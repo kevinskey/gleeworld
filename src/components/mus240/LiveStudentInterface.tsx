@@ -209,7 +209,16 @@ export const LiveStudentInterface: React.FC = () => {
   };
 
   const submitResponse = async (selectedAnswer: number) => {
-    console.log('🎯 submitResponse called', { activePoll: !!activePoll, submitting, selectedAnswer, user: !!user, anonId });
+    console.log('🎯 submitResponse called', { 
+      activePoll: !!activePoll, 
+      submitting, 
+      selectedAnswer, 
+      user: !!user, 
+      userId: user?.id,
+      anonId,
+      pollId: activePoll?.id,
+      currentQuestionIndex: activePoll?.current_question_index
+    });
     
     if (!activePoll || submitting) {
       console.log('❌ Early return:', { activePoll: !!activePoll, submitting });
@@ -243,16 +252,24 @@ export const LiveStudentInterface: React.FC = () => {
     };
     
     console.log('📤 Submitting poll response:', requestData);
+    console.log('📤 Supabase client check:', !!supabase);
     
     try {
+      console.log('🔄 Starting upsert operation...');
       const { data, error } = await supabase
         .from('mus240_poll_responses')
         .upsert(requestData);
 
       console.log('📥 Supabase response:', { data, error });
+      console.log('📥 Response data type:', typeof data);
+      console.log('📥 Error type:', typeof error);
       
       if (error) {
         console.error('❌ Supabase error details:', error);
+        console.error('❌ Error code:', error.code);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error hint:', error.hint);
+        console.error('❌ Error details:', error.details);
         throw error;
       }
 
