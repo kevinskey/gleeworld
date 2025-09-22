@@ -167,7 +167,7 @@ export default function GroupDetail() {
 
   const fetchNotes = async () => {
     const { data, error } = await supabase
-      .from('mus240_group_notes' as any)
+      .from('mus240_group_notes')
       .select('*')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
@@ -177,12 +177,12 @@ export default function GroupDetail() {
       return;
     }
 
-    setNotes((data as any) || []);
+    setNotes(data || []);
   };
 
   const fetchLinks = async () => {
     const { data, error } = await supabase
-      .from('mus240_group_links' as any)
+      .from('mus240_group_links')
       .select('*')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
@@ -192,12 +192,12 @@ export default function GroupDetail() {
       return;
     }
 
-    setLinks((data as any) || []);
+    setLinks(data || []);
   };
 
   const fetchSandboxes = async () => {
     const { data, error } = await supabase
-      .from('mus240_group_sandboxes' as any)
+      .from('mus240_group_sandboxes')
       .select('*')
       .eq('group_id', groupId)
       .order('created_at', { ascending: false });
@@ -207,7 +207,7 @@ export default function GroupDetail() {
       return;
     }
 
-    setSandboxes((data as any) || []);
+    setSandboxes(data || []);
   };
 
   const handleAddNote = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -216,12 +216,13 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_notes' as any)
+        .from('mus240_group_notes')
         .insert({
           group_id: groupId,
           title: formData.get('title') as string,
           content: formData.get('content') as string,
-          created_by: user?.id
+          created_by: user?.id,
+          created_by_name: user?.user_metadata?.full_name || user?.email
         });
 
       if (error) throw error;
@@ -241,13 +242,14 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_links' as any)
+        .from('mus240_group_links')
         .insert({
           group_id: groupId,
           title: formData.get('title') as string,
           url: formData.get('url') as string,
           description: formData.get('description') as string,
-          created_by: user?.id
+          created_by: user?.id,
+          created_by_name: user?.user_metadata?.full_name || user?.email
         });
 
       if (error) throw error;
@@ -267,13 +269,14 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_sandboxes' as any)
+        .from('mus240_group_sandboxes')
         .insert({
           group_id: groupId,
           title: formData.get('title') as string,
           description: formData.get('description') as string,
           sandbox_url: formData.get('sandbox_url') as string,
-          created_by: user?.id
+          created_by: user?.id,
+          created_by_name: user?.user_metadata?.full_name || user?.email
         });
 
       if (error) throw error;
@@ -292,7 +295,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_notes' as any)
+        .from('mus240_group_notes')
         .delete()
         .eq('id', noteId);
 
@@ -311,7 +314,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_links' as any)
+        .from('mus240_group_links')
         .delete()
         .eq('id', linkId);
 
@@ -330,7 +333,7 @@ export default function GroupDetail() {
 
     try {
       const { error } = await supabase
-        .from('mus240_group_sandboxes' as any)
+        .from('mus240_group_sandboxes')
         .delete()
         .eq('id', sandboxId);
 
