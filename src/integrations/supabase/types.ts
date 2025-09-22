@@ -3928,6 +3928,47 @@ export type Database = {
           },
         ]
       }
+      gw_attendance_qr_tokens: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          event_id: string | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          token: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          event_id?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          token: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          event_id?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          token?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_attendance_qr_tokens_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_audio_files: {
         Row: {
           bitrate: number | null
