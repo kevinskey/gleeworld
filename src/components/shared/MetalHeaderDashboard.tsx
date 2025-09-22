@@ -28,7 +28,8 @@ import {
   Shield,
   Clock,
   BarChart3,
-  GraduationCap
+  GraduationCap,
+  Key
 } from "lucide-react";
 
 // Sortable Module Card Component
@@ -146,6 +147,7 @@ interface MetalHeaderDashboardProps {
 
 export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
   const navigate = useNavigate();
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   
   // Get the user's first name from full_name
   const getFirstName = (fullName: string) => {
@@ -368,11 +370,6 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     <div className="space-y-4">
       {/* Metal Plate Header */}
       <div className="relative bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg p-5">
-        {/* Quick Actions Panel - integrated into header */}
-        <QuickActionsPanel 
-          user={user} 
-          onModuleSelect={setSelectedModule} 
-        />
         {/* Left Rivet */}
         <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
           <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
@@ -382,11 +379,27 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
         <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
           <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
         </div>
+
+        {/* Key Ignition - Top Right */}
+        <button
+          onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
+          className="absolute top-3 right-12 w-8 h-8 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
+        >
+          <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
+        </button>
         
         {/* Personalized Title */}
         <h1 className="text-xl lg:text-2xl font-bold text-center text-slate-800 dark:text-slate-100 tracking-wide font-mono uppercase">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
+
+        {/* Quick Actions Panel - slides out from underneath */}
+        <QuickActionsPanel 
+          user={user} 
+          onModuleSelect={setSelectedModule}
+          isOpen={isQuickActionsOpen}
+          onClose={() => setIsQuickActionsOpen(false)}
+        />
       </div>
 
 
