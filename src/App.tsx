@@ -150,6 +150,7 @@ import QRGeneratorPage from "./pages/QRGenerator";
 import QRAnalytics from "./pages/QRAnalytics";
 import ModuleAccess from "./pages/admin/ModuleAccess";
 import Appointments from "./pages/Appointments";
+import WardrobeAppointments from "./pages/WardrobeAppointments";
 import ProviderAppointments from "./pages/ProviderAppointments";
 import { ProviderRoutes } from "./routes/ProviderRoutes";
 import SearchPage from "./pages/SearchPage";
@@ -1146,7 +1147,15 @@ const App = () => {
                                      <Appointments />
                                    </ProtectedRoute>
                                  } 
-                               />
+                                />
+                                <Route 
+                                  path="/wardrobe-appointments" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <WardrobeAppointments />
+                                    </ProtectedRoute>
+                                  } 
+                                />
                                  {/* Provider Routes - Protected for service providers only */}
                                  <Route 
                                    path="/provider/*" 

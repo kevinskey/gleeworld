@@ -116,6 +116,18 @@ const EXECUTIVE_PAGE_MAPPINGS: ExecutivePageMapping[] = [
     ]
   },
   {
+    position: 'wardrobe_manager',
+    displayName: 'Wardrobe Manager',
+    icon: Shirt,
+    primaryPage: '/wardrobe-appointments',
+    availablePages: [
+      { path: '/wardrobe-appointments', name: 'Wardrobe Appointments', description: 'Manage costume fittings and consultations' },
+      { path: '/wardrobe', name: 'Wardrobe Management', description: 'Inventory and costume management' },
+      { path: '/dashboard/executive-board', name: 'Executive Dashboard', description: 'Board overview' },
+      { path: '/handbook', name: 'Handbook', description: 'Wardrobe procedures' }
+    ]
+  },
+  {
     position: 'student_conductor',
     displayName: 'Student Conductor',
     icon: Music2,

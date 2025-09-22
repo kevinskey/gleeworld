@@ -1,12 +1,15 @@
 import React from 'react';
 import { ComprehensiveAppointmentSystem } from '@/components/appointments/ComprehensiveAppointmentSystem';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { AppointmentAccessControl } from '@/components/appointments/AppointmentAccessControl';
 
 const Appointments = () => {
   return (
-    <UniversalLayout showHeader={true} showFooter={false}>
-      <ComprehensiveAppointmentSystem />
-    </UniversalLayout>
+    <AppointmentAccessControl>
+      <UniversalLayout showHeader={true} showFooter={false}>
+        <ComprehensiveAppointmentSystem />
+      </UniversalLayout>
+    </AppointmentAccessControl>
   );
 };
 
