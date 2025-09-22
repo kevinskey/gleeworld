@@ -82,7 +82,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect }: QuickActionsPanelPro
   return (
     <>
       {/* Steel Dropdown Trigger Button - positioned in header area */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="absolute top-5 right-5 z-20">
         <Button
           onClick={() => setIsOpen(!isOpen)}
           className={`h-10 px-4 rounded-lg shadow-lg transition-all duration-300 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 border-2 border-slate-400 dark:border-slate-500 text-slate-800 dark:text-slate-100 hover:shadow-xl font-mono uppercase tracking-wide ${
@@ -95,15 +95,15 @@ export const QuickActionsPanel = ({ user, onModuleSelect }: QuickActionsPanelPro
         </Button>
       </div>
 
-      {/* Steel Dropdown Panel */}
+      {/* Steel Dropdown Panel - connects seamlessly to header */}
       <div 
-        className={`fixed top-16 right-4 z-40 transition-all duration-300 ease-out ${
+        className={`absolute top-16 left-0 right-0 z-10 transition-all duration-300 ease-out ${
           isOpen 
             ? 'translate-y-0 opacity-100 scale-100' 
             : '-translate-y-4 opacity-0 scale-95 pointer-events-none'
         }`}
       >
-        <div className="w-80 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-2xl backdrop-blur-sm">
+        <div className="bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-b-lg border-x-2 border-b-2 border-slate-400 dark:border-slate-500 shadow-2xl backdrop-blur-sm mx-4">
           {/* Steel Header with Rivets */}
           <div className="relative p-4 border-b border-slate-400 dark:border-slate-500">
             {/* Top Left Rivet */}
