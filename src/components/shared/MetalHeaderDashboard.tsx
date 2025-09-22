@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { 
   Calendar, 
   Search, 
@@ -27,8 +28,7 @@ import {
   Shield,
   Clock,
   BarChart3,
-  GraduationCap,
-  Zap 
+  GraduationCap
 } from "lucide-react";
 
 // Sortable Module Card Component
@@ -384,49 +384,11 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
         </h1>
       </div>
 
-      {/* Quick Action Modules */}
-      <div className="bg-gradient-to-r from-primary/5 via-background to-muted/20 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Zap className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">Quick Actions</h2>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {/* Dynamic quick actions based on role */}
-          {isAdmin && (
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('permissions')}>
-              <CardContent className="p-4 text-center">
-                <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center mx-auto mb-3">
-                  <Shield className="h-6 w-6 text-orange-600 dark:text-orange-400" />
-                </div>
-                <h3 className="font-semibold text-sm mb-1">Permissions</h3>
-                <p className="text-xs text-muted-foreground">Manage access control</p>
-              </CardContent>
-            </Card>
-          )}
-
-          <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => setSelectedModule('calendar')}>
-            <CardContent className="p-4 text-center">
-              <div className="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center mx-auto mb-3">
-                <Calendar className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <h3 className="font-semibold text-sm mb-1">Calendar</h3>
-              <p className="text-xs text-muted-foreground">View events</p>
-            </CardContent>
-          </Card>
-
-          {user.role !== 'auditioner' && (
-            <Card className="cursor-pointer hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-background/80 backdrop-blur-sm" onClick={() => navigate('/appointments')}>
-              <CardContent className="p-4 text-center">
-                <div className="w-12 h-12 rounded-lg bg-cyan-100 dark:bg-cyan-900/20 flex items-center justify-center mx-auto mb-3">
-                  <Clock className="h-6 w-6 text-cyan-600 dark:text-cyan-400" />
-                </div>
-                <h3 className="font-semibold text-sm mb-1">Appointments</h3>
-                <p className="text-xs text-muted-foreground">Schedule meetings</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
+      {/* Quick Actions Panel - Now as floating side panel */}
+      <QuickActionsPanel 
+        user={user} 
+        onModuleSelect={setSelectedModule} 
+      />
 
       {/* Search Field */}
       <Card className="p-4">
