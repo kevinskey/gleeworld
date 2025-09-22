@@ -12,6 +12,7 @@ import { AuditionerDashboard } from "./dashboards/AuditionerDashboard";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { ErrorState } from "@/components/shared/ErrorState";
+import { MetalHeaderDashboard } from "@/components/shared/MetalHeaderDashboard";
 
 export const MemberViewDashboard = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -65,8 +66,6 @@ export const MemberViewDashboard = () => {
   const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
 
   const renderDashboardContent = () => {
-    // Import the unified MetalHeaderDashboard component
-    const { MetalHeaderDashboard } = require('@/components/shared/MetalHeaderDashboard');
     console.log('MemberViewDashboard: rendering unified dashboard for user:', user);
     return <MetalHeaderDashboard user={user} />;
   };
