@@ -16,6 +16,7 @@ import AlumnaeLanding from '@/pages/AlumnaeLanding';
 import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 import { ModuleDisplay } from './ModuleDisplay';
 import { DashboardNavigation } from './DashboardNavigation';
+import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
 
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
@@ -291,7 +292,6 @@ export const UnifiedDashboard = () => {
 
   // Default view: Use unified dashboard for all users
   if (viewMode === 'default') {
-    const { MetalHeaderDashboard } = require('@/components/shared/MetalHeaderDashboard');
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           <MetalHeaderDashboard user={{
