@@ -31,6 +31,14 @@ interface QuickActionsPanelProps {
 export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: QuickActionsPanelProps) => {
   const navigate = useNavigate();
   const isAdmin = user.role === 'super-admin' || user.role === 'admin';
+  
+  // Debug logging
+  console.log('QuickActionsPanel user:', {
+    role: user.role,
+    is_exec_board: user.is_exec_board,
+    isAdmin,
+    exec_board_role: user.exec_board_role
+  });
 
   const quickActions = [
     ...(isAdmin ? [{
