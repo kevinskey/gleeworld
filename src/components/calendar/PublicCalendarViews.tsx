@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, ListIcon, Grid3X3Icon } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
+import { CalendarViewSelector } from "./CalendarViewSelector";
 import { PublicMonthlyCalendar } from "./PublicMonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
@@ -58,46 +58,37 @@ export const PublicCalendarViews = () => {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-            <CalendarIcon className="h-4 w-4 md:h-5 md:w-5" />
-            <span className="hidden sm:inline">Public Events Calendar</span>
-            <span className="sm:hidden">Public Events</span>
+        <div className="flex items-center justify-between gap-4">
+          <CardTitle className="flex items-center gap-2 text-xl font-semibold tracking-tight">
+            <CalendarIcon className="h-5 w-5" />
+            Public Events Calendar
           </CardTitle>
+          <CalendarViewSelector 
+            activeView={activeView} 
+            onViewChange={setActiveView}
+          />
         </div>
       </CardHeader>
       <CardContent className="p-3 md:p-6">
-        <Tabs value={activeView} onValueChange={setActiveView}>
-          <TabsList className="grid w-full grid-cols-3 h-12 md:h-10">
-            <TabsTrigger value="month" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
-              <Grid3X3Icon className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Month</span>
-              <span className="sm:hidden">Mo</span>
-            </TabsTrigger>
-            <TabsTrigger value="week" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
-              <CalendarIcon className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Week</span>
-              <span className="sm:hidden">Wk</span>
-            </TabsTrigger>
-            <TabsTrigger value="list" className="flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2">
-              <ListIcon className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">List</span>
-              <span className="sm:hidden">Li</span>
-            </TabsTrigger>
-          </TabsList>
+        <div className="mt-4">
+          {activeView === 'month' && (
+            <div className="animate-fade-in">
+              <PublicMonthlyCalendar events={events} onEventUpdated={fetchEvents} />
+            </div>
+          )}
           
-          <TabsContent value="month" className="mt-3 md:mt-6">
-            <PublicMonthlyCalendar events={events} onEventUpdated={fetchEvents} />
-          </TabsContent>
+          {activeView === 'week' && (
+            <div className="animate-fade-in">
+              <WeeklyCalendar events={events} onEventUpdated={fetchEvents} />
+            </div>
+          )}
           
-          <TabsContent value="week" className="mt-3 md:mt-6">
-            <WeeklyCalendar events={events} onEventUpdated={fetchEvents} />
-          </TabsContent>
-          
-          <TabsContent value="list" className="mt-3 md:mt-6">
-            <EventsList events={events} onEventUpdated={fetchEvents} />
-          </TabsContent>
-        </Tabs>
+          {activeView === 'list' && (
+            <div className="animate-fade-in">
+              <EventsList events={events} onEventUpdated={fetchEvents} />
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

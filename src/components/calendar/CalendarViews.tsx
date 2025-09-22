@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { CalendarIcon, ListIcon, Grid3X3Icon, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
+import { CalendarViewSelector } from "./CalendarViewSelector";
 import { MonthlyCalendar } from "./MonthlyCalendar";
 import { EventsList } from "./EventsList";
 import { WeeklyCalendar } from "./WeeklyCalendar";
@@ -95,57 +95,13 @@ export const CalendarViews = () => {
           </CardHeader>
         <CardContent className="px-0 pt-2 pb-0 md:px-1.5">
           <div className="relative">
-            {/* Mobile Header with View Selector */}
-            <div className="md:hidden bg-gradient-to-r from-primary/5 to-accent/5 border-b border-border/50 px-4 py-3 mb-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Calendar</h2>
-                <div className="flex bg-muted rounded-full p-1">
-                  <Button
-                    variant={activeView === 'month' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setActiveView('month')}
-                    className="rounded-full px-3 py-1 text-xs h-8"
-                  >
-                    Month
-                  </Button>
-                  <Button
-                    variant={activeView === 'week' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setActiveView('week')}
-                    className="rounded-full px-3 py-1 text-xs h-8"
-                  >
-                    Week
-                  </Button>
-                  <Button
-                    variant={activeView === 'list' ? 'default' : 'ghost'}
-                    size="sm"
-                    onClick={() => setActiveView('list')}
-                    className="rounded-full px-3 py-1 text-xs h-8"
-                  >
-                    List
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop Tabs */}
-            <div className="hidden md:block">
-              <Tabs value={activeView} onValueChange={setActiveView}>
-                <TabsList className="grid w-full grid-cols-3 h-10 gap-1">
-                  <TabsTrigger value="month" className="flex items-center justify-center gap-1">
-                    <Grid3X3Icon className="h-4 w-4" />
-                    Month
-                  </TabsTrigger>
-                  <TabsTrigger value="week" className="flex items-center justify-center gap-1">
-                    <CalendarIcon className="h-4 w-4" />
-                    Week
-                  </TabsTrigger>
-                  <TabsTrigger value="list" className="flex items-center justify-center gap-1">
-                    <ListIcon className="h-4 w-4" />
-                    List
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+            {/* Apple-style Header with View Selector */}
+            <div className="flex items-center justify-between px-4 py-3 mb-4 bg-gradient-to-r from-background/80 to-background/60 backdrop-blur-sm border-b border-border/30">
+              <h2 className="text-xl font-semibold tracking-tight">Calendar</h2>
+              <CalendarViewSelector 
+                activeView={activeView} 
+                onViewChange={setActiveView}
+              />
             </div>
             
             {/* Content Area */}
