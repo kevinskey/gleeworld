@@ -49,7 +49,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
       color: 'green',
       action: () => onModuleSelect('calendar')
     },
-    ...(user.role !== 'auditioner' ? [{
+    ...(isAdmin || user.is_exec_board ? [{
       id: 'appointments',
       title: 'Appointments',
       description: 'Schedule meetings',
