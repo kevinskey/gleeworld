@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { UNIFIED_MODULES } from "@/config/unified-modules";
 import { 
   Zap, 
   Shield, 
@@ -64,6 +65,16 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
     isAdmin,
     exec_board_role: user.exec_board_role
   });
+
+  // Available modules for selection
+  const availableModules = UNIFIED_MODULES.filter(module => module.isActive).map(module => ({
+    id: module.id,
+    name: module.name,
+    title: module.title,
+    description: module.description,
+    icon: module.icon.name || module.title.charAt(0).toUpperCase(),
+    category: module.category
+  }));
 
   // Available icons for quick actions
   const availableIcons = {
@@ -156,10 +167,12 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
       return;
     }
 
+    const selectedModule = availableModules.find(m => m.name === newActionModule);
+    
     const newAction = {
       id: `custom_${Date.now()}`,
       title: newActionTitle.trim(),
-      description: newActionDescription.trim() || 'Custom action',
+      description: newActionDescription.trim() || (selectedModule ? selectedModule.description : 'Custom action'),
       icon: newActionIcon,
       color: 'blue',
       action: () => {
@@ -169,7 +182,8 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
           toast.info(`${newActionTitle} action clicked!`);
         }
       },
-      isDefault: false
+      isDefault: false,
+      moduleId: newActionModule || null
     };
 
     const updatedActions = [...customActions, newAction];
@@ -182,7 +196,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
     setNewActionModule('');
     setShowAddDialog(false);
     
-    toast.success('Quick action added successfully!');
+    toast.success(`Quick action "${newActionTitle}" added successfully!`);
   };
 
   const handleDeleteAction = (actionId: string) => {
@@ -253,10 +267,10 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
                     <div>
                       <label className="text-sm font-medium">Icon</label>
                       <Select value={newActionIcon} onValueChange={setNewActionIcon}>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50 max-h-48 overflow-y-auto">
                           {Object.keys(availableIcons).map((iconName) => {
                             const IconComponent = availableIcons[iconName as keyof typeof availableIcons];
                             return (
@@ -272,12 +286,33 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
                       </Select>
                     </div>
                     <div>
-                      <label className="text-sm font-medium">Module (Optional)</label>
-                      <Input
-                        value={newActionModule}
-                        onChange={(e) => setNewActionModule(e.target.value)}
-                        placeholder="e.g., calendar, attendance"
-                      />
+                      <label className="text-sm font-medium">Module</label>
+                      <Select value={newActionModule} onValueChange={setNewActionModule}>
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50">
+                          <SelectValue placeholder="Select a module (optional)" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50 max-h-60 overflow-y-auto">
+                          <SelectItem value="">
+                            <span className="text-gray-500">No module (custom action)</span>
+                          </SelectItem>
+                          {availableModules.map((module) => (
+                            <SelectItem key={module.id} value={module.name}>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
+                                  {module.category}
+                                </span>
+                                <div>
+                                  <div className="font-medium">{module.title}</div>
+                                  <div className="text-xs text-gray-500">{module.description}</div>
+                                </div>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Select a module to integrate with, or leave empty for a custom action
+                      </p>
                     </div>
                     <div className="flex gap-2 pt-4">
                       <Button onClick={handleAddAction} className="flex-1">
