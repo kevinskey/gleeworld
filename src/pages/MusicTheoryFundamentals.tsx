@@ -508,6 +508,33 @@ const MusicTheoryFundamentals = () => {
               </CardContent>
             </Card>
 
+            {/* Quick Access Section */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileMusic className="w-6 h-6" />
+                  Quick Course Access
+                </CardTitle>
+                <CardDescription>
+                  Direct links to course materials and tools
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Link to="/sight-singing-test">
+                    <Button variant="outline" className="w-full justify-start">
+                      <Music className="w-4 h-4 mr-2" />
+                      Sight Singing Practice
+                    </Button>
+                  </Link>
+                  <Button variant="outline" className="w-full justify-start">
+                    <BookOpen className="w-4 h-4 mr-2" />
+                    Course Materials
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Get Started Section */}
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-4">Ready to Begin?</h2>
