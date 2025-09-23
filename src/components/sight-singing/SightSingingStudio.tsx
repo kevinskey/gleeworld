@@ -25,6 +25,7 @@ import { ScoreHistoryView } from './ScoreHistoryView';
 import { PitchPipe } from './PitchPipe';
 import { AssignmentCreator } from './AssignmentCreator';
 import { RecordingShareDialog } from './RecordingShareDialog';
+import { MusicXMLUploader } from './MusicXMLUploader';
 import { UserInfoCard } from './UserInfoCard';
 
 // Import hooks
@@ -1074,6 +1075,32 @@ export const SightSingingStudio: React.FC = () => {
                     Browse your saved scores and uploaded MusicXML files. Select any score to view and practice with playback controls.
                   </p>
                 </div>
+
+                {/* Upload MusicXML Section */}
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                  <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">📤 Upload MusicXML</h3>
+                  <p className="text-sm text-green-700 dark:text-green-300 mb-3">
+                    Upload your own MusicXML files to add them to your library.
+                  </p>
+                  <MusicXMLUploader 
+                    onUpload={(musicXML, filename) => {
+                      setCurrentMusicXML(musicXML);
+                      setCurrentScore(null);
+                      setParameters(null);
+                      setCurrentExerciseId(`uploaded-${Date.now()}`);
+                      
+                      // Auto-save uploaded file to library
+                      setTimeout(() => {
+                        handleSaveToLibrary();
+                      }, 500);
+                      
+                      toast({
+                        title: "MusicXML Uploaded",
+                        description: `"${filename}" uploaded and will be saved to your library.`,
+                      });
+                    }}
+                  />
+                </div>
                 
                 <ScoreLibraryManager 
                   onScoreSelect={(score) => {
@@ -1144,7 +1171,7 @@ export const SightSingingStudio: React.FC = () => {
                               size="sm"
                               variant="outline"
                               onClick={handleSaveToLibrary}
-                              disabled={!currentMusicXML || !parameters}
+                              disabled={!currentMusicXML}
                               className="flex items-center gap-1"
                             >
                               <BookOpen className="h-3 w-3" />
