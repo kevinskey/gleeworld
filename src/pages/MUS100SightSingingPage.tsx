@@ -3,6 +3,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
 import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
 import { Upload, FileMusic, Trash2, Play, Pause, Volume2 } from 'lucide-react';
@@ -15,6 +16,7 @@ interface UploadedFile {
 const MUS100SightSingingPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
+  const [tempo, setTempo] = useState<number>(120);
   const {
     isPlaying,
     startPlayback,
@@ -79,7 +81,7 @@ const MUS100SightSingingPage: React.FC = () => {
     if (isPlaying) {
       stopPlayback();
     } else {
-      startPlayback(selectedFile.content, 120); // 120 BPM default tempo
+      startPlayback(selectedFile.content, tempo);
     }
   };
   return <UniversalLayout>
@@ -153,7 +155,21 @@ const MUS100SightSingingPage: React.FC = () => {
                   <CardTitle>
                     {selectedFile ? selectedFile.name : 'Musical Score'}
                   </CardTitle>
-                  {selectedFile && <div className="flex gap-2">
+                   {selectedFile && <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium">Tempo:</label>
+                        <div className="w-20">
+                          <Slider
+                            value={[tempo]}
+                            onValueChange={(value) => setTempo(value[0])}
+                            min={60}
+                            max={200}
+                            step={5}
+                            className="cursor-pointer"
+                          />
+                        </div>
+                        <span className="text-sm text-muted-foreground w-12">{tempo} BPM</span>
+                      </div>
                       <Button onClick={handlePlayPause} variant="outline" size="sm" className="flex items-center gap-2">
                         {isPlaying ? <>
                             <Pause className="h-4 w-4" />
