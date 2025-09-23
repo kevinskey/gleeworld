@@ -481,32 +481,6 @@ const MusicTheoryFundamentals = () => {
               )}
             </Card>
 
-            {/* Interactive Sight Singing Practice */}
-            <Card className="mb-8">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Music className="w-6 h-6" />
-                  Interactive Sight Singing Practice
-                </CardTitle>
-                <CardDescription>
-                  AI-powered sight singing exercises tailored to reinforce music theory concepts
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <SightSingingWidget
-                  context="music-theory"
-                  showAdvancedControls={true}
-                  defaultParams={{
-                    difficulty: 'beginner',
-                    measures: 8,
-                    key: { tonic: 'C', mode: 'major' }
-                  }}
-                  onExerciseGenerated={(result) => {
-                    console.log('Generated exercise for music theory:', result);
-                  }}
-                />
-              </CardContent>
-            </Card>
 
             {/* Quick Access Section */}
             <Card className="mb-8">
