@@ -34,36 +34,67 @@ const MUS100SightSingingPage: React.FC = () => {
   } = useTonePlayback();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
-    if (!file.name.toLowerCase().endsWith('.xml') && !file.name.toLowerCase().endsWith('.musicxml')) {
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    // Validate all files first
+    Array.from(files).forEach(file => {
+      if (file.name.toLowerCase().endsWith('.xml') || file.name.toLowerCase().endsWith('.musicxml')) {
+        validFiles.push(file);
+      } else {
+        invalidFiles.push(file.name);
+      }
+    });
+
+    if (invalidFiles.length > 0) {
       toast({
-        title: "Invalid file type",
-        description: "Please upload a MusicXML (.xml or .musicxml) file",
+        title: "Some files skipped",
+        description: `${invalidFiles.length} non-MusicXML files were skipped`,
+        variant: "destructive"
+      });
+    }
+
+    if (validFiles.length === 0) {
+      toast({
+        title: "No valid files",
+        description: "Please upload MusicXML (.xml or .musicxml) files",
         variant: "destructive"
       });
       return;
     }
 
     try {
-      const content = await file.text();
-      const newFile: UploadedFile = {
-        id: Date.now().toString(),
-        name: file.name,
-        content
-      };
+      const newFiles: UploadedFile[] = [];
+      
+      // Process all valid files
+      for (const file of validFiles) {
+        const content = await file.text();
+        const newFile: UploadedFile = {
+          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          name: file.name,
+          content
+        };
+        newFiles.push(newFile);
+      }
 
-      setUploadedFiles(prev => [...prev, newFile]);
-      setSelectedFile(newFile);
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      
+      // Auto-select the first uploaded file if none is selected
+      if (!selectedFile && newFiles.length > 0) {
+        setSelectedFile(newFiles[0]);
+      }
+
       toast({
-        title: "File uploaded successfully",
-        description: `${file.name} has been loaded for sight singing practice`
+        title: "Files uploaded successfully",
+        description: `${newFiles.length} MusicXML file${newFiles.length > 1 ? 's' : ''} uploaded`
       });
     } catch (error) {
       toast({
         title: "Upload failed",
-        description: "Could not read the MusicXML file",
+        description: "Could not read some MusicXML files",
         variant: "destructive"
       });
     }
@@ -195,6 +226,7 @@ const MUS100SightSingingPage: React.FC = () => {
                       id="musicxml-upload" 
                       type="file" 
                       accept=".xml,.musicxml" 
+                      multiple
                       onChange={handleFileUpload} 
                       className="hidden" 
                     />
@@ -204,7 +236,7 @@ const MUS100SightSingingPage: React.FC = () => {
                       className="w-full"
                     >
                       <Upload className="h-4 w-4 mr-2" />
-                      Choose File
+                      Choose Files
                     </Button>
                   </div>
                 </div>
