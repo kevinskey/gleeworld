@@ -47,7 +47,7 @@ const EXAM_QUESTIONS: Question[] = [
     id: '1-2',
     section: 'Section 1: Notation and Basics',
     type: 'multiple-choice',
-    question: 'Identify the note on the bass clef staff (second line):',
+    question: 'Identify the note shown on the second line of the bass clef staff:',
     points: 4,
     options: ['G', 'B', 'D', 'F'],
     correctAnswer: 'B'
@@ -72,10 +72,10 @@ const EXAM_QUESTIONS: Question[] = [
     id: '1-5',
     section: 'Section 1: Notation and Basics',
     type: 'multiple-choice',
-    question: 'Which key signature represents G major?',
+    question: 'Select the correct key signature for G major:',
     points: 4,
-    options: ['One sharp (F#)', 'One flat (Bb)', 'Two sharps (F#, C#)', 'No sharps or flats'],
-    correctAnswer: 'One sharp (F#)'
+    options: ['One sharp (F♯)', 'One flat (B♭)', 'Two sharps (F♯, C♯)', 'No sharps or flats'],
+    correctAnswer: 'One sharp (F♯)'
   },
 
   // Section 2: Rhythm and Meter (20 pts)
@@ -83,7 +83,7 @@ const EXAM_QUESTIONS: Question[] = [
     id: '2-1',
     section: 'Section 2: Rhythm and Meter',
     type: 'staff-input',
-    question: `Recreate this rhythm: ${MUSICAL_SYMBOLS.quarterNote} ${MUSICAL_SYMBOLS.quarterRest} ${MUSICAL_SYMBOLS.eighthNote} ${MUSICAL_SYMBOLS.eighthNote} ${MUSICAL_SYMBOLS.halfNote}`,
+    question: 'Recreate this rhythm pattern:',
     points: 5,
     staffType: 'treble'
   },
@@ -125,7 +125,7 @@ const EXAM_QUESTIONS: Question[] = [
     id: '3-2',
     section: 'Section 3: Scales, Intervals, Chords',
     type: 'multiple-choice',
-    question: 'What interval is C to E?',
+    question: 'Identify the interval from C to E:',
     points: 5,
     options: ['Major 2nd', 'Minor 3rd', 'Major 3rd', 'Perfect 4th'],
     correctAnswer: 'Major 3rd'
@@ -327,18 +327,62 @@ export const SMUS100MidtermExam: React.FC = () => {
     switch (question.type) {
       case 'multiple-choice':
         return (
-          <RadioGroup
-            value={answer as string}
-            onValueChange={(value) => handleAnswerChange(question.id, value)}
-            className="space-y-2"
-          >
-            {question.options?.map((option, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <RadioGroupItem value={option} id={`${question.id}-${index}`} />
-                <Label htmlFor={`${question.id}-${index}`}>{option}</Label>
+          <div className="space-y-4">
+            {/* Add musical notation examples for specific questions */}
+            {question.id === '1-2' && (
+              <div className="bg-muted/10 p-4 rounded-lg">
+                <div className="text-center">
+                  <MusicalNotation 
+                    type="staff" 
+                    clef="bass"
+                    notes={[MUSICAL_SYMBOLS.quarterNote]}
+                    className="mx-auto"
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">Note on second line of bass clef</p>
+                </div>
               </div>
-            ))}
-          </RadioGroup>
+            )}
+            {question.id === '1-5' && (
+              <div className="bg-muted/10 p-4 rounded-lg grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <MusicalNotation 
+                    type="key-signature" 
+                    clef="treble"
+                    keySignature="G major"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Option A</p>
+                </div>
+                <div className="text-center">
+                  <MusicalNotation 
+                    type="key-signature" 
+                    clef="treble"
+                    keySignature="F major"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Option B</p>
+                </div>
+              </div>
+            )}
+            {question.id === '3-2' && (
+              <div className="bg-muted/10 p-4 rounded-lg">
+                <div className="text-center">
+                  <div className="text-2xl font-mono">C — E</div>
+                  <p className="text-sm text-muted-foreground mt-2">Interval example</p>
+                </div>
+              </div>
+            )}
+            <RadioGroup
+              value={answer as string}
+              onValueChange={(value) => handleAnswerChange(question.id, value)}
+              className="space-y-2"
+            >
+              {question.options?.map((option, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <RadioGroupItem value={option} id={`${question.id}-${index}`} />
+                  <Label htmlFor={`${question.id}-${index}`}>{option}</Label>
+                </div>
+              ))}
+            </RadioGroup>
+          </div>
         );
 
       case 'fill-blank':
@@ -354,19 +398,26 @@ export const SMUS100MidtermExam: React.FC = () => {
       case 'staff-input':
         return (
           <div className="space-y-4">
-            <div className="bg-muted/20 p-6 rounded-lg border-2 border-dashed border-muted-foreground/20">
-              <div className="text-center text-muted-foreground">
-                <Music className="w-12 h-12 mx-auto mb-2" />
-                <p className="text-sm">Staff Input Widget</p>
-                <p className="text-xs text-muted-foreground">
-                  {question.staffType === 'treble' ? 'Treble Clef' : 'Bass Clef'} notation area
-                </p>
+            {/* Add rhythm examples for specific questions */}
+            {question.id === '2-1' && (
+              <div className="bg-muted/10 p-4 rounded-lg">
+                <div className="text-center">
+                  <div className="text-3xl font-serif mb-2">
+                    {MUSICAL_SYMBOLS.quarterNote} {MUSICAL_SYMBOLS.quarterRest} {MUSICAL_SYMBOLS.eighthNote}{MUSICAL_SYMBOLS.eighthNote} {MUSICAL_SYMBOLS.halfNote}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Rhythm pattern to recreate</p>
+                </div>
               </div>
-            </div>
+            )}
+            <MusicalNotation 
+              type="staff" 
+              clef={question.staffType}
+              className="bg-background border rounded-lg p-4"
+            />
             <Textarea
               value={answer as string}
               onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-              placeholder="Describe your notation or use text representation..."
+              placeholder="Describe your notation or use text representation (e.g., C D E F G A B C)..."
               className="min-h-16"
             />
           </div>
@@ -375,6 +426,18 @@ export const SMUS100MidtermExam: React.FC = () => {
       case 'drag-drop':
         return (
           <div className="space-y-4">
+            {question.id === '2-3' && (
+              <div className="bg-muted/10 p-4 rounded-lg">
+                <div className="text-center text-xl">
+                  <span className="mr-4">{MUSICAL_SYMBOLS.quarterNote}</span>
+                  <span className="text-muted-foreground mr-4">+</span>
+                  <span className="text-muted-foreground mr-4">____</span>
+                  <span className="text-muted-foreground mr-4">=</span>
+                  <span>3/4</span>
+                </div>
+                <p className="text-sm text-muted-foreground text-center mt-2">Complete the measure</p>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-2">
               {question.options?.map((option, index) => (
                 <Button
