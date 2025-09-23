@@ -181,6 +181,7 @@ import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 import MUS240Instructor from "./pages/classes/mus240/instructor";
 import MidtermExam from "./pages/mus240/MidtermExam";
 import SMUS100MidtermExamPage from "./pages/SMUS100MidtermExamPage";
+import MUS100SightSingingPage from "./pages/MUS100SightSingingPage";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
@@ -394,6 +395,15 @@ const App = () => {
                  element={
                    <PublicRoute>
                      <SMUS100MidtermExamPage />
+                   </PublicRoute>
+                 } 
+               />
+               {/* MUS100 Sight Singing Practice */}
+               <Route 
+                 path="/mus100-sight-singing" 
+                 element={
+                   <PublicRoute>
+                     <MUS100SightSingingPage />
                    </PublicRoute>
                  } 
                />
