@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
 import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
-import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, BookOpen, Users, Download } from 'lucide-react';
+import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, BookOpen, Users, Download, ArrowLeft } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 interface UploadedFile {
   id: string;
@@ -25,6 +26,7 @@ interface PublicMusicXML {
 }
 
 const MUS100SightSingingPage: React.FC = () => {
+  const navigate = useNavigate();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [publicFiles, setPublicFiles] = useState<PublicMusicXML[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
@@ -271,6 +273,19 @@ const MUS100SightSingingPage: React.FC = () => {
           
           {/* Main header content */}
           <div className="relative px-6 py-12 md:py-16">
+            {/* Back button */}
+            <div className="max-w-4xl mx-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="mb-6 text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </div>
+            
             <div className="max-w-4xl mx-auto text-center space-y-6">
               <div className="flex items-center justify-center gap-4 mb-6">
                 <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
