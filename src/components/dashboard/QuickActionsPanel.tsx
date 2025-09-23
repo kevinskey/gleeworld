@@ -119,6 +119,15 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
       action: () => onModuleSelect('calendar'),
       isDefault: true
     },
+    {
+      id: 'academy',
+      title: 'Academy',
+      description: 'Learning & education hub',
+      icon: 'BookOpen',
+      color: 'blue',
+      action: () => onModuleSelect('academy'),
+      isDefault: true
+    },
     ...(isAdmin || user.is_exec_board ? [{
       id: 'appointments',
       title: 'Appointments',
