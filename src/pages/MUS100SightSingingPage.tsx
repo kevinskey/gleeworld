@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
-import { Upload, FileMusic, Trash2 } from 'lucide-react';
+import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
+import { Upload, FileMusic, Trash2, Play, Pause, Volume2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface UploadedFile {
@@ -16,6 +17,7 @@ interface UploadedFile {
 const MUS100SightSingingPage: React.FC = () => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
+  const { isPlaying, startPlayback, stopPlayback } = useTonePlayback();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -74,6 +76,16 @@ const MUS100SightSingingPage: React.FC = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const handlePlayPause = () => {
+    if (!selectedFile) return;
+
+    if (isPlaying) {
+      stopPlayback();
+    } else {
+      startPlayback(selectedFile.content, 120); // 120 BPM default tempo
+    }
   };
 
   return (
@@ -182,9 +194,33 @@ const MUS100SightSingingPage: React.FC = () => {
           <div className="lg:col-span-2">
             <Card className="h-full">
               <CardHeader>
-                <CardTitle>
-                  {selectedFile ? selectedFile.name : 'Musical Score'}
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>
+                    {selectedFile ? selectedFile.name : 'Musical Score'}
+                  </CardTitle>
+                  {selectedFile && (
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={handlePlayPause}
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        {isPlaying ? (
+                          <>
+                            <Pause className="h-4 w-4" />
+                            Stop
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4" />
+                            Play
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="h-[600px]">
                 {selectedFile ? (
