@@ -495,7 +495,7 @@ const MusicTheoryFundamentals = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Link to="/sight-singing-test">
+                  <Link to="/mus100-sight-singing">
                     <Button variant="outline" className="w-full justify-start">
                       <Music className="w-4 h-4 mr-2" />
                       Sight Singing Practice

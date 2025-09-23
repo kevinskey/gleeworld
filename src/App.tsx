@@ -185,7 +185,7 @@ import MUS100SightSingingPage from "./pages/MUS100SightSingingPage";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
-import SightSingingTestPage from "./pages/SightSingingTestPage";
+
 import GrandStaves from "./pages/GrandStaves";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
 import MySubmissionsPage from "./pages/student/MySubmissionsPage";
@@ -1397,14 +1397,6 @@ const App = () => {
                                         element={
                                           <ProtectedRoute>
                                             <MemberSightReadingStudioPage />
-                                          </ProtectedRoute>
-                                        } 
-                                      />
-                                      <Route 
-                                        path="/sight-singing-test" 
-                                        element={
-                                          <ProtectedRoute>
-                                            <SightSingingTestPage />
                                           </ProtectedRoute>
                                         } 
                                       />
