@@ -86,6 +86,7 @@ import { MemberSightReadingModule } from '@/components/modules/MemberSightReadin
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import GleeAcademy from '@/pages/GleeAcademy';
 import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementModule';
+import { ProviderAppointmentModule } from '@/components/modules/ProviderAppointmentModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -259,6 +260,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: AppointmentSchedulingModule,
     dbFunctionName: "appointments"
+  },
+  {
+    id: "provider-appointments",
+    name: "provider-appointments",
+    title: "Provider Calendar",
+    description: "Personal appointment calendar for service providers with external sync capabilities",
+    icon: Calendar,
+    iconColor: "green",
+    category: "communications",
+    isActive: true,
+    component: ProviderAppointmentModule,
+    dbFunctionName: "provider-appointments"
   },
 
   // Attendance & Member Management modules
