@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Maximize2, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 
@@ -20,6 +20,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 }) => {
   const scoreRef = useRef<HTMLDivElement>(null);
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   useEffect(() => {
     console.log('🎼 ScoreDisplay useEffect triggered');
@@ -151,42 +152,98 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-end mb-2 sm:mb-4">
-        <div className="flex gap-2">
-          {hasRecording && onGradeRecording && (
-            <Button 
-              onClick={onGradeRecording}
-              disabled={isGrading}
-              variant="default"
-              size="sm"
-              className="text-xs sm:text-sm"
-            >
-              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              {isGrading ? 'Grading...' : 'Grade Performance'}
-            </Button>
-          )}
+    <>
+      {/* Full Screen Overlay */}
+      {isFullScreen && (
+        <div className="fixed inset-0 z-50 bg-background">
+          <div className="h-full flex flex-col">
+            {/* Full Screen Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <h2 className="text-lg font-semibold">Music Score - Full Screen</h2>
+              <Button
+                onClick={() => setIsFullScreen(false)}
+                variant="outline"
+                size="sm"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </div>
+            
+            {/* Full Screen Score */}
+            <div className="flex-1 p-4 overflow-auto">
+              <div 
+                className="w-full bg-white rounded border shadow-sm p-4 min-h-full"
+                style={{ 
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center'
+                }}
+              >
+                <div 
+                  className="w-full overflow-auto"
+                  dangerouslySetInnerHTML={{ 
+                    __html: scoreRef.current?.innerHTML || '' 
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
+      )}
+      
+      {/* Normal View */}
+      <div className="h-full flex flex-col">
+        <div className="flex items-center justify-between mb-2 sm:mb-4">
+          <div className="flex gap-2">
+            {musicXML && (
+              <Button
+                onClick={() => setIsFullScreen(true)}
+                variant="outline"
+                size="sm"
+                className="text-xs sm:text-sm"
+              >
+                <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Full Screen
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            {hasRecording && onGradeRecording && (
+              <Button 
+                onClick={onGradeRecording}
+                disabled={isGrading}
+                variant="default"
+                size="sm"
+                className="text-xs sm:text-sm"
+              >
+                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {isGrading ? 'Grading...' : 'Grade Performance'}
+              </Button>
+            )}
+          </div>
+        </div>
+        
+        {musicXML && (
+          <div 
+            ref={scoreRef}
+            className="flex-1 min-h-[200px] sm:min-h-[300px] w-full bg-white rounded border shadow-sm p-0 sm:p-2 overflow-auto"
+            style={{ 
+              width: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center'
+            }}
+          />
+        )}
+        
+        {!musicXML && (
+          <div className="flex-1 flex items-center justify-center text-muted-foreground">
+            <p className="text-sm sm:text-base">Generate an exercise to see the score</p>
+          </div>
+        )}
       </div>
-      
-      {musicXML && (
-        <div 
-          ref={scoreRef}
-          className="flex-1 min-h-[200px] sm:min-h-[300px] w-full bg-white rounded border shadow-sm p-0 sm:p-2 overflow-x-auto overflow-y-visible"
-          style={{ 
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center'
-          }}
-        />
-      )}
-      
-      {!musicXML && (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          <p className="text-sm sm:text-base">Generate an exercise to see the score</p>
-        </div>
-      )}
-    </div>
+    </>
   );
 };
