@@ -47,23 +47,31 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log('MusicXML length:', musicXML.length);
         console.log('Full MusicXML content:', musicXML);
         
-        // Force exactly 4 measures per line
+        // Force exactly 4 measures per line with responsive sizing
         const containerWidth = scoreRef.current?.clientWidth || 800;
-        const measuresPerRow = 4; // Always 4 measures per line
+        const isMobile = containerWidth < 640; // sm breakpoint
+        const isTablet = containerWidth < 1024; // lg breakpoint
         
-        console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}`);
+        let measuresPerRow = 4; // Default for desktop
+        if (isMobile) {
+          measuresPerRow = 2; // 2 measures per row on mobile
+        } else if (isTablet) {
+          measuresPerRow = 3; // 3 measures per row on tablet
+        }
         
-        // Dynamically resize the container to force 4 measures per row
-        const baseWidthPerMeasure = 160; // Consistent width per measure
-        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + 60; // Standard padding
+        console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}, Device: ${isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop'}`);
+        
+        // Dynamically resize the container to force proper measures per row
+        const baseWidthPerMeasure = isMobile ? 140 : isTablet ? 150 : 160;
+        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + (isMobile ? 40 : 60);
         
         // Temporarily constrain the container width for OSMD calculation
         if (scoreRef.current) {
-          scoreRef.current.style.width = `${targetContainerWidth}px`;
-          scoreRef.current.style.maxWidth = `${targetContainerWidth}px`;
+          scoreRef.current.style.width = `${Math.min(targetContainerWidth, containerWidth)}px`;
+          scoreRef.current.style.maxWidth = `${Math.min(targetContainerWidth, containerWidth)}px`;
         }
         
-        // Create OSMD instance with minimal, stable settings
+        // Create OSMD instance with responsive settings
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
           backend: "svg",
@@ -80,7 +88,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         // Load the MusicXML
         await osmd.load(musicXML);
         
-        console.log(`Rendering score with container width constrained to ${targetContainerWidth}px for ${measuresPerRow} measures per row`);
+        console.log(`Rendering score with container width constrained to ${Math.min(targetContainerWidth, containerWidth)}px for ${measuresPerRow} measures per row`);
         
         // Render with constrained width
         osmd.render();
@@ -91,7 +99,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           scoreRef.current.style.maxWidth = '';
         }
         
-        console.log(`OSMD rendering completed with forced ${measuresPerRow} measures per row layout`);
+        console.log(`OSMD rendering completed with responsive ${measuresPerRow} measures per row layout`);
 
       } catch (error) {
         console.error("Error rendering score with OSMD:", error);
@@ -158,22 +166,23 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         <div className="fixed inset-0 z-50 bg-background">
           <div className="h-full flex flex-col">
             {/* Full Screen Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border">
-              <h2 className="text-lg font-semibold">Music Score - Full Screen</h2>
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border">
+              <h2 className="text-base sm:text-lg font-semibold">Music Score - Full Screen</h2>
               <Button
                 onClick={() => setIsFullScreen(false)}
                 variant="outline"
                 size="sm"
+                className="text-xs sm:text-sm"
               >
-                <X className="h-4 w-4 mr-2" />
+                <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 Back
               </Button>
             </div>
             
             {/* Full Screen Score */}
-            <div className="flex-1 p-4 overflow-auto">
+            <div className="flex-1 p-2 sm:p-4 overflow-auto">
               <div 
-                className="w-full bg-white rounded border shadow-sm p-4 min-h-full"
+                className="w-full bg-white rounded border shadow-sm p-2 sm:p-4 min-h-full"
                 style={{ 
                   display: 'flex',
                   flexDirection: 'column',
@@ -194,7 +203,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       
       {/* Normal View */}
       <div className="h-full flex flex-col">
-        <div className="flex items-center justify-between mb-2 sm:mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 sm:mb-4 gap-2">
           <div className="flex gap-2">
             {musicXML && (
               <Button
@@ -228,7 +237,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         {musicXML && (
           <div 
             ref={scoreRef}
-            className="flex-1 min-h-[200px] sm:min-h-[300px] w-full bg-white rounded border shadow-sm p-0 sm:p-2 overflow-auto"
+            className="flex-1 min-h-[180px] sm:min-h-[250px] lg:min-h-[300px] w-full bg-white rounded border shadow-sm p-1 sm:p-2 overflow-auto"
             style={{ 
               width: '100%',
               display: 'flex',

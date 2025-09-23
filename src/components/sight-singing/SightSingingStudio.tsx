@@ -905,14 +905,15 @@ export const SightSingingStudio: React.FC = () => {
           <TabsContent value="practice" className="mt-2 sm:mt-3">
             {/* Show score display if we have generated music, otherwise show parameter form */}
             {currentMusicXML ? (
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {/* Score Display with Reset Button */}
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-semibold">Generated Exercise</h2>
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                  <h2 className="text-lg sm:text-xl font-semibold">Generated Exercise</h2>
                   <Button 
                     onClick={handleReset}
                     variant="outline"
-                    className="flex items-center gap-2"
+                    size="sm"
+                    className="flex items-center gap-2 self-start sm:self-auto text-sm"
                   >
                     ← New Exercise
                   </Button>
@@ -933,10 +934,9 @@ export const SightSingingStudio: React.FC = () => {
                 {/* Transport Controls */}
                 {currentMusicXML && (
                   <div className="bg-card border rounded-lg shadow-md p-3 lg:p-4">
-                    <div className="responsive-grid-3 items-center gap-3 lg:gap-4"
-                         style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 items-center">
                       {/* Sound Selectors */}
-                      <div className="flex items-center gap-2 lg:gap-3 order-1">
+                      <div className="flex items-center gap-2 lg:gap-3 justify-center sm:justify-start">
                         <Select 
                           value={soundSettings.notes} 
                           onValueChange={(value) => setSoundSettings(prev => ({ ...prev, notes: value }))}
@@ -954,7 +954,7 @@ export const SightSingingStudio: React.FC = () => {
                       </div>
 
                       {/* Play Controls */}
-                      <div className="flex items-center gap-1 lg:gap-2 order-2">
+                      <div className="flex items-center gap-1 lg:gap-2 justify-center">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -1065,8 +1065,8 @@ export const SightSingingStudio: React.FC = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="library" className="mt-6">
-            <div className="grid gap-6 lg:grid-cols-2">
+          <TabsContent value="library" className="mt-4 sm:mt-6">
+            <div className="grid gap-4 sm:gap-6 xl:grid-cols-2">
               {/* Left Column - Score Library */}
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -1129,7 +1129,7 @@ export const SightSingingStudio: React.FC = () => {
               </div>
 
               {/* Right Column - Parameters and Musical Score Display */}
-              <div className="flex-1 min-w-0 space-y-4">
+              <div className="flex-1 min-w-0 space-y-3 sm:space-y-4">
                 {/* Score Generator Parameters */}
                 <div className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
                   <h3 className="font-semibold text-purple-900 dark:text-purple-100 mb-2">🎼 Generate New Scores</h3>
@@ -1138,8 +1138,8 @@ export const SightSingingStudio: React.FC = () => {
                   </p>
                 </div>
                 
-                <Card className="p-2 sm:p-4">
-                  <h2 className="text-sm font-semibold mb-2 sm:mb-3 flex-shrink-0">Score Generator</h2>
+                <Card className="p-3 sm:p-4">
+                  <h2 className="text-sm sm:text-base font-semibold mb-2 sm:mb-3 flex-shrink-0">Score Generator</h2>
                   <div>
                     <ParameterForm 
                       onGenerate={(params) => {
@@ -1160,11 +1160,11 @@ export const SightSingingStudio: React.FC = () => {
 
                 {/* Musical Score Display */}
                 {currentMusicXML && (
-                  <Card className="p-2 sm:p-3 lg:p-4 min-h-[400px] sm:min-h-[500px] flex flex-col shadow-2xl border-2 bg-white">
-                  <div className="flex items-center justify-between mb-3 flex-shrink-0">
-                    <h2 className="text-base font-semibold">Musical Score</h2>
+                  <Card className="p-3 sm:p-4 lg:p-5 min-h-[300px] sm:min-h-[400px] lg:min-h-[500px] flex flex-col shadow-2xl border-2 bg-white">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2 flex-shrink-0">
+                    <h2 className="text-sm sm:text-base font-semibold">Musical Score</h2>
                     {currentMusicXML && (
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
@@ -1172,10 +1172,10 @@ export const SightSingingStudio: React.FC = () => {
                               variant="outline"
                               onClick={handleSaveToLibrary}
                               disabled={!currentMusicXML}
-                              className="flex items-center gap-1"
+                              className="flex items-center gap-1 text-xs sm:text-sm"
                             >
                               <BookOpen className="h-3 w-3" />
-                              Save
+                              <span className="hidden sm:inline">Save</span>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
@@ -1190,10 +1190,10 @@ export const SightSingingStudio: React.FC = () => {
                               variant="outline"
                               onClick={handleDownloadMusicXML}
                               disabled={!currentMusicXML}
-                              className="flex items-center gap-1"
+                              className="flex items-center gap-1 text-xs sm:text-sm"
                             >
                               <Download className="h-3 w-3" />
-                              Download
+                              <span className="hidden sm:inline">Download</span>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
