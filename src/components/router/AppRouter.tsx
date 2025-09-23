@@ -56,6 +56,7 @@ import WeekDetail from "@/pages/mus240/WeekDetail";
 import SyllabusPage from "@/pages/mus240/SyllabusPage";
 import { Mus240GradesPage } from "@/pages/mus240/Mus240GradesPage";
 import SMUS100MidtermExamPage from "@/pages/SMUS100MidtermExamPage";
+import MUS100SightSingingPage from "@/pages/MUS100SightSingingPage";
 
 export const router = createBrowserRouter([
   {
@@ -266,6 +267,10 @@ export const router = createBrowserRouter([
   {
     path: "/smus100-midterm-exam",
     element: <SMUS100MidtermExamPage />,
+  },
+  {
+    path: "/mus100-sight-singing",
+    element: <MUS100SightSingingPage />,
   },
   {
     path: "*",
