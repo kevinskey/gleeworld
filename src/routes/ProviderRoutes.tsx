@@ -7,7 +7,7 @@ export const ProviderRoutes = () => {
   return (
     <Routes>
       <Route 
-        path="/provider/appointments" 
+        path="/appointments" 
         element={
           <ProviderRoute>
             <ProviderAppointments />
