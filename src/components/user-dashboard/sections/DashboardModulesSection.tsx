@@ -146,7 +146,9 @@ export const DashboardModulesSection = () => {
         { name: "Tour Manager", description: "Manage tour logistics", icon: MapPin, route: "/tour-manager" },
         { name: "Contract Management", description: "Handle tour contracts", icon: BookIcon, route: "/contract-signing" },
         { name: "Wardrobe Management", description: "Manage tour wardrobe", icon: Award, route: "/wardrobe-management" },
-        { name: "Appointments", description: "Schedule appointments", icon: Calendar, route: "/appointments" }
+        { name: "Appointments", description: "Schedule appointments", icon: Calendar, route: "/appointments" },
+        { name: "My Appointments", description: "Personal appointment calendar for service providers", icon: Calendar, route: "/dashboard?module=assignable-appointments" },
+        { name: "Service Provider Management", description: "Assign users as appointment service providers", icon: Users, route: "/dashboard?module=service-provider-management", requiresAdmin: true }
       ]
     },
     {
