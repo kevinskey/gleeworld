@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
 import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
-import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2 } from 'lucide-react';
+import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, BookOpen, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface UploadedFile {
@@ -202,9 +202,70 @@ const MUS100SightSingingPage: React.FC = () => {
 
   return (
     <UniversalLayout>
-      <div className="space-y-6">
-        <div className="border-b border-border pb-4">
-          <h1 className="text-3xl font-bold text-foreground">MUS100 Sight Singing Practice</h1>
+      <div className="space-y-8">
+        {/* Beautiful Header */}
+        <div className="relative overflow-hidden">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent"></div>
+          
+          {/* Decorative musical notes */}
+          <div className="absolute top-4 right-8 opacity-20">
+            <Music className="h-16 w-16 text-primary animate-pulse" />
+          </div>
+          <div className="absolute top-12 right-24 opacity-15">
+            <Music className="h-8 w-8 text-primary animate-pulse" style={{ animationDelay: '0.5s' }} />
+          </div>
+          <div className="absolute bottom-4 left-12 opacity-10">
+            <Music className="h-12 w-12 text-primary animate-pulse" style={{ animationDelay: '1s' }} />
+          </div>
+          
+          {/* Main header content */}
+          <div className="relative px-6 py-12 md:py-16">
+            <div className="max-w-4xl mx-auto text-center space-y-6">
+              <div className="flex items-center justify-center gap-4 mb-6">
+                <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+                  <BookOpen className="h-8 w-8 text-primary" />
+                </div>
+                <div className="h-8 w-px bg-border"></div>
+                <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+                  <Music className="h-8 w-8 text-primary" />
+                </div>
+                <div className="h-8 w-px bg-border"></div>
+                <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
+                  <Users className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent animate-fade-in">
+                  MUS100 Sight Singing
+                </h1>
+                <p className="text-xl md:text-2xl text-muted-foreground font-medium animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                  Practice & Perfect Your Musical Skills
+                </p>
+                <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                  Upload MusicXML files, practice sight singing with interactive playback modes, 
+                  and record yourself to track your progress. Develop your musical ear and vocal precision.
+                </p>
+              </div>
+              
+              {/* Feature highlights */}
+              <div className="flex flex-wrap justify-center gap-4 pt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 border border-border/50 backdrop-blur-sm">
+                  <FileMusic className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">MusicXML Support</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 border border-border/50 backdrop-blur-sm">
+                  <Play className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Interactive Playback</span>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 border border-border/50 backdrop-blur-sm">
+                  <Mic className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Voice Recording</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
