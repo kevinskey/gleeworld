@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Label } from '@/components/ui/label';
 import { Knob } from '@/components/ui/knob';
 import { useToast } from '@/hooks/use-toast';
-import { Download, Play, Pause, Volume2, VolumeX, Save, FileMusic } from 'lucide-react';
+import { Download, Play, Pause, Volume2, VolumeX, Save, FileMusic, BookOpen } from 'lucide-react';
 
 // Import all the components
 import { ParameterForm } from './ParameterForm';
@@ -823,7 +823,7 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   const handleSaveToLibrary = async () => {
-    if (!currentMusicXML || !parameters) {
+    if (!currentMusicXML) {
       toast({
         title: "Nothing to Save",
         description: "Please generate an exercise first.",
@@ -833,31 +833,42 @@ export const SightSingingStudio: React.FC = () => {
     }
 
     try {
-      // Create a meaningful title for the score
-      const keyString = `${parameters.key.tonic} ${parameters.key.mode}`;
-      const timeString = `${parameters.time.num}/${parameters.time.den}`;
-      const title = `Sight Reading Exercise - ${keyString} - ${timeString}`;
+      let title, keyString, timeString, difficulty, voiceParts;
       
-      // Determine difficulty based on parameters
-      let difficulty = 'beginner';
-      if (parameters.allowDots || parameters.allowAccidentals || parameters.numMeasures > 4) {
-        difficulty = 'intermediate';
-      }
-      if (parameters.maxInterval && parameters.maxInterval > 5) {
-        difficulty = 'advanced';
-      }
+      if (parameters) {
+        // Generated exercise - use parameters
+        keyString = `${parameters.key.tonic} ${parameters.key.mode}`;
+        timeString = `${parameters.time.num}/${parameters.time.den}`;
+        title = `Sight Reading Exercise - ${keyString} - ${timeString}`;
+        
+        // Determine difficulty based on parameters
+        difficulty = 'beginner';
+        if (parameters.allowDots || parameters.allowAccidentals || parameters.numMeasures > 4) {
+          difficulty = 'intermediate';
+        }
+        if (parameters.maxInterval && parameters.maxInterval > 5) {
+          difficulty = 'advanced';
+        }
 
-      // Create voice parts array based on the score
-      const voiceParts = parameters.parts.map(part => part.role === 'S' ? 'Soprano' : 'Alto');
+        // Create voice parts array based on the score
+        voiceParts = parameters.parts.map(part => part.role === 'S' ? 'Soprano' : 'Alto');
+      } else {
+        // Uploaded MusicXML - use generic values
+        title = `MusicXML Exercise - ${new Date().toLocaleDateString()}`;
+        keyString = 'C major';
+        timeString = '4/4';
+        difficulty = 'intermediate';
+        voiceParts = ['Soprano'];
+      }
 
       await addScore({
         title,
-        composer: 'AI Generated',
+        composer: parameters ? 'AI Generated' : 'Uploaded',
         difficulty_level: difficulty,
         key_signature: keyString,
         time_signature: timeString,
         voice_parts: voiceParts,
-        tags: ['sight-reading', 'generated', parameters.key.mode, timeString],
+        tags: ['sight-reading', parameters ? 'generated' : 'uploaded'],
         xml_content: currentMusicXML,
         is_public: false
       });
@@ -1133,14 +1144,33 @@ export const SightSingingStudio: React.FC = () => {
                               size="sm"
                               variant="outline"
                               onClick={handleSaveToLibrary}
+                              disabled={!currentMusicXML || !parameters}
                               className="flex items-center gap-1"
                             >
-                              <Save className="h-3 w-3" />
-                              Save to Library
+                              <BookOpen className="h-3 w-3" />
+                              Save
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Save this exercise to your Score Library for future use</p>
+                            <p>Save this MusicXML to your library</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleDownloadMusicXML}
+                              disabled={!currentMusicXML}
+                              className="flex items-center gap-1"
+                            >
+                              <Download className="h-3 w-3" />
+                              Download
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Download MusicXML file</p>
                           </TooltipContent>
                         </Tooltip>
                         
