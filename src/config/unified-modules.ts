@@ -87,6 +87,8 @@ import { SightSingingPreviewModule } from '@/components/modules/SightSingingPrev
 import GleeAcademy from '@/pages/GleeAcademy';
 import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementModule';
 import { ProviderAppointmentModule } from '@/components/modules/ProviderAppointmentModule';
+import { AssignableAppointmentModule } from '@/components/modules/AssignableAppointmentModule';
+import { ServiceProviderManagementModule } from '@/components/modules/ServiceProviderManagementModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -272,6 +274,32 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: ProviderAppointmentModule,
     dbFunctionName: "provider-appointments"
+  },
+  {
+    id: "assignable-appointments",
+    name: "assignable-appointments", 
+    title: "My Appointments",
+    description: "Personal appointment management for assigned service providers",
+    icon: Calendar,
+    iconColor: "green",
+    category: "communications",
+    isActive: true,
+    component: AssignableAppointmentModule,
+    dbFunctionName: "assignable-appointments",
+    requiredRoles: ["service-provider"]
+  },
+  {
+    id: "service-provider-management",
+    name: "service-provider-management",
+    title: "Service Provider Management", 
+    description: "Assign and manage users as appointment service providers",
+    icon: Users,
+    iconColor: "purple",
+    category: "communications",
+    isActive: true,
+    component: ServiceProviderManagementModule,
+    dbFunctionName: "service-provider-management",
+    requiredRoles: ["admin"]
   },
 
   // Attendance & Member Management modules
