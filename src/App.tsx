@@ -180,6 +180,7 @@ import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 import MUS240Instructor from "./pages/classes/mus240/instructor";
 import MidtermExam from "./pages/mus240/MidtermExam";
+import SMUS100MidtermExamPage from "./pages/SMUS100MidtermExamPage";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
@@ -384,6 +385,15 @@ const App = () => {
                  element={
                    <PublicRoute>
                      <GrandStaves />
+                   </PublicRoute>
+                 } 
+               />
+               {/* SMUS-100 Midterm Exam */}
+               <Route 
+                 path="/smus100-midterm-exam" 
+                 element={
+                   <PublicRoute>
+                     <SMUS100MidtermExamPage />
                    </PublicRoute>
                  } 
                />
