@@ -19,6 +19,8 @@ const MUS100SightSingingPage: React.FC = () => {
   const [tempo, setTempo] = useState<number>(120);
   const {
     isPlaying,
+    mode,
+    setMode,
     startPlayback,
     stopPlayback
   } = useTonePlayback();
@@ -81,7 +83,8 @@ const MUS100SightSingingPage: React.FC = () => {
     if (isPlaying) {
       stopPlayback();
     } else {
-      startPlayback(selectedFile.content, tempo);
+      console.log('🎼 Starting playback with mode:', mode, 'tempo:', tempo);
+      startPlayback(selectedFile.content, tempo, 'click-and-score'); // Force click-and-score mode
     }
   };
   return <UniversalLayout>
@@ -156,6 +159,18 @@ const MUS100SightSingingPage: React.FC = () => {
                     {selectedFile ? selectedFile.name : 'Musical Score'}
                   </CardTitle>
                    {selectedFile && <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium">Mode:</label>
+                        <select 
+                          value={mode} 
+                          onChange={(e) => setMode(e.target.value as any)}
+                          className="px-2 py-1 text-sm border border-border rounded"
+                        >
+                          <option value="click-only">Click Only</option>
+                          <option value="click-and-score">Click + Notes</option>
+                          <option value="pitch-only">Notes Only</option>
+                        </select>
+                      </div>
                       <div className="flex items-center gap-2">
                         <label className="text-sm font-medium">Tempo:</label>
                         <div className="w-20">
