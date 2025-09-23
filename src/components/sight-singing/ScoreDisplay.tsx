@@ -46,16 +46,15 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log('MusicXML length:', musicXML.length);
         console.log('Full MusicXML content:', musicXML);
         
-        // Calculate responsive settings - Force 2 measures per row on mobile
+        // Force exactly 4 measures per line
         const containerWidth = scoreRef.current?.clientWidth || 800;
-        const isMobile = containerWidth < 768;
-        const measuresPerRow = isMobile ? 2 : 4; // Force 2 on mobile, 4 on desktop
+        const measuresPerRow = 4; // Always 4 measures per line
         
-        console.log(`Mobile mode: ${isMobile}, Container width: ${containerWidth}, Measures per row: ${measuresPerRow}`);
+        console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}`);
         
-        // Dynamically resize the container to force the desired measures per row
-        const baseWidthPerMeasure = isMobile ? 120 : 160; // Smaller width per measure on mobile
-        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + (isMobile ? 20 : 60); // Minimal padding on mobile
+        // Dynamically resize the container to force 4 measures per row
+        const baseWidthPerMeasure = 160; // Consistent width per measure
+        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + 60; // Standard padding
         
         // Temporarily constrain the container width for OSMD calculation
         if (scoreRef.current) {
