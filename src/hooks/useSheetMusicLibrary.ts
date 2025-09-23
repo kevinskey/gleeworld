@@ -146,16 +146,16 @@ export const useSheetMusicLibrary = () => {
           xml_content: xmlContent,
           xml_url: urlData.publicUrl,
         });
-      } else {
-        // Create new score from XML
-        const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
-        return await addScore({
-          title: fileName,
-          xml_content: xmlContent,
-          xml_url: urlData.publicUrl,
-          is_public: false,
-        });
-      }
+        } else {
+          // Create new score from XML
+          const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+          return await addScore({
+            title: fileName,
+            xml_content: xmlContent,
+            xml_url: urlData.publicUrl,
+            is_public: true,
+          });
+        }
     } catch (err) {
       console.error('Error uploading XML:', err);
       throw err;
