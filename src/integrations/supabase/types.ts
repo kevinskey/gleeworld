@@ -5436,9 +5436,17 @@ export type Database = {
           image_url: string | null
           is_private: boolean | null
           is_public: boolean | null
+          is_recurring: boolean | null
           late_arrival_allowed: boolean | null
           location: string | null
           max_attendees: number | null
+          max_occurrences: number | null
+          parent_event_id: string | null
+          recurrence_days_of_week: number[] | null
+          recurrence_end_date: string | null
+          recurrence_interval: number | null
+          recurrence_rule: string | null
+          recurrence_type: string | null
           registration_required: boolean | null
           start_date: string
           status: string | null
@@ -5466,9 +5474,17 @@ export type Database = {
           image_url?: string | null
           is_private?: boolean | null
           is_public?: boolean | null
+          is_recurring?: boolean | null
           late_arrival_allowed?: boolean | null
           location?: string | null
           max_attendees?: number | null
+          max_occurrences?: number | null
+          parent_event_id?: string | null
+          recurrence_days_of_week?: number[] | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_rule?: string | null
+          recurrence_type?: string | null
           registration_required?: boolean | null
           start_date: string
           status?: string | null
@@ -5496,9 +5512,17 @@ export type Database = {
           image_url?: string | null
           is_private?: boolean | null
           is_public?: boolean | null
+          is_recurring?: boolean | null
           late_arrival_allowed?: boolean | null
           location?: string | null
           max_attendees?: number | null
+          max_occurrences?: number | null
+          parent_event_id?: string | null
+          recurrence_days_of_week?: number[] | null
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_rule?: string | null
+          recurrence_type?: string | null
           registration_required?: boolean | null
           start_date?: string
           status?: string | null
@@ -5520,6 +5544,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_events_parent_event_id_fkey"
+            columns: ["parent_event_id"]
+            isOneToOne: false
+            referencedRelation: "gw_events"
             referencedColumns: ["id"]
           },
         ]
@@ -17914,6 +17945,17 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      create_recurring_event_instances: {
+        Args: {
+          max_occurrences_param?: number
+          parent_event_id_param: string
+          recurrence_days_of_week_param?: number[]
+          recurrence_end_date_param?: string
+          recurrence_interval_param?: number
+          recurrence_type_param: string
+        }
+        Returns: number
       }
       create_recurring_events: {
         Args: {

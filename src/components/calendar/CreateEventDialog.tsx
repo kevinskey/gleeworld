@@ -40,7 +40,12 @@ export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDi
     attendance_required: false,
     attendance_deadline: '',
     late_arrival_allowed: true,
-    excuse_required: false
+    excuse_required: false,
+    is_recurring: false,
+    recurrence_type: 'weekly',
+    recurrence_interval: 1,
+    recurrence_end_date: '',
+    max_occurrences: 10
   });
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
   const [notificationMessage, setNotificationMessage] = useState('');
@@ -318,7 +323,12 @@ export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDi
         excuse_required: formData.excuse_required,
         created_by: user.id,
         status: 'scheduled',
-        calendar_id: selectedCalendarId // Ensure calendar_id is always present
+        calendar_id: selectedCalendarId,
+        is_recurring: formData.is_recurring,
+        recurrence_type: formData.is_recurring ? formData.recurrence_type : null,
+        recurrence_interval: formData.is_recurring ? formData.recurrence_interval : null,
+        recurrence_end_date: formData.is_recurring && formData.recurrence_end_date ? new Date(formData.recurrence_end_date + ':00').toISOString() : null,
+        max_occurrences: formData.is_recurring ? formData.max_occurrences : null
       };
 
       console.log('Creating event with data:', eventData);
@@ -447,10 +457,43 @@ export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDi
         }
       }
 
+      // Create recurring events if enabled
+      if (formData.is_recurring && newEvent) {
+        try {
+          const { data: recurrenceCount, error: recurrenceError } = await supabase.rpc(
+            'create_recurring_event_instances',
+            {
+              parent_event_id_param: newEvent.id,
+              recurrence_type_param: formData.recurrence_type,
+              recurrence_interval_param: formData.recurrence_interval,
+              recurrence_end_date_param: formData.recurrence_end_date ? new Date(formData.recurrence_end_date + 'T23:59:59').toISOString() : null,
+              max_occurrences_param: formData.max_occurrences
+            }
+          );
+
+          if (recurrenceError) {
+            console.error('Error creating recurring events:', recurrenceError);
+            toast({
+              title: "Warning",
+              description: "Event created but recurring instances failed to generate",
+              variant: "destructive",
+            });
+          } else {
+            console.log(`Created ${recurrenceCount} recurring events`);
+          }
+        } catch (recurrenceErr) {
+          console.error('Error creating recurring events:', recurrenceErr);
+        }
+      }
+
       const totalNotifications = teamMembers.length + selectedUserIds.length;
+      const successMessage = formData.is_recurring 
+        ? `Event created successfully with recurring instances!${totalNotifications > 0 ? ` Notifications sent to ${totalNotifications} user(s).` : ''}`
+        : `Event created successfully!${totalNotifications > 0 ? ` Notifications sent to ${totalNotifications} user(s).` : ''}`;
+      
       toast({
         title: "Success",
-        description: `Event created successfully!${totalNotifications > 0 ? ` Notifications sent to ${totalNotifications} user(s).` : ''}`,
+        description: successMessage,
       });
 
       setOpen(false);
@@ -468,7 +511,12 @@ export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDi
         attendance_required: false,
         attendance_deadline: '',
         late_arrival_allowed: true,
-        excuse_required: false
+        excuse_required: false,
+        is_recurring: false,
+        recurrence_type: 'weekly',
+        recurrence_interval: 1,
+        recurrence_end_date: '',
+        max_occurrences: 10
       });
       setSelectedUserIds([]);
       setNotificationMessage('');
@@ -821,6 +869,103 @@ export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDi
               </div>
             </div>
 
+            {/* Recurring Event Section */}
+            <div className="space-y-4 border-t pt-4 border-primary/20 bg-muted/20 p-4 rounded-lg">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2 text-base font-semibold">
+                  <CalendarDays className="h-5 w-5" />
+                  Recurring Event
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Set this event to repeat on a schedule
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Make this event recurring</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Automatically create future instances of this event
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.is_recurring}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_recurring: checked }))}
+                />
+              </div>
+
+              {formData.is_recurring && (
+                <div className="space-y-4 p-4 border rounded-lg bg-background">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Recurrence Pattern</Label>
+                      <Select
+                        value={formData.recurrence_type}
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, recurrence_type: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Repeat Every</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="12"
+                          value={formData.recurrence_interval}
+                          onChange={(e) => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(e.target.value) || 1 }))}
+                          className="w-20"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {formData.recurrence_type === 'daily' ? 'days' : 
+                           formData.recurrence_type === 'weekly' ? 'weeks' : 'months'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>End Date (Optional)</Label>
+                      <Input
+                        type="date"
+                        value={formData.recurrence_end_date}
+                        onChange={(e) => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Max Occurrences</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="365"
+                        value={formData.max_occurrences}
+                        onChange={(e) => setFormData(prev => ({ ...prev, max_occurrences: parseInt(e.target.value) || 10 }))}
+                        placeholder="10"
+                      />
+                    </div>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">
+                    Recurring events will be created automatically when you save this event.
+                    {formData.recurrence_end_date ? 
+                      ` Events will repeat until ${new Date(formData.recurrence_end_date).toLocaleDateString()}.` :
+                      ` Up to ${formData.max_occurrences} future events will be created.`
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Team Member Management Section */}
             <div className="space-y-4 border-t pt-4">
