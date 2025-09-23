@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
+import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
 
 interface MemberProfile {
   user_id: string;
@@ -149,7 +150,7 @@ export default function ExecutiveBoardMemberDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto p-6">
-        {/* Header */}
+        {/* Header with Back Button */}
         <div className="flex items-center gap-4 mb-6">
           <Button 
             variant="outline" 
@@ -160,23 +161,18 @@ export default function ExecutiveBoardMemberDashboard() {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Crown className="h-8 w-8 text-primary" />
-              {memberProfile.full_name}
-            </h1>
-            <p className="text-muted-foreground">Executive Board Member Dashboard</p>
-          </div>
         </div>
 
-        {/* Executive Board Member Modules */}
-        <ExecBoardMemberModules 
+        {/* Use MetalHeaderDashboard for consistent styling */}
+        <MetalHeaderDashboard 
           user={{
             id: memberProfile.user_id,
             email: memberProfile.email,
             full_name: memberProfile.full_name,
             role: memberProfile.role,
-            is_exec_board: memberProfile.is_exec_board
+            exec_board_role: memberProfile.role,
+            is_exec_board: memberProfile.is_exec_board,
+            created_at: new Date().toISOString()
           }}
         />
       </div>

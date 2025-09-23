@@ -19,6 +19,7 @@ import { MemberSightReadingModule } from "@/components/modules/MemberSightReadin
 import { MemberModules } from "@/components/member-view/MemberModules";
 import { QuickActions } from "@/components/community/QuickActions";
 import { ExecBoardModularHub } from "@/components/executive/ExecBoardModularHub";
+import { MetalHeaderDashboard } from "@/components/shared/MetalHeaderDashboard";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
@@ -43,6 +44,8 @@ interface MemberProfileLite {
 }
 
 export const MemberDashboardV2 = ({ user }: MemberDashboardV2Props) => {
+  // Use the MetalHeaderDashboard for consistent styling
+  return <MetalHeaderDashboard user={user} />;
   // Announcements
   const { announcements, loading: annLoading } = useAnnouncements();
 

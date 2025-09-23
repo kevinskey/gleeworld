@@ -47,6 +47,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { QuickActions } from "@/components/community/QuickActions";
+import { MetalHeaderDashboard } from "@/components/shared/MetalHeaderDashboard";
 
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(m => ({ default: m.CalendarViews })));
 
@@ -64,6 +65,8 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard = ({ user }: AdminDashboardProps) => {
+  // Use the MetalHeaderDashboard for consistent styling
+  return <MetalHeaderDashboard user={user} />;
   const navigate = useNavigate();
   const [activeMainTab, setActiveMainTab] = useState("overview");
   const [showAuditionDialog, setShowAuditionDialog] = useState(false);

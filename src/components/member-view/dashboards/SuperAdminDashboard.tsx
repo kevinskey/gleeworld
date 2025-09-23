@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ModuleCard } from '@/components/shared/ModuleWrapper';
 import { UNIFIED_MODULE_CATEGORIES } from '@/config/unified-modules';
 import { Calendar, CheckCircle, DollarSign, Bell, Music, BookOpen, Clock, Award, Users, TrendingUp, Settings, Star, Shield, Database, BarChart3, FileText, AlertCircle, Crown, Server, Activity, Lock, GraduationCap, Grid3X3, ChevronDown, ChevronUp, GripVertical, Globe, Zap, Heart, Eye, Search, Filter, SortAsc, SortDesc, Pin, PinOff } from "lucide-react";
+import { MetalHeaderDashboard } from "@/components/shared/MetalHeaderDashboard";
 const CalendarViewsLazy = lazy(() => import("@/components/calendar/CalendarViews").then(module => ({
   default: module.CalendarViews
 })));
@@ -128,6 +129,8 @@ export const SuperAdminDashboard = ({
   user
 }: SuperAdminDashboardProps) => {
   console.log('SuperAdminDashboard: Component loaded with user:', user);
+  // Use the MetalHeaderDashboard for consistent styling
+  return <MetalHeaderDashboard user={user} />;
   const navigate = useNavigate();
   const {
     events: upcomingEvents

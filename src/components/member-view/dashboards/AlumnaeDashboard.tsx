@@ -15,6 +15,7 @@ import {
   GraduationCap,
   Star
 } from "lucide-react";
+import { MetalHeaderDashboard } from "@/components/shared/MetalHeaderDashboard";
 
 interface AlumnaeDashboardProps {
   user: {
@@ -29,6 +30,8 @@ interface AlumnaeDashboardProps {
 }
 
 export const AlumnaeDashboard = ({ user }: AlumnaeDashboardProps) => {
+  // Use the MetalHeaderDashboard for consistent styling
+  return <MetalHeaderDashboard user={user} />;
   const [alumnaeData, setAlumnaeData] = useState({
     membershipYears: {
       start: '2015',
