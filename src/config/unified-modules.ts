@@ -89,6 +89,7 @@ import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementMod
 import { ProviderAppointmentModule } from '@/components/modules/ProviderAppointmentModule';
 import { AssignableAppointmentModule } from '@/components/modules/AssignableAppointmentModule';
 import { ServiceProviderManagementModule } from '@/components/modules/ServiceProviderManagementModule';
+import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -888,6 +889,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: QRCodeManagementModule,
     dbFunctionName: "qr-code-management"
+  },
+  {
+    id: "mus240-groups",
+    name: "mus240-groups",
+    title: "MUS240 Groups",
+    description: "Manage MUS240 course groups and assignments",
+    icon: Users,
+    iconColor: "green",
+    category: "musical-leadership",
+    isActive: true,
+    component: Mus240GroupsModule,
+    dbFunctionName: "mus240-groups"
   }
 ];
 
