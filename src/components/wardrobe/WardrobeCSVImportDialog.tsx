@@ -534,7 +534,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
                         <SelectValue placeholder="Select CSV column" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">-- Skip this field --</SelectItem>
+                        <SelectItem value="skip">-- Skip this field --</SelectItem>
                         {headers.map((header, index) => (
                           <SelectItem key={index} value={header}>
                             {header}

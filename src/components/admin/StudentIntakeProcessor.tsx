@@ -296,7 +296,7 @@ export const StudentIntakeProcessor = () => {
                             <SelectValue placeholder="Dress" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {wardrobeItems
                               .filter(item => item.category === 'dresses')
                               .map(item => (
@@ -314,7 +314,7 @@ export const StudentIntakeProcessor = () => {
                             <SelectValue placeholder="Shoes" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">None</SelectItem>
+                            <SelectItem value="none">None</SelectItem>
                             {wardrobeItems
                               .filter(item => item.category === 'shoes')
                               .map(item => (

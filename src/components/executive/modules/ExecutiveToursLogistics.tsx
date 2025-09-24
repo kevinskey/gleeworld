@@ -330,7 +330,7 @@ export const ExecutiveToursLogistics = () => {
                     <SelectValue placeholder="Filter by tour" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Tours</SelectItem>
+                    <SelectItem value="all">All Tours</SelectItem>
                     {tours.map((tour) => (
                       <SelectItem key={tour.id} value={tour.id}>
                         {tour.name}

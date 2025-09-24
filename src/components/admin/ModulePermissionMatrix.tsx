@@ -169,7 +169,7 @@ export function ModulePermissionMatrix() {
               <SelectValue placeholder="Filter by role (optional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Roles</SelectItem>
+              <SelectItem value="all">All Roles</SelectItem>
               {roles.map(role => (
                 <SelectItem key={role.key} value={role.key}>
                   {role.name}

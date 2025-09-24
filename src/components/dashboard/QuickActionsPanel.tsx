@@ -301,7 +301,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
                           <SelectValue placeholder="Select a module (optional)" />
                         </SelectTrigger>
                         <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50 max-h-60 overflow-y-auto">
-                          <SelectItem value="">
+                          <SelectItem value="none">
                             <span className="text-gray-500">No module (custom action)</span>
                           </SelectItem>
                           {availableModules.map((module) => (

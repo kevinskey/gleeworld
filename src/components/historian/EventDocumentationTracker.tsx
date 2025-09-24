@@ -181,7 +181,7 @@ export const EventDocumentationTracker = () => {
                 <SelectValue placeholder="Filter by month" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Months</SelectItem>
+                <SelectItem value="all">All Months</SelectItem>
                 <SelectItem value="2024-01">January 2024</SelectItem>
                 <SelectItem value="2024-10">October 2024</SelectItem>
                 <SelectItem value="2024-11">November 2024</SelectItem>

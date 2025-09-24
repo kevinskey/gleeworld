@@ -274,7 +274,7 @@ export const SpotlightContentForm = ({ content, onSuccess, onCancel }: Spotlight
                   <SelectValue placeholder="Select a person (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {users.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.full_name} ({user.email})
@@ -294,7 +294,7 @@ export const SpotlightContentForm = ({ content, onSuccess, onCancel }: Spotlight
                   <SelectValue placeholder="Select an event (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {events.map((event) => (
                     <SelectItem key={event.id} value={event.id}>
                       {event.title} ({format(new Date(event.start_date), 'MMM d, yyyy')})

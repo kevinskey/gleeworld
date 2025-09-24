@@ -408,7 +408,7 @@ export const FeedbackDashboard = () => {
                   <SelectValue placeholder="All parts" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Parts</SelectItem>
+                  <SelectItem value="all">All Parts</SelectItem>
                   <SelectItem value="S1">Soprano 1</SelectItem>
                   <SelectItem value="S2">Soprano 2</SelectItem>
                   <SelectItem value="A1">Alto 1</SelectItem>
@@ -423,7 +423,7 @@ export const FeedbackDashboard = () => {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   <SelectItem value="Vocal Blend">Vocal Blend</SelectItem>
                   <SelectItem value="Rhythmic Precision">Rhythmic Precision</SelectItem>
                   <SelectItem value="Diction">Diction</SelectItem>
@@ -439,7 +439,7 @@ export const FeedbackDashboard = () => {
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Types</SelectItem>
+                  <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="Self Assessment">Self Assessment</SelectItem>
                   <SelectItem value="Section Leader Review">Section Leader</SelectItem>
                   <SelectItem value="Admin Review">Admin Review</SelectItem>
