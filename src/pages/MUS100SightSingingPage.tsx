@@ -459,7 +459,7 @@ const MUS100SightSingingPage: React.FC = () => {
           </div>
           
           {/* Main header content */}
-          <div className="relative px-6 py-12 md:py-16">
+          <div className="relative px-4 py-4 md:py-6">
             {/* Back button */}
             <div className="max-w-4xl mx-auto">
               <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-6 text-muted-foreground hover:text-foreground">
