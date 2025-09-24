@@ -22,6 +22,58 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
+  // Function to enforce maximum measures per system by modifying the rendered SVG
+  const enforceMaxMeasuresPerSystem = (container: HTMLElement, maxMeasures: number) => {
+    try {
+      const svgElements = container.querySelectorAll('svg');
+      
+      svgElements.forEach(svg => {
+        // Find all measure groups or measure elements
+        const measures = svg.querySelectorAll('g[class*="measure"], g[id*="measure"], g[class*="vf-measure"]');
+        console.log(`Found ${measures.length} measures in SVG`);
+        
+        if (measures.length <= maxMeasures) return; // No need to break if already within limit
+        
+        let currentSystemIndex = 0;
+        let measuresInCurrentSystem = 0;
+        const systemHeight = 100; // Adjust spacing between systems
+        
+        measures.forEach((measure, index) => {
+          measuresInCurrentSystem++;
+          
+          if (measuresInCurrentSystem > maxMeasures) {
+            // Move to next system
+            currentSystemIndex++;
+            measuresInCurrentSystem = 1;
+            
+            // Apply transform to move measure down
+            const currentTransform = measure.getAttribute('transform') || '';
+            const yOffset = currentSystemIndex * systemHeight;
+            
+            // Update or add transform
+            if (currentTransform.includes('translate')) {
+              const newTransform = currentTransform.replace(
+                /translate\s*\(\s*([^,\)]+)\s*,\s*([^,\)]+)\s*\)/,
+                `translate($1, ${yOffset})`
+              );
+              measure.setAttribute('transform', newTransform);
+            } else {
+              measure.setAttribute('transform', `translate(0, ${yOffset}) ${currentTransform}`);
+            }
+          }
+        });
+        
+        // Adjust SVG height to accommodate all systems
+        if (currentSystemIndex > 0) {
+          const newHeight = (currentSystemIndex + 1) * systemHeight + 50; // Add some bottom margin
+          svg.setAttribute('height', newHeight.toString());
+        }
+      });
+    } catch (error) {
+      console.error('Error enforcing max measures per system:', error);
+    }
+  };
+
   useEffect(() => {
     console.log('🎼 ScoreDisplay useEffect triggered');
     console.log('🎼 MusicXML exists:', !!musicXML);
@@ -97,13 +149,16 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         // Render with constrained width
         osmd.render();
         
+        // Force system breaks after every 4 measures
+        enforceMaxMeasuresPerSystem(scoreRef.current!, 4);
+        
         // After rendering, restore the container to full width for responsive display
         if (scoreRef.current) {
           scoreRef.current.style.width = '';
           scoreRef.current.style.maxWidth = '';
         }
         
-        console.log(`OSMD rendering completed with responsive ${measuresPerRow} measures per row layout`);
+        console.log(`OSMD rendering completed with enforced max 4 measures per system`);
 
       } catch (error) {
         console.error("Error rendering score with OSMD:", error);
