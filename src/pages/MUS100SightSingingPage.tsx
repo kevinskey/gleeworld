@@ -412,7 +412,7 @@ const MUS100SightSingingPage: React.FC = () => {
       };
       mediaRecorderRef.current.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, {
-          type: 'audio/webm'
+          type: 'audio/mp3'
         });
         setRecordedAudio(audioBlob);
         setShowShareDialog(true);
@@ -440,7 +440,7 @@ const MUS100SightSingingPage: React.FC = () => {
   }, [isRecording]);
   const handlePlayPause = async () => {
     if (!selectedFile) return;
-    if (mode === 'record') {
+    if (mode === 'record-click' || mode === 'record-both') {
       if (isRecording) {
         stopRecording();
       } else {
@@ -468,7 +468,7 @@ const MUS100SightSingingPage: React.FC = () => {
       const url = URL.createObjectURL(recordedAudio);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sight-singing-${selectedFile?.name || 'recording'}-${Date.now()}.webm`;
+      a.download = `sight-singing-${selectedFile?.name || 'recording'}-${Date.now()}.mp3`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -734,7 +734,7 @@ const MUS100SightSingingPage: React.FC = () => {
                         size="sm" 
                         className="w-full sm:w-auto flex items-center justify-center gap-2"
                       >
-                        {mode === 'record' ? isRecording ? (
+                        {(mode === 'record-click' || mode === 'record-both') ? isRecording ? (
                           <>
                             <MicOff className="h-4 w-4" />
                             Stop Recording

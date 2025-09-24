@@ -232,9 +232,9 @@ export const SightSingingStudio: React.FC = () => {
     stopPlayback 
   }: {
     isPlaying: boolean;
-    mode: 'click-only' | 'click-and-score' | 'pitch-only' | 'record';
-    setMode: (mode: 'click-only' | 'click-and-score' | 'pitch-only' | 'record') => void;
-    startPlayback: (musicXML: string, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only' | 'record') => Promise<void>;
+    mode: 'click-only' | 'click-and-score' | 'pitch-only' | 'record-click' | 'record-both';
+    setMode: (mode: 'click-only' | 'click-and-score' | 'pitch-only' | 'record-click' | 'record-both') => void;
+    startPlayback: (musicXML: string, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only' | 'record-click' | 'record-both') => Promise<void>;
     stopPlayback: () => void;
   } = useTonePlayback(soundSettings);
 
@@ -526,7 +526,7 @@ export const SightSingingStudio: React.FC = () => {
   };
 
   // Safe start helper to manage playback transitions
-  const safeStart = useCallback(async (desiredMode: 'click-only' | 'click-and-score' | 'pitch-only' | 'record') => {
+  const safeStart = useCallback(async (desiredMode: 'click-only' | 'click-and-score' | 'pitch-only' | 'record-click' | 'record-both') => {
     const now = Date.now();
     if (now - lastClickAtRef.current < 250) {
       console.log('⚠️ Throttling click - too soon since last click');

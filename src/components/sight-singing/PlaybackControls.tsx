@@ -5,8 +5,8 @@ import { Play, Square } from 'lucide-react';
 
 interface PlaybackControlsProps {
   isPlaying: boolean;
-  mode: 'click-only' | 'click-and-score';
-  onModeChange: (mode: 'click-only' | 'click-and-score') => void;
+  mode: 'click-only' | 'click-and-score' | 'record-click' | 'record-both';
+  onModeChange: (mode: 'click-only' | 'click-and-score' | 'record-click' | 'record-both') => void;
   onStartPlayback: () => void;
   onStopPlayback: () => void;
   hasExercise: boolean;
@@ -31,6 +31,8 @@ export const PlaybackControls: React.FC<PlaybackControlsProps> = ({
           <SelectContent>
             <SelectItem value="click-only">Click Only</SelectItem>
             <SelectItem value="click-and-score">Click + Score</SelectItem>
+            <SelectItem value="record-click">Record with Click</SelectItem>
+            <SelectItem value="record-both">Record with Click + Score</SelectItem>
           </SelectContent>
         </Select>
       </div>

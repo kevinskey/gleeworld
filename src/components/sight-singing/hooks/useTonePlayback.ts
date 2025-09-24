@@ -4,7 +4,7 @@ import { parseMusicXML } from '../utils/musicXMLParser';
 
 export const useTonePlayback = (soundSettings?: { notes: string; click: string }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [mode, setMode] = useState<'click-only' | 'click-and-score' | 'pitch-only' | 'record'>('click-only');
+  const [mode, setMode] = useState<'click-only' | 'click-and-score' | 'pitch-only' | 'record-click' | 'record-both'>('click-only');
   const playerRef = useRef<MusicXMLPlayer | null>(null);
   const autoStopTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const opIdRef = useRef(0);
@@ -58,7 +58,7 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
     };
   }, []);
 
-  const startPlayback = useCallback(async (musicXML: string, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only' | 'record') => {
+  const startPlayback = useCallback(async (musicXML: string, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only' | 'record-click' | 'record-both') => {
     console.log('🎼 useTonePlayback.startPlayback called');
     
     // Check if transitioning and wait briefly if needed
@@ -137,7 +137,7 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
         }
       });
       
-      if (activeMode !== 'record') {
+      if (activeMode !== 'record-click' && activeMode !== 'record-both') {
         await playerRef.current.playScore(parsedScore, activeMode, soundSettings);
       }
       console.log('✅ playerRef.current.playScore completed');

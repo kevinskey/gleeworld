@@ -25,7 +25,7 @@ export const useAudioRecorder = () => {
       };
       
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
+        const blob = new Blob(chunks, { type: 'audio/mp3' });
         setAudioBlob(blob);
       };
       
