@@ -88,7 +88,6 @@ const MUS100SightSingingPage: React.FC = () => {
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [loadingPublic, setLoadingPublic] = useState(true);
-  const scoreDisplayRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
@@ -404,17 +403,6 @@ const MUS100SightSingingPage: React.FC = () => {
       setIsRecording(false);
     }
   }, [isRecording]);
-  
-  const handleFileSelect = useCallback((file: UploadedFile) => {
-    setSelectedFile(file);
-    // Scroll to score display at the top
-    setTimeout(() => {
-      scoreDisplayRef.current?.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'start' 
-      });
-    }, 100);
-  }, []);
   const handlePlayPause = () => {
     if (!selectedFile) return;
     if (mode === 'record') {
@@ -471,7 +459,7 @@ const MUS100SightSingingPage: React.FC = () => {
           </div>
           
           {/* Main header content */}
-          <div className="relative px-4 py-2 md:py-6">
+          <div className="relative px-6 py-12 md:py-16">
             {/* Back button */}
             <div className="max-w-4xl mx-auto">
               <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-6 text-muted-foreground hover:text-foreground">
@@ -489,23 +477,13 @@ const MUS100SightSingingPage: React.FC = () => {
                 <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
                   <Music className="h-8 w-8 text-primary" />
                 </div>
-                <div className="h-8 w-px bg-border"></div>
+                
                 <div className="p-3 rounded-full bg-primary/10 border border-primary/20">
                   <Users className="h-8 w-8 text-primary" />
                 </div>
               </div>
               
-              <div className="space-y-4">
-                <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent animate-fade-in">
-                  MUS100 Sight Singing
-                </h1>
-                <p className="text-xl md:text-2xl text-muted-foreground font-medium animate-fade-in" style={{
-                animationDelay: '0.2s'
-              }}>
-                  Practice & Perfect Your Musical Skills
-                </p>
-                
-              </div>
+              
               
               {/* Feature highlights */}
               
@@ -513,14 +491,14 @@ const MUS100SightSingingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          <div className="lg:col-span-1 space-y-4 md:space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-1 space-y-6">
             {/* Upload Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Upload className="h-5 w-5" />
-                  Upload MusicXML Files
+                  Upload Files
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -530,7 +508,7 @@ const MUS100SightSingingPage: React.FC = () => {
                   </label>
                   <div className="flex items-center gap-2">
                     <Input id="musicxml-upload" type="file" accept=".xml,.musicxml" multiple onChange={handleFileUpload} className="hidden" />
-                    <Button onClick={() => document.getElementById('musicxml-upload')?.click()} variant="outline" className="w-full py-1">
+                    <Button onClick={() => document.getElementById('musicxml-upload')?.click()} variant="outline" className="w-full">
                       <Upload className="h-4 w-4 mr-2" />
                       Choose Files
                     </Button>
@@ -538,26 +516,14 @@ const MUS100SightSingingPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Select File</h4>
-                  {uploadedFiles.length === 0 ? <p className="text-sm text-muted-foreground">No files uploaded yet</p> : 
-                    <div className="relative">
-                      <select 
-                        value={selectedFile?.id || ''} 
-                        onChange={(e) => {
-                          const file = uploadedFiles.find(f => f.id === e.target.value);
-                          if (file) handleFileSelect(file);
-                        }}
-                        className="w-full px-3 py-2 text-sm border border-border rounded bg-background text-foreground truncate"
-                      >
-                        <option value="">Select a file...</option>
-                        {uploadedFiles.map(file => (
-                          <option key={file.id} value={file.id} className="truncate">
-                            {file.name.replace('.xml', '')}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  }
+                  <h4 className="text-sm font-medium">Uploaded Files</h4>
+                  {uploadedFiles.length === 0 ? <p className="text-sm text-muted-foreground">No files uploaded yet</p> : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={uploadedFiles.map(file => file.id)} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-2">
+                          {uploadedFiles.map(file => <SortableFileItem key={file.id} file={file} isSelected={selectedFile?.id === file.id} onSelect={setSelectedFile} onRemove={removeFile} />)}
+                        </div>
+                      </SortableContext>
+                    </DndContext>}
                 </div>
               </CardContent>
             </Card>
@@ -587,9 +553,9 @@ const MUS100SightSingingPage: React.FC = () => {
           </div>
 
           <div className="lg:col-span-2">
-            <Card ref={scoreDisplayRef} className="h-full">
+            <Card className="h-full">
               <CardHeader>
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center justify-between">
                   <CardTitle>
                     {selectedFile ? selectedFile.name : 'Musical Score'}
                   </CardTitle>
@@ -628,7 +594,7 @@ const MUS100SightSingingPage: React.FC = () => {
                     </div>}
                 </div>
               </CardHeader>
-              <CardContent className="h-[400px] md:h-[600px] px-0 md:px-6">
+              <CardContent className="h-[600px]">
                 {selectedFile ? <ScoreDisplay musicXML={selectedFile.content} /> : <div className="h-full flex items-center justify-center text-center">
                     <div className="space-y-3">
                       <FileMusic className="h-12 w-12 mx-auto text-muted-foreground" />
