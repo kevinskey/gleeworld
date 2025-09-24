@@ -616,7 +616,7 @@ const MUS100SightSingingPage: React.FC = () => {
                     </div>}
                 </div>
               </CardHeader>
-              <CardContent className="h-[400px] md:h-[600px]">
+              <CardContent className="h-[400px] md:h-[600px] px-0 md:px-6">
                 {selectedFile ? <ScoreDisplay musicXML={selectedFile.content} /> : <div className="h-full flex items-center justify-center text-center">
                     <div className="space-y-3">
                       <FileMusic className="h-12 w-12 mx-auto text-muted-foreground" />
