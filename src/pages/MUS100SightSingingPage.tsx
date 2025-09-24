@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
 import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
 import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, BookOpen, Users, Download, ArrowLeft, GripVertical } from 'lucide-react';
@@ -543,36 +542,49 @@ const MUS100SightSingingPage: React.FC = () => {
                 ) : publicFiles.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No public files available</p>
                 ) : (
-                  <Select 
-                    onValueChange={(value) => {
-                      const file = publicFiles.find(f => f.id === value);
-                      if (file) {
-                        handlePublicFileSelect(file);
-                        // Scroll to score display
-                        const scoreElement = document.querySelector('[data-score-display]');
-                        if (scoreElement) {
-                          scoreElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                      }
-                    }}
-                    value={selectedFile?.id || ""}
-                  >
-                    <SelectTrigger className="w-full bg-background">
-                      <SelectValue placeholder="Select a composition to practice..." />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-64 bg-background border border-border shadow-lg z-50">
+                  <div className="space-y-2">
+                    <div className="block lg:hidden">
+                      <label className="sr-only" htmlFor="public-musicxml-select">Select title</label>
+                      <select
+                        id="public-musicxml-select"
+                        className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground truncate z-50"
+                        value={publicFiles.some(f => f.id === selectedFile?.id) ? (selectedFile as any).id : ''}
+                        onChange={(e) => {
+                          const file = publicFiles.find(f => f.id === e.target.value);
+                          if (file) {
+                            handlePublicFileSelect(file);
+                            const scoreElement = document.querySelector('[data-score-display]');
+                            if (scoreElement) {
+                              (scoreElement as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                          }
+                        }}
+                      >
+                        <option value="">Select a composition…</option>
+                        {publicFiles.map(file => (
+                          <option key={file.id} value={file.id}>{file.title}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="hidden lg:block space-y-2 max-h-64 overflow-y-auto">
                       {publicFiles.map(file => (
-                        <SelectItem key={file.id} value={file.id} className="cursor-pointer">
-                          <div className="flex flex-col">
-                            <span className="font-medium truncate">{file.title}</span>
-                            {file.composer && (
-                              <span className="text-xs text-muted-foreground">by {file.composer}</span>
-                            )}
+                        <div
+                          key={file.id}
+                          className={`p-3 rounded-md border cursor-pointer transition-colors ${selectedFile?.id === file.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                          onClick={() => handlePublicFileSelect(file)}
+                        >
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium truncate">{file.title}</p>
+                            {file.composer && <p className="text-xs text-muted-foreground">by {file.composer}</p>}
+                            <p className="text-xs text-muted-foreground">
+                              Added {new Date(file.created_at).toLocaleDateString()}
+                            </p>
                           </div>
-                        </SelectItem>
+                        </div>
                       ))}
-                    </SelectContent>
-                  </Select>
+                    </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
