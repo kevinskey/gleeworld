@@ -148,11 +148,46 @@ const MUS100SightSingingPage: React.FC = () => {
       const {
         data,
         error
-      } = await supabase.from('gw_sheet_music').select('id, title, composer, xml_content, created_at').eq('is_public', true).eq('is_archived', false).not('xml_content', 'is', null).order('created_at', {
+      } = await supabase.from('gw_sheet_music').select('id, title, composer, xml_content, xml_url, created_at').eq('is_public', true).eq('is_archived', false).order('created_at', {
         ascending: false
       });
       if (error) throw error;
-      setPublicFiles(data || []);
+
+      // Filter and process files to ensure they have XML content
+      const processedFiles: PublicMusicXML[] = [];
+      
+      for (const file of data || []) {
+        let xmlContent = file.xml_content;
+        
+        // If no xml_content but has xml_url, try to fetch it
+        if (!xmlContent && file.xml_url) {
+          try {
+            const { data: fileData, error: downloadError } = await supabase.storage
+              .from('user-files')
+              .download(file.xml_url);
+            
+            if (!downloadError && fileData) {
+              xmlContent = await fileData.text();
+            }
+          } catch (downloadError) {
+            console.warn(`Failed to download XML for ${file.title}:`, downloadError);
+            continue; // Skip this file if we can't get the content
+          }
+        }
+        
+        // Only include files that have XML content
+        if (xmlContent) {
+          processedFiles.push({
+            id: file.id,
+            title: file.title,
+            composer: file.composer,
+            xml_content: xmlContent,
+            created_at: file.created_at
+          });
+        }
+      }
+      
+      setPublicFiles(processedFiles);
     } catch (error) {
       console.error('Error fetching public MusicXML:', error);
       toast({
