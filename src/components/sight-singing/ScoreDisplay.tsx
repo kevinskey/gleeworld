@@ -22,8 +22,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
 
-  // Preprocess MusicXML: insert <print new-system="yes"/> every 4 measures
-  const insertSystemBreaks = useCallback((xml: string, measuresPerSystem: number = 4) => {
+  // Preprocess MusicXML: insert <print new-system="yes"/> every 2 measures
+  const insertSystemBreaks = useCallback((xml: string, measuresPerSystem: number = 2) => {
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(xml, 'application/xml');
@@ -143,15 +143,15 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log('MusicXML length:', musicXML.length);
         console.log('Full MusicXML content:', musicXML);
         
-        // Force exactly 4 measures per line maximum with responsive sizing
+        // Force exactly 2 measures per line maximum with responsive sizing
         const containerWidth = scoreRef.current?.clientWidth || 800;
         const isMobile = containerWidth < 640; // sm breakpoint
         
-        let measuresPerRow = 4; // Default maximum for all devices
+        let measuresPerRow = 2; // Default maximum for all devices
         if (isMobile) {
-          measuresPerRow = Math.min(2, 4); // 2 measures per row on mobile, never more than 4
+          measuresPerRow = Math.min(2, 2); // 2 measures per row on mobile
         } else {
-          measuresPerRow = 4; // Always 4 measures per row on tablet and desktop
+          measuresPerRow = 2; // Always 2 measures per row on tablet and desktop
         }
         
         console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}, Device: ${isMobile ? 'mobile' : 'desktop/tablet'}`);
@@ -186,7 +186,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         osmdRef.current = osmd;
 
         // Load the MusicXML with enforced system breaks
-        const xmlWithBreaks = insertSystemBreaks(musicXML, 4);
+        const xmlWithBreaks = insertSystemBreaks(musicXML, 2);
         await osmd.load(xmlWithBreaks);
         
         console.log(`Rendering score with container width constrained to ${Math.min(targetContainerWidth, containerWidth)}px for ${measuresPerRow} measures per row`);
@@ -194,8 +194,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         // Render with constrained width
         osmd.render();
         
-        // Force system breaks after every 4 measures
-        enforceMaxMeasuresPerSystem(scoreRef.current!, 4);
+        // Force system breaks after every 2 measures
+        enforceMaxMeasuresPerSystem(scoreRef.current!, 2);
         
         // After rendering, restore the container to full width for responsive display
         if (scoreRef.current) {
@@ -203,7 +203,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           scoreRef.current.style.maxWidth = '';
         }
         
-        console.log(`OSMD rendering completed with enforced max 4 measures per system`);
+        console.log(`OSMD rendering completed with enforced max 2 measures per system`);
 
       } catch (error) {
         console.error("Error rendering score with OSMD:", error);
