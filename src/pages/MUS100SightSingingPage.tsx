@@ -10,6 +10,7 @@ import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, Boo
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   DndContext,
   closestCenter,
@@ -110,6 +111,7 @@ interface PublicMusicXML {
 
 const MUS100SightSingingPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [publicFiles, setPublicFiles] = useState<PublicMusicXML[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
@@ -136,10 +138,44 @@ const MUS100SightSingingPage: React.FC = () => {
     stopPlayback
   } = useTonePlayback();
 
-  // Fetch public MusicXML files on component mount
+  // Fetch public MusicXML files and user's uploaded files on component mount
   useEffect(() => {
     fetchPublicMusicXML();
-  }, []);
+    if (user?.id) {
+      fetchUserUploadedFiles();
+    }
+  }, [user?.id]);
+
+  const fetchUserUploadedFiles = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('gw_sheet_music')
+        .select('id, title, xml_content, created_at')
+        .eq('created_by', user.id)
+        .eq('is_public', false)
+        .not('xml_content', 'is', null)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const userFiles: UploadedFile[] = (data || []).map(file => ({
+        id: file.id,
+        name: file.title + '.xml',
+        content: file.xml_content
+      }));
+      
+      setUploadedFiles(userFiles);
+    } catch (error) {
+      console.error('Error fetching user uploaded files:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load your uploaded files",
+        variant: "destructive"
+      });
+    }
+  };
 
   const fetchPublicMusicXML = async () => {
     try {
@@ -213,30 +249,80 @@ const MUS100SightSingingPage: React.FC = () => {
       
       // Process all valid files
       for (const file of validFiles) {
+        // Read file content
         const content = await file.text();
+        
+        // Upload to Supabase storage
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const filePath = `musicxml/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('user-files')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          toast({
+            title: "Upload failed",
+            description: `Could not upload ${file.name}`,
+            variant: "destructive"
+          });
+          continue;
+        }
+
+        // Save to database
+        const { data: sheetMusicData, error: dbError } = await supabase
+          .from('gw_sheet_music')
+          .insert({
+            title: file.name.replace(/\.(xml|musicxml)$/i, ''),
+            xml_url: filePath,
+            xml_content: content,
+            created_by: user?.id,
+            is_public: false,
+            tags: ['practice', 'mus100']
+          })
+          .select()
+          .single();
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+          // Clean up uploaded file if database save fails
+          await supabase.storage.from('user-files').remove([filePath]);
+          toast({
+            title: "Save failed", 
+            description: `Could not save ${file.name} to database`,
+            variant: "destructive"
+          });
+          continue;
+        }
+
         const newFile: UploadedFile = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+          id: sheetMusicData.id,
           name: file.name,
           content
         };
         newFiles.push(newFile);
       }
 
-      setUploadedFiles(prev => [...prev, ...newFiles]);
-      
-      // Auto-select the first uploaded file if none is selected
-      if (!selectedFile && newFiles.length > 0) {
-        setSelectedFile(newFiles[0]);
-      }
+      if (newFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...newFiles]);
+        
+        // Auto-select the first uploaded file if none is selected
+        if (!selectedFile && newFiles.length > 0) {
+          setSelectedFile(newFiles[0]);
+        }
 
-      toast({
-        title: "Files uploaded successfully",
-        description: `${newFiles.length} MusicXML file${newFiles.length > 1 ? 's' : ''} uploaded`
-      });
+        toast({
+          title: "Files uploaded successfully",
+          description: `${newFiles.length} MusicXML file${newFiles.length > 1 ? 's' : ''} uploaded and saved`
+        });
+      }
     } catch (error) {
+      console.error('Upload process error:', error);
       toast({
         title: "Upload failed",
-        description: "Could not read some MusicXML files",
+        description: "Could not process MusicXML files",
         variant: "destructive"
       });
     }
@@ -244,7 +330,58 @@ const MUS100SightSingingPage: React.FC = () => {
     event.target.value = '';
   };
 
-  const removeFile = (fileId: string) => {
+  const removeFile = async (fileId: string) => {
+    try {
+      // First try to delete from database (this will give us the file path)
+      const { data: fileData, error: fetchError } = await supabase
+        .from('gw_sheet_music')
+        .select('xml_url')
+        .eq('id', fileId)
+        .eq('created_by', user?.id)
+        .single();
+
+      if (!fetchError && fileData?.xml_url) {
+        // Delete from storage
+        const { error: storageError } = await supabase.storage
+          .from('user-files')
+          .remove([fileData.xml_url]);
+
+        if (storageError) {
+          console.error('Storage deletion error:', storageError);
+        }
+
+        // Delete from database
+        const { error: dbError } = await supabase
+          .from('gw_sheet_music')
+          .delete()
+          .eq('id', fileId)
+          .eq('created_by', user?.id);
+
+        if (dbError) {
+          console.error('Database deletion error:', dbError);
+          toast({
+            title: "Delete failed",
+            description: "Could not delete file from database",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        toast({
+          title: "File deleted",
+          description: "File removed successfully"
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: "Delete failed", 
+        description: "Could not delete file",
+        variant: "destructive"
+      });
+    }
+
+    // Remove from local state regardless
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
     if (selectedFile?.id === fileId) {
       setSelectedFile(null);
