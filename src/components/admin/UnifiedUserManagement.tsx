@@ -383,7 +383,7 @@ export const UnifiedUserManagement = () => {
           <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3">Overview</TabsTrigger>
           <TabsTrigger value="users" className="text-xs sm:text-sm px-2 sm:px-3">Users</TabsTrigger>
           <TabsTrigger value="enroll" className="text-xs sm:text-sm px-2 sm:px-3">Add User</TabsTrigger>
-          <TabsTrigger value="permissions" className="text-xs sm:text-sm px-2 sm:px-3">Permissions</TabsTrigger>
+          <TabsTrigger value="permissions" className="text-xs sm:text-sm px-2 sm:px-3 pb-2">Permissions</TabsTrigger>
           <TabsTrigger value="modules" className="text-xs sm:text-sm px-2 sm:px-3">Modules</TabsTrigger>
           <TabsTrigger value="username" className="text-xs sm:text-sm px-2 sm:px-3">Username</TabsTrigger>
         </TabsList>
