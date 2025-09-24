@@ -70,7 +70,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
 
-  // Check if user has permission to import CSV (Drew or Soleil)
+  // Check if user has permission to import CSV (admins and specific wardrobe managers)
   React.useEffect(() => {
     const checkPermission = async () => {
       if (!user) {
@@ -81,11 +81,14 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
       try {
         const { data: profile, error } = await supabase
           .from('gw_profiles')
-          .select('email, full_name')
+          .select('email, full_name, is_admin, is_super_admin')
           .eq('user_id', user.id)
           .single();
 
         if (error) throw error;
+
+        // Allow admins, super admins, and specific wardrobe managers
+        const isAdmin = profile?.is_admin || profile?.is_super_admin;
 
         const allowedUsers = [
           'drew', 'soleil', 'drewroberts@spelman.edu', 'soleilvailes@spelman.edu', 'soleilvailes111@gmail.com'
@@ -94,11 +97,11 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
         const userEmail = profile?.email?.toLowerCase() || '';
         const userName = profile?.full_name?.toLowerCase() || '';
         
-        const isAllowed = allowedUsers.some(name => 
+        const isSpecificUser = allowedUsers.some(name => 
           userEmail.includes(name) || userName.includes(name) || userEmail === name
         );
 
-        setHasPermission(isAllowed);
+        setHasPermission(isAdmin || isSpecificUser);
       } catch (error) {
         console.error('Error checking permission:', error);
         setHasPermission(false);

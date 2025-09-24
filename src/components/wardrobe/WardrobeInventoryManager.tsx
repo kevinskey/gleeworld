@@ -97,12 +97,15 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
     try {
       const { data: profile, error } = await supabase
         .from('gw_profiles')
-        .select('email, full_name')
+        .select('email, full_name, is_admin, is_super_admin')
         .eq('user_id', user.id)
         .single();
 
       if (error) throw error;
 
+      // Allow admins, super admins, and specific wardrobe managers
+      const isAdmin = profile?.is_admin || profile?.is_super_admin;
+      
       const allowedUsers = [
         'drew', 'soleil', 'drewroberts@spelman.edu', 'soleilvailes@spelman.edu'
       ];
@@ -110,11 +113,11 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
       const userEmail = profile?.email?.toLowerCase() || '';
       const userName = profile?.full_name?.toLowerCase() || '';
       
-      const isAllowed = allowedUsers.some(name => 
+      const isSpecificUser = allowedUsers.some(name => 
         userEmail.includes(name) || userName.includes(name)
       );
 
-      setHasImportPermission(isAllowed);
+      setHasImportPermission(isAdmin || isSpecificUser);
     } catch (error) {
       console.error('Error checking import permission:', error);
       setHasImportPermission(false);
