@@ -157,16 +157,16 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}, Device: ${isMobile ? 'mobile' : 'desktop/tablet'}`);
         
         // Dynamically resize the container to force proper measures per row
-        const baseWidthPerMeasure = isMobile ? 140 : 160;
-        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + (isMobile ? 40 : 60);
+        const baseWidthPerMeasure = isMobile ? 180 : 200;  // Increased width per measure
+        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + (isMobile ? 20 : 60);
         
-        // Temporarily constrain the container width for OSMD calculation
-        if (scoreRef.current) {
+        // Don't constrain width on mobile - use full available width
+        if (scoreRef.current && !isMobile) {
           scoreRef.current.style.width = `${Math.min(targetContainerWidth, containerWidth)}px`;
           scoreRef.current.style.maxWidth = `${Math.min(targetContainerWidth, containerWidth)}px`;
         }
         
-        // Create OSMD instance with responsive settings
+        // Create OSMD instance with responsive settings optimized for 2 measures per line
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
           backend: "svg",
@@ -175,9 +175,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           drawCredits: false,
           drawLyrics: false,
           drawPartNames: false,
-          spacingFactorSoftmax: 5,
-          spacingBetweenTextLines: 0.5,
-          newSystemFromXML: false,
+          spacingFactorSoftmax: isMobile ? 3 : 5,  // Tighter spacing on mobile
+          spacingBetweenTextLines: 0.3,
+          newSystemFromXML: true,  // Respect system breaks
           newPageFromXML: false,
           autoBeam: true,
         });
@@ -189,16 +189,16 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         const xmlWithBreaks = insertSystemBreaks(musicXML, 2);
         await osmd.load(xmlWithBreaks);
         
-        console.log(`Rendering score with container width constrained to ${Math.min(targetContainerWidth, containerWidth)}px for ${measuresPerRow} measures per row`);
+        console.log(`Rendering score for ${isMobile ? 'mobile' : 'desktop'} with ${measuresPerRow} measures per row`);
         
-        // Render with constrained width
+        // Render with optimized settings
         osmd.render();
         
         // Force system breaks after every 2 measures
         enforceMaxMeasuresPerSystem(scoreRef.current!, 2);
         
-        // After rendering, restore the container to full width for responsive display
-        if (scoreRef.current) {
+        // Restore container width only for desktop
+        if (scoreRef.current && !isMobile) {
           scoreRef.current.style.width = '';
           scoreRef.current.style.maxWidth = '';
         }
