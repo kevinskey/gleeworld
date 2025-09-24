@@ -86,6 +86,63 @@ serve(async (req) => {
     )
 
     if (updateError) {
+      // If the auth user was not found, try to reconcile automatically
+      const notFound = (updateError as any)?.status === 404 || (updateError as any)?.code === 'user_not_found'
+      if (notFound) {
+        console.error('Target auth user not found. Attempting reconciliation via email/profile linkage...', { email, providedUserId: userId, resolvedAuthUserId: authUserId })
+
+        // Try to find an auth user by email by creating the account if missing
+        const { data: created, error: createErr } = await supabaseClient.auth.admin.createUser({
+          email,
+          password: newPassword,
+          email_confirm: true,
+        })
+
+        if (createErr) {
+          console.error('Failed to create missing auth user:', createErr)
+          return new Response(
+            JSON.stringify({ error: `Failed to create or update user: ${createErr.message}` }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        // Best-effort: link gw_profiles.user_id to the newly created auth user
+        if (created?.user?.id) {
+          try {
+            // If the incoming userId looked like a profile id, update that row; otherwise, update by email
+            const profileUpdate = await supabaseClient
+              .from('gw_profiles')
+              .update({ user_id: created.user.id })
+              .or(`id.eq.${userId},email.eq.${email}`)
+
+            if (profileUpdate.error) {
+              console.warn('Profile linkage warning (non-fatal):', profileUpdate.error)
+            }
+          } catch (e) {
+            console.warn('Profile linkage threw (non-fatal):', e)
+          }
+        }
+
+        // Log the admin action
+        await supabaseClient
+          .from('gw_security_audit_log')
+          .insert({
+            user_id: user.id,
+            action_type: 'admin_password_reset_create_user',
+            resource_type: 'user_account',
+            resource_id: created?.user?.id ?? null,
+            details: { target_email: email, reset_by_admin: user.email, reconciled: true }
+          })
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `User was missing. Created auth user and set password for ${email}` 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
       console.error('Error updating password:', updateError)
       return new Response(
         JSON.stringify({ error: `Failed to update password: ${updateError.message}` }),

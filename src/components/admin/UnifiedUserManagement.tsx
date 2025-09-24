@@ -64,9 +64,11 @@ import { PermissionErrorBoundary } from './PermissionErrorBoundary';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
 import { useUsernamePermissionsAdmin } from '@/hooks/useUsernamePermissions';
 import { usePermissionGroups } from '@/hooks/usePermissionGroups';
+import type { User as AdminUser } from '@/hooks/useUsers';
 
 interface UserProfile {
-  id: string;
+  id: string; // profile row id
+  user_id?: string; // auth user id
   email: string | null;
   full_name: string | null;
   role: string;
@@ -75,6 +77,7 @@ interface UserProfile {
   is_admin?: boolean;
   is_super_admin?: boolean;
   verified?: boolean;
+  avatar_url?: string | null;
   created_at: string;
   last_sign_in_at?: string;
 }
@@ -205,7 +208,7 @@ export const UnifiedUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
-  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
@@ -609,7 +612,19 @@ export const UnifiedUserManagement = () => {
                             
                             <DropdownMenuItem 
                               onClick={() => {
-                                setSelectedUser(user);
+                                setSelectedUser({
+                                  id: user.user_id,
+                                  email: user.email,
+                                  full_name: user.full_name,
+                                  role: user.role,
+                                  created_at: user.created_at,
+                                  exec_board_role: user.exec_board_role ?? null,
+                                  is_exec_board: !!user.is_exec_board,
+                                  avatar_url: user.avatar_url ?? null,
+                                  verified: !!user.verified,
+                                  is_admin: !!user.is_admin,
+                                  is_super_admin: !!user.is_super_admin,
+                                });
                                 setShowResetDialog(true);
                               }}
                             >
@@ -619,7 +634,19 @@ export const UnifiedUserManagement = () => {
                             
                             <DropdownMenuItem 
                               onClick={() => {
-                                setSelectedUser(user);
+                                setSelectedUser({
+                                  id: user.user_id!,
+                                  email: user.email,
+                                  full_name: user.full_name,
+                                  role: user.role,
+                                  created_at: user.created_at,
+                                  exec_board_role: user.exec_board_role ?? null,
+                                  is_exec_board: !!user.is_exec_board,
+                                  avatar_url: user.avatar_url ?? null,
+                                  verified: !!user.verified,
+                                  is_admin: !!user.is_admin,
+                                  is_super_admin: !!user.is_super_admin,
+                                });
                                 setDeleteDialogOpen(true);
                               }}
                               className="text-destructive"
