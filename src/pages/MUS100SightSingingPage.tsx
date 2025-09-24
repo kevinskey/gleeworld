@@ -513,8 +513,8 @@ const MUS100SightSingingPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="lg:col-span-1 space-y-4 md:space-y-6">
             {/* Upload Section */}
             <Card>
               <CardHeader>
@@ -616,7 +616,7 @@ const MUS100SightSingingPage: React.FC = () => {
                     </div>}
                 </div>
               </CardHeader>
-              <CardContent className="h-[600px]">
+              <CardContent className="h-[400px] md:h-[600px]">
                 {selectedFile ? <ScoreDisplay musicXML={selectedFile.content} /> : <div className="h-full flex items-center justify-center text-center">
                     <div className="space-y-3">
                       <FileMusic className="h-12 w-12 mx-auto text-muted-foreground" />
