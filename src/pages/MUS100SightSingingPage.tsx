@@ -538,14 +538,26 @@ const MUS100SightSingingPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Uploaded Files</h4>
-                  {uploadedFiles.length === 0 ? <p className="text-sm text-muted-foreground">No files uploaded yet</p> : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                      <SortableContext items={uploadedFiles.map(file => file.id)} strategy={verticalListSortingStrategy}>
-                        <div className="space-y-2">
-                          {uploadedFiles.map(file => <SortableFileItem key={file.id} file={file} isSelected={selectedFile?.id === file.id} onSelect={handleFileSelect} onRemove={removeFile} />)}
-                        </div>
-                      </SortableContext>
-                    </DndContext>}
+                  <h4 className="text-sm font-medium">Select File</h4>
+                  {uploadedFiles.length === 0 ? <p className="text-sm text-muted-foreground">No files uploaded yet</p> : 
+                    <div className="relative">
+                      <select 
+                        value={selectedFile?.id || ''} 
+                        onChange={(e) => {
+                          const file = uploadedFiles.find(f => f.id === e.target.value);
+                          if (file) handleFileSelect(file);
+                        }}
+                        className="w-full px-3 py-2 text-sm border border-border rounded bg-background text-foreground truncate"
+                      >
+                        <option value="">Select a file...</option>
+                        {uploadedFiles.map(file => (
+                          <option key={file.id} value={file.id} className="truncate">
+                            {file.name.replace('.xml', '')}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  }
                 </div>
               </CardContent>
             </Card>
