@@ -11,66 +11,41 @@ import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import {
-  useSortable,
-} from '@dnd-kit/sortable';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-
 interface SortableFileItemProps {
   file: UploadedFile;
   isSelected: boolean;
   onSelect: (file: UploadedFile) => void;
   onRemove: (fileId: string) => void;
 }
-
-const SortableFileItem: React.FC<SortableFileItemProps> = ({ file, isSelected, onSelect, onRemove }) => {
+const SortableFileItem: React.FC<SortableFileItemProps> = ({
+  file,
+  isSelected,
+  onSelect,
+  onRemove
+}) => {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging,
-  } = useSortable({ id: file.id });
-
+    isDragging
+  } = useSortable({
+    id: file.id
+  });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.5 : 1
   };
-
-  return (
-    <div 
-      ref={setNodeRef}
-      style={style}
-      className={`p-3 rounded-md border cursor-pointer transition-colors ${
-        isSelected 
-          ? 'border-primary bg-primary/5' 
-          : 'border-border hover:border-primary/50'
-      }`}
-    >
+  return <div ref={setNodeRef} style={style} className={`p-3 rounded-md border cursor-pointer transition-colors ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div 
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted/50 rounded"
-          >
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted/50 rounded">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
           <div onClick={() => onSelect(file)} className="flex-1 min-w-0">
@@ -78,29 +53,21 @@ const SortableFileItem: React.FC<SortableFileItemProps> = ({ file, isSelected, o
           </div>
         </div>
         <div className="flex gap-1">
-          <Button 
-            size="sm" 
-            variant="ghost" 
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove(file.id);
-            }} 
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-          >
+          <Button size="sm" variant="ghost" onClick={e => {
+          e.stopPropagation();
+          onRemove(file.id);
+        }} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
             <Trash2 className="h-3 w-3" />
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 interface UploadedFile {
   id: string;
   name: string;
   content: string;
 }
-
 interface PublicMusicXML {
   id: string;
   title: string;
@@ -108,10 +75,11 @@ interface PublicMusicXML {
   xml_content: string;
   created_at: string;
 }
-
 const MUS100SightSingingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [publicFiles, setPublicFiles] = useState<PublicMusicXML[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
@@ -122,14 +90,9 @@ const MUS100SightSingingPage: React.FC = () => {
   const [loadingPublic, setLoadingPublic] = useState(true);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-  
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates
+  }));
   const {
     isPlaying,
     mode,
@@ -145,21 +108,17 @@ const MUS100SightSingingPage: React.FC = () => {
       fetchUserUploadedFiles();
     }
   }, [user?.id]);
-
   const fetchUserUploadedFiles = async () => {
     if (!user?.id) return;
-    
     try {
-      const { data, error } = await supabase
-        .from('gw_sheet_music')
-        .select('id, title, xml_content, created_at')
-        .eq('created_by', user.id)
-        .eq('is_public', false)
-        .not('xml_content', 'is', null)
-        .order('created_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('gw_sheet_music').select('id, title, xml_content, created_at').eq('created_by', user.id).eq('is_public', false).not('xml_content', 'is', null).order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
-      
+
       // Remove duplicates based on title and content
       const uniqueFiles = new Map<string, any>();
       (data || []).forEach(file => {
@@ -168,13 +127,11 @@ const MUS100SightSingingPage: React.FC = () => {
           uniqueFiles.set(key, file);
         }
       });
-      
       const userFiles: UploadedFile[] = Array.from(uniqueFiles.values()).map(file => ({
         id: file.id,
         name: file.title + '.xml',
         content: file.xml_content
       }));
-      
       setUploadedFiles(userFiles);
     } catch (error) {
       console.error('Error fetching user uploaded files:', error);
@@ -185,18 +142,15 @@ const MUS100SightSingingPage: React.FC = () => {
       });
     }
   };
-
   const fetchPublicMusicXML = async () => {
     try {
       setLoadingPublic(true);
-      const { data, error } = await supabase
-        .from('gw_sheet_music')
-        .select('id, title, composer, xml_content, created_at')
-        .eq('is_public', true)
-        .eq('is_archived', false)
-        .not('xml_content', 'is', null)
-        .order('created_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('gw_sheet_music').select('id, title, composer, xml_content, created_at').eq('is_public', true).eq('is_archived', false).not('xml_content', 'is', null).order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       setPublicFiles(data || []);
     } catch (error) {
@@ -210,7 +164,6 @@ const MUS100SightSingingPage: React.FC = () => {
       setLoadingPublic(false);
     }
   };
-
   const handlePublicFileSelect = (publicFile: PublicMusicXML) => {
     const fileData: UploadedFile = {
       id: publicFile.id,
@@ -219,11 +172,9 @@ const MUS100SightSingingPage: React.FC = () => {
     };
     setSelectedFile(fileData);
   };
-
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
-
     const validFiles: File[] = [];
     const invalidFiles: string[] = [];
 
@@ -235,7 +186,6 @@ const MUS100SightSingingPage: React.FC = () => {
         invalidFiles.push(file.name);
       }
     });
-
     if (invalidFiles.length > 0) {
       toast({
         title: "Some files skipped",
@@ -243,7 +193,6 @@ const MUS100SightSingingPage: React.FC = () => {
         variant: "destructive"
       });
     }
-
     if (validFiles.length === 0) {
       toast({
         title: "No valid files",
@@ -252,24 +201,21 @@ const MUS100SightSingingPage: React.FC = () => {
       });
       return;
     }
-
     try {
       const newFiles: UploadedFile[] = [];
-      
+
       // Process all valid files
       for (const file of validFiles) {
         // Read file content
         const content = await file.text();
-        
+
         // Upload to Supabase storage
         const fileExt = file.name.split('.').pop();
         const storageFileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
         const filePath = `musicxml/${storageFileName}`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('user-files')
-          .upload(filePath, file);
-
+        const {
+          error: uploadError
+        } = await supabase.storage.from('user-files').upload(filePath, file);
         if (uploadError) {
           console.error('Upload error:', uploadError);
           toast({
@@ -282,17 +228,12 @@ const MUS100SightSingingPage: React.FC = () => {
 
         // Check for duplicates before saving
         const displayTitle = file.name.replace(/\.(xml|musicxml)$/i, '');
-        const { data: existingFiles } = await supabase
-          .from('gw_sheet_music')
-          .select('id, title, xml_content')
-          .eq('created_by', user?.id)
-          .eq('title', displayTitle);
+        const {
+          data: existingFiles
+        } = await supabase.from('gw_sheet_music').select('id, title, xml_content').eq('created_by', user?.id).eq('title', displayTitle);
 
         // Skip if exact duplicate exists
-        const isDuplicate = existingFiles?.some(existing => 
-          existing.xml_content === content
-        );
-
+        const isDuplicate = existingFiles?.some(existing => existing.xml_content === content);
         if (isDuplicate) {
           console.log(`Skipping duplicate file: ${file.name}`);
           // Clean up uploaded file
@@ -301,31 +242,28 @@ const MUS100SightSingingPage: React.FC = () => {
         }
 
         // Save to database
-        const { data: sheetMusicData, error: dbError } = await supabase
-          .from('gw_sheet_music')
-          .insert({
-            title: displayTitle,
-            xml_url: filePath,
-            xml_content: content,
-            created_by: user?.id,
-            is_public: false,
-            tags: ['practice', 'mus100']
-          })
-          .select()
-          .single();
-
+        const {
+          data: sheetMusicData,
+          error: dbError
+        } = await supabase.from('gw_sheet_music').insert({
+          title: displayTitle,
+          xml_url: filePath,
+          xml_content: content,
+          created_by: user?.id,
+          is_public: false,
+          tags: ['practice', 'mus100']
+        }).select().single();
         if (dbError) {
           console.error('Database error:', dbError);
           // Clean up uploaded file if database save fails
           await supabase.storage.from('user-files').remove([filePath]);
           toast({
-            title: "Save failed", 
+            title: "Save failed",
             description: `Could not save ${file.name} to database`,
             variant: "destructive"
           });
           continue;
         }
-
         const newFile: UploadedFile = {
           id: sheetMusicData.id,
           name: file.name,
@@ -333,15 +271,13 @@ const MUS100SightSingingPage: React.FC = () => {
         };
         newFiles.push(newFile);
       }
-
       if (newFiles.length > 0) {
         setUploadedFiles(prev => [...prev, ...newFiles]);
-        
+
         // Auto-select the first uploaded file if none is selected
         if (!selectedFile && newFiles.length > 0) {
           setSelectedFile(newFiles[0]);
         }
-
         toast({
           title: "Files uploaded successfully",
           description: `${newFiles.length} MusicXML file${newFiles.length > 1 ? 's' : ''} uploaded and saved`
@@ -355,37 +291,28 @@ const MUS100SightSingingPage: React.FC = () => {
         variant: "destructive"
       });
     }
-
     event.target.value = '';
   };
-
   const removeFile = async (fileId: string) => {
     try {
       // First try to delete from database (this will give us the file path)
-      const { data: fileData, error: fetchError } = await supabase
-        .from('gw_sheet_music')
-        .select('xml_url')
-        .eq('id', fileId)
-        .eq('created_by', user?.id)
-        .single();
-
+      const {
+        data: fileData,
+        error: fetchError
+      } = await supabase.from('gw_sheet_music').select('xml_url').eq('id', fileId).eq('created_by', user?.id).single();
       if (!fetchError && fileData?.xml_url) {
         // Delete from storage
-        const { error: storageError } = await supabase.storage
-          .from('user-files')
-          .remove([fileData.xml_url]);
-
+        const {
+          error: storageError
+        } = await supabase.storage.from('user-files').remove([fileData.xml_url]);
         if (storageError) {
           console.error('Storage deletion error:', storageError);
         }
 
         // Delete from database
-        const { error: dbError } = await supabase
-          .from('gw_sheet_music')
-          .delete()
-          .eq('id', fileId)
-          .eq('created_by', user?.id);
-
+        const {
+          error: dbError
+        } = await supabase.from('gw_sheet_music').delete().eq('id', fileId).eq('created_by', user?.id);
         if (dbError) {
           console.error('Database deletion error:', dbError);
           toast({
@@ -395,7 +322,6 @@ const MUS100SightSingingPage: React.FC = () => {
           });
           return;
         }
-
         toast({
           title: "File deleted",
           description: "File removed successfully"
@@ -404,7 +330,7 @@ const MUS100SightSingingPage: React.FC = () => {
     } catch (error) {
       console.error('Error deleting file:', error);
       toast({
-        title: "Delete failed", 
+        title: "Delete failed",
         description: "Could not delete file",
         variant: "destructive"
       });
@@ -416,23 +342,22 @@ const MUS100SightSingingPage: React.FC = () => {
       setSelectedFile(null);
     }
   };
-
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
+    const {
+      active,
+      over
+    } = event;
     if (active.id !== over?.id) {
-      setUploadedFiles((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
-        
+      setUploadedFiles(items => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over?.id);
         return arrayMove(items, oldIndex, newIndex);
       });
     }
   };
-
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 24000,
           channelCount: 1,
@@ -441,28 +366,25 @@ const MUS100SightSingingPage: React.FC = () => {
           autoGainControl: true
         }
       });
-      
       audioChunksRef.current = [];
       mediaRecorderRef.current = new MediaRecorder(stream, {
         mimeType: 'audio/webm;codecs=opus'
       });
-      
-      mediaRecorderRef.current.ondataavailable = (event) => {
+      mediaRecorderRef.current.ondataavailable = event => {
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
-      
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: 'audio/webm'
+        });
         setRecordedAudio(audioBlob);
         setShowShareDialog(true);
         stream.getTracks().forEach(track => track.stop());
       };
-      
       mediaRecorderRef.current.start();
       setIsRecording(true);
-      
       toast({
         title: "Recording started",
         description: "Sing along to the music!"
@@ -475,17 +397,14 @@ const MUS100SightSingingPage: React.FC = () => {
       });
     }
   }, []);
-
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   }, [isRecording]);
-
   const handlePlayPause = () => {
     if (!selectedFile) return;
-    
     if (mode === 'record') {
       if (isRecording) {
         stopRecording();
@@ -494,14 +413,12 @@ const MUS100SightSingingPage: React.FC = () => {
       }
       return;
     }
-    
     if (isPlaying) {
       stopPlayback();
     } else {
       startPlayback(selectedFile.content, tempo, mode === 'click-only' ? 'click-only' : 'click-and-score');
     }
   };
-
   const handleShareRecording = () => {
     if (recordedAudio) {
       const url = URL.createObjectURL(recordedAudio);
@@ -512,7 +429,6 @@ const MUS100SightSingingPage: React.FC = () => {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
       toast({
         title: "Recording downloaded",
         description: "Your sight singing recording has been saved"
@@ -520,9 +436,7 @@ const MUS100SightSingingPage: React.FC = () => {
     }
     setShowShareDialog(false);
   };
-
-  return (
-    <UniversalLayout>
+  return <UniversalLayout>
       <div className="space-y-8">
         {/* Beautiful Header */}
         <div className="relative overflow-hidden">
@@ -534,22 +448,21 @@ const MUS100SightSingingPage: React.FC = () => {
             <Music className="h-16 w-16 text-primary animate-pulse" />
           </div>
           <div className="absolute top-12 right-24 opacity-15">
-            <Music className="h-8 w-8 text-primary animate-pulse" style={{ animationDelay: '0.5s' }} />
+            <Music className="h-8 w-8 text-primary animate-pulse" style={{
+            animationDelay: '0.5s'
+          }} />
           </div>
           <div className="absolute bottom-4 left-12 opacity-10">
-            <Music className="h-12 w-12 text-primary animate-pulse" style={{ animationDelay: '1s' }} />
+            <Music className="h-12 w-12 text-primary animate-pulse" style={{
+            animationDelay: '1s'
+          }} />
           </div>
           
           {/* Main header content */}
           <div className="relative px-6 py-12 md:py-16">
             {/* Back button */}
             <div className="max-w-4xl mx-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(-1)}
-                className="mb-6 text-muted-foreground hover:text-foreground"
-              >
+              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-6 text-muted-foreground hover:text-foreground">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
@@ -574,30 +487,16 @@ const MUS100SightSingingPage: React.FC = () => {
                 <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent animate-fade-in">
                   MUS100 Sight Singing
                 </h1>
-                <p className="text-xl md:text-2xl text-muted-foreground font-medium animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                <p className="text-xl md:text-2xl text-muted-foreground font-medium animate-fade-in" style={{
+                animationDelay: '0.2s'
+              }}>
                   Practice & Perfect Your Musical Skills
                 </p>
-                <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                  Upload MusicXML files, practice sight singing with interactive playback modes, 
-                  and record yourself to track your progress. Develop your musical ear and vocal precision.
-                </p>
+                
               </div>
               
               {/* Feature highlights */}
-              <div className="flex flex-wrap justify-center gap-4 pt-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 border border-border/50 backdrop-blur-sm">
-                  <FileMusic className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">MusicXML Support</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 border border-border/50 backdrop-blur-sm">
-                  <Play className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Interactive Playback</span>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/80 border border-border/50 backdrop-blur-sm">
-                  <Mic className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Voice Recording</span>
-                </div>
-              </div>
+              
             </div>
           </div>
         </div>
@@ -618,19 +517,8 @@ const MUS100SightSingingPage: React.FC = () => {
                     Upload MusicXML File
                   </label>
                   <div className="flex items-center gap-2">
-                    <Input 
-                      id="musicxml-upload" 
-                      type="file" 
-                      accept=".xml,.musicxml" 
-                      multiple
-                      onChange={handleFileUpload} 
-                      className="hidden" 
-                    />
-                    <Button 
-                      onClick={() => document.getElementById('musicxml-upload')?.click()} 
-                      variant="outline" 
-                      className="w-full"
-                    >
+                    <Input id="musicxml-upload" type="file" accept=".xml,.musicxml" multiple onChange={handleFileUpload} className="hidden" />
+                    <Button onClick={() => document.getElementById('musicxml-upload')?.click()} variant="outline" className="w-full">
                       <Upload className="h-4 w-4 mr-2" />
                       Choose Files
                     </Button>
@@ -639,32 +527,13 @@ const MUS100SightSingingPage: React.FC = () => {
 
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Uploaded Files</h4>
-                  {uploadedFiles.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No files uploaded yet</p>
-                  ) : (
-                    <DndContext 
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
-                    >
-                      <SortableContext 
-                        items={uploadedFiles.map(file => file.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
+                  {uploadedFiles.length === 0 ? <p className="text-sm text-muted-foreground">No files uploaded yet</p> : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={uploadedFiles.map(file => file.id)} strategy={verticalListSortingStrategy}>
                         <div className="space-y-2">
-                          {uploadedFiles.map(file => (
-                            <SortableFileItem
-                              key={file.id}
-                              file={file}
-                              isSelected={selectedFile?.id === file.id}
-                              onSelect={setSelectedFile}
-                              onRemove={removeFile}
-                            />
-                          ))}
+                          {uploadedFiles.map(file => <SortableFileItem key={file.id} file={file} isSelected={selectedFile?.id === file.id} onSelect={setSelectedFile} onRemove={removeFile} />)}
                         </div>
                       </SortableContext>
-                    </DndContext>
-                  )}
+                    </DndContext>}
                 </div>
               </CardContent>
             </Card>
@@ -678,35 +547,17 @@ const MUS100SightSingingPage: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {loadingPublic ? (
-                  <p className="text-sm text-muted-foreground">Loading library...</p>
-                ) : publicFiles.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No public files available</p>
-                ) : (
-                  <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {publicFiles.map(file => (
-                      <div 
-                        key={file.id} 
-                        className={`p-3 rounded-md border cursor-pointer transition-colors ${
-                          selectedFile?.id === file.id 
-                            ? 'border-primary bg-primary/5' 
-                            : 'border-border hover:border-primary/50'
-                        }`}
-                        onClick={() => handlePublicFileSelect(file)}
-                      >
+                {loadingPublic ? <p className="text-sm text-muted-foreground">Loading library...</p> : publicFiles.length === 0 ? <p className="text-sm text-muted-foreground">No public files available</p> : <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {publicFiles.map(file => <div key={file.id} className={`p-3 rounded-md border cursor-pointer transition-colors ${selectedFile?.id === file.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`} onClick={() => handlePublicFileSelect(file)}>
                         <div className="space-y-1">
                           <p className="text-sm font-medium truncate">{file.title}</p>
-                          {file.composer && (
-                            <p className="text-xs text-muted-foreground">by {file.composer}</p>
-                          )}
+                          {file.composer && <p className="text-xs text-muted-foreground">by {file.composer}</p>}
                           <p className="text-xs text-muted-foreground">
                             Added {new Date(file.created_at).toLocaleDateString()}
                           </p>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      </div>)}
+                  </div>}
               </CardContent>
             </Card>
           </div>
@@ -718,15 +569,10 @@ const MUS100SightSingingPage: React.FC = () => {
                   <CardTitle>
                     {selectedFile ? selectedFile.name : 'Musical Score'}
                   </CardTitle>
-                  {selectedFile && (
-                    <div className="flex items-center gap-4">
+                  {selectedFile && <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <label className="text-sm font-medium">Mode:</label>
-                        <select 
-                          value={mode} 
-                          onChange={(e) => setMode(e.target.value as any)}
-                          className="px-3 py-2 text-sm border border-border rounded bg-background text-foreground z-50"
-                        >
+                        <select value={mode} onChange={e => setMode(e.target.value as any)} className="px-3 py-2 text-sm border border-border rounded bg-background text-foreground z-50">
                           <option value="click-only">Click Only</option>
                           <option value="click-and-score">Click + Notes</option>
                           <option value="pitch-only">Notes Only</option>
@@ -736,53 +582,30 @@ const MUS100SightSingingPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <label className="text-sm font-medium">Tempo:</label>
                         <div className="w-20">
-                          <Slider
-                            value={[tempo]}
-                            onValueChange={(value) => setTempo(value[0])}
-                            min={60}
-                            max={200}
-                            step={5}
-                            className="cursor-pointer"
-                          />
+                          <Slider value={[tempo]} onValueChange={value => setTempo(value[0])} min={60} max={200} step={5} className="cursor-pointer" />
                         </div>
                         <span className="text-sm text-muted-foreground w-12">{tempo} BPM</span>
                       </div>
                       <Button onClick={handlePlayPause} variant="outline" size="sm" className="flex items-center gap-2">
-                        {mode === 'record' ? (
-                          isRecording ? (
-                            <>
+                        {mode === 'record' ? isRecording ? <>
                               <MicOff className="h-4 w-4" />
                               Stop Recording
-                            </>
-                          ) : (
-                            <>
+                            </> : <>
                               <Mic className="h-4 w-4" />
                               Start Recording
-                            </>
-                          )
-                        ) : (
-                          isPlaying ? (
-                            <>
+                            </> : isPlaying ? <>
                               <Pause className="h-4 w-4" />
                               Stop
-                            </>
-                          ) : (
-                            <>
+                            </> : <>
                               <Play className="h-4 w-4" />
                               Play
-                            </>
-                          )
-                        )}
+                            </>}
                       </Button>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </CardHeader>
               <CardContent className="h-[600px]">
-                {selectedFile ? (
-                  <ScoreDisplay musicXML={selectedFile.content} />
-                ) : (
-                  <div className="h-full flex items-center justify-center text-center">
+                {selectedFile ? <ScoreDisplay musicXML={selectedFile.content} /> : <div className="h-full flex items-center justify-center text-center">
                     <div className="space-y-3">
                       <FileMusic className="h-12 w-12 mx-auto text-muted-foreground" />
                       <div>
@@ -792,16 +615,14 @@ const MUS100SightSingingPage: React.FC = () => {
                         </p>
                       </div>
                     </div>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
           </div>
         </div>
 
         {/* Share Recording Dialog */}
-        {showShareDialog && recordedAudio && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        {showShareDialog && recordedAudio && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <Card className="w-96 mx-4">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -824,11 +645,8 @@ const MUS100SightSingingPage: React.FC = () => {
                 </div>
               </CardContent>
             </Card>
-          </div>
-        )}
+          </div>}
       </div>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 };
-
 export default MUS100SightSingingPage;
