@@ -47,22 +47,21 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         console.log('MusicXML length:', musicXML.length);
         console.log('Full MusicXML content:', musicXML);
         
-        // Force exactly 4 measures per line with responsive sizing
+        // Force exactly 4 measures per line maximum with responsive sizing
         const containerWidth = scoreRef.current?.clientWidth || 800;
         const isMobile = containerWidth < 640; // sm breakpoint
-        const isTablet = containerWidth < 1024; // lg breakpoint
         
-        let measuresPerRow = 4; // Default for desktop
+        let measuresPerRow = 4; // Default maximum for all devices
         if (isMobile) {
-          measuresPerRow = 2; // 2 measures per row on mobile
-        } else if (isTablet) {
-          measuresPerRow = 3; // 3 measures per row on tablet
+          measuresPerRow = Math.min(2, 4); // 2 measures per row on mobile, never more than 4
+        } else {
+          measuresPerRow = 4; // Always 4 measures per row on tablet and desktop
         }
         
-        console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}, Device: ${isMobile ? 'mobile' : isTablet ? 'tablet' : 'desktop'}`);
+        console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}, Device: ${isMobile ? 'mobile' : 'desktop/tablet'}`);
         
         // Dynamically resize the container to force proper measures per row
-        const baseWidthPerMeasure = isMobile ? 140 : isTablet ? 150 : 160;
+        const baseWidthPerMeasure = isMobile ? 140 : 160;
         const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + (isMobile ? 40 : 60);
         
         // Temporarily constrain the container width for OSMD calculation
