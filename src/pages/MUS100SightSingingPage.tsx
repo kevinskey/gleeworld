@@ -678,43 +678,77 @@ const MUS100SightSingingPage: React.FC = () => {
           <div className="lg:col-span-2">
             <Card className="h-full">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="space-y-3">
                   <CardTitle>
                     {selectedFile ? selectedFile.name : 'Musical Score'}
                   </CardTitle>
-                  {selectedFile && <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium">Mode:</label>
-                        <select value={mode} onChange={e => setMode(e.target.value as any)} className="px-3 py-2 text-sm border border-border rounded bg-background text-foreground z-50">
-                          <option value="click-only">Click Only</option>
-                          <option value="click-and-score">Click + Notes</option>
-                          <option value="pitch-only">Notes Only</option>
-                          <option value="record">Record</option>
-                        </select>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium">Tempo:</label>
-                        <div className="w-20">
-                          <Slider value={[tempo]} onValueChange={value => setTempo(value[0])} min={60} max={200} step={5} className="cursor-pointer" />
+                  {selectedFile && (
+                    <div className="space-y-3">
+                      {/* Mobile-first responsive controls */}
+                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <label className="text-sm font-medium whitespace-nowrap">Mode:</label>
+                          <select 
+                            value={mode} 
+                            onChange={e => setMode(e.target.value as any)} 
+                            className="flex-1 px-3 py-2 text-sm border border-border rounded bg-background text-foreground min-w-[120px]"
+                          >
+                            <option value="click-only">Click Only</option>
+                            <option value="click-and-score">Click + Notes</option>
+                            <option value="pitch-only">Notes Only</option>
+                            <option value="record">Record</option>
+                          </select>
                         </div>
-                        <span className="text-sm text-muted-foreground w-12">{tempo} BPM</span>
+                        
+                        <div className="flex items-center gap-2 w-full sm:w-auto min-w-0">
+                          <label className="text-sm font-medium whitespace-nowrap">Tempo:</label>
+                          <div className="flex-1 min-w-[80px] max-w-[120px]">
+                            <Slider 
+                              value={[tempo]} 
+                              onValueChange={value => setTempo(value[0])} 
+                              min={60} 
+                              max={200} 
+                              step={5} 
+                              className="cursor-pointer" 
+                            />
+                          </div>
+                          <span className="text-sm text-muted-foreground whitespace-nowrap min-w-[50px]">
+                            {tempo} BPM
+                          </span>
+                        </div>
                       </div>
-                      <Button onClick={handlePlayPause} variant="outline" size="sm" className="flex items-center gap-2">
-                        {mode === 'record' ? isRecording ? <>
-                              <MicOff className="h-4 w-4" />
-                              Stop Recording
-                            </> : <>
-                              <Mic className="h-4 w-4" />
-                              Start Recording
-                            </> : isPlaying ? <>
-                              <Pause className="h-4 w-4" />
-                              Stop
-                            </> : <>
-                              <Play className="h-4 w-4" />
-                              Play
-                            </>}
+                      
+                      {/* Play button - full width on mobile, auto on desktop */}
+                      <Button 
+                        onClick={handlePlayPause} 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full sm:w-auto flex items-center justify-center gap-2"
+                      >
+                        {mode === 'record' ? isRecording ? (
+                          <>
+                            <MicOff className="h-4 w-4" />
+                            Stop Recording
+                          </>
+                        ) : (
+                          <>
+                            <Mic className="h-4 w-4" />
+                            Start Recording
+                          </>
+                        ) : isPlaying ? (
+                          <>
+                            <Pause className="h-4 w-4" />
+                            Stop
+                          </>
+                        ) : (
+                          <>
+                            <Play className="h-4 w-4" />
+                            Play
+                          </>
+                        )}
                       </Button>
-                    </div>}
+                    </div>
+                  )}
                 </div>
               </CardHeader>
               <CardContent className="h-[600px]" data-score-display>
