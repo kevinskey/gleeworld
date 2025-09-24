@@ -25,6 +25,23 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
     };
   }, []);
 
+  useEffect(() => {
+    const unlock = async () => {
+      try {
+        await playerRef.current?.ensureUnlocked?.();
+      } catch {}
+      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('click', unlock);
+    };
+    // Attempt unlock on first user interaction (iOS/Safari requirement)
+    window.addEventListener('touchstart', unlock, { once: true } as any);
+    window.addEventListener('click', unlock, { once: true } as any);
+    return () => {
+      window.removeEventListener('touchstart', unlock);
+      window.removeEventListener('click', unlock);
+    };
+  }, []);
+
   const startPlayback = useCallback(async (musicXML: string, tempo: number, overrideMode?: 'click-only' | 'click-and-score' | 'pitch-only' | 'record') => {
     console.log('🎼 useTonePlayback.startPlayback called');
     
@@ -68,6 +85,9 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
     try {
       console.log('🎼 Setting isPlaying to true...');
       setIsPlaying(true);
+      
+      // Ensure audio is unlocked on iOS/Safari before parsing/playing
+      try { await playerRef.current?.ensureUnlocked?.(); } catch {}
       
       // Parse the MusicXML
       console.log('🎼 About to parse MusicXML...');

@@ -438,20 +438,29 @@ const MUS100SightSingingPage: React.FC = () => {
       setIsRecording(false);
     }
   }, [isRecording]);
-  const handlePlayPause = () => {
+  const handlePlayPause = async () => {
     if (!selectedFile) return;
     if (mode === 'record') {
       if (isRecording) {
         stopRecording();
       } else {
-        startRecording();
+        await startRecording();
       }
       return;
     }
     if (isPlaying) {
       stopPlayback();
     } else {
-      startPlayback(selectedFile.content, tempo, mode === 'click-only' ? 'click-only' : 'click-and-score');
+      try {
+        await startPlayback(selectedFile.content, tempo, mode === 'click-only' ? 'click-only' : 'click-and-score');
+      } catch (error) {
+        console.error('Playback failed:', error);
+        toast({
+          title: 'Playback failed',
+          description: error instanceof Error ? error.message : 'Audio could not start. Please tap once and try again.',
+          variant: 'destructive'
+        });
+      }
     }
   };
   const handleShareRecording = () => {

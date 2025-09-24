@@ -28,6 +28,27 @@ export class MusicXMLPlayer {
     return this.audioContext;
   }
 
+  public async ensureUnlocked() {
+    const ctx = this.initAudioContext();
+    try {
+      await ctx.resume();
+    } catch (e) {
+      // ignore
+    }
+    // iOS/WebKit unlock: play a very short silent buffer
+    try {
+      const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+      source.stop(0);
+    } catch (e) {
+      // ignore
+    }
+    return ctx.state === 'running';
+  }
+
   private createTone(frequency: number, startTime: number, duration: number, volume: number = 0.3, noteSound: string = 'piano'): void {
     console.log('Creating tone with sound:', noteSound, 'frequency:', frequency);
     
