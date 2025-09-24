@@ -517,13 +517,58 @@ const MUS100SightSingingPage: React.FC = () => {
 
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium">Uploaded Files</h4>
-                  {uploadedFiles.length === 0 ? <p className="text-sm text-muted-foreground">No files uploaded yet</p> : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                      <SortableContext items={uploadedFiles.map(file => file.id)} strategy={verticalListSortingStrategy}>
-                        <div className="space-y-2">
-                          {uploadedFiles.map(file => <SortableFileItem key={file.id} file={file} isSelected={selectedFile?.id === file.id} onSelect={setSelectedFile} onRemove={removeFile} />)}
-                        </div>
-                      </SortableContext>
-                    </DndContext>}
+                  {uploadedFiles.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No files uploaded yet</p>
+                  ) : (
+                    <>
+                      {/* Mobile: native selector (spinner) */}
+                      <div className="lg:hidden">
+                        <select
+                          className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                          value={selectedFile?.id || ''}
+                          onChange={(e) => {
+                            const file = uploadedFiles.find(f => f.id === e.target.value);
+                            if (file) {
+                              setSelectedFile(file);
+                              setTimeout(() => {
+                                const scoreElement = document.querySelector('[data-score-display]');
+                                if (scoreElement) {
+                                  (scoreElement as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                }
+                              }, 100);
+                            }
+                          }}
+                        >
+                          <option value="">Select uploaded composition…</option>
+                          {uploadedFiles.map(file => {
+                            const label = file.name.replace(/\.(xml|musicxml)$/i, '');
+                            return (
+                              <option key={file.id} value={file.id}>{label}</option>
+                            );
+                          })}
+                        </select>
+                      </div>
+
+                      {/* Desktop: draggable list */}
+                      <div className="hidden lg:block">
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                          <SortableContext items={uploadedFiles.map(file => file.id)} strategy={verticalListSortingStrategy}>
+                            <div className="space-y-2">
+                              {uploadedFiles.map(file => (
+                                <SortableFileItem
+                                  key={file.id}
+                                  file={file}
+                                  isSelected={selectedFile?.id === file.id}
+                                  onSelect={setSelectedFile}
+                                  onRemove={removeFile}
+                                />
+                              ))}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
+                      </div>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
