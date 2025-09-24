@@ -6,10 +6,93 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
 import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
-import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, BookOpen, Users, Download, ArrowLeft } from 'lucide-react';
+import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, BookOpen, Users, Download, ArrowLeft, GripVertical } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+interface SortableFileItemProps {
+  file: UploadedFile;
+  isSelected: boolean;
+  onSelect: (file: UploadedFile) => void;
+  onRemove: (fileId: string) => void;
+}
+
+const SortableFileItem: React.FC<SortableFileItemProps> = ({ file, isSelected, onSelect, onRemove }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: file.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className={`p-3 rounded-md border cursor-pointer transition-colors ${
+        isSelected 
+          ? 'border-primary bg-primary/5' 
+          : 'border-border hover:border-primary/50'
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div 
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted/50 rounded"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div onClick={() => onSelect(file)} className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">{file.name}</p>
+          </div>
+        </div>
+        <div className="flex gap-1">
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove(file.id);
+            }} 
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 interface UploadedFile {
   id: string;
@@ -37,6 +120,13 @@ const MUS100SightSingingPage: React.FC = () => {
   const [loadingPublic, setLoadingPublic] = useState(true);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
   
   const {
     isPlaying,
@@ -158,6 +248,19 @@ const MUS100SightSingingPage: React.FC = () => {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
     if (selectedFile?.id === fileId) {
       setSelectedFile(null);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      setUploadedFiles((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over?.id);
+        
+        return arrayMove(items, oldIndex, newIndex);
+      });
     }
   };
 
@@ -373,37 +476,28 @@ const MUS100SightSingingPage: React.FC = () => {
                   {uploadedFiles.length === 0 ? (
                     <p className="text-sm text-muted-foreground">No files uploaded yet</p>
                   ) : (
-                    <div className="space-y-2">
-                      {uploadedFiles.map(file => (
-                        <div 
-                          key={file.id} 
-                          className={`p-3 rounded-md border cursor-pointer transition-colors ${
-                            selectedFile?.id === file.id 
-                              ? 'border-primary bg-primary/5' 
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div onClick={() => setSelectedFile(file)} className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">{file.name}</p>
-                            </div>
-                            <div className="flex gap-1">
-                              <Button 
-                                size="sm" 
-                                variant="ghost" 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeFile(file.id);
-                                }} 
-                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
+                    <DndContext 
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext 
+                        items={uploadedFiles.map(file => file.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-2">
+                          {uploadedFiles.map(file => (
+                            <SortableFileItem
+                              key={file.id}
+                              file={file}
+                              isSelected={selectedFile?.id === file.id}
+                              onSelect={setSelectedFile}
+                              onRemove={removeFile}
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </SortableContext>
+                    </DndContext>
                   )}
                 </div>
               </CardContent>
