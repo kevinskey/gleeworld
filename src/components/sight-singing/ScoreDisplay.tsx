@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, Maximize2, X } from 'lucide-react';
@@ -21,6 +21,50 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   const scoreRef = useRef<HTMLDivElement>(null);
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
+
+  // Preprocess MusicXML: insert <print new-system="yes"/> every 4 measures
+  const insertSystemBreaks = useCallback((xml: string, measuresPerSystem: number = 4) => {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'application/xml');
+      const parseError = doc.getElementsByTagName('parsererror')[0];
+      if (parseError) {
+        console.warn('XML parse error, skipping system break insertion');
+        return xml;
+      }
+      const ns = doc.documentElement.namespaceURI || undefined;
+
+      // Remove existing <print> elements to avoid conflicts
+      const existingPrints = Array.from(doc.getElementsByTagName('print'));
+      existingPrints.forEach((p) => p.parentNode?.removeChild(p));
+
+      const parts = Array.from(doc.getElementsByTagName('part'));
+      parts.forEach((part) => {
+        const measures = Array.from(part.getElementsByTagName('measure'));
+        measures.forEach((measure, idx) => {
+          if (idx > 0 && idx % measuresPerSystem === 0) {
+            const printEl = ns
+              ? doc.createElementNS(ns, 'print')
+              : doc.createElement('print');
+            printEl.setAttribute('new-system', 'yes');
+            // Insert at top of measure
+            const firstChild = measure.firstChild;
+            if (firstChild) {
+              measure.insertBefore(printEl, firstChild);
+            } else {
+              measure.appendChild(printEl);
+            }
+          }
+        });
+      });
+
+      const serialized = new XMLSerializer().serializeToString(doc);
+      return serialized;
+    } catch (e) {
+      console.warn('Failed to insert system breaks, returning original XML', e);
+      return xml;
+    }
+  }, []);
 
   // Function to enforce maximum measures per system by modifying the rendered SVG
   const enforceMaxMeasuresPerSystem = (container: HTMLElement, maxMeasures: number) => {
@@ -141,8 +185,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         // Store reference for cleanup and resize
         osmdRef.current = osmd;
 
-        // Load the MusicXML
-        await osmd.load(musicXML);
+        // Load the MusicXML with enforced system breaks
+        const xmlWithBreaks = insertSystemBreaks(musicXML, 4);
+        await osmd.load(xmlWithBreaks);
         
         console.log(`Rendering score with container width constrained to ${Math.min(targetContainerWidth, containerWidth)}px for ${measuresPerRow} measures per row`);
         

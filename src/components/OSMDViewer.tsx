@@ -24,6 +24,49 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Preprocess MusicXML: insert <print new-system="yes"/> every 4 measures
+  const insertSystemBreaks = (xml: string, measuresPerSystem: number = 4) => {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'application/xml');
+      const parseError = doc.getElementsByTagName('parsererror')[0];
+      if (parseError) {
+        console.warn('XML parse error, skipping system break insertion');
+        return xml;
+      }
+      const ns = doc.documentElement.namespaceURI || undefined;
+
+      // Remove existing <print> elements to avoid conflicts
+      const existingPrints = Array.from(doc.getElementsByTagName('print'));
+      existingPrints.forEach((p) => p.parentNode?.removeChild(p));
+
+      const parts = Array.from(doc.getElementsByTagName('part'));
+      parts.forEach((part) => {
+        const measures = Array.from(part.getElementsByTagName('measure'));
+        measures.forEach((measure, idx) => {
+          if (idx > 0 && idx % measuresPerSystem === 0) {
+            const printEl = ns
+              ? doc.createElementNS(ns, 'print')
+              : doc.createElement('print');
+            printEl.setAttribute('new-system', 'yes');
+            const firstChild = measure.firstChild;
+            if (firstChild) {
+              measure.insertBefore(printEl, firstChild);
+            } else {
+              measure.appendChild(printEl);
+            }
+          }
+        });
+      });
+
+      const serialized = new XMLSerializer().serializeToString(doc);
+      return serialized;
+    } catch (e) {
+      console.warn('Failed to insert system breaks, returning original XML', e);
+      return xml;
+    }
+  };
+
   // Function to apply 4 bars per line constraint
   const applyBarsPerLineLimit = () => {
     if (!containerRef.current) return;
@@ -160,8 +203,9 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
           });
         }
         
-        // Create blob URL from XML content
-        const blob = new Blob([xmlContent], { type: 'application/xml' });
+        // Create blob URL from XML content (with enforced system breaks)
+        const xmlWithBreaks = insertSystemBreaks(xmlContent, 4);
+        const blob = new Blob([xmlWithBreaks], { type: 'application/xml' });
         const blobUrl = URL.createObjectURL(blob);
         
         try {
@@ -187,8 +231,9 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
           const xmlText = await response.text();
           console.log('Fetched XML, length:', xmlText.length);
           
-          // Create blob URL from fetched content
-          const blob = new Blob([xmlText], { type: 'application/xml' });
+          // Create blob URL from fetched content (with enforced system breaks)
+          const xmlWithBreaks = insertSystemBreaks(xmlText, 4);
+          const blob = new Blob([xmlWithBreaks], { type: 'application/xml' });
           const blobUrl = URL.createObjectURL(blob);
           
           try {
