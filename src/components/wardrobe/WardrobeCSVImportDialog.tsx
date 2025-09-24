@@ -134,10 +134,14 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
         try {
           const content = e.target?.result as string;
           const lines = content.split('\n').filter(line => line.trim());
-          const parsedHeaders = parseCSVLine(lines[0]);
+          const rawHeaders = parseCSVLine(lines[0]);
+          const sanitizedHeaders = rawHeaders.map((h, i) => {
+            const cleaned = (h ?? '').trim();
+            return cleaned.length > 0 ? cleaned : `Column ${i + 1}`;
+          });
           const parsedData = lines.slice(1).map(line => parseCSVLine(line));
           
-          setHeaders(parsedHeaders);
+          setHeaders(sanitizedHeaders);
           setCsvData(parsedData);
           setStep('mapping');
           console.log('✅ File parsed successfully');
