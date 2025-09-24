@@ -79,7 +79,12 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           drawComposer: false,
           drawCredits: false,
           drawLyrics: false,
-          drawPartNames: false
+          drawPartNames: false,
+          spacingFactorSoftmax: 5,
+          spacingBetweenTextLines: 0.5,
+          newSystemFromXML: false,
+          newPageFromXML: false,
+          autoBeam: true,
         });
 
         // Store reference for cleanup and resize

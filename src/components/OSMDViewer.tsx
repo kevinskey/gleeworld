@@ -24,6 +24,41 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  // Function to apply 4 bars per line constraint
+  const applyBarsPerLineLimit = () => {
+    if (!containerRef.current) return;
+    
+    try {
+      // Find all measure elements in the SVG
+      const svgs = containerRef.current.querySelectorAll('svg');
+      svgs.forEach(svg => {
+        const measures = svg.querySelectorAll('[class*="measure"], [id*="measure"]');
+        let currentLine = 0;
+        let measuresInCurrentLine = 0;
+        
+        measures.forEach((measure, index) => {
+          measuresInCurrentLine++;
+          
+          // Force a new line after every 4 measures
+          if (measuresInCurrentLine > 4) {
+            // Add transform to move measure to new line
+            const transform = measure.getAttribute('transform') || '';
+            const yOffset = (currentLine + 1) * 80; // Adjust spacing as needed
+            const newTransform = transform.includes('translate') 
+              ? transform.replace(/translate\([^)]*\)/, `translate(0, ${yOffset})`)
+              : `translate(0, ${yOffset}) ${transform}`;
+            
+            measure.setAttribute('transform', newTransform);
+            currentLine++;
+            measuresInCurrentLine = 1;
+          }
+        });
+      });
+    } catch (error) {
+      console.log('Could not apply bars per line limit:', error);
+    }
+  };
+
   // Initialize OSMD
   useEffect(() => {
     if (containerRef.current && !osmdRef.current) {
@@ -46,6 +81,9 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
           // Enable better spacing and formatting
           spacingFactorSoftmax: 5,
           spacingBetweenTextLines: 0.5,
+          newSystemFromXML: false,
+          newPageFromXML: false,
+          autoBeam: true,
         });
         console.log('OSMD initialized successfully');
       } catch (error) {
@@ -116,6 +154,9 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
             defaultFontFamily: 'Times New Roman',
             spacingFactorSoftmax: 5,
             spacingBetweenTextLines: 0.5,
+            newSystemFromXML: false,
+            newPageFromXML: false,
+            autoBeam: true,
           });
         }
         
@@ -166,6 +207,9 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
 
       // Render the music
       await osmdRef.current.render();
+      
+      // Apply 4 bars per line constraint after rendering
+      applyBarsPerLineLimit();
       
       console.log('Music loaded and rendered successfully');
       

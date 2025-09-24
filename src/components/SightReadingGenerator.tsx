@@ -105,8 +105,11 @@ export const SightReadingGenerator = ({ onStartSightReading }: { onStartSightRea
           pageBackgroundColor: '#FFFFFF',
           renderSingleHorizontalStaffline: false,
           defaultFontFamily: 'Times New Roman',
-          // Ensure proper rendering
-          drawingParameters: 'default'
+          spacingFactorSoftmax: 5,
+          spacingBetweenTextLines: 0.5,
+          newSystemFromXML: false,
+          newPageFromXML: false,
+          autoBeam: true,
         });
         console.log('OSMD initialized successfully:', !!osmdRef.current);
       } catch (error) {

@@ -64,6 +64,11 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
           drawCredits: false,
           drawLyrics: false,
           drawPartNames: false,
+          spacingFactorSoftmax: 5,
+          spacingBetweenTextLines: 0.5,
+          newSystemFromXML: false,
+          newPageFromXML: false,
+          autoBeam: true,
         });
       } catch (error) {
         console.error('Error initializing OSMD:', error);
