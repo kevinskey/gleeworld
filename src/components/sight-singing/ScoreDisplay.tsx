@@ -156,14 +156,14 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         
         console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}, Device: ${isMobile ? 'mobile' : 'desktop/tablet'}`);
         
-        // Dynamically resize the container to force proper measures per row
-        const baseWidthPerMeasure = isMobile ? 180 : 200;  // Increased width per measure
-        const targetContainerWidth = measuresPerRow * baseWidthPerMeasure + (isMobile ? 20 : 60);
+        // Choose a layout width that ensures 2 measures fit per system, then scale down on mobile
+        const viewportWidth = containerWidth;
+        const baseWidthPerMeasure = 240; // generous width per measure for clean spacing
+        const desiredLayoutWidth = Math.max(2 * baseWidthPerMeasure + 40, 640); // at least 640px
         
-        // Don't constrain width on mobile - use full available width
-        if (scoreRef.current && !isMobile) {
-          scoreRef.current.style.width = `${Math.min(targetContainerWidth, containerWidth)}px`;
-          scoreRef.current.style.maxWidth = `${Math.min(targetContainerWidth, containerWidth)}px`;
+        if (scoreRef.current) {
+          scoreRef.current.style.width = `${desiredLayoutWidth}px`;
+          scoreRef.current.style.maxWidth = `${desiredLayoutWidth}px`;
         }
         
         // Create OSMD instance with responsive settings optimized for 2 measures per line
@@ -184,6 +184,13 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
         // Store reference for cleanup and resize
         osmdRef.current = osmd;
+
+        // Set zoom so the laid-out width fits the actual viewport on mobile
+        if (isMobile) {
+          osmd.zoom = Math.min(1, viewportWidth / desiredLayoutWidth);
+        } else {
+          osmd.zoom = 1;
+        }
 
         // Load the MusicXML with enforced system breaks
         const xmlWithBreaks = insertSystemBreaks(musicXML, 2);
