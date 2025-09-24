@@ -577,7 +577,7 @@ const MUS100SightSingingPage: React.FC = () => {
           <div className="lg:col-span-2">
             <Card ref={scoreDisplayRef} className="h-full">
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <CardTitle>
                     {selectedFile ? selectedFile.name : 'Musical Score'}
                   </CardTitle>
