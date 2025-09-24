@@ -64,9 +64,24 @@ serve(async (req) => {
       )
     }
 
+    // First, get the auth user ID from the profile - userId might be profile ID or auth user ID
+    let authUserId = userId;
+    
+    // Check if this is a profile ID by looking it up in gw_profiles
+    const { data: profileData } = await supabaseClient
+      .from('gw_profiles')
+      .select('user_id')
+      .eq('id', userId)
+      .single()
+    
+    // If we found a profile record, use the user_id field (which is the auth user ID)
+    if (profileData?.user_id) {
+      authUserId = profileData.user_id;
+    }
+
     // Use Supabase Admin API to update the user's password
     const { data: updateData, error: updateError } = await supabaseClient.auth.admin.updateUserById(
-      userId,
+      authUserId,
       { password: newPassword }
     )
 
