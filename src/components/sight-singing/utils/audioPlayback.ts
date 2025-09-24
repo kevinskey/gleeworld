@@ -41,8 +41,10 @@ export class MusicXMLPlayer {
       const source = ctx.createBufferSource();
       source.buffer = buffer;
       source.connect(ctx.destination);
-      source.start(0);
-      source.stop(0);
+      const t = ctx.currentTime + 0.001;
+      source.start(t);
+      // Stop slightly after start to ensure the graph actually runs
+      source.stop(t + 0.005);
     } catch (e) {
       // ignore
     }

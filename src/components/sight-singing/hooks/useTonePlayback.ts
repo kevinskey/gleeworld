@@ -28,17 +28,33 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
   useEffect(() => {
     const unlock = async () => {
       try {
-        await playerRef.current?.ensureUnlocked?.();
-      } catch {}
+        const ok = await playerRef.current?.ensureUnlocked?.();
+        console.log('🔓 Audio unlock attempted. Success:', ok);
+      } catch (e) {
+        console.warn('Audio unlock error:', e);
+      }
       window.removeEventListener('touchstart', unlock);
       window.removeEventListener('click', unlock);
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', keyHandler as any);
     };
+
+    const keyHandler = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') {
+        unlock();
+      }
+    };
+
     // Attempt unlock on first user interaction (iOS/Safari requirement)
     window.addEventListener('touchstart', unlock, { once: true } as any);
     window.addEventListener('click', unlock, { once: true } as any);
+    window.addEventListener('pointerdown', unlock, { once: true } as any);
+    window.addEventListener('keydown', keyHandler as any, { once: true } as any);
     return () => {
       window.removeEventListener('touchstart', unlock);
       window.removeEventListener('click', unlock);
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', keyHandler as any);
     };
   }, []);
 
@@ -87,7 +103,10 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
       setIsPlaying(true);
       
       // Ensure audio is unlocked on iOS/Safari before parsing/playing
-      try { await playerRef.current?.ensureUnlocked?.(); } catch {}
+      try {
+        const ok = await playerRef.current?.ensureUnlocked?.();
+        console.log('🔓 ensureUnlocked result:', ok);
+      } catch {}
       
       // Parse the MusicXML
       console.log('🎼 About to parse MusicXML...');
