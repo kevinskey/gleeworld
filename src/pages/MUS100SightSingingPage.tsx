@@ -543,30 +543,35 @@ const MUS100SightSingingPage: React.FC = () => {
                   <p className="text-sm text-muted-foreground">No public files available</p>
                 ) : (
                   <div className="space-y-2">
-                    <div className="block lg:hidden">
-                      <label className="sr-only" htmlFor="public-musicxml-select">Select title</label>
+                    {/* Mobile dropdown selector */}
+                    <div className="lg:hidden">
                       <select
-                        id="public-musicxml-select"
-                        className="w-full bg-background border border-border rounded px-3 py-2 text-sm text-foreground truncate z-50"
-                        value={publicFiles.some(f => f.id === selectedFile?.id) ? (selectedFile as any).id : ''}
+                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        value={selectedFile?.id || ''}
                         onChange={(e) => {
                           const file = publicFiles.find(f => f.id === e.target.value);
                           if (file) {
                             handlePublicFileSelect(file);
-                            const scoreElement = document.querySelector('[data-score-display]');
-                            if (scoreElement) {
-                              (scoreElement as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
+                            // Smooth scroll to score
+                            setTimeout(() => {
+                              const scoreElement = document.querySelector('[data-score-display]');
+                              if (scoreElement) {
+                                scoreElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                            }, 100);
                           }
                         }}
                       >
-                        <option value="">Select a composition…</option>
+                        <option value="">Select composition...</option>
                         {publicFiles.map(file => (
-                          <option key={file.id} value={file.id}>{file.title}</option>
+                          <option key={file.id} value={file.id}>
+                            {file.title}
+                          </option>
                         ))}
                       </select>
                     </div>
 
+                    {/* Desktop scrollable list */}
                     <div className="hidden lg:block space-y-2 max-h-64 overflow-y-auto">
                       {publicFiles.map(file => (
                         <div
