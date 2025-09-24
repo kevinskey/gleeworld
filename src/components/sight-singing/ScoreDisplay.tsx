@@ -284,9 +284,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             </div>
             
             {/* Full Screen Score */}
-            <div className="flex-1 p-2 sm:p-4 overflow-auto">
+            <div className="flex-1 px-0 sm:p-4 py-2 sm:py-4 overflow-auto">
               <div 
-                className="w-full bg-white rounded border shadow-sm p-2 sm:p-4 min-h-full"
+                className="w-full bg-white rounded border shadow-sm py-2 sm:p-4 px-0 sm:px-4 min-h-full"
                 style={{ 
                   display: 'flex',
                   flexDirection: 'column',
@@ -341,7 +341,7 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         {musicXML && (
           <div 
             ref={scoreRef}
-            className="flex-1 min-h-[180px] sm:min-h-[250px] lg:min-h-[300px] w-full bg-white rounded border shadow-sm p-1 sm:p-2 overflow-auto"
+            className="flex-1 min-h-[180px] sm:min-h-[250px] lg:min-h-[300px] w-full bg-white rounded border shadow-sm py-1 sm:p-2 px-0 sm:px-2 overflow-auto"
             style={{ 
               width: '100%',
               display: 'flex',
