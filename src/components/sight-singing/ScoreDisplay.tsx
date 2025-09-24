@@ -156,11 +156,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         
         console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}, Device: ${isMobile ? 'mobile' : 'desktop/tablet'}`);
         
-        // Choose a layout width that ensures 2 measures fit per system, then scale down on mobile
-        const viewportWidth = containerWidth;
-        const baseWidthPerMeasure = 240; // generous width per measure for clean spacing
-        const desiredLayoutWidth = Math.max(2 * baseWidthPerMeasure + 40, 640); // at least 640px
-        
+        // Layout at a wider fixed width so 2 measures fit, then scale SVG to container width
+        const desiredLayoutWidth = 1200;
         if (scoreRef.current) {
           scoreRef.current.style.width = `${desiredLayoutWidth}px`;
           scoreRef.current.style.maxWidth = `${desiredLayoutWidth}px`;
@@ -185,12 +182,8 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         // Store reference for cleanup and resize
         osmdRef.current = osmd;
 
-        // Set zoom so the laid-out width fits the actual viewport on mobile
-        if (isMobile) {
-          osmd.zoom = Math.min(1, viewportWidth / desiredLayoutWidth);
-        } else {
-          osmd.zoom = 1;
-        }
+        // Use default zoom; we'll make SVG responsive after render
+        osmd.zoom = 1;
 
         // Load the MusicXML with enforced system breaks
         const xmlWithBreaks = insertSystemBreaks(musicXML, 2);
@@ -201,11 +194,23 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         // Render with optimized settings
         osmd.render();
         
+        // Make SVG responsive to container width
+        const svgs = scoreRef.current!.querySelectorAll('svg');
+        svgs.forEach((svgEl) => {
+          svgEl.removeAttribute('width');
+          svgEl.removeAttribute('height');
+          svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+          (svgEl as SVGElement).style.width = '100%';
+          (svgEl as SVGElement).style.maxWidth = '100%';
+          (svgEl as SVGElement).style.height = 'auto';
+          (svgEl as SVGElement).style.display = 'block';
+        });
+        
         // Force system breaks after every 2 measures
         enforceMaxMeasuresPerSystem(scoreRef.current!, 2);
         
-        // Restore container width only for desktop
-        if (scoreRef.current && !isMobile) {
+        // Restore container width after rendering so SVG can scale to available space
+        if (scoreRef.current) {
           scoreRef.current.style.width = '';
           scoreRef.current.style.maxWidth = '';
         }
@@ -245,8 +250,26 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           
           // Use a debounced approach to avoid excessive re-renders
           setTimeout(() => {
-            if (osmdRef.current) {
+            const desiredLayoutWidth = 1200;
+            if (osmdRef.current && scoreRef.current) {
+              // Temporarily widen for consistent 2-measure layout
+              scoreRef.current.style.width = `${desiredLayoutWidth}px`;
+              scoreRef.current.style.maxWidth = `${desiredLayoutWidth}px`;
               osmdRef.current.render();
+              // Make SVG responsive to container width
+              const svgs = scoreRef.current.querySelectorAll('svg');
+              svgs.forEach((svgEl) => {
+                svgEl.removeAttribute('width');
+                svgEl.removeAttribute('height');
+                svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                (svgEl as SVGElement).style.width = '100%';
+                (svgEl as SVGElement).style.maxWidth = '100%';
+                (svgEl as SVGElement).style.height = 'auto';
+                (svgEl as SVGElement).style.display = 'block';
+              });
+              // Restore container width
+              scoreRef.current.style.width = '';
+              scoreRef.current.style.maxWidth = '';
             }
           }, 250);
         } catch (error) {
