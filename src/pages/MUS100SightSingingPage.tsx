@@ -518,7 +518,7 @@ const MUS100SightSingingPage: React.FC = () => {
                   </label>
                   <div className="flex items-center gap-2">
                     <Input id="musicxml-upload" type="file" accept=".xml,.musicxml" multiple onChange={handleFileUpload} className="hidden" />
-                    <Button onClick={() => document.getElementById('musicxml-upload')?.click()} variant="outline" className="w-full">
+                    <Button onClick={() => document.getElementById('musicxml-upload')?.click()} variant="outline" className="w-full py-1">
                       <Upload className="h-4 w-4 mr-2" />
                       Choose Files
                     </Button>
