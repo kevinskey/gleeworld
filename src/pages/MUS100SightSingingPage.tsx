@@ -160,7 +160,16 @@ const MUS100SightSingingPage: React.FC = () => {
 
       if (error) throw error;
       
-      const userFiles: UploadedFile[] = (data || []).map(file => ({
+      // Remove duplicates based on title and content
+      const uniqueFiles = new Map<string, any>();
+      (data || []).forEach(file => {
+        const key = `${file.title}-${file.xml_content.substring(0, 100)}`;
+        if (!uniqueFiles.has(key)) {
+          uniqueFiles.set(key, file);
+        }
+      });
+      
+      const userFiles: UploadedFile[] = Array.from(uniqueFiles.values()).map(file => ({
         id: file.id,
         name: file.title + '.xml',
         content: file.xml_content
@@ -254,8 +263,8 @@ const MUS100SightSingingPage: React.FC = () => {
         
         // Upload to Supabase storage
         const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-        const filePath = `musicxml/${fileName}`;
+        const storageFileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const filePath = `musicxml/${storageFileName}`;
         
         const { error: uploadError } = await supabase.storage
           .from('user-files')
@@ -271,11 +280,31 @@ const MUS100SightSingingPage: React.FC = () => {
           continue;
         }
 
+        // Check for duplicates before saving
+        const displayTitle = file.name.replace(/\.(xml|musicxml)$/i, '');
+        const { data: existingFiles } = await supabase
+          .from('gw_sheet_music')
+          .select('id, title, xml_content')
+          .eq('created_by', user?.id)
+          .eq('title', displayTitle);
+
+        // Skip if exact duplicate exists
+        const isDuplicate = existingFiles?.some(existing => 
+          existing.xml_content === content
+        );
+
+        if (isDuplicate) {
+          console.log(`Skipping duplicate file: ${file.name}`);
+          // Clean up uploaded file
+          await supabase.storage.from('user-files').remove([filePath]);
+          continue;
+        }
+
         // Save to database
         const { data: sheetMusicData, error: dbError } = await supabase
           .from('gw_sheet_music')
           .insert({
-            title: file.name.replace(/\.(xml|musicxml)$/i, ''),
+            title: displayTitle,
             xml_url: filePath,
             xml_content: content,
             created_by: user?.id,
