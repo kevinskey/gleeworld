@@ -88,6 +88,7 @@ const MUS100SightSingingPage: React.FC = () => {
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [loadingPublic, setLoadingPublic] = useState(true);
+  const scoreDisplayRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
@@ -403,6 +404,17 @@ const MUS100SightSingingPage: React.FC = () => {
       setIsRecording(false);
     }
   }, [isRecording]);
+  
+  const handleFileSelect = useCallback((file: UploadedFile) => {
+    setSelectedFile(file);
+    // Scroll to score display at the top
+    setTimeout(() => {
+      scoreDisplayRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }, 100);
+  }, []);
   const handlePlayPause = () => {
     if (!selectedFile) return;
     if (mode === 'record') {
@@ -530,7 +542,7 @@ const MUS100SightSingingPage: React.FC = () => {
                   {uploadedFiles.length === 0 ? <p className="text-sm text-muted-foreground">No files uploaded yet</p> : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                       <SortableContext items={uploadedFiles.map(file => file.id)} strategy={verticalListSortingStrategy}>
                         <div className="space-y-2">
-                          {uploadedFiles.map(file => <SortableFileItem key={file.id} file={file} isSelected={selectedFile?.id === file.id} onSelect={setSelectedFile} onRemove={removeFile} />)}
+                          {uploadedFiles.map(file => <SortableFileItem key={file.id} file={file} isSelected={selectedFile?.id === file.id} onSelect={handleFileSelect} onRemove={removeFile} />)}
                         </div>
                       </SortableContext>
                     </DndContext>}
@@ -563,7 +575,7 @@ const MUS100SightSingingPage: React.FC = () => {
           </div>
 
           <div className="lg:col-span-2">
-            <Card className="h-full">
+            <Card ref={scoreDisplayRef} className="h-full">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>
