@@ -277,7 +277,7 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
       <div className="flex flex-col gap-4 lg:gap-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <h2 className="text-xl lg:text-3xl font-bold tracking-tight">Wardrobe Inventory</h2>
+            <h2 className="text-xl lg:text-3xl font-bold tracking-tight pt-4">Wardrobe Inventory</h2>
             <p className="text-sm lg:text-base text-muted-foreground">Manage dresses, accessories, and garment bags</p>
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
