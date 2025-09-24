@@ -379,13 +379,13 @@ export const UnifiedUserManagement = () => {
       </div>
 
       <Tabs defaultValue="overview" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-          <TabsTrigger value="enroll">Add User</TabsTrigger>
-          <TabsTrigger value="permissions">Permissions</TabsTrigger>
-          <TabsTrigger value="modules">Module Access</TabsTrigger>
-          <TabsTrigger value="username">Username Perms</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm px-2 sm:px-3">Overview</TabsTrigger>
+          <TabsTrigger value="users" className="text-xs sm:text-sm px-2 sm:px-3">Users</TabsTrigger>
+          <TabsTrigger value="enroll" className="text-xs sm:text-sm px-2 sm:px-3">Add User</TabsTrigger>
+          <TabsTrigger value="permissions" className="text-xs sm:text-sm px-2 sm:px-3">Permissions</TabsTrigger>
+          <TabsTrigger value="modules" className="text-xs sm:text-sm px-2 sm:px-3">Modules</TabsTrigger>
+          <TabsTrigger value="username" className="text-xs sm:text-sm px-2 sm:px-3">Username</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
