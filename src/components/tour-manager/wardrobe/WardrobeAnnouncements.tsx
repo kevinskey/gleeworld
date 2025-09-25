@@ -244,7 +244,7 @@ export const WardrobeAnnouncements = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-white rounded-lg border shadow-sm">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>

@@ -184,8 +184,8 @@ export const WardrobeInventoryDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border">
+    <div className="space-y-6 p-6 bg-white rounded-lg border shadow-sm">
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg border">
         <h2 className="text-xl font-semibold text-blue-800 mb-2">Inventory Management</h2>
         <p className="text-blue-600 text-sm">
           Manage wardrobe item quantities and track availability
@@ -193,9 +193,9 @@ export const WardrobeInventoryDashboard = () => {
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Items</p>
@@ -206,7 +206,7 @@ export const WardrobeInventoryDashboard = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Out of Stock</p>
@@ -217,7 +217,7 @@ export const WardrobeInventoryDashboard = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Stock</p>
@@ -228,7 +228,7 @@ export const WardrobeInventoryDashboard = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Available</p>
@@ -268,7 +268,7 @@ export const WardrobeInventoryDashboard = () => {
       </div>
 
       {/* Inventory Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredItems.map(item => (
           <Card key={item.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-3">
