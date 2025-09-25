@@ -53,6 +53,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
   const [file, setFile] = useState<File | null>(null);
   const [csvData, setCsvData] = useState<string[][]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
+  const [delimiter, setDelimiter] = useState<string>(',');
   const [mapping, setMapping] = useState<ImportMapping>({
     category: '',
     item_name: '',
@@ -133,13 +134,16 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
       reader.onload = (e) => {
         try {
           const content = e.target?.result as string;
-          const lines = content.split('\n').filter(line => line.trim());
-          const rawHeaders = parseCSVLine(lines[0]);
+          const lines = content.split(/\r?\n/).filter(line => line.trim());
+          // Detect delimiter: prefer tab if present in header and no commas
+          const detectedDelimiter = (lines[0].includes('\t') && !lines[0].includes(',')) ? '\t' : ',';
+          setDelimiter(detectedDelimiter);
+          const rawHeaders = parseCSVLine(lines[0], detectedDelimiter);
           const sanitizedHeaders = rawHeaders.map((h, i) => {
             const cleaned = (h ?? '').trim();
             return cleaned.length > 0 ? cleaned : `Column ${i + 1}`;
           });
-          const parsedData = lines.slice(1).map(line => parseCSVLine(line));
+          const parsedData = lines.slice(1).map(line => parseCSVLine(line, detectedDelimiter));
           
           setHeaders(sanitizedHeaders);
           setCsvData(parsedData);
@@ -165,16 +169,24 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
     }
   };
 
-  const parseCSVLine = (line: string): string[] => {
-    const result = [];
+  const parseCSVLine = (line: string, customDelimiter?: string): string[] => {
+    const d = customDelimiter ?? delimiter;
+    if (d !== ',') {
+      // Simple split for tab or other single-char delimiters
+      return line.split(d).map(item => item.replace(/^"|"$/g, '').trim());
+    }
+    // Robust CSV parser for comma-delimited with quotes
+    const result: string[] = [];
     let current = '';
     let inQuotes = false;
     
     for (let i = 0; i < line.length; i++) {
       const char = line[i];
-      if (char === '"' && (i === 0 || line[i - 1] === ',')) {
+      if (char === '"') {
         inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
+        continue;
+      }
+      if (char === ',' && !inQuotes) {
         result.push(current.trim());
         current = '';
       } else {
@@ -350,7 +362,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
     try {
       const template = [
         ['category', 'item_name', 'sizes', 'colors', 'quantity_total', 'quantity_available', 'condition', 'low_stock_threshold', 'notes'],
-        ['dresses', 'Black Evening Gown', 'S,M,L,XL', 'Black', '10', '8', 'good', '2', 'Formal performance dress'],
+        ['formal_dress', 'Black Evening Gown', '0,2,4,6,8,10,12,14,16,18,20,22,26,28', 'Black', '10', '8', 'good', '2', 'Formal performance dress'],
         ['pearls', 'Classic Pearl Necklace', '', 'White', '20', '18', 'new', '3', '16-inch strand'],
         ['lipstick', 'Performance Red', '', 'Red', '15', '12', 'new', '5', 'Stage-appropriate color']
       ];
