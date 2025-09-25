@@ -28,6 +28,8 @@ interface WardrobeItem {
   size_options: string[];
   color_options: string[];
   available_quantity: number;
+  condition?: string;
+  notes?: string;
 }
 
 interface CheckoutItem {
@@ -87,16 +89,26 @@ export const WardrobeCheckoutSystem = () => {
   // Fetch available wardrobe items
   const fetchWardrobeItems = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch wardrobe inventory
+      const { data: inventoryData, error: inventoryError } = await supabase
         .from('gw_wardrobe_inventory')
         .select('*')
         .gt('quantity_available', 0)
         .order('category', { ascending: true });
 
-      if (error) throw error;
+      if (inventoryError) throw inventoryError;
+
+      // Fetch available pearls
+      const { data: pearlData, error: pearlError } = await supabase
+        .from('gw_pearl_inventory')
+        .select('*')
+        .eq('is_available', true)
+        .order('pearl_set_number', { ascending: true });
+
+      if (pearlError) throw pearlError;
       
-      // Transform the data to match the expected interface
-      const transformedItems = data?.map(item => ({
+      // Transform wardrobe inventory data
+      const transformedInventory = inventoryData?.map(item => ({
         id: item.id,
         name: item.item_name,
         category: item.category,
@@ -104,8 +116,22 @@ export const WardrobeCheckoutSystem = () => {
         color_options: item.color_available || [],
         available_quantity: item.quantity_available
       })) || [];
+
+      // Transform pearl data
+      const transformedPearls = pearlData?.map(pearl => ({
+        id: pearl.id,
+        name: `Pearl Set ${pearl.pearl_set_number}`,
+        category: 'pearls',
+        size_options: [],
+        color_options: [],
+        available_quantity: 1,
+        condition: pearl.condition,
+        notes: pearl.notes
+      })) || [];
       
-      setWardrobeItems(transformedItems);
+      // Combine both types
+      const allItems = [...transformedInventory, ...transformedPearls];
+      setWardrobeItems(allItems);
     } catch (error) {
       console.error('Error fetching wardrobe items:', error);
       toast.error('Failed to load wardrobe items');
@@ -173,24 +199,51 @@ export const WardrobeCheckoutSystem = () => {
           throw new Error(`Not enough ${selectedItem.item.name} available. Requested: ${selectedItem.quantity}, Available: ${selectedItem.item.available_quantity}`);
         }
 
-        const { data: checkout, error } = await supabase
-          .from('gw_wardrobe_checkouts')
-          .insert({
-            inventory_item_id: selectedItem.item.id,
-            member_id: selectedUser.id,
-            checked_out_by: user.id,
-            size: selectedItem.size,
-            color: selectedItem.color,
-            quantity: selectedItem.quantity,
-            due_date: expectedReturnDate || null,
-            notes: checkoutNotes,
-            checked_out_at: new Date().toISOString()
-          })
-          .select()
-          .single();
+        // Handle pearl checkout differently
+        if (selectedItem.item.category === 'pearls') {
+          const { data: checkout, error } = await supabase
+            .from('gw_pearl_checkouts')
+            .insert({
+              pearl_id: selectedItem.item.id,
+              member_id: selectedUser.id,
+              checked_out_by: user.id,
+              due_date: expectedReturnDate || null,
+              notes: checkoutNotes,
+              checked_out_at: new Date().toISOString()
+            })
+            .select()
+            .single();
 
-        if (error) throw error;
-        return { checkout, selectedItem };
+          if (error) throw error;
+
+          // Update pearl availability
+          await supabase
+            .from('gw_pearl_inventory')
+            .update({ is_available: false })
+            .eq('id', selectedItem.item.id);
+
+          return { checkout, selectedItem };
+        } else {
+          // Handle regular wardrobe item checkout
+          const { data: checkout, error } = await supabase
+            .from('gw_wardrobe_checkouts')
+            .insert({
+              inventory_item_id: selectedItem.item.id,
+              member_id: selectedUser.id,
+              checked_out_by: user.id,
+              size: selectedItem.size,
+              color: selectedItem.color,
+              quantity: selectedItem.quantity,
+              due_date: expectedReturnDate || null,
+              notes: checkoutNotes,
+              checked_out_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          return { checkout, selectedItem };
+        }
       });
 
       const checkoutResults = await Promise.all(checkoutPromises);
@@ -361,20 +414,29 @@ export const WardrobeCheckoutSystem = () => {
                       <h4 className="font-medium">{item.name}</h4>
                       <p className="text-sm text-muted-foreground capitalize">{item.category}</p>
                       <p className="text-sm text-green-600">Available: {item.available_quantity}</p>
+                      {item.condition && (
+                        <p className="text-sm text-blue-600">Condition: {item.condition}</p>
+                      )}
+                      {item.notes && (
+                        <p className="text-xs text-gray-500">{item.notes}</p>
+                      )}
                       
                       {isItemSelected(item.id) && (
                         <div className="mt-3 space-y-2">
-                          <div>
-                            <label className="text-xs font-medium">Quantity:</label>
-                            <Input
-                              type="number"
-                              min="1"
-                              max={item.available_quantity}
-                              value={selectedItems.find(s => s.item.id === item.id)?.quantity || 1}
-                              onChange={(e) => updateSelectedItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
-                              className="mt-1"
-                            />
-                          </div>
+                          {/* Only show quantity selector for non-pearl items */}
+                          {item.category !== 'pearls' && (
+                            <div>
+                              <label className="text-xs font-medium">Quantity:</label>
+                              <Input
+                                type="number"
+                                min="1"
+                                max={item.available_quantity}
+                                value={selectedItems.find(s => s.item.id === item.id)?.quantity || 1}
+                                onChange={(e) => updateSelectedItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
+                                className="mt-1"
+                              />
+                            </div>
+                          )}
                           
                           {item.size_options && item.size_options.length > 0 && (
                             <div>

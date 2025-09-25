@@ -7824,6 +7824,92 @@ export type Database = {
           },
         ]
       }
+      gw_pearl_checkouts: {
+        Row: {
+          checked_out_at: string
+          checked_out_by: string
+          condition_on_return: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          member_id: string
+          notes: string | null
+          pearl_id: string
+          returned_at: string | null
+          returned_to: string | null
+          updated_at: string
+        }
+        Insert: {
+          checked_out_at?: string
+          checked_out_by: string
+          condition_on_return?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          member_id: string
+          notes?: string | null
+          pearl_id: string
+          returned_at?: string | null
+          returned_to?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checked_out_at?: string
+          checked_out_by?: string
+          condition_on_return?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          member_id?: string
+          notes?: string | null
+          pearl_id?: string
+          returned_at?: string | null
+          returned_to?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_pearl_checkouts_pearl_id_fkey"
+            columns: ["pearl_id"]
+            isOneToOne: false
+            referencedRelation: "gw_pearl_inventory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_pearl_inventory: {
+        Row: {
+          condition: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_available: boolean
+          notes: string | null
+          pearl_set_number: string
+          updated_at: string
+        }
+        Insert: {
+          condition?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_available?: boolean
+          notes?: string | null
+          pearl_set_number: string
+          updated_at?: string
+        }
+        Update: {
+          condition?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_available?: boolean
+          notes?: string | null
+          pearl_set_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_performance_reviews: {
         Row: {
           created_at: string
