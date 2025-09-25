@@ -29,19 +29,12 @@ import { WardrobeMemberManagement } from "./WardrobeMemberManagement";
 import { UpcomingAppointmentsCard } from "./UpcomingAppointmentsCard";
 import { HairNailApprovalManager } from "./HairNailApprovalManager";
 import { HairNailSubmission } from "./HairNailSubmission";
+import { useWardrobeStats } from "@/hooks/useWardrobeStats";
 
 export const WardrobeManagementHub = () => {
   const [activeTab, setActiveTab] = useState("inventory");
   const [searchTerm, setSearchTerm] = useState("");
-
-  // TODO: Implement actual stats fetching from Supabase
-  const stats = {
-    totalItems: 0,
-    checkedOut: 0,
-    overdue: 0,
-    lowStock: 0,
-    notifications: 0
-  };
+  const { stats, loading: statsLoading } = useWardrobeStats();
 
   return (
     <div className="space-y-4">

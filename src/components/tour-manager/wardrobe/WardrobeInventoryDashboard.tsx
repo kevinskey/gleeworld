@@ -57,12 +57,27 @@ export const WardrobeInventoryDashboard = () => {
   const fetchItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('wardrobe_items')
+        .from('gw_wardrobe_inventory')
         .select('*')
         .order('category', { ascending: true });
 
       if (error) throw error;
-      setItems(data || []);
+      
+      // Transform the data to match the expected interface
+      const transformedData = (data || []).map(item => ({
+        id: item.id,
+        name: item.item_name || 'Unnamed Item',
+        category: item.category || 'uncategorized',
+        size_options: item.size_available || [],
+        color_options: item.color_available || [],
+        total_quantity: item.quantity_total || 0,
+        available_quantity: item.quantity_available || 0,
+        notes: item.notes,
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+      
+      setItems(transformedData);
     } catch (error) {
       console.error('Error fetching items:', error);
       toast.error('Failed to load inventory');
@@ -98,10 +113,10 @@ export const WardrobeInventoryDashboard = () => {
       }
 
       const { error } = await supabase
-        .from('wardrobe_items')
+        .from('gw_wardrobe_inventory')
         .update({
-          total_quantity: Math.max(0, newTotalQuantity),
-          available_quantity: Math.max(0, newAvailableQuantity),
+          quantity_total: Math.max(0, newTotalQuantity),
+          quantity_available: Math.max(0, newAvailableQuantity),
           notes: updateForm.notes || selectedItem.notes,
           updated_at: new Date().toISOString()
         })
@@ -141,7 +156,7 @@ export const WardrobeInventoryDashboard = () => {
 
     try {
       const { error } = await supabase
-        .from('wardrobe_items')
+        .from('gw_wardrobe_inventory')
         .delete()
         .eq('id', item.id);
 

@@ -4,6 +4,7 @@ import { Shirt, Package, Calendar, User, Camera, Loader2, FileText } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useWardrobeItems } from '@/hooks/useWardrobeItems';
+import { useWardrobeStats } from '@/hooks/useWardrobeStats';
 import { BackNavigation } from '@/components/shared/BackNavigation';
 import { FittingScheduleDialog } from '@/components/wardrobe/FittingScheduleDialog';
 import { HairNailSubmission } from '@/components/wardrobe/HairNailSubmission';
@@ -14,6 +15,7 @@ const WardrobePage = () => {
     loading,
     getMeasurements
   } = useWardrobeItems();
+  const { stats } = useWardrobeStats();
   const [isFittingDialogOpen, setIsFittingDialogOpen] = useState(false);
   const [isDressCodeModalOpen, setIsDressCodeModalOpen] = useState(false);
   const [selectedFittingItem, setSelectedFittingItem] = useState<{
@@ -52,7 +54,7 @@ const WardrobePage = () => {
                 <Package className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Total Items</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{wardrobeItems.length}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.totalItems}</p>
                   <p className="text-xs text-muted-foreground hidden sm:block">Active inventory</p>
                 </div>
               </div>
@@ -65,7 +67,7 @@ const WardrobePage = () => {
                 <User className="h-4 w-4 sm:h-5 sm:w-5 text-green-500 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Checked Out</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{wardrobeItems.filter(item => item.status === 'checked_out').length}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.checkedOut}</p>
                   <p className="text-xs text-muted-foreground hidden sm:block">Currently borrowed</p>
                 </div>
               </div>
@@ -78,7 +80,7 @@ const WardrobePage = () => {
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Overdue</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">0</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.overdue}</p>
                   <p className="text-xs text-muted-foreground hidden sm:block">Past return date</p>
                 </div>
               </div>
@@ -91,7 +93,7 @@ const WardrobePage = () => {
                 <Package className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Low Stock</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">0</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.lowStock}</p>
                   <p className="text-xs text-muted-foreground hidden sm:block">Need restocking</p>
                 </div>
               </div>
@@ -104,7 +106,7 @@ const WardrobePage = () => {
                 <Shirt className="h-4 w-4 sm:h-5 sm:w-5 text-purple-500 flex-shrink-0" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground">Notifications</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{needsFittingCount}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.notifications}</p>
                   <p className="text-xs text-muted-foreground hidden sm:block">Unread alerts</p>
                 </div>
               </div>
