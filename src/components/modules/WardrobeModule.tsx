@@ -6,10 +6,12 @@ import { HairNailSubmission } from '@/components/wardrobe/HairNailSubmission';
 import { ModuleProps } from '@/types/unified-modules';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
+import { useServiceProviders } from '@/hooks/useServiceProviders';
 
 export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
   const { user: authUser } = useAuth();
   const { userProfile } = useUserProfile(authUser);
+  const { data: providers = [] } = useServiceProviders();
   
   // Check URL for member view - only show member interface on /member/ routes
   const currentPath = window.location.pathname;
@@ -23,12 +25,27 @@ export const WardrobeModule = ({ user, isFullPage = false }: ModuleProps) => {
     full_location: window.location.href
   });
   
-  // Check if user is wardrobe staff (admin, super admin, or executive board)
+  // Check if user is wardrobe staff
+  const currentProvider = providers.find(p => p.user_id === authUser?.id);
+  const isWardrobeProvider = currentProvider && (
+    currentProvider.title?.toLowerCase().includes('wardrobe') ||
+    currentProvider.email === 'drewroberts@spelman.edu' ||
+    currentProvider.email === 'soleilvailes@spelman.edu'
+  );
+  
+  // Check if user is wardrobe staff (admin, super admin, executive board, or wardrobe service provider)
   // But if we're in member view, always show member interface
-  const isWardrobeStaff = !isInMemberView && (userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'executive');
+  const isWardrobeStaff = !isInMemberView && (
+    userProfile?.is_admin || 
+    userProfile?.is_super_admin || 
+    userProfile?.role === 'executive' ||
+    isWardrobeProvider
+  );
   
   console.log('WardrobeModule Debug:', {
     userProfile: userProfile,
+    currentProvider: currentProvider,
+    isWardrobeProvider,
     isWardrobeStaff,
     isInMemberView,
     currentPath: window.location.pathname,
