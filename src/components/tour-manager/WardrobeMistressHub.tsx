@@ -22,77 +22,79 @@ export const WardrobeMistressHub = () => {
       </div>
 
       {/* Navigation Tabs - More Space and Better Layout */}
-      <div className="bg-white rounded-lg border shadow-sm p-2">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 h-auto gap-1 bg-muted p-1">
+      <div className="bg-white rounded-lg border shadow-sm p-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 h-auto gap-2 bg-muted p-2 mb-8">
             <TabsTrigger 
               value="inventory" 
-              className="flex flex-col items-center gap-1 p-3 min-h-[60px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
             >
-              <Package className="h-5 w-5" />
+              <Package className="h-6 w-6" />
               <span>Inventory</span>
             </TabsTrigger>
             <TabsTrigger 
               value="members" 
-              className="flex flex-col items-center gap-1 p-3 min-h-[60px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
             >
-              <Users className="h-5 w-5" />
+              <Users className="h-6 w-6" />
               <span>Members</span>
             </TabsTrigger>
             <TabsTrigger 
               value="checkout" 
-              className="flex flex-col items-center gap-1 p-3 min-h-[60px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
             >
-              <ClipboardCheck className="h-5 w-5" />
+              <ClipboardCheck className="h-6 w-6" />
               <span>Check In/Out</span>
             </TabsTrigger>
             <TabsTrigger 
               value="orders" 
-              className="flex flex-col items-center gap-1 p-3 min-h-[60px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
             >
-              <ShoppingCart className="h-5 w-5" />
+              <ShoppingCart className="h-6 w-6" />
               <span>Orders</span>
             </TabsTrigger>
             <TabsTrigger 
               value="announcements" 
-              className="flex flex-col items-center gap-1 p-3 min-h-[60px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
             >
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="h-6 w-6" />
               <span>Communications</span>
             </TabsTrigger>
             <TabsTrigger 
               value="reports" 
-              className="flex flex-col items-center gap-1 p-3 min-h-[60px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm"
+              className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
             >
-              <FileText className="h-5 w-5" />
+              <FileText className="h-6 w-6" />
               <span>Reports</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab Content with More Spacing */}
-          <TabsContent value="inventory" className="mt-6">
-            <WardrobeInventoryDashboard />
-          </TabsContent>
+          {/* Tab Content with Significant Spacing to Prevent Overlap */}
+          <div className="pt-8 mt-8 border-t">
+            <TabsContent value="inventory" className="mt-0">
+              <WardrobeInventoryDashboard />
+            </TabsContent>
 
-          <TabsContent value="members" className="mt-6">
-            <MemberManagementPanel />
-          </TabsContent>
+            <TabsContent value="members" className="mt-0">
+              <MemberManagementPanel />
+            </TabsContent>
 
-          <TabsContent value="checkout" className="mt-6">
-            <WardrobeCheckoutSystem />
-          </TabsContent>
+            <TabsContent value="checkout" className="mt-0">
+              <WardrobeCheckoutSystem />
+            </TabsContent>
 
-          <TabsContent value="orders" className="mt-6">
-            <OrderManagement />
-          </TabsContent>
+            <TabsContent value="orders" className="mt-0">
+              <OrderManagement />
+            </TabsContent>
 
-          <TabsContent value="announcements" className="mt-6">
-            <WardrobeAnnouncements />
-          </TabsContent>
+            <TabsContent value="announcements" className="mt-0">
+              <WardrobeAnnouncements />
+            </TabsContent>
 
-          <TabsContent value="reports" className="mt-6">
-            <WardrobeReports />
-          </TabsContent>
+            <TabsContent value="reports" className="mt-0">
+              <WardrobeReports />
+            </TabsContent>
+          </div>
         </Tabs>
       </div>
     </div>
