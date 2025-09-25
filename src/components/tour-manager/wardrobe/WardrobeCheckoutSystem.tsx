@@ -88,13 +88,24 @@ export const WardrobeCheckoutSystem = () => {
   const fetchWardrobeItems = async () => {
     try {
       const { data, error } = await supabase
-        .from('wardrobe_items')
+        .from('gw_wardrobe_inventory')
         .select('*')
-        .gt('available_quantity', 0)
+        .gt('quantity_available', 0)
         .order('category', { ascending: true });
 
       if (error) throw error;
-      setWardrobeItems(data || []);
+      
+      // Transform the data to match the expected interface
+      const transformedItems = data?.map(item => ({
+        id: item.id,
+        name: item.item_name,
+        category: item.category,
+        size_options: item.size_available || [],
+        color_options: item.color_available || [],
+        available_quantity: item.quantity_available
+      })) || [];
+      
+      setWardrobeItems(transformedItems);
     } catch (error) {
       console.error('Error fetching wardrobe items:', error);
       toast.error('Failed to load wardrobe items');
