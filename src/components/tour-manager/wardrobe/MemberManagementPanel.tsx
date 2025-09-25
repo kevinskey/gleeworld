@@ -27,9 +27,12 @@ interface MemberProfile {
   height_measurement?: number;
   measurements_taken_date?: string;
   measurements_taken_by?: string;
-  full_name?: string;
-  email?: string;
-  voice_part?: string;
+  profile?: {
+    user_id: string;
+    full_name?: string;
+    email?: string;
+    voice_part?: string;
+  };
 }
 
 const pearlStatusColors = {
@@ -60,13 +63,35 @@ export const MemberManagementPanel = () => {
 
   const fetchMembers = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch member wardrobe profiles with profile data
+      const { data: wardrobeProfiles, error: wardrobeError } = await supabase
         .from('gw_member_wardrobe_profiles')
-        .select('*')
-        .order('profiles(full_name)', { ascending: true });
+        .select('*');
 
-      if (error) throw error;
-      setMembers(data || []);
+      if (wardrobeError) throw wardrobeError;
+
+      // Fetch corresponding profile data  
+      const { data: profiles, error: profilesError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email, voice_part');
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const combinedData = wardrobeProfiles?.map(profile => {
+        const userProfile = profiles?.find(p => p.user_id === profile.user_id);
+        return {
+          ...profile,
+          profile: userProfile
+        };
+      }).filter(item => item.profile) || [];
+
+      // Sort by full name
+      combinedData.sort((a, b) => 
+        (a.profile?.full_name || '').localeCompare(b.profile?.full_name || '')
+      );
+
+      setMembers(combinedData);
     } catch (error) {
       console.error('Error fetching members:', error);
       toast.error('Failed to load members');
@@ -127,8 +152,8 @@ export const MemberManagementPanel = () => {
   };
 
   const filteredMembers = members.filter(member => 
-    member.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    member.profile?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    member.profile?.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -163,8 +188,8 @@ export const MemberManagementPanel = () => {
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg">{member.full_name || 'Unknown'}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{member.voice_part}</p>
+                  <CardTitle className="text-lg">{member.profile?.full_name || 'Unknown'}</CardTitle>
+                  <p className="text-sm text-muted-foreground">{member.profile?.voice_part}</p>
                 </div>
                 <Badge className={pearlStatusColors[member.pearl_status as keyof typeof pearlStatusColors]}>
                   {member.pearl_status}
@@ -255,7 +280,7 @@ export const MemberManagementPanel = () => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Take Measurements - {selectedMember?.full_name}
+              Take Measurements - {selectedMember?.profile?.full_name}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
