@@ -103,16 +103,26 @@ export const UpcomingAppointmentsCard = () => {
             ))}
           </div>
         )}
-        <div className="mt-4 pt-3 border-t border-border/50">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate('/admin/appointments')}
-            className="w-full"
-          >
-            Manage Appointments
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
+        <div className="mt-4 pt-3 border-t border-border/50 space-y-2">
+          <div className="text-xs font-medium text-muted-foreground mb-2">Book Appointments:</div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate('/appointments/provider/drew')}
+              className="text-xs"
+            >
+              Drew
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate('/appointments/provider/soleil')}
+              className="text-xs"
+            >
+              Soleil
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
