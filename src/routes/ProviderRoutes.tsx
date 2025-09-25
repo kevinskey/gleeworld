@@ -7,7 +7,15 @@ export const ProviderRoutes = () => {
   return (
     <Routes>
       <Route 
-        path="/appointments" 
+        path="appointments" 
+        element={
+          <ProviderRoute>
+            <ProviderAppointments />
+          </ProviderRoute>
+        } 
+      />
+      <Route 
+        path="appointments/:providerId" 
         element={
           <ProviderRoute>
             <ProviderAppointments />

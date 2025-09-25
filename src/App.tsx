@@ -1178,7 +1178,7 @@ const App = () => {
                                 />
                                  {/* Provider Routes - Protected for service providers only */}
                                  <Route 
-                                   path="/provider/*" 
+                                   path="/appointments/provider/*" 
                                    element={<ProviderRoutes />} 
                                  />
                                  <Route 
