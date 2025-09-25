@@ -66,6 +66,8 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<WardrobeItem | null>(null);
   const [hasImportPermission, setHasImportPermission] = useState<boolean>(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -234,38 +236,90 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
       const sizesInput = formData.get('sizes') as string;
       const colorsInput = formData.get('colors') as string;
       
-      const newItem = {
+      const itemData = {
         category: formData.get('category') as string,
         item_name: formData.get('item_name') as string,
         size_available: sizesInput ? sizesInput.split(',').map(s => s.trim()) : null,
         color_available: colorsInput ? colorsInput.split(',').map(c => c.trim()) : null,
         quantity_total: parseInt(formData.get('quantity_total') as string) || 0,
         quantity_available: parseInt(formData.get('quantity_available') as string) || 0,
-        quantity_checked_out: 0,
+        quantity_checked_out: editingItem ? editingItem.quantity_checked_out : 0,
         condition: formData.get('condition') as string,
         low_stock_threshold: parseInt(formData.get('low_stock_threshold') as string) || 5,
         notes: formData.get('notes') as string || null,
       };
 
+      if (editingItem) {
+        // Update existing item
+        const { error } = await supabase
+          .from('gw_wardrobe_inventory')
+          .update(itemData)
+          .eq('id', editingItem.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Item updated successfully",
+        });
+      } else {
+        // Insert new item
+        const { error } = await supabase
+          .from('gw_wardrobe_inventory')
+          .insert(itemData);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Item added to inventory",
+        });
+      }
+      
+      setIsAddDialogOpen(false);
+      setIsEditDialogOpen(false);
+      setEditingItem(null);
+      fetchInventory();
+      e.currentTarget.reset();
+    } catch (error) {
+      console.error('Error saving item:', error);
+      toast({
+        title: "Error",
+        description: editingItem ? "Failed to update item" : "Failed to add item",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEdit = (item: WardrobeItem) => {
+    setEditingItem(item);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = async (item: WardrobeItem) => {
+    if (!confirm(`Are you sure you want to delete "${item.item_name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
       const { error } = await supabase
         .from('gw_wardrobe_inventory')
-        .insert(newItem);
+        .delete()
+        .eq('id', item.id);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Item added to inventory",
+        description: "Item deleted successfully",
       });
       
-      setIsAddDialogOpen(false);
       fetchInventory();
-      e.currentTarget.reset();
     } catch (error) {
-      console.error('Error adding item:', error);
+      console.error('Error deleting item:', error);
       toast({
         title: "Error",
-        description: "Failed to add item",
+        description: "Failed to delete item",
         variant: "destructive",
       });
     }
@@ -361,6 +415,124 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                   </Button>
                   <Button type="submit">
                     Add Item
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Edit Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-[95vw] lg:max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-lg lg:text-2xl">Edit Inventory Item</DialogTitle>
+                <DialogDescription className="text-sm lg:text-base">
+                  Update the details for "{editingItem?.item_name}"
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select name="category" defaultValue={editingItem?.category} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(category => (
+                          <SelectItem key={category.value} value={category.value}>
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="item_name">Item Name</Label>
+                    <Input name="item_name" defaultValue={editingItem?.item_name} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="sizes">Available Sizes (comma-separated)</Label>
+                    <Input 
+                      name="sizes" 
+                      placeholder="S, M, L, XL" 
+                      defaultValue={editingItem?.size_available?.join(', ') || ''}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="colors">Available Colors (comma-separated)</Label>
+                    <Input 
+                      name="colors" 
+                      placeholder="Black, White, Blue" 
+                      defaultValue={editingItem?.color_available?.join(', ') || ''}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="quantity_total">Total Quantity</Label>
+                    <Input 
+                      name="quantity_total" 
+                      type="number" 
+                      min="0" 
+                      defaultValue={editingItem?.quantity_total} 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="quantity_available">Available Quantity</Label>
+                    <Input 
+                      name="quantity_available" 
+                      type="number" 
+                      min="0" 
+                      defaultValue={editingItem?.quantity_available} 
+                      required 
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="condition">Condition</Label>
+                    <Select name="condition" defaultValue={editingItem?.condition}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {conditions.map(condition => (
+                          <SelectItem key={condition} value={condition}>
+                            {condition.charAt(0).toUpperCase() + condition.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="low_stock_threshold">Low Stock Threshold</Label>
+                    <Input 
+                      name="low_stock_threshold" 
+                      type="number" 
+                      min="0" 
+                      defaultValue={editingItem?.low_stock_threshold || 5} 
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea 
+                    name="notes" 
+                    placeholder="Additional notes..." 
+                    defaultValue={editingItem?.notes || ''}
+                  />
+                </div>
+                <div className="flex flex-col lg:flex-row justify-end gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsEditDialogOpen(false);
+                      setEditingItem(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit">
+                    Update Item
                   </Button>
                 </div>
               </form>
@@ -477,14 +649,24 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                                   {item.category.replace('-', ' ')}
                                 </p>
                               </div>
-                              <div className="flex gap-1">
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted">
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive">
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
+                               <div className="flex gap-1">
+                                 <Button 
+                                   variant="ghost" 
+                                   size="sm" 
+                                   className="h-8 w-8 p-0 hover:bg-muted"
+                                   onClick={() => handleEdit(item)}
+                                 >
+                                   <Edit className="h-3 w-3" />
+                                 </Button>
+                                 <Button 
+                                   variant="ghost" 
+                                   size="sm" 
+                                   className="h-8 w-8 p-0 hover:bg-destructive/10 hover:text-destructive"
+                                   onClick={() => handleDelete(item)}
+                                 >
+                                   <Trash2 className="h-3 w-3" />
+                                 </Button>
+                               </div>
                             </div>
                             
                             {/* Mobile specs */}
@@ -620,14 +802,24 @@ export const WardrobeInventoryManager = ({ searchTerm }: WardrobeInventoryManage
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden lg:table-cell pr-6">
-                          <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-muted">
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                           <div className="flex items-center gap-2">
+                             <Button 
+                               variant="ghost" 
+                               size="sm" 
+                               className="h-9 w-9 p-0 hover:bg-muted"
+                               onClick={() => handleEdit(item)}
+                             >
+                               <Edit className="h-4 w-4" />
+                             </Button>
+                             <Button 
+                               variant="ghost" 
+                               size="sm" 
+                               className="h-9 w-9 p-0 hover:bg-destructive/10 hover:text-destructive"
+                               onClick={() => handleDelete(item)}
+                             >
+                               <Trash2 className="h-4 w-4" />
+                             </Button>
+                           </div>
                         </TableCell>
                       </TableRow>
                     );
