@@ -198,6 +198,9 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
       // Special handling for the wardrobe structure with dress sizes and named items
       csvData.forEach((row, index) => {
         try {
+          // Skip empty rows
+          if (!row[0] || !row[1]) return;
+          
           // Check if this is a dress size row (first column is a number)
           const firstColumnValue = row[0]?.trim();
           const isDressSizeRow = !isNaN(parseInt(firstColumnValue)) && firstColumnValue !== '';
@@ -210,7 +213,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
             if (quantity > 0) {
               const record: CSVRecord = {
                 category: 'formal_dress',
-                item_name: `Size ${size} Dress`,
+                item_name: `Size ${size} Formal Dress`,
                 size_available: [size],
                 color_available: [],
                 quantity_total: quantity,
@@ -220,6 +223,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
                 notes: ''
               };
               previewData.push(record);
+              console.log(`✅ Added dress record: Size ${size}, Qty: ${quantity}`);
             }
           } else if (row[0] && row[1] && !isNaN(parseInt(row[1]))) {
             // Process named item row (like "Spare Necklaces", "Stud Pairs", etc.)
@@ -252,12 +256,16 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
                 notes: ''
               };
               previewData.push(record);
+              console.log(`✅ Added item record: ${itemName}, Category: ${category}, Qty: ${quantity}`);
             }
           }
         } catch (error) {
           errors.push(`Row ${index + 2}: Error processing row - ${error}`);
         }
       });
+
+      console.log(`🔍 Generated ${previewData.length} records for preview`);
+      console.log('📋 Preview data:', previewData);
 
       setValidationErrors(errors);
       if (errors.length === 0) {
