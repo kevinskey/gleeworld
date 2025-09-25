@@ -191,7 +191,7 @@ export const ProviderAppointmentHub = ({ providerId, providerInfo }: ProviderApp
           </Button>
           <div className="space-y-1">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
-              {providerInfo ? `${providerInfo.first_name}'s Appointment Center` : 'My Appointment Center'}
+              {providerInfo ? `${providerInfo.full_name || providerInfo.first_name || 'Provider'}'s Appointment Center` : 'My Appointment Center'}
             </h1>
             <p className="text-sm lg:text-base text-muted-foreground">
               {currentProvider.title} {currentProvider.provider_name} - {currentProvider.department}
