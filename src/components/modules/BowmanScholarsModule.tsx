@@ -9,7 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBowmanScholars } from '@/hooks/useBowmanScholars';
 import { useAuth } from '@/contexts/AuthContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { GraduationCap, User, Edit2, Users, BookOpen, Calendar, Plus, Trash2, Clock } from 'lucide-react';
+import { CameraCapture } from '@/components/ui/camera-capture';
+import { GraduationCap, User, Edit2, Users, BookOpen, Calendar, Plus, Trash2, Clock, Camera, Upload, FileText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useLiturgicalWorksheets, LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
 import { LiturgicalWorksheetForm } from '@/components/liturgical/LiturgicalWorksheetForm';
@@ -32,15 +35,41 @@ export const BowmanScholarsModule = () => {
   const [editMode, setEditMode] = useState(false);
   const [showWorksheetForm, setShowWorksheetForm] = useState(false);
   const [editingWorksheet, setEditingWorksheet] = useState<LiturgicalWorksheet | undefined>();
+  const [showCamera, setShowCamera] = useState(false);
+  const [uploadingResume, setUploadingResume] = useState(false);
+  const { toast } = useToast();
   
   const [formData, setFormData] = useState({
+    full_name: currentScholar?.full_name || '',
     major: currentScholar?.major || '',
     grad_year: currentScholar?.grad_year || new Date().getFullYear(),
+    hometown: currentScholar?.hometown || '',
     bio: currentScholar?.bio || '',
     headshot_url: currentScholar?.headshot_url || '',
+    resume_url: currentScholar?.resume_url || '',
+    ministry_statement: currentScholar?.ministry_statement || '',
   });
 
   const handleSave = async () => {
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save your profile",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate required fields
+    if (!formData.full_name.trim()) {
+      toast({
+        title: "Error",
+        description: "Full name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const result = await updateScholar(formData);
     if (result.success) {
       setEditMode(false);
@@ -73,6 +102,112 @@ export const BowmanScholarsModule = () => {
     setShowWorksheetForm(false);
     setEditingWorksheet(undefined);
   };
+
+  const handleCameraCapture = async (imageBlob: Blob) => {
+    if (!user) return;
+
+    try {
+      const fileExt = 'jpg';
+      const fileName = `${user.id}/headshot.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('bowman-scholars')
+        .upload(fileName, imageBlob, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('bowman-scholars')
+        .getPublicUrl(fileName);
+
+      setFormData(prev => ({ ...prev, headshot_url: data.publicUrl }));
+      setShowCamera(false);
+      
+      toast({
+        title: "Success",
+        description: "Photo captured successfully",
+      });
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload photo",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResumeUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type and size
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Error",
+        description: "Please upload a PDF or Word document",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      toast({
+        title: "Error",
+        description: "File size must be less than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingResume(true);
+
+    try {
+      const fileExt = file.name.split('.').pop() || 'pdf';
+      const fileName = `${user.id}/resume.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('bowman-scholars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('bowman-scholars')
+        .getPublicUrl(fileName);
+
+      setFormData(prev => ({ ...prev, resume_url: data.publicUrl }));
+      
+      toast({
+        title: "Success",
+        description: "Resume uploaded successfully",
+      });
+    } catch (error) {
+      console.error('Error uploading resume:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload resume",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingResume(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <GraduationCap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium mb-2">Authentication Required</h3>
+          <p className="text-muted-foreground mb-4">
+            Please log in to GleeWorld to access the Bowman Scholars program
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -197,24 +332,41 @@ export const BowmanScholarsModule = () => {
                                <GraduationCap className="h-6 w-6 lg:h-8 lg:w-8" />
                              </AvatarFallback>
                            </Avatar>
-                           <div className="flex-1 min-w-0">
-                             <div className="flex flex-wrap items-center gap-1 lg:gap-2 mb-2">
-                               <Badge variant="secondary" className="bg-gold/20 text-gold text-xs">
-                                 Bowman Scholar
-                               </Badge>
-                               {scholar.grad_year && (
-                                 <Badge variant="outline" className="text-xs">
-                                   Class of {scholar.grad_year}
-                                 </Badge>
-                               )}
-                             </div>
-                             {scholar.major && (
-                               <p className="text-xs lg:text-sm font-medium mb-1 truncate">{scholar.major}</p>
-                             )}
-                             {scholar.bio && (
-                               <p className="text-xs lg:text-sm text-muted-foreground line-clamp-2">{scholar.bio}</p>
-                             )}
-                           </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-1 lg:gap-2 mb-2">
+                                <Badge variant="secondary" className="bg-gold/20 text-gold text-xs">
+                                  Bowman Scholar
+                                </Badge>
+                                {scholar.grad_year && (
+                                  <Badge variant="outline" className="text-xs">
+                                    Class of {scholar.grad_year}
+                                  </Badge>
+                                )}
+                              </div>
+                              {scholar.full_name && (
+                                <h4 className="text-sm lg:text-base font-semibold mb-1">{scholar.full_name}</h4>
+                              )}
+                              <div className="flex flex-wrap gap-2 text-xs lg:text-sm text-muted-foreground mb-1">
+                                {scholar.major && <span>• {scholar.major}</span>}
+                                {scholar.hometown && <span>• {scholar.hometown}</span>}
+                              </div>
+                              {scholar.bio && (
+                                <p className="text-xs lg:text-sm text-muted-foreground line-clamp-2">{scholar.bio}</p>
+                              )}
+                              {scholar.resume_url && (
+                                <div className="mt-2">
+                                  <a 
+                                    href={scholar.resume_url} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                    View Resume
+                                  </a>
+                                </div>
+                              )}
+                            </div>
                          </div>
                        </Card>
                      ))
@@ -257,57 +409,151 @@ export const BowmanScholarsModule = () => {
                     Create Profile
                   </Button>
                 </div>
-              ) : editMode ? (
-                 <div className="space-y-4">
-                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+               ) : editMode ? (
+                 <div className="space-y-6">
+                   {/* Basic Information */}
+                   <div className="space-y-4">
+                     <h3 className="text-lg font-semibold">Basic Information</h3>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div>
+                         <Label htmlFor="full_name">Full Name *</Label>
+                         <Input
+                           id="full_name"
+                           value={formData.full_name}
+                           onChange={(e) => handleInputChange('full_name', e.target.value)}
+                           placeholder="Your full name"
+                           required
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="hometown">Hometown</Label>
+                         <Input
+                           id="hometown"
+                           value={formData.hometown}
+                           onChange={(e) => handleInputChange('hometown', e.target.value)}
+                           placeholder="City, State"
+                         />
+                       </div>
+                     </div>
+                     
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                       <div>
+                         <Label htmlFor="major">Major</Label>
+                         <Input
+                           id="major"
+                           value={formData.major}
+                           onChange={(e) => handleInputChange('major', e.target.value)}
+                           placeholder="Your major"
+                         />
+                       </div>
+                       <div>
+                         <Label htmlFor="grad_year">Graduation Year</Label>
+                         <Input
+                           id="grad_year"
+                           type="number"
+                           value={formData.grad_year}
+                           onChange={(e) => handleInputChange('grad_year', parseInt(e.target.value))}
+                         />
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Profile Photo */}
+                   <div className="space-y-4">
+                     <h3 className="text-lg font-semibold">Profile Photo</h3>
+                     <div className="flex items-center gap-4">
+                       <Avatar className="h-20 w-20">
+                         <AvatarImage src={formData.headshot_url} />
+                         <AvatarFallback>
+                           <GraduationCap className="h-10 w-10" />
+                         </AvatarFallback>
+                       </Avatar>
+                       <div className="flex gap-2">
+                         <Button 
+                           type="button" 
+                           variant="outline" 
+                           onClick={() => setShowCamera(true)}
+                         >
+                           <Camera className="h-4 w-4 mr-2" />
+                           Take Selfie
+                         </Button>
+                         <div>
+                           <Label htmlFor="headshot_url">Or enter URL:</Label>
+                           <Input
+                             id="headshot_url"
+                             value={formData.headshot_url}
+                             onChange={(e) => handleInputChange('headshot_url', e.target.value)}
+                             placeholder="Image URL"
+                             className="mt-1"
+                           />
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Resume Upload */}
+                   <div className="space-y-4">
+                     <h3 className="text-lg font-semibold">Resume</h3>
+                     <div className="flex items-center gap-4">
+                       <div className="flex-1">
+                         <Label htmlFor="resume">Upload Resume (PDF or Word)</Label>
+                         <Input
+                           id="resume"
+                           type="file"
+                           accept=".pdf,.doc,.docx"
+                           onChange={handleResumeUpload}
+                           disabled={uploadingResume}
+                           className="mt-1"
+                         />
+                         {formData.resume_url && (
+                           <p className="text-sm text-green-600 mt-1">Resume uploaded successfully</p>
+                         )}
+                       </div>
+                       {uploadingResume && (
+                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                       )}
+                     </div>
+                   </div>
+
+                   {/* Bio */}
+                   <div className="space-y-4">
                      <div>
-                       <Label htmlFor="major">Major</Label>
-                       <Input
-                         id="major"
-                         value={formData.major}
-                         onChange={(e) => handleInputChange('major', e.target.value)}
-                         placeholder="Your major"
+                       <Label htmlFor="bio">Academic Bio</Label>
+                       <Textarea
+                         id="bio"
+                         value={formData.bio}
+                         onChange={(e) => handleInputChange('bio', e.target.value)}
+                         placeholder="Tell us about your academic achievements, goals, and background..."
+                         rows={4}
+                         className="mt-1"
                        />
                      </div>
+                   </div>
+
+                   {/* Ministry Statement */}
+                   <div className="space-y-4">
                      <div>
-                       <Label htmlFor="grad_year">Graduation Year</Label>
-                       <Input
-                         id="grad_year"
-                         type="number"
-                         value={formData.grad_year}
-                         onChange={(e) => handleInputChange('grad_year', parseInt(e.target.value))}
+                       <Label htmlFor="ministry_statement">Ministry Statement</Label>
+                       <Textarea
+                         id="ministry_statement"
+                         value={formData.ministry_statement}
+                         onChange={(e) => handleInputChange('ministry_statement', e.target.value)}
+                         placeholder="Share your vision for ministry and how you plan to serve Catholic parishes..."
+                         rows={6}
+                         className="mt-1"
                        />
                      </div>
                    </div>
                   
-                  <div>
-                    <Label htmlFor="headshot_url">Headshot URL</Label>
-                    <Input
-                      id="headshot_url"
-                      value={formData.headshot_url}
-                      onChange={(e) => handleInputChange('headshot_url', e.target.value)}
-                      placeholder="URL to your professional headshot"
-                    />
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="bio">Bio</Label>
-                    <Textarea
-                      id="bio"
-                      value={formData.bio}
-                      onChange={(e) => handleInputChange('bio', e.target.value)}
-                      placeholder="Tell us about your academic achievements and goals..."
-                      rows={4}
-                    />
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button onClick={handleSave}>Save Profile</Button>
-                    <Button variant="outline" onClick={() => setEditMode(false)}>
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
+                   <div className="flex gap-2 pt-4">
+                     <Button onClick={handleSave} disabled={!formData.full_name.trim()}>
+                       Save Profile
+                     </Button>
+                     <Button variant="outline" onClick={() => setEditMode(false)}>
+                       Cancel
+                     </Button>
+                   </div>
+                 </div>
               ) : (
                  <div className="space-y-4">
                    <div className="flex items-start gap-3 lg:gap-4">

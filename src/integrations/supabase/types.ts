@@ -943,25 +943,37 @@ export type Database = {
         Row: {
           bio: string | null
           created_at: string | null
+          full_name: string | null
           grad_year: number | null
           headshot_url: string | null
+          hometown: string | null
           major: string | null
+          ministry_statement: string | null
+          resume_url: string | null
           user_id: string
         }
         Insert: {
           bio?: string | null
           created_at?: string | null
+          full_name?: string | null
           grad_year?: number | null
           headshot_url?: string | null
+          hometown?: string | null
           major?: string | null
+          ministry_statement?: string | null
+          resume_url?: string | null
           user_id: string
         }
         Update: {
           bio?: string | null
           created_at?: string | null
+          full_name?: string | null
           grad_year?: number | null
           headshot_url?: string | null
+          hometown?: string | null
           major?: string | null
+          ministry_statement?: string | null
+          resume_url?: string | null
           user_id?: string
         }
         Relationships: []

@@ -5,10 +5,14 @@ import { useToast } from '@/hooks/use-toast';
 
 interface BowmanScholar {
   user_id: string;
+  full_name?: string;
   major?: string;
   grad_year?: number;
+  hometown?: string;
   bio?: string;
   headshot_url?: string;
+  resume_url?: string;
+  ministry_statement?: string;
   created_at: string;
 }
 
