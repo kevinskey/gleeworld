@@ -1181,6 +1181,11 @@ const App = () => {
                                    path="/appointments/provider/*" 
                                    element={<ProviderRoutes />} 
                                  />
+                                 {/* Alias for plural path to prevent 404s */}
+                                 <Route 
+                                   path="/appointments/providers/*" 
+                                   element={<ProviderRoutes />} 
+                                 />
                                  <Route 
                                    path="/provider-appointments" 
                                    element={

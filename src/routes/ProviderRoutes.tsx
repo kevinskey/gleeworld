@@ -6,16 +6,18 @@ import ProviderAppointments from '@/pages/ProviderAppointments';
 export const ProviderRoutes = () => {
   return (
     <Routes>
+      {/* Index: /appointments/provider */}
       <Route 
-        path="appointments" 
+        index 
         element={
           <ProviderRoute>
             <ProviderAppointments />
           </ProviderRoute>
         } 
       />
+      {/* Provider-specific: /appointments/provider/:providerId (e.g., Drew, Soleil) */}
       <Route 
-        path="appointments/:providerId" 
+        path=":providerId" 
         element={
           <ProviderRoute>
             <ProviderAppointments />
