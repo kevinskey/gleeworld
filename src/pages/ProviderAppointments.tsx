@@ -61,19 +61,7 @@ const ProviderAppointments = () => {
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <div className="container mx-auto p-6">
-        {providerId && provider && (
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold">
-              {provider.full_name || provider.first_name || 'Provider'} - Appointments
-            </h1>
-            <p className="text-muted-foreground">
-              Book an appointment with {provider.first_name || 'this provider'}
-            </p>
-          </div>
-        )}
-        <ProviderAppointmentHub providerId={provider?.user_id} providerInfo={provider} />
-      </div>
+      <ProviderAppointmentHub providerId={provider?.user_id} providerInfo={provider} />
     </UniversalLayout>
   );
 };
