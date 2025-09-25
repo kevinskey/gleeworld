@@ -10,6 +10,10 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format } from 'date-fns';
+import QRCode from 'qrcode';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Link, Download } from 'lucide-react';
 
 interface QRToken {
   id: string;
@@ -33,6 +37,8 @@ export const QRCodeManagementModule = () => {
   const [activeTokens, setActiveTokens] = useState<QRToken[]>([]);
   const [historicalTokens, setHistoricalTokens] = useState<QRToken[]>([]);
   const [loading, setLoading] = useState(false);
+  const [customUrl, setCustomUrl] = useState('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState('');
   const [stats, setStats] = useState({
     totalGenerated: 0,
     totalScans: 0,
@@ -150,6 +156,50 @@ export const QRCodeManagementModule = () => {
     }
   };
 
+  const generateUrlQRCode = async (url: string) => {
+    try {
+      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+      const qrDataUrl = await QRCode.toDataURL(fullUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      setQrCodeDataUrl(qrDataUrl);
+      
+      toast({
+        title: "Success",
+        description: "QR code generated successfully",
+      });
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate QR code",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const downloadQRCode = () => {
+    if (!qrCodeDataUrl) return;
+    
+    const link = document.createElement('a');
+    link.href = qrCodeDataUrl;
+    link.download = `qr-code-${customUrl.replace(/[^a-zA-Z0-9]/g, '-')}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const quickLinks = [
+    { name: 'Bowman Scholars Landing', url: '/bowman-scholars' },
+    { name: 'Public Calendar', url: '/calendar' },
+    { name: 'Home Page', url: '/' },
+  ];
+
   const TokenCard = ({ token, showActions = false }: { token: QRToken; showActions?: boolean }) => {
     const isExpired = new Date() > new Date(token.expires_at);
     const isActive = token.is_active && !isExpired;
@@ -262,14 +312,18 @@ export const QRCodeManagementModule = () => {
       </div>
 
       <Tabs defaultValue="generator" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="generator" className="flex items-center gap-2">
             <QrCode className="h-4 w-4" />
-            Generate QR Code
+            Attendance QR
+          </TabsTrigger>
+          <TabsTrigger value="url-generator" className="flex items-center gap-2">
+            <Link className="h-4 w-4" />
+            URL QR Code
           </TabsTrigger>
           <TabsTrigger value="active" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Active Codes ({stats.activeTokens})
+            Active ({stats.activeTokens})
           </TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="h-4 w-4" />
@@ -279,6 +333,91 @@ export const QRCodeManagementModule = () => {
 
         <TabsContent value="generator" className="mt-6">
           <QRAttendanceGenerator onEventChange={loadTokenData} />
+        </TabsContent>
+
+        <TabsContent value="url-generator" className="mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Link className="h-5 w-5" />
+                  Generate URL QR Code
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="custom-url">Enter URL or Path</Label>
+                  <Input
+                    id="custom-url"
+                    value={customUrl}
+                    onChange={(e) => setCustomUrl(e.target.value)}
+                    placeholder="/bowman-scholars or https://example.com"
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Quick Links</Label>
+                  <div className="grid grid-cols-1 gap-2">
+                    {quickLinks.map((link) => (
+                      <Button
+                        key={link.url}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCustomUrl(link.url)}
+                        className="justify-start"
+                      >
+                        {link.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={() => generateUrlQRCode(customUrl)}
+                  disabled={!customUrl.trim()}
+                  className="w-full"
+                >
+                  Generate QR Code
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Generated QR Code</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {qrCodeDataUrl ? (
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-lg border flex justify-center">
+                      <img 
+                        src={qrCodeDataUrl} 
+                        alt="Generated QR Code" 
+                        className="max-w-full h-auto"
+                      />
+                    </div>
+                    <div className="text-sm text-muted-foreground text-center">
+                      URL: {customUrl.startsWith('http') ? customUrl : `${window.location.origin}${customUrl}`}
+                    </div>
+                    <Button 
+                      onClick={downloadQRCode}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download QR Code
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <QrCode className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                    <p>Enter a URL and click "Generate QR Code" to create a QR code</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="active" className="mt-6">
