@@ -42,7 +42,7 @@ interface ImportMapping {
 }
 
 const requiredFields = ['category', 'item_name', 'quantity_total', 'quantity_available'];
-const categories = ['dresses', 'pearls', 'lipstick', 'polos', 't-shirts', 'garment-bags'];
+const categories = ['formal_dress', 'pearls', 'lipstick', 'semi_formal_polo', 'casual_tshirt'];
 const conditions = ['new', 'good', 'fair', 'poor', 'damaged'];
 
 export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: WardrobeCSVImportDialogProps) => {
@@ -209,7 +209,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
             
             if (quantity > 0) {
               const record: CSVRecord = {
-                category: 'dresses',
+                category: 'formal_dress',
                 item_name: `Size ${size} Dress`,
                 size_available: [size],
                 color_available: [],
@@ -233,7 +233,11 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
               if (lowerName.includes('lipstick') || lowerName.includes('lip')) {
                 category = 'lipstick';
               } else if (lowerName.includes('dress') || lowerName.includes('gown')) {
-                category = 'dresses';
+                category = 'formal_dress';
+              } else if (lowerName.includes('polo')) {
+                category = 'semi_formal_polo';
+              } else if (lowerName.includes('tshirt') || lowerName.includes('t-shirt') || lowerName.includes('t shirt')) {
+                category = 'casual_tshirt';
               }
               
               const record: CSVRecord = {
@@ -539,7 +543,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="font-medium text-green-900 mb-2">Processing Rules:</h4>
                 <ul className="text-sm text-green-700 space-y-1">
-                  <li>• Numeric values in first column = Dress sizes</li>
+                  <li>• Numeric values in first column = Formal dresses</li>
                   <li>• Named items with "necklace", "stud", "pearl" = Pearls category</li>
                   <li>• Named items with "lipstick", "lip" = Lipstick category</li>
                   <li>• Items with quantity 0 will be skipped</li>
