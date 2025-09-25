@@ -20,7 +20,12 @@ import {
 } from '@/hooks/useRealAppointments';
 import { useServiceProviders } from '@/hooks/useServiceProviders';
 
-export const ProviderAppointmentHub = () => {
+interface ProviderAppointmentHubProps {
+  providerId?: string;
+  providerInfo?: any;
+}
+
+export const ProviderAppointmentHub = ({ providerId, providerInfo }: ProviderAppointmentHubProps = {}) => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editingAppointmentId, setEditingAppointmentId] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -29,8 +34,17 @@ export const ProviderAppointmentHub = () => {
   const { userProfile } = useUserProfile(user);
   const { data: providers = [] } = useServiceProviders();
   
-  // Find current user's provider profile
-  const currentProvider = providers.find(p => p.user_id === user?.id);
+  // Find current user's provider profile or use provided provider
+  const currentProvider = providerInfo ? 
+    { 
+      ...providerInfo, 
+      provider_name: providerInfo.full_name || providerInfo.first_name,
+      department: 'Music Department',
+      services_offered: ['general', 'consultation', 'voice-lesson', 'tutorial'],
+      is_active: true,
+      title: 'Dr.'
+    } : 
+    providers.find(p => p.user_id === user?.id);
   
   // Use real appointments data
   const { data: allAppointments = [], isLoading, error } = useRealAppointments();
@@ -176,7 +190,9 @@ export const ProviderAppointmentHub = () => {
             <span className="sm:hidden">Back</span>
           </Button>
           <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">My Appointment Center</h1>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold">
+              {providerInfo ? `${providerInfo.first_name}'s Appointment Center` : 'My Appointment Center'}
+            </h1>
             <p className="text-sm lg:text-base text-muted-foreground">
               {currentProvider.title} {currentProvider.provider_name} - {currentProvider.department}
             </p>

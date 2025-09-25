@@ -72,7 +72,7 @@ const ProviderAppointments = () => {
             </p>
           </div>
         )}
-        <ProviderAppointmentHub />
+        <ProviderAppointmentHub providerId={provider?.user_id} providerInfo={provider} />
       </div>
     </UniversalLayout>
   );
