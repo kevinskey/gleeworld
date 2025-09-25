@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { useNavigate } from "react-router-dom";
+import React, { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useLocation } from "react-router-dom";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
@@ -181,11 +181,23 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     isModulePinned
   } = useModuleOrdering(user.id);
 
+  // Navigation hooks
+  const location = useLocation();
+  
   // State management
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'status'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Initialize selected module from URL on component mount
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const moduleFromUrl = params.get('module');
+    if (moduleFromUrl) {
+      setSelectedModule(moduleFromUrl);
+    }
+  }, [location.search]);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);
@@ -337,6 +349,24 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     }));
   };
 
+  // Module selection handlers with URL persistence
+  const handleModuleSelect = (moduleId: string) => {
+    setSelectedModule(moduleId);
+    // Update URL with module parameter
+    const params = new URLSearchParams(location.search);
+    params.set('module', moduleId);
+    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+  };
+
+  const handleBackToModules = () => {
+    setSelectedModule(null);
+    // Remove module parameter from URL
+    const params = new URLSearchParams(location.search);
+    params.delete('module');
+    const newSearch = params.toString();
+    navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+  };
+
   // If a module is selected, render it
   if (selectedModule) {
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
@@ -345,7 +375,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
       return (
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <Button variant="ghost" size="sm" onClick={() => setSelectedModule(null)} className="p-0 h-auto">
+            <Button variant="ghost" size="sm" onClick={handleBackToModules} className="p-0 h-auto">
               {getFirstName(user.full_name)}'s Dashboard
             </Button>
             <span>/</span>
@@ -359,7 +389,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
               is_super_admin: user.role === 'super-admin'
             }} 
             isFullPage={true} 
-            onNavigate={(moduleId: string) => setSelectedModule(moduleId)} 
+            onNavigate={handleModuleSelect} 
           />
         </div>
       );
@@ -396,7 +426,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
         {/* Quick Actions Panel - slides out from underneath */}
         <QuickActionsPanel 
           user={user} 
-          onModuleSelect={setSelectedModule}
+          onModuleSelect={handleModuleSelect}
           isOpen={isQuickActionsOpen}
           onClose={() => setIsQuickActionsOpen(false)}
         />
@@ -495,7 +525,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                   <SortableModuleCard
                     key={module.id}
                     module={module}
-                    onModuleClick={setSelectedModule}
+                    onModuleClick={handleModuleSelect}
                     navigate={navigate}
                     isPinned={isModulePinned(module.category, module.id)}
                     onTogglePin={() => toggleModulePin(module.category, module.id)}
@@ -548,7 +578,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                             <SortableModuleCard
                               key={module.id}
                               module={module}
-                              onModuleClick={setSelectedModule}
+                              onModuleClick={handleModuleSelect}
                               navigate={navigate}
                               isPinned={isModulePinned(category, module.id)}
                               onTogglePin={() => toggleModulePin(category, module.id)}
