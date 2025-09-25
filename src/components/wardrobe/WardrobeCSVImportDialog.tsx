@@ -195,77 +195,61 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
       const errors: string[] = [];
       const previewData: CSVRecord[] = [];
 
-      // Check if required fields are mapped
-      requiredFields.forEach(field => {
-        if (!mapping[field as keyof ImportMapping]) {
-          errors.push(`Required field "${field}" is not mapped`);
-        }
-      });
-
-      if (errors.length > 0) {
-        setValidationErrors(errors);
-        return;
-      }
-
+      // Special handling for the wardrobe structure with dress sizes and named items
       csvData.forEach((row, index) => {
         try {
-          const categoryIndex = headers.indexOf(mapping.category);
-          const itemNameIndex = headers.indexOf(mapping.item_name);
-          const sizesIndex = mapping.sizes ? headers.indexOf(mapping.sizes) : -1;
-          const colorsIndex = mapping.colors ? headers.indexOf(mapping.colors) : -1;
-          const quantityTotalIndex = headers.indexOf(mapping.quantity_total);
-          const quantityAvailableIndex = headers.indexOf(mapping.quantity_available);
-          const conditionIndex = mapping.condition ? headers.indexOf(mapping.condition) : -1;
-          const lowStockIndex = mapping.low_stock_threshold ? headers.indexOf(mapping.low_stock_threshold) : -1;
-          const notesIndex = mapping.notes ? headers.indexOf(mapping.notes) : -1;
-
-          const category = row[categoryIndex]?.toLowerCase();
-          if (!categories.includes(category)) {
-            errors.push(`Row ${index + 2}: Invalid category "${category}". Must be one of: ${categories.join(', ')}`);
-            return;
+          // Check if this is a dress size row (first column is a number)
+          const firstColumnValue = row[0]?.trim();
+          const isDressSizeRow = !isNaN(parseInt(firstColumnValue)) && firstColumnValue !== '';
+          
+          if (isDressSizeRow) {
+            // Process dress size row
+            const size = firstColumnValue;
+            const quantity = parseInt(row[1]) || 0;
+            
+            if (quantity > 0) {
+              const record: CSVRecord = {
+                category: 'dresses',
+                item_name: `Size ${size} Dress`,
+                size_available: [size],
+                color_available: [],
+                quantity_total: quantity,
+                quantity_available: quantity,
+                condition: 'good',
+                low_stock_threshold: 1,
+                notes: ''
+              };
+              previewData.push(record);
+            }
+          } else if (row[0] && row[1] && !isNaN(parseInt(row[1]))) {
+            // Process named item row (like "Spare Necklaces", "Stud Pairs", etc.)
+            const itemName = row[0].trim();
+            const quantity = parseInt(row[1]) || 0;
+            
+            if (quantity > 0 && itemName) {
+              // Determine category based on item name
+              let category = 'pearls'; // default
+              const lowerName = itemName.toLowerCase();
+              if (lowerName.includes('lipstick') || lowerName.includes('lip')) {
+                category = 'lipstick';
+              } else if (lowerName.includes('dress') || lowerName.includes('gown')) {
+                category = 'dresses';
+              }
+              
+              const record: CSVRecord = {
+                category,
+                item_name: itemName,
+                size_available: [],
+                color_available: [],
+                quantity_total: quantity,
+                quantity_available: quantity,
+                condition: 'good',
+                low_stock_threshold: Math.min(5, Math.ceil(quantity * 0.2)),
+                notes: ''
+              };
+              previewData.push(record);
+            }
           }
-
-          const itemName = row[itemNameIndex];
-          if (!itemName) {
-            errors.push(`Row ${index + 2}: Item name is required`);
-            return;
-          }
-
-          const quantityTotal = parseInt(row[quantityTotalIndex]);
-          const quantityAvailable = parseInt(row[quantityAvailableIndex]);
-          if (isNaN(quantityTotal) || isNaN(quantityAvailable)) {
-            errors.push(`Row ${index + 2}: Quantities must be valid numbers`);
-            return;
-          }
-
-          if (quantityAvailable > quantityTotal) {
-            errors.push(`Row ${index + 2}: Available quantity cannot exceed total quantity`);
-            return;
-          }
-
-          const condition = conditionIndex >= 0 ? row[conditionIndex]?.toLowerCase() : 'good';
-          if (condition && !conditions.includes(condition)) {
-            errors.push(`Row ${index + 2}: Invalid condition "${condition}". Must be one of: ${conditions.join(', ')}`);
-            return;
-          }
-
-          const record: CSVRecord = {
-            category,
-            item_name: itemName,
-            size_available: sizesIndex >= 0 && row[sizesIndex] 
-              ? row[sizesIndex].split(',').map(s => s.trim()).filter(Boolean)
-              : [],
-            color_available: colorsIndex >= 0 && row[colorsIndex]
-              ? row[colorsIndex].split(',').map(c => c.trim()).filter(Boolean)
-              : [],
-            quantity_total: quantityTotal,
-            quantity_available: quantityAvailable,
-            condition: condition || 'good',
-            low_stock_threshold: lowStockIndex >= 0 ? parseInt(row[lowStockIndex]) || 5 : 5,
-            notes: notesIndex >= 0 ? row[notesIndex] || '' : ''
-          };
-
-          previewData.push(record);
         } catch (error) {
           errors.push(`Row ${index + 2}: Error processing row - ${error}`);
         }
@@ -275,7 +259,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
       if (errors.length === 0) {
         setPreview(previewData);
         setStep('preview');
-        console.log('✅ Preview generated successfully');
+        console.log('✅ Preview generated successfully', previewData);
       }
     } catch (error) {
       console.error('❌ Error in generatePreview:', error);
@@ -520,41 +504,53 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
           {step === 'mapping' && (
             <div className="space-y-4">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-2">Map CSV columns to wardrobe fields</h4>
+                <h4 className="font-medium text-blue-900 mb-2">Auto-Processing Your Wardrobe Data</h4>
                 <p className="text-sm text-blue-700">
-                  Match your CSV columns to the appropriate wardrobe inventory fields. Required fields are marked with *.
+                  Your CSV will be automatically processed. No column mapping needed for your format.
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(mapping).map(([field, value]) => (
-                  <div key={field}>
-                    <Label className="text-sm font-medium">
-                      {field.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                      {requiredFields.includes(field) && <span className="text-destructive ml-1">*</span>}
-                    </Label>
-                    <Select value={value} onValueChange={(val) => handleColumnMapping(field as keyof ImportMapping, val)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select CSV column" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="skip">-- Skip this field --</SelectItem>
+              {headers.length > 0 && (
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-2">CSV Data Preview</h4>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
                         {headers.map((header, index) => (
-                          <SelectItem key={index} value={header}>
-                            {header}
-                          </SelectItem>
+                          <TableHead key={index} className="text-xs">{header}</TableHead>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {csvData.slice(0, 10).map((row, rowIndex) => (
+                        <TableRow key={rowIndex}>
+                          {row.map((cell, cellIndex) => (
+                            <TableCell key={cellIndex} className="text-xs max-w-24 truncate">
+                              {cell || '-'}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-medium text-green-900 mb-2">Processing Rules:</h4>
+                <ul className="text-sm text-green-700 space-y-1">
+                  <li>• Numeric values in first column = Dress sizes</li>
+                  <li>• Named items with "necklace", "stud", "pearl" = Pearls category</li>
+                  <li>• Named items with "lipstick", "lip" = Lipstick category</li>
+                  <li>• Items with quantity 0 will be skipped</li>
+                </ul>
               </div>
 
               {validationErrors.length > 0 && (
                 <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-destructive" />
-                    <h4 className="font-medium text-destructive">Validation Errors</h4>
+                    <h4 className="font-medium text-destructive">Processing Errors</h4>
                   </div>
                   <ul className="list-disc list-inside space-y-1 text-sm text-destructive">
                     {validationErrors.map((error, index) => (
@@ -569,7 +565,7 @@ export const WardrobeCSVImportDialog = ({ open, onOpenChange, onSuccess }: Wardr
                   Back
                 </Button>
                 <Button onClick={generatePreview}>
-                  Generate Preview
+                  Process Data
                 </Button>
               </div>
             </div>
