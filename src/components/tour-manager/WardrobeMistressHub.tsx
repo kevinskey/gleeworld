@@ -69,29 +69,29 @@ export const WardrobeMistressHub = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab Content with Significant Spacing to Prevent Overlap */}
+          {/* Tab Content with 100px header spacing */}
           <div className="pt-12 mt-12 border-t relative z-10">
-            <TabsContent value="inventory" className="mt-0">
+            <TabsContent value="inventory" className="mt-0 pt-[100px]">
               <WardrobeInventoryDashboard />
             </TabsContent>
 
-            <TabsContent value="members" className="mt-0">
+            <TabsContent value="members" className="mt-0 pt-[100px]">
               <MemberManagementPanel />
             </TabsContent>
 
-            <TabsContent value="checkout" className="mt-0">
+            <TabsContent value="checkout" className="mt-0 pt-[100px]">
               <WardrobeCheckoutSystem />
             </TabsContent>
 
-            <TabsContent value="orders" className="mt-0">
+            <TabsContent value="orders" className="mt-0 pt-[100px]">
               <OrderManagement />
             </TabsContent>
 
-            <TabsContent value="announcements" className="mt-0">
+            <TabsContent value="announcements" className="mt-0 pt-[100px]">
               <WardrobeAnnouncements />
             </TabsContent>
 
-            <TabsContent value="reports" className="mt-0">
+            <TabsContent value="reports" className="mt-0 pt-[100px]">
               <WardrobeReports />
             </TabsContent>
           </div>
