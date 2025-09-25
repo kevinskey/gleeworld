@@ -24,7 +24,7 @@ export const WardrobeMistressHub = () => {
       {/* Navigation Tabs - More Space and Better Layout */}
       <div className="bg-white rounded-lg border shadow-sm p-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 h-auto gap-2 bg-muted p-2 mb-8">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-3 lg:grid-cols-6 h-auto gap-2 bg-muted p-2 mb-12 sticky top-0 z-20">
             <TabsTrigger 
               value="inventory" 
               className="flex flex-col items-center gap-2 p-4 min-h-[80px] text-xs font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md"
@@ -70,7 +70,7 @@ export const WardrobeMistressHub = () => {
           </TabsList>
 
           {/* Tab Content with Significant Spacing to Prevent Overlap */}
-          <div className="pt-8 mt-8 border-t">
+          <div className="pt-12 mt-12 border-t relative z-10">
             <TabsContent value="inventory" className="mt-0">
               <WardrobeInventoryDashboard />
             </TabsContent>
