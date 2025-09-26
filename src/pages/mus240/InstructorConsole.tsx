@@ -151,7 +151,7 @@ export const InstructorConsole = () => {
 
         {/* Main Console */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto gap-0.5 md:gap-1 p-0.5 md:p-1">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto gap-0.5 md:gap-1 p-0.5 md:p-1">
             <TabsTrigger 
               value="assignments" 
               className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
@@ -174,6 +174,13 @@ export const InstructorConsole = () => {
               <span>Grades</span>
             </TabsTrigger>
             <TabsTrigger 
+              value="midterm-grading" 
+              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+            >
+              <ClipboardCheck className="h-3 w-3 md:h-4 md:w-4" />
+              <span>Grading</span>
+            </TabsTrigger>
+            <TabsTrigger 
               value="ai-assistant" 
               className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
             >
@@ -192,6 +199,10 @@ export const InstructorConsole = () => {
 
           <TabsContent value="grades" className="mt-1 md:mt-3">
             <GradesAdmin />
+          </TabsContent>
+
+          <TabsContent value="midterm-grading" className="mt-1 md:mt-3">
+            <MidtermGradingDashboard />
           </TabsContent>
 
           <TabsContent value="ai-assistant" className="mt-1 md:mt-3">
