@@ -55,9 +55,9 @@ const Auth = () => {
         return;
       }
       
-      // Default redirect based on admin status
-      const defaultPath = isAdmin() ? '/dashboard' : '/dashboard';
-      console.log('Auth: Redirecting to default path:', defaultPath);
+      // Default redirect to Glee Academy
+      const defaultPath = '/glee-academy';
+      console.log('Auth: Redirecting to Glee Academy:', defaultPath);
       navigate(defaultPath, { replace: true });
     }
   }, [user, loading, profileLoading, navigate, isAdmin]);
