@@ -301,6 +301,14 @@ function getSaintForDate(date: Date): string {
 function getAccurateReadings(date: Date, season: string, liturgicalYear: string, usccbUrl: string): any {
   const dayOfWeek = date.getDay(); // 0 = Sunday
   const isSunday = dayOfWeek === 0;
+
+  // Date-specific corrections (authoritative overrides)
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const dateKey = `${yyyy}-${mm}-${dd}`;
+  const override = getReadingOverride(dateKey, usccbUrl);
+  if (override) return override;
   
   if (season === 'Ordinary Time' && isSunday) {
     return getSundayOrdinaryTimeReadings(liturgicalYear, date, usccbUrl);
@@ -510,4 +518,36 @@ function getWeekdayReadings(season: string, usccbUrl: string): any {
       content: `Today's Gospel reading for ${season}.\n\nComplete Gospel available at: ${usccbUrl}` 
     }
   };
+}
+
+// Date-specific reading overrides
+function getReadingOverride(dateKey: string, usccbUrl: string): any {
+  // Add curated corrections where our generic cycle mapping is insufficient
+  switch (dateKey) {
+    case '2025-09-28':
+      return {
+        first_reading: {
+          title: 'First Reading',
+          citation: 'Amos 6:1a, 4-7',
+          content: `Thus says the LORD the God of hosts: Woe to the complacent in Zion...\n\nComplete text available at: ${usccbUrl}`,
+        },
+        responsorial_psalm: {
+          title: 'Responsorial Psalm',
+          citation: 'Psalm 146:7-10',
+          content: `R. Praise the Lord, my soul! (or: Alleluia)\nThe LORD keeps faith forever, secures justice for the oppressed...\n\nComplete text available at: ${usccbUrl}`,
+        },
+        second_reading: {
+          title: 'Second Reading',
+          citation: '1 Timothy 6:11-16',
+          content: `But you, man of God, pursue righteousness, devotion, faith, love, patience, and gentleness...\n\nComplete text available at: ${usccbUrl}`,
+        },
+        gospel: {
+          title: 'Gospel',
+          citation: 'Luke 16:19-31',
+          content: `Jesus said to the Pharisees: 'There was a rich man who dressed in purple...' (The Rich Man and Lazarus)\n\nComplete text available at: ${usccbUrl}`,
+        },
+      };
+    default:
+      return null;
+  }
 }
