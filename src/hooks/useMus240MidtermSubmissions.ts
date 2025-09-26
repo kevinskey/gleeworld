@@ -161,6 +161,18 @@ export const useMus240MidtermSubmissions = () => {
   });
 
   const saveProgress = (data: Partial<MidtermSubmission>) => {
+    console.log('saveProgress called:', { user: user?.id, submission: submission?.id, data });
+    
+    if (!user?.id) {
+      console.error('No user authenticated - cannot save progress');
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to save your exam progress.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     if (submission) {
       updateSubmissionMutation.mutate(data);
     } else {
