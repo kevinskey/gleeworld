@@ -20,6 +20,9 @@ export interface MidtermSubmission {
   excerpt_2_genre?: string;
   excerpt_2_features?: string;
   excerpt_2_context?: string;
+  excerpt_3_genre?: string;
+  excerpt_3_features?: string;
+  excerpt_3_context?: string;
   selected_essay_question?: number;
   essay_answer?: string;
   submitted_at: string;
