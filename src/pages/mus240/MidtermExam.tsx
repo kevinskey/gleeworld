@@ -23,12 +23,12 @@ export default function MidtermExam() {
         {/* Page Title */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            MUS 240 – Midterm Exam (1840–1940)
+            Midterm Exam: Survey of African American Music (1840–1940)
           </h1>
           <div className="flex justify-center gap-4 mb-6">
             <Badge variant="secondary" className="px-4 py-2">
               <Clock className="h-4 w-4 mr-2" />
-              Closed-Book Exam
+              50 minutes total
             </Badge>
             <Badge variant="outline" className="px-4 py-2">
               <FileText className="h-4 w-4 mr-2" />
@@ -66,41 +66,46 @@ export default function MidtermExam() {
 
         <Separator className="my-8" />
 
-        {/* Part I: Short Answer */}
+        {/* Part I: Short Identifications */}
         <Card className="mb-8">
           <CardContent className="p-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
               <span className="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">I</span>
-              Part I. Short Answer (20 points)
+              Part I: Short Identifications (20 minutes)
             </h2>
             <p className="text-slate-700 mb-6">
-              Answer <strong>four (4)</strong> of the following in 3–5 sentences (5 points each):
+              Define and explain <strong>four</strong> of the following six terms in 5–7 sentences. Include time period, musical features, and cultural role.
             </p>
             
             <div className="space-y-4">
               <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-slate-800">
-                  <span className="font-semibold">1.</span> Explain how the <strong>ring shout</strong> reflects African cultural survivals. Use an example from our listening.
+                <p className="text-slate-800 font-semibold">
+                  Ring shout
                 </p>
               </div>
               <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-slate-800">
-                  <span className="font-semibold">2.</span> What role did the <strong>Black church</strong> play in sustaining sacred and secular traditions between 1865–1900?
+                <p className="text-slate-800 font-semibold">
+                  Field holler
                 </p>
               </div>
               <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-slate-800">
-                  <span className="font-semibold">3.</span> Compare a <strong>blues lyric</strong> and a <strong>spiritual text</strong> in terms of theme and function. Provide examples.
+                <p className="text-slate-800 font-semibold">
+                  Negro spiritual
                 </p>
               </div>
               <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-slate-800">
-                  <span className="font-semibold">4.</span> How did <strong>migration</strong> reshape African American music in the early 20th century?
+                <p className="text-slate-800 font-semibold">
+                  Blues
                 </p>
               </div>
               <div className="bg-slate-50 rounded-lg p-4">
-                <p className="text-slate-800">
-                  <span className="font-semibold">5.</span> Why was the <strong>1939 "Spirituals to Swing" concert</strong> historically significant?
+                <p className="text-slate-800 font-semibold">
+                  Ragtime
+                </p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-4">
+                <p className="text-slate-800 font-semibold">
+                  Swing
                 </p>
               </div>
             </div>
@@ -109,46 +114,30 @@ export default function MidtermExam() {
 
         <Separator className="my-8" />
 
-        {/* Part II: Source Analysis */}
+        {/* Part II: Listening/Analysis */}
         <Card className="mb-8">
           <CardContent className="p-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
               <span className="bg-green-100 text-green-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">II</span>
-              Part II. Source Analysis (30 points)
+              Part II: Listening/Analysis (15 minutes)
             </h2>
             <p className="text-slate-700 mb-6">
-              You will be given two excerpts in class:
+              You will hear two short excerpts from our class playlist (e.g., Fisk Jubilee Singers, Bessie Smith, Joplin, Armstrong, Ellington). For each:
             </p>
             
-            <div className="grid md:grid-cols-2 gap-4 mb-6">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-900 mb-2">Excerpt A:</h4>
-                <p className="text-blue-800">Lyrics from a spiritual studied in class.</p>
-              </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <h4 className="font-semibold text-purple-900 mb-2">Excerpt B:</h4>
-                <p className="text-purple-800">A stanza from a blues song (e.g., <em>St. Louis Blues</em>).</p>
-              </div>
-            </div>
-
             <div className="bg-slate-100 rounded-lg p-6">
-              <h4 className="font-semibold text-slate-900 mb-3">For each excerpt (15 pts each):</h4>
-              <ul className="space-y-2 text-slate-700">
+              <ul className="space-y-3 text-slate-700">
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-slate-400 rounded-full mt-2"></span>
                   Identify the genre.
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-slate-400 rounded-full mt-2"></span>
-                  Explain how the text reflects African American experience.
+                  Point out two musical features (form, rhythm, timbre, texture, harmony).
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="w-2 h-2 bg-slate-400 rounded-full mt-2"></span>
-                  Discuss one musical feature (rhythm, form, style).
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="w-2 h-2 bg-slate-400 rounded-full mt-2"></span>
-                  Connect to a broader historical moment (slavery, Reconstruction, migration, Depression).
+                  Briefly connect the piece to its cultural or historical context.
                 </li>
               </ul>
             </div>
@@ -157,39 +146,36 @@ export default function MidtermExam() {
 
         <Separator className="my-8" />
 
-        {/* Part III: Essay */}
+        {/* Part III: Short Essay */}
         <Card className="mb-8">
           <CardContent className="p-8">
             <h2 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-3">
               <span className="bg-orange-100 text-orange-800 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">III</span>
-              Part III. Essay (50 points)
+              Part III: Short Essay (15 minutes)
             </h2>
             <p className="text-slate-700 mb-6">
-              Write a 3–4 page essay on <strong>one (1)</strong> of the following:
+              Answer <strong>one</strong> of the following in 1–2 well-organized paragraphs:
             </p>
             
             <div className="space-y-6">
               <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-6 border border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-3">1. Sacred vs. Secular</h4>
+                <h4 className="font-semibold text-blue-900 mb-3">1. Musical Evolution</h4>
                 <p className="text-blue-800">
-                  Discuss the tension and overlap between sacred and secular traditions from 1840–1940. 
-                  Use examples of spirituals, blues, gospel beginnings, and quartets.
+                  Trace how one early form (ring shout, field holler, or spiritual) influenced later styles (blues, jazz, swing).
                 </p>
               </div>
               
               <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-6 border border-green-200">
-                <h4 className="font-semibold text-green-900 mb-3">2. The American Negro, 1840–1940</h4>
+                <h4 className="font-semibold text-green-900 mb-3">2. Technology's Impact</h4>
                 <p className="text-green-800">
-                  Trace the journey from slavery through Reconstruction to swing. How did music preserve 
-                  identity and innovate toward new futures?
+                  Explain how technology (sheet music, race records, radio) shaped the spread of African American music between 1890 and 1940.
                 </p>
               </div>
               
               <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-6 border border-purple-200">
-                <h4 className="font-semibold text-purple-900 mb-3">3. Quartet Case Study</h4>
+                <h4 className="font-semibold text-purple-900 mb-3">3. Sacred vs. Secular Comparison</h4>
                 <p className="text-purple-800">
-                  Explain how groups like the Golden Gate Quartet or Mills Brothers navigated sacred 
-                  and secular spaces.
+                  Compare sacred and secular functions of two genres we studied.
                 </p>
               </div>
             </div>
@@ -208,39 +194,18 @@ export default function MidtermExam() {
             
             <div className="grid gap-4">
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2">Short Answer (20 pts)</h4>
-                <p className="text-blue-800 text-sm">Accuracy, concision, connection to class.</p>
+                <h4 className="font-semibold text-blue-900 mb-2">Part I: 40 pts (10 each)</h4>
+                <p className="text-blue-800 text-sm">Short identifications with time period, musical features, and cultural role.</p>
               </div>
               
               <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                <h4 className="font-semibold text-green-900 mb-2">Source Analysis (30 pts)</h4>
-                <p className="text-green-800 text-sm">Correct identification, context, musical detail.</p>
+                <h4 className="font-semibold text-green-900 mb-2">Part II: 30 pts (15 each)</h4>
+                <p className="text-green-800 text-sm">Listening analysis with genre identification, musical features, and historical context.</p>
               </div>
               
               <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                <h4 className="font-semibold text-orange-900 mb-3">Essay (50 pts)</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2 text-sm">
-                  <div className="bg-white rounded p-2 text-center">
-                    <div className="font-semibold text-orange-800">Thesis clarity</div>
-                    <div className="text-orange-600">(10)</div>
-                  </div>
-                  <div className="bg-white rounded p-2 text-center">
-                    <div className="font-semibold text-orange-800">Historical context</div>
-                    <div className="text-orange-600">(10)</div>
-                  </div>
-                  <div className="bg-white rounded p-2 text-center">
-                    <div className="font-semibold text-orange-800">Musical literacy</div>
-                    <div className="text-orange-600">(10)</div>
-                  </div>
-                  <div className="bg-white rounded p-2 text-center">
-                    <div className="font-semibold text-orange-800">Class examples</div>
-                    <div className="text-orange-600">(10)</div>
-                  </div>
-                  <div className="bg-white rounded p-2 text-center">
-                    <div className="font-semibold text-orange-800">Organization</div>
-                    <div className="text-orange-600">(10)</div>
-                  </div>
-                </div>
+                <h4 className="font-semibold text-orange-900 mb-2">Part III: 30 pts</h4>
+                <p className="text-orange-800 text-sm">Short essay demonstrating understanding of musical evolution, technology's impact, or genre comparison.</p>
               </div>
             </div>
           </CardContent>
