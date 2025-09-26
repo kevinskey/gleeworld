@@ -13961,6 +13961,39 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_grading_rubrics: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          criteria: Json
+          id: string
+          question_id: string
+          question_type: string
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          criteria: Json
+          id?: string
+          question_id: string
+          question_type: string
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          criteria?: Json
+          id?: string
+          question_id?: string
+          question_type?: string
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mus240_group_applications: {
         Row: {
           applicant_id: string
@@ -14929,6 +14962,71 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "mus240_session_analytics_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_midterm_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mus240_submission_grades: {
+        Row: {
+          ai_feedback: string | null
+          ai_graded_at: string | null
+          ai_score: number | null
+          created_at: string
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          instructor_feedback: string | null
+          instructor_score: number | null
+          needs_review: boolean | null
+          question_id: string
+          question_type: string
+          rubric_breakdown: Json | null
+          student_answer: string | null
+          submission_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_feedback?: string | null
+          ai_graded_at?: string | null
+          ai_score?: number | null
+          created_at?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          instructor_feedback?: string | null
+          instructor_score?: number | null
+          needs_review?: boolean | null
+          question_id: string
+          question_type: string
+          rubric_breakdown?: Json | null
+          student_answer?: string | null
+          submission_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_feedback?: string | null
+          ai_graded_at?: string | null
+          ai_score?: number | null
+          created_at?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          instructor_feedback?: string | null
+          instructor_score?: number | null
+          needs_review?: boolean | null
+          question_id?: string
+          question_type?: string
+          rubric_breakdown?: Json | null
+          student_answer?: string | null
+          submission_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_submission_grades_submission_id_fkey"
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "mus240_midterm_submissions"
