@@ -29,13 +29,24 @@ export const useMidtermGrading = () => {
   const { data: submissions, isLoading: isLoadingSubmissions } = useQuery({
     queryKey: ['midterm-submissions-for-grading'],
     queryFn: async () => {
+      // Check authentication status
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('No authenticated user found for midterm grading');
+        throw new Error('Authentication required to view midterm submissions');
+      }
+
       const { data, error } = await supabase
         .from('mus240_midterm_submissions')
         .select('*')
         .eq('is_submitted', true)
         .order('submitted_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching midterm submissions:', error);
+        throw error;
+      }
       
       // Get user profiles separately
       const userIds = data?.map(s => s.user_id) || [];
