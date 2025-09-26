@@ -74,7 +74,9 @@ export const MidtermExamForm: React.FC = () => {
 
   // Load existing submission data
   useEffect(() => {
+    console.log('Loading submission data:', { submission, isSubmitted: submission?.is_submitted });
     if (submission && !submission.is_submitted) {
+      console.log('Setting form data from submission:', submission);
       setFormData({
         selectedTerms: submission.selected_terms || [],
         termAnswers: {
@@ -189,10 +191,17 @@ export const MidtermExamForm: React.FC = () => {
   // Auto-save every 30 seconds
   useEffect(() => {
     if (submission && !submission.is_submitted) {
-      const interval = setInterval(handleAutoSave, 30000);
-      return () => clearInterval(interval);
+      console.log('Setting up auto-save interval', { formData, submission: submission.id });
+      const interval = setInterval(() => {
+        console.log('Auto-save triggered');
+        handleAutoSave();
+      }, 30000);
+      return () => {
+        console.log('Clearing auto-save interval');
+        clearInterval(interval);
+      };
     }
-  }, [formData, submission]);
+  }, [submission?.id, submission?.is_submitted]); // Fixed dependency array
 
   if (isLoading) {
     return (
