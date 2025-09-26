@@ -23,6 +23,8 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
   const [formData, setFormData] = useState({
     liturgical_date: worksheet?.liturgical_date || '',
     liturgical_season: worksheet?.liturgical_season || '',
+    liturgical_color: worksheet?.liturgical_color || '',
+    saint_of_day: worksheet?.saint_of_day || '',
     theme: worksheet?.theme || '',
     readings: {
       first_reading: worksheet?.readings?.first_reading || '',
@@ -98,17 +100,27 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
     
     const data = await syncLiturgicalData(formData.liturgical_date);
     if (data) {
-      // Auto-populate readings from USCCB data
+      // Auto-populate readings from enhanced USCCB data
       setFormData(prev => ({
         ...prev,
         liturgical_season: data.season || prev.liturgical_season,
+        liturgical_color: data.liturgical_color || prev.liturgical_color,
         theme: data.title || prev.theme,
         readings: {
-          first_reading: data.readings.first_reading?.citation || prev.readings.first_reading,
-          psalm: data.readings.responsorial_psalm?.citation || prev.readings.psalm,
-          second_reading: data.readings.second_reading?.citation || prev.readings.second_reading,
-          gospel: data.readings.gospel?.citation || prev.readings.gospel,
-        }
+          first_reading: data.readings.first_reading ? 
+            `${data.readings.first_reading.citation}\n\n${data.readings.first_reading.content}` : 
+            prev.readings.first_reading,
+          psalm: data.readings.responsorial_psalm ? 
+            `${data.readings.responsorial_psalm.citation}\n\n${data.readings.responsorial_psalm.content}` : 
+            prev.readings.psalm,
+          second_reading: data.readings.second_reading ? 
+            `${data.readings.second_reading.citation}\n\n${data.readings.second_reading.content}` : 
+            prev.readings.second_reading,
+          gospel: data.readings.gospel ? 
+            `${data.readings.gospel.citation}\n\n${data.readings.gospel.content}` : 
+            prev.readings.gospel,
+        },
+        saint_of_day: data.saint_of_day || prev.saint_of_day
       }));
     }
   };

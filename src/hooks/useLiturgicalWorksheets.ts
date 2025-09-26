@@ -8,6 +8,8 @@ export interface LiturgicalWorksheet {
   user_id: string;
   liturgical_date: string;
   liturgical_season: string;
+  liturgical_color?: string;
+  saint_of_day?: string;
   readings: {
     first_reading?: string;
     psalm?: string;

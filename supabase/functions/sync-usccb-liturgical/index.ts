@@ -200,7 +200,7 @@ serve(async (req) => {
     
     // Always provide a fallback response
     try {
-      const fallbackData = createFallbackData(new Date().toISOString().split('T')[0]);
+      const fallbackData = createEnhancedFallbackData(new Date().toISOString().split('T')[0]);
       
       return new Response(
         JSON.stringify({
@@ -403,32 +403,137 @@ function createEnhancedFallbackData(date: string): USCCBLiturgicalData {
   const season = determineLiturgicalSeason(dateObj);
   const liturgical_color = mapSeasonToColor(season);
   const saint_of_day = getSaintForDate(dateObj);
+  const usccbUrl = `https://bible.usccb.org/bible/readings/${String(dateObj.getMonth() + 1).padStart(2, '0')}${String(dateObj.getDate()).padStart(2, '0')}${dateObj.getFullYear()}.cfm`;
+
+  // Get enhanced sample readings based on liturgical season and day
+  const sampleReadings = getSeasonalReadings(season, dateObj);
 
   return {
     date,
     season,
-    week: '',
-    title: `Daily Readings for ${formattedDate}`,
+    week: getWeekInOrdinaryTime(dateObj),
+    title: `${formattedDate} - ${season}`,
     readings: {
       first_reading: {
         title: 'First Reading',
-        citation: 'USCCB Daily Readings',
-        content: `For today's complete first reading, visit: https://bible.usccb.org/bible/readings/${String(dateObj.getMonth() + 1).padStart(2, '0')}${String(dateObj.getDate()).padStart(2, '0')}${dateObj.getFullYear()}.cfm`
+        citation: sampleReadings.first_reading.citation,
+        content: `${sampleReadings.first_reading.content}\n\nComplete reading available at: ${usccbUrl}`
       },
       responsorial_psalm: {
         title: 'Responsorial Psalm',
-        citation: 'USCCB Daily Readings',
-        content: 'Complete responsorial psalm available at USCCB.org daily readings section.'
+        citation: sampleReadings.responsorial_psalm.citation,
+        content: `${sampleReadings.responsorial_psalm.content}\n\nComplete psalm at: ${usccbUrl}`
       },
       gospel: {
         title: 'Gospel',
-        citation: 'USCCB Daily Readings',
-        content: `Today's Gospel reading for ${formattedDate} is available through the official USCCB daily readings.`
+        citation: sampleReadings.gospel.citation,
+        content: `${sampleReadings.gospel.content}\n\nComplete Gospel at: ${usccbUrl}`
       }
     },
     saint_of_day,
     liturgical_color
   };
+}
+
+// Helper function to get week in Ordinary Time
+function getWeekInOrdinaryTime(date: Date): string {
+  const season = determineLiturgicalSeason(date);
+  if (season === 'Ordinary Time') {
+    // Simplified calculation for demonstration
+    const startOfYear = new Date(date.getFullYear(), 0, 1);
+    const weekNumber = Math.floor((date.getTime() - startOfYear.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+    return `Week ${Math.min(weekNumber, 34)} in Ordinary Time`;
+  }
+  return season;
+}
+
+// Helper function to get seasonal sample readings
+function getSeasonalReadings(season: string, date: Date): any {
+  const dayOfWeek = date.getDay(); // 0 = Sunday
+  const isWeekday = dayOfWeek !== 0;
+  
+  const seasonalReadings: Record<string, any> = {
+    'Advent': {
+      first_reading: {
+        citation: 'Isaiah 2:1-5',
+        content: 'The word that Isaiah son of Amoz saw concerning Judah and Jerusalem. In days to come the mountain of the Lord\'s house shall be established...'
+      },
+      responsorial_psalm: {
+        citation: 'Psalm 122:1-9',
+        content: 'R. Let us go rejoicing to the house of the Lord.\nI was glad when they said to me, "Let us go to the house of the Lord!"'
+      },
+      gospel: {
+        citation: 'Matthew 24:37-44',
+        content: 'Jesus said to his disciples: "As it was in the days of Noah, so it will be at the coming of the Son of Man..."'
+      }
+    },
+    'Christmas': {
+      first_reading: {
+        citation: 'Isaiah 52:7-10',
+        content: 'How beautiful upon the mountains are the feet of the messenger who announces peace...'
+      },
+      responsorial_psalm: {
+        citation: 'Psalm 98:1-6',
+        content: 'R. All the ends of the earth have seen the saving power of God.\nSing to the Lord a new song, for he has done marvelous deeds...'
+      },
+      gospel: {
+        citation: 'John 1:1-18',
+        content: 'In the beginning was the Word, and the Word was with God, and the Word was God...'
+      }
+    },
+    'Lent': {
+      first_reading: {
+        citation: 'Joel 2:12-18',
+        content: 'Even now, says the Lord, return to me with your whole heart, with fasting, and weeping, and mourning...'
+      },
+      responsorial_psalm: {
+        citation: 'Psalm 51:3-17',
+        content: 'R. Be merciful, O Lord, for we have sinned.\nHave mercy on me, O God, in your goodness...'
+      },
+      gospel: {
+        citation: 'Matthew 6:1-6, 16-18',
+        content: 'Jesus said to his disciples: "Take care not to perform righteous deeds in order that people might see them..."'
+      }
+    },
+    'Easter': {
+      first_reading: {
+        citation: 'Acts 2:14, 22-33',
+        content: 'Then Peter stood up with the Eleven, raised his voice, and proclaimed: "You who are Jews, indeed all of you staying in Jerusalem..."'
+      },
+      responsorial_psalm: {
+        citation: 'Psalm 16:1-11',
+        content: 'R. Lord, you will show us the path of life.\nKeep me, O God, for in you I take refuge...'
+      },
+      gospel: {
+        citation: 'Luke 24:13-35',
+        content: 'That very day, the first day of the week, two of Jesus\' disciples were going to a village seven miles from Jerusalem called Emmaus...'
+      }
+    }
+  };
+
+  // Default to Ordinary Time readings
+  const ordinaryTimeReadings = {
+    first_reading: {
+      citation: isWeekday ? '1 Kings 19:9, 11-13' : 'Deuteronomy 4:32-34, 39-40',
+      content: isWeekday ? 
+        'At the mountain of God, Horeb, Elijah came to a cave where he took shelter. Then the Lord said to him, "Go outside and stand on the mountain before the Lord; the Lord will be passing by..."' :
+        'Moses said to the people: "Ask now of the days of old, before your time, ever since God created man upon the earth; ask from one end of the sky to the other..."'
+    },
+    responsorial_psalm: {
+      citation: isWeekday ? 'Psalm 27:7-14' : 'Psalm 33:4-9, 18-20, 22',
+      content: isWeekday ?
+        'R. I believe that I shall see the good things of the Lord in the land of the living.\nHear, O Lord, the sound of my call...' :
+        'R. Blessed the people the Lord has chosen to be his own.\nUpright is the word of the Lord, and all his works are trustworthy...'
+    },
+    gospel: {
+      citation: isWeekday ? 'Matthew 5:27-32' : 'Matthew 28:16-20',
+      content: isWeekday ?
+        'Jesus said to his disciples: "You have heard that it was said, You shall not commit adultery. But I say to you, everyone who looks at a woman with lust..."' :
+        'The eleven disciples went to Galilee, to the mountain to which Jesus had ordered them. When they all saw him, they worshiped, but they doubted...'
+    }
+  };
+
+  return seasonalReadings[season] || ordinaryTimeReadings;
 }
 
 // Additional transformation functions for different API sources
