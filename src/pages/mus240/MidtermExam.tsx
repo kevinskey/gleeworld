@@ -23,7 +23,7 @@ export default function MidtermExam() {
 
         {/* Page Title */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+          <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-slate-900 mb-4">
             Midterm Exam: Survey of African American Music (1840–1940)
           </h1>
           <div className="flex justify-center gap-4 mb-6">
