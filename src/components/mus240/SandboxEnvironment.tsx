@@ -117,7 +117,10 @@ const musicGenres = [
   const handleShareSandbox = () => {
     // Create a shareable link (in a real implementation, this would create a unique URL)
     const encodedCode = encodeURIComponent(code);
-    const shareUrl = `${window.location.origin}/sandbox?code=${encodedCode}`;
+    const baseUrl = window.location.hostname.includes('lovable') 
+      ? 'https://gleeworld.org' 
+      : window.location.origin;
+    const shareUrl = `${baseUrl}/sandbox?code=${encodedCode}`;
     
     navigator.clipboard.writeText(shareUrl).then(() => {
       toast.success('Sandbox link copied to clipboard!');

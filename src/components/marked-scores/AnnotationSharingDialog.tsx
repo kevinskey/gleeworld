@@ -203,7 +203,10 @@ export const AnnotationSharingDialog = ({ markedScoreId, musicTitle, children }:
   };
 
   const copyShareLink = (shareToken: string) => {
-    const shareUrl = `${window.location.origin}/shared-annotation/${shareToken}`;
+    const baseUrl = window.location.hostname.includes('lovable') 
+      ? 'https://gleeworld.org' 
+      : window.location.origin;
+    const shareUrl = `${baseUrl}/shared-annotation/${shareToken}`;
     navigator.clipboard.writeText(shareUrl);
     toast.success("Share link copied to clipboard!");
   };

@@ -43,7 +43,10 @@ export const PressKitShare = ({ pressKit }: PressKitShareProps) => {
     },
   ];
 
-  const publicUrl = `${window.location.origin}/press-kit/${pressKit.id}`;
+  const baseUrl = window.location.hostname.includes('lovable') 
+    ? 'https://gleeworld.org' 
+    : window.location.origin;
+  const publicUrl = `${baseUrl}/press-kit/${pressKit.id}`;
 
   const handleShare = async () => {
     if (!shareForm.recipient_email.trim()) {
@@ -88,7 +91,10 @@ export const PressKitShare = ({ pressKit }: PressKitShareProps) => {
 
   const generateDownloadLink = () => {
     // In a real implementation, this would generate a ZIP file with all press kit materials
-    return `${window.location.origin}/api/press-kit/${pressKit.id}/download`;
+    const baseUrl = window.location.hostname.includes('lovable') 
+      ? 'https://gleeworld.org' 
+      : window.location.origin;
+    return `${baseUrl}/api/press-kit/${pressKit.id}/download`;
   };
 
   return (

@@ -123,8 +123,11 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       const token = data as string;
       setQrToken(token);
 
-      // Create the scan URL
-      const scanUrl = `${window.location.origin}/attendance-scan?token=${token}`;
+      // Create the scan URL - use production domain for GleeWorld
+      const baseUrl = window.location.hostname.includes('lovable') 
+        ? 'https://gleeworld.org' 
+        : window.location.origin;
+      const scanUrl = `${baseUrl}/attendance-scan?token=${token}`;
       
       // Generate QR code
       const qrDataUrl = await QRCode.toDataURL(scanUrl, {
@@ -229,7 +232,10 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
       
       // Fallback: Share just the URL if file sharing isn't supported
       if (navigator.share) {
-        const scanUrl = `${window.location.origin}/attendance-scan?token=${qrToken}`;
+        const baseUrl = window.location.hostname.includes('lovable') 
+          ? 'https://gleeworld.org' 
+          : window.location.origin;
+        const scanUrl = `${baseUrl}/attendance-scan?token=${qrToken}`;
         await navigator.share({
           title,
           text,
@@ -237,7 +243,10 @@ export const QRAttendanceGenerator = ({ selectedEventId, onEventChange }: QRAtte
         });
       } else {
         // Final fallback: Copy to clipboard
-        const scanUrl = `${window.location.origin}/attendance-scan?token=${qrToken}`;
+        const baseUrl = window.location.hostname.includes('lovable') 
+          ? 'https://gleeworld.org' 
+          : window.location.origin;
+        const scanUrl = `${baseUrl}/attendance-scan?token=${qrToken}`;
         await navigator.clipboard.writeText(`${title}\n${text}\n${scanUrl}`);
         toast({
           title: "Copied to Clipboard",

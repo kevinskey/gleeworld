@@ -158,7 +158,10 @@ export const QRCodeManagementModule = () => {
 
   const generateUrlQRCode = async (url: string) => {
     try {
-      const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+      const baseUrl = window.location.hostname.includes('lovable') 
+        ? 'https://gleeworld.org' 
+        : window.location.origin;
+      const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
       const qrDataUrl = await QRCode.toDataURL(fullUrl, {
         width: 300,
         margin: 2,
@@ -398,7 +401,7 @@ export const QRCodeManagementModule = () => {
                       />
                     </div>
                     <div className="text-sm text-muted-foreground text-center">
-                      URL: {customUrl.startsWith('http') ? customUrl : `${window.location.origin}${customUrl}`}
+                      URL: {customUrl.startsWith('http') ? customUrl : `${window.location.hostname.includes('lovable') ? 'https://gleeworld.org' : window.location.origin}${customUrl}`}
                     </div>
                     <Button 
                       onClick={downloadQRCode}

@@ -115,7 +115,10 @@ export const RecordingShareDialog: React.FC<RecordingShareDialogProps> = ({
   };
 
   const handleCopyLink = () => {
-    const link = `${window.location.origin}/sight-reading-generator?recording=${recording.id}`;
+    const baseUrl = window.location.hostname.includes('lovable') 
+      ? 'https://gleeworld.org' 
+      : window.location.origin;
+    const link = `${baseUrl}/sight-reading-generator?recording=${recording.id}`;
     navigator.clipboard.writeText(link);
     toast({
       title: "Link copied",
