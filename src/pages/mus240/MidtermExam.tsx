@@ -44,7 +44,7 @@ export default function MidtermExam() {
             <div className="flex items-start gap-4 mb-6">
               <BookOpen className="h-6 w-6 text-blue-600 mt-1" />
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-4">Instructions</h2>
+                <h2 className="text-2xl font-bold text-slate-900 mb-4 pt-6">Instructions</h2>
                 <p className="text-slate-700 leading-relaxed mb-4">
                   This exam covers African American music and cultural history from 1840 to 1940. 
                   You will demonstrate your understanding of sacred and secular traditions, key historical events, and the music's 
