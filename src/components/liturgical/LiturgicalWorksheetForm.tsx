@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Music, BookOpen, FileText, Download, Loader2, Upload, Eye } from 'lucide-react';
+import { Calendar, Music, BookOpen, FileText, Download, Loader2, Eye } from 'lucide-react';
 import { LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
 import { useUSCCBSync } from '@/hooks/useUSCCBSync';
 import { useEnhancedLiturgicalData } from '@/hooks/useEnhancedLiturgicalData';
@@ -34,11 +34,14 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
     },
     responsorial_psalm_musicxml: worksheet?.responsorial_psalm_musicxml || '',
     music_selections: {
+      prelude: worksheet?.music_selections?.prelude || '',
+      opening_psalm: worksheet?.music_selections?.opening_psalm || '',
       entrance_hymn: worksheet?.music_selections?.entrance_hymn || '',
       responsorial_psalm: worksheet?.music_selections?.responsorial_psalm || '',
       alleluia: worksheet?.music_selections?.alleluia || '',
       offertory: worksheet?.music_selections?.offertory || '',
       communion: worksheet?.music_selections?.communion || '',
+      song_of_praise: worksheet?.music_selections?.song_of_praise || '',
       closing_hymn: worksheet?.music_selections?.closing_hymn || '',
     },
     special_instructions: worksheet?.special_instructions || '',
@@ -70,7 +73,6 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
   const handleMusicXMLUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Accept MusicXML files regardless of MIME type, check by extension
       const isValidFile = file.name.toLowerCase().endsWith('.xml') || 
                          file.name.toLowerCase().endsWith('.musicxml') ||
                          file.type === 'text/xml' ||
@@ -100,7 +102,6 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
     
     const data = await syncLiturgicalData(formData.liturgical_date);
     if (data) {
-      // Auto-populate readings from enhanced USCCB data
       setFormData(prev => ({
         ...prev,
         liturgical_season: data.season || prev.liturgical_season,
@@ -133,7 +134,6 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
     
     const enhancedData = await fetchEnhancedLiturgicalData(formData.liturgical_date);
     if (enhancedData) {
-      // Auto-populate with enhanced liturgical data
       setFormData(prev => ({
         ...prev,
         liturgical_season: enhancedData.season,
@@ -145,11 +145,14 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
           gospel: enhancedData.readings.gospel?.citation || prev.readings.gospel,
         },
         music_selections: {
+          prelude: prev.music_selections.prelude,
+          opening_psalm: prev.music_selections.opening_psalm,
           entrance_hymn: enhancedData.music_suggestions.entrance_hymn[0] || prev.music_selections.entrance_hymn,
           responsorial_psalm: enhancedData.music_suggestions.responsorial_psalm[0] || prev.music_selections.responsorial_psalm,
           alleluia: enhancedData.music_suggestions.alleluia[0] || prev.music_selections.alleluia,
           offertory: enhancedData.music_suggestions.offertory[0] || prev.music_selections.offertory,
           communion: enhancedData.music_suggestions.communion[0] || prev.music_selections.communion,
+          song_of_praise: prev.music_selections.song_of_praise,
           closing_hymn: enhancedData.music_suggestions.closing_hymn[0] || prev.music_selections.closing_hymn,
         },
         special_instructions: enhancedData.additional_notes || prev.special_instructions,
@@ -165,7 +168,7 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
     
     setSaving(false);
     if (result.success) {
-      onCancel(); // Close form on success
+      onCancel();
     }
   };
 
@@ -284,176 +287,242 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
             />
           </div>
 
-          {/* Readings Section */}
+          {/* Order of the Mass */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
                 <BookOpen className="h-4 w-4" />
-                Scripture Readings
+                Order of the Mass
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="first_reading">First Reading</Label>
-                  <Textarea
-                    id="first_reading"
-                    value={formData.readings.first_reading}
-                    onChange={(e) => handleReadingChange('first_reading', e.target.value)}
-                    placeholder="e.g., Isaiah 43:16-21 - Full reading text with citation"
-                    rows={6}
-                    className="font-mono text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="psalm">Responsorial Psalm</Label>
-                  <Textarea
-                    id="psalm"
-                    value={formData.readings.psalm}
-                    onChange={(e) => handleReadingChange('psalm', e.target.value)}
-                    placeholder="e.g., Psalm 126 - Response and verses"
-                    rows={6}
-                    className="font-mono text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="second_reading">Second Reading</Label>
-                  <Textarea
-                    id="second_reading"
-                    value={formData.readings.second_reading}
-                    onChange={(e) => handleReadingChange('second_reading', e.target.value)}
-                    placeholder="e.g., Philippians 3:8-14 - Full reading text with citation"
-                    rows={6}
-                    className="font-mono text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="gospel">Gospel</Label>
-                  <Textarea
-                    id="gospel"
-                    value={formData.readings.gospel}
-                    onChange={(e) => handleReadingChange('gospel', e.target.value)}
-                    placeholder="e.g., John 12:12-16 - Full Gospel reading with citation"
-                    rows={6}
-                    className="font-mono text-sm"
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Responsorial Psalm MusicXML */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Music className="h-4 w-4" />
-                Responsorial Psalm Composition
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Prelude */}
               <div>
-                <Label htmlFor="musicxml-upload">Upload MusicXML</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    id="musicxml-upload"
-                    type="file"
-                    accept=".xml,.musicxml"
-                    onChange={handleMusicXMLUpload}
-                    className="flex-1"
-                  />
-                  {formData.responsorial_psalm_musicxml && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowMusicXMLViewer(true)}
-                      className="whitespace-nowrap"
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Upload a MusicXML file for the responsorial psalm composition
-                </p>
-              </div>
-              
-              {showMusicXMLViewer && formData.responsorial_psalm_musicxml && (
-                <MusicXMLViewer
-                  musicxml={formData.responsorial_psalm_musicxml}
-                  onClose={() => setShowMusicXMLViewer(false)}
-                  title="Responsorial Psalm Composition"
+                <Label htmlFor="prelude">Prelude</Label>
+                <Input
+                  id="prelude"
+                  value={formData.music_selections?.prelude || ''}
+                  onChange={(e) => handleMusicChange('prelude', e.target.value)}
+                  placeholder="Prelude music selection"
                 />
-              )}
-            </CardContent>
-          </Card>
+              </div>
 
-          {/* Music Selections */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Music className="h-4 w-4" />
-                Music Selections
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="entrance_hymn">Entrance Hymn</Label>
+              {/* Opening Psalm/Hymn */}
+              <div>
+                <Label htmlFor="opening_psalm">Opening Psalm/Hymn</Label>
+                <Input
+                  id="opening_psalm"
+                  value={formData.music_selections?.opening_psalm || ''}
+                  onChange={(e) => handleMusicChange('opening_psalm', e.target.value)}
+                  placeholder="Opening psalm or hymn"
+                />
+              </div>
+
+              {/* First Reading */}
+              <div>
+                <Label htmlFor="first_reading">First Reading</Label>
+                <div className="space-y-2">
                   <Input
-                    id="entrance_hymn"
-                    value={formData.music_selections.entrance_hymn}
-                    onChange={(e) => handleMusicChange('entrance_hymn', e.target.value)}
-                    placeholder="Opening hymn title"
+                    id="first_reading_citation"
+                    value={formData.readings.first_reading.split('\n')[0] || ''}
+                    onChange={(e) => {
+                      const lines = formData.readings.first_reading.split('\n');
+                      lines[0] = e.target.value;
+                      handleReadingChange('first_reading', lines.join('\n'));
+                    }}
+                    placeholder="e.g., Isaiah 43:16-21"
+                    className="font-semibold"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="responsorial_psalm_music">Responsorial Psalm Music</Label>
-                  <Input
-                    id="responsorial_psalm_music"
-                    value={formData.music_selections.responsorial_psalm}
-                    onChange={(e) => handleMusicChange('responsorial_psalm', e.target.value)}
-                    placeholder="Psalm response melody"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="alleluia">Alleluia/Gospel Acclamation</Label>
                   <Textarea
-                    id="alleluia"
-                    value={formData.music_selections.alleluia}
-                    onChange={(e) => handleMusicChange('alleluia', e.target.value)}
-                    placeholder="Gospel acclamation"
+                    value={formData.readings.first_reading.split('\n').slice(1).join('\n')}
+                    onChange={(e) => {
+                      const citation = formData.readings.first_reading.split('\n')[0] || '';
+                      handleReadingChange('first_reading', `${citation}\n${e.target.value}`);
+                    }}
+                    placeholder="Reading content..."
                     rows={3}
+                    className="text-sm"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="offertory">Offertory</Label>
+              </div>
+
+              {/* Responsorial Psalm */}
+              <div>
+                <Label htmlFor="responsorial_psalm">Responsorial Psalm</Label>
+                <div className="space-y-2">
                   <Input
-                    id="offertory"
-                    value={formData.music_selections.offertory}
-                    onChange={(e) => handleMusicChange('offertory', e.target.value)}
-                    placeholder="Preparation of gifts music"
+                    id="responsorial_psalm_citation"
+                    value={formData.readings.psalm.split('\n')[0] || ''}
+                    onChange={(e) => {
+                      const lines = formData.readings.psalm.split('\n');
+                      lines[0] = e.target.value;
+                      handleReadingChange('psalm', lines.join('\n'));
+                    }}
+                    placeholder="e.g., Psalm 126"
+                    className="font-semibold"
                   />
+                  <Textarea
+                    value={formData.readings.psalm.split('\n').slice(1).join('\n')}
+                    onChange={(e) => {
+                      const citation = formData.readings.psalm.split('\n')[0] || '';
+                      handleReadingChange('psalm', `${citation}\n${e.target.value}`);
+                    }}
+                    placeholder="Response and verses..."
+                    rows={3}
+                    className="text-sm"
+                  />
+                  <div>
+                    <Label htmlFor="psalm_music">Psalm Music</Label>
+                    <Input
+                      id="psalm_music"
+                      value={formData.music_selections.responsorial_psalm}
+                      onChange={(e) => handleMusicChange('responsorial_psalm', e.target.value)}
+                      placeholder="Psalm response melody"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="communion">Communion Hymn</Label>
+              </div>
+
+              {/* MusicXML Upload for Responsorial Psalm */}
+              <Card className="bg-muted/50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Music className="h-4 w-4" />
+                    Responsorial Psalm MusicXML
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      type="file"
+                      accept=".xml,.musicxml"
+                      onChange={handleMusicXMLUpload}
+                      className="flex-1"
+                    />
+                    {formData.responsorial_psalm_musicxml && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowMusicXMLViewer(true)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Upload MusicXML for the responsorial psalm composition
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Second Reading */}
+              <div>
+                <Label htmlFor="second_reading">Second Reading</Label>
+                <div className="space-y-2">
                   <Input
-                    id="communion"
-                    value={formData.music_selections.communion}
-                    onChange={(e) => handleMusicChange('communion', e.target.value)}
-                    placeholder="Communion processional"
+                    id="second_reading_citation"
+                    value={formData.readings.second_reading.split('\n')[0] || ''}
+                    onChange={(e) => {
+                      const lines = formData.readings.second_reading.split('\n');
+                      lines[0] = e.target.value;
+                      handleReadingChange('second_reading', lines.join('\n'));
+                    }}
+                    placeholder="e.g., Philippians 3:8-14"
+                    className="font-semibold"
+                  />
+                  <Textarea
+                    value={formData.readings.second_reading.split('\n').slice(1).join('\n')}
+                    onChange={(e) => {
+                      const citation = formData.readings.second_reading.split('\n')[0] || '';
+                      handleReadingChange('second_reading', `${citation}\n${e.target.value}`);
+                    }}
+                    placeholder="Reading content..."
+                    rows={3}
+                    className="text-sm"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="closing_hymn">Closing Hymn</Label>
+              </div>
+
+              {/* Gospel */}
+              <div>
+                <Label htmlFor="gospel">Gospel</Label>
+                <div className="space-y-2">
                   <Input
-                    id="closing_hymn"
-                    value={formData.music_selections.closing_hymn}
-                    onChange={(e) => handleMusicChange('closing_hymn', e.target.value)}
-                    placeholder="Recessional hymn"
+                    id="gospel_citation"
+                    value={formData.readings.gospel.split('\n')[0] || ''}
+                    onChange={(e) => {
+                      const lines = formData.readings.gospel.split('\n');
+                      lines[0] = e.target.value;
+                      handleReadingChange('gospel', lines.join('\n'));
+                    }}
+                    placeholder="e.g., John 12:12-16"
+                    className="font-semibold"
                   />
+                  <Textarea
+                    value={formData.readings.gospel.split('\n').slice(1).join('\n')}
+                    onChange={(e) => {
+                      const citation = formData.readings.gospel.split('\n')[0] || '';
+                      handleReadingChange('gospel', `${citation}\n${e.target.value}`);
+                    }}
+                    placeholder="Gospel reading..."
+                    rows={3}
+                    className="text-sm"
+                  />
+                  <div>
+                    <Label htmlFor="alleluia">Gospel Acclamation (Alleluia)</Label>
+                    <Input
+                      id="alleluia"
+                      value={formData.music_selections.alleluia}
+                      onChange={(e) => handleMusicChange('alleluia', e.target.value)}
+                      placeholder="Gospel acclamation"
+                    />
+                  </div>
                 </div>
+              </div>
+
+              {/* Preparation Hymn */}
+              <div>
+                <Label htmlFor="preparation_hymn">Preparation Hymn (Offertory)</Label>
+                <Input
+                  id="preparation_hymn"
+                  value={formData.music_selections.offertory}
+                  onChange={(e) => handleMusicChange('offertory', e.target.value)}
+                  placeholder="Preparation of gifts music"
+                />
+              </div>
+
+              {/* Communion Hymn */}
+              <div>
+                <Label htmlFor="communion_hymn">Communion Hymn</Label>
+                <Input
+                  id="communion_hymn"
+                  value={formData.music_selections.communion}
+                  onChange={(e) => handleMusicChange('communion', e.target.value)}
+                  placeholder="Communion processional"
+                />
+              </div>
+
+              {/* Song of Praise */}
+              <div>
+                <Label htmlFor="song_of_praise">Song of Praise</Label>
+                <Input
+                  id="song_of_praise"
+                  value={formData.music_selections?.song_of_praise || ''}
+                  onChange={(e) => handleMusicChange('song_of_praise', e.target.value)}
+                  placeholder="Song of praise after communion"
+                />
+              </div>
+
+              {/* Closing Hymn */}
+              <div>
+                <Label htmlFor="closing_hymn">Closing Hymn</Label>
+                <Input
+                  id="closing_hymn"
+                  value={formData.music_selections.closing_hymn}
+                  onChange={(e) => handleMusicChange('closing_hymn', e.target.value)}
+                  placeholder="Closing/recessional hymn"
+                />
               </div>
             </CardContent>
           </Card>
@@ -500,6 +569,15 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
             </Button>
           </div>
         </form>
+
+        {/* MusicXML Viewer Modal */}
+        {showMusicXMLViewer && formData.responsorial_psalm_musicxml && (
+          <MusicXMLViewer
+            musicxml={formData.responsorial_psalm_musicxml}
+            onClose={() => setShowMusicXMLViewer(false)}
+            title="Responsorial Psalm Composition"
+          />
+        )}
       </CardContent>
     </Card>
   );

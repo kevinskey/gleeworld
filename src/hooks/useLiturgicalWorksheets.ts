@@ -18,11 +18,14 @@ export interface LiturgicalWorksheet {
   };
   responsorial_psalm_musicxml?: string;
   music_selections: {
+    prelude?: string;
+    opening_psalm?: string;
     entrance_hymn?: string;
     responsorial_psalm?: string;
     alleluia?: string;
     offertory?: string;
     communion?: string;
+    song_of_praise?: string;
     closing_hymn?: string;
   };
   special_instructions?: string;
