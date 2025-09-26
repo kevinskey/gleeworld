@@ -14300,6 +14300,9 @@ export type Database = {
           excerpt_2_context: string | null
           excerpt_2_features: string | null
           excerpt_2_genre: string | null
+          excerpt_3_context: string | null
+          excerpt_3_features: string | null
+          excerpt_3_genre: string | null
           field_holler_answer: string | null
           id: string
           is_submitted: boolean
@@ -14325,6 +14328,9 @@ export type Database = {
           excerpt_2_context?: string | null
           excerpt_2_features?: string | null
           excerpt_2_genre?: string | null
+          excerpt_3_context?: string | null
+          excerpt_3_features?: string | null
+          excerpt_3_genre?: string | null
           field_holler_answer?: string | null
           id?: string
           is_submitted?: boolean
@@ -14350,6 +14356,9 @@ export type Database = {
           excerpt_2_context?: string | null
           excerpt_2_features?: string | null
           excerpt_2_genre?: string | null
+          excerpt_3_context?: string | null
+          excerpt_3_features?: string | null
+          excerpt_3_genre?: string | null
           field_holler_answer?: string | null
           id?: string
           is_submitted?: boolean
