@@ -20,6 +20,9 @@ interface ExamFormData {
   excerpt2Genre: string;
   excerpt2Features: string;
   excerpt2Context: string;
+  excerpt3Genre: string;
+  excerpt3Features: string;
+  excerpt3Context: string;
   selectedEssayQuestion: number | null;
   essayAnswer: string;
 }
@@ -60,6 +63,9 @@ export const MidtermExamForm: React.FC = () => {
     excerpt2Genre: '',
     excerpt2Features: '',
     excerpt2Context: '',
+    excerpt3Genre: '',
+    excerpt3Features: '',
+    excerpt3Context: '',
     selectedEssayQuestion: null,
     essayAnswer: ''
   });
@@ -83,6 +89,9 @@ export const MidtermExamForm: React.FC = () => {
         excerpt2Genre: submission.excerpt_2_genre || '',
         excerpt2Features: submission.excerpt_2_features || '',
         excerpt2Context: submission.excerpt_2_context || '',
+        excerpt3Genre: submission.excerpt_3_genre || '',
+        excerpt3Features: submission.excerpt_3_features || '',
+        excerpt3Context: submission.excerpt_3_context || '',
         selectedEssayQuestion: submission.selected_essay_question || null,
         essayAnswer: submission.essay_answer || ''
       });
@@ -140,6 +149,9 @@ export const MidtermExamForm: React.FC = () => {
       excerpt_2_genre: formData.excerpt2Genre || null,
       excerpt_2_features: formData.excerpt2Features || null,
       excerpt_2_context: formData.excerpt2Context || null,
+      excerpt_3_genre: formData.excerpt3Genre || null,
+      excerpt_3_features: formData.excerpt3Features || null,
+      excerpt_3_context: formData.excerpt3Context || null,
       selected_essay_question: formData.selectedEssayQuestion || null,
       essay_answer: formData.essayAnswer || null,
     };
@@ -162,6 +174,9 @@ export const MidtermExamForm: React.FC = () => {
       excerpt_2_genre: formData.excerpt2Genre || null,
       excerpt_2_features: formData.excerpt2Features || null,
       excerpt_2_context: formData.excerpt2Context || null,
+      excerpt_3_genre: formData.excerpt3Genre || null,
+      excerpt_3_features: formData.excerpt3Features || null,
+      excerpt_3_context: formData.excerpt3Context || null,
       selected_essay_question: formData.selectedEssayQuestion || null,
       essay_answer: formData.essayAnswer || null,
     };
@@ -322,13 +337,13 @@ export const MidtermExamForm: React.FC = () => {
             Part II: Listening/Analysis (30 points)
           </CardTitle>
           <p className="text-slate-600">
-            You will hear two short excerpts from our class playlist. For each excerpt, identify the genre, point out two musical features, and connect to cultural/historical context.
+            You will hear three short excerpts from our class playlist. For each excerpt, identify the genre, point out two musical features, and connect to cultural/historical context.
           </p>
         </CardHeader>
         <CardContent className="space-y-8">
           {/* Excerpt 1 */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-blue-900">Excerpt 1 (15 points)</h4>
+            <h4 className="text-lg font-semibold text-blue-900">Excerpt 1 (10 points)</h4>
             <div className="space-y-3">
               <div>
                 <Label>Genre</Label>
@@ -362,7 +377,7 @@ export const MidtermExamForm: React.FC = () => {
 
           {/* Excerpt 2 */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-purple-900">Excerpt 2 (15 points)</h4>
+            <h4 className="text-lg font-semibold text-purple-900">Excerpt 2 (10 points)</h4>
             <div className="space-y-3">
               <div>
                 <Label>Genre</Label>
@@ -388,6 +403,40 @@ export const MidtermExamForm: React.FC = () => {
                   placeholder="Connect the piece to its cultural or historical context..."
                   value={formData.excerpt2Context}
                   onChange={(e) => setFormData(prev => ({ ...prev, excerpt2Context: e.target.value }))}
+                  className="min-h-[80px]"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Excerpt 3 */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold text-green-900">Excerpt 3 (10 points)</h4>
+            <div className="space-y-3">
+              <div>
+                <Label>Genre</Label>
+                <Textarea
+                  placeholder="Identify the genre..."
+                  value={formData.excerpt3Genre}
+                  onChange={(e) => setFormData(prev => ({ ...prev, excerpt3Genre: e.target.value }))}
+                  className="min-h-[60px]"
+                />
+              </div>
+              <div>
+                <Label>Musical Features (form, rhythm, timbre, texture, harmony)</Label>
+                <Textarea
+                  placeholder="Point out two musical features..."
+                  value={formData.excerpt3Features}
+                  onChange={(e) => setFormData(prev => ({ ...prev, excerpt3Features: e.target.value }))}
+                  className="min-h-[80px]"
+                />
+              </div>
+              <div>
+                <Label>Cultural/Historical Context</Label>
+                <Textarea
+                  placeholder="Connect the piece to its cultural or historical context..."
+                  value={formData.excerpt3Context}
+                  onChange={(e) => setFormData(prev => ({ ...prev, excerpt3Context: e.target.value }))}
                   className="min-h-[80px]"
                 />
               </div>
