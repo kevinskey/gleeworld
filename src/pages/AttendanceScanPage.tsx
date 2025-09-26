@@ -118,7 +118,15 @@ const AttendanceScanPage = () => {
               You need to be logged in to record attendance.
             </p>
             <Button 
-              onClick={() => navigate(`/auth?returnTo=${encodeURIComponent(window.location.href)}`)} 
+              onClick={() => {
+                // Store the current URL for redirect after auth
+                try {
+                  sessionStorage.setItem('redirectAfterAuth', window.location.pathname + window.location.search);
+                } catch (error) {
+                  console.warn('Could not store redirect path:', error);
+                }
+                navigate('/auth');
+              }} 
               className="w-full"
             >
               Sign In to Record Attendance

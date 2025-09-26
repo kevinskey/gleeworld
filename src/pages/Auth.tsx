@@ -34,7 +34,19 @@ const Auth = () => {
     if (!loading && !profileLoading && user) {
       console.log('🚀 Auth redirect logic - User authenticated, redirecting...');
       
-      // Clear any stored redirect path first
+      // Check for URL parameter first, then sessionStorage
+      const urlParams = new URLSearchParams(window.location.search);
+      const returnTo = urlParams.get('returnTo');
+      
+      if (returnTo) {
+        console.log('Auth: Redirecting to URL parameter:', returnTo);
+        // Store in sessionStorage for consistency and redirect
+        sessionStorage.setItem('redirectAfterAuth', returnTo);
+        navigate(returnTo, { replace: true });
+        return;
+      }
+      
+      // Clear any stored redirect path
       const redirectPath = sessionStorage.getItem('redirectAfterAuth');
       if (redirectPath) {
         console.log('Auth: Redirecting to stored path:', redirectPath);
