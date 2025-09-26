@@ -293,41 +293,49 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
                 <div>
                   <Label htmlFor="first_reading">First Reading</Label>
-                  <Input
+                  <Textarea
                     id="first_reading"
                     value={formData.readings.first_reading}
                     onChange={(e) => handleReadingChange('first_reading', e.target.value)}
-                    placeholder="e.g., Isaiah 43:16-21"
+                    placeholder="e.g., Isaiah 43:16-21 - Full reading text with citation"
+                    rows={6}
+                    className="font-mono text-sm"
                   />
                 </div>
                 <div>
                   <Label htmlFor="psalm">Responsorial Psalm</Label>
-                  <Input
+                  <Textarea
                     id="psalm"
                     value={formData.readings.psalm}
                     onChange={(e) => handleReadingChange('psalm', e.target.value)}
-                    placeholder="e.g., Psalm 126"
+                    placeholder="e.g., Psalm 126 - Response and verses"
+                    rows={6}
+                    className="font-mono text-sm"
                   />
                 </div>
                 <div>
                   <Label htmlFor="second_reading">Second Reading</Label>
-                  <Input
+                  <Textarea
                     id="second_reading"
                     value={formData.readings.second_reading}
                     onChange={(e) => handleReadingChange('second_reading', e.target.value)}
-                    placeholder="e.g., Philippians 3:8-14"
+                    placeholder="e.g., Philippians 3:8-14 - Full reading text with citation"
+                    rows={6}
+                    className="font-mono text-sm"
                   />
                 </div>
                 <div>
                   <Label htmlFor="gospel">Gospel</Label>
-                  <Input
+                  <Textarea
                     id="gospel"
                     value={formData.readings.gospel}
                     onChange={(e) => handleReadingChange('gospel', e.target.value)}
-                    placeholder="e.g., John 12:12-16"
+                    placeholder="e.g., John 12:12-16 - Full Gospel reading with citation"
+                    rows={6}
+                    className="font-mono text-sm"
                   />
                 </div>
               </div>
