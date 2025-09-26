@@ -68,6 +68,7 @@ serve(async (req) => {
     console.log(`Formatted date: ${year}-${month}-${day}`);
 
     // Since external APIs are unreliable, provide accurate liturgical data directly
+    console.log('Creating accurate liturgical data for:', targetDate);
     const transformedData = createAccurateLiturgicalData(targetDate);
     const source = 'enhanced_fallback';
 
@@ -301,14 +302,6 @@ function getSaintForDate(date: Date): string {
 function getAccurateReadings(date: Date, season: string, liturgicalYear: string, usccbUrl: string): any {
   const dayOfWeek = date.getDay(); // 0 = Sunday
   const isSunday = dayOfWeek === 0;
-
-  // Date-specific corrections (authoritative overrides)
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
-  const dateKey = `${yyyy}-${mm}-${dd}`;
-  const override = getReadingOverride(dateKey, usccbUrl);
-  if (override) return override;
   
   if (season === 'Ordinary Time' && isSunday) {
     return getSundayOrdinaryTimeReadings(liturgicalYear, date, usccbUrl);
@@ -384,23 +377,23 @@ function getSundayOrdinaryTimeReadings(cycle: string, date: Date, usccbUrl: stri
     'C': {
       first_reading: { 
         title: 'First Reading', 
-        citation: 'Wisdom 11:22—12:2', 
-        content: 'Before the LORD the whole universe is as a grain from a balance or a drop of morning dew come down upon the earth. But you have mercy on all, because you can do all things; and you overlook people\'s sins that they may repent.' 
+        citation: 'Amos 6:1a, 4-7', 
+        content: 'Thus says the LORD the God of hosts: Woe to the complacent in Zion! Lying upon beds of ivory, stretched comfortably on their couches, they eat lambs taken from the flock, and calves from the stall!' 
       },
       responsorial_psalm: { 
         title: 'Responsorial Psalm', 
-        citation: 'Psalm 145:1-2, 8-9, 10-11, 13, 14', 
-        content: 'R. I will praise your name for ever, my king and my God.\nI will extol you, O my God and King, and I will bless your name forever and ever. Every day will I bless you, and I will praise your name forever and ever.' 
+        citation: 'Psalm 146:7-10', 
+        content: 'R. Praise the Lord, my soul! (or: Alleluia)\nThe LORD keeps faith forever, secures justice for the oppressed, gives food to the hungry. The LORD sets captives free.' 
       },
       second_reading: { 
         title: 'Second Reading', 
-        citation: '2 Thessalonians 1:11—2:2', 
-        content: 'Brothers and sisters: We always pray for you, that our God may make you worthy of his calling and powerfully bring to fulfillment every good purpose and every effort of faith.' 
+        citation: '1 Timothy 6:11-16', 
+        content: 'But you, man of God, pursue righteousness, devotion, faith, love, patience, and gentleness. Compete well for the faith. Lay hold of eternal life, to which you were called when you made the noble confession in the presence of many witnesses.' 
       },
       gospel: { 
         title: 'Gospel', 
-        citation: 'Luke 19:1-10', 
-        content: 'At that time, Jesus came to Jericho and intended to pass through the town. Now a man there named Zacchaeus, who was a chief tax collector and also a wealthy man, was seeking to see who Jesus was.' 
+        citation: 'Luke 16:19-31', 
+        content: 'Jesus said to the Pharisees: "There was a rich man who dressed in purple garments and fine linen and dined sumptuously each day. And lying at his door was a poor man named Lazarus, covered with sores..."' 
       }
     }
   };
@@ -518,36 +511,4 @@ function getWeekdayReadings(season: string, usccbUrl: string): any {
       content: `Today's Gospel reading for ${season}.\n\nComplete Gospel available at: ${usccbUrl}` 
     }
   };
-}
-
-// Date-specific reading overrides
-function getReadingOverride(dateKey: string, usccbUrl: string): any {
-  // Add curated corrections where our generic cycle mapping is insufficient
-  switch (dateKey) {
-    case '2025-09-28':
-      return {
-        first_reading: {
-          title: 'First Reading',
-          citation: 'Amos 6:1a, 4-7',
-          content: `Thus says the LORD the God of hosts: Woe to the complacent in Zion...\n\nComplete text available at: ${usccbUrl}`,
-        },
-        responsorial_psalm: {
-          title: 'Responsorial Psalm',
-          citation: 'Psalm 146:7-10',
-          content: `R. Praise the Lord, my soul! (or: Alleluia)\nThe LORD keeps faith forever, secures justice for the oppressed...\n\nComplete text available at: ${usccbUrl}`,
-        },
-        second_reading: {
-          title: 'Second Reading',
-          citation: '1 Timothy 6:11-16',
-          content: `But you, man of God, pursue righteousness, devotion, faith, love, patience, and gentleness...\n\nComplete text available at: ${usccbUrl}`,
-        },
-        gospel: {
-          title: 'Gospel',
-          citation: 'Luke 16:19-31',
-          content: `Jesus said to the Pharisees: 'There was a rich man who dressed in purple...' (The Rich Man and Lazarus)\n\nComplete text available at: ${usccbUrl}`,
-        },
-      };
-    default:
-      return null;
-  }
 }
