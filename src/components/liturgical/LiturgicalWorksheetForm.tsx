@@ -348,11 +348,12 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
                 </div>
                 <div>
                   <Label htmlFor="alleluia">Alleluia/Gospel Acclamation</Label>
-                  <Input
+                  <Textarea
                     id="alleluia"
                     value={formData.music_selections.alleluia}
                     onChange={(e) => handleMusicChange('alleluia', e.target.value)}
                     placeholder="Gospel acclamation"
+                    rows={3}
                   />
                 </div>
                 <div>
