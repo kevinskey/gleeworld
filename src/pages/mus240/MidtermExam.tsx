@@ -50,11 +50,11 @@ export default function MidtermExam() {
                   You will demonstrate your understanding of sacred and secular traditions, key historical events, and the music's 
                   role in shaping American identity.
                 </p>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-                  <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5" />
+                <div className="bg-amber-600 border border-amber-700 rounded-lg p-4 flex items-start gap-3 text-white">
+                  <AlertTriangle className="h-5 w-5 text-white mt-0.5" />
                   <div>
-                    <p className="text-amber-800 font-medium mb-1">Important Notice</p>
-                    <p className="text-amber-700 text-sm">
+                    <p className="text-white font-medium mb-1">Important Notice</p>
+                    <p className="text-white text-sm">
                       Your progress is automatically saved every 30 seconds. You can also manually save at any time. 
                       Make sure to submit your exam when complete.
                     </p>
