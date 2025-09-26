@@ -5,10 +5,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { MidtermExamForm } from '@/components/mus240/MidtermExamForm';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export default function MidtermExam() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <UniversalLayout showHeader={true} showFooter={false}>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header Navigation */}
         <div className="mb-8">
@@ -80,7 +82,8 @@ export default function MidtermExam() {
             Return to Course Home
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </UniversalLayout>
   );
 }
