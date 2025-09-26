@@ -13,42 +13,11 @@ import {
   GraduationCap, 
   Clock, 
   CheckCircle, 
-  XCircle, 
   FileText, 
   Star,
   User,
   Calendar
 } from 'lucide-react';
-
-interface MidtermSubmission {
-  id: string;
-  user_id: string;
-  selected_terms: string[] | null;
-  blues_answer: string | null;
-  work_song_answer: string | null;
-  spiritual_answer: string | null;
-  ragtime_answer: string | null;
-  excerpt_1_genre: string | null;
-  excerpt_1_features: string | null;
-  excerpt_1_context: string | null;
-  excerpt_2_genre: string | null;
-  excerpt_2_features: string | null;
-  excerpt_2_context: string | null;
-  essay_answer: string | null;
-  is_submitted: boolean;
-  submitted_at: string | null;
-  created_at: string;
-  time_started: string;
-  total_time_minutes: number | null;
-  grade: number | null;
-  feedback: string | null;
-  graded_by: string | null;
-  graded_at: string | null;
-  gw_profiles?: {
-    full_name: string;
-    email: string;
-  };
-}
 
 interface GradingRubric {
   terms: number;           // 10 points (2 pts each x 5 terms)
@@ -67,7 +36,7 @@ const RUBRIC_DEFAULTS: GradingRubric = {
 };
 
 export const MidtermGradingManager: React.FC = () => {
-  const [selectedSubmission, setSelectedSubmission] = useState<MidtermSubmission | null>(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
   const [rubricScores, setRubricScores] = useState<GradingRubric>(RUBRIC_DEFAULTS);
   const [feedback, setFeedback] = useState('');
   const queryClient = useQueryClient();
@@ -84,7 +53,7 @@ export const MidtermGradingManager: React.FC = () => {
         .order('submitted_at', { ascending: false });
 
       if (error) throw error;
-      return data as MidtermSubmission[];
+      return data;
     },
   });
 
@@ -97,7 +66,7 @@ export const MidtermGradingManager: React.FC = () => {
           feedback,
           graded_at: new Date().toISOString(),
           graded_by: (await supabase.auth.getUser()).data.user?.id
-        })
+        } as any)
         .eq('id', submissionId);
 
       if (error) throw error;
@@ -147,7 +116,7 @@ export const MidtermGradingManager: React.FC = () => {
     return 'F';
   };
 
-  const getStatusBadge = (submission: MidtermSubmission) => {
+  const getStatusBadge = (submission: any) => {
     if (submission.grade !== null) {
       return <Badge variant="default" className="bg-green-100 text-green-800">Graded</Badge>;
     }
@@ -186,7 +155,7 @@ export const MidtermGradingManager: React.FC = () => {
         <CardContent>
           <ScrollArea className="h-[600px]">
             <div className="space-y-3">
-              {submissions?.map((submission) => (
+              {submissions?.map((submission: any) => (
                 <Card 
                   key={submission.id} 
                   className={`cursor-pointer transition-colors hover:bg-gray-50 ${

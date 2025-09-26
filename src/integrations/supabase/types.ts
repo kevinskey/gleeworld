@@ -14303,7 +14303,11 @@ export type Database = {
           excerpt_3_context: string | null
           excerpt_3_features: string | null
           excerpt_3_genre: string | null
+          feedback: string | null
           field_holler_answer: string | null
+          grade: number | null
+          graded_at: string | null
+          graded_by: string | null
           id: string
           is_submitted: boolean
           negro_spiritual_answer: string | null
@@ -14331,7 +14335,11 @@ export type Database = {
           excerpt_3_context?: string | null
           excerpt_3_features?: string | null
           excerpt_3_genre?: string | null
+          feedback?: string | null
           field_holler_answer?: string | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           is_submitted?: boolean
           negro_spiritual_answer?: string | null
@@ -14359,7 +14367,11 @@ export type Database = {
           excerpt_3_context?: string | null
           excerpt_3_features?: string | null
           excerpt_3_genre?: string | null
+          feedback?: string | null
           field_holler_answer?: string | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           is_submitted?: boolean
           negro_spiritual_answer?: string | null
