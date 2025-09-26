@@ -14289,6 +14289,84 @@ export type Database = {
           },
         ]
       }
+      mus240_midterm_submissions: {
+        Row: {
+          blues_answer: string | null
+          created_at: string
+          essay_answer: string | null
+          excerpt_1_context: string | null
+          excerpt_1_features: string | null
+          excerpt_1_genre: string | null
+          excerpt_2_context: string | null
+          excerpt_2_features: string | null
+          excerpt_2_genre: string | null
+          field_holler_answer: string | null
+          id: string
+          is_submitted: boolean
+          negro_spiritual_answer: string | null
+          ragtime_answer: string | null
+          ring_shout_answer: string | null
+          selected_essay_question: number | null
+          selected_terms: string[]
+          submitted_at: string
+          swing_answer: string | null
+          time_started: string
+          total_time_minutes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          blues_answer?: string | null
+          created_at?: string
+          essay_answer?: string | null
+          excerpt_1_context?: string | null
+          excerpt_1_features?: string | null
+          excerpt_1_genre?: string | null
+          excerpt_2_context?: string | null
+          excerpt_2_features?: string | null
+          excerpt_2_genre?: string | null
+          field_holler_answer?: string | null
+          id?: string
+          is_submitted?: boolean
+          negro_spiritual_answer?: string | null
+          ragtime_answer?: string | null
+          ring_shout_answer?: string | null
+          selected_essay_question?: number | null
+          selected_terms?: string[]
+          submitted_at?: string
+          swing_answer?: string | null
+          time_started?: string
+          total_time_minutes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          blues_answer?: string | null
+          created_at?: string
+          essay_answer?: string | null
+          excerpt_1_context?: string | null
+          excerpt_1_features?: string | null
+          excerpt_1_genre?: string | null
+          excerpt_2_context?: string | null
+          excerpt_2_features?: string | null
+          excerpt_2_genre?: string | null
+          field_holler_answer?: string | null
+          id?: string
+          is_submitted?: boolean
+          negro_spiritual_answer?: string | null
+          ragtime_answer?: string | null
+          ring_shout_answer?: string | null
+          selected_essay_question?: number | null
+          selected_terms?: string[]
+          submitted_at?: string
+          swing_answer?: string | null
+          time_started?: string
+          total_time_minutes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       mus240_participation_grades: {
         Row: {
           created_at: string
