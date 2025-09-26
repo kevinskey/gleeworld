@@ -29,26 +29,40 @@ export const useMidtermGrading = () => {
   const { data: submissions, isLoading: isLoadingSubmissions } = useQuery({
     queryKey: ['midterm-submissions-for-grading'],
     queryFn: async () => {
+      console.log('Fetching midterm submissions...');
+      
       const { data, error } = await supabase
         .from('mus240_midterm_submissions')
         .select('*')
         .eq('is_submitted', true)
         .order('submitted_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('Submissions query result:', { data, error, count: data?.length });
+      
+      if (error) {
+        console.error('Error fetching submissions:', error);
+        throw error;
+      }
       
       // Get user profiles separately
       const userIds = data?.map(s => s.user_id) || [];
-      const { data: profiles } = await supabase
+      console.log('Fetching profiles for user IDs:', userIds);
+      
+      const { data: profiles, error: profileError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email')
         .in('user_id', userIds);
 
+      console.log('Profiles query result:', { profiles, profileError });
+
       // Combine the data
-      return data?.map(submission => ({
+      const combinedData = data?.map(submission => ({
         ...submission,
         profile: profiles?.find(p => p.user_id === submission.user_id)
       }));
+      
+      console.log('Final combined data:', combinedData);
+      return combinedData;
     },
   });
 
