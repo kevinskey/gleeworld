@@ -13676,6 +13676,36 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_ai_detection_patterns: {
+        Row: {
+          created_at: string
+          detection_rules: Json
+          id: string
+          is_active: boolean
+          pattern_description: string | null
+          pattern_name: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          detection_rules: Json
+          id?: string
+          is_active?: boolean
+          pattern_description?: string | null
+          pattern_name: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          detection_rules?: Json
+          id?: string
+          is_active?: boolean
+          pattern_description?: string | null
+          pattern_name?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       mus240_assignment_types: {
         Row: {
           created_at: string | null
@@ -13793,6 +13823,42 @@ export type Database = {
           title?: string
           updated_at?: string
           uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      mus240_course_analytics: {
+        Row: {
+          ai_usage_percentage: number | null
+          average_completion_time_minutes: number | null
+          class_performance_trends: Json | null
+          common_strength_areas: string[] | null
+          common_struggle_areas: string[] | null
+          generated_at: string
+          id: string
+          semester: string
+          total_students: number
+        }
+        Insert: {
+          ai_usage_percentage?: number | null
+          average_completion_time_minutes?: number | null
+          class_performance_trends?: Json | null
+          common_strength_areas?: string[] | null
+          common_struggle_areas?: string[] | null
+          generated_at?: string
+          id?: string
+          semester?: string
+          total_students?: number
+        }
+        Update: {
+          ai_usage_percentage?: number | null
+          average_completion_time_minutes?: number | null
+          class_performance_trends?: Json | null
+          common_strength_areas?: string[] | null
+          common_struggle_areas?: string[] | null
+          generated_at?: string
+          id?: string
+          semester?: string
+          total_students?: number
         }
         Relationships: []
       }
@@ -14801,6 +14867,127 @@ export type Database = {
             columns: ["submission_id"]
             isOneToOne: false
             referencedRelation: "assignment_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mus240_session_analytics: {
+        Row: {
+          ai_likelihood_score: number | null
+          average_typing_speed: number | null
+          browser_info: Json | null
+          consistency_score: number | null
+          created_at: string
+          id: string
+          response_patterns: Json | null
+          revision_frequency: number | null
+          section_completion_order: string[] | null
+          strength_areas: string[] | null
+          struggle_areas: string[] | null
+          student_id: string
+          submission_id: string
+          total_active_time_seconds: number
+          total_pause_time_seconds: number
+          updated_at: string
+        }
+        Insert: {
+          ai_likelihood_score?: number | null
+          average_typing_speed?: number | null
+          browser_info?: Json | null
+          consistency_score?: number | null
+          created_at?: string
+          id?: string
+          response_patterns?: Json | null
+          revision_frequency?: number | null
+          section_completion_order?: string[] | null
+          strength_areas?: string[] | null
+          struggle_areas?: string[] | null
+          student_id: string
+          submission_id: string
+          total_active_time_seconds?: number
+          total_pause_time_seconds?: number
+          updated_at?: string
+        }
+        Update: {
+          ai_likelihood_score?: number | null
+          average_typing_speed?: number | null
+          browser_info?: Json | null
+          consistency_score?: number | null
+          created_at?: string
+          id?: string
+          response_patterns?: Json | null
+          revision_frequency?: number | null
+          section_completion_order?: string[] | null
+          strength_areas?: string[] | null
+          struggle_areas?: string[] | null
+          student_id?: string
+          submission_id?: string
+          total_active_time_seconds?: number
+          total_pause_time_seconds?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_session_analytics_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_midterm_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mus240_test_analytics: {
+        Row: {
+          ai_indicators: Json | null
+          content_length: number | null
+          created_at: string
+          edit_count: number | null
+          event_type: string
+          id: string
+          keystroke_patterns: Json | null
+          question_id: string | null
+          section_name: string | null
+          student_id: string
+          submission_id: string
+          time_spent_seconds: number | null
+          timestamp_recorded: string
+        }
+        Insert: {
+          ai_indicators?: Json | null
+          content_length?: number | null
+          created_at?: string
+          edit_count?: number | null
+          event_type: string
+          id?: string
+          keystroke_patterns?: Json | null
+          question_id?: string | null
+          section_name?: string | null
+          student_id: string
+          submission_id: string
+          time_spent_seconds?: number | null
+          timestamp_recorded?: string
+        }
+        Update: {
+          ai_indicators?: Json | null
+          content_length?: number | null
+          created_at?: string
+          edit_count?: number | null
+          event_type?: string
+          id?: string
+          keystroke_patterns?: Json | null
+          question_id?: string | null
+          section_name?: string | null
+          student_id?: string
+          submission_id?: string
+          time_spent_seconds?: number | null
+          timestamp_recorded?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_test_analytics_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_midterm_submissions"
             referencedColumns: ["id"]
           },
         ]
@@ -18031,6 +18218,10 @@ export type Database = {
       bulk_update_user_roles_secure: {
         Args: { new_role: string; performer_id: string; user_ids: string[] }
         Returns: Json
+      }
+      calculate_ai_likelihood_score: {
+        Args: { p_submission_id: string }
+        Returns: number
       }
       calculate_event_budget_totals: {
         Args: { event_id_param: string }

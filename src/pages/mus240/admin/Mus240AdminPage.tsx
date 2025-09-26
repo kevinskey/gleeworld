@@ -10,9 +10,10 @@ import { PollParticipationTracker } from '@/components/mus240/admin/PollParticip
 import { StudentScoresViewer } from '@/components/mus240/admin/StudentScoresViewer';
 import { Mus240PollSystem } from '@/components/mus240/Mus240PollSystem';
 import { MidtermGradingManager } from '@/components/mus240/admin/MidtermGradingManager';
+import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GraduationCap, Users, FileText, Settings, ExternalLink, BarChart, BookOpen, Trophy, ClipboardCheck } from 'lucide-react';
+import { GraduationCap, Users, FileText, Settings, ExternalLink, BarChart, BookOpen, Trophy, ClipboardCheck, Brain } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { OpenAITestButton } from '@/components/mus240/admin/OpenAITestButton';
@@ -66,7 +67,7 @@ export const Mus240AdminPage = () => {
           {/* Main Content */}
           <div className="bg-white/10 backdrop-blur-md rounded-lg sm:rounded-2xl p-3 sm:p-6 border border-white/20">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-7 mb-3 sm:mb-6 bg-white/20 backdrop-blur-sm h-auto p-1 gap-0.5 sm:gap-1">
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-8 mb-3 sm:mb-6 bg-white/20 backdrop-blur-sm h-auto p-1 gap-0.5 sm:gap-1">
                 <TabsTrigger value="scores" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <Trophy className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm">Scores</span>
@@ -82,6 +83,10 @@ export const Mus240AdminPage = () => {
                 <TabsTrigger value="midterms" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <ClipboardCheck className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm">Midterms</span>
+                </TabsTrigger>
+                <TabsTrigger value="analytics" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
+                  <Brain className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">Analytics</span>
                 </TabsTrigger>
                 <TabsTrigger value="resources" className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 text-xs py-2 px-1 sm:px-3 data-[state=active]:bg-white/30">
                   <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -111,6 +116,10 @@ export const Mus240AdminPage = () => {
               
               <TabsContent value="midterms" className="mt-6">
                 <MidtermGradingManager />
+              </TabsContent>
+              
+              <TabsContent value="analytics" className="mt-6">
+                <StudentAnalyticsDashboard />
               </TabsContent>
               
               <TabsContent value="resources" className="mt-6">

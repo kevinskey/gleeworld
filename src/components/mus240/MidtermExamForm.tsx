@@ -9,6 +9,7 @@ import { Clock, Save, Send, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useMus240MidtermSubmissions } from '@/hooks/useMus240MidtermSubmissions';
+import { useTestAnalytics } from '@/hooks/useTestAnalytics';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface ExamFormData {
@@ -53,6 +54,7 @@ const essayQuestions = [
 
 export const MidtermExamForm: React.FC = () => {
   const { submission, isLoading, saveProgress, submitExam, isSaving, isSubmitting } = useMus240MidtermSubmissions();
+  const analytics = useTestAnalytics(submission?.id || null, submission?.user_id || null);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [formData, setFormData] = useState<ExamFormData>({
     selectedTerms: [],
