@@ -222,14 +222,14 @@ const EXAM_QUESTIONS: Question[] = [
   }
 ];
 
-const EXAM_DURATION = 90; // 90 minutes in seconds for testing (real would be 5400)
+// No time limit - removed duration constraint
 
 export const SMUS100MidtermExam: React.FC = () => {
   const { toast } = useToast();
   const [examState, setExamState] = useState<ExamState>({
     currentSection: 0,
     answers: {},
-    timeRemaining: EXAM_DURATION,
+    timeRemaining: 0, // No time limit
     isStarted: false,
     isSubmitted: false,
     currentQuestionIndex: 0
@@ -237,23 +237,7 @@ export const SMUS100MidtermExam: React.FC = () => {
 
   const [audioPlaying, setAudioPlaying] = useState<string | null>(null);
 
-  // Timer effect
-  useEffect(() => {
-    if (!examState.isStarted || examState.isSubmitted) return;
-
-    const timer = setInterval(() => {
-      setExamState(prev => {
-        if (prev.timeRemaining <= 1) {
-          // Auto-submit when time runs out
-          handleSubmitExam();
-          return { ...prev, timeRemaining: 0, isSubmitted: true };
-        }
-        return { ...prev, timeRemaining: prev.timeRemaining - 1 };
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [examState.isStarted, examState.isSubmitted]);
+  // Timer removed - no time limit on exam
 
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
@@ -265,7 +249,7 @@ export const SMUS100MidtermExam: React.FC = () => {
     setExamState(prev => ({ ...prev, isStarted: true }));
     toast({
       title: "Exam Started",
-      description: "You have 90 minutes to complete the SMUS-100 Midterm Exam. Good luck!",
+      description: "Take your time to complete the SMUS-100 Midterm Exam. Good luck!",
     });
   };
 
@@ -624,15 +608,9 @@ export const SMUS100MidtermExam: React.FC = () => {
                 <Music className="w-5 h-5" />
                 <h1 className="text-xl font-bold">SMUS-100 Midterm Exam</h1>
               </div>
-              <div className="flex items-center gap-4">
-                <Badge variant={examState.timeRemaining < 300 ? "destructive" : "outline"}>
-                  <Clock className="w-3 h-3 mr-1" />
-                  {formatTime(examState.timeRemaining)}
-                </Badge>
-                {examState.timeRemaining < 300 && (
-                  <AlertCircle className="w-5 h-5 text-destructive" />
-                )}
-              </div>
+              <Badge variant="outline">
+                No Time Limit
+              </Badge>
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm text-muted-foreground">
