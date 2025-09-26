@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Music, BookOpen, FileText, Download, Loader2, Upload, Eye } from 'lucide-react';
 import { LiturgicalWorksheet } from '@/hooks/useLiturgicalWorksheets';
 import { useUSCCBSync } from '@/hooks/useUSCCBSync';
+import { useEnhancedLiturgicalData } from '@/hooks/useEnhancedLiturgicalData';
 import { MusicXMLViewer } from './MusicXMLViewer';
 
 interface LiturgicalWorksheetFormProps {
@@ -18,6 +19,7 @@ interface LiturgicalWorksheetFormProps {
 
 export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: LiturgicalWorksheetFormProps) => {
   const { syncLiturgicalData, liturgicalData, isLoading, error } = useUSCCBSync();
+  const { data: enhancedData, loading: enhancedLoading, fetchEnhancedLiturgicalData } = useEnhancedLiturgicalData();
   const [formData, setFormData] = useState({
     liturgical_date: worksheet?.liturgical_date || '',
     liturgical_season: worksheet?.liturgical_season || '',
@@ -111,6 +113,38 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
     }
   };
 
+  const handleEnhancedAutoPopulate = async () => {
+    if (!formData.liturgical_date) {
+      alert('Please select a liturgical date first');
+      return;
+    }
+    
+    const enhancedData = await fetchEnhancedLiturgicalData(formData.liturgical_date);
+    if (enhancedData) {
+      // Auto-populate with enhanced liturgical data
+      setFormData(prev => ({
+        ...prev,
+        liturgical_season: enhancedData.season,
+        theme: enhancedData.celebration_name || `${enhancedData.season} - Week ${enhancedData.season_week}`,
+        readings: {
+          first_reading: enhancedData.readings.first_reading?.citation || prev.readings.first_reading,
+          psalm: enhancedData.readings.psalm?.citation || prev.readings.psalm,
+          second_reading: enhancedData.readings.second_reading?.citation || prev.readings.second_reading,
+          gospel: enhancedData.readings.gospel?.citation || prev.readings.gospel,
+        },
+        music_selections: {
+          entrance_hymn: enhancedData.music_suggestions.entrance_hymn[0] || prev.music_selections.entrance_hymn,
+          responsorial_psalm: enhancedData.music_suggestions.responsorial_psalm[0] || prev.music_selections.responsorial_psalm,
+          alleluia: enhancedData.music_suggestions.alleluia[0] || prev.music_selections.alleluia,
+          offertory: enhancedData.music_suggestions.offertory[0] || prev.music_selections.offertory,
+          communion: enhancedData.music_suggestions.communion[0] || prev.music_selections.communion,
+          closing_hymn: enhancedData.music_suggestions.closing_hymn[0] || prev.music_selections.closing_hymn,
+        },
+        special_instructions: enhancedData.additional_notes || prev.special_instructions,
+      }));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -155,21 +189,38 @@ export const LiturgicalWorksheetForm = ({ worksheet, onSave, onCancel }: Liturgi
                   required
                   className="flex-1"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAutoPopulate}
-                  disabled={isLoading || !formData.liturgical_date}
-                  className="whitespace-nowrap"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Download className="h-4 w-4" />
-                  )}
-                  Auto-populate
-                </Button>
+                <div className="flex gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAutoPopulate}
+                    disabled={isLoading || !formData.liturgical_date}
+                    className="whitespace-nowrap"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Download className="h-4 w-4" />
+                    )}
+                    USCCB
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEnhancedAutoPopulate}
+                    disabled={enhancedLoading || !formData.liturgical_date}
+                    className="whitespace-nowrap"
+                  >
+                    {enhancedLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <BookOpen className="h-4 w-4" />
+                    )}
+                    Enhanced
+                  </Button>
+                </div>
               </div>
               {error && (
                 <p className="text-sm text-destructive mt-1">{error}</p>
