@@ -44,15 +44,27 @@ export const MidtermGradingManager: React.FC = () => {
   const { data: submissions, isLoading } = useQuery({
     queryKey: ['midterm-submissions'],
     queryFn: async () => {
+      // Check authentication status
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        console.error('No authenticated user found for midterm grading');
+        throw new Error('Authentication required to view midterm submissions');
+      }
+
       const { data, error } = await supabase
         .from('mus240_midterm_submissions')
         .select(`
           *,
           gw_profiles!inner(full_name, email)
         `)
+        .eq('is_submitted', true)
         .order('submitted_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching midterm submissions:', error);
+        throw error;
+      }
       return data;
     },
   });
