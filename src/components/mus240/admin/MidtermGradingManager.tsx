@@ -46,7 +46,7 @@ export const MidtermGradingManager: React.FC = () => {
   const [rubricScores, setRubricScores] = useState<Record<string, GradingRubric>>({});
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
-  const [progress, setProgress] = useState<{ total: number; done: number } | null>(null);
+  const [progress, setProgress] = useState<{ total: number; started: number; done: number } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: submissions, isLoading } = useQuery({
@@ -142,10 +142,12 @@ export const MidtermGradingManager: React.FC = () => {
       const graderId = auth.user?.id ?? null;
 
       // Initialize progress UI
-      setProgress({ total: submissionIds.length, done: 0 });
+      setProgress({ total: submissionIds.length, started: 0, done: 0 });
 
       for (const submissionId of submissionIds) {
         try {
+          // Mark as started so the progress bar moves immediately
+          setProgress((p) => (p ? { ...p, started: p.started + 1 } : p));
           // Retry up to 3 times for transient network errors like "Load failed" or timeouts
           let attempt = 0;
           let data: any | null = null;
@@ -421,9 +423,9 @@ export const MidtermGradingManager: React.FC = () => {
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
               <span>AI grading progress</span>
-              <span>{progress.done}/{progress.total} ({Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%)</span>
+              <span>Started {progress.started}/{progress.total} • Done {progress.done}</span>
             </div>
-            <Progress value={Math.round((progress.done / Math.max(progress.total, 1)) * 100)} />
+            <Progress value={Math.round((progress.started / Math.max(progress.total, 1)) * 100)} />
           </div>
         )}
       </CardHeader>
