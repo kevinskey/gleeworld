@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -93,6 +93,8 @@ export const MidtermGradingManager: React.FC = () => {
         gw_profiles: profileMap.get(s.user_id) || null,
       }));
     },
+    refetchInterval: progress ? 3000 : false,
+    refetchIntervalInBackground: true,
   });
 
   const gradeMutation = useMutation({
@@ -148,19 +150,19 @@ export const MidtermGradingManager: React.FC = () => {
         try {
           // Mark as started so the progress bar moves immediately
           setProgress((p) => (p ? { ...p, started: p.started + 1 } : p));
-          // Retry up to 3 times for transient network errors like "Load failed" or timeouts
+
+          // Trigger async edge function with retries
           let attempt = 0;
-          let data: any | null = null;
+          let accepted = false;
           let lastErr: any = null;
-          while (attempt < 3) {
+          while (attempt < 3 && !accepted) {
             try {
               const resp = await withTimeout(
-                supabase.functions.invoke('grade-midterm-ai', { body: { submission_id: submissionId } }),
-                60000
+                supabase.functions.invoke('grade-midterm-ai-async', { body: { submission_id: submissionId } }),
+                15000
               );
               if ((resp as any).error) throw (resp as any).error;
-              data = (resp as any).data;
-              break; // success
+              accepted = true;
             } catch (err: any) {
               lastErr = err;
               const msg = (err?.message || '').toLowerCase();
@@ -175,49 +177,36 @@ export const MidtermGradingManager: React.FC = () => {
               throw err;
             }
           }
-          if (!data) throw lastErr || new Error('No data returned from grade-midterm-ai');
+          if (!accepted) throw lastErr || new Error('Failed to enqueue grading');
 
-          // Compute overall percentage from returned AI grades
-          const grades = (data?.grades ?? []) as Array<{ score: number; total_points: number; feedback?: string }>;
-          const totals = grades.reduce(
-            (acc, g) => {
-              const score = typeof g.score === 'number' ? g.score : 0;
-              const max = typeof g.total_points === 'number' ? g.total_points : 0;
-              return { achieved: acc.achieved + score, possible: acc.possible + max };
-            },
-            { achieved: 0, possible: 0 }
-          );
-          const finalGrade = totals.possible > 0 ? Math.round((totals.achieved / totals.possible) * 100) : null;
-
-          // Persist overall grade back to submissions so UI reflects status
-          if (finalGrade !== null) {
-            const { error: updateErr } = await supabase
-              .from('mus240_midterm_submissions')
-              .update({
-                grade: finalGrade,
-                graded_at: new Date().toISOString(),
-                graded_by: graderId,
-              } as any)
-              .eq('id', submissionId);
-
-            if (updateErr) {
-              console.error('Failed to update submission with AI grade:', updateErr);
-              results.push({ submissionId, success: false, error: updateErr });
+          // Poll for completion by checking if any grade rows exist for this submission
+          let polls = 0;
+          const maxPolls = 40; // ~120s at 3s interval
+          while (polls < maxPolls) {
+            const { data: rows, error: rowsErr } = await supabase
+              .from('mus240_submission_grades')
+              .select('id')
+              .eq('submission_id', submissionId)
+              .limit(1);
+            if (!rowsErr && rows && rows.length > 0) {
               setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
-              // small spacing between calls to reduce pressure on the function
-              await delay(300);
-              continue;
+              results.push({ submissionId, success: true });
+              break;
             }
+            polls += 1;
+            await delay(3000);
           }
-
-          results.push({ submissionId, success: true, data, finalGrade });
-          setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
-          await delay(300); // space out calls a bit
+          if (polls >= maxPolls) {
+            results.push({ submissionId, success: false, error: new Error('Grading timed out') });
+            // still advance done to avoid stuck UI
+            setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
+          }
+          await delay(200);
         } catch (error) {
           console.error(`Failed to grade submission ${submissionId}:`, error);
           results.push({ submissionId, success: false, error });
           setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
-          await delay(300);
+          await delay(200);
         }
       }
       return results;
