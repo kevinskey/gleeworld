@@ -10,7 +10,8 @@ import { AssignmentManager } from '@/components/mus240/instructor/AssignmentMana
 import { JournalsAdmin } from '@/components/mus240/instructor/JournalsAdmin';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
-import { MidtermGradingDashboard } from '@/components/grading/MidtermGradingDashboard';
+import { MidtermGradingManager } from '@/components/mus240/admin/MidtermGradingManager';
+import { GradeCalculationSystem } from '@/components/mus240/admin/GradeCalculationSystem';
 import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
 import { toast } from 'sonner';
 
@@ -152,7 +153,7 @@ export const InstructorConsole = () => {
 
         {/* Main Console */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto gap-0.5 md:gap-1 p-0.5 md:p-1">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto gap-0.5 md:gap-1 p-0.5 md:p-1">
             <TabsTrigger 
               value="assignments" 
               className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
@@ -179,7 +180,14 @@ export const InstructorConsole = () => {
               className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
             >
               <ClipboardCheck className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Grading</span>
+              <span>Midterm</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="grade-calculation" 
+              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+            >
+              <Users className="h-3 w-3 md:h-4 md:w-4" />
+              <span>Calculate</span>
             </TabsTrigger>
             <TabsTrigger 
               value="ai-assistant" 
@@ -203,7 +211,11 @@ export const InstructorConsole = () => {
           </TabsContent>
 
           <TabsContent value="midterm-grading" className="mt-1 md:mt-3">
-            <MidtermGradingDashboard />
+            <MidtermGradingManager />
+          </TabsContent>
+
+          <TabsContent value="grade-calculation" className="mt-1 md:mt-3">
+            <GradeCalculationSystem />
           </TabsContent>
 
           <TabsContent value="ai-assistant" className="mt-1 md:mt-3">
