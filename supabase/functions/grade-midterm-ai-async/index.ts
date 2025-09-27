@@ -104,7 +104,7 @@ serve(async (req) => {
           const computeFromDb = async (): Promise<number | null> => {
             const { data: rows, error: rowsErr } = await supabase
               .from("mus240_submission_grades")
-              .select("ai_score, rubric_breakdown, question_type")
+              .select("ai_score, rubric_breakdown")
               .eq("submission_id", submissionId);
             if (rowsErr) {
               console.warn("[grade-midterm-ai-async] DB select error:", rowsErr);
@@ -137,18 +137,12 @@ serve(async (req) => {
               if (maxFromRubric > 0) {
                 possible += maxFromRubric;
               } else {
-                // Heuristic fallback by question type
-                const t: string = String(r.question_type || "").toLowerCase();
-                let fallback = 10;
-                if (t.includes("essay")) fallback = 20;
-                else if (t.includes("excerpt")) fallback = 10;
-                else if (t.includes("term")) fallback = 2;
-                else if (t.includes("short")) fallback = 5;
-                possible += fallback;
+                // Heuristic fallback when no rubric info
+                possible += 10;
               }
             }
 
-            if (possible > 0) return Math.round((achieved / possible) * 100);
+            if (possible > 0) return Math.max(0, Math.min(100, Math.round((achieved / possible) * 100)));
             return null;
           };
 
