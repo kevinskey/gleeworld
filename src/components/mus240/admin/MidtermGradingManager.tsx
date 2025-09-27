@@ -16,7 +16,9 @@ import {
   FileText, 
   Star,
   User,
-  Calendar
+  Calendar,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface GradingRubric {
@@ -36,9 +38,9 @@ const RUBRIC_DEFAULTS: GradingRubric = {
 };
 
 export const MidtermGradingManager: React.FC = () => {
-  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
-  const [rubricScores, setRubricScores] = useState<GradingRubric>(RUBRIC_DEFAULTS);
-  const [feedback, setFeedback] = useState('');
+  const [expandedSubmissionId, setExpandedSubmissionId] = useState<string | null>(null);
+  const [rubricScores, setRubricScores] = useState<Record<string, GradingRubric>>({});
+  const [feedback, setFeedback] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
 
   const { data: submissions, isLoading } = useQuery({
@@ -104,9 +106,6 @@ export const MidtermGradingManager: React.FC = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['midterm-submissions'] });
       toast.success('Grade saved successfully');
-      setSelectedSubmission(null);
-      setRubricScores(RUBRIC_DEFAULTS);
-      setFeedback('');
     },
     onError: (error) => {
       toast.error('Failed to save grade');
@@ -114,20 +113,69 @@ export const MidtermGradingManager: React.FC = () => {
     },
   });
 
-  const handleRubricChange = (section: keyof GradingRubric, value: number) => {
-    const newScores = { ...rubricScores, [section]: value };
-    newScores.total = newScores.terms + newScores.shortAnswers + newScores.excerpts + newScores.essay;
-    setRubricScores(newScores);
+  const getSubmissionRubric = (submissionId: string): GradingRubric => {
+    return rubricScores[submissionId] || RUBRIC_DEFAULTS;
   };
 
-  const handleGradeSubmission = () => {
-    if (!selectedSubmission) return;
+  const getSubmissionFeedback = (submissionId: string): string => {
+    return feedback[submissionId] || '';
+  };
+
+  const handleRubricChange = (submissionId: string, section: keyof GradingRubric, value: number) => {
+    const currentRubric = getSubmissionRubric(submissionId);
+    const newRubric = { ...currentRubric, [section]: value };
+    newRubric.total = newRubric.terms + newRubric.shortAnswers + newRubric.excerpts + newRubric.essay;
+    
+    setRubricScores(prev => ({
+      ...prev,
+      [submissionId]: newRubric
+    }));
+  };
+
+  const handleFeedbackChange = (submissionId: string, value: string) => {
+    setFeedback(prev => ({
+      ...prev,
+      [submissionId]: value
+    }));
+  };
+
+  const handleGradeSubmission = (submission: any) => {
+    const rubric = getSubmissionRubric(submission.id);
+    const feedbackText = getSubmissionFeedback(submission.id);
     
     gradeMutation.mutate({
-      submissionId: selectedSubmission.id,
-      grade: rubricScores.total,
-      feedback
+      submissionId: submission.id,
+      grade: rubric.total,
+      feedback: feedbackText
     });
+  };
+
+  const toggleExpansion = (submission: any) => {
+    const isExpanding = expandedSubmissionId !== submission.id;
+    setExpandedSubmissionId(isExpanding ? submission.id : null);
+    
+    if (isExpanding && submission.grade !== null) {
+      // Pre-fill rubric if already graded
+      const termScore = Math.round((submission.grade / 100) * 10);
+      const shortScore = Math.round((submission.grade / 100) * 20);
+      const excerptScore = Math.round((submission.grade / 100) * 30);
+      const essayScore = submission.grade - termScore - shortScore - excerptScore;
+      
+      setRubricScores(prev => ({
+        ...prev,
+        [submission.id]: {
+          terms: termScore,
+          shortAnswers: shortScore,
+          excerpts: excerptScore,
+          essay: Math.max(0, essayScore),
+          total: submission.grade
+        }
+      }));
+      setFeedback(prev => ({
+        ...prev,
+        [submission.id]: submission.feedback || ''
+      }));
+    }
   };
 
   const getLetterGrade = (score: number) => {
@@ -173,213 +221,199 @@ export const MidtermGradingManager: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Submissions List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Midterm Submissions ({submissions?.length || 0})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[600px]">
-            <div className="space-y-3">
-              {submissions?.map((submission: any) => (
-                <Card 
-                  key={submission.id} 
-                  className={`cursor-pointer transition-colors hover:bg-gray-50 ${
-                    selectedSubmission?.id === submission.id ? 'ring-2 ring-blue-500' : ''
-                  }`}
-                  onClick={() => {
-                    setSelectedSubmission(submission);
-                    if (submission.grade !== null) {
-                      // Pre-fill rubric if already graded
-                      const termScore = Math.round((submission.grade / 100) * 10);
-                      const shortScore = Math.round((submission.grade / 100) * 20);
-                      const excerptScore = Math.round((submission.grade / 100) * 30);
-                      const essayScore = submission.grade - termScore - shortScore - excerptScore;
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-5 w-5" />
+          Midterm Submissions ({submissions?.length || 0})
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[800px]">
+          <div className="space-y-4">
+            {submissions?.map((submission: any) => {
+              const isExpanded = expandedSubmissionId === submission.id;
+              const currentRubric = getSubmissionRubric(submission.id);
+              const currentFeedback = getSubmissionFeedback(submission.id);
+
+              return (
+                <div key={submission.id} className="border rounded-lg">
+                  {/* Submission Card Header */}
+                  <Card className="cursor-pointer transition-colors hover:bg-gray-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-gray-500" />
+                          <span className="font-medium">{submission.gw_profiles?.full_name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(submission)}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleExpansion(submission)}
+                            className="h-8 w-8 p-0"
+                          >
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
                       
-                      setRubricScores({
-                        terms: termScore,
-                        shortAnswers: shortScore,
-                        excerpts: excerptScore,
-                        essay: Math.max(0, essayScore),
-                        total: submission.grade
-                      });
-                      setFeedback(submission.feedback || '');
-                    } else {
-                      setRubricScores(RUBRIC_DEFAULTS);
-                      setFeedback('');
-                    }
-                  }}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium">{submission.gw_profiles?.full_name}</span>
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {submission.submitted_at 
+                            ? new Date(submission.submitted_at).toLocaleDateString()
+                            : 'In Progress'
+                          }
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {submission.total_time_minutes 
+                            ? `${submission.total_time_minutes} min`
+                            : '--'
+                          }
+                        </div>
                       </div>
-                      {getStatusBadge(submission)}
-                    </div>
-                    
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {submission.submitted_at 
-                          ? new Date(submission.submitted_at).toLocaleDateString()
-                          : 'In Progress'
-                        }
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {submission.total_time_minutes 
-                          ? `${submission.total_time_minutes} min`
-                          : '--'
-                        }
-                      </div>
-                    </div>
 
-                    {submission.grade !== null && (
-                      <div className="flex items-center gap-2">
-                        <Star className="h-4 w-4 text-yellow-500" />
-                        <span className="font-semibold">{submission.grade}/100</span>
-                        <Badge variant="outline">{getLetterGrade(submission.grade)}</Badge>
+                      {submission.grade !== null && (
+                        <div className="flex items-center gap-2">
+                          <Star className="h-4 w-4 text-yellow-500" />
+                          <span className="font-semibold">{submission.grade}/100</span>
+                          <Badge variant="outline">{getLetterGrade(submission.grade)}</Badge>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-center mt-2 text-sm text-gray-500">
+                        {isExpanded ? 'Click to collapse details' : 'Click to review and grade'}
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                    </CardContent>
+                  </Card>
 
-      {/* Grading Interface */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CheckCircle className="h-5 w-5" />
-            {selectedSubmission ? 'Grade Submission' : 'Select a Submission'}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {selectedSubmission ? (
-            <div className="space-y-6">
-              {/* Student Info */}
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">{selectedSubmission.gw_profiles?.full_name}</h3>
-                <p className="text-sm text-gray-600">{selectedSubmission.gw_profiles?.email}</p>
-                <p className="text-sm text-gray-600">
-                  Submitted: {selectedSubmission.submitted_at 
-                    ? new Date(selectedSubmission.submitted_at).toLocaleString()
-                    : 'Not submitted'
-                  }
-                </p>
-              </div>
+                  {/* Expanded Grading Interface */}
+                  {isExpanded && (
+                    <Card className="mt-0 border-t-0 rounded-t-none">
+                      <CardContent className="p-6 bg-gray-50">
+                        <div className="space-y-6">
+                          {/* Student Info */}
+                          <div className="bg-white p-4 rounded-lg">
+                            <h3 className="font-semibold mb-2">{submission.gw_profiles?.full_name}</h3>
+                            <p className="text-sm text-gray-600">{submission.gw_profiles?.email}</p>
+                            <p className="text-sm text-gray-600">
+                              Submitted: {submission.submitted_at 
+                                ? new Date(submission.submitted_at).toLocaleString()
+                                : 'Not submitted'
+                              }
+                            </p>
+                          </div>
 
-              {/* Grading Rubric */}
-              <div className="space-y-4">
-                <h3 className="font-semibold">Grading Rubric</h3>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium">Terms (0-10)</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="10"
-                      value={rubricScores.terms}
-                      onChange={(e) => handleRubricChange('terms', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">2 pts each × 5 terms</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium">Short Answers (0-20)</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="20"
-                      value={rubricScores.shortAnswers}
-                      onChange={(e) => handleRubricChange('shortAnswers', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">5 pts each × 4 questions</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium">Excerpts (0-30)</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="30"
-                      value={rubricScores.excerpts}
-                      onChange={(e) => handleRubricChange('excerpts', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">15 pts each × 2 excerpts</p>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium">Essay (0-40)</label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="40"
-                      value={rubricScores.essay}
-                      onChange={(e) => handleRubricChange('essay', Number(e.target.value))}
-                      className="mt-1"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">Historical analysis</p>
-                  </div>
+                          {/* Grading Rubric */}
+                          <div className="bg-white p-4 rounded-lg space-y-4">
+                            <h3 className="font-semibold">Grading Rubric</h3>
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-sm font-medium">Terms (0-10)</label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="10"
+                                  value={currentRubric.terms}
+                                  onChange={(e) => handleRubricChange(submission.id, 'terms', Number(e.target.value))}
+                                  className="mt-1"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">2 pts each × 5 terms</p>
+                              </div>
+                              
+                              <div>
+                                <label className="text-sm font-medium">Short Answers (0-20)</label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="20"
+                                  value={currentRubric.shortAnswers}
+                                  onChange={(e) => handleRubricChange(submission.id, 'shortAnswers', Number(e.target.value))}
+                                  className="mt-1"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">5 pts each × 4 questions</p>
+                              </div>
+                              
+                              <div>
+                                <label className="text-sm font-medium">Excerpts (0-30)</label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="30"
+                                  value={currentRubric.excerpts}
+                                  onChange={(e) => handleRubricChange(submission.id, 'excerpts', Number(e.target.value))}
+                                  className="mt-1"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">15 pts each × 2 excerpts</p>
+                              </div>
+                              
+                              <div>
+                                <label className="text-sm font-medium">Essay (0-40)</label>
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="40"
+                                  value={currentRubric.essay}
+                                  onChange={(e) => handleRubricChange(submission.id, 'essay', Number(e.target.value))}
+                                  className="mt-1"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Historical analysis</p>
+                              </div>
+                            </div>
+
+                            <Separator />
+
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold">Total Score:</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-2xl font-bold">{currentRubric.total}/100</span>
+                                  <Badge variant="outline" className="text-lg px-3 py-1">
+                                    {getLetterGrade(currentRubric.total)}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Feedback */}
+                            <div>
+                              <label className="text-sm font-medium">Feedback</label>
+                              <Textarea
+                                value={currentFeedback}
+                                onChange={(e) => handleFeedbackChange(submission.id, e.target.value)}
+                                placeholder="Provide detailed feedback for the student..."
+                                className="mt-1 min-h-[120px]"
+                              />
+                            </div>
+
+                            {/* Save Button */}
+                            <Button 
+                              onClick={() => handleGradeSubmission(submission)}
+                              disabled={gradeMutation.isPending}
+                              className="w-full"
+                              size="lg"
+                            >
+                              {gradeMutation.isPending ? 'Saving...' : 'Save Grade'}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
-
-                <Separator />
-
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold">Total Score:</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold">{rubricScores.total}/100</span>
-                      <Badge variant="outline" className="text-lg px-3 py-1">
-                        {getLetterGrade(rubricScores.total)}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Feedback */}
-                <div>
-                  <label className="text-sm font-medium">Feedback</label>
-                  <Textarea
-                    value={feedback}
-                    onChange={(e) => setFeedback(e.target.value)}
-                    placeholder="Provide detailed feedback for the student..."
-                    className="mt-1 min-h-[120px]"
-                  />
-                </div>
-
-                {/* Save Button */}
-                <Button 
-                  onClick={handleGradeSubmission}
-                  disabled={gradeMutation.isPending}
-                  className="w-full"
-                  size="lg"
-                >
-                  {gradeMutation.isPending ? 'Saving...' : 'Save Grade'}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-12 text-gray-500">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-              <p>Select a submission from the list to begin grading</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 };
