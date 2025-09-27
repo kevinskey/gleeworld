@@ -119,14 +119,50 @@ export const MidtermGradingManager: React.FC = () => {
 
   const bulkGradeWithAI = useMutation({
     mutationFn: async (submissionIds: string[]) => {
-      const results = [];
+      const results: Array<{ submissionId: string; success: boolean; error?: any; data?: any; finalGrade?: number | null }> = [];
+
+      // Get current user for graded_by
+      const { data: auth } = await supabase.auth.getUser();
+      const graderId = auth.user?.id ?? null;
+
       for (const submissionId of submissionIds) {
         try {
           const { data, error } = await supabase.functions.invoke('grade-midterm-ai', {
             body: { submission_id: submissionId }
           });
           if (error) throw error;
-          results.push({ submissionId, success: true, data });
+
+          // Compute overall percentage from returned AI grades
+          const grades = (data?.grades ?? []) as Array<{ score: number; total_points: number; feedback?: string }>;
+          const totals = grades.reduce(
+            (acc, g) => {
+              const score = typeof g.score === 'number' ? g.score : 0;
+              const max = typeof g.total_points === 'number' ? g.total_points : 0;
+              return { achieved: acc.achieved + score, possible: acc.possible + max };
+            },
+            { achieved: 0, possible: 0 }
+          );
+          const finalGrade = totals.possible > 0 ? Math.round((totals.achieved / totals.possible) * 100) : null;
+
+          // Persist overall grade back to submissions so UI reflects status
+          if (finalGrade !== null) {
+            const { error: updateErr } = await supabase
+              .from('mus240_midterm_submissions')
+              .update({
+                grade: finalGrade,
+                graded_at: new Date().toISOString(),
+                graded_by: graderId,
+              } as any)
+              .eq('id', submissionId);
+
+            if (updateErr) {
+              console.error('Failed to update submission with AI grade:', updateErr);
+              results.push({ submissionId, success: false, error: updateErr });
+              continue;
+            }
+          }
+
+          results.push({ submissionId, success: true, data, finalGrade });
         } catch (error) {
           console.error(`Failed to grade submission ${submissionId}:`, error);
           results.push({ submissionId, success: false, error });
