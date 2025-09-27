@@ -62,7 +62,7 @@ const DEFAULT_WEIGHTS: GradeWeights = {
 };
 
 export const GradeCalculationSystem: React.FC = () => {
-  const [semester, setSemester] = useState('Fall 2024');
+  const [semester, setSemester] = useState('Fall 2025');
   const [weights, setWeights] = useState<GradeWeights>(DEFAULT_WEIGHTS);
   const queryClient = useQueryClient();
 
@@ -92,12 +92,12 @@ export const GradeCalculationSystem: React.FC = () => {
 
       if (profileError) throw profileError;
 
-      // Get midterm scores
-      const { data: midtermScores, error: midtermError } = await supabase
-        .from('mus240_midterm_submissions')
-        .select('user_id, grade')
-        .in('user_id', studentIds)
-        .eq('is_submitted', true);
+        // Get midterm scores
+        const { data: midtermScores, error: midtermError } = await supabase
+          .from('mus240_midterm_submissions')
+          .select('user_id, grade')
+          .in('user_id', studentIds)
+          .eq('is_submitted', true);
 
       if (midtermError) throw midtermError;
 
