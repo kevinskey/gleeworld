@@ -95,7 +95,7 @@ export const GradeCalculationSystem: React.FC = () => {
       // Get midterm scores (manual or finalized)
       const { data: midtermScores, error: midtermError } = await supabase
         .from('mus240_midterm_submissions')
-        .select('user_id, grade, is_submitted')
+        .select('id, user_id, grade, is_submitted')
         .in('user_id', studentIds)
         .eq('is_submitted', true);
 
@@ -132,19 +132,25 @@ export const GradeCalculationSystem: React.FC = () => {
       if (participationError) throw participationError;
 
       // Get AI/instructor midterm per-question grades (to compute overall when submission.grade is null)
-      const { data: submissionGrades, error: submissionGradesError } = await supabase
-        .from('mus240_submission_grades')
-        .select(`
-          submission_id,
-          question_type,
-          question_id,
-          ai_score,
-          instructor_score,
-          mus240_midterm_submissions!inner(user_id)
-        `)
-        .in('mus240_midterm_submissions.user_id', studentIds);
+      const submissionIdByUser = new Map<string, string>();
+      const userBySubmissionId = new Map<string, string>();
+      (midtermScores || []).forEach((m: any) => {
+        if (m?.id && m?.user_id) {
+          submissionIdByUser.set(m.user_id, m.id);
+          userBySubmissionId.set(m.id, m.user_id);
+        }
+      });
+      const submissionIds = Array.from(userBySubmissionId.keys());
 
-      if (submissionGradesError) throw submissionGradesError;
+      let submissionGrades: any[] = [];
+      if (submissionIds.length > 0) {
+        const { data: rows, error: submissionGradesError } = await supabase
+          .from('mus240_submission_grades')
+          .select('submission_id, question_type, question_id, ai_score, instructor_score, rubric_breakdown')
+          .in('submission_id', submissionIds);
+        if (submissionGradesError) throw submissionGradesError;
+        submissionGrades = rows || [];
+      }
 
       // Get rubrics to know max points per question
       const { data: rubrics, error: rubricsError } = await supabase
@@ -159,11 +165,18 @@ export const GradeCalculationSystem: React.FC = () => {
         rubricMap.set(`${r.question_type}:${r.question_id}`, Number(r.total_points) || 10);
       });
 
+      // De-duplicate grades by (submission_id, question_id)
+      const uniqueByQuestion = new Map<string, any>();
+      for (const g of submissionGrades) {
+        const key = `${g.submission_id}|${g.question_type}:${g.question_id}`;
+        if (!uniqueByQuestion.has(key)) uniqueByQuestion.set(key, g);
+      }
+
       const midtermAggregateByUser = new Map<string, { score: number; possible: number }>();
-      (submissionGrades || []).forEach((g: any) => {
-        const uid = (g as any)?.mus240_midterm_submissions?.user_id;
+      Array.from(uniqueByQuestion.values()).forEach((g: any) => {
+        const uid = userBySubmissionId.get(g.submission_id);
         if (!uid) return;
-        const received = Number(g.instructor_score ?? g.ai_score);
+        const received = Number(g.instructor_score ?? g.ai_score ?? 0);
         if (!isFinite(received)) return;
         const max = rubricMap.get(`${g.question_type}:${g.question_id}`) ?? 10;
         const agg = midtermAggregateByUser.get(uid) || { score: 0, possible: 0 };
