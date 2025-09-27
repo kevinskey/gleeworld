@@ -16,6 +16,7 @@ interface GradeData {
   graded_at: string;
   feedback: string;
   rubric_scores: any[];
+  type: 'journal' | 'midterm';
 }
 
 export const GradesAdmin = () => {
@@ -40,18 +41,26 @@ export const GradesAdmin = () => {
 
   const fetchGrades = async () => {
     try {
-  const fetchGrades = async () => {
-    try {
-      const { data, error } = await supabase
+      // Fetch journal grades
+      const { data: journalGrades, error: journalError } = await supabase
         .from('mus240_journal_grades')
         .select('*')
         .order('graded_at', { ascending: false });
 
-      if (error) throw error;
+      if (journalError) throw journalError;
 
-      // Fetch related data for each grade
-      const formattedGrades = await Promise.all(
-        (data || []).map(async (grade) => {
+      // Fetch midterm grades
+      const { data: midtermGrades, error: midtermError } = await supabase
+        .from('mus240_midterm_submissions')
+        .select('*')
+        .eq('is_submitted', true)
+        .order('submitted_at', { ascending: false });
+
+      if (midtermError) throw midtermError;
+
+      // Fetch related data for journal grades
+      const formattedJournalGrades = await Promise.all(
+        (journalGrades || []).map(async (grade) => {
           // Get user profile
           const { data: profileData } = await supabase
             .from('gw_profiles')
@@ -62,17 +71,46 @@ export const GradesAdmin = () => {
           return {
             student_name: profileData?.full_name || 'Unknown',
             student_email: profileData?.email || '',
-            assignment_title: `Assignment ${grade.assignment_id}`,
+            assignment_title: `Journal ${grade.journal_id}`,
             overall_score: grade.overall_score || 0,
             letter_grade: grade.letter_grade || 'N/A',
             graded_at: grade.graded_at,
             feedback: grade.feedback || '',
-            rubric_scores: []
+            rubric_scores: [],
+            type: 'journal' as const
           };
         })
       );
 
-      setGrades(formattedGrades);
+      // Fetch related data for midterm grades
+      const formattedMidtermGrades = await Promise.all(
+        (midtermGrades || []).map(async (submission) => {
+          // Get user profile
+          const { data: profileData } = await supabase
+            .from('gw_profiles')
+            .select('full_name, email')
+            .eq('user_id', submission.user_id)
+            .single();
+
+          return {
+            student_name: profileData?.full_name || 'Unknown',
+            student_email: profileData?.email || '',
+            assignment_title: 'Midterm Exam',
+            overall_score: submission.grade || 0,
+            letter_grade: getLetterGradeFromScore(submission.grade || 0),
+            graded_at: submission.graded_at || submission.submitted_at,
+            feedback: submission.feedback || '',
+            rubric_scores: [],
+            type: 'midterm' as const
+          };
+        })
+      );
+
+      // Combine and sort all grades
+      const allGrades = [...formattedJournalGrades, ...formattedMidtermGrades]
+        .sort((a, b) => new Date(b.graded_at).getTime() - new Date(a.graded_at).getTime());
+
+      setGrades(allGrades);
     } catch (error) {
       console.error('Error fetching grades:', error);
       toast.error('Failed to load grades');
@@ -80,12 +118,21 @@ export const GradesAdmin = () => {
       setLoading(false);
     }
   };
-    } catch (error) {
-      console.error('Error fetching grades:', error);
-      toast.error('Failed to load grades');
-    } finally {
-      setLoading(false);
-    }
+
+  const getLetterGradeFromScore = (score: number): string => {
+    if (score >= 97) return 'A+';
+    if (score >= 93) return 'A';
+    if (score >= 90) return 'A-';
+    if (score >= 87) return 'B+';
+    if (score >= 83) return 'B';
+    if (score >= 80) return 'B-';
+    if (score >= 77) return 'C+';
+    if (score >= 73) return 'C';
+    if (score >= 70) return 'C-';
+    if (score >= 67) return 'D+';
+    if (score >= 63) return 'D';
+    if (score >= 60) return 'D-';
+    return 'F';
   };
 
   const fetchAssignments = async () => {
@@ -283,9 +330,14 @@ export const GradesAdmin = () => {
           <div className="space-y-4">
             {grades.slice(0, 10).map((grade, index) => (
               <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
-                  <p className="font-medium">{grade.student_name}</p>
-                  <p className="text-sm text-gray-600">{grade.assignment_title}</p>
+                 <div className="flex-1">
+                   <div className="flex items-center gap-2">
+                     <p className="font-medium">{grade.student_name}</p>
+                     <Badge variant={grade.type === 'midterm' ? 'default' : 'secondary'} className="text-xs">
+                       {grade.type === 'midterm' ? 'Midterm' : 'Journal'}
+                     </Badge>
+                   </div>
+                   <p className="text-sm text-gray-600">{grade.assignment_title}</p>
                   {grade.feedback && (
                     <details className="mt-2">
                       <summary className="text-sm text-blue-600 cursor-pointer hover:text-blue-800">
