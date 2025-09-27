@@ -18,7 +18,10 @@ import {
   User,
   Calendar,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  CheckSquare,
+  Square,
+  Zap
 } from 'lucide-react';
 
 interface GradingRubric {
@@ -41,6 +44,7 @@ export const MidtermGradingManager: React.FC = () => {
   const [expandedSubmissionId, setExpandedSubmissionId] = useState<string | null>(null);
   const [rubricScores, setRubricScores] = useState<Record<string, GradingRubric>>({});
   const [feedback, setFeedback] = useState<Record<string, string>>({});
+  const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
 
   const { data: submissions, isLoading } = useQuery({
@@ -113,6 +117,41 @@ export const MidtermGradingManager: React.FC = () => {
     },
   });
 
+  const bulkGradeWithAI = useMutation({
+    mutationFn: async (submissionIds: string[]) => {
+      const results = [];
+      for (const submissionId of submissionIds) {
+        try {
+          const { data, error } = await supabase.functions.invoke('grade-midterm-ai', {
+            body: { submission_id: submissionId }
+          });
+          if (error) throw error;
+          results.push({ submissionId, success: true, data });
+        } catch (error) {
+          console.error(`Failed to grade submission ${submissionId}:`, error);
+          results.push({ submissionId, success: false, error });
+        }
+      }
+      return results;
+    },
+    onSuccess: (results) => {
+      queryClient.invalidateQueries({ queryKey: ['midterm-submissions'] });
+      const successCount = results.filter(r => r.success).length;
+      const failCount = results.length - successCount;
+      
+      if (failCount === 0) {
+        toast.success(`Successfully graded ${successCount} submissions with AI`);
+      } else {
+        toast.success(`Graded ${successCount} submissions. ${failCount} failed.`);
+      }
+      setSelectedSubmissions(new Set());
+    },
+    onError: (error) => {
+      console.error('Bulk grading error:', error);
+      toast.error('Failed to grade submissions with AI');
+    },
+  });
+
   const getSubmissionRubric = (submissionId: string): GradingRubric => {
     return rubricScores[submissionId] || RUBRIC_DEFAULTS;
   };
@@ -178,6 +217,37 @@ export const MidtermGradingManager: React.FC = () => {
     }
   };
 
+  const toggleSubmissionSelection = (submissionId: string) => {
+    setSelectedSubmissions(prev => {
+      const newSelection = new Set(prev);
+      if (newSelection.has(submissionId)) {
+        newSelection.delete(submissionId);
+      } else {
+        newSelection.add(submissionId);
+      }
+      return newSelection;
+    });
+  };
+
+  const toggleAllSubmissions = () => {
+    const ungradedSubmissions = submissions?.filter((s: any) => s.grade === null) || [];
+    const allUngradedIds = ungradedSubmissions.map((s: any) => s.id);
+    
+    if (selectedSubmissions.size === allUngradedIds.length) {
+      setSelectedSubmissions(new Set());
+    } else {
+      setSelectedSubmissions(new Set(allUngradedIds));
+    }
+  };
+
+  const handleBulkGradeWithAI = () => {
+    if (selectedSubmissions.size === 0) {
+      toast.error('Please select submissions to grade');
+      return;
+    }
+    bulkGradeWithAI.mutate(Array.from(selectedSubmissions));
+  };
+
   const getLetterGrade = (score: number) => {
     if (score >= 97) return 'A+';
     if (score >= 93) return 'A';
@@ -220,12 +290,44 @@ export const MidtermGradingManager: React.FC = () => {
     );
   }
 
+  const ungradedCount = submissions?.filter((s: any) => s.grade === null).length || 0;
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Midterm Submissions ({submissions?.length || 0})
+        <CardTitle className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Midterm Submissions ({submissions?.length || 0})
+          </div>
+          {ungradedCount > 0 && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleAllSubmissions}
+                className="flex items-center gap-2"
+              >
+                {selectedSubmissions.size === ungradedCount ? (
+                  <CheckSquare className="h-4 w-4" />
+                ) : (
+                  <Square className="h-4 w-4" />
+                )}
+                {selectedSubmissions.size === ungradedCount ? 'Deselect All' : 'Select All Ungraded'}
+              </Button>
+              <Button
+                onClick={handleBulkGradeWithAI}
+                disabled={selectedSubmissions.size === 0 || bulkGradeWithAI.isPending}
+                className="flex items-center gap-2"
+              >
+                <Zap className="h-4 w-4" />
+                {bulkGradeWithAI.isPending 
+                  ? `Grading ${selectedSubmissions.size}...` 
+                  : `Grade ${selectedSubmissions.size} with AI`
+                }
+              </Button>
+            </div>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -238,30 +340,47 @@ export const MidtermGradingManager: React.FC = () => {
 
               return (
                 <div key={submission.id} className="border rounded-lg">
-                  {/* Submission Card Header */}
-                  <Card className="cursor-pointer transition-colors hover:bg-gray-50">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-500" />
-                          <span className="font-medium">{submission.gw_profiles?.full_name}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(submission)}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleExpansion(submission)}
-                            className="h-8 w-8 p-0"
-                          >
-                            {isExpanded ? (
-                              <ChevronUp className="h-4 w-4" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
+                   {/* Submission Card Header */}
+                   <Card className="cursor-pointer transition-colors hover:bg-gray-50">
+                     <CardContent className="p-4">
+                       <div className="flex items-center justify-between mb-2">
+                         <div className="flex items-center gap-2">
+                           {submission.grade === null && (
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 toggleSubmissionSelection(submission.id);
+                               }}
+                               className="h-6 w-6 p-0"
+                             >
+                               {selectedSubmissions.has(submission.id) ? (
+                                 <CheckSquare className="h-4 w-4 text-blue-600" />
+                               ) : (
+                                 <Square className="h-4 w-4 text-gray-400" />
+                               )}
+                             </Button>
+                           )}
+                           <User className="h-4 w-4 text-gray-500" />
+                           <span className="font-medium">{submission.gw_profiles?.full_name}</span>
+                         </div>
+                         <div className="flex items-center gap-2">
+                           {getStatusBadge(submission)}
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             onClick={() => toggleExpansion(submission)}
+                             className="h-8 w-8 p-0"
+                           >
+                             {isExpanded ? (
+                               <ChevronUp className="h-4 w-4" />
+                             ) : (
+                               <ChevronDown className="h-4 w-4" />
+                             )}
+                           </Button>
+                         </div>
+                       </div>
                       
                       <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
                         <div className="flex items-center gap-1">
