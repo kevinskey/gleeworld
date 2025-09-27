@@ -152,10 +152,8 @@ export const MidtermGradingManager: React.FC = () => {
           while (attempt < 3) {
             try {
               const resp = await withTimeout(
-                supabase.functions.invoke('grade-midterm-ai', {
-                  body: { submission_id: submissionId },
-                }),
-                15000
+                supabase.functions.invoke('grade-midterm-ai', { body: { submission_id: submissionId } }),
+                60000
               );
               if ((resp as any).error) throw (resp as any).error;
               data = (resp as any).data;
