@@ -102,19 +102,33 @@ serve(async (req) => {
         // Fallback: if finalGrade still null, compute from DB rows with retries (wait for grader to finish)
         if (finalGrade === null) {
           const computeFromDb = async (): Promise<number | null> => {
+            // Get unique grades by question_id to avoid duplicates
             const { data: rows, error: rowsErr } = await supabase
               .from("mus240_submission_grades")
-              .select("ai_score, rubric_breakdown")
-              .eq("submission_id", submissionId);
+              .select("ai_score, rubric_breakdown, question_id")
+              .eq("submission_id", submissionId)
+              .order("created_at", { ascending: false });
+            
             if (rowsErr) {
               console.warn("[grade-midterm-ai-async] DB select error:", rowsErr);
               return null;
             }
             if (!rows || rows.length === 0) return null;
 
+            // Get unique questions to avoid duplicate scoring
+            const uniqueQuestions = new Map();
+            for (const row of rows) {
+              if (!uniqueQuestions.has(row.question_id)) {
+                uniqueQuestions.set(row.question_id, row);
+              }
+            }
+
+            const uniqueRows = Array.from(uniqueQuestions.values());
+            console.log(`[grade-midterm-ai-async] Found ${rows.length} total grades, ${uniqueRows.length} unique questions`);
+
             let achieved = 0;
             let possible = 0;
-            for (const r of rows as any[]) {
+            for (const r of uniqueRows as any[]) {
               const score = typeof r.ai_score === "number" ? r.ai_score : Number(r.ai_score) || 0;
               achieved += score;
 
@@ -142,6 +156,7 @@ serve(async (req) => {
               }
             }
 
+            console.log(`[grade-midterm-ai-async] Final calculation: ${achieved}/${possible} points`);
             if (possible > 0) return Math.max(0, Math.min(100, Math.round((achieved / possible) * 100)));
             return null;
           };
