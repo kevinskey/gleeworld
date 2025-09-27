@@ -99,21 +99,32 @@ serve(async (req) => {
           console.warn("[grade-midterm-ai-async] Could not parse grader JSON, will fall back to DB rows.");
         }
 
-        // Fallback: if finalGrade still null, compute from DB rows (sum ai_score / sum max rubric points if present)
+        // Fallback: if finalGrade still null, compute from DB rows with retries (wait for grader to finish)
         if (finalGrade === null) {
-          const { data: rows, error: rowsErr } = await supabase
-            .from("mus240_submission_grades")
-            .select("ai_score, rubric_breakdown, question_type")
-            .eq("submission_id", submissionId);
-          if (!rowsErr && rows && rows.length) {
+          const computeFromDb = async (): Promise<number | null> => {
+            const { data: rows, error: rowsErr } = await supabase
+              .from("mus240_submission_grades")
+              .select("ai_score, rubric_breakdown, question_type")
+              .eq("submission_id", submissionId);
+            if (rowsErr) {
+              console.warn("[grade-midterm-ai-async] DB select error:", rowsErr);
+              return null;
+            }
+            if (!rows || rows.length === 0) return null;
+
             let achieved = 0;
             let possible = 0;
             for (const r of rows as any[]) {
-              const score = typeof r.ai_score === "number" ? r.ai_score : 0;
+              const score = typeof r.ai_score === "number" ? r.ai_score : Number(r.ai_score) || 0;
               achieved += score;
+
               // Try to infer total points from rubric_breakdown if available
               let maxFromRubric = 0;
-              const rb = r.rubric_breakdown;
+              let rb: any = r.rubric_breakdown;
+              // Some rows store rubric_breakdown as TEXT; parse when needed
+              if (rb && typeof rb === "string") {
+                try { rb = JSON.parse(rb); } catch { rb = null; }
+              }
               if (rb && typeof rb === "object") {
                 const values = Object.values(rb) as any[];
                 maxFromRubric = values.reduce((sum: number, crit: any) => {
@@ -122,6 +133,7 @@ serve(async (req) => {
                   return sum + mp;
                 }, 0);
               }
+
               if (maxFromRubric > 0) {
                 possible += maxFromRubric;
               } else {
@@ -135,7 +147,17 @@ serve(async (req) => {
                 possible += fallback;
               }
             }
-            if (possible > 0) finalGrade = Math.round((achieved / possible) * 100);
+
+            if (possible > 0) return Math.round((achieved / possible) * 100);
+            return null;
+          };
+
+          for (let attempt = 1; attempt <= 8 && finalGrade === null; attempt++) {
+            finalGrade = await computeFromDb();
+            if (finalGrade === null) {
+              console.log(`[grade-midterm-ai-async] Attempt ${attempt}: grades not ready, retrying...`);
+              await new Promise((r) => setTimeout(r, 1000));
+            }
           }
         }
 
