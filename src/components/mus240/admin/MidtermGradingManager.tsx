@@ -45,6 +45,7 @@ export const MidtermGradingManager: React.FC = () => {
   const [rubricScores, setRubricScores] = useState<Record<string, GradingRubric>>({});
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
+  const [progress, setProgress] = useState<{ total: number; done: number } | null>(null);
   const queryClient = useQueryClient();
 
   const { data: submissions, isLoading } = useQuery({
@@ -123,31 +124,48 @@ export const MidtermGradingManager: React.FC = () => {
 
       // Small helper to avoid hammering the Edge Function and to retry transient failures
       const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+      const withTimeout = <T,>(p: Promise<T>, ms: number) =>
+        new Promise<T>((resolve, reject) => {
+          const t = setTimeout(() => reject(new Error('Request timed out')), ms);
+          p.then((v) => {
+            clearTimeout(t);
+            resolve(v);
+          }).catch((e) => {
+            clearTimeout(t);
+            reject(e);
+          });
+        });
 
       // Get current user for graded_by
       const { data: auth } = await supabase.auth.getUser();
       const graderId = auth.user?.id ?? null;
 
+      // Initialize progress UI
+      setProgress({ total: submissionIds.length, done: 0 });
+
       for (const submissionId of submissionIds) {
         try {
-          // Retry up to 3 times for transient network errors like "Load failed"
+          // Retry up to 3 times for transient network errors like "Load failed" or timeouts
           let attempt = 0;
           let data: any | null = null;
           let lastErr: any = null;
           while (attempt < 3) {
             try {
-              const resp = await supabase.functions.invoke('grade-midterm-ai', {
-                body: { submission_id: submissionId },
-              });
-              if (resp.error) throw resp.error;
-              data = resp.data;
+              const resp = await withTimeout(
+                supabase.functions.invoke('grade-midterm-ai', {
+                  body: { submission_id: submissionId },
+                }),
+                15000
+              );
+              if ((resp as any).error) throw (resp as any).error;
+              data = (resp as any).data;
               break; // success
             } catch (err: any) {
               lastErr = err;
               const msg = (err?.message || '').toLowerCase();
               const name = (err?.name || '').toLowerCase();
               // Only retry for transient fetch issues
-              if (msg.includes('load failed') || name.includes('functionsfetcherror')) {
+              if (msg.includes('load failed') || msg.includes('timed out') || name.includes('functionsfetcherror')) {
                 attempt += 1;
                 await delay(600 * attempt); // simple backoff
                 continue;
@@ -184,6 +202,7 @@ export const MidtermGradingManager: React.FC = () => {
             if (updateErr) {
               console.error('Failed to update submission with AI grade:', updateErr);
               results.push({ submissionId, success: false, error: updateErr });
+              setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
               // small spacing between calls to reduce pressure on the function
               await delay(300);
               continue;
@@ -191,16 +210,19 @@ export const MidtermGradingManager: React.FC = () => {
           }
 
           results.push({ submissionId, success: true, data, finalGrade });
+          setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
           await delay(300); // space out calls a bit
         } catch (error) {
           console.error(`Failed to grade submission ${submissionId}:`, error);
           results.push({ submissionId, success: false, error });
+          setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
           await delay(300);
         }
       }
       return results;
     },
     onSuccess: (results) => {
+      setProgress(null);
       queryClient.invalidateQueries({ queryKey: ['midterm-submissions'] });
       const successCount = results.filter(r => r.success).length;
       const failCount = results.length - successCount;
@@ -213,6 +235,7 @@ export const MidtermGradingManager: React.FC = () => {
       setSelectedSubmissions(new Set());
     },
     onError: (error) => {
+      setProgress(null);
       console.error('Bulk grading error:', error);
       toast.error('Failed to grade submissions with AI');
     },
@@ -387,8 +410,8 @@ export const MidtermGradingManager: React.FC = () => {
                 className="flex items-center gap-2"
               >
                 <Zap className="h-4 w-4" />
-                {bulkGradeWithAI.isPending 
-                  ? `Grading ${selectedSubmissions.size}...` 
+                {bulkGradeWithAI.isPending
+                  ? (progress ? `Grading ${progress.done}/${progress.total}...` : `Grading ${selectedSubmissions.size}...`)
                   : `Grade ${selectedSubmissions.size} with AI`
                 }
               </Button>
