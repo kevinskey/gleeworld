@@ -92,12 +92,12 @@ export const GradeCalculationSystem: React.FC = () => {
 
       if (profileError) throw profileError;
 
-        // Get midterm scores
-        const { data: midtermScores, error: midtermError } = await supabase
-          .from('mus240_midterm_submissions')
-          .select('user_id, grade')
-          .in('user_id', studentIds)
-          .eq('is_submitted', true);
+      // Get midterm scores (manual or finalized)
+      const { data: midtermScores, error: midtermError } = await supabase
+        .from('mus240_midterm_submissions')
+        .select('user_id, grade, is_submitted')
+        .in('user_id', studentIds)
+        .eq('is_submitted', true);
 
       if (midtermError) throw midtermError;
 
@@ -131,7 +131,47 @@ export const GradeCalculationSystem: React.FC = () => {
 
       if (participationError) throw participationError;
 
-      // Calculate grades for each student
+      // Get AI/instructor midterm per-question grades (to compute overall when submission.grade is null)
+      const { data: submissionGrades, error: submissionGradesError } = await supabase
+        .from('mus240_submission_grades')
+        .select(`
+          submission_id,
+          question_type,
+          question_id,
+          ai_score,
+          instructor_score,
+          mus240_midterm_submissions!inner(user_id)
+        `)
+        .in('mus240_midterm_submissions.user_id', studentIds);
+
+      if (submissionGradesError) throw submissionGradesError;
+
+      // Get rubrics to know max points per question
+      const { data: rubrics, error: rubricsError } = await supabase
+        .from('mus240_grading_rubrics')
+        .select('question_type, question_id, total_points');
+
+      if (rubricsError) throw rubricsError;
+
+      // Build maps for quick lookup
+      const rubricMap = new Map<string, number>();
+      (rubrics || []).forEach((r: any) => {
+        rubricMap.set(`${r.question_type}:${r.question_id}`, Number(r.total_points) || 10);
+      });
+
+      const midtermAggregateByUser = new Map<string, { score: number; possible: number }>();
+      (submissionGrades || []).forEach((g: any) => {
+        const uid = (g as any)?.mus240_midterm_submissions?.user_id;
+        if (!uid) return;
+        const received = Number(g.instructor_score ?? g.ai_score);
+        if (!isFinite(received)) return;
+        const max = rubricMap.get(`${g.question_type}:${g.question_id}`) ?? 10;
+        const agg = midtermAggregateByUser.get(uid) || { score: 0, possible: 0 };
+        agg.score += received;
+        agg.possible += max;
+        midtermAggregateByUser.set(uid, agg);
+      });
+
       const studentGradeData: StudentGradeData[] = [];
 
       for (const enrollment of enrollments || []) {
@@ -140,7 +180,9 @@ export const GradeCalculationSystem: React.FC = () => {
 
         // Get midterm score
         const midtermRecord = midtermScores?.find(m => m.user_id === enrollment.student_id);
-        const midtermScore = midtermRecord?.grade || null;
+        const agg = midtermAggregateByUser.get(enrollment.student_id);
+        const midtermFromAgg = agg && agg.possible > 0 ? (agg.score / agg.possible) * 100 : null;
+        const midtermScore = (midtermRecord?.grade as number | null) ?? midtermFromAgg ?? null;
 
         // Get assignment scores
         const studentAssignments = assignments?.filter(a => a.student_id === enrollment.student_id) || [];
