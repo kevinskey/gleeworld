@@ -1,14 +1,19 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
 
 // Asynchronous trigger for the existing grade-midterm-ai function.
 // Returns immediately (202 Accepted) and relays the grading in the background
-// to avoid client-side timeouts.
+// to avoid client-side timeouts. Also computes an overall grade and
+// updates mus240_midterm_submissions when grading completes.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "https://oopmlreysjzuxzylyheb.supabase.co";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -33,15 +38,33 @@ serve(async (req) => {
     }
 
     const authorization = req.headers.get("authorization") ?? "";
-    const apikey = req.headers.get("apikey") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const apikey = req.headers.get("apikey") ?? SUPABASE_ANON_KEY;
+    const accessToken = authorization.replace(/^Bearer\s+/i, "");
 
-    const supabaseFunctionsUrl = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/grade-midterm-ai`;
+    // Respond immediately so the UI never times out
+    const acceptedResponse = new Response(
+      JSON.stringify({
+        success: true,
+        accepted: true,
+        message: "Grading started in background",
+        submission_id: submissionId,
+        timestamp: new Date().toISOString(),
+      }),
+      {
+        status: 202,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
 
-    // Fire-and-forget background request to the synchronous grader
+    // Start background task
     (async () => {
       try {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+          global: { headers: { Authorization: `Bearer ${accessToken}` } },
+        });
+
         console.log("[grade-midterm-ai-async] Triggering grader for:", submissionId);
-        const resp = await fetch(supabaseFunctionsUrl, {
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/grade-midterm-ai`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -51,26 +74,85 @@ serve(async (req) => {
           },
           body: JSON.stringify({ submission_id: submissionId }),
         });
+
         const text = await resp.text();
         console.log("[grade-midterm-ai-async] Grader responded:", resp.status, text?.slice(0, 2000));
+
+        // Try to compute final grade from function response if available
+        let finalGrade: number | null = null;
+        try {
+          const json = JSON.parse(text);
+          const grades = (json?.data?.grades || json?.grades || []) as Array<{ score?: number; total_points?: number }>;
+          if (Array.isArray(grades) && grades.length) {
+            const totals = grades.reduce(
+              (acc, g) => {
+                const score = typeof g.score === "number" ? g.score : 0;
+                const max = typeof g.total_points === "number" ? g.total_points : 0;
+                return { achieved: acc.achieved + score, possible: acc.possible + max };
+              },
+              { achieved: 0, possible: 0 }
+            );
+            if (totals.possible > 0) {
+              finalGrade = Math.round((totals.achieved / totals.possible) * 100);
+            }
+          }
+        } catch (e) {
+          console.warn("[grade-midterm-ai-async] Could not parse grader JSON, will fall back to DB rows.");
+        }
+
+        // Fallback: if finalGrade still null, compute from DB rows (sum ai_score / sum max rubric points if present)
+        if (finalGrade === null) {
+          const { data: rows, error: rowsErr } = await supabase
+            .from("mus240_submission_grades")
+            .select("ai_score, rubric_breakdown")
+            .eq("submission_id", submissionId);
+          if (!rowsErr && rows && rows.length) {
+            let achieved = 0;
+            let possible = 0;
+            for (const r of rows as any[]) {
+              const score = typeof r.ai_score === "number" ? r.ai_score : 0;
+              achieved += score;
+              // Try to infer total points from rubric_breakdown if available
+              const rb = r.rubric_breakdown;
+              if (rb && typeof rb === "object") {
+                const max = Object.values(rb).reduce((sum: number, crit: any) => {
+                  const mp = typeof crit?.max_points === "number" ? crit.max_points : (typeof crit?.points === "number" ? crit.points : 0);
+                  return sum + mp;
+                }, 0);
+                if (max > 0) possible += max;
+              }
+            }
+            if (possible > 0) finalGrade = Math.round((achieved / possible) * 100);
+          }
+        }
+
+        // Update submission if we computed a grade or at least mark graded_at
+        const { data: auth } = await supabase.auth.getUser();
+        const graderId = auth?.user?.id ?? null;
+        const updatePayload: Record<string, any> = {
+          graded_at: new Date().toISOString(),
+        };
+        if (graderId) updatePayload["graded_by"] = graderId;
+        if (finalGrade !== null) updatePayload["grade"] = finalGrade;
+
+        const { error: updateErr } = await supabase
+          .from("mus240_midterm_submissions")
+          .update(updatePayload)
+          .eq("id", submissionId);
+        if (updateErr) {
+          console.error("[grade-midterm-ai-async] Failed to update submission with final grade:", updateErr);
+        } else {
+          console.log("[grade-midterm-ai-async] Submission updated with grade:", finalGrade);
+        }
       } catch (err) {
         console.error("[grade-midterm-ai-async] Relay failed:", err);
       }
     })();
 
-    return new Response(JSON.stringify({
-      success: true,
-      accepted: true,
-      message: "Grading started in background",
-      submission_id: submissionId,
-      timestamp: new Date().toISOString(),
-    }), {
-      status: 202,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return acceptedResponse;
   } catch (error) {
     console.error("[grade-midterm-ai-async] Error:", error);
-    return new Response(JSON.stringify({ success: false, error: error.message }), {
+    return new Response(JSON.stringify({ success: false, error: (error as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
