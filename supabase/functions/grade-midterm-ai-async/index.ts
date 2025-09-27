@@ -104,7 +104,7 @@ serve(async (req) => {
         if (finalGrade === null) {
           const { data: rows, error: rowsErr } = await supabase
             .from("mus240_submission_grades")
-            .select("ai_score, rubric_breakdown")
+            .select("ai_score, rubric_breakdown, question_type")
             .eq("submission_id", submissionId);
           if (!rowsErr && rows && rows.length) {
             let achieved = 0;
@@ -113,13 +113,27 @@ serve(async (req) => {
               const score = typeof r.ai_score === "number" ? r.ai_score : 0;
               achieved += score;
               // Try to infer total points from rubric_breakdown if available
+              let maxFromRubric = 0;
               const rb = r.rubric_breakdown;
               if (rb && typeof rb === "object") {
-                const max = Object.values(rb).reduce((sum: number, crit: any) => {
-                  const mp = typeof crit?.max_points === "number" ? crit.max_points : (typeof crit?.points === "number" ? crit.points : 0);
+                const values = Object.values(rb) as any[];
+                maxFromRubric = values.reduce((sum: number, crit: any) => {
+                  const raw = typeof crit?.max_points === "number" ? crit.max_points : (typeof crit?.points === "number" ? crit.points : 0);
+                  const mp = Number(raw) || 0;
                   return sum + mp;
                 }, 0);
-                if (max > 0) possible += max;
+              }
+              if (maxFromRubric > 0) {
+                possible += maxFromRubric;
+              } else {
+                // Heuristic fallback by question type
+                const t: string = String(r.question_type || "").toLowerCase();
+                let fallback = 10;
+                if (t.includes("essay")) fallback = 20;
+                else if (t.includes("excerpt")) fallback = 10;
+                else if (t.includes("term")) fallback = 2;
+                else if (t.includes("short")) fallback = 5;
+                possible += fallback;
               }
             }
             if (possible > 0) finalGrade = Math.round((achieved / possible) * 100);
