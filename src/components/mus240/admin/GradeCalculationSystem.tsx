@@ -17,8 +17,11 @@ import {
   Music, 
   Award,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  UserCheck
 } from 'lucide-react';
+import { GroupParticipationAnalyzer } from './GroupParticipationAnalyzer';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface StudentGradeData {
   student_id: string;
@@ -292,8 +295,16 @@ export const GradeCalculationSystem: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Controls */}
-      <Card>
+      <Tabs defaultValue="calculate" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="calculate">Calculate Grades</TabsTrigger>
+          <TabsTrigger value="analytics">Class Analytics</TabsTrigger>
+          <TabsTrigger value="participation">Group Participation</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="calculate" className="space-y-6">
+          {/* Header with Controls */}
+          <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -343,29 +354,143 @@ export const GradeCalculationSystem: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Grade Distribution */}
-      {classStats && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              Grade Distribution
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-5 gap-4">
-              {Object.entries(classStats.gradeDistribution).map(([grade, count]) => (
-                <div key={grade} className="text-center">
-                  <div className="text-3xl font-bold">{count}</div>
-                  <Badge variant="outline" className={getGradeColor(`${grade}+`)}>
-                    {grade} Students
-                  </Badge>
+          {/* Individual Student Grades */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BookOpen className="h-5 w-5" />
+                Individual Student Grades
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[600px]">
+                <div className="space-y-4">
+                  {studentGrades?.map((student) => (
+                    <Card key={student.student_id} className="border-l-4 border-l-blue-500">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h3 className="font-semibold">{student.student_name}</h3>
+                            <p className="text-sm text-gray-600">{student.student_email}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold">{student.percentage}%</div>
+                            <Badge className={getGradeColor(student.letter_grade)}>
+                              {student.letter_grade}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4" />
+                              <span className="text-sm font-medium">Midterm</span>
+                            </div>
+                            <div className="text-lg font-semibold">
+                              {student.midterm_score !== null ? `${student.midterm_score}%` : 'Not taken'}
+                            </div>
+                            <Progress 
+                              value={student.midterm_score || 0} 
+                              className="h-2" 
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <BookOpen className="h-4 w-4" />
+                              <span className="text-sm font-medium">Assignments</span>
+                            </div>
+                            <div className="text-lg font-semibold">
+                              {student.assignment_scores.length > 0 
+                                ? `${(student.assignment_scores.reduce((sum, a) => sum + a.score, 0) / student.assignment_scores.length).toFixed(1)}%`
+                                : 'No assignments'
+                              }
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {student.assignment_scores.length} submitted
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Music className="h-4 w-4" />
+                              <span className="text-sm font-medium">Journals</span>
+                            </div>
+                            <div className="text-lg font-semibold">
+                              {student.journal_scores.length > 0 
+                                ? `${(student.journal_scores.reduce((sum, j) => sum + j.score, 0) / student.journal_scores.length).toFixed(1)}%`
+                                : 'No journals'
+                              }
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {student.journal_scores.length} graded
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4" />
+                              <span className="text-sm font-medium">Participation</span>
+                            </div>
+                            <div className="text-lg font-semibold">
+                              {student.participation_score}%
+                            </div>
+                            <Progress 
+                              value={student.participation_score} 
+                              className="h-2" 
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between text-sm">
+                          <span>Total Points: {student.total_points} / {student.total_possible}</span>
+                          <div className="flex items-center gap-2">
+                            {student.percentage < 70 && (
+                              <AlertTriangle className="h-4 w-4 text-orange-500" />
+                            )}
+                            <span className="font-medium">Final Grade: {student.letter_grade}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          {/* Grade Distribution */}
+          {classStats && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Grade Distribution
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-5 gap-4">
+                  {Object.entries(classStats.gradeDistribution).map(([grade, count]) => (
+                    <div key={grade} className="text-center">
+                      <div className="text-3xl font-bold">{count}</div>
+                      <Badge variant="outline" className={getGradeColor(`${grade}+`)}>
+                        {grade} Students
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="participation" className="space-y-6">
+          <GroupParticipationAnalyzer onCreditAwarded={() => refetch()} />
+        </TabsContent>
+      </Tabs>
 
       {/* Individual Student Grades */}
       <Card>
