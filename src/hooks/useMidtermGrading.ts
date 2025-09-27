@@ -98,11 +98,14 @@ export const useMidtermGrading = () => {
       if (error) throw error;
       return data as MidtermGrade[];
     },
+    // Poll periodically so background grading updates appear quickly
+    refetchInterval: 3000,
+    refetchIntervalInBackground: true,
   });
 
   const gradeWithAI = useMutation({
     mutationFn: async (submission_id: string) => {
-      const { data, error } = await supabase.functions.invoke('grade-midterm-ai', {
+      const { data, error } = await supabase.functions.invoke('grade-midterm-ai-async', {
         body: { submission_id }
       });
 
@@ -112,8 +115,8 @@ export const useMidtermGrading = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['midterm-grades'] });
       toast({
-        title: 'AI Grading Complete',
-        description: 'The submission has been graded by AI.',
+        title: 'AI Grading Started',
+        description: 'Background grading started. Results will appear shortly.',
       });
     },
     onError: (error) => {
