@@ -121,16 +121,42 @@ export const MidtermGradingManager: React.FC = () => {
     mutationFn: async (submissionIds: string[]) => {
       const results: Array<{ submissionId: string; success: boolean; error?: any; data?: any; finalGrade?: number | null }> = [];
 
+      // Small helper to avoid hammering the Edge Function and to retry transient failures
+      const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
       // Get current user for graded_by
       const { data: auth } = await supabase.auth.getUser();
       const graderId = auth.user?.id ?? null;
 
       for (const submissionId of submissionIds) {
         try {
-          const { data, error } = await supabase.functions.invoke('grade-midterm-ai', {
-            body: { submission_id: submissionId }
-          });
-          if (error) throw error;
+          // Retry up to 3 times for transient network errors like "Load failed"
+          let attempt = 0;
+          let data: any | null = null;
+          let lastErr: any = null;
+          while (attempt < 3) {
+            try {
+              const resp = await supabase.functions.invoke('grade-midterm-ai', {
+                body: { submission_id: submissionId },
+              });
+              if (resp.error) throw resp.error;
+              data = resp.data;
+              break; // success
+            } catch (err: any) {
+              lastErr = err;
+              const msg = (err?.message || '').toLowerCase();
+              const name = (err?.name || '').toLowerCase();
+              // Only retry for transient fetch issues
+              if (msg.includes('load failed') || name.includes('functionsfetcherror')) {
+                attempt += 1;
+                await delay(600 * attempt); // simple backoff
+                continue;
+              }
+              // Non-retryable
+              throw err;
+            }
+          }
+          if (!data) throw lastErr || new Error('No data returned from grade-midterm-ai');
 
           // Compute overall percentage from returned AI grades
           const grades = (data?.grades ?? []) as Array<{ score: number; total_points: number; feedback?: string }>;
@@ -158,14 +184,18 @@ export const MidtermGradingManager: React.FC = () => {
             if (updateErr) {
               console.error('Failed to update submission with AI grade:', updateErr);
               results.push({ submissionId, success: false, error: updateErr });
+              // small spacing between calls to reduce pressure on the function
+              await delay(300);
               continue;
             }
           }
 
           results.push({ submissionId, success: true, data, finalGrade });
+          await delay(300); // space out calls a bit
         } catch (error) {
           console.error(`Failed to grade submission ${submissionId}:`, error);
           results.push({ submissionId, success: false, error });
+          await delay(300);
         }
       }
       return results;
