@@ -46,18 +46,15 @@ export const MidtermGradingManager: React.FC = () => {
     queryFn: async () => {
       // Check authentication status
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         console.error('No authenticated user found for midterm grading');
         throw new Error('Authentication required to view midterm submissions');
       }
 
+      // 1) Fetch submissions (submitted only)
       const { data, error } = await supabase
         .from('mus240_midterm_submissions')
-        .select(`
-          *,
-          gw_profiles!inner(full_name, email)
-        `)
+        .select('*')
         .eq('is_submitted', true)
         .order('submitted_at', { ascending: false });
 
@@ -65,7 +62,28 @@ export const MidtermGradingManager: React.FC = () => {
         console.error('Error fetching midterm submissions:', error);
         throw error;
       }
-      return data;
+
+      // 2) Fetch profiles separately and merge (avoids FK join issues)
+      const userIds = (data || []).map((s: any) => s.user_id).filter(Boolean);
+      if (userIds.length === 0) return data;
+
+      const { data: profiles, error: profilesError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', userIds);
+
+      if (profilesError) {
+        console.error('Error fetching profiles for submissions:', profilesError);
+        return data; // fallback to raw submissions
+      }
+
+      const profileMap = new Map<string, any>();
+      (profiles || []).forEach((p: any) => profileMap.set(p.user_id, p));
+
+      return (data || []).map((s: any) => ({
+        ...s,
+        gw_profiles: profileMap.get(s.user_id) || null,
+      }));
     },
   });
 
