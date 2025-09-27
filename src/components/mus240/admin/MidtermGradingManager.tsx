@@ -269,7 +269,7 @@ export const MidtermGradingManager: React.FC = () => {
   const handleRubricChange = (submissionId: string, section: keyof GradingRubric, value: number) => {
     const currentRubric = getSubmissionRubric(submissionId);
     const newRubric = { ...currentRubric, [section]: value };
-    newRubric.total = newRubric.terms + newRubric.shortAnswers + newRubric.excerpts + newRubric.essay;
+    newRubric.total = newRubric.terms + newRubric.excerpts + newRubric.essay; // sync with sections used
     
     setRubricScores(prev => ({
       ...prev,
@@ -295,31 +295,54 @@ export const MidtermGradingManager: React.FC = () => {
     });
   };
 
-  const toggleExpansion = (submission: any) => {
+  const loadAIRubricFromAI = async (submission: any) => {
+    try {
+      const { data: rows, error } = await supabase
+        .from('mus240_submission_grades')
+        .select('submission_id, question_type, question_id, ai_score, instructor_score, created_at')
+        .eq('submission_id', submission.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      const latestByQ = new Map<string, any>();
+      (rows || []).forEach((g: any) => {
+        const key = `${g.question_type}:${g.question_id}`;
+        if (!latestByQ.has(key)) latestByQ.set(key, g);
+      });
+
+      let terms = 0, excerpts = 0, essay = 0;
+      latestByQ.forEach((g: any) => {
+        const received = Number(g.instructor_score ?? g.ai_score ?? 0);
+        if (!isFinite(received)) return;
+        if (g.question_type === 'term_definition') terms += received;
+        else if (g.question_type === 'listening_analysis') excerpts += received;
+        else if (g.question_type === 'essay') essay += received;
+      });
+
+      const rubric: GradingRubric = { terms, shortAnswers: 0, excerpts, essay, total: terms + excerpts + essay };
+      setRubricScores(prev => ({ ...prev, [submission.id]: rubric }));
+      setFeedback(prev => ({ ...prev, [submission.id]: submission.feedback || '' }));
+    } catch (err) {
+      console.error('Failed to load AI rubric:', err);
+    }
+  };
+
+  const toggleExpansion = async (submission: any) => {
     const isExpanding = expandedSubmissionId !== submission.id;
     setExpandedSubmissionId(isExpanding ? submission.id : null);
     
-    if (isExpanding && submission.grade !== null) {
-      // Pre-fill rubric if already graded
-      const termScore = Math.round((submission.grade / 100) * 10);
-      const shortScore = Math.round((submission.grade / 100) * 20);
-      const excerptScore = Math.round((submission.grade / 100) * 30);
-      const essayScore = submission.grade - termScore - shortScore - excerptScore;
-      
-      setRubricScores(prev => ({
-        ...prev,
-        [submission.id]: {
-          terms: termScore,
-          shortAnswers: shortScore,
-          excerpts: excerptScore,
-          essay: Math.max(0, essayScore),
-          total: submission.grade
-        }
-      }));
-      setFeedback(prev => ({
-        ...prev,
-        [submission.id]: submission.feedback || ''
-      }));
+    if (isExpanding) {
+      await loadAIRubricFromAI(submission);
+      // Fallback when no AI grades yet but a final grade exists
+      if (submission.grade !== null && !rubricScores[submission.id]) {
+        const terms = Math.round(submission.grade * 0.4);
+        const excerpts = Math.round(submission.grade * 0.3);
+        const essay = Math.max(0, submission.grade - terms - excerpts);
+        setRubricScores(prev => ({
+          ...prev,
+          [submission.id]: { terms, shortAnswers: 0, excerpts, essay, total: submission.grade }
+        }));
+      }
     }
   };
 
@@ -549,59 +572,46 @@ export const MidtermGradingManager: React.FC = () => {
                           <div className="bg-white p-4 rounded-lg space-y-4">
                             <h3 className="font-semibold">Grading Rubric</h3>
                             
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="text-sm font-medium">Terms (0-10)</label>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  max="10"
-                                  value={currentRubric.terms}
-                                  onChange={(e) => handleRubricChange(submission.id, 'terms', Number(e.target.value))}
-                                  className="mt-1"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">2 pts each × 5 terms</p>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <label className="text-sm font-medium">Terms (0-40)</label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="40"
+                                    value={currentRubric.terms}
+                                    onChange={(e) => handleRubricChange(submission.id, 'terms', Number(e.target.value))}
+                                    className="mt-1"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">10 pts each × graded terms</p>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium">Excerpts (0-30)</label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="30"
+                                    value={currentRubric.excerpts}
+                                    onChange={(e) => handleRubricChange(submission.id, 'excerpts', Number(e.target.value))}
+                                    className="mt-1"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">10 pts each × graded excerpts</p>
+                                </div>
+                                
+                                <div>
+                                  <label className="text-sm font-medium">Essay (0-20)</label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    max="20"
+                                    value={currentRubric.essay}
+                                    onChange={(e) => handleRubricChange(submission.id, 'essay', Number(e.target.value))}
+                                    className="mt-1"
+                                  />
+                                  <p className="text-xs text-gray-500 mt-1">AI essay score</p>
+                                </div>
                               </div>
-                              
-                              <div>
-                                <label className="text-sm font-medium">Short Answers (0-20)</label>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  max="20"
-                                  value={currentRubric.shortAnswers}
-                                  onChange={(e) => handleRubricChange(submission.id, 'shortAnswers', Number(e.target.value))}
-                                  className="mt-1"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">5 pts each × 4 questions</p>
-                              </div>
-                              
-                              <div>
-                                <label className="text-sm font-medium">Excerpts (0-30)</label>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  max="30"
-                                  value={currentRubric.excerpts}
-                                  onChange={(e) => handleRubricChange(submission.id, 'excerpts', Number(e.target.value))}
-                                  className="mt-1"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">15 pts each × 2 excerpts</p>
-                              </div>
-                              
-                              <div>
-                                <label className="text-sm font-medium">Essay (0-40)</label>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  max="40"
-                                  value={currentRubric.essay}
-                                  onChange={(e) => handleRubricChange(submission.id, 'essay', Number(e.target.value))}
-                                  className="mt-1"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Historical analysis</p>
-                              </div>
-                            </div>
 
                             <Separator />
 
