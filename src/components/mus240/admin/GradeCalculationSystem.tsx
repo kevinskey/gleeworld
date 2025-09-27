@@ -28,6 +28,11 @@ interface StudentGradeData {
   student_name: string;
   student_email: string;
   midterm_score: number | null;
+  midterm_sections?: {
+    terms: { score: number; possible: number };
+    excerpts: { score: number; possible: number };
+    essays: { score: number; possible: number };
+  };
   assignment_scores: Array<{
     assignment_id: string;
     assignment_name: string;
@@ -146,8 +151,9 @@ export const GradeCalculationSystem: React.FC = () => {
       if (submissionIds.length > 0) {
         const { data: rows, error: submissionGradesError } = await supabase
           .from('mus240_submission_grades')
-          .select('submission_id, question_type, question_id, ai_score, instructor_score, rubric_breakdown')
-          .in('submission_id', submissionIds);
+          .select('submission_id, question_type, question_id, ai_score, instructor_score, rubric_breakdown, created_at')
+          .in('submission_id', submissionIds)
+          .order('created_at', { ascending: false });
         if (submissionGradesError) throw submissionGradesError;
         submissionGrades = rows || [];
       }
@@ -156,33 +162,82 @@ export const GradeCalculationSystem: React.FC = () => {
       const { data: rubrics, error: rubricsError } = await supabase
         .from('mus240_grading_rubrics')
         .select('question_type, question_id, total_points');
-
       if (rubricsError) throw rubricsError;
 
-      // Build maps for quick lookup
+      // Create rubric map for max points
       const rubricMap = new Map<string, number>();
       (rubrics || []).forEach((r: any) => {
-        rubricMap.set(`${r.question_type}:${r.question_id}`, Number(r.total_points) || 10);
+        const key = `${r.question_type}:${r.question_id}`;
+        rubricMap.set(key, Number(r.total_points) || 10);
       });
 
-      // De-duplicate grades by (submission_id, question_id)
-      const uniqueByQuestion = new Map<string, any>();
-      for (const g of submissionGrades) {
-        const key = `${g.submission_id}|${g.question_type}:${g.question_id}`;
-        if (!uniqueByQuestion.has(key)) uniqueByQuestion.set(key, g);
-      }
-
-      const midtermAggregateByUser = new Map<string, { score: number; possible: number }>();
-      Array.from(uniqueByQuestion.values()).forEach((g: any) => {
+      // Group grades by user and get the latest grade for each question
+      const gradesByUser = new Map<string, Map<string, any>>();
+      submissionGrades.forEach((g: any) => {
         const uid = userBySubmissionId.get(g.submission_id);
         if (!uid) return;
-        const received = Number(g.instructor_score ?? g.ai_score ?? 0);
-        if (!isFinite(received)) return;
-        const max = rubricMap.get(`${g.question_type}:${g.question_id}`) ?? 10;
-        const agg = midtermAggregateByUser.get(uid) || { score: 0, possible: 0 };
-        agg.score += received;
-        agg.possible += max;
-        midtermAggregateByUser.set(uid, agg);
+        
+        if (!gradesByUser.has(uid)) {
+          gradesByUser.set(uid, new Map());
+        }
+        
+        const userGrades = gradesByUser.get(uid)!;
+        const questionKey = `${g.question_type}:${g.question_id}`;
+        
+        // Only keep the latest grade for each question (already ordered by created_at desc)
+        if (!userGrades.has(questionKey)) {
+          userGrades.set(questionKey, g);
+        }
+      });
+
+      // Calculate totals by section for each user
+      const midtermAggregateByUser = new Map<string, { 
+        score: number; 
+        possible: number; 
+        bySection: {
+          terms: { score: number; possible: number };
+          excerpts: { score: number; possible: number }; 
+          essays: { score: number; possible: number };
+        }
+      }>();
+
+      gradesByUser.forEach((userGrades, uid) => {
+        const sections = {
+          terms: { score: 0, possible: 0 },
+          excerpts: { score: 0, possible: 0 },
+          essays: { score: 0, possible: 0 }
+        };
+        
+        let totalScore = 0;
+        let totalPossible = 0;
+
+        userGrades.forEach((grade, questionKey) => {
+          const received = Number(grade.instructor_score ?? grade.ai_score ?? 0);
+          const max = rubricMap.get(questionKey) ?? 10;
+          
+          if (isFinite(received)) {
+            totalScore += received;
+            totalPossible += max;
+            
+            // Categorize by section
+            if (grade.question_type === 'term_definition') {
+              sections.terms.score += received;
+              sections.terms.possible += max;
+            } else if (grade.question_type === 'listening_analysis') {
+              sections.excerpts.score += received;
+              sections.excerpts.possible += max;
+            } else if (grade.question_type === 'essay') {
+              sections.essays.score += received;
+              sections.essays.possible += max;
+            }
+          }
+        });
+
+        midtermAggregateByUser.set(uid, {
+          score: totalScore,
+          possible: totalPossible,
+          bySection: sections
+        });
       });
 
       const studentGradeData: StudentGradeData[] = [];
@@ -242,6 +297,7 @@ export const GradeCalculationSystem: React.FC = () => {
           student_name: profile.full_name || 'Unknown',
           student_email: profile.email || '',
           midterm_score: midtermScore,
+          midterm_sections: agg?.bySection,
           assignment_scores: assignmentScores,
           journal_scores: journalScores,
           participation_score: participationScore,
@@ -443,12 +499,28 @@ export const GradeCalculationSystem: React.FC = () => {
                               <span className="text-sm font-medium">Midterm</span>
                             </div>
                             <div className="text-lg font-semibold">
-                              {student.midterm_score !== null ? `${student.midterm_score}%` : 'Not taken'}
+                              {student.midterm_score !== null ? `${student.midterm_score.toFixed(1)}%` : 'Not taken'}
                             </div>
                             <Progress 
                               value={student.midterm_score || 0} 
                               className="h-2" 
                             />
+                            {student.midterm_sections && (
+                              <div className="mt-2 space-y-1 text-xs">
+                                <div className="flex justify-between">
+                                  <span>Terms:</span>
+                                  <span>{student.midterm_sections.terms.score}/{student.midterm_sections.terms.possible}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Excerpts:</span>
+                                  <span>{student.midterm_sections.excerpts.score}/{student.midterm_sections.excerpts.possible}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span>Essays:</span>
+                                  <span>{student.midterm_sections.essays.score}/{student.midterm_sections.essays.possible}</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           <div className="space-y-2">
