@@ -185,10 +185,37 @@ export const MidtermGradingManager: React.FC = () => {
           while (polls < maxPolls) {
             const { data: rows, error: rowsErr } = await supabase
               .from('mus240_submission_grades')
-              .select('id')
-              .eq('submission_id', submissionId)
-              .limit(1);
+              .select('id, ai_score, rubric_breakdown')
+              .eq('submission_id', submissionId);
             if (!rowsErr && rows && rows.length > 0) {
+              // Compute final grade from AI rows
+              let achieved = 0;
+              let possible = 0;
+              for (const r of rows as any[]) {
+                achieved += typeof r.ai_score === 'number' ? r.ai_score : 0;
+                const rb = r.rubric_breakdown;
+                if (rb && typeof rb === 'object') {
+                  const values = Object.values(rb) as any[];
+                  const max = values.reduce((sum: number, crit: any) => {
+                    const raw = typeof crit?.max_points === 'number' ? crit.max_points : (typeof crit?.points === 'number' ? crit.points : 0);
+                    const mp = Number(raw) || 0;
+                    return sum + mp;
+                  }, 0);
+                  if (Number(max) > 0) possible += Number(max);
+                }
+              }
+              const finalGrade = possible > 0 ? Math.round((achieved / possible) * 100) : null;
+              // Update submission with computed grade
+              const updatePayload: any = { graded_at: new Date().toISOString(), graded_by: graderId };
+              if (finalGrade !== null) updatePayload.grade = finalGrade;
+              const { error: updateErr } = await supabase
+                .from('mus240_midterm_submissions')
+                .update(updatePayload)
+                .eq('id', submissionId);
+              if (updateErr) {
+                console.error('Failed to update submission with computed grade:', updateErr);
+              }
+
               setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
               results.push({ submissionId, success: true });
               break;
