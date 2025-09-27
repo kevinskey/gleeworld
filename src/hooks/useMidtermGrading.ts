@@ -3,6 +3,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+interface UserProfile {
+  user_id: string;
+  full_name: string;
+  email: string;
+}
+
+interface MidtermSubmissionWithProfile {
+  [key: string]: any;
+  profile: UserProfile | null;
+}
+
 export interface MidtermGrade {
   id: string;
   submission_id: string;
@@ -28,7 +39,7 @@ export const useMidtermGrading = () => {
 
   const { data: submissions, isLoading: isLoadingSubmissions } = useQuery({
     queryKey: ['midterm-submissions-for-grading'],
-    queryFn: async () => {
+    queryFn: async (): Promise<MidtermSubmissionWithProfile[]> => {
       // Check authentication status
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -50,15 +61,28 @@ export const useMidtermGrading = () => {
       
       // Get user profiles separately
       const userIds = data?.map(s => s.user_id) || [];
-      const { data: profiles } = await supabase
+      if (userIds.length === 0) {
+        return (data || []).map(submission => ({ ...submission, profile: null }));
+      }
+
+      const { data: profiles, error: profilesError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email')
         .in('user_id', userIds);
 
+      if (profilesError) {
+        console.error('Error fetching profiles for submissions:', profilesError);
+        return (data || []).map(submission => ({ ...submission, profile: null }));
+      }
+
+      // Create a map for efficient lookup
+      const profileMap = new Map<string, UserProfile>();
+      (profiles || []).forEach(p => profileMap.set(p.user_id, p));
+
       // Combine the data
-      return data?.map(submission => ({
+      return (data || []).map(submission => ({
         ...submission,
-        profile: profiles?.find(p => p.user_id === submission.user_id)
+        profile: profileMap.get(submission.user_id) || null
       }));
     },
   });
