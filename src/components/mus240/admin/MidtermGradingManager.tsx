@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { 
   GraduationCap, 
@@ -416,6 +417,15 @@ export const MidtermGradingManager: React.FC = () => {
             </div>
           )}
         </CardTitle>
+        {bulkGradeWithAI.isPending && progress && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+              <span>AI grading progress</span>
+              <span>{progress.done}/{progress.total} ({Math.round((progress.done / Math.max(progress.total, 1)) * 100)}%)</span>
+            </div>
+            <Progress value={Math.round((progress.done / Math.max(progress.total, 1)) * 100)} />
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[800px]">
