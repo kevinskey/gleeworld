@@ -82,6 +82,55 @@ export const GradesAdmin = () => {
         })
       );
 
+      // Compute midterm percentages from per-question grades if submission.grade is null
+      const submissionIds = (midtermGrades || []).map((s: any) => s.id);
+      const midtermPercentBySubmission = new Map<string, number>();
+
+      if (submissionIds.length > 0) {
+        // Latest per-question grades
+        const { data: submissionGradeRows, error: submissionGradesError } = await supabase
+          .from('mus240_submission_grades')
+          .select('submission_id, question_type, question_id, ai_score, instructor_score, created_at')
+          .in('submission_id', submissionIds)
+          .order('created_at', { ascending: false });
+        if (submissionGradesError) throw submissionGradesError;
+
+        // Rubrics for max points
+        const { data: rubrics, error: rubricsError } = await supabase
+          .from('mus240_grading_rubrics')
+          .select('question_type, question_id, total_points');
+        if (rubricsError) throw rubricsError;
+
+        const rubricMap = new Map<string, number>();
+        (rubrics || []).forEach((r: any) => {
+          rubricMap.set(`${r.question_type}:${r.question_id}`, Number(r.total_points) || 10);
+        });
+
+        // Build latest grade per question for each submission
+        const bySubmission = new Map<string, Map<string, any>>();
+        (submissionGradeRows || []).forEach((g: any) => {
+          if (!bySubmission.has(g.submission_id)) bySubmission.set(g.submission_id, new Map());
+          const m = bySubmission.get(g.submission_id)!;
+          const key = `${g.question_type}:${g.question_id}`;
+          if (!m.has(key)) m.set(key, g); // keep latest due to order desc
+        });
+
+        // Compute percentage for each submission
+        bySubmission.forEach((qMap, submissionId) => {
+          let score = 0;
+          let possible = 0;
+          qMap.forEach((g) => {
+            const received = Number(g.instructor_score ?? g.ai_score ?? 0);
+            if (!isFinite(received)) return;
+            const max = rubricMap.get(`${g.question_type}:${g.question_id}`) ?? 10;
+            score += received;
+            possible += max;
+          });
+          const pct = possible > 0 ? (score / possible) * 100 : 0;
+          midtermPercentBySubmission.set(submissionId, Math.round(pct * 10) / 10);
+        });
+      }
+
       // Fetch related data for midterm grades
       const formattedMidtermGrades = await Promise.all(
         (midtermGrades || []).map(async (submission) => {
@@ -92,12 +141,15 @@ export const GradesAdmin = () => {
             .eq('user_id', submission.user_id)
             .single();
 
+          const computed = midtermPercentBySubmission.get(submission.id) ?? 0;
+          const overall = submission.grade ?? computed;
+
           return {
             student_name: profileData?.full_name || 'Unknown',
             student_email: profileData?.email || '',
             assignment_title: 'Midterm Exam',
-            overall_score: submission.grade || 0,
-            letter_grade: getLetterGradeFromScore(submission.grade || 0),
+            overall_score: overall || 0,
+            letter_grade: getLetterGradeFromScore(overall || 0),
             graded_at: submission.graded_at || submission.submitted_at,
             feedback: submission.feedback || '',
             rubric_scores: [],
