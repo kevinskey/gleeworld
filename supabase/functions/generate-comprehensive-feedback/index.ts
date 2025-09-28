@@ -104,15 +104,45 @@ serve(async (req) => {
       const profiles = await profileResponse.json();
       const profile = profiles?.[0] || null;
 
-      // Calculate scores safely
+      // Calculate scores safely with debugging
       const safeGrades = Array.isArray(grades) ? grades : [];
+      console.log('Raw grades data:', safeGrades.length, 'grades found');
+      
       const termGrades = safeGrades.filter((g: any) => g?.question_type === 'term_definition');
       const excerptGrades = safeGrades.filter((g: any) => g?.question_type === 'listening_analysis');
       const essayGrades = safeGrades.filter((g: any) => g?.question_type === 'essay');
 
-      const termScore = termGrades.reduce((sum: number, g: any) => sum + (g?.ai_score || 0), 0);
-      const excerptScore = excerptGrades.reduce((sum: number, g: any) => sum + (g?.ai_score || 0), 0);
-      const essayScore = essayGrades.reduce((sum: number, g: any) => sum + (g?.ai_score || 0), 0);
+      console.log('Grade breakdown:', {
+        terms: termGrades.length,
+        excerpts: excerptGrades.length, 
+        essays: essayGrades.length
+      });
+
+      // Safe score calculation - ensure scores are reasonable numbers
+      const parseScore = (score: any): number => {
+        const parsed = parseFloat(score);
+        return (isNaN(parsed) || parsed < 0 || parsed > 50) ? 0 : parsed; // Cap at 50 per question
+      };
+
+      const termScore = termGrades.reduce((sum: number, g: any) => {
+        const score = parseScore(g?.ai_score);
+        console.log('Term score:', g?.question_id, score);
+        return sum + score;
+      }, 0);
+      
+      const excerptScore = excerptGrades.reduce((sum: number, g: any) => {
+        const score = parseScore(g?.ai_score);
+        console.log('Excerpt score:', g?.question_id, score);
+        return sum + score;
+      }, 0);
+      
+      const essayScore = essayGrades.reduce((sum: number, g: any) => {
+        const score = parseScore(g?.ai_score);
+        console.log('Essay score:', g?.question_id, score);
+        return sum + score;
+      }, 0);
+
+      console.log('Calculated scores:', { termScore, excerptScore, essayScore });
 
       const termMax = 40;
       const excerptMax = 30;
