@@ -77,15 +77,21 @@ serve(async (req) => {
     const profiles = await profileResponse.json();
     const profile = profiles?.[0] || null;
 
-    // Use submission scores directly
+    // Use ONLY the midterm submission scores - no other assignments
     const finalGrade = submission.grade || 0;
     const termScore = submission.term_score || 0;
     const excerptScore = submission.excerpt_score || 0; 
     const essayScore = submission.essay_score || 0;
 
-    console.log('Scores from submission:', { finalGrade, termScore, excerptScore, essayScore });
+    console.log('Midterm-only scores:', { 
+      finalGrade, 
+      termScore, 
+      excerptScore, 
+      essayScore,
+      submissionId: submission.id 
+    });
 
-    // Maximum possible scores
+    // Standard midterm maximums
     const termMax = 40;
     const excerptMax = 30;
     const essayMax = 20;
