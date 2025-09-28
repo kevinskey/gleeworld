@@ -118,11 +118,26 @@ serve(async (req) => {
         essays: essayGrades.length
       });
 
-      // Safe score calculation - ensure scores are reasonable numbers
+      // Safe score calculation - handle duplicates and ensure scores are reasonable numbers
       const parseScore = (score: any): number => {
         const parsed = parseFloat(score);
         return (isNaN(parsed) || parsed < 0 || parsed > 50) ? 0 : parsed; // Cap at 50 per question
       };
+
+      // Group grades by question_id to avoid counting duplicates
+      const uniqueGrades = new Map();
+      safeGrades.forEach((g: any) => {
+        const key = `${g?.question_id}_${g?.question_type}`;
+        const existingGrade = uniqueGrades.get(key);
+        if (!existingGrade || (g?.ai_score > existingGrade.ai_score)) {
+          uniqueGrades.set(key, g);
+        }
+      });
+
+      const uniqueGradesList = Array.from(uniqueGrades.values());
+      const termGrades = uniqueGradesList.filter((g: any) => g?.question_type === 'term_definition');
+      const excerptGrades = uniqueGradesList.filter((g: any) => g?.question_type === 'listening_analysis');
+      const essayGrades = uniqueGradesList.filter((g: any) => g?.question_type === 'essay');
 
       const termScore = termGrades.reduce((sum: number, g: any) => {
         const score = parseScore(g?.ai_score);
@@ -151,8 +166,8 @@ serve(async (req) => {
       const totalMax = 90;
       const percentage = totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
 
-      // Create concise feedback summary
-      const gradeSummary = safeGrades.slice(0, 8).map((g: any) => {
+      // Create concise feedback summary from unique grades
+      const gradeSummary = uniqueGradesList.slice(0, 8).map((g: any) => {
         const feedback = g?.ai_feedback || 'No feedback';
         const truncatedFeedback = feedback.length > 100 ? feedback.substring(0, 100) + '...' : feedback;
         return `${g?.question_type || 'Unknown'}: ${g?.ai_score || 0} pts - ${truncatedFeedback}`;
