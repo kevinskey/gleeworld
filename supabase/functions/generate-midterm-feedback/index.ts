@@ -146,26 +146,22 @@ const { data: grades, error: gradeErr } = await supabase
 
     const studentName = profile?.full_name || profile?.first_name || "the student";
 
-    const prompt = `Generate comprehensive feedback for ${studentName}'s midterm exam:
+    const prompt = `Return only a writing evaluation for ${studentName}'s midterm essay.
 
 EXAM SCORES:
-- Terms: ${termScore}/${termMax} (${termPercentage.toFixed(1)}%)
-- Listening: ${excerptScore}/${excerptMax} (${excerptPercentage.toFixed(1)}%)
 - Essay: ${essayScore}/${essayMax} (${essayPercentage.toFixed(1)}%)
-- Total: ${finalGrade}/${totalMax} (${overallPercentage.toFixed(1)}%)
 
-RUBRIC CRITERIA:
-- Term Definition Accuracy (10 points each, max 4 terms)
-- Listening Analysis Quality (10 points each, max 3 excerpts)
-- Essay Content & Organization (20 points total)
+Instructions:
+- Focus solely on WRITING EVALUATION based on the essay score and observed writing quality (clarity, organization, coherence, use of evidence, and mechanics).
+- Do not mention terms or listening sections.
+- Do not include advice, suggestions, strengths, weaknesses, improvement areas, or recommendations.
+- Do not include AI detection or any other sections.
+- Output format must be exactly:
 
-Generate structured feedback in these sections:
-1. PERFORMANCE SUMMARY WITH RUBRIC BREAKDOWN - Analyze each section against specific rubric criteria
-2. AI DETECTION ANALYSIS - Assess probability (0-100%) that AI was used with reasoning
-3. DETAILED STRENGTHS AND IMPROVEMENT AREAS - Cite specific evidence from performance
-4. ACTIONABLE RECOMMENDATIONS - Concrete steps for academic growth
+WRITING EVALUATION:\n<2–4 sentences evaluating writing quality only>
 
-Keep response under 500 words. Use the exact scores provided above.`;
+- No bullet points.
+- Keep under 120 words.`;
 
     // OpenAI call with timeout
     const controller = new AbortController();

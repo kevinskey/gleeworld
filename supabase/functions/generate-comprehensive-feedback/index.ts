@@ -133,25 +133,22 @@ serve(async (req) => {
 
     const studentName = profile?.full_name || profile?.first_name || 'the student';
 
-    const prompt = `Generate focused feedback for ${studentName}'s midterm exam performance:
+    const prompt = `Return only a writing evaluation for ${studentName}'s midterm essay.
 
 EXAM SCORES:
-- Terms: ${termScore}/${termMax} (${termPercentage.toFixed(1)}%)
-- Listening: ${excerptScore}/${excerptMax} (${excerptPercentage.toFixed(1)}%)  
 - Essay: ${essayScore}/${essayMax} (${essayPercentage.toFixed(1)}%)
-- Total: ${finalGrade}/${totalMax} (${overallPercentage.toFixed(1)}%)
 
-RUBRIC CRITERIA:
-- Term Definition Accuracy (10 points each, max 4 terms)
-- Listening Analysis Quality (10 points each, max 3 excerpts)
-- Essay Content & Organization (20 points total)
+Instructions:
+- Focus solely on WRITING EVALUATION based on the essay score and observed writing quality (clarity, organization, coherence, use of evidence, and mechanics).
+- Do not mention terms or listening sections.
+- Do not include advice, suggestions, strengths, weaknesses, improvement areas, or recommendations.
+- Do not include AI detection or any other sections.
+- Output format must be exactly:
 
-Generate constructive feedback focusing on:
-1. PERFORMANCE SUMMARY - Brief analysis of each section based on actual scores
-2. WRITING QUALITY ASSESSMENT - Evaluate clarity, organization, and content
-3. KEY STRENGTHS - What was done well based on the scores achieved
+WRITING EVALUATION:\n<2–4 sentences evaluating writing quality only>
 
-Keep response under 300 words. Focus on the actual performance, not generic recommendations.`;
+- No bullet points.
+- Keep under 120 words.`;
 
     console.log('Calling OpenAI with prompt length:', prompt.length);
 
