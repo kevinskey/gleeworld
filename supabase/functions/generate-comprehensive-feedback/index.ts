@@ -132,14 +132,16 @@ serve(async (req) => {
 
       console.log('Grade breakdown:', {
         terms: termGrades.length,
-        excerpts: excerptGrades.length, 
+        excerpts: excerptGrades.length,
         essays: essayGrades.length
       });
 
-      // Safe score calculation - ensure scores are reasonable numbers
+      // Safe score calculation - ensure scores are reasonable numbers  
       const parseScore = (score) => {
         const parsed = parseFloat(score);
-        return (isNaN(parsed) || parsed < 0 || parsed > 50) ? 0 : parsed; // Cap at 50 per question
+        // Cap scores at reasonable maximums: 10 for terms, 10 for excerpts, 10 for essays
+        const maxScore = 10;
+        return (isNaN(parsed) || parsed < 0 || parsed > maxScore) ? 0 : parsed;
       };
 
       const termScore = termGrades.reduce((sum, g) => {
