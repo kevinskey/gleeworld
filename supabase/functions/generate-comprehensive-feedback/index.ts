@@ -131,7 +131,7 @@ serve(async (req) => {
     const termMax = 40;
     const excerptMax = 30;
     const essayMax = 20;
-    const totalMax = 90;
+    const totalMax = 100;
     
     // Calculate percentages
     const termPercentage = termMax > 0 ? (termScore / termMax) * 100 : 0;
