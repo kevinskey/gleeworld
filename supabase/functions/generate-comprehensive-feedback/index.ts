@@ -68,6 +68,14 @@ serve(async (req) => {
     const profiles = await profileResponse.json();
     const profile = profiles[0];
 
+    // Check if grades data exists
+    if (!grades || !Array.isArray(grades)) {
+      return new Response(JSON.stringify({ error: 'No grades found for submission' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Analyze grades by section
     const termGrades = grades.filter((g: any) => g.question_type === 'term_definition');
     const excerptGrades = grades.filter((g: any) => g.question_type === 'listening_analysis');
@@ -96,9 +104,9 @@ STUDENT PERFORMANCE SUMMARY:
 
 INDIVIDUAL QUESTION FEEDBACK:
 ${grades.map((g: any) => `
-${g.question_id} (${g.question_type}): ${g.ai_score} points
-Student Answer: ${g.student_answer}
-AI Feedback: ${g.ai_feedback}
+${g.question_id || 'Unknown'} (${g.question_type || 'Unknown'}): ${g.ai_score || 0} points
+Student Answer: ${g.student_answer || 'No answer provided'}
+AI Feedback: ${g.ai_feedback || 'No feedback available'}
 `).join('\n')}
 
 Please provide a comprehensive feedback report with the following sections:
