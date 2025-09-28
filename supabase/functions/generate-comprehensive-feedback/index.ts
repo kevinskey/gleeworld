@@ -82,9 +82,9 @@ serve(async (req) => {
 
     const profile = profiles?.[0] || null;
 
-    // Get AI scores from grades table
+    // Get AI scores from the correct grades table 
     const { data: grades } = await supabase
-      .from('mus240_midterm_question_grades')
+      .from('mus240_submission_grades')
       .select('*')
       .eq('submission_id', submissionId);
 
@@ -92,9 +92,9 @@ serve(async (req) => {
 
     // Group grades by question type for rubric compliance
     const gradesByType = {
-      term_definition: (grades || []).filter(g => g.question_type === 'term_definition').map(g => g.ai_score),
-      listening_analysis: (grades || []).filter(g => g.question_type === 'listening_analysis').map(g => g.ai_score),
-      essay: (grades || []).filter(g => g.question_type === 'essay').map(g => g.ai_score)
+      term_definition: (grades || []).filter(g => g.question_type === 'term_definition').map(g => g.instructor_score || g.ai_score),
+      listening_analysis: (grades || []).filter(g => g.question_type === 'listening_analysis').map(g => g.instructor_score || g.ai_score),
+      essay: (grades || []).filter(g => g.question_type === 'essay').map(g => g.instructor_score || g.ai_score)
     };
 
     // Apply rubric limits: max 4 terms, 3 excerpts, 1 essay
@@ -133,7 +133,7 @@ serve(async (req) => {
 
     const studentName = profile?.full_name || profile?.first_name || 'the student';
 
-    const prompt = `Generate comprehensive feedback for ${studentName}'s midterm exam:
+    const prompt = `Generate focused feedback for ${studentName}'s midterm exam performance:
 
 EXAM SCORES:
 - Terms: ${termScore}/${termMax} (${termPercentage.toFixed(1)}%)
@@ -146,13 +146,12 @@ RUBRIC CRITERIA:
 - Listening Analysis Quality (10 points each, max 3 excerpts)
 - Essay Content & Organization (20 points total)
 
-Generate structured feedback in these sections:
-1. PERFORMANCE SUMMARY WITH RUBRIC BREAKDOWN - Analyze each section against specific rubric criteria
-2. AI DETECTION ANALYSIS - Assess probability (0-100%) that AI was used with reasoning
-3. DETAILED STRENGTHS AND IMPROVEMENT AREAS - Cite specific evidence from performance
-4. ACTIONABLE RECOMMENDATIONS - Concrete steps for academic growth
+Generate constructive feedback focusing on:
+1. PERFORMANCE SUMMARY - Brief analysis of each section based on actual scores
+2. WRITING QUALITY ASSESSMENT - Evaluate clarity, organization, and content
+3. KEY STRENGTHS - What was done well based on the scores achieved
 
-Keep response under 500 words. Use the exact scores provided above.`;
+Keep response under 300 words. Focus on the actual performance, not generic recommendations.`;
 
     console.log('Calling OpenAI with prompt length:', prompt.length);
 
@@ -169,7 +168,7 @@ Keep response under 500 words. Use the exact scores provided above.`;
           { role: 'system', content: 'You are an experienced music professor providing constructive feedback on student midterm exams.' },
           { role: 'user', content: prompt }
         ],
-        max_tokens: 800,
+        max_tokens: 500,
       }),
     });
 
