@@ -80,8 +80,8 @@ serve(async (req) => {
     // Get actual AI scores from the grades table
     const gradesResponse = await fetch(`${supabaseUrl}/rest/v1/mus240_submission_grades?submission_id=eq.${submissionId}&select=question_type,ai_score&order=created_at.desc`, {
       headers: {
-        'apikey': supabaseKey,
-        'authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseServiceKey,
+        'authorization': `Bearer ${supabaseServiceKey}`,
         'accept-profile': 'public'
       }
     });
@@ -90,8 +90,8 @@ serve(async (req) => {
     console.log('Raw grades from database:', grades);
 
     // Calculate scores by question type - take the most recent score for each question
-    const scoresByType = {};
-    grades.forEach(grade => {
+    const scoresByType: { [key: string]: number[] } = {};
+    grades.forEach((grade: any) => {
       const key = `${grade.question_type}`;
       if (!scoresByType[key] || scoresByType[key].length === 0) {
         scoresByType[key] = [];
@@ -103,11 +103,13 @@ serve(async (req) => {
     const termScore = (scoresByType['term_definition'] || []).reduce((sum, score) => sum + score, 0);
     const excerptScore = (scoresByType['listening_analysis'] || []).reduce((sum, score) => sum + score, 0);
     const essayScore = (scoresByType['essay'] || []).reduce((sum, score) => sum + score, 0);
+    const finalGrade = termScore + excerptScore + essayScore;
     
     console.log('Calculated scores:', { 
       termScore,
       excerptScore,
       essayScore,
+      finalGrade,
       scoresByType,
       submissionId: submission.id 
     });
