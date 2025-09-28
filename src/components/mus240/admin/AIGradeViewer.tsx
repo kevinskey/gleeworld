@@ -165,8 +165,8 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId }) => {
               <CheckCircle2 className="h-4 w-4" />
               Overall Feedback
             </h4>
-            <div className="p-3 bg-card border rounded-md">
-              <p className="text-sm leading-relaxed">{grade.feedback}</p>
+            <div className="p-3 bg-card border rounded-md max-h-96 overflow-y-auto">
+              <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans">{grade.feedback}</pre>
             </div>
           </div>
         )}

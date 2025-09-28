@@ -203,9 +203,9 @@ export const MidtermGradingDashboard: React.FC = () => {
                             <Bot className="h-4 w-4 mr-1" />
                             AI Feedback:
                           </h4>
-                          <p className="text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500">
-                            {grade.ai_feedback}
-                          </p>
+                          <div className="text-sm bg-blue-50 p-3 rounded border-l-4 border-blue-500 max-h-96 overflow-y-auto">
+                            <pre className="whitespace-pre-wrap font-sans">{grade.ai_feedback}</pre>
+                          </div>
                         </div>
                       )}
 
