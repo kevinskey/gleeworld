@@ -149,14 +149,11 @@ ACTUAL SCORES (use these exact numbers):
 - Essay: ${essayScore}/${essayMax} (${essayPercentage.toFixed(1)}%)
 - Total: ${finalGrade}/${totalMax} (${overallPercentage.toFixed(1)}%)
 
-Generate structured feedback in 5 sections:
+Generate structured feedback in 2 sections:
 1. PERFORMANCE SUMMARY - Overview using ONLY the exact scores above
 2. STRENGTHS - Two main areas of excellence
-3. IMPROVEMENTS - Two areas needing development
-4. RESOURCES - Two specific study recommendations
-5. ENCOURAGEMENT - Personal motivational note
 
-Keep feedback to 600 words maximum. Use only the scores provided above - do not modify them.`;
+Keep feedback to 300 words maximum. Use only the scores provided above - do not modify them.`;
 
     console.log('Calling OpenAI with prompt length:', prompt.length);
 
