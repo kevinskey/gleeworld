@@ -1,9 +1,10 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-const supabaseUrl = Deno.env.get('SUPABASE_URL');
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,24 +37,23 @@ serve(async (req) => {
 
     console.log('Processing submission:', submissionId);
 
-    // Get submission data
-    const submissionUrl = `${supabaseUrl}/rest/v1/mus240_midterm_submissions?id=eq.${submissionId}&select=*`;
-    const submissionResponse = await fetch(submissionUrl, {
-      headers: {
-        'apikey': supabaseServiceKey,
-        'Authorization': `Bearer ${supabaseServiceKey}`,
-      }
-    });
+    // Initialize Supabase client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    if (!submissionResponse.ok) {
-      console.error('Failed to fetch submission');
+    // Get submission data
+    const { data: submissions, error: submissionError } = await supabase
+      .from('mus240_midterm_submissions')
+      .select('*')
+      .eq('id', submissionId);
+
+    if (submissionError || !submissions || submissions.length === 0) {
+      console.error('Failed to fetch submission:', submissionError);
       return new Response(JSON.stringify({ error: 'Failed to fetch submission' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const submissions = await submissionResponse.json();
     const submission = submissions[0];
 
     if (!submission) {
@@ -65,38 +65,26 @@ serve(async (req) => {
     }
 
     // Get user profile
-    const profileUrl = `${supabaseUrl}/rest/v1/gw_profiles?user_id=eq.${submission.user_id}&select=*`;
-    const profileResponse = await fetch(profileUrl, {
-      headers: {
-        'apikey': supabaseServiceKey,
-        'Authorization': `Bearer ${supabaseServiceKey}`,
-      }
-    });
+    const { data: profiles } = await supabase
+      .from('gw_profiles')
+      .select('*')
+      .eq('user_id', submission.user_id);
 
-    const profiles = await profileResponse.json();
     const profile = profiles?.[0] || null;
 
     // Get AI scores from grades table
-    const gradesUrl = `${supabaseUrl}/rest/v1/mus240_midterm_question_grades?submission_id=eq.${submissionId}&select=*`;
-    const gradesResponse = await fetch(gradesUrl, {
-      headers: {
-        'apikey': supabaseServiceKey,
-        'Authorization': `Bearer ${supabaseServiceKey}`,
-      }
-    });
-
-    let grades = [];
-    if (gradesResponse.ok) {
-      grades = await gradesResponse.json();
-    }
+    const { data: grades } = await supabase
+      .from('mus240_midterm_question_grades')
+      .select('*')
+      .eq('submission_id', submissionId);
 
     console.log('Raw grades from database:', grades);
 
     // Group grades by question type for rubric compliance
     const gradesByType = {
-      term_definition: grades.filter(g => g.question_type === 'term_definition').map(g => g.ai_score),
-      listening_analysis: grades.filter(g => g.question_type === 'listening_analysis').map(g => g.ai_score),
-      essay: grades.filter(g => g.question_type === 'essay').map(g => g.ai_score)
+      term_definition: (grades || []).filter(g => g.question_type === 'term_definition').map(g => g.ai_score),
+      listening_analysis: (grades || []).filter(g => g.question_type === 'listening_analysis').map(g => g.ai_score),
+      essay: (grades || []).filter(g => g.question_type === 'essay').map(g => g.ai_score)
     };
 
     // Apply rubric limits: max 4 terms, 3 excerpts, 1 essay
@@ -186,22 +174,16 @@ Keep response under 500 words. Use the exact scores provided above.`;
     console.log('Generated feedback length:', generatedFeedback.length);
 
     // Update submission with comprehensive feedback
-    const updateUrl = `${supabaseUrl}/rest/v1/mus240_midterm_submissions?id=eq.${submissionId}`;
-    const updateResponse = await fetch(updateUrl, {
-      method: 'PATCH',
-      headers: {
-        'apikey': supabaseServiceKey,
-        'Authorization': `Bearer ${supabaseServiceKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    const { error: updateError } = await supabase
+      .from('mus240_midterm_submissions')
+      .update({
         comprehensive_feedback: generatedFeedback,
         feedback_generated_at: new Date().toISOString()
       })
-    });
+      .eq('id', submissionId);
 
-    if (!updateResponse.ok) {
-      console.error('Failed to update submission with feedback');
+    if (updateError) {
+      console.error('Failed to update submission with feedback:', updateError);
       throw new Error('Failed to save feedback');
     }
 
