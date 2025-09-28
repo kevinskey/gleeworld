@@ -26,10 +26,19 @@ serve(async (req) => {
   try {
     console.log('Starting comprehensive feedback generation');
     
-    const { submissionId } = await req.json();
+    // Parse body robustly and support multiple field names
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch (_) {
+      body = {};
+    }
+
+    const url = new URL(req.url);
+    const submissionId = body.submissionId || body.submission_id || body.id || url.searchParams.get('submissionId');
 
     if (!submissionId) {
-      return new Response(JSON.stringify({ error: 'Missing submissionId' }), {
+      return new Response(JSON.stringify({ error: 'Missing submissionId in body (submissionId or submission_id) or as query param ?submissionId=' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
