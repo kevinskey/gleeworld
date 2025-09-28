@@ -141,7 +141,35 @@ serve(async (req) => {
 
     const studentName = profile?.full_name || profile?.first_name || 'the student';
 
-    const prompt = `Generate feedback for ${studentName}'s midterm exam:
+    // Get actual submission answers for detailed feedback
+    const termAnswers = {
+      ring_shout: submission.ring_shout_answer,
+      field_holler: submission.field_holler_answer,
+      negro_spiritual: submission.negro_spiritual_answer,
+      blues: submission.blues_answer,
+      ragtime: submission.ragtime_answer,
+      swing: submission.swing_answer
+    };
+
+    const listeningAnswers = {
+      excerpt_1: {
+        genre: submission.excerpt_1_genre,
+        features: submission.excerpt_1_features,
+        context: submission.excerpt_1_context
+      },
+      excerpt_2: {
+        genre: submission.excerpt_2_genre,
+        features: submission.excerpt_2_features,
+        context: submission.excerpt_2_context
+      },
+      excerpt_3: {
+        genre: submission.excerpt_3_genre,
+        features: submission.excerpt_3_features,
+        context: submission.excerpt_3_context
+      }
+    };
+
+    const prompt = `Generate detailed, educational feedback for ${studentName}'s midterm exam with specific explanations:
 
 ACTUAL SCORES (use these exact numbers):
 - Terms: ${termScore}/${termMax} (${termPercentage.toFixed(1)}%)
@@ -149,11 +177,36 @@ ACTUAL SCORES (use these exact numbers):
 - Essay: ${essayScore}/${essayMax} (${essayPercentage.toFixed(1)}%)
 - Total: ${finalGrade}/${totalMax} (${overallPercentage.toFixed(1)}%)
 
-Generate structured feedback in 2 sections:
-1. PERFORMANCE SUMMARY - Overview using ONLY the exact scores above
-2. STRENGTHS - Two main areas of excellence
+STUDENT'S ACTUAL RESPONSES FOR ANALYSIS:
 
-Keep feedback to 300 words maximum. Use only the scores provided above - do not modify them.`;
+TERM DEFINITIONS:
+- Blues: "${termAnswers.blues || 'No answer provided'}"
+- Ragtime: "${termAnswers.ragtime || 'No answer provided'}"
+- Ring Shout: "${termAnswers.ring_shout || 'No answer provided'}"
+- Swing: "${termAnswers.swing || 'No answer provided'}"
+
+LISTENING ANALYSIS:
+- Excerpt 1: Genre: "${listeningAnswers.excerpt_1.genre || 'Not answered'}", Features: "${listeningAnswers.excerpt_1.features || 'Not answered'}", Context: "${listeningAnswers.excerpt_1.context || 'Not answered'}"
+
+ESSAY RESPONSE:
+"${submission.essay_answer || 'No essay provided'}"
+
+Generate structured feedback in 2 sections:
+
+1. PERFORMANCE SUMMARY WITH SPECIFIC ANALYSIS
+- Use exact scores above
+- Reference specific elements from their actual answers
+- Explain what they got right and wrong in each section
+- Point out strong elements in their responses
+- Identify specific gaps or misconceptions
+
+2. DETAILED STRENGTHS AND AREAS FOR GROWTH
+- Cite specific quotes from their answers
+- Explain why certain responses earned points
+- Connect their answers to course concepts
+- Provide specific examples of what made their responses effective or ineffective
+
+Keep feedback to 500 words maximum. Be specific, educational, and reference their actual responses.`;
 
     console.log('Calling OpenAI with prompt length:', prompt.length);
 
