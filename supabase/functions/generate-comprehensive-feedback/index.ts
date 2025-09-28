@@ -77,17 +77,38 @@ serve(async (req) => {
     const profiles = await profileResponse.json();
     const profile = profiles?.[0] || null;
 
-    // Use ONLY the midterm submission scores - no other assignments
-    const finalGrade = submission.grade || 0;
-    const termScore = submission.term_score || 0;
-    const excerptScore = submission.excerpt_score || 0; 
-    const essayScore = submission.essay_score || 0;
+    // Get actual AI scores from the grades table
+    const gradesResponse = await fetch(`${supabaseUrl}/rest/v1/mus240_submission_grades?submission_id=eq.${submissionId}&select=question_type,ai_score&order=created_at.desc`, {
+      headers: {
+        'apikey': supabaseKey,
+        'authorization': `Bearer ${supabaseKey}`,
+        'accept-profile': 'public'
+      }
+    });
+    
+    const grades = await gradesResponse.json();
+    console.log('Raw grades from database:', grades);
 
-    console.log('Midterm-only scores:', { 
-      finalGrade, 
-      termScore, 
-      excerptScore, 
+    // Calculate scores by question type - take the most recent score for each question
+    const scoresByType = {};
+    grades.forEach(grade => {
+      const key = `${grade.question_type}`;
+      if (!scoresByType[key] || scoresByType[key].length === 0) {
+        scoresByType[key] = [];
+      }
+      scoresByType[key].push(grade.ai_score || 0);
+    });
+
+    // Sum up scores by category
+    const termScore = (scoresByType['term_definition'] || []).reduce((sum, score) => sum + score, 0);
+    const excerptScore = (scoresByType['listening_analysis'] || []).reduce((sum, score) => sum + score, 0);
+    const essayScore = (scoresByType['essay'] || []).reduce((sum, score) => sum + score, 0);
+    
+    console.log('Calculated scores:', { 
+      termScore,
+      excerptScore,
       essayScore,
+      scoresByType,
       submissionId: submission.id 
     });
 
