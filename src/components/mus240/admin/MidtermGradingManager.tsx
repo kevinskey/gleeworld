@@ -22,7 +22,9 @@ import {
   ChevronUp,
   CheckSquare,
   Square,
-  Zap
+  Zap,
+  MessageSquare,
+  Loader2
 } from 'lucide-react';
 
 interface GradingRubric {
@@ -47,6 +49,8 @@ export const MidtermGradingManager: React.FC = () => {
   const [feedback, setFeedback] = useState<Record<string, string>>({});
   const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
   const [progress, setProgress] = useState<{ total: number; started: number; done: number } | null>(null);
+  const [comprehensiveFeedback, setComprehensiveFeedback] = useState<Record<string, string>>({});
+  const [feedbackLoading, setFeedbackLoading] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
 
   const { data: submissions, isLoading } = useQuery({
@@ -120,6 +124,45 @@ export const MidtermGradingManager: React.FC = () => {
       console.error('Error saving grade:', error);
     },
   });
+
+  const generateComprehensiveFeedback = useMutation({
+    mutationFn: async (submissionId: string) => {
+      const { data, error } = await supabase.functions.invoke('generate-comprehensive-feedback', {
+        body: { submission_id: submissionId }
+      });
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data, submissionId) => {
+      setComprehensiveFeedback(prev => ({
+        ...prev,
+        [submissionId]: data.feedback
+      }));
+      setFeedbackLoading(prev => ({
+        ...prev,
+        [submissionId]: false
+      }));
+      queryClient.invalidateQueries({ queryKey: ['midterm-submissions'] });
+      toast.success('Comprehensive feedback generated successfully');
+    },
+    onError: (error, submissionId) => {
+      setFeedbackLoading(prev => ({
+        ...prev,
+        [submissionId]: false
+      }));
+      toast.error('Failed to generate comprehensive feedback');
+      console.error('Error generating feedback:', error);
+    },
+  });
+
+  const handleGenerateComprehensiveFeedback = (submissionId: string) => {
+    setFeedbackLoading(prev => ({
+      ...prev,
+      [submissionId]: true
+    }));
+    generateComprehensiveFeedback.mutate(submissionId);
+  };
 
   const bulkGradeWithAI = useMutation({
     mutationFn: async (submissionIds: string[]) => {
@@ -322,6 +365,11 @@ export const MidtermGradingManager: React.FC = () => {
       const rubric: GradingRubric = { terms, shortAnswers: 0, excerpts, essay, total: terms + excerpts + essay };
       setRubricScores(prev => ({ ...prev, [submission.id]: rubric }));
       setFeedback(prev => ({ ...prev, [submission.id]: submission.feedback || '' }));
+      
+      // Load comprehensive feedback if it exists
+      if (submission.comprehensive_feedback) {
+        setComprehensiveFeedback(prev => ({ ...prev, [submission.id]: submission.comprehensive_feedback }));
+      }
     } catch (err) {
       console.error('Failed to load AI rubric:', err);
     }
@@ -627,13 +675,48 @@ export const MidtermGradingManager: React.FC = () => {
                               </div>
                             </div>
 
-                            {/* Feedback */}
+                            {/* AI Comprehensive Feedback */}
+                            {comprehensiveFeedback[submission.id] && (
+                              <div className="bg-blue-50 p-4 rounded-lg">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <MessageSquare className="h-4 w-4 text-blue-600" />
+                                  <label className="text-sm font-medium text-blue-900">AI Comprehensive Feedback</label>
+                                </div>
+                                <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
+                                  {comprehensiveFeedback[submission.id]}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Comprehensive Feedback Button */}
+                            <div className="flex gap-2">
+                              <Button
+                                onClick={() => handleGenerateComprehensiveFeedback(submission.id)}
+                                disabled={feedbackLoading[submission.id] || generateComprehensiveFeedback.isPending}
+                                variant="outline"
+                                className="flex-1"
+                              >
+                                {feedbackLoading[submission.id] ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Generating...
+                                  </>
+                                ) : (
+                                  <>
+                                    <MessageSquare className="h-4 w-4 mr-2" />
+                                    Generate AI Feedback
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+
+                            {/* Manual Feedback */}
                             <div>
-                              <label className="text-sm font-medium">Feedback</label>
+                              <label className="text-sm font-medium">Manual Feedback (Optional)</label>
                               <Textarea
                                 value={currentFeedback}
                                 onChange={(e) => handleFeedbackChange(submission.id, e.target.value)}
-                                placeholder="Provide detailed feedback for the student..."
+                                placeholder="Add additional manual feedback if needed..."
                                 className="mt-1 min-h-[120px]"
                               />
                             </div>
