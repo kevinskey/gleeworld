@@ -175,10 +175,40 @@ WRITING EVALUATION:\n<2–4 sentences evaluating writing quality only>
     }
 
     const data = await response.json();
-    const generatedFeedback = data.choices[0].message.content;
+    let generatedFeedback = data?.choices?.[0]?.message?.content ?? '';
+
+    // Enforce writing-only output
+    const sanitizeWritingOnly = (txt: string) => {
+      try {
+        let t = txt || '';
+        // remove markdown headings and bullets
+        t = t.replace(/^#+.*$/gm, '').replace(/^\s*[-*]\s+/gm, '');
+        // prefer explicit WRITING EVALUATION section if present
+        const sectionMatch = t.match(/WRITING EVALUATION:\s*([\s\S]*)/i);
+        let body = sectionMatch ? sectionMatch[1] : t;
+        // strip any unwanted sections if the model added them
+        body = body
+          .replace(/AI DETECTION[\s\S]*/i, '')
+          .replace(/ACTIONABLE RECOMMENDATIONS[\s\S]*/i, '')
+          .replace(/PERFORMANCE SUMMARY[\s\S]*/i, '')
+          .replace(/DETAILED STRENGTHS[\s\S]*/i, '')
+          .replace(/STRENGTHS[\s\S]*/i, '')
+          .replace(/IMPROVEMENT AREAS[\s\S]*/i, '')
+          .replace(/RECOMMENDATIONS[\s\S]*/i, '');
+        // cap length ~120 words
+        const words = body.split(/\s+/).filter(Boolean);
+        if (words.length > 120) {
+          body = words.slice(0, 120).join(' ') + '…';
+        }
+        return `WRITING EVALUATION:\n${body.trim()}`;
+      } catch {
+        return `WRITING EVALUATION:\n${(txt || '').trim()}`;
+      }
+    };
+
+    generatedFeedback = sanitizeWritingOnly(generatedFeedback);
 
     console.log('Generated feedback length:', generatedFeedback.length);
-
     // Update submission with comprehensive feedback
     const { error: updateError } = await supabase
       .from('mus240_midterm_submissions')

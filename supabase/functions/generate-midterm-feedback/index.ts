@@ -198,9 +198,34 @@ WRITING EVALUATION:\n<2–4 sentences evaluating writing quality only>
     }
 
     const aiJson = await aiResp.json();
-    const generatedFeedback: string =
-      aiJson?.choices?.[0]?.message?.content ?? "No feedback generated.";
+    let generatedFeedback: string = aiJson?.choices?.[0]?.message?.content ?? "";
 
+    // Enforce writing-only output
+    const sanitizeWritingOnly = (txt: string) => {
+      try {
+        let t = txt || '';
+        t = t.replace(/^#+.*$/gm, '').replace(/^\s*[-*]\s+/gm, '');
+        const sectionMatch = t.match(/WRITING EVALUATION:\s*([\s\S]*)/i);
+        let body = sectionMatch ? sectionMatch[1] : t;
+        body = body
+          .replace(/AI DETECTION[\s\S]*/i, '')
+          .replace(/ACTIONABLE RECOMMENDATIONS[\s\S]*/i, '')
+          .replace(/PERFORMANCE SUMMARY[\s\S]*/i, '')
+          .replace(/DETAILED STRENGTHS[\s\S]*/i, '')
+          .replace(/STRENGTHS[\s\S]*/i, '')
+          .replace(/IMPROVEMENT AREAS[\s\S]*/i, '')
+          .replace(/RECOMMENDATIONS[\s\S]*/i, '');
+        const words = body.split(/\s+/).filter(Boolean);
+        if (words.length > 120) {
+          body = words.slice(0, 120).join(' ') + '…';
+        }
+        return `WRITING EVALUATION:\n${body.trim()}`;
+      } catch {
+        return `WRITING EVALUATION:\n${(txt || '').trim()}`;
+      }
+    };
+
+    generatedFeedback = sanitizeWritingOnly(generatedFeedback);
     // Persist feedback
     const { error: updateErr } = await supabase
       .from("mus240_midterm_submissions")
