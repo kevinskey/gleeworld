@@ -135,27 +135,26 @@ serve(async (req) => {
 
     const studentName = profile?.full_name || profile?.first_name || 'the student';
 
-    const prompt = `Generate comprehensive feedback for ${studentName}'s midterm exam with detailed analysis:
+    const prompt = `Generate comprehensive feedback for ${studentName}'s midterm exam:
 
-EXAM PERFORMANCE DATA:
+EXAM SCORES:
 - Terms: ${termScore}/${termMax} (${termPercentage.toFixed(1)}%)
-- Listening: ${excerptScore}/${excerptMax} (${excerptPercentage.toFixed(1)}%)
+- Listening: ${excerptScore}/${excerptMax} (${excerptPercentage.toFixed(1)}%)  
 - Essay: ${essayScore}/${essayMax} (${essayPercentage.toFixed(1)}%)
 - Total: ${finalGrade}/${totalMax} (${overallPercentage.toFixed(1)}%)
 
-RUBRIC ELEMENTS TO EVALUATE:
-- Term Definition Accuracy (10 points each, 4 terms max)
-- Listening Analysis Depth (10 points each, 3 excerpts max) 
-- Essay Content Quality & Organization (20 points total)
-- AI Detection Probability Assessment
+RUBRIC CRITERIA:
+- Term Definition Accuracy (10 points each, max 4 terms)
+- Listening Analysis Quality (10 points each, max 3 excerpts)
+- Essay Content & Organization (20 points total)
 
 Generate structured feedback in these sections:
-1. PERFORMANCE SUMMARY WITH RUBRIC BREAKDOWN - Detailed analysis of each section with specific rubric criteria
-2. AI DETECTION ANALYSIS - Probability assessment (0-100%) that AI was used in responses with reasoning
-3. DETAILED STRENGTHS AND IMPROVEMENT AREAS - Specific examples from graded responses
-4. ACTIONABLE RECOMMENDATIONS - Concrete steps for improvement
+1. PERFORMANCE SUMMARY WITH RUBRIC BREAKDOWN - Analyze each section against specific rubric criteria
+2. AI DETECTION ANALYSIS - Assess probability (0-100%) that AI was used with reasoning
+3. DETAILED STRENGTHS AND IMPROVEMENT AREAS - Cite specific evidence from performance
+4. ACTIONABLE RECOMMENDATIONS - Concrete steps for academic growth
 
-Keep response under 500 words but include specific analysis based on the scores provided.`;
+Keep response under 500 words. Use the exact scores provided above.`;
 
     console.log('Calling OpenAI with prompt length:', prompt.length);
 
