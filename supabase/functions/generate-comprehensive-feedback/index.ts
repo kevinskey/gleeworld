@@ -21,12 +21,22 @@ serve(async (req) => {
       });
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
 
+    if (!supabaseUrl || !supabaseServiceKey) {
+      return new Response(JSON.stringify({ error: 'Supabase service configuration missing' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Get submission data
@@ -36,6 +46,15 @@ serve(async (req) => {
         'Authorization': `Bearer ${supabaseServiceKey}`,
       }
     });
+
+    if (!submissionResponse.ok) {
+      const text = await submissionResponse.text();
+      console.error('Failed to fetch submission:', submissionResponse.status, text);
+      return new Response(JSON.stringify({ error: 'Failed to fetch submission' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const submissions = await submissionResponse.json();
     const submission = submissions[0];
@@ -55,6 +74,15 @@ serve(async (req) => {
       }
     });
 
+    if (!gradesResponse.ok) {
+      const text = await gradesResponse.text();
+      console.error('Failed to fetch grades:', gradesResponse.status, text);
+      return new Response(JSON.stringify({ error: 'Failed to fetch grades' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const grades = await gradesResponse.json();
 
     // Get user profile for personalization
@@ -66,20 +94,12 @@ serve(async (req) => {
     });
 
     const profiles = await profileResponse.json();
-    const profile = profiles[0];
-
-    // Check if grades data exists
-    if (!grades || !Array.isArray(grades)) {
-      return new Response(JSON.stringify({ error: 'No grades found for submission' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const profile = profiles?.[0] || null;
 
     // Analyze grades by section
-    const termGrades = grades.filter((g: any) => g.question_type === 'term_definition');
-    const excerptGrades = grades.filter((g: any) => g.question_type === 'listening_analysis');
-    const essayGrades = grades.filter((g: any) => g.question_type === 'essay');
+    const termGrades = Array.isArray(grades) ? grades.filter((g: any) => g.question_type === 'term_definition') : [];
+    const excerptGrades = Array.isArray(grades) ? grades.filter((g: any) => g.question_type === 'listening_analysis') : [];
+    const essayGrades = Array.isArray(grades) ? grades.filter((g: any) => g.question_type === 'essay') : [];
 
     // Calculate section scores
     const termScore = termGrades.reduce((sum: number, g: any) => sum + (g.ai_score || 0), 0);
@@ -94,7 +114,7 @@ serve(async (req) => {
     const percentage = (totalScore / totalMax) * 100;
 
     // Create comprehensive feedback prompt
-    const feedbackPrompt = `As an expert African American music history instructor, generate comprehensive feedback for ${profile?.first_name || 'this student'}'s midterm exam performance.
+    const feedbackPrompt = `As an expert African American music history instructor, generate comprehensive feedback for ${profile?.full_name || profile?.first_name || 'this student'}'s midterm exam performance.
 
 STUDENT PERFORMANCE SUMMARY:
 - Terms Section: ${termScore}/${termMax} points (${((termScore/termMax)*100).toFixed(1)}%)
@@ -103,7 +123,7 @@ STUDENT PERFORMANCE SUMMARY:
 - Overall: ${totalScore}/${totalMax} points (${percentage.toFixed(1)}%)
 
 INDIVIDUAL QUESTION FEEDBACK:
-${grades.map((g: any) => `
+${(Array.isArray(grades) ? grades : []).map((g: any) => `
 ${g.question_id || 'Unknown'} (${g.question_type || 'Unknown'}): ${g.ai_score || 0} points
 Student Answer: ${g.student_answer || 'No answer provided'}
 AI Feedback: ${g.ai_feedback || 'No feedback available'}
@@ -167,13 +187,27 @@ Format the response as a structured academic feedback report that is encouraging
       }),
     });
 
-    const aiData = await aiResponse.json();
-    
-    if (!aiData.choices?.[0]?.message?.content) {
-      throw new Error('Failed to generate comprehensive feedback');
+    if (!aiResponse.ok) {
+      const txt = await aiResponse.text();
+      console.error('OpenAI API error:', aiResponse.status, txt);
+      return new Response(JSON.stringify({ error: 'OpenAI API error', details: txt }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    const comprehensiveFeedback = aiData.choices[0].message.content;
+    const aiData = await aiResponse.json();
+    const content = aiData?.choices?.[0]?.message?.content;
+    
+    if (!content) {
+      console.error('OpenAI empty response:', aiData);
+      return new Response(JSON.stringify({ error: 'Failed to generate comprehensive feedback' }), {
+        status: 502,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const comprehensiveFeedback = content as string;
 
     // Update submission with comprehensive feedback
     const updateResponse = await fetch(`${supabaseUrl}/rest/v1/mus240_midterm_submissions?id=eq.${submission_id}`, {
@@ -191,7 +225,10 @@ Format the response as a structured academic feedback report that is encouraging
 
     if (!updateResponse.ok) {
       console.error('Error updating feedback:', await updateResponse.text());
-      throw new Error('Failed to store comprehensive feedback');
+      return new Response(JSON.stringify({ error: 'Failed to store comprehensive feedback' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     return new Response(JSON.stringify({ 
@@ -207,9 +244,9 @@ Format the response as a structured academic feedback report that is encouraging
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating comprehensive feedback:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error?.message || 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
