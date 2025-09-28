@@ -104,13 +104,31 @@ serve(async (req) => {
       const profiles = await profileResponse.json();
       const profile = profiles?.[0] || null;
 
-      // Calculate scores safely with debugging
+      // Calculate scores safely with deduplication
       const safeGrades = Array.isArray(grades) ? grades : [];
       console.log('Raw grades data:', safeGrades.length, 'grades found');
       
-      const termGrades = safeGrades.filter((g: any) => g?.question_type === 'term_definition');
-      const excerptGrades = safeGrades.filter((g: any) => g?.question_type === 'listening_analysis');
-      const essayGrades = safeGrades.filter((g: any) => g?.question_type === 'essay');
+      // Simple deduplication using a plain object
+      const seen = {};
+      const uniqueGrades = [];
+      
+      for (let i = 0; i < safeGrades.length; i++) {
+        const g = safeGrades[i];
+        const key = (g?.question_id || 'unknown') + '_' + (g?.question_type || 'unknown');
+        
+        if (!seen[key] || (parseFloat(g?.ai_score || '0') > parseFloat(seen[key].ai_score || '0'))) {
+          seen[key] = g;
+        }
+      }
+      
+      // Convert back to array
+      for (const key in seen) {
+        uniqueGrades.push(seen[key]);
+      }
+
+      const termGrades = uniqueGrades.filter((g) => g?.question_type === 'term_definition');
+      const excerptGrades = uniqueGrades.filter((g) => g?.question_type === 'listening_analysis');
+      const essayGrades = uniqueGrades.filter((g) => g?.question_type === 'essay');
 
       console.log('Grade breakdown:', {
         terms: termGrades.length,
@@ -118,40 +136,25 @@ serve(async (req) => {
         essays: essayGrades.length
       });
 
-      // Safe score calculation - handle duplicates and ensure scores are reasonable numbers
-      const parseScore = (score: any): number => {
+      // Safe score calculation - ensure scores are reasonable numbers
+      const parseScore = (score) => {
         const parsed = parseFloat(score);
         return (isNaN(parsed) || parsed < 0 || parsed > 50) ? 0 : parsed; // Cap at 50 per question
       };
 
-      // Group grades by question_id to avoid counting duplicates
-      const uniqueGrades = new Map();
-      safeGrades.forEach((g: any) => {
-        const key = `${g?.question_id}_${g?.question_type}`;
-        const existingGrade = uniqueGrades.get(key);
-        if (!existingGrade || (g?.ai_score > existingGrade.ai_score)) {
-          uniqueGrades.set(key, g);
-        }
-      });
-
-      const uniqueGradesList = Array.from(uniqueGrades.values());
-      const termGrades = uniqueGradesList.filter((g: any) => g?.question_type === 'term_definition');
-      const excerptGrades = uniqueGradesList.filter((g: any) => g?.question_type === 'listening_analysis');
-      const essayGrades = uniqueGradesList.filter((g: any) => g?.question_type === 'essay');
-
-      const termScore = termGrades.reduce((sum: number, g: any) => {
+      const termScore = termGrades.reduce((sum, g) => {
         const score = parseScore(g?.ai_score);
         console.log('Term score:', g?.question_id, score);
         return sum + score;
       }, 0);
       
-      const excerptScore = excerptGrades.reduce((sum: number, g: any) => {
+      const excerptScore = excerptGrades.reduce((sum, g) => {
         const score = parseScore(g?.ai_score);
         console.log('Excerpt score:', g?.question_id, score);
         return sum + score;
       }, 0);
       
-      const essayScore = essayGrades.reduce((sum: number, g: any) => {
+      const essayScore = essayGrades.reduce((sum, g) => {
         const score = parseScore(g?.ai_score);
         console.log('Essay score:', g?.question_id, score);
         return sum + score;
@@ -167,10 +170,10 @@ serve(async (req) => {
       const percentage = totalMax > 0 ? (totalScore / totalMax) * 100 : 0;
 
       // Create concise feedback summary from unique grades
-      const gradeSummary = uniqueGradesList.slice(0, 8).map((g: any) => {
+      const gradeSummary = uniqueGrades.slice(0, 8).map((g) => {
         const feedback = g?.ai_feedback || 'No feedback';
         const truncatedFeedback = feedback.length > 100 ? feedback.substring(0, 100) + '...' : feedback;
-        return `${g?.question_type || 'Unknown'}: ${g?.ai_score || 0} pts - ${truncatedFeedback}`;
+        return (g?.question_type || 'Unknown') + ': ' + (g?.ai_score || 0) + ' pts - ' + truncatedFeedback;
       });
 
       const studentName = profile?.full_name || profile?.first_name || 'this student';
@@ -271,7 +274,7 @@ Provide structured feedback (max 600 words):
       clearTimeout(timeout);
     }
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Function error:', error);
     
     // Always return a valid JSON response to prevent 502
