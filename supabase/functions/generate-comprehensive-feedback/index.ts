@@ -113,58 +113,41 @@ serve(async (req) => {
     const totalMax = 90;
     const percentage = (totalScore / totalMax) * 100;
 
-    // Create comprehensive feedback prompt
+    // Create optimized feedback prompt (limit token usage)
+    const gradeSummary = (Array.isArray(grades) ? grades : []).map((g: any) => {
+      const answer = g.student_answer || '';
+      const feedback = g.ai_feedback || '';
+      // Truncate long responses to prevent token overflow
+      const truncatedAnswer = answer.length > 200 ? answer.substring(0, 200) + '...' : answer;
+      const truncatedFeedback = feedback.length > 150 ? feedback.substring(0, 150) + '...' : feedback;
+      
+      return `${g.question_type || 'Unknown'}: ${g.ai_score || 0} pts - ${truncatedFeedback}`;
+    }).slice(0, 10); // Limit to 10 questions max
+
     const feedbackPrompt = `As an expert African American music history instructor, generate comprehensive feedback for ${profile?.full_name || profile?.first_name || 'this student'}'s midterm exam performance.
 
-STUDENT PERFORMANCE SUMMARY:
-- Terms Section: ${termScore}/${termMax} points (${((termScore/termMax)*100).toFixed(1)}%)
-- Listening Excerpts: ${excerptScore}/${excerptMax} points (${((excerptScore/excerptMax)*100).toFixed(1)}%)
-- Essay: ${essayScore}/${essayMax} points (${((essayScore/essayMax)*100).toFixed(1)}%)
-- Overall: ${totalScore}/${totalMax} points (${percentage.toFixed(1)}%)
+PERFORMANCE SUMMARY:
+- Terms: ${termScore}/${termMax} pts (${((termScore/termMax)*100).toFixed(1)}%)
+- Listening: ${excerptScore}/${excerptMax} pts (${((excerptScore/excerptMax)*100).toFixed(1)}%)
+- Essay: ${essayScore}/${essayMax} pts (${((essayScore/essayMax)*100).toFixed(1)}%)
+- Overall: ${totalScore}/${totalMax} pts (${percentage.toFixed(1)}%)
 
-INDIVIDUAL QUESTION FEEDBACK:
-${(Array.isArray(grades) ? grades : []).map((g: any) => `
-${g.question_id || 'Unknown'} (${g.question_type || 'Unknown'}): ${g.ai_score || 0} points
-Student Answer: ${g.student_answer || 'No answer provided'}
-AI Feedback: ${g.ai_feedback || 'No feedback available'}
-`).join('\n')}
+KEY FEEDBACK POINTS:
+${gradeSummary.join('\n')}
 
-Please provide a comprehensive feedback report with the following sections:
+Provide concise feedback with these sections:
 
-1. **TERMS SECTION ANALYSIS** (${termScore}/${termMax} points)
-   - Analyze performance across the term definitions
-   - Highlight strongest definitions and areas needing improvement
-   - Specific feedback on historical accuracy and contextual understanding
+1. **SECTION PERFORMANCE** - Brief analysis of terms (${termScore}/${termMax}), listening (${excerptScore}/${excerptMax}), and essay (${essayScore}/${essayMax}) performance.
 
-2. **LISTENING EXCERPTS ANALYSIS** (${excerptScore}/${excerptMax} points)
-   - Evaluate their musical analysis skills
-   - Comment on genre identification accuracy
-   - Assess understanding of musical features and cultural context
+2. **STRENGTHS** - 2-3 key areas where student excelled.
 
-3. **ESSAY ANALYSIS** (${essayScore}/${essayMax} points)
-   - Evaluate argument structure and historical evidence
-   - Comment on synthesis of course materials
-   - Assess critical thinking and writing quality
+3. **IMPROVEMENT AREAS** - 2-3 specific areas needing work with actionable suggestions.
 
-4. **OVERALL STRENGTHS**
-   - Identify 2-3 key areas where the student excelled
-   - Highlight specific examples from their responses
+4. **RESOURCES** - 3 relevant study recommendations for identified gaps.
 
-5. **AREAS FOR GROWTH**
-   - Identify 2-3 specific areas needing improvement
-   - Provide concrete suggestions for improvement
+5. **ENCOURAGEMENT** - Personal note with next steps for continued learning.
 
-6. **RESEARCH RECOMMENDATIONS**
-   - Suggest 3-4 specific topics, scholars, or resources for further study
-   - Tailor recommendations to their demonstrated interests and gaps
-   - Include both historical and contemporary sources
-
-7. **ENCOURAGEMENT & NEXT STEPS**
-   - Personal encouragement acknowledging their effort and progress
-   - Specific action items for continued learning
-   - Connection to broader course goals and music history field
-
-Format the response as a structured academic feedback report that is encouraging yet constructive.`;
+Keep response under 800 words, structured and encouraging.`;
 
     // Generate comprehensive feedback
     const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -174,16 +157,16 @@ Format the response as a structured academic feedback report that is encouraging
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { 
             role: 'system', 
-            content: 'You are Dr. Kevin Phillip Johnson, an expert African American music history instructor at Spelman College. You provide detailed, encouraging, and academically rigorous feedback that helps students grow. Your feedback is always constructive, specific, and connects to broader learning goals.' 
+            content: 'You are an African American music history instructor. Provide encouraging, constructive feedback.' 
           },
           { role: 'user', content: feedbackPrompt }
         ],
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: 1500,
       }),
     });
 
