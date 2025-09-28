@@ -1,6 +1,10 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -11,31 +15,26 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (!openAIApiKey) {
+    return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     console.log('Starting comprehensive feedback generation');
     
-    const body = await req.json().catch(() => null);
-    if (!body || !body.submission_id) {
-      return new Response(JSON.stringify({ error: 'submission_id is required' }), {
+    const { submissionId } = await req.json();
+
+    if (!submissionId) {
+      return new Response(JSON.stringify({ error: 'Missing submissionId' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    const submissionId = body.submission_id;
     console.log('Processing submission:', submissionId);
-
-    const supabaseUrl = Deno.env.get('SUPABASE_URL');
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-
-    if (!supabaseUrl || !supabaseServiceKey || !openaiApiKey) {
-      console.error('Missing configuration');
-      return new Response(JSON.stringify({ error: 'Configuration missing' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
 
     // Get submission data
     const submissionUrl = `${supabaseUrl}/rest/v1/mus240_midterm_submissions?id=eq.${submissionId}&select=*`;
@@ -77,45 +76,40 @@ serve(async (req) => {
     const profiles = await profileResponse.json();
     const profile = profiles?.[0] || null;
 
-    // Get actual AI scores from the grades table
-    const gradesResponse = await fetch(`${supabaseUrl}/rest/v1/mus240_submission_grades?submission_id=eq.${submissionId}&select=question_type,ai_score&order=created_at.desc`, {
+    // Get AI scores from grades table
+    const gradesUrl = `${supabaseUrl}/rest/v1/mus240_midterm_question_grades?submission_id=eq.${submissionId}&select=*`;
+    const gradesResponse = await fetch(gradesUrl, {
       headers: {
         'apikey': supabaseServiceKey,
         'Authorization': `Bearer ${supabaseServiceKey}`,
-        'Accept-Profile': 'public'
       }
     });
-    
-    let grades: any[] = [];
-    if (!gradesResponse.ok) {
-      const errText = await gradesResponse.text().catch(() => '');
-      console.error('Failed to fetch grades', gradesResponse.status, errText);
-    } else {
+
+    let grades = [];
+    if (gradesResponse.ok) {
       grades = await gradesResponse.json();
     }
+
     console.log('Raw grades from database:', grades);
 
-    // Select ONLY the latest N grades per section to match exam rubric
-    const selected: { term_definition: number[]; listening_analysis: number[]; essay: number[] } = {
-      term_definition: [],
-      listening_analysis: [],
-      essay: []
+    // Group grades by question type for rubric compliance
+    const gradesByType = {
+      term_definition: grades.filter(g => g.question_type === 'term_definition').map(g => g.ai_score),
+      listening_analysis: grades.filter(g => g.question_type === 'listening_analysis').map(g => g.ai_score),
+      essay: grades.filter(g => g.question_type === 'essay').map(g => g.ai_score)
     };
 
-    const LIMITS = { term_definition: 4, listening_analysis: 3, essay: 1 } as const;
+    // Apply rubric limits: max 4 terms, 3 excerpts, 1 essay
+    const selected = {
+      term_definition: gradesByType.term_definition.slice(0, 4),
+      listening_analysis: gradesByType.listening_analysis.slice(0, 3),
+      essay: gradesByType.essay.slice(0, 1)
+    };
 
-    for (const g of grades as Array<{ question_type: string; ai_score: number }>) {
-      const t = g.question_type as keyof typeof LIMITS;
-      const score = Number(g.ai_score) || 0;
-      if (t in LIMITS && selected[t].length < LIMITS[t]) {
-        selected[t].push(score);
-      }
-    }
-
-    // Sum up scores by category (already ordered desc by created_at)
-    const termScore = (selected.term_definition || []).reduce((sum, s) => sum + s, 0);
-    const excerptScore = (selected.listening_analysis || []).reduce((sum, s) => sum + s, 0);
-    const essayScore = (selected.essay || []).reduce((sum, s) => sum + s, 0);
+    // Calculate totals
+    const termScore = selected.term_definition.reduce((sum, score) => sum + (score || 0), 0);
+    const excerptScore = selected.listening_analysis.reduce((sum, score) => sum + (score || 0), 0);
+    const essayScore = selected.essay.reduce((sum, score) => sum + (score || 0), 0);
     const finalGrade = termScore + excerptScore + essayScore;
     
     console.log('Calculated scores (limited to rubric counts):', { 
@@ -141,35 +135,7 @@ serve(async (req) => {
 
     const studentName = profile?.full_name || profile?.first_name || 'the student';
 
-    // Get actual submission answers for detailed feedback
-    const termAnswers = {
-      ring_shout: submission.ring_shout_answer,
-      field_holler: submission.field_holler_answer,
-      negro_spiritual: submission.negro_spiritual_answer,
-      blues: submission.blues_answer,
-      ragtime: submission.ragtime_answer,
-      swing: submission.swing_answer
-    };
-
-    const listeningAnswers = {
-      excerpt_1: {
-        genre: submission.excerpt_1_genre,
-        features: submission.excerpt_1_features,
-        context: submission.excerpt_1_context
-      },
-      excerpt_2: {
-        genre: submission.excerpt_2_genre,
-        features: submission.excerpt_2_features,
-        context: submission.excerpt_2_context
-      },
-      excerpt_3: {
-        genre: submission.excerpt_3_genre,
-        features: submission.excerpt_3_features,
-        context: submission.excerpt_3_context
-      }
-    };
-
-    const prompt = `Generate detailed, educational feedback for ${studentName}'s midterm exam with specific explanations:
+    const prompt = `Generate feedback for ${studentName}'s midterm exam:
 
 ACTUAL SCORES (use these exact numbers):
 - Terms: ${termScore}/${termMax} (${termPercentage.toFixed(1)}%)
@@ -177,83 +143,42 @@ ACTUAL SCORES (use these exact numbers):
 - Essay: ${essayScore}/${essayMax} (${essayPercentage.toFixed(1)}%)
 - Total: ${finalGrade}/${totalMax} (${overallPercentage.toFixed(1)}%)
 
-STUDENT'S ACTUAL RESPONSES FOR ANALYSIS:
-
-TERM DEFINITIONS:
-- Blues: "${termAnswers.blues || 'No answer provided'}"
-- Ragtime: "${termAnswers.ragtime || 'No answer provided'}"
-- Ring Shout: "${termAnswers.ring_shout || 'No answer provided'}"
-- Swing: "${termAnswers.swing || 'No answer provided'}"
-
-LISTENING ANALYSIS:
-- Excerpt 1: Genre: "${listeningAnswers.excerpt_1.genre || 'Not answered'}", Features: "${listeningAnswers.excerpt_1.features || 'Not answered'}", Context: "${listeningAnswers.excerpt_1.context || 'Not answered'}"
-
-ESSAY RESPONSE:
-"${submission.essay_answer || 'No essay provided'}"
-
 Generate structured feedback in 2 sections:
+1. PERFORMANCE SUMMARY - Overview using ONLY the exact scores above
+2. STRENGTHS - Two main areas of excellence
 
-1. PERFORMANCE SUMMARY WITH SPECIFIC ANALYSIS
-- Use exact scores above
-- Reference specific elements from their actual answers
-- Explain what they got right and wrong in each section
-- Point out strong elements in their responses
-- Identify specific gaps or misconceptions
-
-2. DETAILED STRENGTHS AND AREAS FOR GROWTH
-- Cite specific quotes from their answers
-- Explain why certain responses earned points
-- Connect their answers to course concepts
-- Provide specific examples of what made their responses effective or ineffective
-
-Keep feedback to 500 words maximum. Be specific, educational, and reference their actual responses.`;
+Keep feedback to 300 words maximum. Use only the scores provided above - do not modify them.`;
 
     console.log('Calling OpenAI with prompt length:', prompt.length);
 
     // Call OpenAI
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { 
-            role: 'system', 
-            content: 'You are an encouraging African American music history instructor. Use ONLY the exact scores provided - do not modify or recalculate them.' 
-          },
+          { role: 'system', content: 'You are an experienced music professor providing constructive feedback on student midterm exams.' },
           { role: 'user', content: prompt }
         ],
-        temperature: 0.7,
-        max_tokens: 1200,
-      })
+        max_tokens: 800,
+      }),
     });
 
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('OpenAI error:', openaiResponse.status, errorText);
-      return new Response(JSON.stringify({ error: 'AI service error' }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (!response.ok) {
+      console.error('OpenAI API error:', response.status, response.statusText);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
-    const openaiData = await openaiResponse.json();
-    const feedback = openaiData?.choices?.[0]?.message?.content;
-    
-    if (!feedback) {
-      console.error('No feedback generated');
-      return new Response(JSON.stringify({ error: 'No feedback generated' }), {
-        status: 502,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const data = await response.json();
+    const generatedFeedback = data.choices[0].message.content;
 
-    console.log('Generated feedback length:', feedback.length);
+    console.log('Generated feedback length:', generatedFeedback.length);
 
-    // Update submission
+    // Update submission with comprehensive feedback
     const updateUrl = `${supabaseUrl}/rest/v1/mus240_midterm_submissions?id=eq.${submissionId}`;
     const updateResponse = await fetch(updateUrl, {
       method: 'PATCH',
@@ -263,36 +188,36 @@ Keep feedback to 500 words maximum. Be specific, educational, and reference thei
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        comprehensive_feedback: feedback,
-        feedback_generated_at: new Date().toISOString(),
+        comprehensive_feedback: generatedFeedback,
+        feedback_generated_at: new Date().toISOString()
       })
     });
 
     if (!updateResponse.ok) {
-      console.error('Update failed:', await updateResponse.text());
+      console.error('Failed to update submission with feedback');
+      throw new Error('Failed to save feedback');
     }
 
     console.log('Successfully generated comprehensive feedback');
 
     return new Response(JSON.stringify({ 
       success: true, 
-      feedback: feedback,
-      section_scores: {
-        terms: { score: termScore, max: termMax, percentage: termPercentage },
-        excerpts: { score: excerptScore, max: excerptMax, percentage: excerptPercentage },
-        essay: { score: essayScore, max: essayMax, percentage: essayPercentage },
-        overall: { score: finalGrade, max: totalMax, percentage: overallPercentage }
+      feedback: generatedFeedback,
+      scores: {
+        terms: `${termScore}/${termMax}`,
+        listening: `${excerptScore}/${excerptMax}`,
+        essay: `${essayScore}/${essayMax}`,
+        total: `${finalGrade}/${totalMax}`
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 
   } catch (error) {
-    console.error('Function error:', error);
-    
+    console.error('Error in comprehensive feedback generation:', error);
     return new Response(JSON.stringify({ 
-      error: 'Internal server error', 
-      message: error?.message || 'Unknown error'
+      success: false, 
+      error: error.message || 'Failed to generate comprehensive feedback' 
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
