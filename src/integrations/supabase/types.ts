@@ -14391,6 +14391,7 @@ export type Database = {
       mus240_midterm_submissions: {
         Row: {
           blues_answer: string | null
+          comprehensive_feedback: string | null
           created_at: string
           essay_answer: string | null
           excerpt_1_context: string | null
@@ -14403,6 +14404,7 @@ export type Database = {
           excerpt_3_features: string | null
           excerpt_3_genre: string | null
           feedback: string | null
+          feedback_generated_at: string | null
           field_holler_answer: string | null
           grade: number | null
           graded_at: string | null
@@ -14423,6 +14425,7 @@ export type Database = {
         }
         Insert: {
           blues_answer?: string | null
+          comprehensive_feedback?: string | null
           created_at?: string
           essay_answer?: string | null
           excerpt_1_context?: string | null
@@ -14435,6 +14438,7 @@ export type Database = {
           excerpt_3_features?: string | null
           excerpt_3_genre?: string | null
           feedback?: string | null
+          feedback_generated_at?: string | null
           field_holler_answer?: string | null
           grade?: number | null
           graded_at?: string | null
@@ -14455,6 +14459,7 @@ export type Database = {
         }
         Update: {
           blues_answer?: string | null
+          comprehensive_feedback?: string | null
           created_at?: string
           essay_answer?: string | null
           excerpt_1_context?: string | null
@@ -14467,6 +14472,7 @@ export type Database = {
           excerpt_3_features?: string | null
           excerpt_3_genre?: string | null
           feedback?: string | null
+          feedback_generated_at?: string | null
           field_holler_answer?: string | null
           grade?: number | null
           graded_at?: string | null
