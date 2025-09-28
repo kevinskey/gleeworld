@@ -95,28 +95,35 @@ serve(async (req) => {
     }
     console.log('Raw grades from database:', grades);
 
-    // Calculate scores by question type - take the most recent score for each question
-    const scoresByType: { [key: string]: number[] } = {};
-    grades.forEach((grade: any) => {
-      const key = `${grade.question_type}`;
-      if (!scoresByType[key] || scoresByType[key].length === 0) {
-        scoresByType[key] = [];
-      }
-      scoresByType[key].push(grade.ai_score || 0);
-    });
+    // Select ONLY the latest N grades per section to match exam rubric
+    const selected: { term_definition: number[]; listening_analysis: number[]; essay: number[] } = {
+      term_definition: [],
+      listening_analysis: [],
+      essay: []
+    };
 
-    // Sum up scores by category
-    const termScore = (scoresByType['term_definition'] || []).reduce((sum, score) => sum + score, 0);
-    const excerptScore = (scoresByType['listening_analysis'] || []).reduce((sum, score) => sum + score, 0);
-    const essayScore = (scoresByType['essay'] || []).reduce((sum, score) => sum + score, 0);
+    const LIMITS = { term_definition: 4, listening_analysis: 3, essay: 1 } as const;
+
+    for (const g of grades as Array<{ question_type: string; ai_score: number }>) {
+      const t = g.question_type as keyof typeof LIMITS;
+      const score = Number(g.ai_score) || 0;
+      if (t in LIMITS && selected[t].length < LIMITS[t]) {
+        selected[t].push(score);
+      }
+    }
+
+    // Sum up scores by category (already ordered desc by created_at)
+    const termScore = (selected.term_definition || []).reduce((sum, s) => sum + s, 0);
+    const excerptScore = (selected.listening_analysis || []).reduce((sum, s) => sum + s, 0);
+    const essayScore = (selected.essay || []).reduce((sum, s) => sum + s, 0);
     const finalGrade = termScore + excerptScore + essayScore;
     
-    console.log('Calculated scores:', { 
+    console.log('Calculated scores (limited to rubric counts):', { 
       termScore,
       excerptScore,
       essayScore,
       finalGrade,
-      scoresByType,
+      selected,
       submissionId: submission.id 
     });
 
