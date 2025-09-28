@@ -81,12 +81,18 @@ serve(async (req) => {
     const gradesResponse = await fetch(`${supabaseUrl}/rest/v1/mus240_submission_grades?submission_id=eq.${submissionId}&select=question_type,ai_score&order=created_at.desc`, {
       headers: {
         'apikey': supabaseServiceKey,
-        'authorization': `Bearer ${supabaseServiceKey}`,
-        'accept-profile': 'public'
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Accept-Profile': 'public'
       }
     });
     
-    const grades = await gradesResponse.json();
+    let grades: any[] = [];
+    if (!gradesResponse.ok) {
+      const errText = await gradesResponse.text().catch(() => '');
+      console.error('Failed to fetch grades', gradesResponse.status, errText);
+    } else {
+      grades = await gradesResponse.json();
+    }
     console.log('Raw grades from database:', grades);
 
     // Calculate scores by question type - take the most recent score for each question
