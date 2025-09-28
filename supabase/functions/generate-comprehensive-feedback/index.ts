@@ -135,19 +135,27 @@ serve(async (req) => {
 
     const studentName = profile?.full_name || profile?.first_name || 'the student';
 
-    const prompt = `Generate feedback for ${studentName}'s midterm exam:
+    const prompt = `Generate comprehensive feedback for ${studentName}'s midterm exam with detailed analysis:
 
-ACTUAL SCORES (use these exact numbers):
+EXAM PERFORMANCE DATA:
 - Terms: ${termScore}/${termMax} (${termPercentage.toFixed(1)}%)
 - Listening: ${excerptScore}/${excerptMax} (${excerptPercentage.toFixed(1)}%)
 - Essay: ${essayScore}/${essayMax} (${essayPercentage.toFixed(1)}%)
 - Total: ${finalGrade}/${totalMax} (${overallPercentage.toFixed(1)}%)
 
-Generate structured feedback in 2 sections:
-1. PERFORMANCE SUMMARY - Overview using ONLY the exact scores above
-2. STRENGTHS - Two main areas of excellence
+RUBRIC ELEMENTS TO EVALUATE:
+- Term Definition Accuracy (10 points each, 4 terms max)
+- Listening Analysis Depth (10 points each, 3 excerpts max) 
+- Essay Content Quality & Organization (20 points total)
+- AI Detection Probability Assessment
 
-Keep feedback to 300 words maximum. Use only the scores provided above - do not modify them.`;
+Generate structured feedback in these sections:
+1. PERFORMANCE SUMMARY WITH RUBRIC BREAKDOWN - Detailed analysis of each section with specific rubric criteria
+2. AI DETECTION ANALYSIS - Probability assessment (0-100%) that AI was used in responses with reasoning
+3. DETAILED STRENGTHS AND IMPROVEMENT AREAS - Specific examples from graded responses
+4. ACTIONABLE RECOMMENDATIONS - Concrete steps for improvement
+
+Keep response under 500 words but include specific analysis based on the scores provided.`;
 
     console.log('Calling OpenAI with prompt length:', prompt.length);
 
