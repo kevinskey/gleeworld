@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   ArrowLeft, 
   User, 
@@ -26,6 +28,20 @@ export const StudentMidtermGrading = () => {
   const [aiGenerating, setAiGenerating] = useState(false);
   const [manualFeedback, setManualFeedback] = useState('');
   const [saving, setSaving] = useState(false);
+  const { user } = useAuth();
+  const [termsScore, setTermsScore] = useState<string>('');
+  const [listeningScore, setListeningScore] = useState<string>('');
+  const [essayScore, setEssayScore] = useState<string>('');
+  const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
+  const parsedScores = () => ({
+    terms: clamp(Number(termsScore || 0), 0, 40),
+    listening: clamp(Number(listeningScore || 0), 0, 30),
+    essay: clamp(Number(essayScore || 0), 0, 20),
+  });
+  const totalManual = () => {
+    const p = parsedScores();
+    return p.terms + p.listening + p.essay;
+  };
 
   useEffect(() => {
     if (studentId) {
@@ -48,7 +64,7 @@ export const StudentMidtermGrading = () => {
       const profileQuery = await (supabase
         .from('gw_profiles')
         .select('full_name, email')
-        .eq('id', studentId)
+        .eq('user_id', studentId)
         .maybeSingle() as any);
 
       setSubmission(submissionQuery.data);
@@ -104,6 +120,32 @@ export const StudentMidtermGrading = () => {
     } catch (error) {
       console.error('Save error:', error);
       toast.error('Failed to save feedback');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveManualGrade = async () => {
+    if (!submission) return;
+
+    setSaving(true);
+    try {
+      const total = totalManual();
+      const { error } = await supabase
+        .from('mus240_midterm_submissions')
+        .update({
+          grade: total,
+          graded_by: user?.id ?? null,
+          graded_at: new Date().toISOString()
+        })
+        .eq('id', submission.id);
+
+      if (error) throw error;
+      toast.success('Manual grade saved');
+      setSubmission({ ...submission, grade: total, graded_by: user?.id, graded_at: new Date().toISOString() });
+    } catch (error) {
+      console.error('Save manual grade error:', error);
+      toast.error('Failed to save manual grade');
     } finally {
       setSaving(false);
     }
@@ -230,14 +272,40 @@ export const StudentMidtermGrading = () => {
               <CardContent className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {submission.grade || 0}/100
+                    {submission.grade ?? 0}/100
                   </div>
                   {/* Note: letter_grade column doesn't exist in this table */}
-                  {submission.grade && (
+                  {submission.grade != null && (
                     <Badge className={getLetterGradeColor(calculateLetterGrade(submission.grade))}>
                       {calculateLetterGrade(submission.grade)}
                     </Badge>
                   )}
+                  {submission.grade == null && (
+                    <p className="text-xs text-muted-foreground mt-2">No score yet — Generate AI feedback or enter scores below.</p>
+                  )}
+                </div>
+
+                {/* Manual Scoring */}
+                <div className="space-y-3">
+                  <h4 className="font-medium">Manual Scoring (Instructor)</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground">Terms (0–40)</label>
+                      <Input type="number" min={0} max={40} value={termsScore} onChange={(e) => setTermsScore(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Listening (0–30)</label>
+                      <Input type="number" min={0} max={30} value={listeningScore} onChange={(e) => setListeningScore(e.target.value)} />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">Essay (0–20)</label>
+                      <Input type="number" min={0} max={20} value={essayScore} onChange={(e) => setEssayScore(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Total: <strong>{totalManual()}/100</strong></span>
+                    <Button size="sm" onClick={saveManualGrade} disabled={saving}>Save Manual Grade</Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
