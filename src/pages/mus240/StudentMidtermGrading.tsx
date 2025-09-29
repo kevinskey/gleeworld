@@ -71,6 +71,9 @@ export const StudentMidtermGrading = () => {
       setSubmission(submissionQuery.data);
       setProfile(profileQuery.data);
       setManualFeedback(submissionQuery.data?.comprehensive_feedback || '');
+      
+      // Debug: Log submission data to console
+      console.log('Submission data:', submissionQuery.data);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');
@@ -531,73 +534,71 @@ export const StudentMidtermGrading = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {submission.excerpt_1_answer && (
-                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1">
-                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
-                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
-                          <p className="text-sm text-foreground/80 italic">
-                            Listen to Excerpt 1 and identify the genre, musical features, and historical context. Discuss the significance of this piece in African American music history.
-                          </p>
-                        </div>
-                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
-                        <div className="prose prose-sm max-w-none">
-                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
-                            {submission.excerpt_1_answer}
-                          </p>
-                        </div>
+                {/* Excerpt 1 - Show even if no answer */}
+                <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                        <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                        <p className="text-sm text-foreground/80 italic">
+                          Listen to Excerpt 1 and identify the genre, musical features, and historical context. Discuss the significance of this piece in African American music history.
+                        </p>
                       </div>
-                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
-                        <label className="text-xs font-medium text-muted-foreground">Score</label>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={15}
-                          value={listeningScores.excerpt_1 || ''}
-                          onChange={(e) => setListeningScores({...listeningScores, excerpt_1: e.target.value})}
-                          className="w-16 text-center font-mono"
-                          placeholder="0"
-                        />
-                        <span className="text-xs text-muted-foreground">/15</span>
+                      <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
+                      <div className="prose prose-sm max-w-none">
+                        <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
+                          {submission.excerpt_1_answer || submission.listening_1_answer || submission.listening_analysis_1 || 'No answer provided'}
+                        </p>
                       </div>
                     </div>
+                    <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                      <label className="text-xs font-medium text-muted-foreground">Score</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={15}
+                        value={listeningScores.listening_1 || ''}
+                        onChange={(e) => setListeningScores({...listeningScores, listening_1: e.target.value})}
+                        className="w-16 text-center font-mono"
+                        placeholder="0"
+                      />
+                      <span className="text-xs text-muted-foreground">/15</span>
+                    </div>
                   </div>
-                )}
+                </div>
 
-                {submission.excerpt_2_answer && (
-                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1">
-                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
-                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
-                          <p className="text-sm text-foreground/80 italic">
-                            Listen to Excerpt 2 and identify the genre, musical features, and historical context. Analyze how this piece demonstrates key characteristics of its musical tradition.
-                          </p>
-                        </div>
-                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
-                        <div className="prose prose-sm max-w-none">
-                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
-                            {submission.excerpt_2_answer}
-                          </p>
-                        </div>
+                {/* Excerpt 2 - Show even if no answer */}
+                <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1">
+                      <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                        <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                        <p className="text-sm text-foreground/80 italic">
+                          Listen to Excerpt 2 and identify the genre, musical features, and historical context. Analyze how this piece demonstrates key characteristics of its musical tradition.
+                        </p>
                       </div>
-                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
-                        <label className="text-xs font-medium text-muted-foreground">Score</label>
-                        <Input
-                          type="number"
-                          min={0}
-                          max={15}
-                          value={listeningScores.excerpt_2 || ''}
-                          onChange={(e) => setListeningScores({...listeningScores, excerpt_2: e.target.value})}
-                          className="w-16 text-center font-mono"
-                          placeholder="0"
-                        />
-                        <span className="text-xs text-muted-foreground">/15</span>
+                      <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
+                      <div className="prose prose-sm max-w-none">
+                        <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
+                          {submission.excerpt_2_answer || submission.listening_2_answer || submission.listening_analysis_2 || 'No answer provided'}
+                        </p>
                       </div>
                     </div>
+                    <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                      <label className="text-xs font-medium text-muted-foreground">Score</label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={15}
+                        value={listeningScores.listening_2 || ''}
+                        onChange={(e) => setListeningScores({...listeningScores, listening_2: e.target.value})}
+                        className="w-16 text-center font-mono"
+                        placeholder="0"
+                      />
+                      <span className="text-xs text-muted-foreground">/15</span>
+                    </div>
                   </div>
-                )}
+                </div>
               </CardContent>
             </Card>
 
