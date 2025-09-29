@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Users, CheckCircle, Timer } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface Poll {
   id: string;
@@ -28,6 +29,7 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [submittedAnswers, setSubmittedAnswers] = useState<Record<number, boolean>>({});
   const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchActivePoll();
@@ -84,8 +86,9 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
   };
 
   const submitAnswer = async (questionIndex: number, selectedOption: number) => {
-    if (!activePoll || !studentName.trim()) {
-      toast.error('Please enter your name first');
+    if (!activePoll) return;
+    if (!user?.id) {
+      toast.error('Please sign in to submit your response.');
       return;
     }
 
@@ -97,7 +100,7 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
           poll_id: activePoll.id,
           question_index: questionIndex,
           selected_option: selectedOption,
-          student_id: studentName.trim()
+          student_id: user.id
         });
 
       if (error) {
@@ -166,7 +169,7 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Student Name Input */}
-      {!studentName && (
+      {false && (
         <Card>
           <CardHeader>
             <CardTitle>Enter Your Name</CardTitle>
@@ -257,7 +260,7 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
           {!isAnswered && (
             <Button
               onClick={() => submitAnswer(currentQuestion, selectedAnswer)}
-              disabled={loading || selectedAnswer === undefined || !studentName.trim()}
+              disabled={loading || selectedAnswer === undefined}
               className="w-full"
             >
               {loading ? 'Submitting...' : 'Submit Answer'}
