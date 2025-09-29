@@ -96,19 +96,19 @@ export const StudentPollInterface: React.FC<StudentPollInterfaceProps> = ({ stud
     try {
       const { error } = await supabase
         .from('mus240_poll_responses')
-        .insert({
-          poll_id: activePoll.id,
-          question_index: questionIndex,
-          selected_option: selectedOption,
-          student_id: user.id
-        });
+        .upsert([
+          {
+            poll_id: activePoll.id,
+            question_index: questionIndex,
+            selected_option: selectedOption,
+            student_id: user.id,
+            response_time: new Date().toISOString()
+          }
+        ], { onConflict: 'poll_id,question_index,student_id' });
 
       if (error) {
-        if (error.code === '23505') {
-          toast.error('You have already answered this question');
-        } else {
-          throw error;
-        }
+        console.error('Upsert error:', error);
+        toast.error(`Failed to submit: ${error.message}`);
       } else {
         setSubmittedAnswers(prev => ({ ...prev, [questionIndex]: true }));
         toast.success('Answer submitted!');
