@@ -154,7 +154,7 @@ export const CSVUserImport = () => {
     reader.readAsText(selectedFile);
   };
 
-  const importUsers = async () => {
+  const importMeasurements = async () => {
     if (!file) return;
 
     setImporting(true);
@@ -226,7 +226,7 @@ export const CSVUserImport = () => {
         setResult(result);
         
         if (result.success > 0) {
-          toast.success(`Successfully imported ${result.success} users`);
+          toast.success(`Successfully updated ${result.success} member profiles`);
         }
         
         if (result.errors.length > 0) {
@@ -331,7 +331,7 @@ export const CSVUserImport = () => {
 
           {/* Import Button */}
           <Button 
-            onClick={importUsers} 
+            onClick={importMeasurements} 
             disabled={!file || importing}
             className="w-full"
           >
@@ -365,7 +365,7 @@ export const CSVUserImport = () => {
               <Alert>
                 <CheckCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Import completed: {result.success} users successfully imported
+                  Import completed: {result.success} member profiles successfully updated
                   {result.errors.length > 0 && `, ${result.errors.length} errors`}
                 </AlertDescription>
               </Alert>
