@@ -106,7 +106,7 @@ Format your response as JSON with these fields:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -168,7 +168,7 @@ Format your response as JSON with these fields:
         overall_score: gradingResult.score,
         feedback: gradingResult.feedback,
         graded_at: new Date().toISOString(),
-        ai_model: 'gpt-5-mini-2025-08-07'
+        ai_model: 'gpt-4o-mini'
       }, {
         onConflict: 'student_id,assignment_id'
       });
