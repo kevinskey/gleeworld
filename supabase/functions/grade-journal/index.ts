@@ -180,9 +180,20 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
       };
     }
 
-    // Normalize and guard the result
-    const score = Math.max(0, Math.min(17, Number(gradingResult.score ?? 0)));
-    const letter = gradingResult.letter_grade || letterFromScore(score);
+    // Normalize AI score (0–17) and map to assignment scale if needed
+    const rawScore17 = Math.max(0, Math.min(17, Number(gradingResult.score ?? 0)));
+
+    // Determine target max points per assignment (extend as needed)
+    const assignmentMax: Record<string, number> = {
+      lj2: 10,
+    };
+    const targetMax = assignment_id && assignmentMax[assignment_id] ? assignmentMax[assignment_id] : 17;
+
+    // Convert 0–17 -> 0–targetMax (preserve percentage)
+    const percent = rawScore17 / 17;
+    const dbScore = Math.max(0, Math.min(targetMax, Math.round(percent * targetMax * 100) / 100));
+
+    const letter = gradingResult.letter_grade || letterFromScore(rawScore17);
     const feedback =
       typeof gradingResult.feedback === "string" && gradingResult.feedback.trim().length
         ? gradingResult.feedback.trim()
@@ -195,7 +206,9 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
       student_id,
       assignment_id,
       journal_id,
-      overall_score: score,
+      raw_score_17: rawScore17,
+      mapped_score: dbScore,
+      mapped_max: targetMax,
       letter_grade: letter,
       feedback_length: feedback.length
     });
@@ -208,7 +221,7 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
           student_id,
           assignment_id,
           journal_id,
-          overall_score: score,
+          overall_score: dbScore,
           letter_grade: letter,
           feedback: feedback,
           graded_at: new Date().toISOString(),
@@ -229,7 +242,7 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
     return new Response(
       JSON.stringify({
         success: true,
-        grade: { score, letter_grade: letter, feedback },
+        grade: { score: dbScore, letter_grade: letter, feedback },
         message: "Journal graded successfully",
         wordCount,
       }),
