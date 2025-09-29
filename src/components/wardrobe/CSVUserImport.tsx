@@ -19,15 +19,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface CSVRow {
-  name: string;
+  email: string;
+  name?: string;
   bust?: string;
   waist?: string;
   hips?: string;
   height?: string;
-  shirt?: string;
-  dress?: string;
-  pants?: string;
-  classification?: string;
+  formal_dress_size?: string;
+  polo_size?: string;
+  tshirt_size?: string;
+  lipstick_shade?: string;
+  pearl_status?: string;
 }
 
 interface ImportResult {
@@ -45,39 +47,45 @@ export const CSVUserImport = () => {
 
   const downloadTemplate = () => {
     const headers = [
+      'Email',
       'Name',
       'Bust',
-      'Waist',
+      'Waist', 
       'Hips',
       'Height',
-      'Shirt',
-      'Dress',
-      'Pants',
-      'Classification'
+      'Formal_Dress_Size',
+      'Polo_Size',
+      'Tshirt_Size',
+      'Lipstick_Shade',
+      'Pearl_Status'
     ];
     
     const sampleData = [
       [
+        'jane.smith@spelman.edu',
         'Jane Smith',
         '36',
         '28',
         '38',
-        '5\'6"',
-        'Medium',
+        '66',
         'Size 8',
-        'Size 6',
-        'Senior'
+        'Medium',
+        'Medium',
+        'Ruby Red',
+        'Has pearls'
       ],
       [
+        'maria.garcia@spelman.edu',
         'Maria Garcia',
         '34',
         '26',
         '36',
-        '5\'4"',
-        'Small',
+        '64',
         'Size 6',
-        'Size 4',
-        'Junior'
+        'Small',
+        'Small',
+        'Classic Pink',
+        'Needs pearls'
       ]
     ];
 
@@ -89,7 +97,7 @@ export const CSVUserImport = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'wardrobe_members_template.csv';
+    a.download = 'glee_members_wardrobe_template.csv';
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -116,7 +124,7 @@ export const CSVUserImport = () => {
       });
 
       // Validate required fields
-      if (row.name) {
+      if (row.email) {
         data.push(row as CSVRow);
       }
     }
@@ -168,23 +176,38 @@ export const CSVUserImport = () => {
           setProgress((i / csvData.length) * 100);
 
           try {
-            // Create wardrobe measurement record
+            // First, find the user by email
+            const { data: profile, error: profileError } = await supabase
+              .from('gw_profiles')
+              .select('user_id')
+              .eq('email', row.email)
+              .single();
+
+            if (profileError || !profile) {
+              throw new Error(`User not found with email: ${row.email}`);
+            }
+
+            // Create or update wardrobe profile
             const wardrobeData = {
-              name: row.name,
-              bust_measurement: row.bust,
-              waist_measurement: row.waist,
-              hips_measurement: row.hips,
-              height_measurement: row.height,
-              shirt_size: row.shirt,
-              dress_size: row.dress,
-              pants_size: row.pants,
-              classification: row.classification,
-              created_by: user?.id
+              user_id: profile.user_id,
+              bust_measurement: row.bust ? parseFloat(row.bust) : null,
+              waist_measurement: row.waist ? parseFloat(row.waist) : null,
+              hips_measurement: row.hips ? parseFloat(row.hips) : null,
+              height_measurement: row.height ? parseFloat(row.height) : null,
+              formal_dress_size: row.formal_dress_size,
+              polo_size: row.polo_size,
+              tshirt_size: row.tshirt_size,
+              lipstick_shade: row.lipstick_shade,
+              pearl_status: row.pearl_status,
+              measurements_taken_date: new Date().toISOString().split('T')[0],
+              measurements_taken_by: user?.id
             };
 
             const { error: wardrobeError } = await supabase
-              .from('gw_wardrobe_measurements')
-              .insert(wardrobeData);
+              .from('gw_member_wardrobe_profiles')
+              .upsert(wardrobeData, {
+                onConflict: 'user_id'
+              });
 
             if (wardrobeError) throw wardrobeError;
 
@@ -226,7 +249,7 @@ export const CSVUserImport = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Upload className="h-5 w-5" />
-            CSV User Import
+            Member Wardrobe CSV Import
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -270,29 +293,33 @@ export const CSVUserImport = () => {
                   <table className="w-full text-sm">
                     <thead className="bg-muted/50">
                       <tr>
+                        <th className="p-2 text-left">Email</th>
                         <th className="p-2 text-left">Name</th>
                         <th className="p-2 text-left">Bust</th>
                         <th className="p-2 text-left">Waist</th>
                         <th className="p-2 text-left">Hips</th>
                         <th className="p-2 text-left">Height</th>
-                        <th className="p-2 text-left">Shirt</th>
-                        <th className="p-2 text-left">Dress</th>
-                        <th className="p-2 text-left">Pants</th>
-                        <th className="p-2 text-left">Classification</th>
+                        <th className="p-2 text-left">Dress Size</th>
+                        <th className="p-2 text-left">Polo Size</th>
+                        <th className="p-2 text-left">T-Shirt Size</th>
+                        <th className="p-2 text-left">Lipstick</th>
+                        <th className="p-2 text-left">Pearls</th>
                       </tr>
                     </thead>
                     <tbody>
                       {previewData.map((row, index) => (
                         <tr key={index} className="border-t">
+                          <td className="p-2">{row.email}</td>
                           <td className="p-2">{row.name}</td>
                           <td className="p-2">{row.bust}</td>
                           <td className="p-2">{row.waist}</td>
                           <td className="p-2">{row.hips}</td>
                           <td className="p-2">{row.height}</td>
-                          <td className="p-2">{row.shirt}</td>
-                          <td className="p-2">{row.dress}</td>
-                          <td className="p-2">{row.pants}</td>
-                          <td className="p-2">{row.classification}</td>
+                          <td className="p-2">{row.formal_dress_size}</td>
+                          <td className="p-2">{row.polo_size}</td>
+                          <td className="p-2">{row.tshirt_size}</td>
+                          <td className="p-2">{row.lipstick_shade}</td>
+                          <td className="p-2">{row.pearl_status}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -316,7 +343,7 @@ export const CSVUserImport = () => {
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                Import Users
+                Import Member Sizes
               </>
             )}
           </Button>
@@ -355,7 +382,7 @@ export const CSVUserImport = () => {
                     <div className="space-y-2 max-h-40 overflow-y-auto">
                       {result.errors.map((error, index) => (
                         <div key={index} className="text-sm p-2 bg-destructive/10 rounded">
-                          <div className="font-medium">Row {error.row}: {error.data.name}</div>
+                          <div className="font-medium">Row {error.row}: {error.data.email || error.data.name}</div>
                           <div className="text-muted-foreground">{error.error}</div>
                         </div>
                       ))}
@@ -372,11 +399,12 @@ export const CSVUserImport = () => {
             <AlertDescription>
               <strong>CSV Format Requirements:</strong>
               <ul className="mt-2 space-y-1 text-sm">
-                <li>• Required columns: Name</li>
-                <li>• Optional measurements: Bust, Waist, Hips, Height</li>
-                <li>• Optional sizes: Shirt, Dress, Pants</li>
-                <li>• Classification: Senior, Junior, Sophomore, Freshman</li>
-                <li>• All measurements should be in standard format (e.g., "36", "5'6"")</li>
+                <li>• Required: Email (must match registered member email)</li>
+                <li>• Optional: Name, measurements (Bust, Waist, Hips, Height in inches)</li>
+                <li>• Optional sizes: Formal_Dress_Size, Polo_Size, Tshirt_Size</li>
+                <li>• Optional: Lipstick_Shade, Pearl_Status</li>
+                <li>• Measurements will update member wardrobe profiles</li>
+                <li>• Height should be in inches (e.g., "66" for 5'6")</li>
               </ul>
             </AlertDescription>
           </Alert>
