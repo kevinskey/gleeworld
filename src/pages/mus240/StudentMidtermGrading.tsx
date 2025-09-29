@@ -29,6 +29,7 @@ export const StudentMidtermGrading = () => {
   const [manualFeedback, setManualFeedback] = useState('');
   const [saving, setSaving] = useState(false);
   const { user } = useAuth();
+  
   // Individual question scores
   const [termScores, setTermScores] = useState<{[key: string]: string}>({});
   const [listeningScores, setListeningScores] = useState<{[key: string]: string}>({});
@@ -274,7 +275,6 @@ export const StudentMidtermGrading = () => {
                   <div className="text-3xl font-bold text-gray-900 mb-2">
                     {submission.grade ?? 0}/100
                   </div>
-                  {/* Note: letter_grade column doesn't exist in this table */}
                   {submission.grade != null && (
                     <Badge className={getLetterGradeColor(calculateLetterGrade(submission.grade))}>
                       {calculateLetterGrade(submission.grade)}
