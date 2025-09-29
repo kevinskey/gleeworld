@@ -1,207 +1,223 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.0";
+
+type RubricCriterion = { name: string; max_points: number; description?: string };
+type Rubric = { criteria?: RubricCriterion[] };
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, cache-control, pragma',
+  "Access-Control-Allow-Origin": "*", // consider restricting to your domain in production
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+function letterFromScore(score: number): string {
+  // 17-point scale → letter grade bands (tune to taste)
+  if (score >= 16.5) return "A+";
+  if (score >= 15.5) return "A";
+  if (score >= 14.5) return "A-";
+  if (score >= 13.5) return "B+";
+  if (score >= 12.5) return "B";
+  if (score >= 11.5) return "B-";
+  if (score >= 10.5) return "C+";
+  if (score >= 9.5)  return "C";
+  if (score >= 8.5)  return "C-";
+  if (score >= 7.5)  return "D+";
+  if (score >= 6.5)  return "D";
+  if (score >= 5.5)  return "D-";
+  return "F";
+}
+
 serve(async (req) => {
-  console.log('=== STARTING JOURNAL GRADING FUNCTION ===');
-  console.log('Request URL:', req.url);
-  
-  if (req.method === 'OPTIONS') {
-    console.log('OPTIONS request');
+  // Preflight
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Environment check
-  const supabaseUrl = Deno.env.get('SUPABASE_URL');
-  const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-  
-  console.log('Supabase URL configured:', !!supabaseUrl);
-  console.log('Service role configured:', !!supabaseServiceRoleKey);
-  console.log('OpenAI API key configured:', !!openaiApiKey);
+  // Enforce POST
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
+  // Env checks
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const openaiApiKey = Deno.env.get("OPENAI_API_KEY");
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    return new Response(
+      JSON.stringify({ error: "Supabase environment not configured (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
   if (!openaiApiKey) {
-    return new Response(JSON.stringify({ 
-      error: 'OpenAI API key not configured' 
-    }), {
+    return new Response(JSON.stringify({ error: "OpenAI API key not configured." }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
   try {
-    console.log('=== PARSING REQUEST ===');
-    console.log('Request method:', req.method);
-    
-    const body = await req.json();
-    console.log('Request body keys:', Object.keys(body));
-    
-    const { student_id, assignment_id, journal_text, rubric, journal_id } = body;
-    
-    console.log('Extracted values:');
-    console.log('- student_id:', student_id);
-    console.log('- assignment_id:', assignment_id);
-    console.log('- journal_text length:', journal_text?.length);
-    
-    if (!journal_text) {
-      return new Response(JSON.stringify({
-        error: 'No journal text provided'
-      }), {
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      return new Response(JSON.stringify({ error: "Request body must be valid JSON." }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Basic word count check
-    const wordCount = journal_text.trim().split(/\s+/).length;
-    console.log('Word count:', wordCount, 'Word range OK:', wordCount >= 200 && wordCount <= 350);
+    const { student_id, assignment_id, journal_text, rubric, journal_id } = body as {
+      student_id?: string;
+      assignment_id?: string;
+      journal_text?: string;
+      rubric?: Rubric;
+      journal_id?: string;
+    };
 
+    // Basic validation
+    if (!journal_text || typeof journal_text !== "string") {
+      return new Response(JSON.stringify({ error: "No journal_text provided." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Consistent word-count policy
+    const wordCount = journal_text.trim().split(/\s+/).filter(Boolean).length;
     if (wordCount < 100) {
       return new Response(JSON.stringify({
-        error: 'Journal entry too short. Minimum 100 words required.'
+        error: "Journal entry too short.",
+        details: "Minimum 100 words required.",
+        wordCount,
       }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    console.log('=== CALLING OPENAI API ===');
-    console.log('OpenAI API key length:', openaiApiKey.length);
-    
-    // Build the grading prompt
+    // Build prompt (compact + deterministic structure)
     let gradingPrompt = `You are an expert music professor grading a student listening journal for MUS 240: African American Music.
+Grade on a 17-point scale. Be constructive and specific.
 
-Please evaluate this journal entry and provide detailed feedback with a numerical grade.`;
+If a rubric is present, follow it closely. If not, assess on:
+- Musical analysis and terminology (0–6)
+- Historical/cultural context (0–6)
+- Writing quality (clarity, structure, evidence) (0–5)
 
-    if (rubric && rubric.criteria) {
-      gradingPrompt += `\n\nGRADING RUBRIC:\n`;
-      rubric.criteria.forEach((criterion: any) => {
-        gradingPrompt += `- ${criterion.name} (${criterion.max_points} pts): ${criterion.description}\n`;
+Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), letter_grade (string).
+`;
+
+    if (rubric && Array.isArray(rubric.criteria) && rubric.criteria.length) {
+      gradingPrompt += `\nGRADING RUBRIC:\n`;
+      (rubric.criteria as RubricCriterion[]).forEach((c) => {
+        gradingPrompt += `- ${c.name} (${c.max_points} pts)${c.description ? `: ${c.description}` : ""}\n`;
       });
     }
 
-    gradingPrompt += `\n\nJOURNAL ENTRY TO GRADE:\n${journal_text}
+    gradingPrompt += `\nJOURNAL ENTRY:\n${journal_text}`;
 
-Please provide:
-1. A total numerical score out of 17 points
-2. Detailed feedback on strengths and areas for improvement
-3. Specific comments on musical analysis, historical context, and writing quality
-
-Format your response as JSON with these fields:
-{
-  "score": [numerical score out of 17],
-  "feedback": "[detailed feedback string]",
-  "letter_grade": "[A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F]"
-}`;
-
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    // OpenAI call
+    const openaiResp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
-        'Content-Type': 'application/json',
+        Authorization: `Bearer ${openaiApiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: "gpt-4o-mini",
+        response_format: { type: "json_object" },
         messages: [
           {
-            role: 'system',
-            content: 'You are an expert music professor. Provide fair, constructive feedback on student work. Always respond with valid JSON.'
+            role: "system",
+            content:
+              "You are an expert music professor. Always return valid JSON only, with no extra text.",
           },
-          {
-            role: 'user',
-            content: gradingPrompt
-          }
+          { role: "user", content: gradingPrompt },
         ],
-        max_completion_tokens: 1000
+        max_tokens: 800,
+        temperature: 0.2,
       }),
     });
 
-    console.log('OpenAI status:', openaiResponse.status);
-    
-    if (!openaiResponse.ok) {
-      const errorText = await openaiResponse.text();
-      console.error('OpenAI API error:', errorText);
-      return new Response(JSON.stringify({
-        error: 'OpenAI API error',
-        details: errorText
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    if (!openaiResp.ok) {
+      const details = await openaiResp.text().catch(() => "Unknown error");
+      return new Response(JSON.stringify({ error: "OpenAI API error", details }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const openaiResult = await openaiResponse.json();
-    console.log('OpenAI response received');
-    
-    let gradingResult;
+    const aiJson = await openaiResp.json();
+    const raw = aiJson?.choices?.[0]?.message?.content ?? "{}";
+
+    // Parse JSON safely
+    let gradingResult: { score?: number; feedback?: string; letter_grade?: string } = {};
     try {
-      gradingResult = JSON.parse(openaiResult.choices[0].message.content);
-    } catch (parseError) {
-      console.error('Failed to parse OpenAI response as JSON:', parseError);
-      console.log('Raw response:', openaiResult.choices[0].message.content);
-      
-      // Fallback grading
+      gradingResult = JSON.parse(raw);
+    } catch {
+      // Minimal fallback based on word count
+      const fallbackScore = Math.min(Math.max(Math.floor(wordCount / 20), 8), 17);
       gradingResult = {
-        score: Math.min(Math.max(Math.floor(wordCount / 20), 8), 17),
-        feedback: "Your journal entry demonstrates engagement with the material. " + openaiResult.choices[0].message.content,
-        letter_grade: "B"
+        score: fallbackScore,
+        feedback:
+          "Fallback grading applied due to invalid AI response. Your journal shows engagement; expand musical terminology, strengthen historical context, and clarify structure.",
+        letter_grade: letterFromScore(fallbackScore),
       };
     }
 
-    console.log('=== SAVING TO DATABASE ===');
-    
-    // Initialize Supabase client
-    const supabase = createClient(supabaseUrl!, supabaseServiceRoleKey!);
-    
-    // Save the grade to database
-    const { data: gradeData, error: gradeError } = await supabase
-      .from('mus240_journal_grades')
-      .upsert({
-        student_id,
-        assignment_id,
-        journal_id,
-        overall_score: gradingResult.score,
-        feedback: gradingResult.feedback,
-        graded_at: new Date().toISOString(),
-        ai_model: 'gpt-4o-mini'
-      }, {
-        onConflict: 'student_id,assignment_id'
-      });
+    // Normalize and guard the result
+    const score = Math.max(0, Math.min(17, Number(gradingResult.score ?? 0)));
+    const letter = gradingResult.letter_grade || letterFromScore(score);
+    const feedback =
+      typeof gradingResult.feedback === "string" && gradingResult.feedback.trim().length
+        ? gradingResult.feedback.trim()
+        : "Thank you for your submission. Please see rubric and course guidance for areas to strengthen.";
 
-    if (gradeError) {
-      console.error('Error saving grade:', gradeError);
-      return new Response(JSON.stringify({
-        error: 'Failed to save grade',
-        details: gradeError.message
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    // Save to DB
+    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
+    // Requires a unique constraint on (student_id, assignment_id) for onConflict to work
+    const { error: upsertError } = await supabase
+      .from("mus240_journal_grades")
+      .upsert(
+        {
+          student_id,
+          assignment_id,
+          journal_id,
+          overall_score: score,
+          letter_grade: letter,
+          feedback: feedback,
+          graded_at: new Date().toISOString(),
+          ai_model: "gpt-4o-mini",
+        },
+        { onConflict: "student_id,assignment_id" },
+      );
+
+    if (upsertError) {
+      return new Response(
+        JSON.stringify({ error: "Failed to save grade", details: upsertError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    console.log('Grade saved successfully');
-
-    return new Response(JSON.stringify({
-      success: true,
-      grade: gradingResult,
-      message: 'Journal graded successfully'
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
-  } catch (error) {
-    console.error('Error in grade-journal function:', error);
-    return new Response(JSON.stringify({
-      error: 'Internal server error',
-      message: error.message
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        success: true,
+        grade: { score, letter_grade: letter, feedback },
+        message: "Journal graded successfully",
+        wordCount,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: "Internal server error", message: String(err?.message ?? err) }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   }
 });
