@@ -39,10 +39,7 @@ export const InstructorDashboard = () => {
     return <Navigate to="/classes/mus240" replace />;
   }
 
-  const activeStudents = enrollments.filter(e => 
-    e.enrollment_status === 'enrolled' && 
-    e.gw_profiles?.role === 'student'
-  );
+  const activeStudents = enrollments.filter(e => e.enrollment_status === 'enrolled');
   
   const filteredStudents = activeStudents.filter(student => {
     const matchesSearch = searchTerm === "" || 
