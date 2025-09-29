@@ -496,7 +496,7 @@ export default function Groups() {
                       <div className="flex justify-between items-start">
                          <div className="flex-1">
                            <CardTitle className={`${colorScheme.text} text-card-foreground`}>{group.name}</CardTitle>
-                           <CardDescription className={`${colorScheme.text} text-card-foreground/80 opacity-75`}>
+                           <CardDescription className="text-white opacity-75">
                              {group.description}
                            </CardDescription>
                         </div>
