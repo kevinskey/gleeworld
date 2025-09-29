@@ -191,7 +191,7 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
 
     // Convert 0–17 -> 0–targetMax (preserve percentage)
     const percent = rawScore17 / 17;
-    const dbScore = Math.max(0, Math.min(targetMax, Math.round(percent * targetMax * 100) / 100));
+    const dbScore = Math.max(0, Math.min(targetMax, Math.round(percent * targetMax)));
 
     const letter = gradingResult.letter_grade || letterFromScore(rawScore17);
     const feedback =
@@ -200,8 +200,6 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
         : "Thank you for your submission. Please see rubric and course guidance for areas to strengthen.";
 
     // Save to DB
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-
     console.log('Saving grade to database:', {
       student_id,
       assignment_id,
