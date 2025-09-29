@@ -28,10 +28,13 @@ interface Journal {
   id: string;
   student_id: string;
   student_name: string;
+  assignment_title: string;
+  content: string;
   points_earned?: number;
   points_possible: number;
   feedback?: string;
   created_at: string;
+  graded_at?: string;
 }
 
 interface MidtermSubmission {
@@ -74,11 +77,20 @@ export const GradingInterface: React.FC = () => {
         .from('gw_profiles')
         .select('user_id, full_name, email');
 
-      // Load journals
+      // Load journals - get actual journal entries with their assignments and grades
       const { data: journalData } = await supabase
-        .from('mus240_journal_grades')
-        .select('*')
+        .from('mus240_journal_entries')
+        .select(`
+          *,
+          mus240_assignments!mus240_journal_entries_assignment_db_id_fkey(title, points)
+        `)
+        .eq('is_published', true)
         .order('created_at', { ascending: false });
+
+      // Load grades separately and link them
+      const { data: gradesData } = await supabase
+        .from('mus240_journal_grades')
+        .select('journal_id, overall_score, feedback, graded_at, graded_by');
 
       // Load midterm submissions
       const { data: midtermData } = await supabase
@@ -100,11 +112,24 @@ export const GradingInterface: React.FC = () => {
         student_email: profileLookup[a.student_id]?.email || ''
       }));
 
-      const formattedJournals = (journalData || []).map(j => ({
-        ...j,
-        student_name: profileLookup[j.student_id]?.full_name || 'Unknown',
-        points_possible: 10 // Default value
-      }));
+      // Create grades lookup
+      const gradesLookup = (gradesData || []).reduce((acc, grade) => {
+        acc[grade.journal_id] = grade;
+        return acc;
+      }, {} as Record<string, any>);
+
+      const formattedJournals = (journalData || []).map(j => {
+        const grade = gradesLookup[j.id];
+        return {
+          ...j,
+          student_name: profileLookup[j.student_id]?.full_name || 'Unknown',
+          points_possible: j.mus240_assignments?.points || 10,
+          assignment_title: j.mus240_assignments?.title || 'Unknown Assignment',
+          points_earned: grade?.overall_score,
+          feedback: grade?.feedback,
+          graded_at: grade?.graded_at
+        };
+      });
 
       const formattedMidterms = (midtermData || []).map(m => ({
         ...m,
@@ -407,8 +432,12 @@ export const GradingInterface: React.FC = () => {
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <h4 className="font-medium">{journal.student_name}</h4>
+                          <p className="text-sm text-gray-700">{journal.assignment_title}</p>
                           <p className="text-xs text-gray-500">
                             Created: {new Date(journal.created_at).toLocaleDateString()}
+                          </p>
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            {journal.content?.substring(0, 100)}...
                           </p>
                         </div>
                         {getStatusBadge('', journal.points_earned)}
