@@ -2,27 +2,53 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
 serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
+      status: 405,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+  if (!OPENAI_API_KEY) {
+    return new Response(JSON.stringify({ error: "OpenAI API key not configured" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  let payload: unknown;
   try {
-    const { audioData, exerciseMetadata, musicXML } = await req.json();
+    payload = await req.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    const { audioData, exerciseMetadata, musicXML } = payload as {
+      audioData?: string;
+      exerciseMetadata?: any;
+      musicXML?: string;
+    };
     
     if (!audioData) {
-      throw new Error('No audio data provided');
-    }
-
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+      return new Response(JSON.stringify({ error: "No audio data provided" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     console.log('Processing sight-singing assessment for exercise:', exerciseMetadata);
@@ -34,19 +60,20 @@ serve(async (req) => {
     formData.append('model', 'whisper-1');
 
     // Transcribe audio using OpenAI Whisper
-    console.log('Transcribing audio with Whisper...');
     const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: formData,
     });
 
     if (!transcriptionResponse.ok) {
-      const errorText = await transcriptionResponse.text();
-      console.error('Whisper API error:', errorText);
-      throw new Error(`Transcription failed: ${errorText}`);
+      const details = await transcriptionResponse.text().catch(() => "Unknown error");
+      return new Response(JSON.stringify({ error: "Transcription API error", details }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const transcriptionResult = await transcriptionResponse.json();
@@ -107,47 +134,46 @@ Respond in JSON format:
   "recommendations": ["string", "string", "string"]
 }`;
 
-    console.log('Analyzing performance with GPT-4...');
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
+        response_format: { type: "json_object" },
         messages: [
           {
             role: 'system',
-            content: 'You are an expert music educator specializing in sight-singing assessment. Provide detailed, constructive feedback in JSON format.'
+            content: 'You are an expert music educator specializing in sight-singing assessment. Always respond with valid JSON only.'
           },
           {
             role: 'user',
             content: analysisPrompt
           }
         ],
+        max_tokens: 1000,
         temperature: 0.3,
-        max_tokens: 1000
       }),
     });
 
     if (!analysisResponse.ok) {
-      const errorText = await analysisResponse.text();
-      console.error('GPT-4 API error:', errorText);
-      throw new Error(`Analysis failed: ${errorText}`);
+      const details = await analysisResponse.text().catch(() => "Unknown error");
+      return new Response(JSON.stringify({ error: "Analysis API error", details }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const analysisResult = await analysisResponse.json();
-    const analysisContent = analysisResult.choices[0].message.content;
-    
-    console.log('Analysis completed');
+    const aiJson = await analysisResponse.json();
+    const raw = aiJson?.choices?.[0]?.message?.content ?? "{}";
 
     // Parse the JSON response from GPT-4
-    let assessmentResult;
+    let assessmentResult: any;
     try {
-      assessmentResult = JSON.parse(analysisContent);
-    } catch (parseError) {
-      console.error('Failed to parse GPT-4 response:', analysisContent);
+      assessmentResult = JSON.parse(raw);
+    } catch {
       // Fallback assessment if parsing fails
       assessmentResult = {
         overall_score: 75,
@@ -199,21 +225,14 @@ Respond in JSON format:
       }
     );
 
-  } catch (error) {
-    console.error('Error in assess-sight-singing function:', error);
+  } catch (err: any) {
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message,
+        error: String(err?.message ?? err),
         assessment: null
       }),
-      {
-        status: 500,
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
 });
