@@ -258,7 +258,9 @@ export const LiveStudentInterface: React.FC = () => {
       console.log('🔄 Starting upsert operation...');
       const { data, error } = await supabase
         .from('mus240_poll_responses')
-        .upsert(requestData);
+        .upsert(requestData, {
+          onConflict: 'poll_id,question_index,student_id'
+        });
 
       console.log('📥 Supabase response:', { data, error });
       console.log('📥 Response data type:', typeof data);
