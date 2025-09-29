@@ -99,7 +99,7 @@ export default function GroupsPage() {
               <ScrollArea className="h-64">
                 <div className="space-y-4 text-sm">
                   <div className="p-4 bg-secondary/20 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Key Findings:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Key Findings:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>Deezer reports 28% of daily uploads are fully AI-generated (30,000+ tracks daily)</li>
                       <li>Exponential growth from 10,000 in January to current levels</li>
@@ -109,7 +109,7 @@ export default function GroupsPage() {
                   </div>
                   
                   <div className="p-4 bg-accent/20 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Platform Responses:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Platform Responses:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>Proprietary AI detection systems implemented</li>
                       <li>Clear labeling of AI-generated content</li>
@@ -119,7 +119,7 @@ export default function GroupsPage() {
                   </div>
 
                   <div className="p-4 bg-primary/10 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Research Questions:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Research Questions:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>How will AI content affect traditional royalty distribution?</li>
                       <li>What economic models work for AI-human collaboration?</li>
@@ -148,7 +148,7 @@ export default function GroupsPage() {
               <ScrollArea className="h-64">
                 <div className="space-y-4 text-sm">
                   <div className="p-4 bg-secondary/20 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Major Legal Actions:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Major Legal Actions:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>RIAA lawsuits against Suno and Udio for unlicensed training data</li>
                       <li>Universal, Sony, Warner taking hardline stance on AI training</li>
@@ -158,7 +158,7 @@ export default function GroupsPage() {
                   </div>
 
                   <div className="p-4 bg-accent/20 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Protective Technologies:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Protective Technologies:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>SoundPatrol's "neural fingerprinting" technology</li>
                       <li>Detection of subtle AI influence vs. exact copies</li>
@@ -168,7 +168,7 @@ export default function GroupsPage() {
                   </div>
 
                   <div className="p-4 bg-primary/10 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Research Areas:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Research Areas:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>Fair use doctrine in AI training contexts</li>
                       <li>Artist consent and opt-in licensing models</li>
@@ -198,7 +198,7 @@ export default function GroupsPage() {
               <ScrollArea className="h-64">
                 <div className="space-y-4 text-sm">
                   <div className="p-4 bg-secondary/20 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Identity Concerns:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Identity Concerns:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>Unauthorized AI voice cloning and "deepfake" songs</li>
                       <li>Cultural appropriation through AI music generation</li>
@@ -208,7 +208,7 @@ export default function GroupsPage() {
                   </div>
 
                   <div className="p-4 bg-accent/20 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Global Perspectives:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Global Perspectives:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>Different cultural views on AI creativity</li>
                       <li>Traditional music preservation vs. innovation</li>
@@ -218,7 +218,7 @@ export default function GroupsPage() {
                   </div>
 
                   <div className="p-4 bg-primary/10 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Study Focus:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Study Focus:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>What constitutes authentic musical expression?</li>
                       <li>How do different cultures view AI collaboration?</li>
@@ -248,7 +248,7 @@ export default function GroupsPage() {
               <ScrollArea className="h-64">
                 <div className="space-y-4 text-sm">
                   <div className="p-4 bg-secondary/20 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Career Challenges:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Career Challenges:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>Competition from AI-generated music flooding platforms</li>
                       <li>Revenue dilution from low-quality AI content</li>
@@ -258,7 +258,7 @@ export default function GroupsPage() {
                   </div>
 
                   <div className="p-4 bg-accent/20 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">New Opportunities:</h4>
+                    <h4 className="font-semibold mb-2 text-white">New Opportunities:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>AI as creative collaboration partner</li>
                       <li>Enhanced production capabilities for independent artists</li>
@@ -268,7 +268,7 @@ export default function GroupsPage() {
                   </div>
 
                   <div className="p-4 bg-primary/10 rounded-lg">
-                    <h4 className="font-semibold mb-2 text-card-foreground">Research Topics:</h4>
+                    <h4 className="font-semibold mb-2 text-white">Research Topics:</h4>
                     <ul className="list-disc list-inside space-y-1 text-card-foreground/80">
                       <li>How are musicians adapting their creative process?</li>
                       <li>What skills remain uniquely human in music?</li>
