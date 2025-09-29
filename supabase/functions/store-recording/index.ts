@@ -3,8 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface StoreRecordingRequest {
@@ -15,9 +16,20 @@ interface StoreRecordingRequest {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!SUPABASE_ANON_KEY) {
+    return new Response(JSON.stringify({ error: "Missing Supabase configuration" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 
   try {
@@ -31,13 +43,8 @@ serve(async (req) => {
     }
 
     const supabaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co';
-    const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
-    
-    if (!supabaseKey) {
-      throw new Error('Supabase configuration missing');
-    }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
+    const supabase = createClient(supabaseUrl, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } }
     });
 

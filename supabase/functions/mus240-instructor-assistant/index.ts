@@ -1,8 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-api-version, cache-control, pragma',
@@ -10,17 +8,23 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
+  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+  if (!OPENAI_API_KEY) {
+    return new Response(JSON.stringify({ error: "Missing OpenAI API key" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
 
   try {
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not configured');
-      throw new Error('OpenAI API key not configured');
-    }
-
     console.log('OpenAI API key configured successfully');
     const { task, prompt } = await req.json();
     console.log('Received request:', { task, prompt });
@@ -38,7 +42,7 @@ serve(async (req) => {
 
     if (task === 'poll_creation') {
       // Generate a structured poll response using OpenAI
-      const pollResponse = await generateMusicTheoryPoll(prompt);
+      const pollResponse = await generateMusicTheoryPoll(prompt, OPENAI_API_KEY);
       
       return new Response(
         JSON.stringify({ response: pollResponse }),
@@ -68,7 +72,7 @@ serve(async (req) => {
   }
 });
 
-async function generateMusicTheoryPoll(prompt: string) {
+async function generateMusicTheoryPoll(prompt: string, apiKey: string) {
   console.log('Generating poll with OpenAI for prompt:', prompt);
   
   const systemPrompt = `You are a music theory instructor creating educational polls for MUS 240 (African American Music). 
@@ -102,7 +106,7 @@ Respond ONLY with the JSON object, no additional text.`;
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

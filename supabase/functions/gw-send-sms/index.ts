@@ -1,9 +1,10 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, cache-control, pragma, x-requested-with, accept, accept-encoding, accept-language, user-agent',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface SendSMSRequest {
@@ -13,9 +14,23 @@ interface SendSMSRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
+  const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
+  const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+  const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
+
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+    return new Response(JSON.stringify({ error: "Missing Twilio configuration" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 
   try {
@@ -28,20 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     // Check if Twilio credentials are available
-    const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-    const authToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-    const twilioPhone = Deno.env.get('TWILIO_PHONE_NUMBER') || from;
-
-    if (!accountSid || !authToken || !twilioPhone) {
-      console.error("Missing Twilio credentials");
-      return new Response(JSON.stringify({
-        success: false,
-        error: "SMS service not configured. Missing Twilio credentials."
-      }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      });
-    }
+    const twilioPhone = from || TWILIO_PHONE_NUMBER;
 
     // Validate phone number format
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
@@ -56,8 +58,8 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Prepare Twilio API request
-    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
-    const credentials = btoa(`${accountSid}:${authToken}`);
+    const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/Messages.json`;
+    const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
 
     const formData = new URLSearchParams();
     formData.append('To', to);

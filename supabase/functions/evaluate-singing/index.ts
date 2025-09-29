@@ -3,8 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface EvaluateRequest {
@@ -15,9 +16,21 @@ interface EvaluateRequest {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
+  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+  if (!OPENAI_API_KEY) {
+    return new Response(JSON.stringify({ error: "Missing OpenAI API key" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
   }
 
   try {
@@ -39,7 +52,7 @@ serve(async (req) => {
     const whisperResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
       body: formData,
     });
@@ -87,13 +100,14 @@ Be encouraging but accurate in your assessment.`;
     const analysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
+        response_format: { type: "json_object" },
         messages: [
-          { role: 'system', content: 'You are an expert music teacher and evaluator.' },
+          { role: 'system', content: 'You are an expert music teacher and evaluator. Always return valid JSON only.' },
           { role: 'user', content: analysisPrompt }
         ],
         max_tokens: 1500,
@@ -126,14 +140,13 @@ Be encouraging but accurate in your assessment.`;
 
     // Save evaluation to database if IDs provided
     const authHeader = req.headers.get('authorization');
-    if (authHeader && exerciseId && recordingId) {
-      const supabaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co';
-      const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY');
-      
-      if (supabaseKey) {
-        const supabase = createClient(supabaseUrl, supabaseKey, {
-          global: { headers: { Authorization: authHeader } }
-        });
+      if (authHeader && exerciseId && recordingId) {
+        const supabaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co';
+        
+        if (SUPABASE_ANON_KEY) {
+          const supabase = createClient(supabaseUrl, SUPABASE_ANON_KEY, {
+            global: { headers: { Authorization: authHeader } }
+          });
 
         const { data: { user } } = await supabase.auth.getUser();
         

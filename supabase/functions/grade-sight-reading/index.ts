@@ -3,8 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, cache-control, pragma",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface GradingRequest {
@@ -36,17 +37,30 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: "Method not allowed. Use POST." }), {
+      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+
+  const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+  const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+  if (!OPENAI_API_KEY) {
+    return new Response(JSON.stringify({ error: "Missing OpenAI API key" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return new Response(JSON.stringify({ error: "Missing Supabase configuration" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+    });
+  }
 
   try {
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
-    }
-
     // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const { assignment_id, user_id, audio_data, exercise_data }: GradingRequest = await req.json();
 
@@ -66,7 +80,7 @@ serve(async (req) => {
     console.log('Found assignment:', assignment.title);
 
     // AI-powered grading using OpenAI
-    const gradingResult = await performAIGrading(openAIApiKey, exercise_data, audio_data);
+    const gradingResult = await performAIGrading(OPENAI_API_KEY, exercise_data, audio_data);
 
     console.log('AI grading result:', gradingResult);
 
@@ -193,9 +207,10 @@ async function performAIGrading(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
+        response_format: { type: "json_object" },
         messages: [
-          { role: 'system', content: 'You are a professional music instructor providing detailed, constructive feedback on sight-reading exercises.' },
+          { role: 'system', content: 'You are a professional music instructor providing detailed, constructive feedback on sight-reading exercises. Always return valid JSON only.' },
           { role: 'user', content: analysisPrompt }
         ],
         max_tokens: 1000,
