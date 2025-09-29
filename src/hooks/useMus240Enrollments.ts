@@ -15,6 +15,7 @@ export interface Mus240EnrollmentWithProfile {
     full_name: string;
     email: string;
     phone?: string;
+    role?: string;
   };
 }
 
@@ -48,7 +49,7 @@ export const useMus240Enrollments = (semester: string = 'Fall 2025') => {
         (enrollmentData || []).map(async (enrollment) => {
           const { data: profileData } = await supabase
             .from('gw_profiles')
-            .select('full_name, email, phone')
+            .select('full_name, email, phone, role')
             .eq('user_id', enrollment.student_id)
             .single();
 
