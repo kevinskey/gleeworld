@@ -25,10 +25,9 @@ export const HomeRoute = () => {
     timestamp: new Date().toISOString()
   });
   
-  // Clear any session storage that might be blocking redirects
+  // Clear any session storage that might be blocking redirects (except redirectAfterAuth)
   useEffect(() => {
     sessionStorage.removeItem('force-public-view');
-    sessionStorage.removeItem('redirectAfterAuth');
   }, []);
   
   // Use the role-based redirect hook to handle automatic redirection (only if not public view)
@@ -37,6 +36,17 @@ export const HomeRoute = () => {
   // Force redirect for authenticated admin/executive users (only if not public view)
   useEffect(() => {
     if (!authLoading && user && userProfile && !isPublicView) {
+      // Check if user came here from a page refresh (has redirectAfterAuth stored)
+      const redirectPath = sessionStorage.getItem('redirectAfterAuth');
+      
+      if (redirectPath && redirectPath !== '/' && redirectPath !== '/auth') {
+        console.log('🔄 HomeRoute: Redirecting back to intended path:', redirectPath);
+        sessionStorage.removeItem('redirectAfterAuth');
+        navigate(redirectPath, { replace: true });
+        return;
+      }
+      
+      // Only redirect to dashboard if user is intentionally visiting root
       if (userProfile.is_super_admin || userProfile.role === 'super-admin' || 
           userProfile.is_admin || userProfile.role === 'admin' || 
           userProfile.is_exec_board) {
