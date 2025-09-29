@@ -479,7 +479,7 @@ export const GradingInterface: React.FC = () => {
               <CardTitle>Journal Entries</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-96">
+              <div className="space-y-4">
                 <div className="space-y-4">
                   {journals.map((journal) => (
                     <div key={journal.id} className="border rounded-lg p-4">
@@ -568,7 +568,7 @@ export const GradingInterface: React.FC = () => {
                     </div>
                   ))}
                 </div>
-              </ScrollArea>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
