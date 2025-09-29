@@ -60,15 +60,20 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Grade journal function called');
+    
     let body: any = {};
     try {
       body = await req.json();
-    } catch {
+    } catch (err) {
+      console.error('JSON parsing error:', err);
       return new Response(JSON.stringify({ error: "Request body must be valid JSON." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log('Request body keys:', Object.keys(body));
 
     const { student_id, assignment_id, journal_text, rubric, journal_id } = body as {
       student_id?: string;
@@ -80,6 +85,7 @@ serve(async (req) => {
 
     // Basic validation
     if (!journal_text || typeof journal_text !== "string") {
+      console.error('Missing or invalid journal_text');
       return new Response(JSON.stringify({ error: "No journal_text provided." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -88,6 +94,8 @@ serve(async (req) => {
 
     // Consistent word-count policy
     const wordCount = journal_text.trim().split(/\s+/).filter(Boolean).length;
+    console.log('Word count:', wordCount);
+    
     if (wordCount < 100) {
       return new Response(JSON.stringify({
         error: "Journal entry too short.",
@@ -120,6 +128,8 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
 
     gradingPrompt += `\nJOURNAL ENTRY:\n${journal_text}`;
 
+    console.log('Making OpenAI API call...');
+    
     // OpenAI call
     const openaiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -145,6 +155,7 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
 
     if (!openaiResp.ok) {
       const details = await openaiResp.text().catch(() => "Unknown error");
+      console.error('OpenAI API error:', openaiResp.status, details);
       return new Response(JSON.stringify({ error: "OpenAI API error", details }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -180,7 +191,16 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
     // Save to DB
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-    // Requires a unique constraint on (student_id, assignment_id) for onConflict to work
+    console.log('Saving grade to database:', {
+      student_id,
+      assignment_id,
+      journal_id,
+      overall_score: score,
+      letter_grade: letter,
+      feedback_length: feedback.length
+    });
+
+    // Try to upsert the grade
     const { error: upsertError } = await supabase
       .from("mus240_journal_grades")
       .upsert(
@@ -193,11 +213,13 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
           feedback: feedback,
           graded_at: new Date().toISOString(),
           ai_model: "gpt-4o-mini",
+          rubric: rubric || { criteria: [] }, // Provide default rubric if not provided
         },
         { onConflict: "student_id,assignment_id" },
       );
 
     if (upsertError) {
+      console.error('Database upsert error:', upsertError);
       return new Response(
         JSON.stringify({ error: "Failed to save grade", details: upsertError.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -214,6 +236,7 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err: any) {
+    console.error('Function error:', err);
     return new Response(
       JSON.stringify({ error: "Internal server error", message: String(err?.message ?? err) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
