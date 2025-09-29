@@ -18612,6 +18612,10 @@ export type Database = {
           role: string
         }[]
       }
+      get_assignment_max_points: {
+        Args: { assignment_id_param: string }
+        Returns: number
+      }
       get_audition_application_count: {
         Args: Record<PropertyKey, never>
         Returns: number
