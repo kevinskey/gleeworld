@@ -24,7 +24,10 @@ export default function MUS240Instructor() {
   const [smsMessage, setSmsMessage] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const activeStudents = enrollments.filter(e => e.enrollment_status === 'enrolled');
+  const activeStudents = enrollments.filter(e => 
+    e.enrollment_status === 'enrolled' && 
+    e.gw_profiles?.role === 'student'
+  );
 
   const filteredStudents = activeStudents.filter(student => {
     const matchesSearch = searchTerm === "" || 
