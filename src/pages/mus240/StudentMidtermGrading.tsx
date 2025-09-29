@@ -316,7 +316,13 @@ export const StudentMidtermGrading = () => {
                   <div className="border border-border/50 rounded-lg p-4 bg-background/30">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-3">Negro Spiritual</h4>
+                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                          <p className="text-sm text-foreground/80 italic">
+                            Define and explain the cultural significance of the Negro Spiritual. Include its historical context, musical characteristics, and role in African American culture.
+                          </p>
+                        </div>
+                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
                         <div className="prose prose-sm max-w-none">
                           <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
                             {submission.negro_spiritual_answer}
@@ -344,7 +350,13 @@ export const StudentMidtermGrading = () => {
                   <div className="border border-border/50 rounded-lg p-4 bg-background/30">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-3">Field Holler</h4>
+                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                          <p className="text-sm text-foreground/80 italic">
+                            Define and explain the cultural significance of the Field Holler. Include its historical context, musical characteristics, and influence on later musical forms.
+                          </p>
+                        </div>
+                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
                         <div className="prose prose-sm max-w-none">
                           <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
                             {submission.field_holler_answer}
@@ -372,7 +384,13 @@ export const StudentMidtermGrading = () => {
                   <div className="border border-border/50 rounded-lg p-4 bg-background/30">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-3">Ring Shout</h4>
+                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                          <p className="text-sm text-foreground/80 italic">
+                            Define and explain the cultural significance of the Ring Shout. Include its historical context, ritual elements, and role in preserving African traditions.
+                          </p>
+                        </div>
+                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
                         <div className="prose prose-sm max-w-none">
                           <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
                             {submission.ring_shout_answer}
@@ -400,7 +418,13 @@ export const StudentMidtermGrading = () => {
                   <div className="border border-border/50 rounded-lg p-4 bg-background/30">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-3">Blues</h4>
+                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                          <p className="text-sm text-foreground/80 italic">
+                            Define and explain the cultural significance of the Blues. Include its historical context, musical structure, and influence on American music.
+                          </p>
+                        </div>
+                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
                         <div className="prose prose-sm max-w-none">
                           <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
                             {submission.blues_answer}
@@ -439,7 +463,13 @@ export const StudentMidtermGrading = () => {
                   <div className="border border-border/50 rounded-lg p-4 bg-background/30">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-3">Excerpt 1</h4>
+                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                          <p className="text-sm text-foreground/80 italic">
+                            Listen to Excerpt 1 and identify the genre, musical features, and historical context. Discuss the significance of this piece in African American music history.
+                          </p>
+                        </div>
+                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
                         <div className="prose prose-sm max-w-none">
                           <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
                             {submission.excerpt_1_answer}
@@ -467,7 +497,13 @@ export const StudentMidtermGrading = () => {
                   <div className="border border-border/50 rounded-lg p-4 bg-background/30">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
-                        <h4 className="font-semibold text-foreground mb-3">Excerpt 2</h4>
+                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                          <p className="text-sm text-foreground/80 italic">
+                            Listen to Excerpt 2 and identify the genre, musical features, and historical context. Analyze how this piece demonstrates key characteristics of its musical tradition.
+                          </p>
+                        </div>
+                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
                         <div className="prose prose-sm max-w-none">
                           <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
                             {submission.excerpt_2_answer}
@@ -506,6 +542,13 @@ export const StudentMidtermGrading = () => {
                   <div className="border border-border/50 rounded-lg p-4 bg-background/30">
                     <div className="flex items-start gap-4">
                       <div className="flex-1">
+                        <div className="mb-4 p-3 bg-primary/5 border border-primary/20 rounded-md">
+                          <h4 className="font-semibold text-primary mb-2">Question:</h4>
+                          <p className="text-sm text-foreground/80 italic">
+                            Write an essay discussing the evolution and interconnections between the musical forms studied in this course. Choose at least three forms and analyze how they influenced each other and contributed to the development of African American musical traditions.
+                          </p>
+                        </div>
+                        <h4 className="font-semibold text-foreground mb-3">Student Answer:</h4>
                         <div className="prose prose-sm max-w-none">
                           <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30 whitespace-pre-wrap">
                             {submission.essay_answer}
