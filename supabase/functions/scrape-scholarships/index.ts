@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/+esm'
 import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js'
 
 const corsHeaders = {
