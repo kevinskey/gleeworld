@@ -4,6 +4,7 @@ import { Music, Calendar, BookOpen, Users, TrendingUp, Brain, BarChart, FileChec
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { AdminGradesCard } from '@/components/mus240/admin/AdminGradesCard';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
+import { AIMusicCard } from '@/components/mus240/AIMusicCard';
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -127,6 +128,19 @@ export default function ClassLanding() {
                 <span className="text-2xl md:text-4xl lg:text-3xl xl:text-5xl font-medium">Dr. Kevin Johnson</span>
               </div>
             </div>
+          </div>
+
+          {/* AI Music Card - Featured prominently */}
+          <div className="mb-8">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                Explore AI & African American Music
+              </h2>
+              <p className="text-white/80 text-lg">
+                Generate, analyze, and learn with artificial intelligence
+              </p>
+            </div>
+            <AIMusicCard className="max-w-4xl mx-auto" />
           </div>
 
           {/* Navigation Cards */}
