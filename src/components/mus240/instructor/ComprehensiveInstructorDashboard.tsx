@@ -460,7 +460,36 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="grading">
-            <GradingInterface />
+            <div className="space-y-6">
+              {/* Quick Grading Actions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Grading Tools</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4">
+                    <Button 
+                      onClick={() => navigate('/classes/mus240/instructor/bulk-grading')}
+                      className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+                    >
+                      <Bot className="h-4 w-4" />
+                      Bulk Grade with AI
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate('/classes/mus240/instructor/console')}
+                      className="flex items-center gap-2"
+                    >
+                      <Bot className="h-4 w-4" />
+                      AI Grading Console
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* Grading Interface */}
+              <GradingInterface />
+            </div>
           </TabsContent>
 
           <TabsContent value="communications">
