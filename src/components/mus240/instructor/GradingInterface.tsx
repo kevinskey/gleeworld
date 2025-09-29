@@ -225,6 +225,22 @@ export const GradingInterface: React.FC = () => {
       return;
     }
 
+    // Add validation to prevent scores higher than maximum points
+    let maxPoints = 100; // Default for assignments and midterms
+    if (type === 'journal') {
+      const journal = journals.find(j => j.id === itemId);
+      maxPoints = journal?.points_possible || 10;
+    }
+    
+    if (grade < 0 || grade > maxPoints) {
+      toast({
+        title: "Invalid Grade",
+        description: `Grade must be between 0 and ${maxPoints}`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
       let updateData: any = {};
 
