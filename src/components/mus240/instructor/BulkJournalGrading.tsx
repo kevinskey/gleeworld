@@ -165,7 +165,7 @@ export const BulkJournalGrading = () => {
 
   const gradeJournalWithAI = async (journal: JournalEntry): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { data, error } = await supabase.functions.invoke('grade-journal', {
+      const { data, error } = await supabase.functions.invoke('grade-journal-ai', {
         body: {
           student_id: journal.student_id,
           assignment_id: journal.assignment_id,

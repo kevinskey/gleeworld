@@ -48,7 +48,7 @@ serve(async (req) => {
     }
 
     // Initialize Stripe
-    const stripe = new (await import("https://esm.sh/stripe@14.21.0")).default(stripeKey, {
+    const stripe = new (await import("https://cdn.jsdelivr.net/npm/stripe@14.21.0/+esm")).default(stripeKey, {
       apiVersion: "2023-10-16",
     });
 
