@@ -14,6 +14,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openaiApiKey) {
+    return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const { rawContent, tone, platforms, eventType } = await req.json();
 
@@ -94,7 +102,7 @@ Return as JSON with this structure:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
