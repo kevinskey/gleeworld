@@ -705,9 +705,17 @@ export const MidtermGradingManager: React.FC = () => {
                                   <MessageSquare className="h-4 w-4 text-blue-600" />
                                   <label className="text-sm font-medium text-blue-900">AI Writing Evaluation</label>
                                 </div>
-                                <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap max-h-96 overflow-y-auto border border-blue-200 bg-white p-3 rounded">
-                                  <pre className="font-sans">{sanitizeWritingOnly(comprehensiveFeedback[submission.id])}</pre>
-                                </div>
+                                <Textarea
+                                  value={sanitizeWritingOnly(comprehensiveFeedback[submission.id])}
+                                  onChange={(e) => {
+                                    setComprehensiveFeedback(prev => ({
+                                      ...prev,
+                                      [submission.id]: e.target.value
+                                    }));
+                                  }}
+                                  className="min-h-[200px] max-h-96 text-sm font-sans"
+                                  placeholder="AI writing evaluation will appear here..."
+                                />
                               </div>
                             )}
 
