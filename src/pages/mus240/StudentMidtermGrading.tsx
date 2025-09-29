@@ -50,6 +50,42 @@ export const StudentMidtermGrading = () => {
     }
   }, [studentId]);
 
+  const loadExistingScores = async () => {
+    if (!submission?.id) return;
+    
+    try {
+      const { data: grades, error } = await supabase
+        .from('mus240_submission_grades')
+        .select('*')
+        .eq('submission_id', submission.id)
+        .not('graded_by', 'is', null);
+      
+      if (error) throw error;
+      
+      if (grades && grades.length > 0) {
+        const newTermScores: any = {};
+        const newListeningScores: any = {};
+        let newEssayScore = '';
+        
+        grades.forEach(grade => {
+          if (grade.question_type === 'term_definition') {
+            newTermScores[grade.question_id] = grade.instructor_score?.toString() || '';
+          } else if (grade.question_type === 'listening_analysis') {
+            newListeningScores[grade.question_id] = grade.instructor_score?.toString() || '';
+          } else if (grade.question_type === 'essay') {
+            newEssayScore = grade.instructor_score?.toString() || '';
+          }
+        });
+        
+        setTermScores(newTermScores);
+        setListeningScores(newListeningScores);
+        setEssayScore(newEssayScore);
+      }
+    } catch (error) {
+      console.error('Error loading existing scores:', error);
+    }
+  };
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -71,6 +107,12 @@ export const StudentMidtermGrading = () => {
       setSubmission(submissionQuery.data);
       setProfile(profileQuery.data);
       setManualFeedback(submissionQuery.data?.comprehensive_feedback || '');
+      
+      // Load existing detailed scores if submission exists
+      if (submissionQuery.data) {
+        // Add a small delay to ensure state is set
+        setTimeout(() => loadExistingScores(), 100);
+      }
       
       // Debug: Log submission data to console
       console.log('Submission data:', submissionQuery.data);
@@ -135,6 +177,67 @@ export const StudentMidtermGrading = () => {
     setSaving(true);
     try {
       const total = calculateTotalScore();
+      
+      // Save individual scores to mus240_submission_grades table
+      const gradeEntries = [];
+      
+      // Term definition scores
+      Object.entries(termScores).forEach(([term, score]) => {
+        if (score) {
+          gradeEntries.push({
+            submission_id: submission.id,
+            question_type: 'term_definition',
+            question_id: term,
+            instructor_score: parseFloat(score),
+            graded_by: user?.id,
+            graded_at: new Date().toISOString()
+          });
+        }
+      });
+      
+      // Listening analysis scores
+      Object.entries(listeningScores).forEach(([excerpt, score]) => {
+        if (score) {
+          gradeEntries.push({
+            submission_id: submission.id,
+            question_type: 'listening_analysis',
+            question_id: excerpt,
+            instructor_score: parseFloat(score),
+            graded_by: user?.id,
+            graded_at: new Date().toISOString()
+          });
+        }
+      });
+      
+      // Essay score
+      if (essayScore) {
+        gradeEntries.push({
+          submission_id: submission.id,
+          question_type: 'essay',
+          question_id: 'essay_response',
+          instructor_score: parseFloat(essayScore),
+          graded_by: user?.id,
+          graded_at: new Date().toISOString()
+        });
+      }
+      
+      // Delete existing manual grades for this submission
+      await supabase
+        .from('mus240_submission_grades')
+        .delete()
+        .eq('submission_id', submission.id)
+        .not('graded_by', 'is', null);
+      
+      // Insert new manual grades
+      if (gradeEntries.length > 0) {
+        const { error: gradesError } = await supabase
+          .from('mus240_submission_grades')
+          .insert(gradeEntries);
+        
+        if (gradesError) throw gradesError;
+      }
+      
+      // Update main submission record
       const { error } = await supabase
         .from('mus240_midterm_submissions')
         .update({
