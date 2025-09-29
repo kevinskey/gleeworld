@@ -65,20 +65,33 @@ export const GradingInterface: React.FC = () => {
   const loadGradingData = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Loading grading data...');
 
       // Load assignments with basic data
-      const { data: assignmentData } = await supabase
+      const { data: assignmentData, error: assignmentError } = await supabase
         .from('assignment_submissions')
         .select('*')
         .order('submission_date', { ascending: false });
 
+      if (assignmentError) {
+        console.error('❌ Assignment data error:', assignmentError);
+      } else {
+        console.log('📋 Assignment data loaded:', assignmentData?.length || 0, 'records');
+      }
+
       // Load student profiles separately
-      const { data: profilesData } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email');
 
+      if (profilesError) {
+        console.error('❌ Profiles data error:', profilesError);
+      } else {
+        console.log('👥 Profiles data loaded:', profilesData?.length || 0, 'records');
+      }
+
       // Load journals - get actual journal entries with their assignments and grades
-      const { data: journalData } = await supabase
+      const { data: journalData, error: journalError } = await supabase
         .from('mus240_journal_entries')
         .select(`
           *,
@@ -87,17 +100,35 @@ export const GradingInterface: React.FC = () => {
         .eq('is_published', true)
         .order('created_at', { ascending: false });
 
+      if (journalError) {
+        console.error('❌ Journal data error:', journalError);
+      } else {
+        console.log('📝 Journal data loaded:', journalData?.length || 0, 'records');
+      }
+
       // Load grades separately and link them
-      const { data: gradesData } = await supabase
+      const { data: gradesData, error: gradesError } = await supabase
         .from('mus240_journal_grades')
         .select('journal_id, overall_score, feedback, graded_at, graded_by');
 
+      if (gradesError) {
+        console.error('❌ Grades data error:', gradesError);
+      } else {
+        console.log('🎯 Grades data loaded:', gradesData?.length || 0, 'records');
+      }
+
       // Load midterm submissions - all of them
-      const { data: midtermData } = await supabase
+      const { data: midtermData, error: midtermError } = await supabase
         .from('mus240_midterm_submissions')
         .select('*')
         .eq('is_submitted', true)
         .order('submitted_at', { ascending: false });
+
+      if (midtermError) {
+        console.error('❌ Midterm data error:', midtermError);
+      } else {
+        console.log('🎓 Midterm data loaded:', midtermData?.length || 0, 'records');
+      }
 
       // Create profile lookup
       const profileLookup = (profilesData || []).reduce((acc, profile) => {
@@ -152,9 +183,16 @@ export const GradingInterface: React.FC = () => {
         student_name: profileLookup[m.user_id]?.full_name || 'Unknown'
       }));
 
+      console.log('📊 Final formatted data:');
+      console.log('  - Assignments:', formattedAssignments.length);
+      console.log('  - Journals:', formattedJournals.length);
+      console.log('  - Midterms:', formattedMidterms.length);
+
       setAssignments(formattedAssignments);
       setJournals(formattedJournals);
       setMidterms(formattedMidterms);
+
+      console.log('✅ All data loaded and state updated successfully');
 
     } catch (error) {
       console.error('Error loading grading data:', error);
