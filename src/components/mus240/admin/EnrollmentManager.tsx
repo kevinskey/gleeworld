@@ -226,6 +226,10 @@ export const EnrollmentManager = () => {
           aValue = a.gw_profiles?.full_name || '';
           bValue = b.gw_profiles?.full_name || '';
           break;
+        case 'last_name':
+          aValue = (a.gw_profiles?.full_name || '').split(' ').pop() || '';
+          bValue = (b.gw_profiles?.full_name || '').split(' ').pop() || '';
+          break;
         case 'email':
           aValue = a.gw_profiles?.email || '';
           bValue = b.gw_profiles?.email || '';
@@ -380,7 +384,8 @@ export const EnrollmentManager = () => {
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="name">Name</SelectItem>
+                <SelectItem value="name">Full Name</SelectItem>
+                <SelectItem value="last_name">Last Name</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="enrolled_at">Enrollment Date</SelectItem>
                 <SelectItem value="status">Status</SelectItem>
