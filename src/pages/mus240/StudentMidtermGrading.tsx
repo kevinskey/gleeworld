@@ -29,18 +29,18 @@ export const StudentMidtermGrading = () => {
   const [manualFeedback, setManualFeedback] = useState('');
   const [saving, setSaving] = useState(false);
   const { user } = useAuth();
-  const [termsScore, setTermsScore] = useState<string>('');
-  const [listeningScore, setListeningScore] = useState<string>('');
+  // Individual question scores
+  const [termScores, setTermScores] = useState<{[key: string]: string}>({});
+  const [listeningScores, setListeningScores] = useState<{[key: string]: string}>({});
   const [essayScore, setEssayScore] = useState<string>('');
+  
   const clamp = (val: number, min: number, max: number) => Math.max(min, Math.min(max, val));
-  const parsedScores = () => ({
-    terms: clamp(Number(termsScore || 0), 0, 40),
-    listening: clamp(Number(listeningScore || 0), 0, 30),
-    essay: clamp(Number(essayScore || 0), 0, 20),
-  });
-  const totalManual = () => {
-    const p = parsedScores();
-    return p.terms + p.listening + p.essay;
+  
+  const calculateTotalScore = () => {
+    const termTotal = Object.values(termScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 10), 0);
+    const listeningTotal = Object.values(listeningScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 15), 0);
+    const essayTotal = clamp(Number(essayScore || 0), 0, 20);
+    return termTotal + listeningTotal + essayTotal;
   };
 
   useEffect(() => {
@@ -130,7 +130,7 @@ export const StudentMidtermGrading = () => {
 
     setSaving(true);
     try {
-      const total = totalManual();
+      const total = calculateTotalScore();
       const { error } = await supabase
         .from('mus240_midterm_submissions')
         .update({
@@ -285,41 +285,259 @@ export const StudentMidtermGrading = () => {
                   )}
                 </div>
 
-                {/* Manual Scoring */}
+                {/* Current Total Score */}
                 <div className="space-y-3">
-                  <h4 className="font-medium">Manual Scoring (Instructor)</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <label className="text-xs text-muted-foreground">Terms (0–40)</label>
-                      <Input type="number" min={0} max={40} value={termsScore} onChange={(e) => setTermsScore(e.target.value)} />
+                  <h4 className="font-medium">Current Total Score</h4>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">
+                      {calculateTotalScore()}/100
                     </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Listening (0–30)</label>
-                      <Input type="number" min={0} max={30} value={listeningScore} onChange={(e) => setListeningScore(e.target.value)} />
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Essay (0–20)</label>
-                      <Input type="number" min={0} max={20} value={essayScore} onChange={(e) => setEssayScore(e.target.value)} />
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Total: <strong>{totalManual()}/100</strong></span>
-                    <Button size="sm" onClick={saveManualGrade} disabled={saving}>Save Manual Grade</Button>
+                    <Button size="sm" onClick={saveManualGrade} disabled={saving} className="mt-2">
+                      {saving ? 'Saving...' : 'Save All Grades'}
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Main Content */}
+          {/* Main Content - Student Answers with Inline Grading */}
           <div className="lg:col-span-2 space-y-6">
-            {/* AI Writing Evaluation */}
+            {/* Terms Section */}
+            <Card className="border-0 bg-white/70 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileText className="h-5 w-5" />
+                  Term Definitions (40 points total)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {submission.negro_spiritual_answer && (
+                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground mb-3">Negro Spiritual</h4>
+                        <div className="prose prose-sm max-w-none">
+                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
+                            {submission.negro_spiritual_answer}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <label className="text-xs font-medium text-muted-foreground">Score</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10}
+                          value={termScores.negro_spiritual || ''}
+                          onChange={(e) => setTermScores({...termScores, negro_spiritual: e.target.value})}
+                          className="w-16 text-center font-mono"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-muted-foreground">/10</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {submission.field_holler_answer && (
+                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground mb-3">Field Holler</h4>
+                        <div className="prose prose-sm max-w-none">
+                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
+                            {submission.field_holler_answer}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <label className="text-xs font-medium text-muted-foreground">Score</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10}
+                          value={termScores.field_holler || ''}
+                          onChange={(e) => setTermScores({...termScores, field_holler: e.target.value})}
+                          className="w-16 text-center font-mono"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-muted-foreground">/10</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {submission.ring_shout_answer && (
+                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground mb-3">Ring Shout</h4>
+                        <div className="prose prose-sm max-w-none">
+                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
+                            {submission.ring_shout_answer}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <label className="text-xs font-medium text-muted-foreground">Score</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10}
+                          value={termScores.ring_shout || ''}
+                          onChange={(e) => setTermScores({...termScores, ring_shout: e.target.value})}
+                          className="w-16 text-center font-mono"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-muted-foreground">/10</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {submission.blues_answer && (
+                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground mb-3">Blues</h4>
+                        <div className="prose prose-sm max-w-none">
+                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
+                            {submission.blues_answer}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <label className="text-xs font-medium text-muted-foreground">Score</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={10}
+                          value={termScores.blues || ''}
+                          onChange={(e) => setTermScores({...termScores, blues: e.target.value})}
+                          className="w-16 text-center font-mono"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-muted-foreground">/10</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Listening Analysis Section */}
+            <Card className="border-0 bg-white/70 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileText className="h-5 w-5" />
+                  Listening Analysis (30 points total)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {submission.excerpt_1_answer && (
+                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground mb-3">Excerpt 1</h4>
+                        <div className="prose prose-sm max-w-none">
+                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
+                            {submission.excerpt_1_answer}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <label className="text-xs font-medium text-muted-foreground">Score</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={15}
+                          value={listeningScores.excerpt_1 || ''}
+                          onChange={(e) => setListeningScores({...listeningScores, excerpt_1: e.target.value})}
+                          className="w-16 text-center font-mono"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-muted-foreground">/15</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {submission.excerpt_2_answer && (
+                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-foreground mb-3">Excerpt 2</h4>
+                        <div className="prose prose-sm max-w-none">
+                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30">
+                            {submission.excerpt_2_answer}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <label className="text-xs font-medium text-muted-foreground">Score</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={15}
+                          value={listeningScores.excerpt_2 || ''}
+                          onChange={(e) => setListeningScores({...listeningScores, excerpt_2: e.target.value})}
+                          className="w-16 text-center font-mono"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-muted-foreground">/15</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Essay Section */}
+            {submission.essay_answer && (
+              <Card className="border-0 bg-white/70 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <FileText className="h-5 w-5" />
+                    Essay Question (20 points)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="border border-border/50 rounded-lg p-4 bg-background/30">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1">
+                        <div className="prose prose-sm max-w-none">
+                          <p className="leading-relaxed text-foreground/90 bg-background/50 p-4 rounded-md border border-border/30 whitespace-pre-wrap">
+                            {submission.essay_answer}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <label className="text-xs font-medium text-muted-foreground">Score</label>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={20}
+                          value={essayScore}
+                          onChange={(e) => setEssayScore(e.target.value)}
+                          className="w-16 text-center font-mono"
+                          placeholder="0"
+                        />
+                        <span className="text-xs text-muted-foreground">/20</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* AI Feedback Section */}
             <Card className="border-0 bg-white/70 backdrop-blur-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Brain className="h-5 w-5" />
-                    AI Writing Evaluation
+                    Overall Feedback
                   </CardTitle>
                   <Button
                     onClick={generateAIFeedback}
@@ -346,8 +564,8 @@ export const StudentMidtermGrading = () => {
                   value={manualFeedback}
                   onChange={(e) => setManualFeedback(e.target.value)}
                   placeholder="AI-generated or manual feedback will appear here..."
-                  className="min-h-[300px] bg-white/50"
-                  rows={12}
+                  className="min-h-[200px] bg-background/50"
+                  rows={8}
                 />
                 <div className="flex justify-end mt-4">
                   <Button
@@ -366,54 +584,6 @@ export const StudentMidtermGrading = () => {
                       </>
                     )}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Student Submission Content */}
-            <Card className="border-0 bg-white/70 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Student Answers
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-white/50 rounded-lg p-4 max-h-96 overflow-y-auto space-y-4">
-                  {submission.negro_spiritual_answer && (
-                    <div className="border-b pb-3">
-                      <h4 className="font-medium mb-2">Negro Spiritual</h4>
-                      <p className="text-sm text-gray-700">{submission.negro_spiritual_answer}</p>
-                    </div>
-                  )}
-                  {submission.field_holler_answer && (
-                    <div className="border-b pb-3">
-                      <h4 className="font-medium mb-2">Field Holler</h4>
-                      <p className="text-sm text-gray-700">{submission.field_holler_answer}</p>
-                    </div>
-                  )}
-                  {submission.ring_shout_answer && (
-                    <div className="border-b pb-3">
-                      <h4 className="font-medium mb-2">Ring Shout</h4>
-                      <p className="text-sm text-gray-700">{submission.ring_shout_answer}</p>
-                    </div>
-                  )}
-                  {submission.blues_answer && (
-                    <div className="border-b pb-3">
-                      <h4 className="font-medium mb-2">Blues</h4>
-                      <p className="text-sm text-gray-700">{submission.blues_answer}</p>
-                    </div>
-                  )}
-                  {submission.essay_answer && (
-                    <div>
-                      <h4 className="font-medium mb-2">Essay Answer</h4>
-                      <p className="text-sm text-gray-700">{submission.essay_answer}</p>
-                    </div>
-                  )}
-                  {!submission.negro_spiritual_answer && !submission.field_holler_answer && 
-                   !submission.ring_shout_answer && !submission.blues_answer && !submission.essay_answer && (
-                    <p className="text-gray-500">No submission content available</p>
-                  )}
                 </div>
               </CardContent>
             </Card>
