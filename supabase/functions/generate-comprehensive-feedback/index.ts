@@ -209,12 +209,13 @@ WRITING EVALUATION:\n<2–4 sentences evaluating writing quality only>
     generatedFeedback = sanitizeWritingOnly(generatedFeedback);
 
     console.log('Generated feedback length:', generatedFeedback.length);
-    // Update submission with comprehensive feedback
+    // Update submission with comprehensive feedback AND grade
     const { error: updateError } = await supabase
       .from('mus240_midterm_submissions')
       .update({
         comprehensive_feedback: generatedFeedback,
-        feedback_generated_at: new Date().toISOString()
+        feedback_generated_at: new Date().toISOString(),
+        grade: finalGrade
       })
       .eq('id', submissionId);
 

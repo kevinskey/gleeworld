@@ -74,8 +74,8 @@ export const StudentMidtermGrading = () => {
       if (error) throw error;
 
       if (data.success) {
-        await fetchData(); // Refresh to get the new feedback
-        toast.success('AI feedback generated successfully');
+        await fetchData(); // Refresh to get the new feedback and grade
+        toast.success('AI feedback and scoring generated successfully');
       } else {
         throw new Error(data.error || 'Failed to generate feedback');
       }
