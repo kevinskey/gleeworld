@@ -177,6 +177,8 @@ import GroupDetail from "./pages/mus240/GroupDetail";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
+import { InstructorDashboard } from "./pages/mus240/InstructorDashboard";
+import { StudentMidtermGrading } from "./pages/mus240/StudentMidtermGrading";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 import MUS240Instructor from "./pages/classes/mus240/instructor";
 import MidtermExam from "./pages/mus240/MidtermExam";
@@ -1706,7 +1708,7 @@ const App = () => {
                                     element={
                                       <ProtectedRoute>
                                         <AdminOnlyRoute>
-                                          <InstructorConsole />
+                                          <InstructorDashboard />
                                         </AdminOnlyRoute>
                                       </ProtectedRoute>
                                     } 
@@ -1717,6 +1719,16 @@ const App = () => {
                                       <ProtectedRoute>
                                         <AdminOnlyRoute>
                                           <MUS240Instructor />
+                                        </AdminOnlyRoute>
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
+                                    path="/classes/mus240/instructor/student/:studentId/midterm" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <AdminOnlyRoute>
+                                          <StudentMidtermGrading />
                                         </AdminOnlyRoute>
                                       </ProtectedRoute>
                                     } 
