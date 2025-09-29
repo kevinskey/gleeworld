@@ -41,7 +41,7 @@ export const StudentMidtermGrading = () => {
       const submissionQuery = await (supabase
         .from('mus240_midterm_submissions')
         .select('*')
-        .eq('student_id', studentId)
+        .eq('user_id', studentId)
         .maybeSingle() as any);
       
       // @ts-ignore - Avoiding Supabase type complexity issue
@@ -107,6 +107,22 @@ export const StudentMidtermGrading = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const calculateLetterGrade = (score: number) => {
+    if (score >= 97) return 'A+';
+    if (score >= 93) return 'A';
+    if (score >= 90) return 'A-';
+    if (score >= 87) return 'B+';
+    if (score >= 83) return 'B';
+    if (score >= 80) return 'B-';
+    if (score >= 77) return 'C+';
+    if (score >= 73) return 'C';
+    if (score >= 70) return 'C-';
+    if (score >= 67) return 'D+';
+    if (score >= 65) return 'D';
+    if (score >= 60) return 'D-';
+    return 'F';
   };
 
   const getLetterGradeColor = (grade: string) => {
@@ -214,11 +230,12 @@ export const StudentMidtermGrading = () => {
               <CardContent className="space-y-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {submission.total_score || 0}/100
+                    {submission.grade || 0}/100
                   </div>
-                  {submission.letter_grade && (
-                    <Badge className={getLetterGradeColor(submission.letter_grade)}>
-                      {submission.letter_grade}
+                  {/* Note: letter_grade column doesn't exist in this table */}
+                  {submission.grade && (
+                    <Badge className={getLetterGradeColor(calculateLetterGrade(submission.grade))}>
+                      {calculateLetterGrade(submission.grade)}
                     </Badge>
                   )}
                 </div>
