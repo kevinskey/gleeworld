@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
@@ -12,6 +12,7 @@ import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
 import { MidtermGradingManager } from '@/components/mus240/admin/MidtermGradingManager';
 import { GradeCalculationSystem } from '@/components/mus240/admin/GradeCalculationSystem';
+import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
 import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
 import { toast } from 'sonner';
 
@@ -153,7 +154,7 @@ export const InstructorConsole = () => {
 
         {/* Main Console */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 h-auto gap-0.5 md:gap-1 p-0.5 md:p-1">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto gap-0.5 md:gap-1 p-0.5 md:p-1">
             <TabsTrigger 
               value="assignments" 
               className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
@@ -174,6 +175,13 @@ export const InstructorConsole = () => {
             >
               <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
               <span>Grades</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="students" 
+              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+            >
+              <UserPlus className="h-3 w-3 md:h-4 md:w-4" />
+              <span>Students</span>
             </TabsTrigger>
             <TabsTrigger 
               value="midterm-grading" 
@@ -216,6 +224,10 @@ export const InstructorConsole = () => {
 
           <TabsContent value="grade-calculation" className="mt-1 md:mt-3">
             <GradeCalculationSystem />
+          </TabsContent>
+
+          <TabsContent value="students" className="mt-1 md:mt-3">
+            <EnrollmentManager />
           </TabsContent>
 
           <TabsContent value="ai-assistant" className="mt-1 md:mt-3">
