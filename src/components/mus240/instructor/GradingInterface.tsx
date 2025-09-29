@@ -283,9 +283,9 @@ export const GradingInterface: React.FC = () => {
   };
 
   const calculateStats = () => {
-    const ungradedAssignments = assignments.filter(a => !a.grade).length;
-    const ungradedJournals = journals.filter(j => !j.points_earned).length;
-    const ungradedMidterms = midterms.filter(m => !m.grade).length;
+    const ungradedAssignments = assignments.filter(a => a.grade === null || a.grade === undefined).length;
+    const ungradedJournals = journals.filter(j => j.points_earned === null || j.points_earned === undefined).length;
+    const ungradedMidterms = midterms.filter(m => m.grade === null || m.grade === undefined).length;
     
     return {
       totalUngraded: ungradedAssignments + ungradedJournals + ungradedMidterms,
@@ -444,13 +444,13 @@ export const GradingInterface: React.FC = () => {
                       ) : (
                         <div className="flex justify-between items-center pt-3 border-t">
                           <div>
-                            {assignment.grade ? (
-                              <span className="text-sm font-medium text-green-600">
-                                Grade: {assignment.grade}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-gray-500">Not graded</span>
-                            )}
+                             {assignment.grade !== null && assignment.grade !== undefined ? (
+                               <span className="text-sm font-medium text-green-600">
+                                 Grade: {assignment.grade}
+                               </span>
+                             ) : (
+                               <span className="text-sm text-gray-500">Not graded</span>
+                             )}
                             {assignment.feedback && (
                               <p className="text-xs text-gray-600 mt-1">{assignment.feedback}</p>
                             )}
@@ -461,7 +461,7 @@ export const GradingInterface: React.FC = () => {
                             onClick={() => handleStartEdit(assignment.id, assignment.grade, assignment.feedback)}
                           >
                             <Edit className="h-3 w-3 mr-1" />
-                            {assignment.grade ? 'Edit' : 'Grade'}
+                            {assignment.grade !== null && assignment.grade !== undefined ? 'Edit' : 'Grade'}
                           </Button>
                         </div>
                       )}
@@ -542,15 +542,15 @@ export const GradingInterface: React.FC = () => {
                       ) : (
                         <div className="flex justify-between items-center pt-3 border-t">
                           <div>
-                            {journal.points_earned ? (
-                              <span className="text-sm font-medium text-green-600">
-                                Points: {journal.points_earned}/{journal.points_possible}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-gray-500">
-                                Not graded (out of {journal.points_possible})
-                              </span>
-                            )}
+                             {journal.points_earned !== null && journal.points_earned !== undefined ? (
+                               <span className="text-sm font-medium text-green-600">
+                                 Points: {journal.points_earned}/{journal.points_possible}
+                               </span>
+                             ) : (
+                               <span className="text-sm text-gray-500">
+                                 Not graded (out of {journal.points_possible})
+                               </span>
+                             )}
                             {journal.feedback && (
                               <p className="text-xs text-gray-600 mt-1">{journal.feedback}</p>
                             )}
@@ -561,7 +561,7 @@ export const GradingInterface: React.FC = () => {
                             onClick={() => handleStartEdit(journal.id, journal.points_earned, journal.feedback)}
                           >
                             <Edit className="h-3 w-3 mr-1" />
-                            {journal.points_earned ? 'Edit' : 'Grade'}
+                            {journal.points_earned !== null && journal.points_earned !== undefined ? 'Edit' : 'Grade'}
                           </Button>
                         </div>
                       )}
@@ -635,13 +635,13 @@ export const GradingInterface: React.FC = () => {
                       ) : (
                         <div className="flex justify-between items-center pt-3 border-t">
                           <div>
-                            {midterm.grade ? (
-                              <span className="text-sm font-medium text-green-600">
-                                Grade: {midterm.grade}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-gray-500">Not graded</span>
-                            )}
+                             {midterm.grade !== null && midterm.grade !== undefined ? (
+                               <span className="text-sm font-medium text-green-600">
+                                 Grade: {midterm.grade}
+                               </span>
+                             ) : (
+                               <span className="text-sm text-gray-500">Not graded</span>
+                             )}
                             {midterm.feedback && (
                               <p className="text-xs text-gray-600 mt-1">{midterm.feedback}</p>
                             )}
@@ -652,7 +652,7 @@ export const GradingInterface: React.FC = () => {
                             onClick={() => handleStartEdit(midterm.id, midterm.grade, midterm.feedback)}
                           >
                             <Edit className="h-3 w-3 mr-1" />
-                            {midterm.grade ? 'Edit' : 'Grade'}
+                            {midterm.grade !== null && midterm.grade !== undefined ? 'Edit' : 'Grade'}
                           </Button>
                         </div>
                       )}
