@@ -69,6 +69,14 @@ export const InstructorDashboard = () => {
       action: () => navigate('/classes/mus240/instructor/journals')
     },
     {
+      title: 'Bulk Grade Journals',
+      description: 'AI-powered bulk journal grading',
+      icon: ClipboardCheck,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      action: () => navigate('/classes/mus240/instructor/bulk-grading')
+    },
+    {
       title: 'AI Assistant',
       description: 'Get help with course content',
       icon: Brain,
@@ -110,7 +118,7 @@ export const InstructorDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
           {quickActions.map((action, index) => (
             <Card 
               key={index}
