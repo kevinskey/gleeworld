@@ -20,7 +20,8 @@ import {
   User,
   ArrowLeft,
   Home,
-  ChevronRight
+  ChevronRight,
+  Bot
 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useMus240Enrollments } from '@/hooks/useMus240Enrollments';
@@ -309,11 +310,19 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
                   <Button 
+                    onClick={() => navigate('/classes/mus240/instructor/console')}
+                    className="h-20 flex flex-col items-center justify-center bg-primary hover:bg-primary/90"
+                  >
+                    <Bot className="h-6 w-6 mb-2" />
+                    AI Grading Console
+                  </Button>
+                  <Button 
                     onClick={() => setActiveTab('grading')}
+                    variant="outline"
                     className="h-20 flex flex-col items-center justify-center"
                   >
                     <BookOpen className="h-6 w-6 mb-2" />
-                    Grade Assignments
+                    Manual Grading
                   </Button>
                   <Button 
                     onClick={() => setActiveTab('communications')}
@@ -330,13 +339,6 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
                   >
                     <Users className="h-6 w-6 mb-2" />
                     Manage Students
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    className="h-20 flex flex-col items-center justify-center"
-                  >
-                    <FileText className="h-6 w-6 mb-2" />
-                    View Reports
                   </Button>
                 </CardContent>
               </Card>

@@ -1715,6 +1715,16 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
+                                    path="/classes/mus240/instructor/console" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <AdminOnlyRoute>
+                                          <InstructorConsole />
+                                        </AdminOnlyRoute>
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
                                     path="/classes/mus240/instructor/students" 
                                     element={
                                       <ProtectedRoute>
