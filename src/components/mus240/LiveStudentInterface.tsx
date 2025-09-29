@@ -225,6 +225,15 @@ export const LiveStudentInterface: React.FC = () => {
       return;
     }
 
+    // 🔒 Require authentication to satisfy RLS policies
+    if (!user?.id) {
+      console.warn('🔒 Submission blocked: user not authenticated');
+      toast.error('Please sign in to submit your response.');
+      setSubmissionAnimation(false);
+      setSubmitting(false);
+      return;
+    }
+
     setSubmitting(true);
     setSubmissionAnimation(true);
     
@@ -292,7 +301,9 @@ export const LiveStudentInterface: React.FC = () => {
     } catch (error) {
       console.error('❌ Error submitting response:', error);
       console.error('❌ Error details:', JSON.stringify(error, null, 2));
-      toast.error('Failed to submit response - Please try again');
+      const err: any = error as any;
+      const msg = err?.message || err?.hint || err?.details || 'Please try again';
+      toast.error(`Failed to submit response: ${msg}`);
       setSubmissionAnimation(false);
     } finally {
       setSubmitting(false);
