@@ -157,7 +157,8 @@ export const InstructorDashboard = () => {
               {filteredStudents.map((student) => (
                 <div 
                   key={student.id}
-                  className="flex items-center justify-between p-4 rounded-lg border bg-white/50 hover:bg-white/70 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg border bg-white/50 hover:bg-white/70 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/classes/mus240/instructor/student/${student.student_id}`)}
                 >
                   <div className="flex items-center gap-3">
                     <Avatar>
@@ -167,7 +168,7 @@ export const InstructorDashboard = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-medium">
+                      <h3 className="font-medium hover:text-blue-600 transition-colors">
                         {student.gw_profiles?.full_name || 'Name not provided'}
                       </h3>
                       <p className="text-sm text-gray-600">
@@ -176,14 +177,6 @@ export const InstructorDashboard = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/classes/mus240/instructor/student/${student.student_id}/midterm`)}
-                    >
-                      <ClipboardCheck className="h-4 w-4 mr-2" />
-                      Grade Midterm
-                    </Button>
                     <ChevronRight className="h-4 w-4 text-gray-400" />
                   </div>
                 </div>
