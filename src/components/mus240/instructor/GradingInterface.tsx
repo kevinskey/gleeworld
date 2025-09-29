@@ -30,6 +30,7 @@ interface Journal {
   student_id: string;
   student_name: string;
   assignment_title: string;
+  assignment_id: string; // from mus240_journal_entries
   content: string;
   points_earned?: number;
   points_possible: number;
@@ -243,18 +244,25 @@ export const GradingInterface: React.FC = () => {
         
         if (error) throw error;
       } else if (type === 'journal') {
-        updateData = {
-          points_earned: grade,
+        const journal = journals.find(j => j.id === itemId);
+        if (!journal) {
+          throw new Error('Journal not found');
+        }
+
+        const upsertData = {
+          student_id: journal.student_id,
+          assignment_id: journal.assignment_id,
+          journal_id: journal.id,
+          overall_score: grade,
           feedback: feedbackInput,
           graded_by: user?.id,
-          graded_at: new Date().toISOString()
+          graded_at: new Date().toISOString(),
         };
-        
+
         const { error } = await supabase
           .from('mus240_journal_grades')
-          .update(updateData)
-          .eq('id', itemId);
-        
+          .upsert(upsertData, { onConflict: 'student_id,assignment_id' });
+
         if (error) throw error;
       } else if (type === 'midterm') {
         updateData = {
@@ -294,24 +302,22 @@ export const GradingInterface: React.FC = () => {
   // Dedicated function for journal grading used by JournalGradingCard
   const handleSaveJournalGrade = async (journalId: string, points: number, feedback: string) => {
     try {
-      const updateData = {
-        points_earned: points,
-        feedback: feedback,
-        graded_by: user?.id,
-        graded_at: new Date().toISOString()
-      };
+      const journal = journals.find(j => j.id === journalId);
+      if (!journal) {
+        throw new Error('Journal not found');
+      }
 
-      // Update the journal entry directly - using the same approach as the original handleSaveGrade
       const { error } = await supabase
         .from('mus240_journal_grades')
         .upsert({
-          student_id: journals.find(j => j.id === journalId)?.student_id,
-          assignment_id: 'lj1', // This should match the journal's assignment
+          student_id: journal.student_id,
+          assignment_id: journal.assignment_id,
+          journal_id: journal.id,
           overall_score: points,
-          feedback: feedback,
+          feedback,
           graded_by: user?.id,
-          graded_at: new Date().toISOString()
-        });
+          graded_at: new Date().toISOString(),
+        }, { onConflict: 'student_id,assignment_id' });
       
       if (error) throw error;
 
