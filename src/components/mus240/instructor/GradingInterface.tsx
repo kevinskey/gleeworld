@@ -92,7 +92,7 @@ export const GradingInterface: React.FC = () => {
         .from('mus240_journal_grades')
         .select('journal_id, overall_score, feedback, graded_at, graded_by');
 
-      // Load midterm submissions
+      // Load midterm submissions - all of them
       const { data: midtermData } = await supabase
         .from('mus240_midterm_submissions')
         .select('*')
@@ -120,11 +120,27 @@ export const GradingInterface: React.FC = () => {
 
       const formattedJournals = (journalData || []).map(j => {
         const grade = gradesLookup[j.id];
+        // Create a more descriptive assignment title from assignment_id
+        let assignmentTitle = 'Unknown Assignment';
+        if (j.mus240_assignments?.title) {
+          assignmentTitle = j.mus240_assignments.title;
+        } else if (j.assignment_id) {
+          // Map assignment IDs to meaningful titles
+          const assignmentMap: Record<string, string> = {
+            'lj1': 'Listening Journal 1',
+            'lj2': 'Listening Journal 2', 
+            'lj3': 'Listening Journal 3',
+            'lj4': 'Listening Journal 4',
+            'lj5': 'Listening Journal 5'
+          };
+          assignmentTitle = assignmentMap[j.assignment_id] || `Assignment ${j.assignment_id.toUpperCase()}`;
+        }
+        
         return {
           ...j,
           student_name: profileLookup[j.student_id]?.full_name || 'Unknown',
           points_possible: j.mus240_assignments?.points || 10,
-          assignment_title: j.mus240_assignments?.title || 'Unknown Assignment',
+          assignment_title: assignmentTitle,
           points_earned: grade?.overall_score,
           feedback: grade?.feedback,
           graded_at: grade?.graded_at
