@@ -298,7 +298,7 @@ export const StudentMidtermGrading = () => {
                       <span className="font-mono">{Object.values(termScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 10), 0)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>Listening ({Object.values(listeningScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 15), 0)}/40)</span>
+                      <span>Listening ({Object.values(listeningScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 15), 0)}/45)</span>
                       <span className="font-mono">{Object.values(listeningScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 15), 0)}</span>
                     </div>
                     <div className="flex justify-between">
@@ -348,19 +348,24 @@ export const StudentMidtermGrading = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            const termTotal = Math.round(grade * 0.4);
-                            const listeningTotal = Math.round(grade * 0.4);
-                            const essayTotal = Math.round(grade * 0.2);
+                            const percentage = grade / 100;
+                            // 40 points for terms (4 terms × 10 pts each)
+                            const termScore = Math.round(10 * percentage);
+                            // 45 points for listening (3 excerpts × 15 pts each)
+                            const listeningScore = Math.round(15 * percentage);
+                            // 20 points for essay
+                            const essayTotal = Math.round(20 * percentage);
                             
                             setTermScores({
-                              negro_spiritual: Math.round(termTotal / 4).toString(),
-                              field_holler: Math.round(termTotal / 4).toString(),
-                              ring_shout: Math.round(termTotal / 4).toString(),
-                              blues: Math.round(termTotal / 4).toString()
+                              negro_spiritual: termScore.toString(),
+                              field_holler: termScore.toString(),
+                              ring_shout: termScore.toString(),
+                              blues: termScore.toString()
                             });
                             setListeningScores({
-                              listening_1: Math.round(listeningTotal / 2.67).toString(),
-                              listening_2: Math.round(listeningTotal / 2.67).toString()
+                              listening_1: listeningScore.toString(),
+                              listening_2: listeningScore.toString(),
+                              listening_3: listeningScore.toString()
                             });
                             setEssayScore(essayTotal.toString());
                           }}
