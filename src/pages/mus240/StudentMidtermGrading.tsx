@@ -397,7 +397,7 @@ export const StudentMidtermGrading = () => {
                   <h4 className="font-medium">Score Breakdown</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span>Terms ({Object.values(termScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 10), 0)}/40)</span>
+                      <span>Terms ({Object.values(termScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 10), 0)}/20)</span>
                       <span className="font-mono">{Object.values(termScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 10), 0)}</span>
                     </div>
                     <div className="flex justify-between">
@@ -410,7 +410,7 @@ export const StudentMidtermGrading = () => {
                     </div>
                     <div className="border-t pt-2 flex justify-between font-semibold">
                       <span>Current Total</span>
-                      <span className="font-mono">{calculateTotalScore()}/100</span>
+                      <span className="font-mono">{calculateTotalScore()}/85</span>
                     </div>
                   </div>
                 </div>
@@ -452,19 +452,20 @@ export const StudentMidtermGrading = () => {
                           size="sm"
                           onClick={() => {
                             const percentage = grade / 100;
-                            // 40 points for terms (4 terms × 10 pts each)
+                            // 20 points for terms (2 terms × 10 pts each)
                             const termScore = Math.round(10 * percentage);
-                            // 45 points for listening (3 excerpts × 15 pts each)
+                            // 45 points for listening (3 excerpts × 15 pts each)  
                             const listeningScore = Math.round(15 * percentage);
                             // 20 points for essay
                             const essayTotal = Math.round(20 * percentage);
                             
-                            setTermScores({
-                              negro_spiritual: termScore.toString(),
-                              field_holler: termScore.toString(),
-                              ring_shout: termScore.toString(),
-                              blues: termScore.toString()
+                            // Only set scores for the first 2 term definitions
+                            const termKeys = Object.keys(termScores);
+                            const newTermScores: any = {};
+                            termKeys.slice(0, 2).forEach(key => {
+                              newTermScores[key] = termScore.toString();
                             });
+                            setTermScores(newTermScores);
                             setListeningScores({
                               listening_1: listeningScore.toString(),
                               listening_2: listeningScore.toString(),
@@ -491,7 +492,7 @@ export const StudentMidtermGrading = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <FileText className="h-5 w-5" />
-                  Term Definitions (40 points total)
+                  Term Definitions (20 points total)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
