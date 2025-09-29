@@ -380,15 +380,15 @@ export const StudentMidtermGrading = () => {
                 {/* Final Grade Display */}
                 <div className="text-center p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="text-3xl font-bold text-gray-900 mb-2">
-                    {submission.grade ?? 0}/100
+                    {calculateTotalScore()}/85
                   </div>
-                  {submission.grade != null && (
-                    <Badge className={getLetterGradeColor(calculateLetterGrade(submission.grade))}>
-                      {calculateLetterGrade(submission.grade)}
+                  {calculateTotalScore() > 0 && (
+                    <Badge className={getLetterGradeColor(calculateLetterGrade(calculateTotalScore()))}>
+                      {calculateLetterGrade(calculateTotalScore())}
                     </Badge>
                   )}
-                  {submission.grade == null && (
-                    <p className="text-xs text-muted-foreground mt-2">No final grade saved yet</p>
+                  {calculateTotalScore() === 0 && (
+                    <p className="text-xs text-muted-foreground mt-2">No scores entered yet</p>
                   )}
                 </div>
 
