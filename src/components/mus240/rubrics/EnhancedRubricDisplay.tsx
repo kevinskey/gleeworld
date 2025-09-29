@@ -84,7 +84,7 @@ export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({
   const totalPossible = grade.rubric_scores?.reduce((sum, score) => sum + score.max_score, 0) || 0;
 
   const getPerformanceAnalysis = () => {
-    if (!grade.rubric_scores) return [];
+    if (!grade.rubric_scores) return { strengths: [], improvements: [] };
     
     const strengths = grade.rubric_scores
       .filter(score => (score.score / score.max_score) >= 0.8)
@@ -97,9 +97,7 @@ export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({
     return { strengths, improvements };
   };
 
-  const performanceAnalysis = getPerformanceAnalysis();
-  const strengths = performanceAnalysis.strengths || [];
-  const improvements = performanceAnalysis.improvements || [];
+  const { strengths, improvements } = getPerformanceAnalysis();
 
   return (
     <Card className="mt-4">
