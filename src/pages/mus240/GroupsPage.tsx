@@ -26,7 +26,7 @@ export default function GroupsPage() {
               AI & Music Industry Research Groups
             </h1>
           </div>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg text-white max-w-3xl mx-auto">
             Explore current developments and global trends at the intersection of artificial intelligence and the music industry
           </p>
         </div>
@@ -286,7 +286,7 @@ export default function GroupsPage() {
         <Card className="border-primary/20 bg-card">
           <CardContent className="p-8 text-center">
             <h2 className="text-2xl font-bold mb-4 text-card-foreground">Join a Research Group</h2>
-            <p className="text-card-foreground/80 mb-6 max-w-2xl mx-auto">
+            <p className="text-white mb-6 max-w-2xl mx-auto">
               Select a research focus area that interests you most. Each group will conduct in-depth analysis, 
               present findings, and contribute to our understanding of AI's role in the music industry.
             </p>
