@@ -12,8 +12,7 @@ import {
   Clock, 
   Brain,
   Save,
-  FileText,
-  MessageSquare
+  FileText
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -38,31 +37,25 @@ export const StudentMidtermGrading = () => {
     try {
       setLoading(true);
       
-      // Fetch the submission directly by student_id
-      const submissionResult = await supabase
+      // @ts-ignore - Avoiding Supabase type complexity issue
+      const submissionQuery = await (supabase
         .from('mus240_midterm_submissions')
         .select('*')
         .eq('student_id', studentId)
-        .maybeSingle();
-
-      const submissionData = submissionResult.data;
-
-      // Fetch profile separately
-      const { data: profileData, error: profileError } = await supabase
+        .maybeSingle() as any);
+      
+      // @ts-ignore - Avoiding Supabase type complexity issue
+      const profileQuery = await (supabase
         .from('gw_profiles')
         .select('full_name, email')
         .eq('id', studentId)
-        .maybeSingle();
+        .maybeSingle() as any);
 
-      if (profileError) {
-        console.error('Profile error:', profileError);
-      }
-
-      setSubmission(submissionData);
-      setProfile(profileData);
-      setManualFeedback(submissionData?.comprehensive_feedback || '');
+      setSubmission(submissionQuery.data);
+      setProfile(profileQuery.data);
+      setManualFeedback(submissionQuery.data?.comprehensive_feedback || '');
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching data:', error);
       toast.error('Failed to load data');
     } finally {
       setLoading(false);
@@ -331,6 +324,10 @@ export const StudentMidtermGrading = () => {
                       <h4 className="font-medium mb-2">Essay Answer</h4>
                       <p className="text-sm text-gray-700">{submission.essay_answer}</p>
                     </div>
+                  )}
+                  {!submission.negro_spiritual_answer && !submission.field_holler_answer && 
+                   !submission.ring_shout_answer && !submission.blues_answer && !submission.essay_answer && (
+                    <p className="text-gray-500">No submission content available</p>
                   )}
                 </div>
               </CardContent>
