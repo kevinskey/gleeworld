@@ -158,9 +158,38 @@ export default function Syllabus() {
                     <CardContent className="pt-0 space-y-6">
                       {/* Listening Journals */}
                       <div className="border border-gray-200 rounded-lg p-6 bg-white/50">
-                        <h4 className="text-lg font-semibold mb-3 text-gray-900">Listening Journals (10 × 20 pts each)</h4>
-                        <div className="space-y-3 text-sm text-gray-700">
+                        <h4 className="text-lg font-semibold mb-3 text-gray-900">Listening Journals (10 × 10 pts each)</h4>
+                        <div className="space-y-4 text-sm text-gray-700">
                           <p>Weekly 250–300 word essays connecting listening examples to cultural context.</p>
+                          
+                          <div className="mt-4">
+                            <h5 className="font-semibold text-gray-900 mb-2">Grading Rubric (10 Points Total):</h5>
+                            <div className="bg-white/70 rounded-lg p-4 space-y-2">
+                              <div className="flex justify-between">
+                                <span className="font-medium">Content Understanding:</span>
+                                <span className="text-amber-600 font-semibold">4 pts</span>
+                              </div>
+                              <p className="text-xs text-gray-600 ml-4">Demonstrates clear understanding of musical concepts and context</p>
+                              
+                              <div className="flex justify-between">
+                                <span className="font-medium">Critical Analysis:</span>
+                                <span className="text-amber-600 font-semibold">3 pts</span>
+                              </div>
+                              <p className="text-xs text-gray-600 ml-4">Provides thoughtful analysis and personal reflection on the material</p>
+                              
+                              <div className="flex justify-between">
+                                <span className="font-medium">Writing Quality:</span>
+                                <span className="text-amber-600 font-semibold">2 pts</span>
+                              </div>
+                              <p className="text-xs text-gray-600 ml-4">Clear, well-organized writing with proper grammar and structure</p>
+                              
+                              <div className="flex justify-between">
+                                <span className="font-medium">Requirements Met:</span>
+                                <span className="text-amber-600 font-semibold">1 pt</span>
+                              </div>
+                              <p className="text-xs text-gray-600 ml-4">Meets word count (250-300 words) and assignment requirements</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
@@ -233,39 +262,39 @@ export default function Syllabus() {
                             </tr>
                           </thead>
                           <tbody className="text-sm">
-                            <tr>
+                             <tr>
                               <td className="border border-gray-300 p-3">Listening Journals</td>
-                              <td className="border border-gray-300 p-3">200</td>
-                              <td className="border border-gray-300 p-3">30%</td>
+                              <td className="border border-gray-300 p-3">100</td>
+                              <td className="border border-gray-300 p-3">18%</td>
                             </tr>
                             <tr className="bg-gray-50">
                               <td className="border border-gray-300 p-3">Research Project</td>
                               <td className="border border-gray-300 p-3">150</td>
-                              <td className="border border-gray-300 p-3">23%</td>
+                              <td className="border border-gray-300 p-3">27%</td>
                             </tr>
                             <tr>
                               <td className="border border-gray-300 p-3">AI Group Project</td>
                               <td className="border border-gray-300 p-3">100</td>
-                              <td className="border border-gray-300 p-3">15%</td>
+                              <td className="border border-gray-300 p-3">18%</td>
                             </tr>
                             <tr className="bg-gray-50">
                               <td className="border border-gray-300 p-3">Midterm Exam</td>
                               <td className="border border-gray-300 p-3">100</td>
-                              <td className="border border-gray-300 p-3">15%</td>
+                              <td className="border border-gray-300 p-3">18%</td>
                             </tr>
                             <tr>
                               <td className="border border-gray-300 p-3">Final Reflection Essay</td>
                               <td className="border border-gray-300 p-3">50</td>
-                              <td className="border border-gray-300 p-3">8%</td>
+                              <td className="border border-gray-300 p-3">9%</td>
                             </tr>
                             <tr className="bg-gray-50">
                               <td className="border border-gray-300 p-3">Participation, Discussion & Attendance</td>
                               <td className="border border-gray-300 p-3">50</td>
-                              <td className="border border-gray-300 p-3">8%</td>
+                              <td className="border border-gray-300 p-3">9%</td>
                             </tr>
                             <tr className="bg-amber-100 font-semibold">
                               <td className="border border-gray-300 p-3">Total</td>
-                              <td className="border border-gray-300 p-3">650</td>
+                              <td className="border border-gray-300 p-3">550</td>
                               <td className="border border-gray-300 p-3">100%</td>
                             </tr>
                           </tbody>
