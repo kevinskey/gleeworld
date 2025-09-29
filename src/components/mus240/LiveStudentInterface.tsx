@@ -594,7 +594,17 @@ export const LiveStudentInterface: React.FC = () => {
               {currentQuestion.options.map((option, index) => (
                 <Button
                   key={index}
-                  onClick={() => submitResponse(index)}
+                  onClick={() => {
+                    console.log('🖱️ BUTTON CLICKED!', { 
+                      optionIndex: index, 
+                      option: option,
+                      hasSubmitted, 
+                      submitting,
+                      disabled: hasSubmitted || submitting,
+                      timestamp: new Date().toISOString()
+                    });
+                    submitResponse(index);
+                  }}
                   disabled={hasSubmitted || submitting}
                   className={`w-full text-left justify-start p-6 h-auto transition-all duration-300 relative overflow-hidden ${
                     submitting && userResponse !== index
