@@ -1,0 +1,586 @@
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { BookOpen, FileText, GraduationCap, BarChart3, Eye, Edit, Save, Check, Clock } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+interface Assignment {
+  id: string;
+  assignment_id: string;
+  student_id: string;
+  student_name: string;
+  student_email: string;
+  submission_date: string;
+  grade?: number;
+  feedback?: string;
+  file_url?: string;
+  status: string;
+}
+
+interface Journal {
+  id: string;
+  student_id: string;
+  student_name: string;
+  points_earned?: number;
+  points_possible: number;
+  feedback?: string;
+  created_at: string;
+}
+
+interface MidtermSubmission {
+  id: string;
+  user_id: string;
+  student_name: string;
+  submitted_at: string;
+  grade?: number;
+  feedback?: string;
+  is_submitted: boolean;
+}
+
+export const GradingInterface: React.FC = () => {
+  const { user } = useAuth();
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [journals, setJournals] = useState<Journal[]>([]);
+  const [midterms, setMidterms] = useState<MidtermSubmission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('assignments');
+  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [gradeInput, setGradeInput] = useState('');
+  const [feedbackInput, setFeedbackInput] = useState('');
+
+  useEffect(() => {
+    loadGradingData();
+  }, []);
+
+  const loadGradingData = async () => {
+    try {
+      setLoading(true);
+
+      // Load assignments with basic data
+      const { data: assignmentData } = await supabase
+        .from('assignment_submissions')
+        .select('*')
+        .order('submission_date', { ascending: false });
+
+      // Load student profiles separately
+      const { data: profilesData } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email');
+
+      // Load journals
+      const { data: journalData } = await supabase
+        .from('mus240_journal_grades')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // Load midterm submissions
+      const { data: midtermData } = await supabase
+        .from('mus240_midterm_submissions')
+        .select('*')
+        .eq('is_submitted', true)
+        .order('submitted_at', { ascending: false });
+
+      // Create profile lookup
+      const profileLookup = (profilesData || []).reduce((acc, profile) => {
+        acc[profile.user_id] = profile;
+        return acc;
+      }, {} as Record<string, any>);
+
+      // Format the data with student names
+      const formattedAssignments = (assignmentData || []).map(a => ({
+        ...a,
+        student_name: profileLookup[a.student_id]?.full_name || 'Unknown',
+        student_email: profileLookup[a.student_id]?.email || ''
+      }));
+
+      const formattedJournals = (journalData || []).map(j => ({
+        ...j,
+        student_name: profileLookup[j.student_id]?.full_name || 'Unknown',
+        points_possible: 10 // Default value
+      }));
+
+      const formattedMidterms = (midtermData || []).map(m => ({
+        ...m,
+        student_name: profileLookup[m.user_id]?.full_name || 'Unknown'
+      }));
+
+      setAssignments(formattedAssignments);
+      setJournals(formattedJournals);
+      setMidterms(formattedMidterms);
+
+    } catch (error) {
+      console.error('Error loading grading data:', error);
+      toast.error('Failed to load grading data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartEdit = (itemId: string, currentGrade?: number, currentFeedback?: string) => {
+    setEditingItem(itemId);
+    setGradeInput(currentGrade?.toString() || '');
+    setFeedbackInput(currentFeedback || '');
+  };
+
+  const handleSaveGrade = async (type: 'assignment' | 'journal' | 'midterm', itemId: string) => {
+    const grade = parseFloat(gradeInput);
+    if (isNaN(grade)) {
+      toast.error('Please enter a valid grade');
+      return;
+    }
+
+    try {
+      let updateData: any = {};
+
+      if (type === 'assignment') {
+        updateData = {
+          grade,
+          feedback: feedbackInput,
+          graded_by: user?.id,
+          graded_at: new Date().toISOString(),
+          status: 'graded'
+        };
+        
+        const { error } = await supabase
+          .from('assignment_submissions')
+          .update(updateData)
+          .eq('id', itemId);
+        
+        if (error) throw error;
+      } else if (type === 'journal') {
+        updateData = {
+          points_earned: grade,
+          feedback: feedbackInput,
+          graded_by: user?.id,
+          graded_at: new Date().toISOString()
+        };
+        
+        const { error } = await supabase
+          .from('mus240_journal_grades')
+          .update(updateData)
+          .eq('id', itemId);
+        
+        if (error) throw error;
+      } else if (type === 'midterm') {
+        updateData = {
+          grade,
+          feedback: feedbackInput,
+          graded_by: user?.id,
+          graded_at: new Date().toISOString()
+        };
+        
+        const { error } = await supabase
+          .from('mus240_midterm_submissions')
+          .update(updateData)
+          .eq('id', itemId);
+        
+        if (error) throw error;
+      }
+
+      toast.success('Grade saved successfully!');
+      setEditingItem(null);
+      setGradeInput('');
+      setFeedbackInput('');
+      loadGradingData(); // Reload data
+
+    } catch (error) {
+      console.error('Error saving grade:', error);
+      toast.error('Failed to save grade');
+    }
+  };
+
+  const getStatusBadge = (status: string, grade?: number) => {
+    if (grade !== null && grade !== undefined) {
+      return <Badge variant="default"><Check className="h-3 w-3 mr-1" />Graded</Badge>;
+    }
+    return <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+  };
+
+  const calculateStats = () => {
+    const ungradedAssignments = assignments.filter(a => !a.grade).length;
+    const ungradedJournals = journals.filter(j => !j.points_earned).length;
+    const ungradedMidterms = midterms.filter(m => !m.grade).length;
+    
+    return {
+      totalUngraded: ungradedAssignments + ungradedJournals + ungradedMidterms,
+      ungradedAssignments,
+      ungradedJournals,
+      ungradedMidterms
+    };
+  };
+
+  const stats = calculateStats();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <BarChart3 className="h-8 w-8 animate-pulse mx-auto mb-2" />
+          <p>Loading grading data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Grading Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-4 w-4 text-orange-600" />
+              <span className="text-sm font-medium">Total Pending</span>
+            </div>
+            <p className="text-2xl font-bold text-orange-600">{stats.totalUngraded}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <BookOpen className="h-4 w-4 text-blue-600" />
+              <span className="text-sm font-medium">Assignments</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.ungradedAssignments}</p>
+            <p className="text-xs text-gray-500">pending</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="h-4 w-4 text-green-600" />
+              <span className="text-sm font-medium">Journals</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.ungradedJournals}</p>
+            <p className="text-xs text-gray-500">pending</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <GraduationCap className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium">Midterms</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.ungradedMidterms}</p>
+            <p className="text-xs text-gray-500">pending</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Grading Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="assignments">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Assignments ({assignments.length})
+          </TabsTrigger>
+          <TabsTrigger value="journals">
+            <FileText className="h-4 w-4 mr-2" />
+            Journals ({journals.length})
+          </TabsTrigger>
+          <TabsTrigger value="midterms">
+            <GraduationCap className="h-4 w-4 mr-2" />
+            Midterms ({midterms.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="assignments" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Assignment Submissions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-96">
+                <div className="space-y-4">
+                  {assignments.map((assignment) => (
+                    <div key={assignment.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium">{assignment.student_name}</h4>
+                          <p className="text-sm text-gray-600">{assignment.assignment_id}</p>
+                          <p className="text-xs text-gray-500">
+                            Submitted: {new Date(assignment.submission_date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(assignment.status, assignment.grade)}
+                          {assignment.file_url && (
+                            <Button size="sm" variant="outline">
+                              <Eye className="h-3 w-3 mr-1" />
+                              View
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {editingItem === assignment.id ? (
+                        <div className="space-y-3 pt-3 border-t">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-medium">Grade</label>
+                              <Input
+                                type="number"
+                                placeholder="Enter grade..."
+                                value={gradeInput}
+                                onChange={(e) => setGradeInput(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Feedback</label>
+                            <Textarea
+                              placeholder="Enter feedback..."
+                              value={feedbackInput}
+                              onChange={(e) => setFeedbackInput(e.target.value)}
+                              rows={3}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleSaveGrade('assignment', assignment.id)}
+                            >
+                              <Save className="h-3 w-3 mr-1" />
+                              Save
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => setEditingItem(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center pt-3 border-t">
+                          <div>
+                            {assignment.grade ? (
+                              <span className="text-sm font-medium text-green-600">
+                                Grade: {assignment.grade}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-500">Not graded</span>
+                            )}
+                            {assignment.feedback && (
+                              <p className="text-xs text-gray-600 mt-1">{assignment.feedback}</p>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleStartEdit(assignment.id, assignment.grade, assignment.feedback)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            {assignment.grade ? 'Edit' : 'Grade'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="journals" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Journal Entries</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-96">
+                <div className="space-y-4">
+                  {journals.map((journal) => (
+                    <div key={journal.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium">{journal.student_name}</h4>
+                          <p className="text-xs text-gray-500">
+                            Created: {new Date(journal.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {getStatusBadge('', journal.points_earned)}
+                      </div>
+
+                      {editingItem === journal.id ? (
+                        <div className="space-y-3 pt-3 border-t">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-medium">
+                                Points (out of {journal.points_possible})
+                              </label>
+                              <Input
+                                type="number"
+                                max={journal.points_possible}
+                                placeholder="Enter points..."
+                                value={gradeInput}
+                                onChange={(e) => setGradeInput(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Feedback</label>
+                            <Textarea
+                              placeholder="Enter feedback..."
+                              value={feedbackInput}
+                              onChange={(e) => setFeedbackInput(e.target.value)}
+                              rows={3}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleSaveGrade('journal', journal.id)}
+                            >
+                              <Save className="h-3 w-3 mr-1" />
+                              Save
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => setEditingItem(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center pt-3 border-t">
+                          <div>
+                            {journal.points_earned ? (
+                              <span className="text-sm font-medium text-green-600">
+                                Points: {journal.points_earned}/{journal.points_possible}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-500">
+                                Not graded (out of {journal.points_possible})
+                              </span>
+                            )}
+                            {journal.feedback && (
+                              <p className="text-xs text-gray-600 mt-1">{journal.feedback}</p>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleStartEdit(journal.id, journal.points_earned, journal.feedback)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            {journal.points_earned ? 'Edit' : 'Grade'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="midterms" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Midterm Submissions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-96">
+                <div className="space-y-4">
+                  {midterms.map((midterm) => (
+                    <div key={midterm.id} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium">{midterm.student_name}</h4>
+                          <p className="text-xs text-gray-500">
+                            Submitted: {new Date(midterm.submitted_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        {getStatusBadge('', midterm.grade)}
+                      </div>
+
+                      {editingItem === midterm.id ? (
+                        <div className="space-y-3 pt-3 border-t">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-sm font-medium">Grade</label>
+                              <Input
+                                type="number"
+                                placeholder="Enter grade..."
+                                value={gradeInput}
+                                onChange={(e) => setGradeInput(e.target.value)}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">Feedback</label>
+                            <Textarea
+                              placeholder="Enter feedback..."
+                              value={feedbackInput}
+                              onChange={(e) => setFeedbackInput(e.target.value)}
+                              rows={3}
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleSaveGrade('midterm', midterm.id)}
+                            >
+                              <Save className="h-3 w-3 mr-1" />
+                              Save
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => setEditingItem(null)}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center pt-3 border-t">
+                          <div>
+                            {midterm.grade ? (
+                              <span className="text-sm font-medium text-green-600">
+                                Grade: {midterm.grade}
+                              </span>
+                            ) : (
+                              <span className="text-sm text-gray-500">Not graded</span>
+                            )}
+                            {midterm.feedback && (
+                              <p className="text-xs text-gray-600 mt-1">{midterm.feedback}</p>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleStartEdit(midterm.id, midterm.grade, midterm.feedback)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            {midterm.grade ? 'Edit' : 'Grade'}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};

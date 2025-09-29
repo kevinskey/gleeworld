@@ -177,7 +177,7 @@ import GroupDetail from "./pages/mus240/GroupDetail";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
-import { InstructorDashboard } from "./pages/mus240/InstructorDashboard";
+import { ComprehensiveInstructorDashboard } from "./components/mus240/instructor/ComprehensiveInstructorDashboard";
 import { StudentMidtermGrading } from "./pages/mus240/StudentMidtermGrading";
 import { StudentWorkOverview } from "./pages/mus240/StudentWorkOverview";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
@@ -1709,7 +1709,7 @@ const App = () => {
                                     element={
                                       <ProtectedRoute>
                                         <AdminOnlyRoute>
-                                          <InstructorDashboard />
+                                          <ComprehensiveInstructorDashboard />
                                         </AdminOnlyRoute>
                                       </ProtectedRoute>
                                     } 
