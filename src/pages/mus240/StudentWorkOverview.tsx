@@ -17,23 +17,20 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useUserById } from '@/hooks/useUserById';
-import { useMus240MidtermSubmissions } from '@/hooks/useMus240MidtermSubmissions';
-// import { useAssignmentSubmissions } from '@/hooks/useAssignmentSubmissions';
+import { useStudentMidtermSubmission } from '@/hooks/useStudentMidtermSubmission';
+import { useStudentAssignmentSubmissions } from '@/hooks/useStudentAssignmentSubmissions';
 import { getInitials } from '@/utils/avatarUtils';
 
 export const StudentWorkOverview = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
   const { user, loading: userLoading } = useUserById(studentId);
-  
-  // This would need to be implemented to fetch student's midterm submission
-  // For now, we'll use a placeholder
-  const midtermSubmission = null;
-  
-  // This would need to be implemented to fetch all assignment submissions for the student
-  const assignmentSubmissions = [];
+  const { data: midtermSubmission, isLoading: midtermLoading } = useStudentMidtermSubmission(studentId || '');
+  const { data: assignmentSubmissions, isLoading: assignmentsLoading } = useStudentAssignmentSubmissions(studentId || '');
 
-  if (userLoading) {
+  const isLoading = userLoading || midtermLoading || assignmentsLoading;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg">Loading student information...</div>
@@ -123,14 +120,16 @@ export const StudentWorkOverview = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Status:</span>
-                    {getStatusBadge(midtermSubmission.status)}
+                    {getStatusBadge(midtermSubmission.is_submitted ? 'submitted' : 'pending')}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Submitted:</span>
-                    <span className="text-sm">
-                      {new Date(midtermSubmission.submitted_at).toLocaleDateString()}
-                    </span>
-                  </div>
+                  {midtermSubmission.submitted_at && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Submitted:</span>
+                      <span className="text-sm">
+                        {new Date(midtermSubmission.submitted_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Grade:</span>
                     <span className="text-sm font-medium">
@@ -170,22 +169,24 @@ export const StudentWorkOverview = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {assignmentSubmissions.length > 0 ? (
+              {assignmentSubmissions && assignmentSubmissions.length > 0 ? (
                 <div className="space-y-3">
-                  {assignmentSubmissions.slice(0, 3).map((assignment: any, index: number) => (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg border bg-white/50">
+                  {assignmentSubmissions.slice(0, 3).map((assignment) => (
+                    <div key={assignment.id} className="flex items-center justify-between p-3 rounded-lg border bg-white/50">
                       <div>
-                        <h4 className="font-medium text-sm">{assignment.title}</h4>
+                        <h4 className="font-medium text-sm">{assignment.file_name || `Assignment ${assignment.assignment_id}`}</h4>
                         <p className="text-xs text-gray-600">
-                          Due: {new Date(assignment.due_date).toLocaleDateString()}
+                          Submitted: {new Date(assignment.submitted_at).toLocaleDateString()}
                         </p>
                       </div>
                       {getStatusBadge(assignment.status)}
                     </div>
                   ))}
-                  <Button variant="outline" className="w-full mt-4">
-                    View All Assignments
-                  </Button>
+                  {assignmentSubmissions.length > 3 && (
+                    <Button variant="outline" className="w-full mt-4">
+                      View All {assignmentSubmissions.length} Assignments
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-6">
