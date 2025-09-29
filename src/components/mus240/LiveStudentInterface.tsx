@@ -168,16 +168,15 @@ export const LiveStudentInterface: React.FC = () => {
   };
 
   const checkExistingResponse = async (pollId: string, questionIndex: number) => {
-    // Use authenticated user id or persistent anonymous UUID
-    const sid = user?.id ?? anonId;
-    if (!sid) return;
+    // RLS policy requires student_id to match auth.uid()::text, so only check for authenticated users
+    if (!user?.id) return;
 
     try {
       const { data, error } = await supabase
         .from('mus240_poll_responses')
         .select('selected_option')
         .eq('poll_id', pollId)
-        .eq('student_id', sid)
+        .eq('student_id', user.id)
         .eq('question_index', questionIndex)
         .single();
 
@@ -237,20 +236,9 @@ export const LiveStudentInterface: React.FC = () => {
     setSubmitting(true);
     setSubmissionAnimation(true);
     
-    // Resolve student identifier - authenticated user ID or persistent anonymous UUID
-    let studentId = user?.id ?? anonId ?? null;
-    console.log('🔑 Student ID resolution:', { userId: user?.id, anonId, finalStudentId: studentId });
-    
-    if (!studentId) {
-      try {
-        studentId = (crypto as any)?.randomUUID ? (crypto as any).randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}-anon`;
-      } catch (e) {
-        studentId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}-anon`;
-      }
-      localStorage.setItem('gw_anon_student_uuid', studentId);
-      setAnonId(studentId);
-      console.log('🆔 Generated new student ID:', studentId);
-    }
+    // RLS policy requires student_id to match auth.uid()::text, so use the authenticated user ID
+    const studentId = user.id; // Already verified user.id exists above
+    console.log('🔑 Student ID resolution:', { userId: user.id, studentId });
     
     const requestData = {
       poll_id: activePoll.id,
