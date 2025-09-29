@@ -13706,6 +13706,32 @@ export type Database = {
         }
         Relationships: []
       }
+      mus240_assignment_codes: {
+        Row: {
+          assignment_id: string | null
+          code: string
+          created_at: string | null
+        }
+        Insert: {
+          assignment_id?: string | null
+          code: string
+          created_at?: string | null
+        }
+        Update: {
+          assignment_id?: string | null
+          code?: string
+          created_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_assignment_codes_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mus240_assignment_types: {
         Row: {
           created_at: string | null

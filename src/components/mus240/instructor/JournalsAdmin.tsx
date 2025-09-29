@@ -44,16 +44,39 @@ export const JournalsAdmin = () => {
             .eq('user_id', journal.student_id)
             .single();
 
+          // Use the lookup table to resolve assignment names from shorthand codes
           const { data: assignmentData } = await supabase
-            .from('mus240_assignments')
-            .select('title, id')
-            .eq('id', journal.assignment_id)
-            .single();
+            .from('mus240_assignment_codes')
+            .select(`
+              assignment_id,
+              mus240_assignments!inner (
+                id,
+                title,
+                description
+              )
+            `)
+            .eq('code', journal.assignment_id)
+            .maybeSingle();
+
+          // Fallback to direct UUID lookup if code lookup fails
+          let assignment = assignmentData?.mus240_assignments;
+          if (!assignment) {
+            const { data: directAssignment } = await supabase
+              .from('mus240_assignments')
+              .select('title, id, description')
+              .eq('id', journal.assignment_id)
+              .maybeSingle();
+            assignment = directAssignment;
+          }
 
           return { 
             ...journal, 
             user_profile: profileData,
-            assignment: assignmentData,
+            assignment: assignment || { 
+              id: journal.assignment_id, 
+              title: `Unknown Assignment (${journal.assignment_id})`,
+              description: 'Assignment not found'
+            },
             author_name: profileData?.full_name || 'Unknown Student'
           };
         })
