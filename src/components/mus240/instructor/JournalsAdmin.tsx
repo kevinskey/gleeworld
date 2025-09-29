@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, BarChart3, Calendar, User, Trash2, Bot, Sparkles, Target } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Eye, BarChart3, Calendar, User, Trash2, Bot, Sparkles, Target, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { InstructorGradingModal } from '../InstructorGradingModal';
 import { RubricCustomizer } from '../rubrics/RubricCustomizer';
@@ -12,6 +13,7 @@ import { AIGradingDemo } from '../rubrics/AIGradingDemo';
 export const JournalsAdmin = () => {
   const [journals, setJournals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedJournals, setExpandedJournals] = useState<Set<string>>(new Set());
   const [gradingModal, setGradingModal] = useState<{
     isOpen: boolean;
     journal: any;
@@ -21,6 +23,18 @@ export const JournalsAdmin = () => {
     journal: null,
     assignment: null
   });
+
+  const toggleJournalExpanded = (journalId: string) => {
+    setExpandedJournals(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(journalId)) {
+        newSet.delete(journalId);
+      } else {
+        newSet.add(journalId);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     fetchJournals();
@@ -162,63 +176,79 @@ export const JournalsAdmin = () => {
 
           <div className="space-y-4">
             {journals.map((journal) => (
-              <Card key={journal.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        {journal.user_profile?.full_name || 'Unknown Student'}
-                        <Badge variant="outline">Ready for AI Grading</Badge>
-                      </CardTitle>
-                      <p className="text-sm text-gray-600">{journal.user_profile?.email}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        variant="default"
-                        onClick={() => handleGradeJournal(journal)}
-                        className="flex items-center gap-1"
-                      >
-                        <Bot className="h-4 w-4" />
-                        AI Grade
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDeleteJournal(journal.id, journal.user_profile?.full_name || 'Unknown Student')}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Journal Content Preview:</p>
-                      <p className="text-sm bg-muted/50 p-3 rounded-lg border line-clamp-3">
-                        {journal.content?.substring(0, 300)}...
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        Published {new Date(journal.submitted_at).toLocaleDateString()}
+              <Collapsible 
+                key={journal.id}
+                open={expandedJournals.has(journal.id)}
+                onOpenChange={() => toggleJournalExpanded(journal.id)}
+              >
+                <Card className="hover:shadow-md transition-shadow">
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-3">
+                          {expandedJournals.has(journal.id) ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <div>
+                            <CardTitle className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              {journal.user_profile?.full_name || 'Unknown Student'}
+                              <Badge variant="outline">Ready for AI Grading</Badge>
+                            </CardTitle>
+                            <p className="text-sm text-gray-600">{journal.user_profile?.email}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(journal.submitted_at).toLocaleDateString()}
+                          <Badge variant="secondary" className="text-xs">
+                            {journal.content?.split(' ').length || 0} words
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Badge variant="secondary" className="text-xs">
-                          {journal.content?.split(' ').length || 0} words
-                        </Badge>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="pt-0">
+                      <div className="space-y-4">
+                        <div className="flex justify-end gap-2 border-b pb-3">
+                          <Button 
+                            size="sm" 
+                            variant="default"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleGradeJournal(journal);
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <Bot className="h-4 w-4" />
+                            AI Grade
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteJournal(journal.id, journal.user_profile?.full_name || 'Unknown Student');
+                            }}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2">Assignment: {journal.assignment?.title || 'Unknown Assignment'}</p>
+                          <div className="text-sm bg-muted/50 p-4 rounded-lg border max-h-96 overflow-y-auto">
+                            <p className="whitespace-pre-wrap">{journal.content}</p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">
-                        Assignment: {journal.assignment?.title || 'Unknown Assignment'}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             ))}
             
             {journals.length === 0 && (
