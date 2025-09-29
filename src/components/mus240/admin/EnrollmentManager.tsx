@@ -227,8 +227,9 @@ export const EnrollmentManager = () => {
           bValue = b.gw_profiles?.full_name || '';
           break;
         case 'last_name':
-          aValue = (a.gw_profiles?.full_name || '').split(' ').pop() || '';
-          bValue = (b.gw_profiles?.full_name || '').split(' ').pop() || '';
+          // Extract last name more reliably by trimming and splitting
+          aValue = (a.gw_profiles?.full_name || '').trim().split(/\s+/).slice(-1)[0] || '';
+          bValue = (b.gw_profiles?.full_name || '').trim().split(/\s+/).slice(-1)[0] || '';
           break;
         case 'email':
           aValue = a.gw_profiles?.email || '';
