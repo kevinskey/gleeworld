@@ -268,10 +268,11 @@ export const StudentMidtermGrading = () => {
             {/* Grade Summary */}
             <Card className="border-0 bg-white/70 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle>Grade Summary</CardTitle>
+                <CardTitle>Grade Control Panel</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-center">
+                {/* Final Grade Display */}
+                <div className="text-center p-4 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="text-3xl font-bold text-gray-900 mb-2">
                     {submission.grade ?? 0}/100
                   </div>
@@ -281,20 +282,91 @@ export const StudentMidtermGrading = () => {
                     </Badge>
                   )}
                   {submission.grade == null && (
-                    <p className="text-xs text-muted-foreground mt-2">No score yet — Generate AI feedback or enter scores below.</p>
+                    <p className="text-xs text-muted-foreground mt-2">No final grade saved yet</p>
                   )}
                 </div>
 
-                {/* Current Total Score */}
+                {/* Score Breakdown */}
                 <div className="space-y-3">
-                  <h4 className="font-medium">Current Total Score</h4>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
-                      {calculateTotalScore()}/100
+                  <h4 className="font-medium">Score Breakdown</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Terms ({Object.values(termScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 10), 0)}/40)</span>
+                      <span className="font-mono">{Object.values(termScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 10), 0)}</span>
                     </div>
-                    <Button size="sm" onClick={saveManualGrade} disabled={saving} className="mt-2">
-                      {saving ? 'Saving...' : 'Save All Grades'}
+                    <div className="flex justify-between">
+                      <span>Listening ({Object.values(listeningScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 15), 0)}/40)</span>
+                      <span className="font-mono">{Object.values(listeningScores).reduce((sum, score) => sum + clamp(Number(score || 0), 0, 15), 0)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Essay ({clamp(Number(essayScore || 0), 0, 20)}/20)</span>
+                      <span className="font-mono">{clamp(Number(essayScore || 0), 0, 20)}</span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between font-semibold">
+                      <span>Current Total</span>
+                      <span className="font-mono">{calculateTotalScore()}/100</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grade Controls */}
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      onClick={saveManualGrade} 
+                      disabled={saving} 
+                      className="flex-1"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      {saving ? 'Saving...' : 'Save Grade'}
                     </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        setTermScores({});
+                        setListeningScores({});
+                        setEssayScore('');
+                      }}
+                      className="px-3"
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                  
+                  {/* Quick Grade Buttons */}
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">Quick Grade:</p>
+                    <div className="grid grid-cols-3 gap-1">
+                      {[90, 85, 80, 75, 70, 65].map(grade => (
+                        <Button
+                          key={grade}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const termTotal = Math.round(grade * 0.4);
+                            const listeningTotal = Math.round(grade * 0.4);
+                            const essayTotal = Math.round(grade * 0.2);
+                            
+                            setTermScores({
+                              negro_spiritual: Math.round(termTotal / 4).toString(),
+                              field_holler: Math.round(termTotal / 4).toString(),
+                              ring_shout: Math.round(termTotal / 4).toString(),
+                              blues: Math.round(termTotal / 4).toString()
+                            });
+                            setListeningScores({
+                              listening_1: Math.round(listeningTotal / 2.67).toString(),
+                              listening_2: Math.round(listeningTotal / 2.67).toString()
+                            });
+                            setEssayScore(essayTotal.toString());
+                          }}
+                          className="text-xs"
+                        >
+                          {grade}%
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </CardContent>
