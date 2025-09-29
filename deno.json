@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "lib": ["deno.ns", "dom"],
+    "strict": true
+  },
+  "tasks": {
+    "check:functions": "deno check --all supabase/functions/**/index.ts"
+  }
+}
