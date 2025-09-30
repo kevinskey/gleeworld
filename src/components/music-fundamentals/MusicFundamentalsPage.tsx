@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Music, Upload, BookOpen, Trophy, Settings, Clock } from 'lucide-react';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
-import { SightSingingWidget } from '@/components/shared/SightSingingWidget';
+
 import { FileUploadSection } from '@/components/music-fundamentals/FileUploadSection';
 import { AssignmentsList } from '@/components/music-fundamentals/AssignmentsList';
 import { AdminGradingPanel } from '@/components/music-fundamentals/AdminGradingPanel';
@@ -103,23 +103,72 @@ export const MusicFundamentalsPage: React.FC = () => {
             </div>
           </TabsContent>
 
-          {/* Practice Tab - Sight Singing Generator */}
+          {/* Practice Tab - MusicXML Library */}
           <TabsContent value="practice" className="section-spacing">
             <Card className="card-compact">
               <CardHeader className="card-header-compact">
                 <CardTitle className="flex items-center gap-1 md:gap-2 page-header">
                   <Music className="h-4 w-4 md:h-5 md:w-5 text-primary" />
-                  Sight Singing Practice
+                  Sight Singing Practice Library
                 </CardTitle>
                 <CardDescription className="text-xs md:text-sm">
-                  Generate custom sight singing exercises and record your performance for evaluation
+                  Access the MusicXML library to practice sight singing with uploaded exercises
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <SightSingingWidget 
-                  context="music-theory"
-                  showAdvancedControls={true}
-                />
+              <CardContent className="space-y-4">
+                <div className="p-6 bg-primary/5 rounded-lg border border-primary/10">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <BookOpen className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg mb-2">Practice with MusicXML Library</h3>
+                      <p className="text-muted-foreground mb-4">
+                        Access a curated library of sight singing exercises in MusicXML format. 
+                        View the music notation, practice with playback, and record your performances.
+                      </p>
+                      <a 
+                        href="/mus100-sight-singing"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                      >
+                        <Music className="h-4 w-4" />
+                        Open Practice Library
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 bg-background rounded-lg border">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      Public Library
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Access curated sight singing exercises uploaded by instructors
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-background rounded-lg border">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <Upload className="h-4 w-4 text-primary" />
+                      Your Uploads
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Upload and practice with your own MusicXML files
+                    </p>
+                  </div>
+                  
+                  <div className="p-4 bg-background rounded-lg border">
+                    <h4 className="font-medium mb-2 flex items-center gap-2">
+                      <Music className="h-4 w-4 text-primary" />
+                      Practice Tools
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      Playback, tempo control, and recording features
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
