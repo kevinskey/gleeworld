@@ -28,11 +28,11 @@ import {
 } from 'lucide-react';
 
 interface GradingRubric {
-  terms: number;           // 10 points (2 pts each x 5 terms)
-  shortAnswers: number;    // 20 points (5 pts each x 4 questions)
-  excerpts: number;        // 30 points (15 pts each x 2 excerpts)
-  essay: number;          // 40 points
-  total: number;          // 100 points
+  terms: number;           // 40 points (10 pts each x 4 terms)
+  shortAnswers: number;    // Not used in current rubric
+  excerpts: number;        // 30 points (10 pts each x 3 excerpts)
+  essay: number;           // 20 points
+  total: number;           // 90 points total
 }
 
 const RUBRIC_DEFAULTS: GradingRubric = {
@@ -426,15 +426,17 @@ export const MidtermGradingManager: React.FC = () => {
   };
 
   const getLetterGrade = (score: number) => {
-    if (score >= 97) return 'A+';
-    if (score >= 93) return 'A';
-    if (score >= 90) return 'A-';
-    if (score >= 87) return 'B+';
-    if (score >= 83) return 'B';
-    if (score >= 80) return 'B-';
-    if (score >= 77) return 'C+';
-    if (score >= 73) return 'C';
-    if (score >= 70) return 'C-';
+    // Convert raw score (out of 90) to percentage
+    const percentage = (score / 90) * 100;
+    if (percentage >= 97) return 'A+';
+    if (percentage >= 93) return 'A';
+    if (percentage >= 90) return 'A-';
+    if (percentage >= 87) return 'B+';
+    if (percentage >= 83) return 'B';
+    if (percentage >= 80) return 'B-';
+    if (percentage >= 77) return 'C+';
+    if (percentage >= 73) return 'C';
+    if (percentage >= 70) return 'C-';
     if (score >= 67) return 'D+';
     if (score >= 63) return 'D';
     if (score >= 60) return 'D-';
@@ -611,7 +613,7 @@ export const MidtermGradingManager: React.FC = () => {
                       {submission.grade !== null && (
                         <div className="flex items-center gap-2">
                           <Star className="h-4 w-4 text-yellow-500" />
-                          <span className="font-semibold">{submission.grade}/100</span>
+                          <span className="font-semibold">{submission.grade}/90</span>
                           <Badge variant="outline">{getLetterGrade(submission.grade)}</Badge>
                         </div>
                       )}
@@ -690,7 +692,7 @@ export const MidtermGradingManager: React.FC = () => {
                               <div className="flex items-center justify-between">
                                 <span className="font-semibold">Total Score:</span>
                                 <div className="flex items-center gap-2">
-                                  <span className="text-2xl font-bold">{currentRubric.total}/100</span>
+                                  <span className="text-2xl font-bold">{currentRubric.total}/90</span>
                                   <Badge variant="outline" className="text-lg px-3 py-1">
                                     {getLetterGrade(currentRubric.total)}
                                   </Badge>
