@@ -178,7 +178,7 @@ export const LiveStudentInterface: React.FC = () => {
         .eq('poll_id', pollId)
         .eq('student_id', user.id)
         .eq('question_index', questionIndex)
-        .single();
+        .maybeSingle();
 
       if (data) {
         setUserResponse(data.selected_option);
