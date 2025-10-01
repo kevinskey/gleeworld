@@ -133,7 +133,7 @@ export const StudentWorkOverview = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Grade:</span>
                     <span className="text-sm font-medium">
-                      {midtermSubmission.grade ? `${midtermSubmission.grade}/85` : 'Not graded'}
+                      {midtermSubmission.grade ? `${midtermSubmission.grade}/90` : 'Not graded'}
                     </span>
                   </div>
                   <Button

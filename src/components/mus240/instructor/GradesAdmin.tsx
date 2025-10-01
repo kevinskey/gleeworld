@@ -82,9 +82,9 @@ export const GradesAdmin = () => {
         })
       );
 
-      // Compute midterm percentages from per-question grades if submission.grade is null
+      // Compute midterm raw scores from per-question grades if submission.grade is null
       const submissionIds = (midtermGrades || []).map((s: any) => s.id);
-      const midtermPercentBySubmission = new Map<string, number>();
+      const midtermScoreBySubmission = new Map<string, number>();
 
       if (submissionIds.length > 0) {
         // Latest per-question grades
@@ -95,17 +95,6 @@ export const GradesAdmin = () => {
           .order('created_at', { ascending: false });
         if (submissionGradesError) throw submissionGradesError;
 
-        // Rubrics for max points
-        const { data: rubrics, error: rubricsError } = await supabase
-          .from('mus240_grading_rubrics')
-          .select('question_type, question_id, total_points');
-        if (rubricsError) throw rubricsError;
-
-        const rubricMap = new Map<string, number>();
-        (rubrics || []).forEach((r: any) => {
-          rubricMap.set(`${r.question_type}:${r.question_id}`, Number(r.total_points) || 10);
-        });
-
         // Build latest grade per question for each submission
         const bySubmission = new Map<string, Map<string, any>>();
         (submissionGradeRows || []).forEach((g: any) => {
@@ -115,19 +104,15 @@ export const GradesAdmin = () => {
           if (!m.has(key)) m.set(key, g); // keep latest due to order desc
         });
 
-        // Compute percentage for each submission
+        // Compute raw score (out of 90) for each submission
         bySubmission.forEach((qMap, submissionId) => {
           let score = 0;
-          let possible = 0;
           qMap.forEach((g) => {
             const received = Number(g.instructor_score ?? g.ai_score ?? 0);
             if (!isFinite(received)) return;
-            const max = rubricMap.get(`${g.question_type}:${g.question_id}`) ?? 10;
             score += received;
-            possible += max;
           });
-          const pct = possible > 0 ? (score / possible) * 100 : 0;
-          midtermPercentBySubmission.set(submissionId, Math.round(pct * 10) / 10);
+          midtermScoreBySubmission.set(submissionId, Math.round(score));
         });
       }
 
@@ -141,7 +126,7 @@ export const GradesAdmin = () => {
             .eq('user_id', submission.user_id)
             .single();
 
-          const computed = midtermPercentBySubmission.get(submission.id) ?? 0;
+          const computed = midtermScoreBySubmission.get(submission.id) ?? 0;
           const overall = submission.grade ?? computed;
 
           return {
@@ -172,15 +157,20 @@ export const GradesAdmin = () => {
   };
 
   const getLetterGradeFromScore = (score: number): string => {
-    if (score >= 97) return 'A+';
-    if (score >= 93) return 'A';
-    if (score >= 90) return 'A-';
-    if (score >= 87) return 'B+';
-    if (score >= 83) return 'B';
-    if (score >= 80) return 'B-';
-    if (score >= 77) return 'C+';
-    if (score >= 73) return 'C';
-    if (score >= 70) return 'C-';
+    // Convert raw score (out of 90 for midterms, out of 100 for journals) to percentage
+    // For now, assume midterms are out of 90, journals out of 100
+    // This is a simplified approach - ideally we'd pass type info
+    const percentage = score > 90 ? score : (score / 90) * 100;
+    
+    if (percentage >= 97) return 'A+';
+    if (percentage >= 93) return 'A';
+    if (percentage >= 90) return 'A-';
+    if (percentage >= 87) return 'B+';
+    if (percentage >= 83) return 'B';
+    if (percentage >= 80) return 'B-';
+    if (percentage >= 77) return 'C+';
+    if (percentage >= 73) return 'C';
+    if (percentage >= 70) return 'C-';
     if (score >= 67) return 'D+';
     if (score >= 63) return 'D';
     if (score >= 60) return 'D-';
@@ -249,10 +239,11 @@ export const GradesAdmin = () => {
     toast.success('Grades exported successfully');
   };
 
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600';
-    if (score >= 80) return 'text-blue-600';
-    if (score >= 70) return 'text-yellow-600';
+  const getScoreColor = (score: number, isMidterm: boolean = false) => {
+    const percentage = isMidterm ? (score / 90) * 100 : score;
+    if (percentage >= 90) return 'text-green-600';
+    if (percentage >= 80) return 'text-blue-600';
+    if (percentage >= 70) return 'text-yellow-600';
     return 'text-red-600';
   };
 
@@ -319,8 +310,8 @@ export const GradesAdmin = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Average Score</p>
-                <p className={`text-2xl font-bold ${getScoreColor(stats.averageScore)}`}>
-                  {stats.averageScore.toFixed(1)}%
+                <p className={`text-2xl font-bold ${getScoreColor(stats.averageScore, false)}`}>
+                  {stats.averageScore.toFixed(1)}
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-600" />
@@ -403,8 +394,8 @@ export const GradesAdmin = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <p className={`font-bold ${getScoreColor(grade.overall_score)}`}>
-                      {grade.overall_score}%
+                    <p className={`font-bold ${getScoreColor(grade.overall_score, grade.type === 'midterm')}`}>
+                      {grade.type === 'midterm' ? `${grade.overall_score}/90` : `${grade.overall_score}%`}
                     </p>
                     <p className="text-sm text-gray-600">
                       {new Date(grade.graded_at).toLocaleDateString()}
