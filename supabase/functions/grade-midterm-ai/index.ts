@@ -104,12 +104,11 @@ serve(async (req) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'gpt-4o-mini',
+            model: 'o4-mini-2025-04-16',
             messages: [
               { role: 'system', content: 'You are an expert music instructor grading African American music history exam responses. Provide detailed, constructive feedback.' },
               { role: 'user', content: prompt }
             ],
-            temperature: 0.3,
           }),
         });
 
