@@ -92,7 +92,8 @@ serve(async (req) => {
               { achieved: 0, possible: 0 }
             );
             if (totals.possible > 0) {
-              finalGrade = Math.round((totals.achieved / totals.possible) * 100);
+              // Use raw score instead of percentage (exam is out of 90 points)
+              finalGrade = Math.round(totals.achieved);
             }
           }
         } catch (e) {
@@ -157,7 +158,8 @@ serve(async (req) => {
             }
 
             console.log(`[grade-midterm-ai-async] Final calculation: ${achieved}/${possible} points`);
-            if (possible > 0) return Math.max(0, Math.min(100, Math.round((achieved / possible) * 100)));
+            // Return raw score instead of percentage (exam is out of 90 points)
+            if (possible > 0) return Math.round(achieved);
             return null;
           };
 
