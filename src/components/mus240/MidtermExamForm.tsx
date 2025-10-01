@@ -355,6 +355,14 @@ export const MidtermExamForm: React.FC = () => {
           {/* Excerpt 1 */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-blue-900">Excerpt 1 (10 points)</h4>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
+              <Label className="text-sm font-medium mb-2 block">Audio Link</Label>
+              <input 
+                type="text" 
+                placeholder="Paste YouTube or audio link here"
+                className="w-full px-3 py-2 border border-blue-300 rounded-md text-sm"
+              />
+            </div>
             <div className="space-y-3">
               <div>
                 <Label>Genre</Label>
@@ -389,6 +397,14 @@ export const MidtermExamForm: React.FC = () => {
           {/* Excerpt 2 */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-purple-900">Excerpt 2 (10 points)</h4>
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-3">
+              <Label className="text-sm font-medium mb-2 block">Audio Link</Label>
+              <input 
+                type="text" 
+                placeholder="Paste YouTube or audio link here"
+                className="w-full px-3 py-2 border border-purple-300 rounded-md text-sm"
+              />
+            </div>
             <div className="space-y-3">
               <div>
                 <Label>Genre</Label>
@@ -423,6 +439,14 @@ export const MidtermExamForm: React.FC = () => {
           {/* Excerpt 3 */}
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-green-900">Excerpt 3 (10 points)</h4>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
+              <Label className="text-sm font-medium mb-2 block">Audio Link</Label>
+              <input 
+                type="text" 
+                placeholder="Paste YouTube or audio link here"
+                className="w-full px-3 py-2 border border-green-300 rounded-md text-sm"
+              />
+            </div>
             <div className="space-y-3">
               <div>
                 <Label>Genre</Label>

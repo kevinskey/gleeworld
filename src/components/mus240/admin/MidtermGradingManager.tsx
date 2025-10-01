@@ -24,7 +24,8 @@ import {
   Square,
   Zap,
   MessageSquare,
-  Loader2
+  Loader2,
+  RefreshCcw
 } from 'lucide-react';
 
 interface GradingRubric {
@@ -439,6 +440,40 @@ export const MidtermGradingManager: React.FC = () => {
     bulkGradeWithAI.mutate(allSubmittedIds);
   };
 
+  const allowRetakeMutation = useMutation({
+    mutationFn: async (submissionId: string) => {
+      // Delete the submission to allow retake
+      const { error } = await supabase
+        .from('mus240_midterm_submissions')
+        .delete()
+        .eq('id', submissionId);
+
+      if (error) throw error;
+      
+      // Also delete any grades for this submission
+      await supabase
+        .from('mus240_submission_grades')
+        .delete()
+        .eq('submission_id', submissionId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['midterm-submissions'] });
+      toast.success('Student can now retake the midterm');
+      setExpandedSubmissionId(null);
+    },
+    onError: (error) => {
+      toast.error('Failed to allow retake');
+      console.error('Error allowing retake:', error);
+    },
+  });
+
+  const handleAllowRetake = (submissionId: string, studentName: string) => {
+    if (!confirm(`Allow ${studentName} to retake the midterm? This will delete their current submission and grade.`)) {
+      return;
+    }
+    allowRetakeMutation.mutate(submissionId);
+  };
+
   const getLetterGrade = (score: number) => {
     // Convert raw score (out of 90) to percentage
     const percentage = (score / 90) * 100;
@@ -780,15 +815,27 @@ export const MidtermGradingManager: React.FC = () => {
                               />
                             </div>
 
-                            {/* Save Button */}
-                            <Button 
-                              onClick={() => handleGradeSubmission(submission)}
-                              disabled={gradeMutation.isPending}
-                              className="w-full"
-                              size="lg"
-                            >
-                              {gradeMutation.isPending ? 'Saving...' : 'Save Grade'}
-                            </Button>
+                            {/* Action Buttons */}
+                            <div className="flex gap-2">
+                              <Button 
+                                onClick={() => handleGradeSubmission(submission)}
+                                disabled={gradeMutation.isPending}
+                                className="flex-1"
+                                size="lg"
+                              >
+                                {gradeMutation.isPending ? 'Saving...' : 'Save Grade'}
+                              </Button>
+                              <Button 
+                                onClick={() => handleAllowRetake(submission.id, submission.gw_profiles?.full_name || 'Student')}
+                                disabled={allowRetakeMutation.isPending}
+                                variant="outline"
+                                size="lg"
+                                className="flex items-center gap-2"
+                              >
+                                <RefreshCcw className="h-4 w-4" />
+                                Allow Retake
+                              </Button>
+                            </div>
                           </div>
                         </div>
                       </CardContent>
