@@ -425,6 +425,20 @@ export const MidtermGradingManager: React.FC = () => {
     bulkGradeWithAI.mutate(Array.from(selectedSubmissions));
   };
 
+  const handleRegradeAll = async () => {
+    const allSubmittedIds = submissions?.filter((s: any) => s.is_submitted).map((s: any) => s.id) || [];
+    if (allSubmittedIds.length === 0) {
+      toast.error('No submitted midterms to regrade');
+      return;
+    }
+    
+    if (!confirm(`This will regrade all ${allSubmittedIds.length} submitted midterms. Continue?`)) {
+      return;
+    }
+    
+    bulkGradeWithAI.mutate(allSubmittedIds);
+  };
+
   const getLetterGrade = (score: number) => {
     // Convert raw score (out of 90) to percentage
     const percentage = (score / 90) * 100;
@@ -502,34 +516,46 @@ export const MidtermGradingManager: React.FC = () => {
             <FileText className="h-5 w-5" />
             Midterm Submissions ({submissions?.length || 0})
           </div>
-          {ungradedCount > 0 && (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleAllSubmissions}
-                className="flex items-center gap-2"
-              >
-                {selectedSubmissions.size === ungradedCount ? (
-                  <CheckSquare className="h-4 w-4" />
-                ) : (
-                  <Square className="h-4 w-4" />
-                )}
-                {selectedSubmissions.size === ungradedCount ? 'Deselect All' : 'Select All Ungraded'}
-              </Button>
-              <Button
-                onClick={handleBulkGradeWithAI}
-                disabled={selectedSubmissions.size === 0 || bulkGradeWithAI.isPending}
-                className="flex items-center gap-2"
-              >
-                <Zap className="h-4 w-4" />
-                {bulkGradeWithAI.isPending
-                  ? (progress ? `Grading ${progress.done}/${progress.total}...` : `Grading ${selectedSubmissions.size}...`)
-                  : `Grade ${selectedSubmissions.size} with AI`
-                }
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {ungradedCount > 0 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleAllSubmissions}
+                  className="flex items-center gap-2"
+                >
+                  {selectedSubmissions.size === ungradedCount ? (
+                    <CheckSquare className="h-4 w-4" />
+                  ) : (
+                    <Square className="h-4 w-4" />
+                  )}
+                  {selectedSubmissions.size === ungradedCount ? 'Deselect All' : 'Select All Ungraded'}
+                </Button>
+                <Button
+                  onClick={handleBulkGradeWithAI}
+                  disabled={selectedSubmissions.size === 0 || bulkGradeWithAI.isPending}
+                  className="flex items-center gap-2"
+                >
+                  <Zap className="h-4 w-4" />
+                  {bulkGradeWithAI.isPending
+                    ? (progress ? `Grading ${progress.done}/${progress.total}...` : `Grading ${selectedSubmissions.size}...`)
+                    : `Grade ${selectedSubmissions.size} with AI`
+                  }
+                </Button>
+              </>
+            )}
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleRegradeAll}
+              disabled={bulkGradeWithAI.isPending || !submissions?.some((s: any) => s.is_submitted)}
+              className="flex items-center gap-2"
+            >
+              <Zap className="h-4 w-4" />
+              Regrade All
+            </Button>
+          </div>
         </CardTitle>
         {bulkGradeWithAI.isPending && progress && (
           <div className="mt-3">
