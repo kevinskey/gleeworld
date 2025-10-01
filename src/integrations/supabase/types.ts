@@ -14414,6 +14414,36 @@ export type Database = {
           },
         ]
       }
+      mus240_midterm_config: {
+        Row: {
+          created_at: string | null
+          excerpt_1_url: string | null
+          excerpt_2_url: string | null
+          excerpt_3_url: string | null
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          excerpt_1_url?: string | null
+          excerpt_2_url?: string | null
+          excerpt_3_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          excerpt_1_url?: string | null
+          excerpt_2_url?: string | null
+          excerpt_3_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       mus240_midterm_submissions: {
         Row: {
           blues_answer: string | null
