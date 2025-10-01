@@ -19090,6 +19090,14 @@ export type Database = {
         Args: { p_group_id: string }
         Returns: undefined
       }
+      recalculate_missing_midterm_grades: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          calculated_grade: number
+          question_count: number
+          submission_id: string
+        }[]
+      }
       refresh_all_user_permissions: {
         Args: Record<PropertyKey, never>
         Returns: Json
