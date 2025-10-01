@@ -5,25 +5,26 @@ import { BarChart } from 'lucide-react';
 
 export const Mus240PollPage = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-800 to-amber-600 relative">
-      {/* Gradient overlay for consistency with landing page */}
+    <div className="h-screen bg-gradient-to-br from-orange-800 to-amber-600 relative overflow-hidden flex flex-col">
+      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-black/5"></div>
       
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        <BackNavigation fallbackPath="/dashboard" className="mb-6" />
-        
-        {/* Header with glass morphism */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-3 mb-6 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
-            <BarChart className="h-8 w-8 text-amber-300" />
-            <span className="text-3xl font-bold text-white">MUS 240 Polling System</span>
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Compact Header */}
+        <div className="flex-shrink-0 px-4 pt-4 pb-2">
+          <BackNavigation fallbackPath="/dashboard" className="mb-3" />
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
+              <BarChart className="h-5 w-5 text-amber-300" />
+              <span className="text-lg font-bold text-white">MUS 240 Polling</span>
+            </div>
           </div>
-          <p className="text-xl text-white/90 max-w-2xl mx-auto">
-            Interactive polls for music theory learning and assessment
-          </p>
         </div>
 
-        <Mus240PollSystem />
+        {/* Main Content Area - Uses remaining viewport */}
+        <div className="flex-1 overflow-hidden px-4 pb-4">
+          <Mus240PollSystem />
+        </div>
       </div>
     </div>
   );

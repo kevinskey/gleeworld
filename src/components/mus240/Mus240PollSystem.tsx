@@ -265,22 +265,21 @@ export const Mus240PollSystem = () => {
   // Show student view for non-admins or when admin chooses student view
   if (!hasAdminAccess || viewMode === 'student') {
     return (
-      <div className="space-y-6 bg-white/95 backdrop-blur-sm p-8 rounded-3xl shadow-2xl border border-white/30">
+      <div className="h-full flex flex-col bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/30 overflow-hidden">
         {hasAdminAccess && (
-          <div className="flex justify-end mb-4">
+          <div className="flex-shrink-0 px-4 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200">
             <Button
               onClick={() => setViewMode('admin')}
-              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 transition-all duration-300 shadow-lg"
+              size="sm"
+              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 w-full"
             >
               Switch to Admin View
             </Button>
           </div>
         )}
-        <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-3">MUS 240 Live Poll</h2>
-          <p className="text-lg text-gray-600">Join the live poll session</p>
+        <div className="flex-1 overflow-hidden">
+          <LiveStudentInterface />
         </div>
-        <LiveStudentInterface />
       </div>
     );
   }

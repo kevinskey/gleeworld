@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Clock, Users, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -300,26 +301,26 @@ export const LiveStudentInterface: React.FC = () => {
 
   if (loading) {
     return (
-      <Card className="bg-white/95 backdrop-blur-sm border border-white/30 shadow-xl">
-        <CardContent className="p-8 text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-4"></div>
+      <div className="h-full flex items-center justify-center bg-white/95 backdrop-blur-sm rounded-2xl border border-white/30 shadow-xl">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 mx-auto mb-3"></div>
           <p className="text-gray-600">Loading live poll...</p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   if (!activePoll) {
     return (
-      <Card className="bg-white/95 backdrop-blur-sm border border-white/30 shadow-xl">
-        <CardContent className="p-8 text-center">
-          <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Live Poll Active</h3>
-          <p className="text-gray-600">
+      <div className="h-full flex items-center justify-center bg-white/95 backdrop-blur-sm rounded-2xl border border-white/30 shadow-xl">
+        <div className="text-center p-6">
+          <AlertCircle className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Live Poll Active</h3>
+          <p className="text-gray-600 text-sm">
             Wait for your instructor to start a live polling session.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -338,406 +339,275 @@ export const LiveStudentInterface: React.FC = () => {
   // Poll completion state
   if (pollCompleted) {
     return (
-      <div className="space-y-6">
-        {/* Completion Celebration */}
-        <div className="bg-gradient-to-br from-emerald-500 via-teal-400 to-cyan-400 p-8 rounded-3xl shadow-xl border border-white/20 relative overflow-hidden text-center">
-          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent"></div>
-          <div className="absolute -top-4 -right-4 w-32 h-32 bg-white/20 rounded-full blur-2xl animate-pulse"></div>
-          <div className="absolute -bottom-4 -left-4 w-40 h-40 bg-yellow-400/30 rounded-full blur-3xl animate-pulse delay-75"></div>
-          
-          <div className="relative z-10">
-            <div className="text-8xl mb-6 animate-bounce">🎉</div>
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 tracking-tight">
-              Poll Complete!
-            </h2>
-            <p className="text-xl text-white/90 mb-6 max-w-2xl mx-auto leading-relaxed">
-              Thank you for participating in "{activePoll.title}". Your responses have been recorded and will contribute to your participation grade.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30">
-                <div className="text-3xl mb-2">📚</div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  {activePoll.questions.length}
-                </div>
-                <div className="text-white/80">Questions Answered</div>
-              </div>
-              
-              <div className="bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30">
-                <div className="text-3xl mb-2">⭐</div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  100%
-                </div>
-                <div className="text-white/80">Participation</div>
-              </div>
-              
-              <div className="bg-white/20 backdrop-blur-xl rounded-2xl p-6 border border-white/30">
-                <div className="text-3xl mb-2">🎵</div>
-                <div className="text-2xl font-bold text-white mb-1">
-                  Complete
-                </div>
-                <div className="text-white/80">Status</div>
-              </div>
-            </div>
+      <div className="h-full flex flex-col bg-white/95 backdrop-blur-sm rounded-2xl border border-white/30 shadow-xl overflow-hidden">
+        {/* Compact Completion Header */}
+        <div className="flex-shrink-0 bg-gradient-to-r from-emerald-500 to-teal-500 p-4 text-center text-white">
+          <div className="text-4xl mb-2">🎉</div>
+          <h2 className="text-2xl font-bold mb-1">Poll Complete!</h2>
+          <p className="text-sm text-emerald-100">Thank you for participating</p>
+        </div>
 
-            <div className="mt-8 p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 max-w-2xl mx-auto">
-              <h3 className="text-xl font-semibold text-white mb-3">What's Next?</h3>
-              <div className="text-white/90 space-y-2">
-                <p>✓ Your responses are saved and counted toward participation</p>
-                <p>✓ Review the correct answers shown below</p>
-                <p>✓ Wait for your instructor to start the next activity</p>
-              </div>
+        {/* Stats Grid - Fixed */}
+        <div className="flex-shrink-0 p-3 bg-gradient-to-br from-emerald-50 to-teal-50 border-b border-emerald-200">
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-white/80 rounded-lg p-2 text-center border border-emerald-200">
+              <div className="text-xl font-bold text-gray-800">{activePoll.questions.length}</div>
+              <div className="text-xs text-gray-600">Questions</div>
+            </div>
+            <div className="bg-white/80 rounded-lg p-2 text-center border border-emerald-200">
+              <div className="text-xl font-bold text-gray-800">100%</div>
+              <div className="text-xs text-gray-600">Participation</div>
+            </div>
+            <div className="bg-white/80 rounded-lg p-2 text-center border border-emerald-200">
+              <div className="text-xl font-bold text-emerald-600">✓</div>
+              <div className="text-xs text-gray-600">Complete</div>
             </div>
           </div>
         </div>
 
-        {/* Final Results Review */}
-        <Card className="bg-white/95 backdrop-blur-sm border border-white/30 shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-900 flex items-center gap-3">
-              <span className="text-2xl">📊</span>
-              Final Results - {activePoll.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {activePoll.questions.map((question, questionIndex) => {
-                const questionResponses = responses.filter(r => r.question_index === questionIndex);
-                const questionStats = question.options.map((option, optionIndex) => {
-                  const count = questionResponses.filter(r => r.selected_option === optionIndex).length;
-                  const percentage = questionResponses.length > 0 ? (count / questionResponses.length) * 100 : 0;
-                  return { option, count, percentage, isCorrect: optionIndex === question.correct_answer };
-                });
+        {/* Scrollable Results */}
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-3">
+            {activePoll.questions.map((question, questionIndex) => {
+              const questionResponses = responses.filter(r => r.question_index === questionIndex);
+              const questionStats = question.options.map((option, optionIndex) => {
+                const count = questionResponses.filter(r => r.selected_option === optionIndex).length;
+                const percentage = questionResponses.length > 0 ? (count / questionResponses.length) * 100 : 0;
+                return { option, count, percentage, isCorrect: optionIndex === question.correct_answer };
+              });
 
-                return (
-                  <div key={questionIndex} className="border border-gray-200 rounded-xl p-6 bg-gray-50/50">
-                    <h4 className="font-semibold text-gray-900 mb-4">
-                      {questionIndex + 1}. {question.question}
-                    </h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      {questionStats.map((stat, optionIndex) => (
-                        <div
-                          key={optionIndex}
-                          className={`p-3 rounded-lg border-2 transition-all ${
-                            stat.isCorrect
-                              ? 'border-green-500 bg-green-50 text-green-900'
-                              : 'border-gray-300 bg-white'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span>
-                              <span className="font-medium mr-2">
-                                {String.fromCharCode(65 + optionIndex)}.
-                              </span>
-                              {stat.option}
+              return (
+                <div key={questionIndex} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  <h4 className="font-semibold text-gray-900 mb-2 text-sm">
+                    {questionIndex + 1}. {question.question}
+                  </h4>
+                  <div className="space-y-2">
+                    {questionStats.map((stat, optionIndex) => (
+                      <div
+                        key={optionIndex}
+                        className={`p-2 rounded-lg border-2 ${
+                          stat.isCorrect
+                            ? 'border-green-500 bg-green-50'
+                            : 'border-gray-300 bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs">
+                            <span className="font-medium mr-1">
+                              {String.fromCharCode(65 + optionIndex)}.
                             </span>
-                            <div className="flex items-center gap-2">
-                              {stat.isCorrect && (
-                                <Badge className="bg-green-600 text-white">✓ Correct</Badge>
-                              )}
-                              <span className="text-sm text-gray-600">
-                                {stat.percentage.toFixed(0)}%
-                              </span>
-                            </div>
+                            {stat.option}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {stat.isCorrect && (
+                              <Badge className="bg-green-600 text-white text-xs px-1.5 py-0">✓</Badge>
+                            )}
+                            <span className="text-xs text-gray-600">
+                              {stat.percentage.toFixed(0)}%
+                            </span>
                           </div>
-                          <Progress value={stat.percentage} className="mt-2 h-2" />
                         </div>
-                      ))}
-                    </div>
-                    
-                    {question.explanation && (
-                      <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h5 className="font-medium text-blue-900 mb-2">💡 Explanation:</h5>
-                        <p className="text-blue-800 text-sm">{question.explanation}</p>
+                        <Progress value={stat.percentage} className="h-1.5" />
                       </div>
-                    )}
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                  
+                  {question.explanation && (
+                    <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                      <h5 className="text-xs font-medium text-blue-900 mb-1">💡 Explanation</h5>
+                      <p className="text-xs text-blue-800">{question.explanation}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </ScrollArea>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">{/* Rest of the existing component remains the same */}
-      {/* Beautiful Classroom Display */}
-      <div className="bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 p-8 rounded-3xl shadow-xl border border-slate-400/20 relative overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent"></div>
-        <div className="absolute -top-4 -right-4 w-24 h-24 bg-amber-400/20 rounded-full blur-xl"></div>
-        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-rose-400/20 rounded-full blur-2xl"></div>
-        
-        <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          {/* Live Response Count */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 shadow-lg">
-            <div className="text-center">
-              <div className="text-4xl mb-2">🎵</div>
-              <div className="text-5xl md:text-6xl font-light text-gray-800 mb-2 tracking-tight">
-                {totalResponses}
-              </div>
-              <div className="text-lg font-medium text-gray-700 tracking-wide">
-                Responses
-              </div>
-              <div className="text-sm text-gray-600 mt-1 font-light">
-                Question {activePoll.current_question_index + 1} of {activePoll.questions.length}
-              </div>
-            </div>
+    <div className="h-full flex flex-col bg-white/95 backdrop-blur-sm rounded-2xl border border-white/30 shadow-xl overflow-hidden">
+      {/* Compact Header - Fixed */}
+      <div className="flex-shrink-0 px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-500 border-b border-slate-400/20">
+        <div className="flex items-center justify-between text-white">
+          <div className="flex items-center gap-3">
+            <span className="text-xl font-bold">{activePoll.title}</span>
+            <Badge className="bg-rose-500 text-white animate-pulse border-0 text-xs">
+              <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-bounce"></div>
+              LIVE
+            </Badge>
           </div>
-
-          {/* Poll Status */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 shadow-lg">
-            <div className="text-center">
-              <div className="text-4xl mb-3">✨</div>
-              <div className="text-xl font-medium text-gray-800 mb-2 leading-relaxed">
-                {activePoll.title}
-              </div>
-              <div className="flex items-center justify-center gap-2 mt-3">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                <span className="text-base font-medium text-gray-700 tracking-wide">Live Session</span>
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse delay-75"></div>
-              </div>
+          <div className="flex items-center gap-4 text-sm">
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" />
+              <span>Q {activePoll.current_question_index + 1}/{activePoll.questions.length}</span>
             </div>
-          </div>
-
-          {/* Participation Rate */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-6 border border-gray-200 shadow-lg">
-            <div className="text-center">
-              <div className="text-4xl mb-2">🌟</div>
-              <div className="text-4xl md:text-5xl font-light text-gray-800 mb-2 tracking-tight">
-                {totalResponses > 0 ? Math.round((totalResponses / 30) * 100) : 0}%
-              </div>
-              <div className="text-lg font-medium text-gray-700 tracking-wide">
-                Participation
-              </div>
-              <div className="text-sm text-gray-600 mt-1 font-light">
-                Every voice matters!
-              </div>
+            <div className="flex items-center gap-1.5">
+              <Users className="h-3.5 w-3.5" />
+              <span>{totalResponses}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Poll Header */}
-      <Card className="bg-white/95 backdrop-blur-sm border border-gray-200 shadow-lg">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-xl text-gray-900">{activePoll.title}</CardTitle>
-              <p className="text-gray-600 mt-1">{activePoll.description}</p>
+      {/* Main Content - Scrollable */}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          {/* Stats Bar - Compact */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-3 text-center border border-blue-100">
+              <div className="text-2xl font-light text-gray-800">{totalResponses}</div>
+              <div className="text-xs text-gray-600">Responses</div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge className="bg-gradient-to-r from-rose-500 to-pink-500 text-white animate-pulse border-0 shadow-lg">
-                <div className="w-2 h-2 bg-white rounded-full mr-2 animate-bounce"></div>
-                LIVE
-              </Badge>
-              <div className="text-right text-sm text-gray-600">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  Question {activePoll.current_question_index + 1} of {activePoll.questions.length}
-                </div>
-                <div className="flex items-center gap-1 mt-1">
-                  <Users className="h-4 w-4" />
-                  {totalResponses} responses
-                </div>
-              </div>
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 text-center border border-purple-100">
+              <div className="text-2xl font-light text-gray-800">{activePoll.current_question_index + 1}/{activePoll.questions.length}</div>
+              <div className="text-xs text-gray-600">Progress</div>
+            </div>
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 text-center border border-amber-100">
+              <div className="text-2xl font-light text-gray-800">{totalResponses > 0 ? Math.round((totalResponses / 30) * 100) : 0}%</div>
+              <div className="text-xs text-gray-600">Class Rate</div>
             </div>
           </div>
-        </CardHeader>
-      </Card>
 
-      {/* Current Question */}
-      <Card className="bg-white/95 backdrop-blur-sm border border-white/30 shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-xl text-gray-900">
-            {currentQuestion.question}
-          </CardTitle>
-          {currentQuestion.audio_url && (
-            <div className="flex items-center gap-2 text-blue-600 text-sm">
-              <span>🎵</span>
-              <span>Audio clip: {currentQuestion.audio_url}</span>
-            </div>
-          )}
-        </CardHeader>
-        <CardContent>
+          {/* Question */}
+          <div className="bg-gradient-to-r from-slate-700 to-slate-600 rounded-xl p-4 border border-slate-400/20">
+            <h3 className="text-lg font-semibold text-white leading-snug">
+              {currentQuestion.question}
+            </h3>
+            {currentQuestion.audio_url && (
+              <div className="flex items-center gap-2 text-amber-300 text-sm mt-2">
+                <span>🎵</span>
+                <span>{currentQuestion.audio_url}</span>
+              </div>
+            )}
+          </div>
+
           {!activePoll.show_results ? (
             // Answer Selection Mode
-            <div className="space-y-3">
-              {/* Enhanced Submission Status */}
+            <div className="space-y-2">
+              {/* Submission Status */}
               {justSubmitted && (
-                <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-6 rounded-xl shadow-lg mb-6 animate-pulse">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] animate-slide-right"></div>
-                  <div className="flex items-center justify-center gap-3">
-                    <div className="text-3xl animate-bounce">✅</div>
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-3 rounded-xl mb-2 animate-pulse">
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className="text-xl">✅</div>
                     <div>
-                      <div className="text-xl font-bold">Response Submitted!</div>
-                      <div className="text-emerald-100">Your answer has been recorded and sent to your instructor</div>
+                      <div className="font-bold">Submitted!</div>
+                      <div className="text-xs text-emerald-100">Response recorded</div>
                     </div>
-                    <div className="text-3xl animate-bounce delay-100">🎵</div>
                   </div>
                 </div>
               )}
               
               {hasSubmitted && !justSubmitted && (
-                <div className="flex items-center gap-3 text-emerald-600 font-medium mb-4 bg-emerald-50 p-4 rounded-xl border border-emerald-200">
-                  <CheckCircle className="h-6 w-6" />
+                <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200 mb-2 text-sm">
+                  <CheckCircle className="h-5 w-5 flex-shrink-0" />
                   <div>
                     <div className="font-semibold">Response Recorded</div>
-                    <div className="text-sm text-emerald-700">Waiting for instructor to show results...</div>
+                    <div className="text-xs">Waiting for results...</div>
                   </div>
                 </div>
               )}
               
+              {/* Options */}
               {currentQuestion.options.map((option, index) => (
                 <Button
                   key={index}
-                  onClick={() => {
-                    console.log('🖱️ BUTTON CLICKED!', { 
-                      optionIndex: index, 
-                      option: option,
-                      hasSubmitted, 
-                      submitting,
-                      disabled: hasSubmitted || submitting,
-                      timestamp: new Date().toISOString()
-                    });
-                    submitResponse(index);
-                  }}
+                  onClick={() => submitResponse(index)}
                   disabled={hasSubmitted || submitting}
-                  className={`w-full text-left justify-start p-6 h-auto transition-all duration-300 relative overflow-hidden ${
+                  className={`w-full text-left justify-start p-4 h-auto transition-all relative ${
                     submitting && userResponse !== index
-                      ? 'opacity-50 pointer-events-none'
+                      ? 'opacity-50'
                       : userResponse === index && submissionAnimation
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-xl border-0 transform scale-[1.05] animate-pulse'
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg animate-pulse'
                       : userResponse === index
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg border-0 transform scale-[1.02]'
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
                       : hasSubmitted
                       ? 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200'
-                      : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md hover:transform hover:scale-[1.01]'
+                      : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 hover:border-gray-300 shadow-sm'
                   }`}
                 >
-                  {submitting && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] animate-slide-right"></div>
-                  )}
-                  <div className="flex items-center w-full">
-                    <span className="font-bold mr-4 text-lg">
+                  <div className="flex items-center w-full gap-3">
+                    <span className="font-bold text-base flex-shrink-0">
                       {String.fromCharCode(65 + index)}.
                     </span>
-                    <span className="flex-1">{option}</span>
+                    <span className="flex-1 text-sm">{option}</span>
                     {userResponse === index && hasSubmitted && (
-                      <div className="ml-3 flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5" />
-                        <span className="text-sm font-medium">Selected</span>
-                      </div>
+                      <CheckCircle className="h-4 w-4 flex-shrink-0" />
                     )}
-                    {submitting && (
-                      <div className="ml-3">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      </div>
+                    {submitting && userResponse === index && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white flex-shrink-0"></div>
                     )}
                   </div>
                 </Button>
               ))}
-              
-              {submitting && (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-2"></div>
-                  <p className="text-emerald-600 font-medium">Submitting your response...</p>
-                </div>
-              )}
             </div>
           ) : (
             // Results Display Mode
-            <div className="space-y-4">
-              {/* Beautiful Results Display for Classroom */}
-              <div className="bg-gradient-to-br from-slate-700 via-slate-600 to-slate-500 p-8 rounded-3xl shadow-xl border border-slate-400/20 relative overflow-hidden mb-8">
-                {/* Decorative elements */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent"></div>
-                <div className="absolute -top-6 -right-6 w-32 h-32 bg-emerald-400/20 rounded-full blur-2xl"></div>
-                <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-blue-400/20 rounded-full blur-3xl"></div>
-                
-                <div className="relative z-10 text-center">
-                  <div className="text-4xl mb-6 text-white">🎼 Live Results</div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {responseStats.map((stat, index) => (
-                      <div key={index} className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 border border-gray-200 shadow-lg transform hover:scale-105 transition-all duration-300">
-                        <div className="text-3xl md:text-5xl font-light text-gray-800 mb-3 tracking-tight">
-                          {stat.count}
-                        </div>
-                        <div className="text-xl font-medium text-gray-700 mb-2">
-                          {String.fromCharCode(65 + index)}
-                        </div>
-                        <div className="text-lg text-gray-600 font-light">
-                          {stat.percentage.toFixed(0)}%
-                        </div>
-                        {stat.isCorrect && (
-                          <div className="text-2xl mt-3 animate-bounce">🌟</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  <div className="text-xl text-white/90 mt-8 font-light tracking-wide">
-                    {totalResponses} responses received ✨
-                  </div>
+            <div className="space-y-3">
+              {/* Results Grid */}
+              <div className="bg-gradient-to-br from-slate-700 to-slate-600 p-4 rounded-xl border border-slate-400/20">
+                <div className="text-center mb-3">
+                  <div className="text-2xl text-white font-light">📊 Live Results</div>
+                </div>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {responseStats.map((stat, index) => (
+                    <div key={index} className="bg-white/95 rounded-lg p-3 text-center border border-gray-200">
+                      <div className="text-3xl font-light text-gray-800">{stat.count}</div>
+                      <div className="text-base font-medium text-gray-700">{String.fromCharCode(65 + index)}</div>
+                      <div className="text-sm text-gray-600">{stat.percentage.toFixed(0)}%</div>
+                      {stat.isCorrect && <div className="text-lg mt-1">🌟</div>}
+                    </div>
+                  ))}
+                </div>
+                <div className="text-sm text-white/80 text-center">
+                  {totalResponses} responses ✨
                 </div>
               </div>
               
-              {/* Detailed Results for Individual View */}
+              {/* Detailed Results */}
               {responseStats.map((stat, index) => (
                 <div
                   key={index}
-                  className={`p-4 rounded-xl border-2 transition-all duration-500 ${
+                  className={`p-3 rounded-lg border-2 ${
                     stat.isCorrect
-                      ? 'border-green-300 bg-green-50 shadow-lg'
+                      ? 'border-green-300 bg-green-50'
                       : userResponse === index && !stat.isCorrect
                       ? 'border-red-300 bg-red-50'
                       : 'border-gray-200 bg-gray-50'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-gray-900">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm font-medium text-gray-900">
                       {String.fromCharCode(65 + index)}. {stat.option}
                     </span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
                       {stat.isCorrect && (
-                        <Badge className="bg-green-600 text-white animate-bounce">
-                          ✓ Correct
-                        </Badge>
+                        <Badge className="bg-green-600 text-white text-xs">✓</Badge>
                       )}
                       {userResponse === index && (
-                        <Badge className="bg-blue-600 text-white">Your Answer</Badge>
+                        <Badge className="bg-blue-600 text-white text-xs">You</Badge>
                       )}
-                      <span className="text-sm font-medium text-gray-600 bg-white px-2 py-1 rounded-full">
-                        {stat.count} ({stat.percentage.toFixed(1)}%)
+                      <span className="text-xs font-medium text-gray-600 bg-white px-1.5 py-0.5 rounded">
+                        {stat.count}
                       </span>
                     </div>
                   </div>
-                  <Progress 
-                    value={stat.percentage} 
-                    className={`h-3 transition-all duration-700 ${
-                      stat.isCorrect ? 'bg-green-100' : 'bg-gray-100'
-                    }`}
-                  />
+                  <Progress value={stat.percentage} className="h-2" />
                 </div>
               ))}
               
               {currentQuestion.explanation && (
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl animate-fadeIn">
-                  <h4 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
-                    💡 Explanation:
-                  </h4>
-                  <p className="text-blue-800">{currentQuestion.explanation}</p>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="text-sm font-semibold text-blue-900 mb-1">💡 Explanation</h4>
+                  <p className="text-xs text-blue-800">{currentQuestion.explanation}</p>
                 </div>
               )}
-
-              <div className="text-center text-sm text-gray-500 mt-4">
-                Results update in real-time as classmates submit answers
-              </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </ScrollArea>
     </div>
   );
 };
