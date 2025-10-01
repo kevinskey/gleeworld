@@ -11,6 +11,7 @@ import { JournalsAdmin } from '@/components/mus240/instructor/JournalsAdmin';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
 import { MidtermGradingManager } from '@/components/mus240/admin/MidtermGradingManager';
+import { MidtermConfigManager } from '@/components/mus240/admin/MidtermConfigManager';
 import { GradeCalculationSystem } from '@/components/mus240/admin/GradeCalculationSystem';
 import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
 import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
@@ -219,7 +220,10 @@ export const InstructorConsole = () => {
           </TabsContent>
 
           <TabsContent value="midterm-grading" className="mt-1 md:mt-3">
-            <MidtermGradingManager />
+            <div className="space-y-6">
+              <MidtermConfigManager />
+              <MidtermGradingManager />
+            </div>
           </TabsContent>
 
           <TabsContent value="grade-calculation" className="mt-1 md:mt-3">
