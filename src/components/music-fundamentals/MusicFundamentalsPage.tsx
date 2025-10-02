@@ -37,7 +37,7 @@ export const MusicFundamentalsPage: React.FC = () => {
             <p className="mobile-text-lg text-muted-foreground max-w-2xl mx-auto px-2">
               Practice sight singing, complete assignments, and master the fundamentals of music theory and performance.
             </p>
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-3 justify-center">
               <a 
                 href="/grand-staves"
                 target="_blank"
@@ -46,6 +46,13 @@ export const MusicFundamentalsPage: React.FC = () => {
               >
                 <Music className="h-4 w-4" />
                 Open Grand Staves for Class
+              </a>
+              <a 
+                href="/mus100-sight-singing"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition-colors text-sm font-medium"
+              >
+                <BookOpen className="h-4 w-4" />
+                Course Materials
               </a>
             </div>
           </div>
