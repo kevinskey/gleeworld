@@ -2,6 +2,7 @@ import { ParsedScore, ParsedNote } from './musicXMLParser';
 
 export class MusicXMLPlayer {
   private audioContext: AudioContext | null = null;
+  private outputNode: AudioNode | null = null;
   private scheduledNodes: Array<{ oscillator: OscillatorNode; gain: GainNode; timeout: NodeJS.Timeout }> = [];
   private isPlaying = false;
   private startTime = 0;
@@ -51,6 +52,13 @@ export class MusicXMLPlayer {
     return ctx.state === 'running';
   }
 
+  public setOutputNode(node: AudioNode | null) {
+    this.outputNode = node;
+  }
+
+  public getAudioContext(): AudioContext {
+    return this.initAudioContext();
+  }
   private createTone(frequency: number, startTime: number, duration: number, volume: number = 0.3, noteSound: string = 'piano'): void {
     console.log('Creating tone with sound:', noteSound, 'frequency:', frequency);
     
@@ -68,7 +76,11 @@ export class MusicXMLPlayer {
     const gainNode = audioContext.createGain();
     
     oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    if (this.outputNode) {
+      gainNode.connect(this.outputNode);
+    } else {
+      gainNode.connect(audioContext.destination);
+    }
     
     oscillator.frequency.value = frequency;
     
@@ -157,7 +169,11 @@ export class MusicXMLPlayer {
     
     source.buffer = buffer;
     source.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+    if (this.outputNode) {
+      gainNode.connect(this.outputNode);
+    } else {
+      gainNode.connect(audioContext.destination);
+    }
     
     // Volume control
     gainNode.gain.setValueAtTime(volume * (isDownbeat ? 1.2 : 0.8), startTime);

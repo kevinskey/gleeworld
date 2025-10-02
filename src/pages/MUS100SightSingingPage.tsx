@@ -97,7 +97,9 @@ const MUS100SightSingingPage: React.FC = () => {
     mode,
     setMode,
     startPlayback,
-    stopPlayback
+    stopPlayback,
+    getAudioContext,
+    setOutputNode,
   } = useTonePlayback();
 
   // Fetch public MusicXML files and user's uploaded files on component mount
@@ -389,7 +391,8 @@ const MUS100SightSingingPage: React.FC = () => {
   };
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // 1) Get microphone stream
+      const micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           sampleRate: 24000,
           channelCount: 1,
@@ -398,65 +401,67 @@ const MUS100SightSingingPage: React.FC = () => {
           autoGainControl: true
         }
       });
+
+      // 2) Build a mixed stream of program audio (click/notes) + mic using the SAME audio context
+      const ctx = getAudioContext?.();
+      if (!ctx) {
+        toast({ title: 'Audio error', description: 'Audio context not ready', variant: 'destructive' });
+        return;
+      }
+
+      // Destination stream for MediaRecorder
+      const mediaDest = ctx.createMediaStreamDestination();
+
+      // Program audio bus: route player output to both speakers and recorder
+      const programBus = ctx.createGain();
+      programBus.gain.value = 1.0;
+      programBus.connect(ctx.destination); // monitor clicks/notes
+      programBus.connect(mediaDest);       // include in recording
+      setOutputNode?.(programBus);         // direct MusicXMLPlayer output here
+
+      // Mic -> recorder only (avoid feedback)
+      const micSource = ctx.createMediaStreamSource(micStream);
+      micSource.connect(mediaDest);
+
+      // 3) Start MediaRecorder on the mixed stream
       audioChunksRef.current = [];
-      mediaRecorderRef.current = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-      mediaRecorderRef.current.ondataavailable = event => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
+      mediaRecorderRef.current = new MediaRecorder(mediaDest.stream, { mimeType: 'audio/webm;codecs=opus' });
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
       };
       mediaRecorderRef.current.onstop = () => {
         console.log('🛑 Recording stopped, chunks:', audioChunksRef.current.length);
-        
+
+        // Reset player output back to default speakers
+        setOutputNode?.(null);
+
         if (audioChunksRef.current.length === 0) {
           console.error('❌ No audio chunks recorded!');
-          toast({
-            title: "Recording failed",
-            description: "No audio data was captured",
-            variant: "destructive"
-          });
-          stream.getTracks().forEach(track => track.stop());
+          toast({ title: 'Recording failed', description: 'No audio data was captured', variant: 'destructive' });
+          micStream.getTracks().forEach((t) => t.stop());
           return;
         }
-        
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: 'audio/webm'
-        });
+
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         console.log('✅ Audio blob created:', audioBlob.size, 'bytes');
-        console.log('📝 Setting recorded audio and showing dialog...');
-        
-        // Stop the stream first
-        stream.getTracks().forEach(track => track.stop());
-        
-        // Set state in sequence to ensure both are set
+
+        // Stop microphone
+        micStream.getTracks().forEach((t) => t.stop());
+
         setRecordedAudio(audioBlob);
-        setTimeout(() => {
-          console.log('🔔 Opening share dialog');
-          setShowShareDialog(true);
-        }, 100);
-        
-        toast({
-          title: "Recording complete!",
-          description: "Your recording is ready to download"
-        });
+        setTimeout(() => setShowShareDialog(true), 100);
+        toast({ title: 'Recording complete!', description: 'Your recording is ready to download' });
       };
+
       mediaRecorderRef.current.start();
       setIsRecording(true);
       console.log('▶️ Recording started');
-      toast({
-        title: "Recording started",
-        description: "Sing along to the music!"
-      });
+      toast({ title: 'Recording started', description: 'Sing along to the music!' });
     } catch (error) {
-      toast({
-        title: "Recording failed",
-        description: "Could not access microphone",
-        variant: "destructive"
-      });
+      toast({ title: 'Recording failed', description: 'Could not access microphone', variant: 'destructive' });
     }
-  }, []);
+  }, [getAudioContext, setOutputNode]);
+  
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();

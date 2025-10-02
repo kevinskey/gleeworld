@@ -192,6 +192,8 @@ export const useTonePlayback = (soundSettings?: { notes: string; click: string }
     mode,
     setMode,
     startPlayback,
-    stopPlayback
+    stopPlayback,
+    getAudioContext: () => playerRef.current ? playerRef.current.getAudioContext() : null,
+    setOutputNode: (node: AudioNode | null) => { playerRef.current?.setOutputNode(node); }
   };
 };
