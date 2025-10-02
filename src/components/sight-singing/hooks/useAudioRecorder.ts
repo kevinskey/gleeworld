@@ -40,8 +40,10 @@ export const useAudioRecorder = () => {
       setRecordingDuration(0);
       console.log('▶️ MediaRecorder started');
       
-      // Start metronome immediately after recording starts (synchronized)
+      // Small delay to ensure MediaRecorder is actually capturing before first click
       if (bpm && bpm > 0 && metronomeCallbackRef.current) {
+        console.log('🎵 Waiting 100ms for recorder to stabilize before starting metronome');
+        await new Promise(resolve => setTimeout(resolve, 100));
         console.log('🎵 Starting metronome with BPM:', bpm);
         metronomeCallbackRef.current(bpm);
       } else {
