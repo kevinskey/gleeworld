@@ -435,13 +435,37 @@ const MUS100SightSingingPage: React.FC = () => {
       setIsRecording(false);
     }
   }, [isRecording]);
-  const handlePlayPause = async () => {
+  const handlePlayPause = async (e?: React.MouseEvent) => {
+    // Prevent any default behavior or event propagation
+    e?.preventDefault();
+    e?.stopPropagation();
+    
     if (!selectedFile) return;
     if (mode === 'record-click' || mode === 'record-both') {
       if (isRecording) {
-        stopRecording();
+        try {
+          stopRecording();
+          stopPlayback();
+        } catch (error) {
+          console.error('Error stopping recording:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to stop recording',
+            variant: 'destructive'
+          });
+        }
       } else {
-        await startRecording();
+        try {
+          await startRecording();
+          await startPlayback(selectedFile.content, tempo, mode === 'record-click' ? 'click-only' : 'click-and-score');
+        } catch (error) {
+          console.error('Error starting recording:', error);
+          toast({
+            title: 'Error',
+            description: 'Failed to start recording. Please allow microphone access.',
+            variant: 'destructive'
+          });
+        }
       }
       return;
     }
@@ -659,11 +683,11 @@ const MUS100SightSingingPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* Play button - full width on mobile, auto on desktop */}
                       <Button 
-                        onClick={handlePlayPause} 
+                        onClick={(e) => handlePlayPause(e)} 
                         variant="outline" 
                         size="sm" 
+                        type="button"
                         className="w-full sm:w-auto flex items-center justify-center gap-2"
                       >
                         {(mode === 'record-click' || mode === 'record-both') ? isRecording ? (
