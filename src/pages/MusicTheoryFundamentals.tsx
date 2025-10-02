@@ -85,12 +85,16 @@ const MusicTheoryFundamentals = () => {
               Master the building blocks of music with comprehensive lessons in theory, notation, and ear training
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link to="/mus100-sight-singing">
+              <a 
+                href="/course-materials/sightsinging.pdf" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
                 <Button size="lg" className="gap-2">
                   <BookOpen className="w-5 h-5" />
-                  Course Materials
+                  Course Materials (PDF)
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         </section>
