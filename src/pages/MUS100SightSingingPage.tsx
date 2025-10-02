@@ -105,10 +105,16 @@ const MUS100SightSingingPage: React.FC = () => {
 
   // Fetch public MusicXML files and user's uploaded files on component mount
   useEffect(() => {
-    fetchPublicMusicXML();
-    if (user?.id) {
-      fetchUserUploadedFiles();
-    }
+    const loadAllFiles = async () => {
+      const publicFiles = await fetchPublicMusicXML();
+      const userFiles = user?.id ? await fetchUserUploadedFiles() : [];
+      
+      // Merge both arrays without overwriting
+      const allFiles = [...publicFiles, ...userFiles];
+      setUploadedFiles(allFiles);
+    };
+    
+    loadAllFiles();
   }, [user?.id]);
 
   // Manage preview URL for recorded audio (avoid recreating on each render)
@@ -127,8 +133,8 @@ const MUS100SightSingingPage: React.FC = () => {
     };
   }, [recordedAudio]);
 
-  const fetchUserUploadedFiles = async () => {
-    if (!user?.id) return;
+  const fetchUserUploadedFiles = async (): Promise<UploadedFile[]> => {
+    if (!user?.id) return [];
     try {
       const {
         data,
@@ -146,12 +152,11 @@ const MUS100SightSingingPage: React.FC = () => {
           uniqueFiles.set(key, file);
         }
       });
-      const userFiles: UploadedFile[] = Array.from(uniqueFiles.values()).map(file => ({
+      return Array.from(uniqueFiles.values()).map(file => ({
         id: file.id,
         name: file.title + '.xml',
         content: file.xml_content
       }));
-      setUploadedFiles(userFiles);
     } catch (error) {
       console.error('Error fetching user uploaded files:', error);
       toast({
@@ -159,9 +164,10 @@ const MUS100SightSingingPage: React.FC = () => {
         description: "Failed to load your uploaded files",
         variant: "destructive"
       });
+      return [];
     }
   };
-  const fetchPublicMusicXML = async () => {
+  const fetchPublicMusicXML = async (): Promise<UploadedFile[]> => {
     try {
       const {
         data,
@@ -203,7 +209,7 @@ const MUS100SightSingingPage: React.FC = () => {
         }
       }
       
-      setUploadedFiles(processedFiles);
+      return processedFiles;
     } catch (error) {
       console.error('Error fetching public MusicXML:', error);
       toast({
@@ -211,6 +217,7 @@ const MUS100SightSingingPage: React.FC = () => {
         description: "Failed to load public MusicXML library",
         variant: "destructive"
       });
+      return [];
     }
   };
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
