@@ -156,13 +156,6 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         
         console.log(`Container width: ${containerWidth}, Measures per row: ${measuresPerRow}, Device: ${isMobile ? 'mobile' : 'desktop/tablet'}`);
         
-        // Layout at a wider fixed width so 2 measures fit, then scale SVG to container width
-        const desiredLayoutWidth = 1200;
-        if (scoreRef.current) {
-          scoreRef.current.style.width = `${desiredLayoutWidth}px`;
-          scoreRef.current.style.maxWidth = `${desiredLayoutWidth}px`;
-        }
-        
         // Create OSMD instance with responsive settings optimized for 2 measures per line
         const osmd = new OpenSheetMusicDisplay(scoreRef.current!, {
           autoResize: true,
@@ -172,9 +165,9 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           drawCredits: false,
           drawLyrics: false,
           drawPartNames: false,
-          spacingFactorSoftmax: isMobile ? 3 : 5,  // Tighter spacing on mobile
+          spacingFactorSoftmax: isMobile ? 3 : 5,
           spacingBetweenTextLines: 0.3,
-          newSystemFromXML: true,  // Respect system breaks
+          newSystemFromXML: true,
           newPageFromXML: false,
           autoBeam: true,
         });
@@ -182,24 +175,33 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         // Store reference for cleanup and resize
         osmdRef.current = osmd;
 
-        // Use default zoom; we'll make SVG responsive after render
-        osmd.zoom = 1;
+        // Responsive zoom based on container width
+        const baseWidth = 800;
+        const zoomFactor = containerWidth / baseWidth;
+        osmd.zoom = Math.max(0.5, Math.min(1.5, zoomFactor));
 
         // Load the MusicXML with enforced system breaks
         const xmlWithBreaks = insertSystemBreaks(musicXML, 2);
         await osmd.load(xmlWithBreaks);
         
-        console.log(`Rendering score for ${isMobile ? 'mobile' : 'desktop'} with ${measuresPerRow} measures per row`);
+        console.log(`Rendering score for ${isMobile ? 'mobile' : 'desktop'} with ${measuresPerRow} measures per row, zoom: ${osmd.zoom}`);
         
         // Render with optimized settings
         osmd.render();
         
-        // Make SVG responsive to container width
+        // Make SVG fully responsive to viewport
         const svgs = scoreRef.current!.querySelectorAll('svg');
         svgs.forEach((svgEl) => {
+          const originalWidth = svgEl.getAttribute('width');
+          const originalHeight = svgEl.getAttribute('height');
+          
+          if (originalWidth && originalHeight) {
+            svgEl.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
+          }
+          
           svgEl.removeAttribute('width');
           svgEl.removeAttribute('height');
-          svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+          svgEl.setAttribute('preserveAspectRatio', 'xMinYMin meet');
           (svgEl as SVGElement).style.width = '100%';
           (svgEl as SVGElement).style.maxWidth = '100%';
           (svgEl as SVGElement).style.height = 'auto';
@@ -208,12 +210,6 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         
         // Force system breaks after every 2 measures
         enforceMaxMeasuresPerSystem(scoreRef.current!, 2);
-        
-        // Restore container width after rendering so SVG can scale to available space
-        if (scoreRef.current) {
-          scoreRef.current.style.width = '';
-          scoreRef.current.style.maxWidth = '';
-        }
         
         console.log(`OSMD rendering completed with enforced max 2 measures per system`);
 
@@ -250,26 +246,32 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           
           // Use a debounced approach to avoid excessive re-renders
           setTimeout(() => {
-            const desiredLayoutWidth = 1200;
             if (osmdRef.current && scoreRef.current) {
-              // Temporarily widen for consistent 2-measure layout
-              scoreRef.current.style.width = `${desiredLayoutWidth}px`;
-              scoreRef.current.style.maxWidth = `${desiredLayoutWidth}px`;
+              const isMobile = containerWidth < 640;
+              const baseWidth = 800;
+              const zoomFactor = containerWidth / baseWidth;
+              osmdRef.current.zoom = Math.max(0.5, Math.min(1.5, zoomFactor));
+              
               osmdRef.current.render();
-              // Make SVG responsive to container width
+              
+              // Make SVG fully responsive
               const svgs = scoreRef.current.querySelectorAll('svg');
               svgs.forEach((svgEl) => {
+                const originalWidth = svgEl.getAttribute('width');
+                const originalHeight = svgEl.getAttribute('height');
+                
+                if (originalWidth && originalHeight) {
+                  svgEl.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
+                }
+                
                 svgEl.removeAttribute('width');
                 svgEl.removeAttribute('height');
-                svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                svgEl.setAttribute('preserveAspectRatio', 'xMinYMin meet');
                 (svgEl as SVGElement).style.width = '100%';
                 (svgEl as SVGElement).style.maxWidth = '100%';
                 (svgEl as SVGElement).style.height = 'auto';
                 (svgEl as SVGElement).style.display = 'block';
               });
-              // Restore container width
-              scoreRef.current.style.width = '';
-              scoreRef.current.style.maxWidth = '';
             }
           }, 250);
         } catch (error) {
