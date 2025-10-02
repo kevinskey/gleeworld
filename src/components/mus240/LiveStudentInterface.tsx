@@ -69,9 +69,9 @@ export const LiveStudentInterface: React.FC = () => {
   useEffect(() => {
     fetchActivePoll();
     
-    // Subscribe to poll updates
+    // Subscribe to poll updates with better event handling
     const pollChannel = supabase
-      .channel('live-polls')
+      .channel('live-polls-updates')
       .on(
         'postgres_changes',
         {
@@ -81,29 +81,49 @@ export const LiveStudentInterface: React.FC = () => {
           filter: 'is_live_session=eq.true'
         },
         (payload) => {
-          console.log('Poll updated:', payload);
+          console.log('🔔 Poll updated via realtime:', payload);
           const newPoll = {
             ...payload.new,
             questions: Array.isArray(payload.new.questions) ? payload.new.questions : JSON.parse(payload.new.questions || '[]')
           } as Poll;
-          setActivePoll(newPoll);
           
-          // Reset response state when question changes
-          if (payload.new.current_question_index !== activePoll?.current_question_index) {
-            setUserResponse(null);
-            setHasSubmitted(false);
-            setJustSubmitted(false);
-            setSubmissionAnimation(false);
-            checkExistingResponse(payload.new.id, payload.new.current_question_index);
-          }
+          console.log('📊 New poll state:', {
+            oldQuestionIndex: activePoll?.current_question_index,
+            newQuestionIndex: newPoll.current_question_index,
+            isLive: newPoll.is_live_session,
+            showResults: newPoll.show_results
+          });
+          
+          setActivePoll(prev => {
+            // Check if question changed
+            const questionChanged = prev && prev.current_question_index !== newPoll.current_question_index;
+            
+            if (questionChanged) {
+              console.log('🔄 Question changed, resetting state');
+              setUserResponse(null);
+              setHasSubmitted(false);
+              setJustSubmitted(false);
+              setSubmissionAnimation(false);
+              
+              // Check if user already answered this question
+              if (user?.id) {
+                checkExistingResponse(newPoll.id, newPoll.current_question_index);
+              }
+            }
+            
+            return newPoll;
+          });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Realtime subscription status:', status);
+      });
 
     return () => {
+      console.log('🔌 Cleaning up realtime subscription');
       supabase.removeChannel(pollChannel);
     };
-  }, []); // Remove dependency on activePoll?.current_question_index
+  }, [user?.id]); // Only depend on user.id
 
   useEffect(() => {
     if (activePoll) {
