@@ -81,9 +81,17 @@ const MusicTheoryFundamentals = () => {
             <p className="text-lg text-muted-foreground mb-6">
               with Dr. Kevin P. Johnson
             </p>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
               Master the building blocks of music with comprehensive lessons in theory, notation, and ear training
             </p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/mus100-sight-singing">
+                <Button size="lg" className="gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Course Materials
+                </Button>
+              </Link>
+            </div>
           </div>
         </section>
 
