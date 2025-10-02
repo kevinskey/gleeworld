@@ -184,12 +184,16 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
   };
 
   const handleSaveRecording = () => {
-    if (!audioBlob) return;
+    if (!audioBlob) {
+      toast.error('No recording available');
+      return;
+    }
     
+    console.log('💾 Saving recording blob:', audioBlob.size, 'bytes');
     const url = URL.createObjectURL(audioBlob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `sight-singing-${currentExercise?.metadata.key}-${Date.now()}.mp3`;
+    a.download = `sight-singing-${currentExercise?.metadata.key}-${Date.now()}.webm`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

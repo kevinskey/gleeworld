@@ -21,11 +21,16 @@ export const useAudioRecorder = () => {
       const chunks: BlobPart[] = [];
       
       mediaRecorder.ondataavailable = (event) => {
-        chunks.push(event.data);
+        if (event.data.size > 0) {
+          chunks.push(event.data);
+          console.log('📦 Audio chunk received:', event.data.size, 'bytes');
+        }
       };
       
       mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/mp3' });
+        console.log('🛑 Recording stopped, creating blob from', chunks.length, 'chunks');
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        console.log('✅ Recording blob created:', blob.size, 'bytes');
         setAudioBlob(blob);
       };
       
@@ -42,6 +47,7 @@ export const useAudioRecorder = () => {
       mediaRecorder.start();
       setIsRecording(true);
       setRecordingDuration(0);
+      console.log('▶️ MediaRecorder started');
       
       intervalRef.current = setInterval(() => {
         setRecordingDuration(prev => prev + 1);
@@ -49,10 +55,12 @@ export const useAudioRecorder = () => {
       
     } catch (error) {
       console.error('❌ Error starting recording:', error);
+      throw error;
     }
   }, []);
 
   const stopRecording = useCallback(() => {
+    console.log('🛑 Stopping recording, isRecording:', isRecording);
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
@@ -72,6 +80,8 @@ export const useAudioRecorder = () => {
         // Signal to stop metronome (negative BPM as stop signal)
         metronomeCallbackRef.current(-1);
       }
+      
+      console.log('✅ Recording stopped successfully');
     }
   }, [isRecording]);
 
