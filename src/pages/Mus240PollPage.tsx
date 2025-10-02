@@ -22,7 +22,7 @@ export const Mus240PollPage = () => {
         </div>
 
         {/* Main Content Area - Uses remaining viewport */}
-        <div className="flex-1 overflow-hidden px-4 pb-4">
+        <div className="flex-1 overflow-y-auto px-4 pb-4">
           <Mus240PollSystem />
         </div>
       </div>
