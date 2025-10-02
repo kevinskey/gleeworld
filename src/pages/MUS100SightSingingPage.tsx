@@ -81,13 +81,12 @@ const MUS100SightSingingPage: React.FC = () => {
     user
   } = useAuth();
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [publicFiles, setPublicFiles] = useState<PublicMusicXML[]>([]);
   const [selectedFile, setSelectedFile] = useState<UploadedFile | null>(null);
   const [tempo, setTempo] = useState<number>(120);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
-  const [loadingPublic, setLoadingPublic] = useState(true);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
@@ -144,7 +143,6 @@ const MUS100SightSingingPage: React.FC = () => {
   };
   const fetchPublicMusicXML = async () => {
     try {
-      setLoadingPublic(true);
       const {
         data,
         error
@@ -154,7 +152,7 @@ const MUS100SightSingingPage: React.FC = () => {
       if (error) throw error;
 
       // Filter and process files to ensure they have XML content
-      const processedFiles: PublicMusicXML[] = [];
+      const processedFiles: UploadedFile[] = [];
       
       for (const file of data || []) {
         let xmlContent = file.xml_content;
@@ -179,15 +177,13 @@ const MUS100SightSingingPage: React.FC = () => {
         if (xmlContent) {
           processedFiles.push({
             id: file.id,
-            title: file.title,
-            composer: file.composer,
-            xml_content: xmlContent,
-            created_at: file.created_at
+            name: file.title,
+            content: xmlContent
           });
         }
       }
       
-      setPublicFiles(processedFiles);
+      setUploadedFiles(processedFiles);
     } catch (error) {
       console.error('Error fetching public MusicXML:', error);
       toast({
@@ -195,17 +191,7 @@ const MUS100SightSingingPage: React.FC = () => {
         description: "Failed to load public MusicXML library",
         variant: "destructive"
       });
-    } finally {
-      setLoadingPublic(false);
     }
-  };
-  const handlePublicFileSelect = (publicFile: PublicMusicXML) => {
-    const fileData: UploadedFile = {
-      id: publicFile.id,
-      name: publicFile.title,
-      content: publicFile.xml_content
-    };
-    setSelectedFile(fileData);
   };
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -628,71 +614,6 @@ const MUS100SightSingingPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Public Library Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileMusic className="h-5 w-5" />
-                  Public MusicXML Library
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {loadingPublic ? (
-                  <p className="text-sm text-muted-foreground">Loading library...</p>
-                ) : publicFiles.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No public files available</p>
-                ) : (
-                  <div className="space-y-2">
-                    {/* Mobile dropdown selector */}
-                    <div className="lg:hidden">
-                      <select
-                        className="w-full bg-background border border-border rounded-md px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                        value={selectedFile?.id || ''}
-                        onChange={(e) => {
-                          const file = publicFiles.find(f => f.id === e.target.value);
-                          if (file) {
-                            handlePublicFileSelect(file);
-                            // Smooth scroll to score
-                            setTimeout(() => {
-                              const scoreElement = document.querySelector('[data-score-display]');
-                              if (scoreElement) {
-                                scoreElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                              }
-                            }, 100);
-                          }
-                        }}
-                      >
-                        <option value="">Select composition...</option>
-                        {publicFiles.map(file => (
-                          <option key={file.id} value={file.id}>
-                            {file.title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Desktop scrollable list */}
-                    <div className="hidden lg:block space-y-2 max-h-64 overflow-y-auto">
-                      {publicFiles.map(file => (
-                        <div
-                          key={file.id}
-                          className={`p-3 rounded-md border cursor-pointer transition-colors ${selectedFile?.id === file.id ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
-                          onClick={() => handlePublicFileSelect(file)}
-                        >
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium truncate">{file.title}</p>
-                            {file.composer && <p className="text-xs text-muted-foreground">by {file.composer}</p>}
-                            <p className="text-xs text-muted-foreground">
-                              Added {new Date(file.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
           </div>
 
           <div className="lg:col-span-2">
