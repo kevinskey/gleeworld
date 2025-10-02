@@ -85,6 +85,7 @@ const MUS100SightSingingPage: React.FC = () => {
   const [tempo, setTempo] = useState<number>(120);
   const [isRecording, setIsRecording] = useState(false);
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showShareDialog, setShowShareDialog] = useState(false);
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -109,6 +110,23 @@ const MUS100SightSingingPage: React.FC = () => {
       fetchUserUploadedFiles();
     }
   }, [user?.id]);
+
+  // Manage preview URL for recorded audio (avoid recreating on each render)
+  useEffect(() => {
+    if (!recordedAudio) {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        setPreviewUrl(null);
+      }
+      return;
+    }
+    const url = URL.createObjectURL(recordedAudio);
+    setPreviewUrl(url);
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [recordedAudio]);
+
   const fetchUserUploadedFiles = async () => {
     if (!user?.id) return;
     try {
@@ -425,7 +443,19 @@ const MUS100SightSingingPage: React.FC = () => {
 
       // 3) Start MediaRecorder on the mixed stream
       audioChunksRef.current = [];
-      mediaRecorderRef.current = new MediaRecorder(mediaDest.stream, { mimeType: 'audio/webm;codecs=opus' });
+      const preferredTypes = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4;codecs=mp4a',
+        'audio/mp4',
+        'audio/ogg;codecs=opus'
+      ];
+      const isSupported = (t: string) => (window as any).MediaRecorder?.isTypeSupported?.(t);
+      const mimeType = preferredTypes.find(isSupported) || '';
+      mediaRecorderRef.current = new MediaRecorder(
+        mediaDest.stream,
+        mimeType ? { mimeType } as MediaRecorderOptions : undefined
+      );
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) audioChunksRef.current.push(event.data);
       };
@@ -442,7 +472,8 @@ const MUS100SightSingingPage: React.FC = () => {
           return;
         }
 
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const blobType = (audioChunksRef.current[0] as any)?.type || 'audio/webm';
+        const audioBlob = new Blob(audioChunksRef.current, { type: blobType });
         console.log('✅ Audio blob created:', audioBlob.size, 'bytes');
 
         // Stop microphone
@@ -523,7 +554,9 @@ const MUS100SightSingingPage: React.FC = () => {
       const url = URL.createObjectURL(recordedAudio);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sight-singing-${selectedFile?.name || 'recording'}-${Date.now()}.webm`;
+      const type = recordedAudio.type || 'audio/webm';
+      const ext = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
+      a.download = `sight-singing-${selectedFile?.name || 'recording'}-${Date.now()}.${ext}`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -903,14 +936,16 @@ const MUS100SightSingingPage: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Your sight singing recording is ready! Would you like to download it?
+                  Preview your recording below. Listen before deciding to download.
                 </p>
                 
                 {/* Audio player preview */}
-                <audio 
-                  controls 
-                  src={recordedAudio ? URL.createObjectURL(recordedAudio) : undefined}
+                <audio
+                  controls
+                  preload="metadata"
+                  playsInline
                   className="w-full"
+                  src={previewUrl || undefined}
                 />
                 
                 <div className="flex gap-2">
