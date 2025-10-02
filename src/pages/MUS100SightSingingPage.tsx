@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
 import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
-import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, BookOpen, Users, Download, ArrowLeft, GripVertical } from 'lucide-react';
+import { Upload, FileMusic, Trash2, Play, Pause, Mic, MicOff, Share2, Music, BookOpen, Users, Download, ArrowLeft, GripVertical, SkipBack, SkipForward, Square } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -690,7 +690,6 @@ const MUS100SightSingingPage: React.FC = () => {
                             <option value="click-only">Click Only</option>
                             <option value="click-and-score">Click + Notes</option>
                             <option value="pitch-only">Notes Only</option>
-                            <option value="record">Record</option>
                           </select>
                         </div>
                         
@@ -712,35 +711,140 @@ const MUS100SightSingingPage: React.FC = () => {
                         </div>
                       </div>
                       
-                      <Button 
-                        onClick={(e) => handlePlayPause(e)} 
-                        variant="outline" 
-                        size="sm" 
-                        type="button"
-                        className="w-full sm:w-auto flex items-center justify-center gap-2"
-                      >
-                        {(mode === 'record-click' || mode === 'record-both') ? isRecording ? (
-                          <>
-                            <MicOff className="h-4 w-4" />
-                            Stop Recording
-                          </>
-                        ) : (
-                          <>
-                            <Mic className="h-4 w-4" />
-                            Start Recording
-                          </>
-                        ) : isPlaying ? (
-                          <>
-                            <Pause className="h-4 w-4" />
-                            Stop
-                          </>
-                        ) : (
-                          <>
-                            <Play className="h-4 w-4" />
-                            Play
-                          </>
-                        )}
-                      </Button>
+                      {/* Recording Transport Controls */}
+                      <div className="flex items-center justify-center gap-2 p-2 bg-muted/30 rounded-lg border">
+                        {/* Rewind */}
+                        <Button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            stopPlayback();
+                            if (isRecording) {
+                              stopRecording();
+                            }
+                            toast({ title: "Rewound to start" });
+                          }}
+                          variant="ghost" 
+                          size="sm" 
+                          type="button"
+                          className="h-10 w-10 p-0"
+                          title="Rewind to start"
+                        >
+                          <SkipBack className="h-5 w-5" />
+                        </Button>
+
+                        {/* Play */}
+                        <Button 
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!selectedFile) return;
+                            
+                            if (!isPlaying && !isRecording) {
+                              try {
+                                await startPlayback(selectedFile.content, tempo, mode);
+                              } catch (error) {
+                                console.error('Playback failed:', error);
+                                toast({
+                                  title: 'Playback failed',
+                                  description: 'Audio could not start',
+                                  variant: 'destructive'
+                                });
+                              }
+                            }
+                          }}
+                          variant="outline" 
+                          size="sm" 
+                          type="button"
+                          disabled={isRecording || isPlaying}
+                          className="h-10 w-10 p-0"
+                          title="Play"
+                        >
+                          <Play className="h-5 w-5" />
+                        </Button>
+
+                        {/* Pause */}
+                        <Button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (isPlaying) {
+                              stopPlayback();
+                              toast({ title: "Paused" });
+                            }
+                          }}
+                          variant="outline" 
+                          size="sm" 
+                          type="button"
+                          disabled={!isPlaying || isRecording}
+                          className="h-10 w-10 p-0"
+                          title="Pause"
+                        >
+                          <Pause className="h-5 w-5" />
+                        </Button>
+
+                        {/* Record */}
+                        <Button 
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            if (!selectedFile) return;
+                            
+                            if (isRecording) {
+                              try {
+                                stopRecording();
+                                stopPlayback();
+                              } catch (error) {
+                                console.error('Error stopping recording:', error);
+                                toast({
+                                  title: 'Error',
+                                  description: 'Failed to stop recording',
+                                  variant: 'destructive'
+                                });
+                              }
+                            } else {
+                              try {
+                                await startRecording();
+                                await startPlayback(selectedFile.content, tempo, mode);
+                              } catch (error) {
+                                console.error('Error starting recording:', error);
+                                toast({
+                                  title: 'Error',
+                                  description: 'Failed to start recording',
+                                  variant: 'destructive'
+                                });
+                              }
+                            }
+                          }}
+                          variant={isRecording ? "destructive" : "default"}
+                          size="sm" 
+                          type="button"
+                          className="h-10 w-10 p-0"
+                          title={isRecording ? "Stop Recording" : "Start Recording"}
+                        >
+                          {isRecording ? <Square className="h-5 w-5 fill-current" /> : <Mic className="h-5 w-5" />}
+                        </Button>
+
+                        {/* Fast Forward */}
+                        <Button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            stopPlayback();
+                            if (isRecording) {
+                              stopRecording();
+                            }
+                            toast({ title: "Skipped to end" });
+                          }}
+                          variant="ghost" 
+                          size="sm" 
+                          type="button"
+                          className="h-10 w-10 p-0"
+                          title="Fast forward to end"
+                        >
+                          <SkipForward className="h-5 w-5" />
+                        </Button>
+                      </div>
                       
                       {/* Download button - shows after recording */}
                       {recordedAudio && (
