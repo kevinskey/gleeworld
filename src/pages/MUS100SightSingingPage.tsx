@@ -210,6 +210,17 @@ const MUS100SightSingingPage: React.FC = () => {
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+    
+    // Check if user is logged in
+    if (!user?.id) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to upload files",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const validFiles: File[] = [];
     const invalidFiles: string[] = [];
 
@@ -265,7 +276,7 @@ const MUS100SightSingingPage: React.FC = () => {
         const displayTitle = file.name.replace(/\.(xml|musicxml)$/i, '');
         const {
           data: existingFiles
-        } = await supabase.from('gw_sheet_music').select('id, title, xml_content').eq('created_by', user?.id).eq('title', displayTitle);
+        } = await supabase.from('gw_sheet_music').select('id, title, xml_content').eq('created_by', user.id).eq('title', displayTitle);
 
         // Skip if exact duplicate exists
         const isDuplicate = existingFiles?.some(existing => existing.xml_content === content);
@@ -284,7 +295,7 @@ const MUS100SightSingingPage: React.FC = () => {
           title: displayTitle,
           xml_url: filePath,
           xml_content: content,
-          created_by: user?.id,
+          created_by: user.id, // Now guaranteed to exist due to check at start
           is_public: false,
           tags: ['practice', 'mus100']
         }).select().single();
