@@ -408,15 +408,23 @@ const MUS100SightSingingPage: React.FC = () => {
         }
       };
       mediaRecorderRef.current.onstop = () => {
+        console.log('🛑 Recording stopped, chunks:', audioChunksRef.current.length);
         const audioBlob = new Blob(audioChunksRef.current, {
-          type: 'audio/mp3'
+          type: 'audio/webm'
         });
+        console.log('✅ Audio blob created:', audioBlob.size, 'bytes');
         setRecordedAudio(audioBlob);
         setShowShareDialog(true);
         stream.getTracks().forEach(track => track.stop());
+        
+        toast({
+          title: "Recording complete!",
+          description: "Click the download button to save your recording"
+        });
       };
       mediaRecorderRef.current.start();
       setIsRecording(true);
+      console.log('▶️ Recording started');
       toast({
         title: "Recording started",
         description: "Sing along to the music!"
@@ -486,10 +494,11 @@ const MUS100SightSingingPage: React.FC = () => {
   };
   const handleShareRecording = () => {
     if (recordedAudio) {
+      console.log('💾 Downloading recording:', recordedAudio.size, 'bytes');
       const url = URL.createObjectURL(recordedAudio);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `sight-singing-${selectedFile?.name || 'recording'}-${Date.now()}.mp3`;
+      a.download = `sight-singing-${selectedFile?.name || 'recording'}-${Date.now()}.webm`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -712,6 +721,20 @@ const MUS100SightSingingPage: React.FC = () => {
                           </>
                         )}
                       </Button>
+                      
+                      {/* Download button - shows after recording */}
+                      {recordedAudio && (
+                        <Button
+                          onClick={handleShareRecording}
+                          variant="default"
+                          size="sm"
+                          type="button"
+                          className="w-full sm:w-auto flex items-center justify-center gap-2"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download Recording
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>
