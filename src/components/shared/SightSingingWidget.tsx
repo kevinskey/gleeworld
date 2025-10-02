@@ -62,6 +62,9 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
     setMetronomeCallback 
   } = useAudioRecorder();
 
+  // Preview URL for recorded audio
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   // Sheet music display
   const sheetMusicRef = useRef<HTMLDivElement>(null);
   const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
@@ -132,6 +135,17 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
       }
     }
   }, [currentExercise]);
+
+  // Update preview URL when recording changes
+  useEffect(() => {
+    if (audioBlob) {
+      const url = URL.createObjectURL(audioBlob);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, [audioBlob]);
 
   const handleGenerate = async () => {
     const params: SightSingingParams = {
@@ -439,6 +453,13 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
             </>
           )}
         </div>
+
+        {audioBlob && !isRecording && (
+          <div className="space-y-2">
+            <Label>Recording Preview</Label>
+            <audio controls src={previewUrl ?? undefined} className="w-full" />
+          </div>
+        )}
 
         {/* Error Display */}
         {error && (
