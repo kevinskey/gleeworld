@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -72,6 +72,12 @@ export const MidtermExamForm: React.FC = () => {
     essayAnswer: ''
   });
 
+  // Use ref to always have latest formData without triggering effect re-runs
+  const formDataRef = useRef(formData);
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
   // Load existing submission data
   useEffect(() => {
     console.log('Loading submission data:', { submission, isSubmitted: submission?.is_submitted });
@@ -138,30 +144,31 @@ export const MidtermExamForm: React.FC = () => {
     }));
   };
 
-  const handleAutoSave = () => {
+  const handleAutoSave = useCallback(() => {
+    const currentFormData = formDataRef.current;
     const submissionData = {
-      selected_terms: formData.selectedTerms,
-      ring_shout_answer: formData.termAnswers.ring_shout || null,
-      field_holler_answer: formData.termAnswers.field_holler || null,
-      negro_spiritual_answer: formData.termAnswers.negro_spiritual || null,
-      blues_answer: formData.termAnswers.blues || null,
-      ragtime_answer: formData.termAnswers.ragtime || null,
-      swing_answer: formData.termAnswers.swing || null,
-      excerpt_1_genre: formData.excerpt1Genre || null,
-      excerpt_1_features: formData.excerpt1Features || null,
-      excerpt_1_context: formData.excerpt1Context || null,
-      excerpt_2_genre: formData.excerpt2Genre || null,
-      excerpt_2_features: formData.excerpt2Features || null,
-      excerpt_2_context: formData.excerpt2Context || null,
-      excerpt_3_genre: formData.excerpt3Genre || null,
-      excerpt_3_features: formData.excerpt3Features || null,
-      excerpt_3_context: formData.excerpt3Context || null,
-      selected_essay_question: formData.selectedEssayQuestion || null,
-      essay_answer: formData.essayAnswer || null,
+      selected_terms: currentFormData.selectedTerms,
+      ring_shout_answer: currentFormData.termAnswers.ring_shout || null,
+      field_holler_answer: currentFormData.termAnswers.field_holler || null,
+      negro_spiritual_answer: currentFormData.termAnswers.negro_spiritual || null,
+      blues_answer: currentFormData.termAnswers.blues || null,
+      ragtime_answer: currentFormData.termAnswers.ragtime || null,
+      swing_answer: currentFormData.termAnswers.swing || null,
+      excerpt_1_genre: currentFormData.excerpt1Genre || null,
+      excerpt_1_features: currentFormData.excerpt1Features || null,
+      excerpt_1_context: currentFormData.excerpt1Context || null,
+      excerpt_2_genre: currentFormData.excerpt2Genre || null,
+      excerpt_2_features: currentFormData.excerpt2Features || null,
+      excerpt_2_context: currentFormData.excerpt2Context || null,
+      excerpt_3_genre: currentFormData.excerpt3Genre || null,
+      excerpt_3_features: currentFormData.excerpt3Features || null,
+      excerpt_3_context: currentFormData.excerpt3Context || null,
+      selected_essay_question: currentFormData.selectedEssayQuestion || null,
+      essay_answer: currentFormData.essayAnswer || null,
     };
     
     saveProgress(submissionData);
-  };
+  }, [saveProgress]);
 
   const handleSubmitExam = () => {
     const submissionData = {
@@ -188,10 +195,10 @@ export const MidtermExamForm: React.FC = () => {
     submitExam(submissionData);
   };
 
-  // Auto-save every 30 seconds
+  // Auto-save every 30 seconds - stable interval that always uses current formData
   useEffect(() => {
     if (submission && !submission.is_submitted) {
-      console.log('Setting up auto-save interval', { formData, submission: submission.id });
+      console.log('Setting up auto-save interval', { submission: submission.id });
       const interval = setInterval(() => {
         console.log('Auto-save triggered');
         handleAutoSave();
@@ -201,7 +208,7 @@ export const MidtermExamForm: React.FC = () => {
         clearInterval(interval);
       };
     }
-  }, [submission?.id, submission?.is_submitted]); // Fixed dependency array
+  }, [submission?.id, submission?.is_submitted, handleAutoSave]);
 
   if (isLoading) {
     return (
