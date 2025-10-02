@@ -409,17 +409,37 @@ const MUS100SightSingingPage: React.FC = () => {
       };
       mediaRecorderRef.current.onstop = () => {
         console.log('🛑 Recording stopped, chunks:', audioChunksRef.current.length);
+        
+        if (audioChunksRef.current.length === 0) {
+          console.error('❌ No audio chunks recorded!');
+          toast({
+            title: "Recording failed",
+            description: "No audio data was captured",
+            variant: "destructive"
+          });
+          stream.getTracks().forEach(track => track.stop());
+          return;
+        }
+        
         const audioBlob = new Blob(audioChunksRef.current, {
           type: 'audio/webm'
         });
         console.log('✅ Audio blob created:', audioBlob.size, 'bytes');
-        setRecordedAudio(audioBlob);
-        setShowShareDialog(true);
+        console.log('📝 Setting recorded audio and showing dialog...');
+        
+        // Stop the stream first
         stream.getTracks().forEach(track => track.stop());
+        
+        // Set state in sequence to ensure both are set
+        setRecordedAudio(audioBlob);
+        setTimeout(() => {
+          console.log('🔔 Opening share dialog');
+          setShowShareDialog(true);
+        }, 100);
         
         toast({
           title: "Recording complete!",
-          description: "Click the download button to save your recording"
+          description: "Your recording is ready to download"
         });
       };
       mediaRecorderRef.current.start();
@@ -757,7 +777,14 @@ const MUS100SightSingingPage: React.FC = () => {
         </div>
 
         {/* Share Recording Dialog */}
-        {showShareDialog && recordedAudio && <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        {showShareDialog && recordedAudio && <div 
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowShareDialog(false);
+              }
+            }}
+          >
             <Card className="w-96 mx-4">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -769,12 +796,27 @@ const MUS100SightSingingPage: React.FC = () => {
                 <p className="text-sm text-muted-foreground">
                   Your sight singing recording is ready! Would you like to download it?
                 </p>
+                
+                {/* Audio player preview */}
+                <audio 
+                  controls 
+                  src={recordedAudio ? URL.createObjectURL(recordedAudio) : undefined}
+                  className="w-full"
+                />
+                
                 <div className="flex gap-2">
                   <Button onClick={handleShareRecording} className="flex-1">
-                    <Share2 className="h-4 w-4 mr-2" />
+                    <Download className="h-4 w-4 mr-2" />
                     Download Recording
                   </Button>
-                  <Button onClick={() => setShowShareDialog(false)} variant="outline" className="flex-1">
+                  <Button 
+                    onClick={() => {
+                      setShowShareDialog(false);
+                      setRecordedAudio(null);
+                    }} 
+                    variant="outline" 
+                    className="flex-1"
+                  >
                     Cancel
                   </Button>
                 </div>
