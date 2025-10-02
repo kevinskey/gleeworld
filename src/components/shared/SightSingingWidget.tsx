@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Music, Play, RefreshCw, Settings, Download } from 'lucide-react';
+import { Music, Play, RefreshCw, Settings, Download, Mic, MicOff, Save, Square } from 'lucide-react';
 import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { useSightSingingAI, SightSingingParams, SightSingingResult } from '@/hooks/useSightSingingAI';
 import {
@@ -14,6 +14,9 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ScoreDisplay } from '@/components/sight-singing/ScoreDisplay';
+import { useTonePlayback } from '@/components/sight-singing/hooks/useTonePlayback';
+import { useAudioRecorder } from '@/components/sight-singing/hooks/useAudioRecorder';
+import { toast } from 'sonner';
 
 interface SightSingingWidgetProps {
   context?: 'music-theory' | 'audition' | 'practice' | 'assignment';
@@ -46,6 +49,18 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
   const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced'>(
     defaultParams.difficulty || 'beginner'
   );
+  const [tempo, setTempo] = useState(120);
+
+  // Playback and recording
+  const { isPlaying, mode: playbackMode, setMode: setPlaybackMode, startPlayback, stopPlayback } = useTonePlayback();
+  const { 
+    isRecording, 
+    recordingDuration, 
+    audioBlob, 
+    startRecording, 
+    stopRecording,
+    setMetronomeCallback 
+  } = useAudioRecorder();
 
   // Sheet music display
   const sheetMusicRef = useRef<HTMLDivElement>(null);
@@ -135,10 +150,57 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
     }
   };
 
-  const handleStartPractice = () => {
-    if (currentExercise && onStartPractice) {
+  const handleStartPractice = async () => {
+    if (!currentExercise) return;
+    
+    if (onStartPractice) {
       onStartPractice(currentExercise);
+      return;
     }
+
+    // Handle playback/recording
+    try {
+      if (playbackMode === 'record-click' || playbackMode === 'record-both') {
+        if (isRecording) {
+          stopRecording();
+          stopPlayback();
+        } else {
+          await startRecording(tempo);
+          if (playbackMode === 'record-both') {
+            await startPlayback(currentExercise.musicXML, tempo, playbackMode);
+          }
+        }
+      } else {
+        if (isPlaying) {
+          stopPlayback();
+        } else {
+          await startPlayback(currentExercise.musicXML, tempo, playbackMode);
+        }
+      }
+    } catch (error) {
+      console.error('Playback error:', error);
+      toast.error('Failed to start playback');
+    }
+  };
+
+  const handleSaveRecording = () => {
+    if (!audioBlob) return;
+    
+    const url = URL.createObjectURL(audioBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sight-singing-${currentExercise?.metadata.key}-${Date.now()}.mp3`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Recording saved!');
+  };
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getContextTitle = () => {
@@ -234,7 +296,38 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
             />
             <span className="text-sm font-medium w-6">{measures}</span>
           </div>
+
+          <div className="flex items-center gap-2">
+            <Label>Tempo:</Label>
+            <Slider
+              value={[tempo]}
+              onValueChange={(value) => setTempo(value[0])}
+              max={200}
+              min={60}
+              step={5}
+              className="w-20"
+            />
+            <span className="text-sm font-medium w-10">{tempo}</span>
+          </div>
         </div>
+
+        {/* Playback Mode Selector */}
+        {currentExercise && (
+          <div className="flex items-center gap-2">
+            <Label>Mode:</Label>
+            <Select value={playbackMode} onValueChange={(value: any) => setPlaybackMode(value)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="click-only">Click Only</SelectItem>
+                <SelectItem value="click-and-score">Click + Score</SelectItem>
+                <SelectItem value="record-click">Record with Click</SelectItem>
+                <SelectItem value="record-both">Record with Click + Score</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         {/* Advanced Settings */}
         {showAdvancedControls && (
@@ -285,11 +378,11 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button 
             onClick={handleGenerate} 
             disabled={isGenerating}
-            className="flex-1"
+            className="flex-1 min-w-[200px]"
           >
             {isGenerating ? (
               <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -299,11 +392,47 @@ export const SightSingingWidget: React.FC<SightSingingWidgetProps> = ({
             {isGenerating ? 'Generating...' : 'Generate Exercise'}
           </Button>
 
-          {currentExercise && onStartPractice && (
-            <Button onClick={handleStartPractice} variant="outline">
-              <Play className="h-4 w-4 mr-2" />
-              Practice
-            </Button>
+          {currentExercise && (
+            <>
+              <Button 
+                onClick={handleStartPractice} 
+                variant={isRecording || isPlaying ? "destructive" : "default"}
+                disabled={isGenerating}
+              >
+                {(playbackMode === 'record-click' || playbackMode === 'record-both') ? (
+                  isRecording ? (
+                    <>
+                      <Square className="h-4 w-4 mr-2" />
+                      Stop Recording {formatDuration(recordingDuration)}
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="h-4 w-4 mr-2" />
+                      Start Recording
+                    </>
+                  )
+                ) : (
+                  isPlaying ? (
+                    <>
+                      <Square className="h-4 w-4 mr-2" />
+                      Stop
+                    </>
+                  ) : (
+                    <>
+                      <Play className="h-4 w-4 mr-2" />
+                      Play
+                    </>
+                  )
+                )}
+              </Button>
+
+              {audioBlob && !isRecording && (
+                <Button onClick={handleSaveRecording} variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Save Recording
+                </Button>
+              )}
+            </>
           )}
         </div>
 
