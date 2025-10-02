@@ -46,31 +46,34 @@ export const useMusic = () => {
         setTimeout(() => reject(new Error('Request timeout')), 15000)
       );
 
-      // Fetch tracks from multiple sources with timeout
+      // Fetch tracks from multiple sources with timeout - OPTIMIZED with limits
       const fetchPromise = Promise.all([
-        // Music tracks table
+        // Music tracks table - limit to 50 most recent
         supabase
           .from('music_tracks')
           .select(`
             *,
             album:music_albums(title, cover_image_url)
           `)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(50),
         
-        // Audio archive table  
+        // Audio archive table - limit to 20 most recent
         supabase
           .from('audio_archive')
           .select('*')
           .not('audio_url', 'is', null)
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(20),
           
-        // Alumnae audio stories
+        // Alumnae audio stories - limit to 10 most recent
         supabase
           .from('alumnae_audio_stories')
           .select('*')
           .not('audio_url', 'is', null)
           .eq('is_approved', true)
           .order('created_at', { ascending: false })
+          .limit(10)
       ]);
 
       const [musicTracksResult, audioArchiveResult, alumnaeAudioResult] = await Promise.race([
@@ -171,13 +174,15 @@ export const useMusic = () => {
 
   const fetchAlbums = async () => {
     try {
+      // Optimized: Limit to 10 most recent albums with their tracks
       const { data: albumsData, error: albumsError } = await supabase
         .from('music_albums')
         .select(`
           *,
           tracks:music_tracks(*)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(10);
 
       if (albumsError) throw albumsError;
 
