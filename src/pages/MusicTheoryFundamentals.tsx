@@ -86,7 +86,7 @@ const MusicTheoryFundamentals = () => {
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <a 
-                href="/course-materials/sightsinging.pdf" 
+                href="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/sightsinging.pdf" 
                 target="_blank" 
                 rel="noopener noreferrer"
               >
