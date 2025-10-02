@@ -295,8 +295,8 @@ const MUS100SightSingingPage: React.FC = () => {
           title: displayTitle,
           xml_url: filePath,
           xml_content: content,
-          created_by: user.id, // Now guaranteed to exist due to check at start
-          is_public: false,
+          created_by: user.id,
+          is_public: true,
           tags: ['practice', 'mus100']
         }).select().single();
         if (dbError) {
