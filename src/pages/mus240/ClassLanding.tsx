@@ -135,7 +135,7 @@ export default function ClassLanding() {
             <Link to="/mus240-polls" className="group block">
               <div className={`rounded-2xl lg:rounded-3xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 ${
                 hasActivePoll 
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 border-green-400/30 animate-pulse hover:shadow-2xl' 
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-600 border-green-400/30 hover:shadow-2xl' 
                   : 'bg-white/95 backdrop-blur-sm border-white/30 hover:bg-white hover:shadow-2xl'
               }`}>
                 <div className="flex items-center gap-4 sm:gap-3 lg:gap-6 mb-4 sm:mb-3 lg:mb-6">
