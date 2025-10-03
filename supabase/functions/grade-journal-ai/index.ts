@@ -23,10 +23,10 @@ serve(async (req) => {
       });
     }
 
-    const openAIKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIKey) {
-      console.error('Missing OPENAI_API_KEY');
-      return new Response(JSON.stringify({ success: false, error: 'Server misconfigured: missing OpenAI key' }), {
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      console.error('Missing LOVABLE_API_KEY');
+      return new Response(JSON.stringify({ success: false, error: 'Server misconfigured: missing Lovable AI key' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -50,15 +50,15 @@ Return JSON with this exact shape:
   "overall_feedback": "one concise paragraph"
 }`;
 
-    // Call OpenAI (GPT-5 family uses max_completion_tokens, no temperature)
-    const aiResp = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call Lovable AI Gateway (using free Gemini model)
+    const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -66,7 +66,6 @@ Return JSON with this exact shape:
           },
           { role: 'user', content: userPrompt }
         ],
-        max_completion_tokens: 800,
       }),
     });
 
@@ -112,7 +111,7 @@ Return JSON with this exact shape:
       letter_grade,
       feedback: overall_feedback,
       rubric: { criteria: rubric?.criteria || [], scores: rubric_scores },
-      ai_model: 'gpt-5-mini-2025-08-07',
+      ai_model: 'google/gemini-2.5-flash',
       graded_at: new Date().toISOString(),
     };
 
@@ -160,7 +159,7 @@ Return JSON with this exact shape:
         letter_grade,
         rubric_scores,
         feedback: overall_feedback,
-        ai_model: 'gpt-5-mini-2025-08-07',
+        ai_model: 'google/gemini-2.5-flash',
         graded_at: saved?.graded_at || new Date().toISOString(),
       },
       assignment_id,
