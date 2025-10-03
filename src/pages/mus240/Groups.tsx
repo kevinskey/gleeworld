@@ -495,8 +495,8 @@ export default function Groups() {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                          <div className="flex-1">
-                           <CardTitle className={`${colorScheme.text} text-card-foreground`}>{group.name}</CardTitle>
-                           <CardDescription className="text-white opacity-75">
+                           <CardTitle className={`${colorScheme.text}`}>{group.name}</CardTitle>
+                           <CardDescription className="text-slate-600">
                              {group.description}
                            </CardDescription>
                         </div>
@@ -528,8 +528,8 @@ export default function Groups() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-primary" />
-                          <span className="text-base text-primary-foreground">
+                          <Users className="h-4 w-4 text-slate-600" />
+                          <span className="text-base text-slate-700 font-medium">
                             {group.member_count || 0} / {group.max_members || 4} members
                           </span>
                         </div>
@@ -537,12 +537,12 @@ export default function Groups() {
                         {/* Display group members */}
                         {group.members && group.members.length > 0 && (
                           <div className="space-y-2">
-                            <h4 className="text-sm font-medium text-primary-foreground">Members:</h4>
+                            <h4 className="text-sm font-medium text-slate-700">Members:</h4>
                             <div className="space-y-1">
                               {group.members.map((member) => (
                                 <div key={member.member_id} className="flex items-center gap-2 text-xs">
-                                  <div className={`w-2 h-2 rounded-full ${member.role === 'leader' ? 'bg-primary' : 'bg-secondary'}`}></div>
-                                  <span className="text-primary-foreground/80">
+                                  <div className={`w-2 h-2 rounded-full ${member.role === 'leader' ? 'bg-blue-600' : 'bg-slate-400'}`}></div>
+                                  <span className="text-slate-600">
                                     {member.gw_profiles?.full_name || member.gw_profiles?.email || 'Unknown Member'}
                                     {member.role === 'leader' && (
                                       <Badge variant="secondary" className="ml-1 text-xs py-0 px-1">Leader</Badge>
