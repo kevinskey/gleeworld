@@ -107,6 +107,8 @@ Return JSON with this exact shape:
 
     const gradePayloadFull: Record<string, any> = {
       journal_id,
+      student_id,
+      assignment_id,
       overall_score,
       letter_grade,
       feedback: overall_feedback,
@@ -130,6 +132,8 @@ Return JSON with this exact shape:
       upsertError = fullRes.error;
       const minimalPayload = {
         journal_id,
+        student_id,
+        assignment_id,
         overall_score,
         feedback: overall_feedback,
         graded_at: new Date().toISOString(),
