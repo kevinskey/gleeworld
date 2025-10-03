@@ -14,10 +14,10 @@ export const Mus240EnrollmentRoute = ({ children }: Mus240EnrollmentRouteProps) 
   const { isAdmin, isSuperAdmin, loading: roleLoading, profile } = useUserRole();
   const { isEnrolled, loading: enrollmentLoading } = useMus240Enrollment();
   
-  // Memoize the admin access calculations to prevent unnecessary re-computations
-  const adminAccess = useMemo(() => isAdmin(), [isAdmin]);
-  const superAdminAccess = useMemo(() => isSuperAdmin(), [isSuperAdmin]);
-  const enrolled = useMemo(() => isEnrolled(), [isEnrolled]);
+  // Check admin and enrollment status
+  const adminAccess = isAdmin();
+  const superAdminAccess = isSuperAdmin();
+  const enrolled = isEnrolled();
   
   // Debug logging for MUS 240 access
   console.log('MUS 240 Access Debug:', {
