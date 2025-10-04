@@ -119,6 +119,43 @@ export const useMus240MidtermSubmissions = () => {
     },
   });
 
+  const resetSubmissionMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id || !submission?.id) throw new Error('No submission to reset');
+
+      const { data, error } = await supabase
+        .from('mus240_midterm_submissions')
+        .update({
+          is_submitted: false,
+          submitted_at: null,
+          total_time_minutes: null,
+          time_started: new Date().toISOString(),
+        })
+        .eq('id', submission.id)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mus240-midterm-submission', user?.id] });
+      toast({
+        title: 'Exam Reset',
+        description: 'You can now retake the exam.',
+      });
+    },
+    onError: (error) => {
+      console.error('Error resetting submission:', error);
+      toast({
+        title: 'Error Resetting',
+        description: 'Failed to reset the exam. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const submitExamMutation = useMutation({
     mutationFn: async (submissionData: Partial<MidtermSubmission>) => {
       if (!user?.id || !submission?.id) throw new Error('No submission to submit');
@@ -184,12 +221,18 @@ export const useMus240MidtermSubmissions = () => {
     submitExamMutation.mutate(data);
   };
 
+  const resetExam = () => {
+    resetSubmissionMutation.mutate();
+  };
+
   return {
     submission,
     isLoading,
     saveProgress,
     submitExam,
+    resetExam,
     isSaving: createSubmissionMutation.isPending || updateSubmissionMutation.isPending,
     isSubmitting: submitExamMutation.isPending,
+    isResetting: resetSubmissionMutation.isPending,
   };
 };

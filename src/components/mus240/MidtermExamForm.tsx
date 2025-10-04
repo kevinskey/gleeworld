@@ -53,7 +53,7 @@ const essayQuestions = [
 ];
 
 export const MidtermExamForm: React.FC = () => {
-  const { submission, isLoading, saveProgress, submitExam, isSaving, isSubmitting } = useMus240MidtermSubmissions();
+  const { submission, isLoading, saveProgress, submitExam, resetExam, isSaving, isSubmitting, isResetting } = useMus240MidtermSubmissions();
   const analytics = useTestAnalytics(submission?.id || null, submission?.user_id || null);
   const [timeElapsed, setTimeElapsed] = useState(0);
   const [formData, setFormData] = useState<ExamFormData>({
@@ -232,9 +232,32 @@ export const MidtermExamForm: React.FC = () => {
             Your midterm exam was submitted on {new Date(submission.submitted_at).toLocaleDateString()} 
             at {new Date(submission.submitted_at).toLocaleTimeString()}.
           </p>
-          <p className="text-slate-600">
+          <p className="text-slate-600 mb-6">
             Total time: {submission.total_time_minutes} minutes
           </p>
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" className="border-amber-600 text-amber-700 hover:bg-amber-50" disabled={isResetting}>
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                {isResetting ? 'Resetting...' : 'Retake Exam'}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Retake Midterm Exam?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to retake this exam? Your previous submission will be overwritten when you submit the new attempt. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={resetExam} className="bg-amber-600 hover:bg-amber-700">
+                  Yes, Retake Exam
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     );
