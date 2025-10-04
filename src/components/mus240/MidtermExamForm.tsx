@@ -56,6 +56,9 @@ export const MidtermExamForm: React.FC = () => {
   const { submission, isLoading, saveProgress, submitExam, resetExam, isSaving, isSubmitting, isResetting } = useMus240MidtermSubmissions();
   const analytics = useTestAnalytics(submission?.id || null, submission?.user_id || null);
   const [timeElapsed, setTimeElapsed] = useState(0);
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
+  const TIME_LIMIT = 50; // minutes
   const [formData, setFormData] = useState<ExamFormData>({
     selectedTerms: [],
     termAnswers: {},
@@ -125,7 +128,7 @@ export const MidtermExamForm: React.FC = () => {
     }
   }, [submission?.id, submission?.is_submitted, initialDataLoaded]);
 
-  // Timer effect
+  // Timer effect with auto-submit
   useEffect(() => {
     if (submission && !submission.is_submitted) {
       const startTime = new Date(submission.time_started);
@@ -133,11 +136,54 @@ export const MidtermExamForm: React.FC = () => {
         const now = new Date();
         const elapsed = Math.floor((now.getTime() - startTime.getTime()) / 1000 / 60);
         setTimeElapsed(elapsed);
+
+        // Show 10-minute warning
+        if (elapsed === TIME_LIMIT - 10 && !showWarning) {
+          setWarningMessage('10 minutes remaining! Your exam will auto-submit when time expires.');
+          setShowWarning(true);
+        }
+
+        // Show 5-minute warning
+        if (elapsed === TIME_LIMIT - 5) {
+          setWarningMessage('5 minutes remaining! Your exam will auto-submit soon.');
+          setShowWarning(true);
+        }
+
+        // Auto-submit when time expires
+        if (elapsed >= TIME_LIMIT) {
+          clearInterval(timer);
+          handleAutoSubmit();
+        }
       }, 1000);
 
       return () => clearInterval(timer);
     }
-  }, [submission]);
+  }, [submission, showWarning]);
+
+  const handleAutoSubmit = () => {
+    const submissionData = {
+      selected_terms: formData.selectedTerms,
+      ring_shout_answer: formData.termAnswers.ring_shout || null,
+      field_holler_answer: formData.termAnswers.field_holler || null,
+      negro_spiritual_answer: formData.termAnswers.negro_spiritual || null,
+      blues_answer: formData.termAnswers.blues || null,
+      ragtime_answer: formData.termAnswers.ragtime || null,
+      swing_answer: formData.termAnswers.swing || null,
+      excerpt_1_genre: formData.excerpt1Genre || null,
+      excerpt_1_features: formData.excerpt1Features || null,
+      excerpt_1_context: formData.excerpt1Context || null,
+      excerpt_2_genre: formData.excerpt2Genre || null,
+      excerpt_2_features: formData.excerpt2Features || null,
+      excerpt_2_context: formData.excerpt2Context || null,
+      excerpt_3_genre: formData.excerpt3Genre || null,
+      excerpt_3_features: formData.excerpt3Features || null,
+      excerpt_3_context: formData.excerpt3Context || null,
+      selected_essay_question: formData.selectedEssayQuestion || null,
+      essay_answer: formData.essayAnswer || null,
+    };
+    
+    submitExam(submissionData);
+  };
 
   const handleTermSelection = (term: string, checked: boolean) => {
     setFormData(prev => {
@@ -280,16 +326,41 @@ export const MidtermExamForm: React.FC = () => {
     );
   }
 
+  const timeRemaining = TIME_LIMIT - timeElapsed;
+  const isTimeRunningOut = timeRemaining <= 10;
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
+      {/* Time Warning Dialog */}
+      <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              Time Warning
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {warningMessage}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowWarning(false)}>
+              I Understand
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Timer and Controls */}
       <Card>
         <CardContent className="p-4 md:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2 md:gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary flex-shrink-0" />
-                <span className="font-medium text-sm md:text-base">Time Elapsed: {timeElapsed} minutes</span>
+                <Clock className={`h-5 w-5 flex-shrink-0 ${isTimeRunningOut ? 'text-orange-600' : 'text-primary'}`} />
+                <span className={`font-medium text-sm md:text-base ${isTimeRunningOut ? 'text-orange-600' : ''}`}>
+                  Time Remaining: {timeRemaining} minutes
+                </span>
               </div>
               {isSaving && (
                 <Badge variant="outline" className="text-blue-600 text-xs md:text-sm">
