@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { useMus240MidtermSubmissions } from '@/hooks/useMus240MidtermSubmissions';
 import { useTestAnalytics } from '@/hooks/useTestAnalytics';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { YouTubeExamPlayer } from '@/components/mus240/YouTubeExamPlayer';
 
 interface ExamFormData {
   selectedTerms: string[];
@@ -479,16 +480,7 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-blue-900">Excerpt 1 (10 points)</h4>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <iframe 
-                width="100%" 
-                height="200" 
-                src="https://www.youtube-nocookie.com/embed/GUvBGZnL9rE?rel=0&modestbranding=1" 
-                title="Excerpt 1"
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-                className="rounded-md"
-              />
+              <YouTubeExamPlayer videoId="GUvBGZnL9rE" title="Excerpt 1" />
             </div>
             <div className="space-y-3">
               <div>
@@ -526,16 +518,7 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-purple-900">Excerpt 2 (10 points)</h4>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <iframe 
-                width="100%" 
-                height="200" 
-                src="https://www.youtube-nocookie.com/embed/0dz_IsWKl6Y?rel=0&modestbranding=1" 
-                title="Excerpt 2"
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-                className="rounded-md"
-              />
+              <YouTubeExamPlayer videoId="0dz_IsWKl6Y" title="Excerpt 2" />
             </div>
             <div className="space-y-3">
               <div>
@@ -573,16 +556,7 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-green-900">Excerpt 3 (10 points)</h4>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <iframe 
-                width="100%" 
-                height="200" 
-                src="https://www.youtube-nocookie.com/embed/_8yGGtVKrD8?rel=0&modestbranding=1" 
-                title="Excerpt 3"
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-                className="rounded-md"
-              />
+              <YouTubeExamPlayer videoId="_8yGGtVKrD8" title="Excerpt 3" />
             </div>
             <div className="space-y-3">
               <div>
