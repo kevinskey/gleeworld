@@ -59,6 +59,8 @@ serve(async (req) => {
     });
   }
 
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+
   try {
     console.log('Grade journal function called');
     
@@ -105,6 +107,33 @@ serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // If already graded and journal_id provided, return existing grade instead of re-grading
+    if (journal_id) {
+      const existing = await supabase
+        .from('mus240_journal_grades')
+        .select('journal_id,overall_score,letter_grade,feedback,graded_at,ai_model,rubric')
+        .eq('journal_id', journal_id)
+        .maybeSingle();
+      if (existing.data) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            alreadyGraded: true,
+            grade: {
+              journal_id,
+              overall_score: existing.data.overall_score,
+              letter_grade: existing.data.letter_grade,
+              feedback: existing.data.feedback,
+              graded_at: existing.data.graded_at,
+              ai_model: existing.data.ai_model,
+              rubric: existing.data.rubric,
+            },
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Build prompt (compact + deterministic structure)
@@ -185,10 +214,11 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
 
     // Determine target max points per assignment (extend as needed)
     const assignmentMax: Record<string, number> = {
+      lj1: 10,
       lj2: 10,
+      lj3: 15,
     };
     const targetMax = assignment_id && assignmentMax[assignment_id] ? assignmentMax[assignment_id] : 17;
-
     // Convert 0–17 -> 0–targetMax (preserve percentage)
     const percent = rawScore17 / 17;
     const dbScore = Math.max(0, Math.min(targetMax, Math.round(percent * targetMax)));
