@@ -270,36 +270,40 @@ export const MidtermExamForm: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Timer and Controls */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <CardContent className="p-4 md:p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2 md:gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-primary" />
-                <span className="font-medium">Time Elapsed: {timeElapsed} minutes</span>
+                <Clock className="h-5 w-5 text-primary flex-shrink-0" />
+                <span className="font-medium text-sm md:text-base">Time Elapsed: {timeElapsed} minutes</span>
               </div>
               {isSaving && (
-                <Badge variant="outline" className="text-blue-600">
+                <Badge variant="outline" className="text-blue-600 text-xs md:text-sm">
                   Saving...
                 </Badge>
               )}
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full md:w-auto">
               <Button 
                 variant="outline" 
                 onClick={handleAutoSave}
                 disabled={isSaving}
+                className="flex-1 md:flex-none"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Save Progress
+                <span className="hidden sm:inline">Save Progress</span>
+                <span className="sm:hidden">Save</span>
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
                     variant="default"
                     disabled={isSubmitting}
+                    className="flex-1 md:flex-none"
                   >
                     <Send className="h-4 w-4 mr-2" />
-                    Submit Exam
+                    <span className="hidden sm:inline">Submit Exam</span>
+                    <span className="sm:hidden">Submit</span>
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
