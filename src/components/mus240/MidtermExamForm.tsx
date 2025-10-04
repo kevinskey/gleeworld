@@ -393,12 +393,11 @@ export const MidtermExamForm: React.FC = () => {
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-blue-900">Excerpt 1 (10 points)</h4>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
-              <Label className="text-sm font-medium mb-2 block">Audio Link</Label>
-              <input 
-                type="text" 
-                placeholder="Paste YouTube or audio link here"
-                className="w-full px-3 py-2 border border-blue-300 rounded-md text-sm"
-              />
+              <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
+              <audio controls className="w-full">
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/midterm-excerpt-1.mp3" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
             </div>
             <div className="space-y-3">
               <div>
@@ -435,12 +434,11 @@ export const MidtermExamForm: React.FC = () => {
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-purple-900">Excerpt 2 (10 points)</h4>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-3">
-              <Label className="text-sm font-medium mb-2 block">Audio Link</Label>
-              <input 
-                type="text" 
-                placeholder="Paste YouTube or audio link here"
-                className="w-full px-3 py-2 border border-purple-300 rounded-md text-sm"
-              />
+              <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
+              <audio controls className="w-full">
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/midterm-excerpt-2.mp3" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
             </div>
             <div className="space-y-3">
               <div>
@@ -477,12 +475,11 @@ export const MidtermExamForm: React.FC = () => {
           <div className="space-y-4">
             <h4 className="text-lg font-semibold text-green-900">Excerpt 3 (10 points)</h4>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
-              <Label className="text-sm font-medium mb-2 block">Audio Link</Label>
-              <input 
-                type="text" 
-                placeholder="Paste YouTube or audio link here"
-                className="w-full px-3 py-2 border border-green-300 rounded-md text-sm"
-              />
+              <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
+              <audio controls className="w-full">
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/midterm-excerpt-3.mp3" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
             </div>
             <div className="space-y-3">
               <div>
