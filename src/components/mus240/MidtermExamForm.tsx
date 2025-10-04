@@ -480,7 +480,13 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-blue-900">Excerpt 1 (10 points)</h4>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <YouTubeExamPlayer videoId="GUvBGZnL9rE" title="Excerpt 1" />
+              <audio controls className="w-full" preload="metadata">
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt1.mp3" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+              <p className="text-xs text-slate-600 mt-2">
+                If audio doesn't play, please contact your instructor.
+              </p>
             </div>
             <div className="space-y-3">
               <div>
@@ -518,7 +524,13 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-purple-900">Excerpt 2 (10 points)</h4>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <YouTubeExamPlayer videoId="0dz_IsWKl6Y" title="Excerpt 2" />
+              <audio controls className="w-full" preload="metadata">
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt2.mp3" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+              <p className="text-xs text-slate-600 mt-2">
+                If audio doesn't play, please contact your instructor.
+              </p>
             </div>
             <div className="space-y-3">
               <div>
@@ -556,7 +568,13 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-green-900">Excerpt 3 (10 points)</h4>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <YouTubeExamPlayer videoId="_8yGGtVKrD8" title="Excerpt 3" />
+              <audio controls className="w-full" preload="metadata">
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt3.mp3" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+              <p className="text-xs text-slate-600 mt-2">
+                If audio doesn't play, please contact your instructor.
+              </p>
             </div>
             <div className="space-y-3">
               <div>
