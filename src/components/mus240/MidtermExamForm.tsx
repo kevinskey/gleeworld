@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useBlocker } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -80,6 +81,27 @@ export const MidtermExamForm: React.FC = () => {
 
   // Track if initial data has been loaded to prevent resets during exam
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+
+  // Prevent navigation away from exam
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      !submission?.is_submitted &&
+      currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // Prevent browser navigation (refresh, close tab, etc.)
+  useEffect(() => {
+    if (submission && !submission.is_submitted) {
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+  }, [submission?.is_submitted]);
 
   // Load existing submission data ONLY ONCE when exam first loads
   useEffect(() => {
@@ -267,9 +289,32 @@ export const MidtermExamForm: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      {/* Timer and Controls */}
-      <Card>
+    <>
+      {/* Navigation blocker dialog */}
+      {blocker.state === "blocked" && (
+        <AlertDialog open={true}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Leave Exam?</AlertDialogTitle>
+              <AlertDialogDescription>
+                You are currently taking the midterm exam. If you leave now, your progress will be saved but you should return to complete the exam. Are you sure you want to leave?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => blocker.reset?.()}>
+                Stay on Exam
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={() => blocker.proceed?.()}>
+                Leave Exam
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      <div className="max-w-4xl mx-auto space-y-8">
+        {/* Timer and Controls */}
+        <Card>
         <CardContent className="p-4 md:p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2 md:gap-4 flex-wrap">
@@ -575,6 +620,7 @@ export const MidtermExamForm: React.FC = () => {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </>
   );
 };
