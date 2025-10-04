@@ -131,8 +131,8 @@ export const MidtermExamForm: React.FC = () => {
         ? [...prev.selectedTerms, term]
         : prev.selectedTerms.filter(t => t !== term);
       
-      // Limit to 4 terms
-      if (newSelectedTerms.length > 4) {
+      // Limit to 3 terms
+      if (newSelectedTerms.length > 3) {
         return prev;
       }
       
@@ -334,13 +334,13 @@ export const MidtermExamForm: React.FC = () => {
             Part I: Short Identifications (40 points)
           </CardTitle>
           <p className="text-slate-600">
-            Select and define <strong>four</strong> of the following six terms in 5–7 sentences. Include time period, musical features, and cultural role.
+            Select and define <strong>three</strong> of the following six terms in 5–7 sentences. Include time period, musical features, and cultural role.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
           <div>
             <Label className="text-base font-medium mb-3 block">
-              Select 4 terms to define ({formData.selectedTerms.length}/4):
+              Select 3 terms to define ({formData.selectedTerms.length}/3):
             </Label>
             <div className="grid grid-cols-2 gap-3">
               {terms.map((term) => (
@@ -349,7 +349,7 @@ export const MidtermExamForm: React.FC = () => {
                     id={term}
                     checked={formData.selectedTerms.includes(term)}
                     onCheckedChange={(checked) => handleTermSelection(term, checked as boolean)}
-                    disabled={!formData.selectedTerms.includes(term) && formData.selectedTerms.length >= 4}
+                    disabled={!formData.selectedTerms.includes(term) && formData.selectedTerms.length >= 3}
                   />
                   <Label htmlFor={term} className="text-sm">
                     {termLabels[term as keyof typeof termLabels]}
