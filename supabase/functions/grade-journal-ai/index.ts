@@ -85,11 +85,24 @@ Return JSON with this exact shape:
       }
     }
 
-    const rubric_scores = Array.isArray(parsed?.rubric_scores) ? parsed.rubric_scores : [];
-    let overall_score = typeof parsed?.overall_score === 'number' ? parsed.overall_score : rubric_scores.reduce((s: number, r: any) => s + (r?.score || 0), 0);
-    overall_score = Math.max(0, Math.min(totalMax, overall_score));
-    const overall_feedback = parsed?.overall_feedback || 'No feedback provided.';
+    // Normalize rubric scores and overall
+    const rawRubric = Array.isArray(parsed?.rubric_scores) ? parsed.rubric_scores : [];
+    const rubric_scores = rawRubric.map((r: any) => {
+      const max = typeof r?.max_score === 'number' ? r.max_score : 0;
+      const sc = typeof r?.score === 'number' ? r.score : 0;
+      const clamped = Math.max(0, Math.min(max, Math.round(sc)));
+      return {
+        criterion: String(r?.criterion ?? ''),
+        score: clamped,
+        max_score: max,
+        feedback: String(r?.feedback ?? '')
+      };
+    });
 
+    let overall_score = rubric_scores.reduce((s: number, r: any) => s + (r.score || 0), 0);
+    overall_score = Math.round(Math.max(0, Math.min(totalMax, overall_score)));
+
+    const overall_feedback = typeof parsed?.overall_feedback === 'string' ? parsed.overall_feedback : 'No feedback provided.';
     const pct = (overall_score / totalMax) * 100;
     const letter_grade = pct >= 97 ? 'A+' : pct >= 93 ? 'A' : pct >= 90 ? 'A-' : pct >= 87 ? 'B+' : pct >= 83 ? 'B' : pct >= 80 ? 'B-' : pct >= 77 ? 'C+' : pct >= 73 ? 'C' : pct >= 70 ? 'C-' : pct >= 67 ? 'D+' : pct >= 63 ? 'D' : pct >= 60 ? 'D-' : 'F';
 
