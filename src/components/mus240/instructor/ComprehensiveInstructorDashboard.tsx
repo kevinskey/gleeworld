@@ -278,14 +278,14 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
 
         {/* Main Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 mb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Overview
             </TabsTrigger>
-            <TabsTrigger value="students" className="flex items-center gap-2">
+            <TabsTrigger value="students-grades" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              Students
+              Students & Grades
             </TabsTrigger>
             <TabsTrigger value="grading" className="flex items-center gap-2">
               <BookOpen className="h-4 w-4" />
@@ -294,10 +294,6 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
             <TabsTrigger value="communications" className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4" />
               Communications
-            </TabsTrigger>
-            <TabsTrigger value="student-record" className="flex items-center gap-2">
-              <User className="h-4 w-4" />
-              Student Record
             </TabsTrigger>
           </TabsList>
 
@@ -399,53 +395,41 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="students">
-            <div className="space-y-6">
-              {/* Student Search */}
-              <Card>
+          <TabsContent value="students-grades">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Student List - Left Column */}
+              <Card className="lg:col-span-1">
                 <CardHeader>
-                  <CardTitle>Student Management</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-4 mb-4">
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        placeholder="Search students..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                    <Button onClick={() => setActiveTab('student-record')}>
-                      View Selected Student
-                    </Button>
+                  <CardTitle>Student List</CardTitle>
+                  <div className="relative mt-2">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Search students..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
-                  
-                  <ScrollArea className="h-96">
-                    <div className="space-y-2">
+                </CardHeader>
+                <CardContent className="p-0">
+                  <ScrollArea className="h-[600px]">
+                    <div className="space-y-1 px-4 pb-4">
                       {filteredStudents.map((student) => (
                         <div 
                           key={student.user_id}
-                          className={`flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 cursor-pointer ${
-                            selectedStudent?.user_id === student.user_id ? 'bg-blue-50 border-blue-200' : ''
+                          className={`p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${
+                            selectedStudent?.user_id === student.user_id ? 'bg-blue-50 border-blue-300 shadow-sm' : ''
                           }`}
                           onClick={() => setSelectedStudent(student)}
                         >
-                          <div>
-                            <p className="font-medium">{student.full_name}</p>
-                            <p className="text-sm text-gray-600">{student.email}</p>
-                            <p className="text-xs text-gray-500">
-                              Enrolled: {new Date(student.enrolled_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant={student.enrollment_status === 'enrolled' ? 'default' : 'secondary'}>
-                              {student.enrollment_status}
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <p className="font-medium text-sm">{student.full_name}</p>
+                              <p className="text-xs text-gray-600">{student.email}</p>
+                            </div>
+                            <Badge variant={student.enrollment_status === 'enrolled' ? 'default' : 'secondary'} className="text-xs">
+                              {student.final_grade || 'N/A'}
                             </Badge>
-                            {student.final_grade && (
-                              <Badge variant="outline">{student.final_grade}</Badge>
-                            )}
                           </div>
                         </div>
                       ))}
@@ -454,8 +438,13 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
                 </CardContent>
               </Card>
 
-              {/* Enrollment Management */}
-              <EnrollmentManager />
+              {/* Student Details - Right Column */}
+              <div className="lg:col-span-2">
+                <StudentRecordView 
+                  selectedStudent={selectedStudent}
+                  onClose={() => setSelectedStudent(null)}
+                />
+              </div>
             </div>
           </TabsContent>
 
@@ -494,13 +483,6 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
 
           <TabsContent value="communications">
             <StudentCommunications />
-          </TabsContent>
-
-          <TabsContent value="student-record">
-            <StudentRecordView 
-              selectedStudent={selectedStudent}
-              onClose={() => setActiveTab('students')}
-            />
           </TabsContent>
         </Tabs>
       </div>
