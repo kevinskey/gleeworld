@@ -479,16 +479,13 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-blue-900">Excerpt 1 (10 points)</h4>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <iframe 
-                width="100%" 
-                height="200" 
-                src="https://www.youtube.com/embed/GUvBGZnL9rE" 
-                title="Excerpt 1"
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-                className="rounded-md"
-              />
+              <div className="text-sm text-muted-foreground mb-2">
+                Audio Excerpt 1 - Listen carefully and analyze the musical elements
+              </div>
+              <audio controls className="w-full">
+                <source src="https://www.youtube.com/watch?v=GUvBGZnL9rE" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
             </div>
             <div className="space-y-3">
               <div>
@@ -526,16 +523,13 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-purple-900">Excerpt 2 (10 points)</h4>
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <iframe 
-                width="100%" 
-                height="200" 
-                src="https://www.youtube.com/embed/0dz_IsWKl6Y" 
-                title="Excerpt 2"
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-                className="rounded-md"
-              />
+              <div className="text-sm text-muted-foreground mb-2">
+                Audio Excerpt 2 - Listen carefully and analyze the musical elements
+              </div>
+              <audio controls className="w-full">
+                <source src="https://www.youtube.com/watch?v=0dz_IsWKl6Y" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
             </div>
             <div className="space-y-3">
               <div>
@@ -573,16 +567,13 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-green-900">Excerpt 3 (10 points)</h4>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <iframe 
-                width="100%" 
-                height="200" 
-                src="https://www.youtube.com/embed/_8yGGtVKrD8" 
-                title="Excerpt 3"
-                frameBorder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                allowFullScreen
-                className="rounded-md"
-              />
+              <div className="text-sm text-muted-foreground mb-2">
+                Audio Excerpt 3 - Listen carefully and analyze the musical elements
+              </div>
+              <audio controls className="w-full">
+                <source src="https://www.youtube.com/watch?v=_8yGGtVKrD8" type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
             </div>
             <div className="space-y-3">
               <div>
