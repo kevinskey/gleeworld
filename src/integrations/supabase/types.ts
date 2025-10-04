@@ -14472,7 +14472,7 @@ export type Database = {
           ring_shout_answer: string | null
           selected_essay_question: number | null
           selected_terms: string[]
-          submitted_at: string
+          submitted_at: string | null
           swing_answer: string | null
           time_started: string
           total_time_minutes: number | null
@@ -14506,7 +14506,7 @@ export type Database = {
           ring_shout_answer?: string | null
           selected_essay_question?: number | null
           selected_terms?: string[]
-          submitted_at?: string
+          submitted_at?: string | null
           swing_answer?: string | null
           time_started?: string
           total_time_minutes?: number | null
@@ -14540,7 +14540,7 @@ export type Database = {
           ring_shout_answer?: string | null
           selected_essay_question?: number | null
           selected_terms?: string[]
-          submitted_at?: string
+          submitted_at?: string | null
           swing_answer?: string | null
           time_started?: string
           total_time_minutes?: number | null
