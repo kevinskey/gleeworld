@@ -40,25 +40,51 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
     setLoading(true);
     try {
       // Load assignments
-      const { data: assignmentData } = await supabase
+      const { data: assignmentData, error: assignError } = await supabase
         .from('assignment_submissions')
         .select('*')
         .eq('student_id', selectedStudent.user_id)
         .order('submission_date', { ascending: false });
 
-      // Load journals
-      const { data: journalData } = await supabase
+      if (assignError) {
+        console.error('Error loading assignments:', assignError);
+      }
+
+      // Load journals with associated journal entries
+      const { data: journalData, error: journalError } = await supabase
         .from('mus240_journal_grades')
-        .select('*')
+        .select(`
+          *,
+          mus240_journals(
+            id,
+            title,
+            assignment_id,
+            created_at
+          )
+        `)
         .eq('student_id', selectedStudent.user_id)
-        .order('created_at', { ascending: false });
+        .order('graded_at', { ascending: false });
+
+      if (journalError) {
+        console.error('Error loading journals:', journalError);
+      }
 
       // Load midterm
-      const { data: midtermData } = await supabase
+      const { data: midtermData, error: midtermError } = await supabase
         .from('mus240_midterm_submissions')
         .select('*')
         .eq('user_id', selectedStudent.user_id)
-        .single();
+        .maybeSingle();
+
+      if (midtermError) {
+        console.error('Error loading midterm:', midtermError);
+      }
+
+      console.log('Loaded student data:', {
+        assignments: assignmentData?.length || 0,
+        journals: journalData?.length || 0,
+        hasMidterm: !!midtermData
+      });
 
       setAssignments(assignmentData || []);
       setJournals(journalData || []);
@@ -85,12 +111,25 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
   }
 
   const calculateOverallGrade = () => {
-    const assignmentPoints = assignments.reduce((sum, a) => sum + (a.grade || 0), 0);
-    const journalPoints = journals.reduce((sum, j) => sum + (j.points_earned || 0), 0);
-    const midtermPoints = midterm?.grade || 0;
+    // Calculate assignment points (various assignments)
+    const assignmentPoints = assignments.reduce((sum, a) => sum + (Number(a.grade) || 0), 0);
+    
+    // Calculate journal points (lj1=10, lj2=10, lj3=15)
+    const journalPoints = journals.reduce((sum, j) => sum + (Number(j.overall_score) || 0), 0);
+    
+    // Midterm points
+    const midtermPoints = Number(midterm?.grade) || 0;
     
     const totalPoints = assignmentPoints + journalPoints + midtermPoints;
     const totalPossible = 725; // Total possible points for the course
+    
+    console.log('Grade calculation:', {
+      assignmentPoints,
+      journalPoints,
+      midtermPoints,
+      totalPoints,
+      percentage: totalPossible > 0 ? Math.round((totalPoints / totalPossible) * 100) : 0
+    });
     
     return totalPossible > 0 ? Math.round((totalPoints / totalPossible) * 100) : 0;
   };
@@ -191,16 +230,27 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                     <div className="space-y-2">
                       {assignments.map((assignment) => (
                         <div key={assignment.id} className="flex justify-between items-center p-2 bg-white border rounded text-sm">
-                          <div>
-                            <p className="font-medium text-xs">{assignment.assignment_id}</p>
+                          <div className="flex-1">
+                            <p className="font-medium text-xs">{assignment.assignment_id?.toUpperCase()}</p>
                             <p className="text-xs text-gray-600">
-                              {new Date(assignment.submission_date).toLocaleDateString()}
+                              Submitted: {new Date(assignment.submission_date).toLocaleDateString()}
                             </p>
+                            {assignment.graded_at && (
+                              <p className="text-xs text-gray-500">
+                                Graded: {new Date(assignment.graded_at).toLocaleDateString()}
+                              </p>
+                            )}
+                            {assignment.feedback && (
+                              <p className="text-xs text-gray-600 mt-1 italic">
+                                "{assignment.feedback.substring(0, 50)}..."
+                              </p>
+                            )}
                           </div>
                           <div className="text-right">
                             <Badge variant={assignment.grade ? 'default' : 'outline'} className="text-xs">
-                              {assignment.grade ? `${assignment.grade}` : 'Pending'}
+                              {assignment.grade ? `${assignment.grade} pts` : 'Pending'}
                             </Badge>
+                            <p className="text-xs text-gray-500 mt-1 capitalize">{assignment.status}</p>
                           </div>
                         </div>
                       ))}
@@ -220,24 +270,43 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                     <div className="text-center py-8 text-sm text-gray-500">No journal entries</div>
                   ) : (
                     <div className="space-y-2">
-                      {journals.map((journal) => (
-                        <div key={journal.id} className="p-2 bg-white border rounded text-sm">
-                          <div className="flex justify-between items-start mb-1">
-                            <p className="font-medium text-xs">Journal Entry</p>
-                            <Badge variant="outline" className="text-xs">
-                              {journal.overall_score || 0} pts
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-gray-600 mb-1">
-                            {new Date(journal.created_at).toLocaleDateString()}
-                          </p>
-                          {journal.feedback && (
-                            <div className="bg-gray-50 p-1.5 rounded text-xs mt-1">
-                              <strong>Feedback:</strong> {journal.feedback.substring(0, 100)}...
+                      {journals.map((journal: any) => {
+                        const journalEntry = journal.mus240_journals;
+                        const assignmentId = journalEntry?.assignment_id || 'Unknown';
+                        const maxScore = assignmentId === 'lj3' ? 15 : 10;
+                        
+                        return (
+                          <div key={journal.id} className="p-2 bg-white border rounded text-sm">
+                            <div className="flex justify-between items-start mb-1">
+                              <div>
+                                <p className="font-medium text-xs">{assignmentId.toUpperCase()}</p>
+                                <p className="text-xs text-gray-500">
+                                  {journalEntry?.title || 'Journal Entry'}
+                                </p>
+                              </div>
+                              <Badge variant="outline" className="text-xs">
+                                {journal.overall_score || 0} / {maxScore} pts
+                              </Badge>
                             </div>
-                          )}
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="secondary" className="text-xs">
+                                {journal.letter_grade || 'N/A'}
+                              </Badge>
+                              <p className="text-xs text-gray-600">
+                                {new Date(journal.graded_at || journal.created_at).toLocaleDateString()}
+                              </p>
+                            </div>
+                            {journal.feedback && (
+                              <div className="bg-gray-50 p-1.5 rounded text-xs mt-1">
+                                <strong>Feedback:</strong> {journal.feedback.substring(0, 80)}...
+                              </div>
+                            )}
+                            {journal.ai_model && (
+                              <p className="text-xs text-gray-400 mt-1">Graded by: {journal.ai_model}</p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </ScrollArea>
@@ -259,10 +328,17 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                   <div className="space-y-3">
                     <div className="flex justify-between items-center text-sm">
                       <div>
-                        <p className="font-medium text-xs">{new Date(midterm.submitted_at).toLocaleDateString()}</p>
-                        <p className="text-xs text-gray-600">
-                          Time: {midterm.total_time_minutes || 0} min
+                        <p className="font-medium text-xs">
+                          Submitted: {new Date(midterm.submitted_at).toLocaleDateString()}
                         </p>
+                        <p className="text-xs text-gray-600">
+                          Time taken: {midterm.total_time_minutes || 0} minutes
+                        </p>
+                        {midterm.graded_at && (
+                          <p className="text-xs text-gray-500">
+                            Graded: {new Date(midterm.graded_at).toLocaleDateString()}
+                          </p>
+                        )}
                       </div>
                       <Badge variant={midterm.grade ? 'default' : 'outline'} className="text-xs">
                         {midterm.grade ? `${midterm.grade} pts` : 'Pending'}
@@ -271,7 +347,15 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                     
                     {midterm.feedback && (
                       <div className="bg-blue-50 p-2 rounded text-xs">
-                        <strong>Feedback:</strong> {midterm.feedback.substring(0, 150)}...
+                        <strong>Instructor Feedback:</strong>
+                        <p className="mt-1">{midterm.feedback}</p>
+                      </div>
+                    )}
+                    
+                    {midterm.comprehensive_feedback && (
+                      <div className="bg-green-50 p-2 rounded text-xs">
+                        <strong>AI Feedback:</strong>
+                        <p className="mt-1">{midterm.comprehensive_feedback.substring(0, 200)}...</p>
                       </div>
                     )}
                   </div>
