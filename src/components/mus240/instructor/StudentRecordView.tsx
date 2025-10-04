@@ -26,6 +26,7 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
   const [assignments, setAssignments] = useState<any[]>([]);
   const [journals, setJournals] = useState<any[]>([]);
   const [midterm, setMidterm] = useState<any>(null);
+  const [midtermDetails, setMidtermDetails] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -81,6 +82,49 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
 
       if (midtermError) {
         console.error('Error loading midterm:', midtermError);
+      }
+
+      // Load midterm question-level grades if midterm exists
+      if (midtermData) {
+        const { data: gradesData, error: gradesError } = await supabase
+          .from('mus240_submission_grades')
+          .select('*')
+          .eq('submission_id', midtermData.id)
+          .order('created_at', { ascending: false });
+
+        if (gradesError) {
+          console.error('Error loading midterm grades:', gradesError);
+        } else {
+          // Get latest grade per question
+          const latestGrades = new Map();
+          (gradesData || []).forEach((g: any) => {
+            const key = `${g.question_type}:${g.question_id}`;
+            if (!latestGrades.has(key)) {
+              latestGrades.set(key, g);
+            }
+          });
+
+          const details = Array.from(latestGrades.values()).map((g: any) => {
+            let breakdown = {};
+            try {
+              breakdown = typeof g.rubric_breakdown === 'string' 
+                ? JSON.parse(g.rubric_breakdown) 
+                : g.rubric_breakdown || {};
+            } catch (e) {
+              console.error('Error parsing rubric breakdown:', e);
+            }
+
+            return {
+              question_id: g.question_id,
+              question_type: g.question_type,
+              score: Number(g.instructor_score ?? g.ai_score ?? 0),
+              feedback: g.ai_feedback,
+              breakdown
+            };
+          });
+
+          setMidtermDetails(details);
+        }
       }
 
       console.log('Loaded student data:', {
@@ -319,7 +363,7 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
           <TabsContent value="midterm" className="mt-2">
             <div className="space-y-2">
               <h3 className="text-sm font-semibold">Midterm Exam</h3>
-              <div className="border rounded-lg p-3 bg-gray-50 min-h-[288px]">
+              <div className="border rounded-lg overflow-hidden bg-gray-50 min-h-[288px]">
                 {loading ? (
                   <div className="text-center py-8 text-sm">Loading midterm data...</div>
                 ) : !midterm ? (
@@ -329,38 +373,95 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                     <p className="text-xs mt-1">This student has not submitted the midterm exam yet.</p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center text-sm">
-                      <div>
-                        <p className="font-medium text-xs">
-                          Submitted: {new Date(midterm.submitted_at).toLocaleDateString()}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          Time taken: {midterm.total_time_minutes || 0} minutes
-                        </p>
-                        {midterm.graded_at && (
-                          <p className="text-xs text-gray-500">
-                            Graded: {new Date(midterm.graded_at).toLocaleDateString()}
+                  <div>
+                    <div className="p-3 bg-white border-b">
+                      <div className="flex justify-between items-center text-sm">
+                        <div>
+                          <p className="font-medium text-xs">
+                            Submitted: {new Date(midterm.submitted_at).toLocaleDateString()}
                           </p>
-                        )}
+                          <p className="text-xs text-gray-600">
+                            Time taken: {midterm.total_time_minutes || 0} minutes
+                          </p>
+                          {midterm.graded_at && (
+                            <p className="text-xs text-gray-500">
+                              Graded: {new Date(midterm.graded_at).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <Badge variant={midterm.grade ? 'default' : 'outline'} className="text-xs">
+                          {midterm.grade ? `${midterm.grade}/90` : 'Pending'}
+                        </Badge>
                       </div>
-                      <Badge variant={midterm.grade ? 'default' : 'outline'} className="text-xs">
-                        {midterm.grade ? `${midterm.grade} pts` : 'Pending'}
-                      </Badge>
+                      
+                      {midterm.feedback && (
+                        <div className="bg-blue-50 p-2 rounded text-xs mt-2">
+                          <strong>Instructor Feedback:</strong>
+                          <p className="mt-1">{midterm.feedback}</p>
+                        </div>
+                      )}
                     </div>
                     
-                    {midterm.feedback && (
-                      <div className="bg-blue-50 p-2 rounded text-xs">
-                        <strong>Instructor Feedback:</strong>
-                        <p className="mt-1">{midterm.feedback}</p>
-                      </div>
-                    )}
-                    
-                    {midterm.comprehensive_feedback && (
-                      <div className="bg-green-50 p-2 rounded text-xs">
-                        <strong>AI Feedback:</strong>
-                        <p className="mt-1">{midterm.comprehensive_feedback.substring(0, 200)}...</p>
-                      </div>
+                    {/* Question-by-Question Breakdown */}
+                    {midtermDetails.length > 0 && (
+                      <ScrollArea className="h-[400px]">
+                        <div className="p-3 space-y-3">
+                          <h4 className="text-xs font-semibold text-gray-700">Question Breakdown ({midtermDetails.length} questions)</h4>
+                          {midtermDetails.map((detail: any, idx: number) => (
+                            <div key={idx} className="border rounded-lg p-3 bg-white">
+                              <div className="flex justify-between items-start mb-2">
+                                <div>
+                                  <p className="font-medium text-sm capitalize">
+                                    {detail.question_id.replace(/_/g, ' ')}
+                                  </p>
+                                  <p className="text-xs text-gray-500 capitalize">
+                                    {detail.question_type.replace(/_/g, ' ')}
+                                  </p>
+                                </div>
+                                <Badge variant="outline" className="text-xs">
+                                  {detail.score}/10
+                                </Badge>
+                              </div>
+                              
+                              {/* Rubric Breakdown */}
+                              {detail.breakdown && Object.keys(detail.breakdown).length > 0 && (
+                                <div className="grid grid-cols-2 gap-2 mb-2">
+                                  {Object.entries(detail.breakdown).map(([criterion, data]: [string, any]) => (
+                                    <div key={criterion} className="bg-gray-50 rounded p-2 text-xs">
+                                      <div className="flex justify-between items-center mb-1">
+                                        <span className="text-gray-600 capitalize">
+                                          {criterion.replace(/_/g, ' ')}
+                                        </span>
+                                        <span className="font-medium">
+                                          {data.score}/{data.max_points}
+                                        </span>
+                                      </div>
+                                      <div className="bg-gray-200 rounded-full h-1.5">
+                                        <div 
+                                          className="bg-blue-600 h-1.5 rounded-full"
+                                          style={{ width: `${(data.score / data.max_points) * 100}%` }}
+                                        />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {/* AI Feedback */}
+                              {detail.feedback && (
+                                <details className="mt-2">
+                                  <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
+                                    View AI Feedback
+                                  </summary>
+                                  <div className="mt-2 p-2 bg-gray-50 rounded text-xs whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                    {detail.feedback}
+                                  </div>
+                                </details>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
                     )}
                   </div>
                 )}
