@@ -34,12 +34,13 @@ serve(async (req) => {
 
     // Build grading prompt (respect assignment-specific caps if known)
     const rubricMax = (rubric?.criteria || []).reduce((sum: number, c: any) => sum + (c?.max_points || 0), 0) || 17;
-    const assignmentCaps: Record<string, number> = { lj2: 10, lj3: 15 };
+    const assignmentCaps: Record<string, number> = { lj1: 10, lj2: 10, lj3: 15 };
     const totalMax = (assignment_id && assignmentCaps[assignment_id]) ? assignmentCaps[assignment_id] : rubricMax;
 
     const userPrompt = `Grade the following MUS240 journal using the provided rubric. Return STRICT JSON only.
 Rubric (max total ${totalMax}): ${JSON.stringify(rubric?.criteria || [])}
-Student Journal Text:\n"""${journal_text}"""`;
+Student Journal Text:\n"""${journal_text}"""
+
 Return JSON with this exact shape:
 {
   "rubric_scores": [
@@ -50,7 +51,6 @@ Return JSON with this exact shape:
   "overall_score": 0-${totalMax},
   "overall_feedback": "one concise paragraph"
 }`;
-
     // Call Lovable AI Gateway (using free Gemini model)
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
