@@ -30,7 +30,10 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
 
   useEffect(() => {
     if (selectedStudent) {
+      console.log('Loading data for student:', selectedStudent);
       loadStudentData();
+    } else {
+      console.log('No student selected');
     }
   }, [selectedStudent]);
 
@@ -318,11 +321,12 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
               <h3 className="text-sm font-semibold">Midterm Exam</h3>
               <div className="border rounded-lg p-3 bg-gray-50 min-h-[288px]">
                 {loading ? (
-                  <div className="text-center py-8 text-sm">Loading...</div>
+                  <div className="text-center py-8 text-sm">Loading midterm data...</div>
                 ) : !midterm ? (
                   <div className="text-center py-8 text-sm text-gray-500">
                     <GraduationCap className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                    <p>No midterm submission</p>
+                    <p className="font-medium">No midterm submission found</p>
+                    <p className="text-xs mt-1">This student has not submitted the midterm exam yet.</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
