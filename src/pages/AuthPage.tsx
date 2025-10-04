@@ -24,6 +24,17 @@ export default function AuthPage() {
   useEffect(() => {
     // If user is already authenticated, redirect them
     if (user && !loading) {
+      // Check sessionStorage first for stored redirect path
+      const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
+      
+      if (storedRedirect) {
+        // Clear the stored redirect and use it
+        sessionStorage.removeItem('redirectAfterAuth');
+        window.location.href = storedRedirect;
+        return;
+      }
+      
+      // Fall back to URL parameters
       const urlParams = new URLSearchParams(window.location.search);
       const returnTo = urlParams.get('returnTo');
       const hasTimeSlot = urlParams.get('timeSlot');
@@ -61,12 +72,21 @@ export default function AuthPage() {
         });
 
         // Handle redirect after successful login
-        const urlParams = new URLSearchParams(window.location.search);
-        const returnTo = urlParams.get('returnTo');
-        if (returnTo) {
-          window.location.href = returnTo;
+        // Check sessionStorage first
+        const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
+        
+        if (storedRedirect) {
+          sessionStorage.removeItem('redirectAfterAuth');
+          window.location.href = storedRedirect;
         } else {
-          window.location.href = '/dashboard';
+          // Fall back to URL parameters
+          const urlParams = new URLSearchParams(window.location.search);
+          const returnTo = urlParams.get('returnTo');
+          if (returnTo) {
+            window.location.href = returnTo;
+          } else {
+            window.location.href = '/dashboard';
+          }
         }
 
       } else {
