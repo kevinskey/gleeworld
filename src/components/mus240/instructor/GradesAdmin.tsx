@@ -17,6 +17,7 @@ interface GradeData {
   feedback: string;
   rubric_scores: any[];
   type: 'journal' | 'midterm';
+  midterm_details?: any[];
 }
 
 export const GradesAdmin = () => {
@@ -85,12 +86,13 @@ export const GradesAdmin = () => {
       // Compute midterm raw scores from per-question grades if submission.grade is null
       const submissionIds = (midtermGrades || []).map((s: any) => s.id);
       const midtermScoreBySubmission = new Map<string, number>();
+      const midtermDetailsBySubmission = new Map<string, any[]>();
 
       if (submissionIds.length > 0) {
         // Latest per-question grades
         const { data: submissionGradeRows, error: submissionGradesError } = await supabase
           .from('mus240_submission_grades')
-          .select('submission_id, question_type, question_id, ai_score, instructor_score, created_at')
+          .select('submission_id, question_type, question_id, ai_score, instructor_score, ai_feedback, rubric_breakdown, created_at')
           .in('submission_id', submissionIds)
           .order('created_at', { ascending: false });
         if (submissionGradesError) throw submissionGradesError;
@@ -104,15 +106,35 @@ export const GradesAdmin = () => {
           if (!m.has(key)) m.set(key, g); // keep latest due to order desc
         });
 
-        // Compute raw score (out of 90) for each submission
+        // Compute raw score (out of 90) for each submission and collect details
         bySubmission.forEach((qMap, submissionId) => {
           let score = 0;
+          const details: any[] = [];
           qMap.forEach((g) => {
             const received = Number(g.instructor_score ?? g.ai_score ?? 0);
             if (!isFinite(received)) return;
             score += received;
+            
+            // Parse rubric breakdown
+            let breakdown = {};
+            try {
+              breakdown = typeof g.rubric_breakdown === 'string' 
+                ? JSON.parse(g.rubric_breakdown) 
+                : g.rubric_breakdown || {};
+            } catch (e) {
+              console.error('Error parsing rubric breakdown:', e);
+            }
+            
+            details.push({
+              question_id: g.question_id,
+              question_type: g.question_type,
+              score: received,
+              feedback: g.ai_feedback,
+              breakdown
+            });
           });
           midtermScoreBySubmission.set(submissionId, Math.round(score));
+          midtermDetailsBySubmission.set(submissionId, details);
         });
       }
 
@@ -128,6 +150,7 @@ export const GradesAdmin = () => {
 
           const computed = midtermScoreBySubmission.get(submission.id) ?? 0;
           const overall = submission.grade ?? computed;
+          const details = midtermDetailsBySubmission.get(submission.id) || [];
 
           return {
             student_name: profileData?.full_name || 'Unknown',
@@ -137,8 +160,9 @@ export const GradesAdmin = () => {
             letter_grade: getLetterGradeFromScore(overall || 0),
             graded_at: submission.graded_at || submission.submitted_at,
             feedback: submission.feedback || '',
-            rubric_scores: [],
-            type: 'midterm' as const
+            rubric_scores: details,
+            type: 'midterm' as const,
+            midterm_details: details
           };
         })
       );
@@ -372,39 +396,109 @@ export const GradesAdmin = () => {
         <CardContent>
           <div className="space-y-4">
             {grades.slice(0, 10).map((grade, index) => (
-              <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                 <div className="flex-1">
-                   <div className="flex items-center gap-2">
-                     <p className="font-medium">{grade.student_name}</p>
-                     <Badge variant={grade.type === 'midterm' ? 'default' : 'secondary'} className="text-xs">
-                       {grade.type === 'midterm' ? 'Midterm' : 'Journal'}
-                     </Badge>
-                   </div>
-                   <p className="text-sm text-gray-600">{grade.assignment_title}</p>
-                  {grade.feedback && (
-                    <details className="mt-2">
-                      <summary className="text-sm text-blue-600 cursor-pointer hover:text-blue-800">
-                        View AI Feedback
-                      </summary>
-                      <div className="mt-2 p-3 bg-gray-50 rounded text-sm">
-                        {grade.feedback}
-                      </div>
-                    </details>
-                  )}
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <p className={`font-bold ${getScoreColor(grade.overall_score, grade.type === 'midterm')}`}>
-                      {grade.type === 'midterm' ? `${grade.overall_score}/90` : `${grade.overall_score}%`}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(grade.graded_at).toLocaleDateString()}
-                    </p>
+              <div key={index} className="border rounded-lg overflow-hidden">
+                <div className="flex items-center justify-between p-3 bg-gray-50">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{grade.student_name}</p>
+                      <Badge variant={grade.type === 'midterm' ? 'default' : 'secondary'} className="text-xs">
+                        {grade.type === 'midterm' ? 'Midterm' : 'Journal'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">{grade.assignment_title}</p>
                   </div>
-                  <Badge className={getLetterGradeColor(grade.letter_grade)}>
-                    {grade.letter_grade}
-                  </Badge>
+                  <div className="flex items-center gap-4">
+                    <div className="text-right">
+                      <p className={`font-bold ${getScoreColor(grade.overall_score, grade.type === 'midterm')}`}>
+                        {grade.type === 'midterm' ? `${grade.overall_score}/90` : `${grade.overall_score}%`}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(grade.graded_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge className={getLetterGradeColor(grade.letter_grade)}>
+                      {grade.letter_grade}
+                    </Badge>
+                  </div>
                 </div>
+                
+                {/* Midterm Rubric Breakdown */}
+                {grade.type === 'midterm' && grade.midterm_details && grade.midterm_details.length > 0 && (
+                  <details className="border-t">
+                    <summary className="px-3 py-2 text-sm font-medium text-blue-600 cursor-pointer hover:bg-blue-50">
+                      View Detailed Rubric Breakdown ({grade.midterm_details.length} questions)
+                    </summary>
+                    <div className="p-3 space-y-3 bg-white">
+                      {grade.midterm_details.map((detail: any, idx: number) => (
+                        <div key={idx} className="border rounded-lg p-3 bg-gray-50">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="font-medium text-sm capitalize">
+                                {detail.question_id.replace(/_/g, ' ')}
+                              </p>
+                              <p className="text-xs text-gray-500 capitalize">
+                                {detail.question_type.replace(/_/g, ' ')}
+                              </p>
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {detail.score}/10
+                            </Badge>
+                          </div>
+                          
+                          {/* Rubric Breakdown */}
+                          {detail.breakdown && Object.keys(detail.breakdown).length > 0 && (
+                            <div className="grid grid-cols-2 gap-2 mb-2">
+                              {Object.entries(detail.breakdown).map(([criterion, data]: [string, any]) => (
+                                <div key={criterion} className="bg-white rounded p-2 text-xs">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-gray-600 capitalize">
+                                      {criterion.replace(/_/g, ' ')}
+                                    </span>
+                                    <span className="font-medium">
+                                      {data.score}/{data.max_points}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 bg-gray-200 rounded-full h-1.5">
+                                    <div 
+                                      className="bg-blue-600 h-1.5 rounded-full"
+                                      style={{ width: `${(data.score / data.max_points) * 100}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* AI Feedback Snippet */}
+                          {detail.feedback && (
+                            <details className="mt-2">
+                              <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
+                                View AI Feedback
+                              </summary>
+                              <div className="mt-2 p-2 bg-white rounded text-xs whitespace-pre-wrap">
+                                {detail.feedback.length > 300 
+                                  ? detail.feedback.substring(0, 300) + '...' 
+                                  : detail.feedback}
+                              </div>
+                            </details>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+                
+                {/* General Feedback */}
+                {grade.feedback && grade.type !== 'midterm' && (
+                  <details className="border-t">
+                    <summary className="px-3 py-2 text-sm text-blue-600 cursor-pointer hover:bg-blue-50">
+                      View AI Feedback
+                    </summary>
+                    <div className="p-3 bg-white text-sm">
+                      {grade.feedback}
+                    </div>
+                  </details>
+                )}
               </div>
             ))}
           </div>
