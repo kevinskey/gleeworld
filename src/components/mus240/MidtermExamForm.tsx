@@ -488,10 +488,16 @@ export const MidtermExamForm: React.FC = () => {
             <h4 className="text-lg font-semibold text-green-900">Excerpt 3 (10 points)</h4>
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
-              <audio controls className="w-full">
-                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/midterm-excerpt-3.mp3" type="audio/mpeg" />
-                Your browser does not support the audio element.
-              </audio>
+              <iframe 
+                width="100%" 
+                height="200" 
+                src="https://www.youtube.com/embed/_8yGGtVKrD8" 
+                title="Excerpt 3"
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+                className="rounded-md"
+              />
             </div>
             <div className="space-y-3">
               <div>
