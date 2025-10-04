@@ -241,7 +241,7 @@ export const MidtermExamForm: React.FC = () => {
           
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="outline" className="border-amber-600 text-amber-700 hover:bg-amber-50" disabled={isResetting}>
+              <Button variant="destructive" disabled={isResetting}>
                 <AlertTriangle className="h-4 w-4 mr-2" />
                 {isResetting ? 'Resetting...' : 'Retake Exam'}
               </Button>
@@ -255,7 +255,7 @@ export const MidtermExamForm: React.FC = () => {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={resetExam} className="bg-amber-600 hover:bg-amber-700">
+                <AlertDialogAction onClick={resetExam}>
                   Yes, Retake Exam
                 </AlertDialogAction>
               </AlertDialogFooter>
