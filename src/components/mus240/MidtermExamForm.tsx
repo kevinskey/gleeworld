@@ -78,11 +78,13 @@ export const MidtermExamForm: React.FC = () => {
     formDataRef.current = formData;
   }, [formData]);
 
-  // Load existing submission data
+  // Track if initial data has been loaded to prevent resets during exam
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
+
+  // Load existing submission data ONLY ONCE when exam first loads
   useEffect(() => {
-    console.log('Loading submission data:', { submission, isSubmitted: submission?.is_submitted });
-    if (submission && !submission.is_submitted) {
-      console.log('Setting form data from submission:', submission);
+    if (submission && !submission.is_submitted && !initialDataLoaded) {
+      console.log('Initial load of submission data:', submission.id);
       setFormData({
         selectedTerms: submission.selected_terms || [],
         termAnswers: {
@@ -105,8 +107,9 @@ export const MidtermExamForm: React.FC = () => {
         selectedEssayQuestion: submission.selected_essay_question || null,
         essayAnswer: submission.essay_answer || ''
       });
+      setInitialDataLoaded(true);
     }
-  }, [submission]);
+  }, [submission?.id, submission?.is_submitted, initialDataLoaded]);
 
   // Timer effect
   useEffect(() => {

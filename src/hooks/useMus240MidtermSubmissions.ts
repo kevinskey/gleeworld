@@ -56,6 +56,11 @@ export const useMus240MidtermSubmissions = () => {
       return data as MidtermSubmission | null;
     },
     enabled: !!user?.id,
+    // Prevent automatic background refetching during active exam
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
   });
 
   const createSubmissionMutation = useMutation({
