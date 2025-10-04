@@ -334,7 +334,7 @@ export const MidtermExamForm: React.FC = () => {
             Part I: Short Identifications (40 points)
           </CardTitle>
           <p className="text-slate-600">
-            Select and define <strong>three</strong> of the following six terms in 5–7 sentences. Include time period, musical features, and cultural role.
+            Select and define <strong>three</strong> of the following six terms in 3–4 sentences. Include time period, musical features, and cultural role.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -365,7 +365,7 @@ export const MidtermExamForm: React.FC = () => {
                 {termLabels[term as keyof typeof termLabels]}
               </Label>
               <Textarea
-                placeholder="Define this term in 5-7 sentences, including time period, musical features, and cultural role..."
+                placeholder="Define this term in 3-4 sentences, including time period, musical features, and cultural role..."
                 value={formData.termAnswers[term] || ''}
                 onChange={(e) => handleTermAnswer(term, e.target.value)}
                 className="min-h-[120px]"
