@@ -511,7 +511,7 @@ export const SuperAdminDashboard = ({
         className="fixed inset-0 z-0 opacity-25 dark:opacity-20 bg-cover bg-no-repeat pointer-events-none"
         style={{ 
           backgroundImage: `url(${gleeSculptureBg})`,
-          backgroundPosition: 'center 30%'
+          backgroundPosition: 'center 65%'
         }}
       />
       
