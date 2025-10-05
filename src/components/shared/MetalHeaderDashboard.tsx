@@ -72,7 +72,7 @@ const SortableModuleCard = ({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className={`cursor-pointer hover:shadow-md transition-all duration-200 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`}>
+      <Card className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3 flex-1">
@@ -461,7 +461,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
 
 
       {/* Search Field */}
-      <Card className="p-4">
+      <Card className="p-4 bg-background/95 backdrop-blur-sm border-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input 
@@ -475,7 +475,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
 
       {/* Filter Controls - Collapsible */}
       <Collapsible open={!filterControlsCollapsed} onOpenChange={(open) => setFilterControlsCollapsed(!open)}>
-        <Card>
+        <Card className="bg-background/95 backdrop-blur-sm border-2">
           <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-2">
               <Filter className="h-4 w-4" />
@@ -539,7 +539,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
       <div className="space-y-6">
         {/* Show search results when there's a search query or filter */}
         {(searchQuery.trim() || filterCategory !== 'all') ? (
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Search className="h-5 w-5" />
@@ -574,8 +574,8 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
               open={!collapsedSections[category]}
               onOpenChange={() => toggleSectionCollapse(category)}
             >
-              <Card className="overflow-hidden">
-                <CollapsibleTrigger className="w-full p-6 hover:bg-muted/50 transition-colors">
+              <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
+                <CollapsibleTrigger className="w-full p-6 hover:bg-accent transition-colors">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
