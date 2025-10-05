@@ -152,9 +152,10 @@ ModuleRegistry.registerModule({
 
 // Import and register additional modules
 import { EnhancedContractManager } from '@/components/contracts/EnhancedContractManager';
-import { FileText, GraduationCap, QrCode } from 'lucide-react';
+import { FileText, GraduationCap, QrCode, ClipboardList } from 'lucide-react';
 import GleeAcademy from '@/pages/GleeAcademy';
 import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementModule';
+import { TestBuilder } from '@/components/test-builder/TestBuilder';
 
 ModuleRegistry.registerModule({
   id: 'enhanced-contract-management',
@@ -189,4 +190,16 @@ ModuleRegistry.registerModule({
   category: 'administration',
   component: QRCodeManagementModule,
   requiredPermissions: ['admin', 'super-admin', 'exec']
+});
+
+// Register Test Builder
+ModuleRegistry.registerModule({
+  id: 'test-builder',
+  title: 'Test Builder',
+  description: 'Create and manage tests for all Glee Academy courses with multimedia support',
+  icon: ClipboardList,
+  iconColor: 'indigo',
+  category: 'education',
+  component: TestBuilder,
+  requiredPermissions: ['admin', 'super-admin']
 });

@@ -32,6 +32,7 @@ import { RadioManagement } from '../admin/RadioManagement';
 import GleeAcademy from '../../pages/GleeAcademy';
 import { QRCodeManagementModule } from '../modules/QRCodeManagementModule';
 import { Mus240GroupsModule } from '../modules/Mus240GroupsModule';
+import { TestBuilder } from '../test-builder/TestBuilder';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -115,6 +116,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <QRCodeManagementModule />;
       case 'mus240-groups':
         return <Mus240GroupsModule />;
+      case 'test-builder':
+        return <TestBuilder courseId="all" courseName="All Courses" />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
