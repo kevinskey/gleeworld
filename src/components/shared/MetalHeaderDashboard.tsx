@@ -418,15 +418,12 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     <div className="space-y-4 relative min-h-screen">
       {/* Background Image */}
       <div 
-        className="fixed inset-0 z-0 opacity-30 dark:opacity-25 bg-cover bg-no-repeat pointer-events-none"
+        className="fixed inset-0 z-0 opacity-25 dark:opacity-20 bg-cover bg-no-repeat pointer-events-none"
         style={{ 
           backgroundImage: `url(${gleeSculptureBg})`,
           backgroundPosition: 'center 15%'
         }}
       />
-      
-      {/* Black Overlay */}
-      <div className="fixed inset-0 z-[1] bg-black/40 dark:bg-black/60 pointer-events-none" />
       {/* Metal Plate Header */}
       <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg p-5">
         {/* Left Rivet */}
