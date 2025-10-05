@@ -1,9 +1,10 @@
-import React from 'react';
-import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine, Crown, GraduationCap } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine, Crown, GraduationCap, ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface ModuleSelectorProps {
   selectedModule: string;
@@ -11,6 +12,7 @@ interface ModuleSelectorProps {
 }
 
 export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelectorProps) => {
+  const [openCategories, setOpenCategories] = useState<Set<string>>(new Set());
   const modules = [
     {
       id: 'email',
@@ -144,6 +146,18 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
 
   const categories = [...new Set(modules.map(m => m.category))];
 
+  const toggleCategory = (category: string) => {
+    setOpenCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="p-4 border-b border-border">
@@ -152,18 +166,29 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-6">
-          {categories.map((category) => (
-            <div key={category}>
-              <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                {category}
-              </h3>
-              
-              <div className="space-y-2">
-                {modules
-                  .filter(module => module.category === category)
-                  .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
-                  .map((module) => {
+        <div className="p-4 space-y-2">
+          {categories.map((category) => {
+            const isOpen = openCategories.has(category);
+            
+            return (
+              <Collapsible key={category} open={isOpen} onOpenChange={() => toggleCategory(category)}>
+                <CollapsibleTrigger className="flex items-center gap-2 w-full hover:bg-accent/50 p-2 rounded-md transition-colors">
+                  {isOpen ? (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    {category}
+                  </h3>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent className="mt-2">
+                  <div className="space-y-2 ml-6">
+                    {modules
+                      .filter(module => module.category === category)
+                      .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+                      .map((module) => {
                     const Icon = module.icon;
                     const isSelected = selectedModule === module.id;
                     
@@ -206,11 +231,13 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
                           </div>
                         </div>
                       </Card>
-                    );
-                  })}
-              </div>
-            </div>
-          ))}
+                      );
+                    })}
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          })}
         </div>
       </ScrollArea>
     </div>
