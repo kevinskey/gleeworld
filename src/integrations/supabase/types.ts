@@ -2963,6 +2963,60 @@ export type Database = {
           },
         ]
       }
+      glee_academy_tests: {
+        Row: {
+          allow_retakes: boolean | null
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          instructions: string | null
+          is_published: boolean | null
+          passing_score: number | null
+          randomize_questions: boolean | null
+          show_correct_answers: boolean | null
+          title: string
+          total_points: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allow_retakes?: boolean | null
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean | null
+          passing_score?: number | null
+          randomize_questions?: boolean | null
+          show_correct_answers?: boolean | null
+          title: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allow_retakes?: boolean | null
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean | null
+          passing_score?: number | null
+          randomize_questions?: boolean | null
+          show_correct_answers?: boolean | null
+          title?: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       glee_history: {
         Row: {
           category: string | null
@@ -17441,6 +17495,229 @@ export type Database = {
         }
         Relationships: []
       }
+      test_answer_options: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          id: string
+          is_correct: boolean | null
+          option_text: string
+          question_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order: number
+          id?: string
+          is_correct?: boolean | null
+          option_text: string
+          question_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          id?: string
+          is_correct?: boolean | null
+          option_text?: string
+          question_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_answer_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "test_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_answers: {
+        Row: {
+          created_at: string | null
+          feedback: string | null
+          file_url: string | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          is_correct: boolean | null
+          points_earned: number | null
+          question_id: string | null
+          selected_option_id: string | null
+          submission_id: string | null
+          text_answer: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          feedback?: string | null
+          file_url?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_correct?: boolean | null
+          points_earned?: number | null
+          question_id?: string | null
+          selected_option_id?: string | null
+          submission_id?: string | null
+          text_answer?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          feedback?: string | null
+          file_url?: string | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_correct?: boolean | null
+          points_earned?: number | null
+          question_id?: string | null
+          selected_option_id?: string | null
+          submission_id?: string | null
+          text_answer?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "test_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_answers_selected_option_id_fkey"
+            columns: ["selected_option_id"]
+            isOneToOne: false
+            referencedRelation: "test_answer_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_answers_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "test_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_questions: {
+        Row: {
+          created_at: string | null
+          display_order: number
+          end_time: number | null
+          id: string
+          media_title: string | null
+          media_type: Database["public"]["Enums"]["media_type"] | null
+          media_url: string | null
+          points: number | null
+          question_text: string
+          question_type: Database["public"]["Enums"]["question_type"]
+          required: boolean | null
+          start_time: number | null
+          test_id: string | null
+          updated_at: string | null
+          youtube_video_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order: number
+          end_time?: number | null
+          id?: string
+          media_title?: string | null
+          media_type?: Database["public"]["Enums"]["media_type"] | null
+          media_url?: string | null
+          points?: number | null
+          question_text: string
+          question_type: Database["public"]["Enums"]["question_type"]
+          required?: boolean | null
+          start_time?: number | null
+          test_id?: string | null
+          updated_at?: string | null
+          youtube_video_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number
+          end_time?: number | null
+          id?: string
+          media_title?: string | null
+          media_type?: Database["public"]["Enums"]["media_type"] | null
+          media_url?: string | null
+          points?: number | null
+          question_text?: string
+          question_type?: Database["public"]["Enums"]["question_type"]
+          required?: boolean | null
+          start_time?: number | null
+          test_id?: string | null
+          updated_at?: string | null
+          youtube_video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_questions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "glee_academy_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_submissions: {
+        Row: {
+          attempt_number: number | null
+          created_at: string | null
+          id: string
+          passed: boolean | null
+          percentage: number | null
+          started_at: string | null
+          status: string | null
+          student_id: string | null
+          submitted_at: string | null
+          test_id: string | null
+          time_spent_minutes: number | null
+          total_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempt_number?: number | null
+          created_at?: string | null
+          id?: string
+          passed?: boolean | null
+          percentage?: number | null
+          started_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          submitted_at?: string | null
+          test_id?: string | null
+          time_spent_minutes?: number | null
+          total_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempt_number?: number | null
+          created_at?: string | null
+          id?: string
+          passed?: boolean | null
+          percentage?: number | null
+          started_at?: string | null
+          status?: string | null
+          student_id?: string | null
+          submitted_at?: string | null
+          test_id?: string | null
+          time_spent_minutes?: number | null
+          total_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_submissions_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "glee_academy_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       theory_poll_questions: {
         Row: {
           answer_index: number
@@ -19457,6 +19734,7 @@ export type Database = {
       host_source: "booking_request" | "contract" | "manual_entry"
       host_status: "active" | "inactive" | "potential" | "blacklisted"
       hydration_level_enum: "Low" | "Normal" | "High"
+      media_type: "audio" | "video" | "image" | "pdf" | "youtube" | "slide"
       mus240_project_role:
         | "research_lead"
         | "content_developer"
@@ -19468,6 +19746,14 @@ export type Database = {
         | "coordinator_presenter"
       payment_method_enum: "zelle" | "cashapp" | "venmo" | "apple_pay" | "check"
       performer_status: "draft" | "submitted" | "approved"
+      question_type:
+        | "multiple_choice"
+        | "true_false"
+        | "short_answer"
+        | "essay"
+        | "audio_listening"
+        | "video_watching"
+        | "file_upload"
       review_type_enum:
         | "Self Assessment"
         | "Section Leader Review"
@@ -19673,6 +19959,7 @@ export const Constants = {
       host_source: ["booking_request", "contract", "manual_entry"],
       host_status: ["active", "inactive", "potential", "blacklisted"],
       hydration_level_enum: ["Low", "Normal", "High"],
+      media_type: ["audio", "video", "image", "pdf", "youtube", "slide"],
       mus240_project_role: [
         "research_lead",
         "content_developer",
@@ -19685,6 +19972,15 @@ export const Constants = {
       ],
       payment_method_enum: ["zelle", "cashapp", "venmo", "apple_pay", "check"],
       performer_status: ["draft", "submitted", "approved"],
+      question_type: [
+        "multiple_choice",
+        "true_false",
+        "short_answer",
+        "essay",
+        "audio_listening",
+        "video_watching",
+        "file_upload",
+      ],
       review_type_enum: [
         "Self Assessment",
         "Section Leader Review",
