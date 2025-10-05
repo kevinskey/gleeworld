@@ -481,7 +481,7 @@ export const MidtermExamForm: React.FC = () => {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
               <audio controls className="w-full" preload="metadata">
-                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt1.mp3" type="audio/mpeg" />
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt1.wav" type="audio/wav" />
                 Your browser does not support the audio element.
               </audio>
               <p className="text-xs text-slate-600 mt-2">
@@ -525,7 +525,7 @@ export const MidtermExamForm: React.FC = () => {
             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
               <audio controls className="w-full" preload="metadata">
-                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt2.mp3" type="audio/mpeg" />
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt2.wav" type="audio/wav" />
                 Your browser does not support the audio element.
               </audio>
               <p className="text-xs text-slate-600 mt-2">
@@ -569,7 +569,7 @@ export const MidtermExamForm: React.FC = () => {
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-3">
               <Label className="text-sm font-medium mb-2 block">Listen to the Audio</Label>
               <audio controls className="w-full" preload="metadata">
-                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt3.mp3" type="audio/mpeg" />
+                <source src="https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/course-materials/mus240/excerpts/excerpt3.wav" type="audio/wav" />
                 Your browser does not support the audio element.
               </audio>
               <p className="text-xs text-slate-600 mt-2">
