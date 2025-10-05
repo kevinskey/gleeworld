@@ -200,6 +200,20 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
   }, [location.search]);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  
+  // Ensure categories default to collapsed on load
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      setCollapsedSections(prev => {
+        const next = { ...prev };
+        categories.forEach(categoryId => {
+          if (next[categoryId] === undefined) next[categoryId] = true;
+        });
+        return next;
+      });
+    }
+  }, [categories]);
+  
   const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);
 
   const sensors = useSensors(

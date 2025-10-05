@@ -229,6 +229,19 @@ export const SuperAdminDashboard = ({
     return initialCollapsed;
   });
 
+  // Ensure categories from hook are collapsed by default when they load
+  useEffect(() => {
+    if (categories && categories.length > 0) {
+      setCollapsedSections(prev => {
+        const next = { ...prev };
+        categories.forEach(categoryId => {
+          if (next[categoryId] === undefined) next[categoryId] = true;
+        });
+        return next;
+      });
+    }
+  }, [categories]);
+
   // Sort and filter modules
   const filteredAndSortedModules = useMemo(() => {
     const allModules = Object.entries(modulesByCategory).flatMap(([category, modules]) => modules.map(module => ({
