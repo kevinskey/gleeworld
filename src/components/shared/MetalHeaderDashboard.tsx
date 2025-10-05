@@ -418,10 +418,11 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     <div className="space-y-4 relative min-h-screen">
       {/* Background Image */}
       <div 
-        className="fixed inset-0 z-0 opacity-25 dark:opacity-20 bg-cover bg-no-repeat pointer-events-none"
+        className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none"
         style={{ 
           backgroundImage: `url(${gleeSculptureBg})`,
-          backgroundPosition: 'center 15%'
+          backgroundPosition: 'center 15%',
+          filter: 'sepia(0.15) saturate(1.2)'
         }}
       />
       {/* Metal Plate Header */}
