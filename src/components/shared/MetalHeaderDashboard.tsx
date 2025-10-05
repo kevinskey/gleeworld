@@ -201,17 +201,20 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   
-  // Ensure categories default to collapsed on load
+  // Ensure categories default to collapsed on load (without causing loops)
   useEffect(() => {
-    if (categories && categories.length > 0) {
-      setCollapsedSections(prev => {
-        const next = { ...prev };
-        categories.forEach(categoryId => {
-          if (next[categoryId] === undefined) next[categoryId] = true;
-        });
-        return next;
+    if (!categories || categories.length === 0) return;
+    setCollapsedSections(prev => {
+      let changed = false;
+      const next = { ...prev } as Record<string, boolean>;
+      categories.forEach((categoryId) => {
+        if (next[categoryId] === undefined) {
+          next[categoryId] = true;
+          changed = true;
+        }
       });
-    }
+      return changed ? next : prev;
+    });
   }, [categories]);
   
   const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);

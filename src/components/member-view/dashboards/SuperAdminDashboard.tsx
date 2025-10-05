@@ -232,15 +232,18 @@ export const SuperAdminDashboard = ({
 
   // Ensure categories from hook are collapsed by default when they load
   useEffect(() => {
-    if (categories && categories.length > 0) {
-      setCollapsedSections(prev => {
-        const next = { ...prev };
-        categories.forEach(categoryId => {
-          if (next[categoryId] === undefined) next[categoryId] = true;
-        });
-        return next;
+    if (!categories || categories.length === 0) return;
+    setCollapsedSections(prev => {
+      let changed = false;
+      const next = { ...prev } as Record<string, boolean>;
+      categories.forEach((categoryId) => {
+        if (next[categoryId] === undefined) {
+          next[categoryId] = true;
+          changed = true;
+        }
       });
-    }
+      return changed ? next : prev;
+    });
   }, [categories]);
 
   // Sort and filter modules
@@ -505,7 +508,7 @@ export const SuperAdminDashboard = ({
   return <div className="space-y-4 relative min-h-screen">
       {/* Background Image */}
       <div 
-        className="fixed inset-0 z-0 opacity-20 dark:opacity-15 bg-top bg-contain bg-no-repeat pointer-events-none"
+        className="fixed inset-0 z-0 opacity-25 dark:opacity-20 bg-center bg-cover bg-no-repeat pointer-events-none"
         style={{ 
           backgroundImage: `url(${gleeSculptureBg})`,
           backgroundPosition: 'center top'
