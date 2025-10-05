@@ -508,12 +508,15 @@ export const SuperAdminDashboard = ({
   return <div className="space-y-4 relative min-h-screen">
       {/* Background Image */}
       <div 
-        className="fixed inset-0 z-0 opacity-25 dark:opacity-20 bg-cover bg-no-repeat pointer-events-none"
+        className="fixed inset-0 z-0 opacity-30 dark:opacity-25 bg-cover bg-no-repeat pointer-events-none"
         style={{ 
           backgroundImage: `url(${gleeSculptureBg})`,
           backgroundPosition: 'center 15%'
         }}
       />
+      
+      {/* Black Overlay */}
+      <div className="fixed inset-0 z-[1] bg-black/40 dark:bg-black/60 pointer-events-none" />
       
       {/* Content with relative positioning to appear above background */}
       <div className="relative z-10 space-y-4">
