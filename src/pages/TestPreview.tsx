@@ -118,16 +118,28 @@ export default function TestPreview() {
                         />
                       )}
                       {question.media_type === 'audio' && (
-                        <audio 
-                          controls 
-                          preload="metadata"
-                          className="w-full max-w-md"
-                        >
-                          <source src={question.media_url} type="audio/mpeg" />
-                          <source src={question.media_url} type="audio/wav" />
-                          <source src={question.media_url} type="audio/ogg" />
-                          Your browser does not support the audio element.
-                        </audio>
+                        <div className="space-y-2">
+                          <audio 
+                            controls 
+                            preload="auto"
+                            className="w-full max-w-md"
+                            onError={(e) => {
+                              console.error('Audio loading error:', e);
+                              console.error('Audio URL:', question.media_url);
+                            }}
+                            onLoadedData={() => {
+                              console.log('Audio loaded successfully:', question.media_url);
+                            }}
+                          >
+                            <source src={question.media_url} type="audio/mpeg" />
+                            <source src={question.media_url} type="audio/wav" />
+                            <source src={question.media_url} type="audio/ogg" />
+                            Your browser does not support the audio element.
+                          </audio>
+                          <p className="text-xs text-muted-foreground">
+                            Click play to listen to the audio
+                          </p>
+                        </div>
                       )}
                       {question.media_type === 'video' && (
                         <video controls className="w-full max-w-md rounded-lg border">
