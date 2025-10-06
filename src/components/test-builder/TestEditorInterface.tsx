@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { ArrowLeft, Plus, Save, Eye } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { ArrowLeft, Plus, Save, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTest, useUpdateTest } from '@/hooks/useTestBuilder';
 import { useNavigate, Link } from 'react-router-dom';
@@ -28,6 +29,12 @@ export const TestEditorInterface = ({ testId }: TestEditorInterfaceProps) => {
   }
 
   const { test, questions, options } = data;
+
+  const totalQuestionPoints = useMemo(() => {
+    return questions.reduce((sum, q) => sum + q.points, 0);
+  }, [questions]);
+
+  const pointsMatch = totalQuestionPoints === test.total_points;
 
   const handlePublishToggle = () => {
     updateTest.mutate({
@@ -79,6 +86,28 @@ export const TestEditorInterface = ({ testId }: TestEditorInterfaceProps) => {
         </TabsList>
 
         <TabsContent value="questions" className="space-y-4">
+          {/* Point Tracking Alert */}
+          <Alert variant={pointsMatch ? "default" : "destructive"}>
+            <div className="flex items-center gap-2">
+              {pointsMatch ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                <AlertTriangle className="h-4 w-4" />
+              )}
+              <AlertDescription>
+                <strong>Points: {totalQuestionPoints} / {test.total_points}</strong>
+                {pointsMatch ? (
+                  <span className="ml-2">All questions add up correctly!</span>
+                ) : (
+                  <span className="ml-2">
+                    Questions total {totalQuestionPoints} points but test is set to {test.total_points} points. 
+                    Adjust question points or update test settings.
+                  </span>
+                )}
+              </AlertDescription>
+            </div>
+          </Alert>
+
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
