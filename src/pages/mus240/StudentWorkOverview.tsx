@@ -67,11 +67,11 @@ export const StudentWorkOverview = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/classes/mus240/instructor')}
+            onClick={() => navigate('/classes/mus240/instructor/console')}
             className="bg-white/70"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            Back to Instructor Console
           </Button>
         </div>
 

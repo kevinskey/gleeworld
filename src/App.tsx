@@ -180,11 +180,9 @@ import GroupDetail from "./pages/mus240/GroupDetail";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
 import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
-import { ComprehensiveInstructorDashboard } from "./components/mus240/instructor/ComprehensiveInstructorDashboard";
 import { StudentMidtermGrading } from "./pages/mus240/StudentMidtermGrading";
 import { StudentWorkOverview } from "./pages/mus240/StudentWorkOverview";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
-import MUS240Instructor from "./pages/classes/mus240/instructor";
 import { BulkJournalGradingPage } from "./pages/mus240/BulkJournalGradingPage";
 import MidtermExam from "./pages/mus240/MidtermExam";
 import SMUS100MidtermExamPage from "./pages/SMUS100MidtermExamPage";
@@ -1710,13 +1708,7 @@ const App = () => {
                                   />
                                   <Route 
                                     path="/classes/mus240/instructor" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <AdminOnlyRoute>
-                                          <ComprehensiveInstructorDashboard />
-                                        </AdminOnlyRoute>
-                                      </ProtectedRoute>
-                                    } 
+                                    element={<Navigate to="/classes/mus240/instructor/console" replace />}
                                   />
                                   <Route 
                                     path="/classes/mus240/instructor/console" 
@@ -1724,16 +1716,6 @@ const App = () => {
                                       <ProtectedRoute>
                                         <AdminOnlyRoute>
                                           <InstructorConsole />
-                                        </AdminOnlyRoute>
-                                      </ProtectedRoute>
-                                    } 
-                                  />
-                                  <Route 
-                                    path="/classes/mus240/instructor/students" 
-                                    element={
-                                      <ProtectedRoute>
-                                        <AdminOnlyRoute>
-                                          <MUS240Instructor />
                                         </AdminOnlyRoute>
                                       </ProtectedRoute>
                                     } 

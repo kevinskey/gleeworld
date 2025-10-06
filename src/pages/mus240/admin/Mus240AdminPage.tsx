@@ -50,7 +50,7 @@ export const Mus240AdminPage = () => {
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4 px-2">
               <Button asChild variant="outline" className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 w-full sm:w-auto text-sm">
-                <Link to="/classes/mus240/instructor">
+                <Link to="/classes/mus240/instructor/console">
                   <ExternalLink className="h-3 w-3 sm:h-4 sm:w-4 mr-2" />
                   Instructor Console
                 </Link>

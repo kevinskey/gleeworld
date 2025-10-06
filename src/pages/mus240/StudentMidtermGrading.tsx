@@ -299,11 +299,11 @@ export const StudentMidtermGrading = () => {
         <div className="max-w-4xl mx-auto px-4 py-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/classes/mus240/instructor')}
+            onClick={() => navigate('/classes/mus240/instructor/console')}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            Back to Instructor Console
           </Button>
           <div className="text-center py-12">
             <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
@@ -322,10 +322,10 @@ export const StudentMidtermGrading = () => {
         <div className="flex items-center justify-between mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate('/classes/mus240/instructor')}
+            onClick={() => navigate('/classes/mus240/instructor/console')}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
+            Back to Instructor Console
           </Button>
         </div>
 
