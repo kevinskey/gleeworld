@@ -181,14 +181,22 @@ Also provide a suggested test title.`;
     }
 
     const data = await response.json();
-    console.log('AI response received');
+    console.log('AI response received:', JSON.stringify(data));
     
+    // Check if we have choices and message
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid AI response structure:', data);
+      throw new Error('Invalid response from AI');
+    }
+
     const toolCall = data.choices[0].message.tool_calls?.[0];
-    if (!toolCall) {
+    if (!toolCall || !toolCall.function || !toolCall.function.arguments) {
+      console.error('No tool call in response:', data.choices[0].message);
       throw new Error('No tool call in response');
     }
 
     const result = JSON.parse(toolCall.function.arguments);
+    console.log('Parsed result:', result);
     
     return new Response(
       JSON.stringify({ 
