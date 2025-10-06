@@ -39,6 +39,7 @@ import Accounting from "./pages/Accounting";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 import TestBuilderPage from "./pages/mus240/TestBuilderPage";
 import TestBuilderEdit from "./pages/TestBuilderEdit";
+import TestPreview from "./pages/TestPreview";
 
 import AuditionerDashboardPage from "./pages/AuditionerDashboardPage";
 import Mus240Auth from "./pages/Mus240Auth";
@@ -1790,6 +1791,14 @@ const App = () => {
                                      element={
                                        <ProtectedRoute>
                                          <TestBuilderEdit />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/test/:testId/preview" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <TestPreview />
                                        </ProtectedRoute>
                                      } 
                                    />
