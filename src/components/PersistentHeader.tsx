@@ -33,6 +33,9 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
 
   // Update clock every second
   useEffect(() => {
+    // Initialize with current time
+    setCurrentTime(new Date());
+    
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -46,35 +49,35 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-gradient-to-r from-primary/10 via-background to-secondary/10 backdrop-blur-sm shadow-sm">
-      <div className="flex h-16 items-center justify-between px-6">
+      <div className="flex h-14 items-center justify-between px-4 md:px-6">
         {/* Left Section - Logo & Branding */}
         <div className="flex items-center space-x-4">
           <div className="flex items-center space-x-3">
             {/* GleeWorld Logo */}
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">GW</span>
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-primary-foreground font-bold text-base md:text-lg">GW</span>
             </div>
             
             {/* Branding Text */}
             <div className="flex flex-col">
-              <h1 className="text-lg font-bold text-primary">GleeWorld</h1>
-              <p className="text-xs text-muted-foreground">Spelman College Glee Club</p>
+              <h1 className="text-base md:text-lg font-bold text-primary">GleeWorld</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">Spelman College Glee Club</p>
             </div>
           </div>
         </div>
 
         {/* Center Section - Clock & Views */}
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center gap-2 md:gap-4">
           {/* Live Clock */}
-          <div className="flex items-center space-x-2 bg-background/50 px-3 py-1 rounded-lg border">
-            <Clock className="w-4 h-4 text-primary" />
-            <span className="text-sm font-mono">
+          <div className="flex items-center gap-1.5 md:gap-2 bg-background/50 px-2 md:px-3 py-1 rounded-lg border">
+            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
+            <span className="text-xs md:text-sm font-mono">
               {format(currentTime, 'h:mm:ss a')}
             </span>
           </div>
           
           {/* Views Counter */}
-          <div className="flex items-center space-x-2 bg-background/50 px-3 py-1 rounded-lg border">
+          <div className="hidden md:flex items-center gap-2 bg-background/50 px-3 py-1 rounded-lg border">
             <Eye className="w-4 h-4 text-secondary" />
             <span className="text-sm font-medium">{viewCount.toLocaleString()}</span>
             <span className="text-xs text-muted-foreground">views</span>

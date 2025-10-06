@@ -10,6 +10,9 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
   const [showCountdown, setShowCountdown] = useState(false);
 
   useEffect(() => {
+    // Initialize with current time
+    setCurrentTime(new Date());
+    
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
@@ -72,7 +75,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     <div className={`relative ${className}`}>
       <div className="flex items-center gap-2">
         <div
-          className="relative w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
+          className="relative w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
           onMouseEnter={() => setShowCountdown(true)}
           onMouseLeave={() => setShowCountdown(false)}
           onClick={() => setShowCountdown(!showCountdown)}
