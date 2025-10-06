@@ -150,7 +150,10 @@ export default function TestPreview() {
                             crossOrigin="anonymous"
                             muted={false}
                             playsInline
-                            onPlay={() => {
+                            onPlay={(e) => {
+                              const audio = e.currentTarget;
+                              audio.muted = false;
+                              audio.volume = 1;
                               if (radioPlaying) {
                                 console.log('Pausing radio for test audio');
                                 togglePlayPause();
@@ -160,8 +163,17 @@ export default function TestPreview() {
                               console.error('Audio loading error:', e);
                               console.error('Audio URL:', question.media_url);
                             }}
-                            onLoadedData={() => {
+                            onLoadedData={(e) => {
+                              const audio = e.currentTarget;
+                              audio.muted = false;
+                              audio.volume = 1;
                               console.log('Audio loaded successfully:', question.media_url);
+                            }}
+                            onCanPlayThrough={(e) => {
+                              const audio = e.currentTarget;
+                              audio.muted = false;
+                              audio.volume = 1;
+                              console.log('Audio can play through:', question.media_url);
                             }}
                           >
                             <source src={question.media_url} type="audio/mpeg" />
