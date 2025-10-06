@@ -54,11 +54,17 @@ export const useTests = (courseId: string) => {
   return useQuery({
     queryKey: ['tests', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('glee_academy_tests')
         .select('*')
-        .eq('course_id', courseId)
         .order('created_at', { ascending: false });
+      
+      // Only filter by course_id if it's not 'all'
+      if (courseId !== 'all') {
+        query = query.eq('course_id', courseId);
+      }
+      
+      const { data, error } = await query;
 
       if (error) throw error;
       return data as GleeAcademyTest[];
