@@ -75,48 +75,14 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     <div className={`relative ${className}`}>
       <div className="flex items-center gap-2">
         <div
-          className="relative w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
+          className="relative px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
           onMouseEnter={() => setShowCountdown(true)}
           onMouseLeave={() => setShowCountdown(false)}
           onClick={() => setShowCountdown(!showCountdown)}
         >
-          {/* Clock Face */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/30 to-white/10">
-            {/* Hour Markers */}
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-0.5 h-1.5 sm:h-2 md:h-2.5 bg-blue-200 rounded-full border border-gray-800"
-                style={{
-                  top: '2px',
-                  left: '50%',
-                  transformOrigin: '50% 16px',
-                  transform: `translateX(-50%) rotate(${i * 30}deg)`,
-                }}
-              />
-            ))}
-            
-            {/* Hour Hand */}
-            <div
-              className="absolute top-1/2 left-1/2 w-1 bg-blue-400 rounded-full origin-bottom z-10"
-              style={{
-                height: 'clamp(8px, 35%, 18px)',
-                transform: `translate(-50%, -100%) rotate(${getHourAngle()}deg)`,
-              }}
-            />
-            
-            {/* Minute Hand */}
-            <div
-              className="absolute top-1/2 left-1/2 w-1 bg-blue-400 rounded-full origin-bottom z-20"
-              style={{
-                height: 'clamp(12px, 45%, 24px)',
-                transform: `translate(-50%, -100%) rotate(${getMinuteAngle()}deg)`,
-              }}
-            />
-            
-            {/* Center Dot */}
-            <div className="absolute top-1/2 left-1/2 w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
-          </div>
+          <span className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 whitespace-nowrap">
+            {formatTime(currentTime)}
+          </span>
         </div>
         
         {/* Countdown Text - Visible on large screens, hidden on smaller screens where it becomes hover-only */}
