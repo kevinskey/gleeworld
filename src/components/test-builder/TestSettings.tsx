@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUpdateTest, type GleeAcademyTest } from '@/hooks/useTestBuilder';
 
 interface TestSettingsProps {
@@ -12,6 +13,7 @@ interface TestSettingsProps {
 }
 
 interface TestFormData {
+  course_id: string;
   title: string;
   description: string | null;
   instructions: string | null;
@@ -25,8 +27,9 @@ interface TestFormData {
 
 export const TestSettings = ({ test }: TestSettingsProps) => {
   const updateTest = useUpdateTest();
-  const { register, handleSubmit } = useForm<TestFormData>({
+  const { register, handleSubmit, setValue, watch } = useForm<TestFormData>({
     defaultValues: {
+      course_id: test.course_id,
       title: test.title,
       description: test.description,
       instructions: test.instructions,
@@ -38,6 +41,8 @@ export const TestSettings = ({ test }: TestSettingsProps) => {
       randomize_questions: test.randomize_questions,
     },
   });
+
+  const selectedCourse = watch('course_id');
 
   const onSubmit = (data: TestFormData) => {
     updateTest.mutate({
@@ -55,6 +60,21 @@ export const TestSettings = ({ test }: TestSettingsProps) => {
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="course_id">Course/Class</Label>
+              <Select value={selectedCourse} onValueChange={(value) => setValue('course_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mus240">MUS 240 - African American Music</SelectItem>
+                  <SelectItem value="mus101">MUS 101 - Music Theory I</SelectItem>
+                  <SelectItem value="mus102">MUS 102 - Music Theory II</SelectItem>
+                  <SelectItem value="all">All Courses</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label htmlFor="title">Test Title</Label>
               <Input id="title" {...register('title')} />

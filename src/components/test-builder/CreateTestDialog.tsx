@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateTest } from '@/hooks/useTestBuilder';
 import { useNavigate } from 'react-router-dom';
 
@@ -16,6 +17,7 @@ interface CreateTestDialogProps {
 }
 
 interface TestFormData {
+  course_id: string;
   title: string;
   description: string;
   instructions: string;
@@ -30,8 +32,9 @@ interface TestFormData {
 export const CreateTestDialog = ({ open, onOpenChange, courseId }: CreateTestDialogProps) => {
   const navigate = useNavigate();
   const createTest = useCreateTest();
-  const { register, handleSubmit, reset } = useForm<TestFormData>({
+  const { register, handleSubmit, reset, setValue, watch } = useForm<TestFormData>({
     defaultValues: {
+      course_id: courseId,
       total_points: 100,
       passing_score: 70,
       duration_minutes: 60,
@@ -41,9 +44,10 @@ export const CreateTestDialog = ({ open, onOpenChange, courseId }: CreateTestDia
     },
   });
 
+  const selectedCourse = watch('course_id');
+
   const onSubmit = async (data: TestFormData) => {
     const test = await createTest.mutateAsync({
-      course_id: courseId,
       ...data,
       is_published: false,
     });
@@ -62,6 +66,21 @@ export const CreateTestDialog = ({ open, onOpenChange, courseId }: CreateTestDia
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-4">
+            <div>
+              <Label htmlFor="course_id">Course/Class *</Label>
+              <Select value={selectedCourse} onValueChange={(value) => setValue('course_id', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mus240">MUS 240 - African American Music</SelectItem>
+                  <SelectItem value="mus101">MUS 101 - Music Theory I</SelectItem>
+                  <SelectItem value="mus102">MUS 102 - Music Theory II</SelectItem>
+                  <SelectItem value="all">All Courses</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label htmlFor="title">Test Title *</Label>
               <Input
