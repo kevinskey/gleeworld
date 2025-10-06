@@ -136,9 +136,9 @@ export const mus240Assignments: WeekAssignments[] = [
       },
       {
         id: "research-proposal",
-        title: "Research Project Proposal",
-        description: "One-paragraph topic description for your research project on African American music.",
-        instructions: "Submit a one-paragraph description of your chosen research topic. Your topic should focus on a specific aspect of African American music history, artist, genre, or cultural movement. Be specific about your research question and why this topic is significant.",
+        title: "Group Project Proposal: AI and Music",
+        description: "One-paragraph topic description for your group project exploring AI's impact on African American music.",
+        instructions: "Submit a one-paragraph description of your group's chosen focus within the AI and Music theme. Your topic should examine how artificial intelligence is affecting African American music creation, production, distribution, or consumption. Include your group members' names and be specific about your research question and why this aspect is significant. Consider topics like AI-generated music, algorithmic curation, AI in music production tools, or ethical considerations.",
         dueDate: "2025-10-01",
         type: "research-proposal",
         estimatedTime: "1 hour",
@@ -228,9 +228,9 @@ export const mus240Assignments: WeekAssignments[] = [
       },
       {
         id: "annotated-bibliography",
-        title: "Research Project Annotated Bibliography",
-        description: "Compile and annotate at least 5 credible sources for your research project.",
-        instructions: "Create an annotated bibliography with at least 5 credible sources (books, scholarly articles, interviews, etc.) related to your research topic. Each annotation should be 2-3 sentences summarizing the source and explaining its relevance to your project. Format: MLA or Chicago style.",
+        title: "Group Project Annotated Bibliography: AI and Music",
+        description: "Compile and annotate at least 5 credible sources for your group project on AI and music.",
+        instructions: "Create an annotated bibliography with at least 5 credible sources (scholarly articles, books, interviews with AI music researchers, industry reports, etc.) related to AI's impact on African American music. Each annotation should be 2-3 sentences summarizing the source and explaining its relevance to your group project. Include diverse perspectives on AI in music production, creation, ethics, and cultural impact. Format: MLA or Chicago style.",
         dueDate: "2025-10-22",
         type: "annotated-bibliography",
         estimatedTime: "4 hours",
@@ -328,9 +328,9 @@ export const mus240Assignments: WeekAssignments[] = [
     assignments: [
       {
         id: "final-research-project",
-        title: "Research Project Final Presentation",
-        description: "Conduct in-depth study of a topic in African American music and present findings in a professional online format.",
-        instructions: "Create a digital project (video, website, podcast, or interactive format) presenting your research findings. Your presentation should demonstrate content accuracy, depth of research, integration of historical/cultural context, organization, creativity, and effective delivery. Build upon your proposal and annotated bibliography to create a comprehensive exploration of your chosen topic.",
+        title: "Group Project Final Presentation: AI and Music",
+        description: "Conduct an in-depth group study of AI's impact on African American music and present findings in a professional digital format.",
+        instructions: "Create a digital group project (video, website, podcast, or interactive format) presenting your research findings on AI and music. Your presentation should demonstrate: content accuracy about AI technologies in music, depth of research on impact to African American musical traditions, integration of historical/cultural context, organization and clarity, creativity in presentation format, and effective group collaboration. Address both opportunities and challenges that AI presents for African American musicians and the broader musical community. Build upon your group's proposal and annotated bibliography.",
         dueDate: "2025-11-26",
         type: "project",
         estimatedTime: "6 hours",
