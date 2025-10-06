@@ -195,15 +195,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 9,
     topic: "Hip-Hop Culture and Rap Music",
-    startDate: "2025-10-15",
-    endDate: "2025-10-21",
+    startDate: "2025-10-08",
+    endDate: "2025-10-14",
     assignments: [
       {
         id: "lj8",
         title: "Listening Journal 8: Hip-Hop Foundations",
         description: "Analyze the emergence of hip-hop culture and early rap music.",
         instructions: "Examine sampling techniques, lyrical content, and the four elements of hip-hop culture.",
-        dueDate: "2025-10-24",
+        dueDate: "2025-10-17",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -213,15 +213,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 10,
     topic: "Contemporary R&B and Neo-Soul",
-    startDate: "2025-10-22",
-    endDate: "2025-10-28",
+    startDate: "2025-10-15",
+    endDate: "2025-10-21",
     assignments: [
       {
         id: "lj9",
         title: "Listening Journal 9: Contemporary R&B Evolution",
         description: "Study the evolution of R&B from the 1990s to present day.",
         instructions: "Compare traditional R&B with contemporary styles, noting technological and cultural influences.",
-        dueDate: "2025-10-31",
+        dueDate: "2025-10-24",
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
@@ -231,7 +231,7 @@ export const mus240Assignments: WeekAssignments[] = [
         title: "Research Project Annotated Bibliography",
         description: "Compile and annotate at least 5 credible sources for your research project.",
         instructions: "Create an annotated bibliography with at least 5 credible sources (books, scholarly articles, interviews, etc.) related to your research topic. Each annotation should be 2-3 sentences summarizing the source and explaining its relevance to your project. Format: MLA or Chicago style.",
-        dueDate: "2025-10-29",
+        dueDate: "2025-10-22",
         type: "annotated-bibliography",
         estimatedTime: "4 hours",
         points: 30
@@ -241,15 +241,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 11,
     topic: "Gospel's Modern Evolution",
-    startDate: "2025-10-29",
-    endDate: "2025-11-04",
+    startDate: "2025-10-22",
+    endDate: "2025-10-28",
     assignments: [
       {
         id: "lj10",
         title: "Listening Journal 10: Contemporary Gospel",
         description: "Examine modern gospel music and its fusion with other genres.",
         instructions: "Analyze how contemporary gospel incorporates elements from R&B, hip-hop, and pop music.",
-        dueDate: "2025-11-07",
+        dueDate: "2025-10-31",
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
@@ -259,15 +259,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 12,
     topic: "Jazz Fusion and Modern Jazz",
-    startDate: "2025-11-05",
-    endDate: "2025-11-11",
+    startDate: "2025-10-29",
+    endDate: "2025-11-04",
     assignments: [
       {
         id: "lj11",
         title: "Listening Journal 11: Jazz Evolution",
         description: "Trace jazz development from bebop through fusion to contemporary jazz.",
         instructions: "Compare different jazz eras and analyze the incorporation of electronic elements.",
-        dueDate: "2025-11-14",
+        dueDate: "2025-11-07",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -277,7 +277,7 @@ export const mus240Assignments: WeekAssignments[] = [
         title: "Reflection Paper 3: Jazz and Social Change",
         description: "Examine jazz music's relationship to social and political movements.",
         instructions: "Write a 2-3 page essay analyzing how jazz music both reflected and influenced social change in America. Focus on specific examples and connect musical developments to broader cultural movements. Present a clear thesis with evidence from course materials. Format: MLA or Chicago style, double-spaced.",
-        dueDate: "2025-11-12",
+        dueDate: "2025-11-05",
         type: "reflection-paper",
         estimatedTime: "3 hours",
         points: 50
@@ -287,15 +287,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 13,
     topic: "African American Music in Popular Culture",
-    startDate: "2025-11-12",
-    endDate: "2025-11-18",
+    startDate: "2025-11-05",
+    endDate: "2025-11-11",
     assignments: [
       {
         id: "lj12",
         title: "Listening Journal 12: Global Influence",
         description: "Examine the global influence of African American music on world music.",
         instructions: "Analyze how African American musical styles have influenced international artists and genres.",
-        dueDate: "2025-11-21",
+        dueDate: "2025-11-14",
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
@@ -305,15 +305,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 14,
     topic: "Music and Social Justice",
-    startDate: "2025-11-19",
-    endDate: "2025-11-25",
+    startDate: "2025-11-12",
+    endDate: "2025-11-18",
     assignments: [
       {
         id: "lj13",
         title: "Listening Journal 13: Protest and Resistance",
         description: "Study the role of African American music in social movements.",
         instructions: "Analyze protest songs from different eras and their impact on social change.",
-        dueDate: "2025-12-05",
+        dueDate: "2025-11-21",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -323,15 +323,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 15,
     topic: "Future Directions and Legacy",
-    startDate: "2025-11-24",
-    endDate: "2025-11-30",
+    startDate: "2025-11-19",
+    endDate: "2025-11-25",
     assignments: [
       {
         id: "final-research-project",
         title: "Research Project Final Presentation",
         description: "Conduct in-depth study of a topic in African American music and present findings in a professional online format.",
         instructions: "Create a digital project (video, website, podcast, or interactive format) presenting your research findings. Your presentation should demonstrate content accuracy, depth of research, integration of historical/cultural context, organization, creativity, and effective delivery. Build upon your proposal and annotated bibliography to create a comprehensive exploration of your chosen topic.",
-        dueDate: "2025-12-01",
+        dueDate: "2025-11-26",
         type: "project",
         estimatedTime: "6 hours",
         points: 100
@@ -341,7 +341,7 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 16,
     topic: "Final Presentations and Course Reflection",
-    startDate: "2025-12-01",
+    startDate: "2025-11-26",
     endDate: "2025-12-03",
     assignments: [
       {
