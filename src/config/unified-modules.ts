@@ -906,9 +906,9 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
   {
     id: "test-builder",
     name: "test-builder",
-    title: "Test Maker",
-    description: "Create and manage tests, quizzes, and assessments for students",
-    icon: FileText,
+    title: "Glee Academy Test Maker",
+    description: "Create and manage tests, quizzes, and assessments for Glee Academy courses",
+    icon: GraduationCap,
     iconColor: "indigo",
     category: "musical-leadership",
     isActive: true,
