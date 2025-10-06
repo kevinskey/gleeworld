@@ -37,12 +37,12 @@ export const MediaUploadSection = ({ onMediaChange }: MediaUploadSectionProps) =
     <div className="space-y-3">
       <div>
         <Label>Attach Media (Optional)</Label>
-        <Select value={mediaType || ''} onValueChange={(value) => setMediaType(value || null)}>
+        <Select value={mediaType || 'none'} onValueChange={(value) => setMediaType(value === 'none' ? null : value)}>
           <SelectTrigger>
             <SelectValue placeholder="Select media type..." />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">No Media</SelectItem>
+            <SelectItem value="none">No Media</SelectItem>
             <SelectItem value="audio">Audio File</SelectItem>
             <SelectItem value="video">Video File</SelectItem>
             <SelectItem value="image">Image</SelectItem>
