@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { ArrowLeft, Plus, Save, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,10 +30,7 @@ export const TestEditorInterface = ({ testId }: TestEditorInterfaceProps) => {
 
   const { test, questions, options } = data;
 
-  const totalQuestionPoints = useMemo(() => {
-    return questions.reduce((sum, q) => sum + q.points, 0);
-  }, [questions]);
-
+  const totalQuestionPoints = questions.reduce((sum, q) => sum + q.points, 0);
   const pointsMatch = totalQuestionPoints === test.total_points;
 
   const handlePublishToggle = () => {
