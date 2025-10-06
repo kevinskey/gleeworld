@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Plus, FileText } from 'lucide-react';
+import { Plus, FileText, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useTests } from '@/hooks/useTestBuilder';
 import { TestList } from './TestList';
 import { CreateTestDialog } from './CreateTestDialog';
+import { AICreateTestDialog } from './AICreateTestDialog';
 
 interface TestBuilderProps {
   courseId: string;
@@ -13,6 +14,7 @@ interface TestBuilderProps {
 
 export const TestBuilder = ({ courseId, courseName }: TestBuilderProps) => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showAICreateDialog, setShowAICreateDialog] = useState(false);
   const { data: tests, isLoading } = useTests(courseId);
 
   return (
@@ -29,10 +31,16 @@ export const TestBuilder = ({ courseId, courseName }: TestBuilderProps) => {
                 Create, manage, and organize tests for this course
               </CardDescription>
             </div>
-            <Button onClick={() => setShowCreateDialog(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Test
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowAICreateDialog(true)}>
+                <Sparkles className="h-4 w-4 mr-2" />
+                AI Create Test
+              </Button>
+              <Button onClick={() => setShowCreateDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Test
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -59,6 +67,12 @@ export const TestBuilder = ({ courseId, courseName }: TestBuilderProps) => {
       <CreateTestDialog 
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
+        courseId={courseId}
+      />
+
+      <AICreateTestDialog
+        open={showAICreateDialog}
+        onOpenChange={setShowAICreateDialog}
         courseId={courseId}
       />
     </div>
