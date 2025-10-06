@@ -72,7 +72,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     <div className={`relative ${className}`}>
       <div className="flex items-center gap-2">
         <div
-          className="relative w-6 h-6 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
+          className="relative w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-full bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
           onMouseEnter={() => setShowCountdown(true)}
           onMouseLeave={() => setShowCountdown(false)}
           onClick={() => setShowCountdown(!showCountdown)}
@@ -83,11 +83,11 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="absolute w-0.5 h-1 sm:h-1.5 bg-gray-700 rounded-full"
+                className="absolute w-0.5 h-1.5 sm:h-2 md:h-2.5 lg:h-3 bg-gray-700 rounded-full"
                 style={{
-                  top: '1px',
+                  top: '2px',
                   left: '50%',
-                  transformOrigin: '50% 12px',
+                  transformOrigin: '50% 16px',
                   transform: `translateX(-50%) rotate(${i * 30}deg)`,
                 }}
               />
@@ -95,9 +95,9 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             
             {/* Hour Hand */}
             <div
-              className="absolute top-1/2 left-1/2 w-0.5 bg-gray-800 rounded-full origin-bottom z-10"
+              className="absolute top-1/2 left-1/2 w-0.5 sm:w-1 bg-gray-800 rounded-full origin-bottom z-10"
               style={{
-                height: '6px',
+                height: 'clamp(8px, 35%, 18px)',
                 transform: `translate(-50%, -100%) rotate(${getHourAngle()}deg)`,
               }}
             />
@@ -106,19 +106,19 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             <div
               className="absolute top-1/2 left-1/2 w-0.5 bg-gray-700 rounded-full origin-bottom z-20"
               style={{
-                height: '9px',
+                height: 'clamp(12px, 45%, 24px)',
                 transform: `translate(-50%, -100%) rotate(${getMinuteAngle()}deg)`,
               }}
             />
             
             {/* Center Dot */}
-            <div className="absolute top-1/2 left-1/2 w-0.5 h-0.5 sm:w-1 sm:h-1 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
+            <div className="absolute top-1/2 left-1/2 w-1 h-1 sm:w-1.5 sm:h-1.5 md:w-2 md:h-2 bg-spelman-blue-dark rounded-full transform -translate-x-1/2 -translate-y-1/2 z-30" />
           </div>
         </div>
         
         {/* Countdown Text - Visible on large screens, hidden on smaller screens where it becomes hover-only */}
         <div className="hidden xl:block">
-          <span className="text-xs text-gray-700 font-medium whitespace-nowrap">
+          <span className="text-sm text-gray-700 font-medium whitespace-nowrap">
             🎄 {getCountdownText()}
           </span>
         </div>
