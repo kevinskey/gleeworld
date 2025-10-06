@@ -118,8 +118,15 @@ export default function TestPreview() {
                         />
                       )}
                       {question.media_type === 'audio' && (
-                        <audio controls className="w-full max-w-md">
-                          <source src={question.media_url} />
+                        <audio 
+                          controls 
+                          preload="metadata"
+                          className="w-full max-w-md"
+                        >
+                          <source src={question.media_url} type="audio/mpeg" />
+                          <source src={question.media_url} type="audio/wav" />
+                          <source src={question.media_url} type="audio/ogg" />
+                          Your browser does not support the audio element.
                         </audio>
                       )}
                       {question.media_type === 'video' && (
