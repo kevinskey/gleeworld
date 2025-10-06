@@ -98,7 +98,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             
             {/* Hour Hand */}
             <div
-              className="absolute top-1/2 left-1/2 w-0.5 sm:w-1 bg-blue-500 rounded-full origin-bottom z-10"
+              className="absolute top-1/2 left-1/2 w-0.5 sm:w-1 bg-gray-800 rounded-full origin-bottom z-10"
               style={{
                 height: 'clamp(8px, 35%, 18px)',
                 transform: `translate(-50%, -100%) rotate(${getHourAngle()}deg)`,
@@ -107,7 +107,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             
             {/* Minute Hand */}
             <div
-              className="absolute top-1/2 left-1/2 w-0.5 bg-blue-400 rounded-full origin-bottom z-20"
+              className="absolute top-1/2 left-1/2 w-0.5 bg-gray-700 rounded-full origin-bottom z-20"
               style={{
                 height: 'clamp(12px, 45%, 24px)',
                 transform: `translate(-50%, -100%) rotate(${getMinuteAngle()}deg)`,
