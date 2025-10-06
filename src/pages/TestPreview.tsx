@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Clock, Trophy, Edit, Volume2 } from 'lucide-react';
+import { ArrowLeft, Clock, Trophy, Edit } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -181,20 +181,6 @@ export default function TestPreview() {
                             <source src={question.media_url} type="audio/ogg" />
                             Your browser does not support the audio element.
                           </audio>
-                          <div className="flex items-center gap-3 pt-1">
-                            <Button size="sm" variant="outline" onClick={() => {
-                              audioRef.current?.play().catch((err) => console.error('Manual play failed:', err));
-                            }}>
-                              <Volume2 className="h-4 w-4 mr-2" />
-                              Play Audio
-                            </Button>
-                            <p className="text-xs text-muted-foreground">
-                              Click play to listen to the audio
-                            </p>
-                            <a href={question.media_url} target="_blank" rel="noopener noreferrer" className="text-xs underline">
-                              Open in new tab
-                            </a>
-                          </div>
                         </div>
                       )}
                       {question.media_type === 'video' && (
