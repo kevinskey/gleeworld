@@ -75,12 +75,12 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     <div className={`relative ${className}`}>
       <div className="flex items-center gap-2">
         <div
-          className="relative px-3 py-1.5 rounded-lg bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 hover:scale-105 shadow-md flex-shrink-0"
+          className="relative px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 shadow-sm flex-shrink-0"
           onMouseEnter={() => setShowCountdown(true)}
           onMouseLeave={() => setShowCountdown(false)}
           onClick={() => setShowCountdown(!showCountdown)}
         >
-          <span className="text-sm sm:text-base md:text-lg font-semibold text-gray-800 whitespace-nowrap">
+          <span className="text-xs sm:text-sm font-semibold text-gray-800 whitespace-nowrap">
             {formatTime(currentTime)}
           </span>
         </div>
