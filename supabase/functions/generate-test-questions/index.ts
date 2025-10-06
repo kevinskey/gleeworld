@@ -1,9 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { DOMParser } from "https://deno.land/x/deno_dom@v0.1.38/deno-dom-wasm.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+async function scrapeWebpage(url: string) {
+  try {
+    const response = await fetch(url);
+    const html = await response.text();
+    
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    if (!doc) throw new Error('Failed to parse HTML');
+
+    // Extract title
+    const title = doc.querySelector('title')?.textContent || 
+                  doc.querySelector('h1')?.textContent || 
+                  'Untitled';
+
+    // Extract main content (remove scripts, styles, nav, footer)
+    const elementsToRemove = doc.querySelectorAll('script, style, nav, footer, header');
+    elementsToRemove.forEach(el => el.remove());
+
+    // Get text content from body
+    const bodyText = doc.querySelector('body')?.textContent || '';
+    const cleanedText = bodyText
+      .replace(/\s+/g, ' ')
+      .replace(/\n+/g, '\n')
+      .trim()
+      .slice(0, 8000); // Limit to 8000 chars for AI processing
+
+    return { title, content: cleanedText };
+  } catch (error) {
+    console.error('Error scraping webpage:', error);
+    throw error;
+  }
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -11,7 +44,7 @@ serve(async (req) => {
   }
 
   try {
-    const { topic, courseContext, difficulty } = await req.json();
+    const { topic, courseContext, difficulty, url } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     
     if (!LOVABLE_API_KEY) {
@@ -20,9 +53,41 @@ serve(async (req) => {
 
     console.log('Generating test questions for topic:', topic);
 
-    const systemPrompt = `You are an expert test creator for music education courses. Generate exactly 20 high-quality test questions based on the provided topic and context. Each question should be educationally sound and assess different aspects of understanding.`;
+    // Scrape webpage if URL provided
+    let webpageContent = '';
+    let extractedTitle = '';
+    if (url) {
+      console.log('Scraping webpage:', url);
+      const scraped = await scrapeWebpage(url);
+      extractedTitle = scraped.title;
+      webpageContent = scraped.content;
+      console.log('Scraped title:', extractedTitle);
+    }
 
-    const userPrompt = `Create 20 test questions about: ${topic}
+    const systemPrompt = `You are an expert test creator for music education courses. Generate exactly 20 high-quality test questions based on the provided content. Each question should be educationally sound and assess different aspects of understanding.`;
+
+    let userPrompt = '';
+    
+    if (url && webpageContent) {
+      userPrompt = `Based on the following webpage content, create 20 test questions.
+
+Webpage Title: ${extractedTitle}
+Content: ${webpageContent}
+
+Additional Context: ${courseContext || 'None'}
+Difficulty Level: ${difficulty || 'medium'}
+
+Generate a diverse mix of question types:
+- Multiple choice questions (10-12 questions)
+- True/False questions (3-4 questions)  
+- Short answer questions (3-4 questions)
+- Essay questions (1-2 questions)
+
+Each question should test different aspects: factual knowledge, comprehension, analysis, and application.
+
+Also provide a suggested test title based on the webpage content.`;
+    } else {
+      userPrompt = `Create 20 test questions about: ${topic}
 
 Course Context: ${courseContext || 'General music course'}
 Difficulty Level: ${difficulty || 'medium'}
@@ -33,7 +98,10 @@ Generate a diverse mix of question types:
 - Short answer questions (3-4 questions)
 - Essay questions (1-2 questions)
 
-Each question should test different aspects: factual knowledge, comprehension, analysis, and application.`;
+Each question should test different aspects: factual knowledge, comprehension, analysis, and application.
+
+Also provide a suggested test title.`;
+    }
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -56,6 +124,7 @@ Each question should test different aspects: factual knowledge, comprehension, a
               parameters: {
                 type: 'object',
                 properties: {
+                  testTitle: { type: 'string' },
                   questions: {
                     type: 'array',
                     minItems: 20,
@@ -80,7 +149,7 @@ Each question should test different aspects: factual knowledge, comprehension, a
                     }
                   }
                 },
-                required: ['questions'],
+                required: ['testTitle', 'questions'],
                 additionalProperties: false
               }
             }
@@ -124,6 +193,7 @@ Each question should test different aspects: factual knowledge, comprehension, a
     return new Response(
       JSON.stringify({ 
         success: true, 
+        testTitle: result.testTitle,
         questions: result.questions 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

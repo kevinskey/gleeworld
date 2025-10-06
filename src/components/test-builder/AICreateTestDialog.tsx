@@ -20,6 +20,7 @@ interface AICreateTestDialogProps {
 export const AICreateTestDialog = ({ open, onOpenChange, courseId }: AICreateTestDialogProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [url, setUrl] = useState('');
   const [testTitle, setTestTitle] = useState('');
   const [topic, setTopic] = useState('');
   const [courseContext, setCourseContext] = useState('');
@@ -27,23 +28,39 @@ export const AICreateTestDialog = ({ open, onOpenChange, courseId }: AICreateTes
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
-    if (!testTitle.trim() || !topic.trim()) {
-      toast.error('Please provide a test title and topic');
+    if (!url && (!testTitle.trim() || !topic.trim())) {
+      toast.error('Please provide a URL to scrape OR enter a test title and topic');
       return;
     }
 
     setIsGenerating(true);
     try {
-      // Step 1: Create the test
+      // Step 1: Generate questions with AI (and get suggested title if scraping)
+      toast.success('Generating test questions...');
+      
+      const { data: aiData, error: aiError } = await supabase.functions.invoke('generate-test-questions', {
+        body: { url, topic, courseContext, difficulty }
+      });
+
+      if (aiError) throw aiError;
+
+      if (!aiData.success) {
+        throw new Error(aiData.error || 'Failed to generate questions');
+      }
+
+      // Use AI-suggested title if we scraped a URL, otherwise use user-provided title
+      const finalTitle = url && aiData.testTitle ? aiData.testTitle : testTitle;
+
+      // Step 2: Create the test
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Not authenticated');
-
+      
       const { data: newTest, error: testError } = await supabase
         .from('glee_academy_tests')
         .insert({
           course_id: courseId,
-          title: testTitle,
-          description: `AI-generated test on ${topic}`,
+          title: finalTitle,
+          description: url ? `AI-generated test from ${url}` : `AI-generated test on ${topic}`,
           total_points: 100,
           passing_score: 70,
           duration_minutes: 60,
@@ -57,19 +74,6 @@ export const AICreateTestDialog = ({ open, onOpenChange, courseId }: AICreateTes
         .single();
 
       if (testError) throw testError;
-
-      toast.success('Test created! Generating questions...');
-
-      // Step 2: Generate questions with AI
-      const { data: aiData, error: aiError } = await supabase.functions.invoke('generate-test-questions', {
-        body: { topic, courseContext, difficulty }
-      });
-
-      if (aiError) throw aiError;
-
-      if (!aiData.success) {
-        throw new Error(aiData.error || 'Failed to generate questions');
-      }
 
       // Step 3: Insert questions
       const questionsToInsert = aiData.questions.map((q: any, index: number) => ({
@@ -119,6 +123,7 @@ export const AICreateTestDialog = ({ open, onOpenChange, courseId }: AICreateTes
       navigate(`/test-builder/${newTest.id}/edit`);
       
       // Reset form
+      setUrl('');
       setTestTitle('');
       setTopic('');
       setCourseContext('');
@@ -140,13 +145,36 @@ export const AICreateTestDialog = ({ open, onOpenChange, courseId }: AICreateTes
             AI Create Complete Test
           </DialogTitle>
           <DialogDescription>
-            Create a new test with 20 AI-generated questions. Provide details about what you want to test.
+            Create a new test with 20 AI-generated questions. Scrape a webpage URL OR provide topic details.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="test-title">Test Title *</Label>
+            <Label htmlFor="url">Webpage URL (Optional)</Label>
+            <Input
+              id="url"
+              type="url"
+              placeholder="https://example.com/lesson"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Provide a URL to scrape content and auto-generate the test title
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or enter manually</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="test-title">Test Title {!url && '*'}</Label>
             <Input
               id="test-title"
               placeholder="e.g., Gospel Music Unit Test"
@@ -156,7 +184,7 @@ export const AICreateTestDialog = ({ open, onOpenChange, courseId }: AICreateTes
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="topic">Topic *</Label>
+            <Label htmlFor="topic">Topic {!url && '*'}</Label>
             <Input
               id="topic"
               placeholder="e.g., Gospel Music and the Great Migration"

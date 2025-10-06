@@ -17,21 +17,23 @@ interface AITestGeneratorDialogProps {
 }
 
 export const AITestGeneratorDialog = ({ open, onOpenChange, testId, onQuestionsGenerated }: AITestGeneratorDialogProps) => {
+  const [url, setUrl] = useState('');
   const [topic, setTopic] = useState('');
   const [courseContext, setCourseContext] = useState('');
   const [difficulty, setDifficulty] = useState('medium');
   const [isGenerating, setIsGenerating] = useState(false);
 
   const handleGenerate = async () => {
-    if (!topic.trim()) {
-      toast.error('Please enter a topic');
+    if (!url && !topic.trim()) {
+      toast.error('Please provide a URL to scrape OR enter a topic');
       return;
     }
 
     setIsGenerating(true);
     try {
+      console.log('Sending request with:', { url, topic, courseContext, difficulty });
       const { data, error } = await supabase.functions.invoke('generate-test-questions', {
-        body: { topic, courseContext, difficulty }
+        body: { url, topic, courseContext, difficulty }
       });
 
       if (error) throw error;
@@ -83,6 +85,7 @@ export const AITestGeneratorDialog = ({ open, onOpenChange, testId, onQuestionsG
       toast.success('Generated 20 questions successfully!');
       onQuestionsGenerated();
       onOpenChange(false);
+      setUrl('');
       setTopic('');
       setCourseContext('');
       setDifficulty('medium');
@@ -103,13 +106,36 @@ export const AITestGeneratorDialog = ({ open, onOpenChange, testId, onQuestionsG
             AI Test Generator
           </DialogTitle>
           <DialogDescription>
-            Generate 20 high-quality test questions using AI. Provide a topic and context for best results.
+            Generate 20 high-quality test questions. Scrape a webpage URL OR provide a topic.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="topic">Topic *</Label>
+            <Label htmlFor="url">Webpage URL (Optional)</Label>
+            <Input
+              id="url"
+              type="url"
+              placeholder="https://example.com/lesson"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Scrape content from a webpage to generate questions
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or enter manually</span>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="topic">Topic {!url && '*'}</Label>
             <Input
               id="topic"
               placeholder="e.g., Gospel Music and the Great Migration"
