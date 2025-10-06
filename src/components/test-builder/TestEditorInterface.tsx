@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTest, useUpdateTest } from '@/hooks/useTestBuilder';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { QuestionList } from './QuestionList';
 import { TestSettings } from './TestSettings';
 import { AddQuestionDialog } from './AddQuestionDialog';
@@ -38,11 +38,20 @@ export const TestEditorInterface = ({ testId }: TestEditorInterfaceProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link to="/dashboard?module=test-builder" className="hover:text-foreground">
+          Test Builder
+        </Link>
+        <span>/</span>
+        <span className="text-foreground">{test.title}</span>
+      </div>
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard?module=test-builder')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Back to Tests
           </Button>
           <div>
             <h1 className="text-2xl font-bold">{test.title}</h1>

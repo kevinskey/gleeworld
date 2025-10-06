@@ -1,5 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, Trophy } from 'lucide-react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Clock, Trophy, Edit } from 'lucide-react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,14 +50,33 @@ export default function TestPreview() {
   return (
     <UniversalLayout>
       <div className="container mx-auto py-6 space-y-6">
+        {/* Breadcrumb Navigation */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link to="/dashboard?module=test-builder" className="hover:text-foreground">
+            Test Builder
+          </Link>
+          <span>/</span>
+          <Link to={`/test-builder/${testId}`} className="hover:text-foreground">
+            {test.title}
+          </Link>
+          <span>/</span>
+          <span className="text-foreground">Preview</span>
+        </div>
+
         <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="sm" onClick={() => navigate(`/test-builder/${testId}`)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
+            Back to Editor
           </Button>
-          <Badge variant={test.is_published ? 'default' : 'secondary'}>
-            {test.is_published ? 'Published' : 'Draft'}
-          </Badge>
+          <div className="flex gap-2">
+            <Badge variant={test.is_published ? 'default' : 'secondary'}>
+              {test.is_published ? 'Published' : 'Draft'}
+            </Badge>
+            <Button variant="outline" size="sm" onClick={() => navigate(`/test-builder/${testId}`)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Test
+            </Button>
+          </div>
         </div>
 
         <Card>
