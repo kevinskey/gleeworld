@@ -3,18 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus, FileText } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
 import { JournalsAdmin } from '@/components/mus240/instructor/JournalsAdmin';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
-import { MidtermGradingManager } from '@/components/mus240/admin/MidtermGradingManager';
-import { MidtermConfigManager } from '@/components/mus240/admin/MidtermConfigManager';
 import { GradeCalculationSystem } from '@/components/mus240/admin/GradeCalculationSystem';
 import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
 import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
+import { TestList } from '@/components/test-builder/TestList';
+import { useTests } from '@/hooks/useTestBuilder';
 import { toast } from 'sonner';
 
 export const InstructorConsole = () => {
@@ -22,6 +22,7 @@ export const InstructorConsole = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
   const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
+  const { data: tests, isLoading: testsLoading } = useTests('mus240');
 
   if (loading) {
     return (
@@ -185,11 +186,11 @@ export const InstructorConsole = () => {
               <span>Students</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="midterm-grading" 
+              value="tests" 
               className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
             >
-              <ClipboardCheck className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Midterm</span>
+              <FileText className="h-3 w-3 md:h-4 md:w-4" />
+              <span>Tests</span>
             </TabsTrigger>
             <TabsTrigger 
               value="grade-calculation" 
@@ -219,11 +220,34 @@ export const InstructorConsole = () => {
             <GradesAdmin />
           </TabsContent>
 
-          <TabsContent value="midterm-grading" className="mt-1 md:mt-3">
-            <div className="space-y-6">
-              <MidtermConfigManager />
-              <MidtermGradingManager />
-            </div>
+          <TabsContent value="tests" className="mt-1 md:mt-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  MUS 240 Tests
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {testsLoading ? (
+                  <p className="text-muted-foreground">Loading tests...</p>
+                ) : tests && tests.length > 0 ? (
+                  <TestList tests={tests} courseId="mus240" />
+                ) : (
+                  <div className="text-center py-12">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-medium mb-2">No tests assigned to MUS 240</h3>
+                    <p className="text-muted-foreground mb-4">
+                      Create tests in the Test Builder and assign them to MUS 240
+                    </p>
+                    <Button onClick={() => navigate('/dashboard?module=test-builder')}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Go to Test Builder
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="grade-calculation" className="mt-1 md:mt-3">
