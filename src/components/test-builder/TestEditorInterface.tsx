@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Save, Eye, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Plus, Save, Eye, AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,6 +9,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { QuestionList } from './QuestionList';
 import { TestSettings } from './TestSettings';
 import { AddQuestionDialog } from './AddQuestionDialog';
+import { AITestGeneratorDialog } from './AITestGeneratorDialog';
 
 interface TestEditorInterfaceProps {
   testId: string;
@@ -16,9 +17,10 @@ interface TestEditorInterfaceProps {
 
 export const TestEditorInterface = ({ testId }: TestEditorInterfaceProps) => {
   const navigate = useNavigate();
-  const { data, isLoading } = useTest(testId);
+  const { data, isLoading, refetch } = useTest(testId);
   const updateTest = useUpdateTest();
   const [showAddQuestion, setShowAddQuestion] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -114,10 +116,16 @@ export const TestEditorInterface = ({ testId }: TestEditorInterfaceProps) => {
                     Add and manage questions for this test
                   </CardDescription>
                 </div>
-                <Button onClick={() => setShowAddQuestion(true)}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Question
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setShowAIGenerator(true)}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    AI Generate 20 Questions
+                  </Button>
+                  <Button onClick={() => setShowAddQuestion(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Question
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -140,6 +148,13 @@ export const TestEditorInterface = ({ testId }: TestEditorInterfaceProps) => {
         onOpenChange={setShowAddQuestion}
         testId={test.id}
         nextDisplayOrder={questions.length + 1}
+      />
+
+      <AITestGeneratorDialog
+        open={showAIGenerator}
+        onOpenChange={setShowAIGenerator}
+        testId={test.id}
+        onQuestionsGenerated={refetch}
       />
     </div>
   );

@@ -219,3 +219,6 @@ verify_jwt = true
 
 [functions.generate-midterm-feedback]
 verify_jwt = true
+
+[functions.generate-test-questions]
+verify_jwt = true
