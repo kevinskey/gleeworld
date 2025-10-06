@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useUpdateQuestion, useCreateAnswerOptions, useUpdateAnswerOption, useDeleteAnswerOption, type TestQuestion, type AnswerOption } from '@/hooks/useTestBuilder';
+import { useUpdateQuestion, useCreateAnswerOptions, useDeleteAnswerOptions, type TestQuestion, type AnswerOption } from '@/hooks/useTestBuilder';
 import { Plus, X } from 'lucide-react';
 import { MediaUploadSection } from './MediaUploadSection';
 
@@ -36,8 +36,7 @@ interface AnswerOptionData {
 export const EditQuestionDialog = ({ open, onOpenChange, testId, question, existingOptions }: EditQuestionDialogProps) => {
   const updateQuestion = useUpdateQuestion();
   const createAnswerOptions = useCreateAnswerOptions();
-  const updateAnswerOption = useUpdateAnswerOption();
-  const deleteAnswerOption = useDeleteAnswerOption();
+  const deleteAnswerOptions = useDeleteAnswerOptions();
   
   const [questionType, setQuestionType] = useState<string>('multiple_choice');
   const [options, setOptions] = useState<AnswerOptionData[]>([
@@ -83,14 +82,7 @@ export const EditQuestionDialog = ({ open, onOpenChange, testId, question, exist
     setOptions([...options, { text: '', is_correct: false }]);
   };
 
-  const handleRemoveOption = async (index: number) => {
-    const option = options[index];
-    
-    // If the option has an ID, delete it from the database
-    if (option.id) {
-      await deleteAnswerOption.mutateAsync({ id: option.id, testId });
-    }
-    
+  const handleRemoveOption = (index: number) => {
     setOptions(options.filter((_, i) => i !== index));
   };
 
@@ -113,32 +105,23 @@ export const EditQuestionDialog = ({ open, onOpenChange, testId, question, exist
 
     // Handle answer options if it's multiple choice or true/false
     if (questionType === 'multiple_choice' || questionType === 'true_false') {
+      // Delete all existing options first
+      if (existingOptions.length > 0) {
+        await deleteAnswerOptions.mutateAsync({ questionId: question.id, testId });
+      }
+
+      // Create new options
       const validOptions = options.filter(opt => opt.text.trim());
-      
-      for (let i = 0; i < validOptions.length; i++) {
-        const opt = validOptions[i];
-        
-        if (opt.id) {
-          // Update existing option
-          await updateAnswerOption.mutateAsync({
-            id: opt.id,
-            testId,
+      if (validOptions.length > 0) {
+        await createAnswerOptions.mutateAsync({
+          options: validOptions.map((opt, index) => ({
+            question_id: question.id,
             option_text: opt.text,
             is_correct: opt.is_correct,
-            display_order: i,
-          });
-        } else {
-          // Create new option
-          await createAnswerOptions.mutateAsync({
-            options: [{
-              question_id: question.id,
-              option_text: opt.text,
-              is_correct: opt.is_correct,
-              display_order: i,
-            }],
-            testId,
-          });
-        }
+            display_order: index,
+          })),
+          testId,
+        });
       }
     }
 
