@@ -103,15 +103,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 5,
     topic: "Gospel Music and the Great Migration",
-    startDate: "2025-09-17",
-    endDate: "2025-09-23",
+    startDate: "2025-10-08",
+    endDate: "2025-10-14",
     assignments: [
       {
         id: "lj5",
         title: "Listening Journal 5: Gospel Traditions",
         description: "Study the development of gospel music and its relationship to spirituals.",
         instructions: "Compare traditional and contemporary gospel styles, noting influences from blues and jazz.",
-        dueDate: "2025-09-26",
+        dueDate: "2025-10-17",
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
@@ -121,15 +121,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 6,
     topic: "R&B and Soul Music",
-    startDate: "2025-09-24",
-    endDate: "2025-09-30",
+    startDate: "2025-10-15",
+    endDate: "2025-10-21",
     assignments: [
       {
         id: "lj6",
         title: "Listening Journal 6: R&B Evolution",
         description: "Trace the evolution from rhythm and blues to soul music.",
         instructions: "Analyze vocal techniques, instrumentation, and lyrical themes in R&B and soul.",
-        dueDate: "2025-10-03",
+        dueDate: "2025-10-24",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -139,7 +139,7 @@ export const mus240Assignments: WeekAssignments[] = [
         title: "Group Project Proposal: AI and Music",
         description: "One-paragraph topic description for your group project exploring AI's impact on African American music.",
         instructions: "Submit a one-paragraph description of your group's chosen focus within the AI and Music theme. Your topic should examine how artificial intelligence is affecting African American music creation, production, distribution, or consumption. Include your group members' names and be specific about your research question and why this aspect is significant. Consider topics like AI-generated music, algorithmic curation, AI in music production tools, or ethical considerations.",
-        dueDate: "2025-10-01",
+        dueDate: "2025-10-22",
         type: "research-proposal",
         estimatedTime: "1 hour",
         points: 20
@@ -149,15 +149,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 7,
     topic: "Motown and the Sound of Young America",
-    startDate: "2025-10-01",
-    endDate: "2025-10-07",
+    startDate: "2025-10-22",
+    endDate: "2025-10-28",
     assignments: [
       {
         id: "lj7",
         title: "Listening Journal 7: Motown Sound",
         description: "Examine the Motown production style and its cultural impact.",
         instructions: "Listen to key Motown recordings and analyze the 'Motown Sound' formula.",
-        dueDate: "2025-10-10",
+        dueDate: "2025-10-31",
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
@@ -167,7 +167,7 @@ export const mus240Assignments: WeekAssignments[] = [
         title: "Reflection Paper 2: Motown and Cultural Identity",
         description: "Analyze Motown's role in shaping African American cultural identity during the Civil Rights era.",
         instructions: "Write a 2-3 page essay examining how Motown Records influenced both African American identity and mainstream American culture. Present a clear thesis with evidence from course materials and connect to historical/cultural contexts. Format: MLA or Chicago style, double-spaced.",
-        dueDate: "2025-10-08",
+        dueDate: "2025-10-29",
         type: "reflection-paper",
         estimatedTime: "3 hours",
         points: 50
@@ -195,15 +195,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 9,
     topic: "Hip-Hop Culture and Rap Music",
-    startDate: "2025-10-08",
-    endDate: "2025-10-14",
+    startDate: "2025-10-29",
+    endDate: "2025-11-04",
     assignments: [
       {
         id: "lj8",
         title: "Listening Journal 8: Hip-Hop Foundations",
         description: "Analyze the emergence of hip-hop culture and early rap music.",
         instructions: "Examine sampling techniques, lyrical content, and the four elements of hip-hop culture.",
-        dueDate: "2025-10-17",
+        dueDate: "2025-11-07",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -213,15 +213,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 10,
     topic: "Contemporary R&B and Neo-Soul",
-    startDate: "2025-10-15",
-    endDate: "2025-10-21",
+    startDate: "2025-11-05",
+    endDate: "2025-11-11",
     assignments: [
       {
         id: "lj9",
         title: "Listening Journal 9: Contemporary R&B Evolution",
         description: "Study the evolution of R&B from the 1990s to present day.",
         instructions: "Compare traditional R&B with contemporary styles, noting technological and cultural influences.",
-        dueDate: "2025-10-24",
+        dueDate: "2025-11-14",
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
@@ -231,7 +231,7 @@ export const mus240Assignments: WeekAssignments[] = [
         title: "Group Project Annotated Bibliography: AI and Music",
         description: "Compile and annotate at least 5 credible sources for your group project on AI and music.",
         instructions: "Create an annotated bibliography with at least 5 credible sources (scholarly articles, books, interviews with AI music researchers, industry reports, etc.) related to AI's impact on African American music. Each annotation should be 2-3 sentences summarizing the source and explaining its relevance to your group project. Include diverse perspectives on AI in music production, creation, ethics, and cultural impact. Format: MLA or Chicago style.",
-        dueDate: "2025-10-22",
+        dueDate: "2025-11-12",
         type: "annotated-bibliography",
         estimatedTime: "4 hours",
         points: 30
@@ -241,15 +241,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 11,
     topic: "Gospel's Modern Evolution",
-    startDate: "2025-10-22",
-    endDate: "2025-10-28",
+    startDate: "2025-11-12",
+    endDate: "2025-11-18",
     assignments: [
       {
         id: "lj10",
         title: "Listening Journal 10: Contemporary Gospel",
         description: "Examine modern gospel music and its fusion with other genres.",
         instructions: "Analyze how contemporary gospel incorporates elements from R&B, hip-hop, and pop music.",
-        dueDate: "2025-10-31",
+        dueDate: "2025-11-21",
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
@@ -259,15 +259,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 12,
     topic: "Jazz Fusion and Modern Jazz",
-    startDate: "2025-10-29",
-    endDate: "2025-11-04",
+    startDate: "2025-11-19",
+    endDate: "2025-11-25",
     assignments: [
       {
         id: "lj11",
         title: "Listening Journal 11: Jazz Evolution",
         description: "Trace jazz development from bebop through fusion to contemporary jazz.",
         instructions: "Compare different jazz eras and analyze the incorporation of electronic elements.",
-        dueDate: "2025-11-07",
+        dueDate: "2025-11-26",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -277,7 +277,7 @@ export const mus240Assignments: WeekAssignments[] = [
         title: "Reflection Paper 3: Jazz and Social Change",
         description: "Examine jazz music's relationship to social and political movements.",
         instructions: "Write a 2-3 page essay analyzing how jazz music both reflected and influenced social change in America. Focus on specific examples and connect musical developments to broader cultural movements. Present a clear thesis with evidence from course materials. Format: MLA or Chicago style, double-spaced.",
-        dueDate: "2025-11-05",
+        dueDate: "2025-11-24",
         type: "reflection-paper",
         estimatedTime: "3 hours",
         points: 50
@@ -287,15 +287,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 13,
     topic: "African American Music in Popular Culture",
-    startDate: "2025-11-05",
-    endDate: "2025-11-11",
+    startDate: "2025-11-26",
+    endDate: "2025-12-02",
     assignments: [
       {
         id: "lj12",
         title: "Listening Journal 12: Global Influence",
         description: "Examine the global influence of African American music on world music.",
         instructions: "Analyze how African American musical styles have influenced international artists and genres.",
-        dueDate: "2025-11-14",
+        dueDate: "2025-12-05",
         type: "listening-journal",
         estimatedTime: "40 minutes",
         points: 20
@@ -305,15 +305,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 14,
     topic: "Music and Social Justice",
-    startDate: "2025-11-12",
-    endDate: "2025-11-18",
+    startDate: "2025-12-03",
+    endDate: "2025-12-09",
     assignments: [
       {
         id: "lj13",
         title: "Listening Journal 13: Protest and Resistance",
         description: "Study the role of African American music in social movements.",
         instructions: "Analyze protest songs from different eras and their impact on social change.",
-        dueDate: "2025-11-21",
+        dueDate: "2025-12-12",
         type: "listening-journal",
         estimatedTime: "45 minutes",
         points: 20
@@ -323,15 +323,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 15,
     topic: "Future Directions and Legacy",
-    startDate: "2025-11-19",
-    endDate: "2025-11-25",
+    startDate: "2025-12-10",
+    endDate: "2025-12-16",
     assignments: [
       {
         id: "final-research-project",
         title: "Group Project Final Presentation: AI and Music",
         description: "Conduct an in-depth group study of AI's impact on African American music and present findings in a professional digital format.",
         instructions: "Create a digital group project (video, website, podcast, or interactive format) presenting your research findings on AI and music. Your presentation should demonstrate: content accuracy about AI technologies in music, depth of research on impact to African American musical traditions, integration of historical/cultural context, organization and clarity, creativity in presentation format, and effective group collaboration. Address both opportunities and challenges that AI presents for African American musicians and the broader musical community. Build upon your group's proposal and annotated bibliography.",
-        dueDate: "2025-11-26",
+        dueDate: "2025-12-17",
         type: "project",
         estimatedTime: "6 hours",
         points: 100
@@ -341,15 +341,15 @@ export const mus240Assignments: WeekAssignments[] = [
   {
     week: 16,
     topic: "Final Presentations and Course Reflection",
-    startDate: "2025-11-26",
-    endDate: "2025-12-03",
+    startDate: "2025-12-17",
+    endDate: "2025-12-23",
     assignments: [
       {
         id: "final-reflection-essay",
         title: "Final Reflection Essay",
         description: "Synthesize semester's learning and connect to personal perspective.",
         instructions: "Write a 4–5-page essay reflecting on course themes, personal insights, and the role of music as cultural force. Draw on examples from at least three styles studied in the course. Focus on integrating course themes, demonstrating depth of reflection, maintaining clarity, and effectively using examples from the semester. Format: MLA or Chicago style, double-spaced.",
-        dueDate: "2025-12-03",
+        dueDate: "2025-12-23",
         type: "essay",
         estimatedTime: "4 hours",
         points: 50
