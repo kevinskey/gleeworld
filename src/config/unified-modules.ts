@@ -874,7 +874,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Music education platform with courses and private lessons",
     icon: GraduationCap,
     iconColor: "blue",
-    category: "musical-leadership",
+    category: "education",
     isActive: true,
     component: GleeAcademy,
     dbFunctionName: "glee-academy"
@@ -910,7 +910,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     description: "Create and manage tests, quizzes, and assessments for Glee Academy courses",
     icon: GraduationCap,
     iconColor: "indigo",
-    category: "musical-leadership",
+    category: "education",
     isActive: true,
     component: TestBuilderModule,
     dbFunctionName: "test-builder"
@@ -958,6 +958,14 @@ export const UNIFIED_MODULE_CATEGORIES: UnifiedModuleCategory[] = [
     icon: Settings,
     color: "gray",
     modules: UNIFIED_MODULES.filter(m => m.category === "system")
+  },
+  {
+    id: "education",
+    title: "Education & Learning",
+    description: "Glee Academy courses, tests, and educational resources",
+    icon: GraduationCap,
+    color: "indigo",
+    modules: UNIFIED_MODULES.filter(m => m.category === "education")
   }
 ];
 
