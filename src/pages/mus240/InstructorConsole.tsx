@@ -16,6 +16,8 @@ import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
 import { TestList } from '@/components/test-builder/TestList';
 import { useTests } from '@/hooks/useTestBuilder';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 export const InstructorConsole = () => {
   const { isAdmin, loading } = useUserRole();
@@ -23,6 +25,49 @@ export const InstructorConsole = () => {
   const [activeTab, setActiveTab] = useState('assignments');
   const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
   const { data: tests, isLoading: testsLoading } = useTests('mus240');
+  
+  // Fetch original midterm config
+  const { data: midtermConfig } = useQuery({
+    queryKey: ['mus240-original-midterm'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mus240_midterm_config')
+        .select('*')
+        .eq('is_active', true)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+  
+  // Combine Test Builder tests with original midterm
+  const allTests = React.useMemo(() => {
+    const combinedTests = [...(tests || [])];
+    
+    if (midtermConfig) {
+      // Add the original midterm as a special test entry
+      combinedTests.unshift({
+        id: 'original-midterm',
+        course_id: 'mus240',
+        title: 'MUS 240 Midterm (Original)',
+        description: 'Audio excerpt identification midterm with 3 musical examples',
+        instructions: null,
+        duration_minutes: 60,
+        total_points: 100,
+        passing_score: 70,
+        is_published: midtermConfig.is_active,
+        allow_retakes: false,
+        show_correct_answers: false,
+        randomize_questions: false,
+        created_by: null,
+        created_at: midtermConfig.created_at,
+        updated_at: midtermConfig.updated_at,
+      });
+    }
+    
+    return combinedTests;
+  }, [tests, midtermConfig]);
 
   if (loading) {
     return (
@@ -231,8 +276,8 @@ export const InstructorConsole = () => {
               <CardContent>
                 {testsLoading ? (
                   <p className="text-muted-foreground">Loading tests...</p>
-                ) : tests && tests.length > 0 ? (
-                  <TestList tests={tests} courseId="mus240" />
+                ) : allTests && allTests.length > 0 ? (
+                  <TestList tests={allTests} courseId="mus240" />
                 ) : (
                   <div className="text-center py-12">
                     <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
