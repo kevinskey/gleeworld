@@ -90,6 +90,7 @@ import { ProviderAppointmentModule } from '@/components/modules/ProviderAppointm
 import { AssignableAppointmentModule } from '@/components/modules/AssignableAppointmentModule';
 import { ServiceProviderManagementModule } from '@/components/modules/ServiceProviderManagementModule';
 import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
+import { TestBuilderModule } from '@/components/modules/TestBuilderModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -901,6 +902,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: Mus240GroupsModule,
     dbFunctionName: "mus240-groups"
+  },
+  {
+    id: "test-builder",
+    name: "test-builder",
+    title: "Test Maker",
+    description: "Create and manage tests, quizzes, and assessments for students",
+    icon: FileText,
+    iconColor: "indigo",
+    category: "musical-leadership",
+    isActive: true,
+    component: TestBuilderModule,
+    dbFunctionName: "test-builder"
   }
 ];
 
