@@ -331,6 +331,64 @@ export const useCreateAnswerOptions = () => {
   });
 };
 
+// Update answer option
+export const useUpdateAnswerOption = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, testId, ...data }: Partial<AnswerOption> & { id: string; testId: string }) => {
+      const { data: option, error } = await supabase
+        .from('test_answer_options')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return { option, testId };
+    },
+    onSuccess: ({ testId }) => {
+      queryClient.invalidateQueries({ queryKey: ['test', testId] });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to update answer option',
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
+// Delete single answer option
+export const useDeleteAnswerOption = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, testId }: { id: string; testId: string }) => {
+      const { error } = await supabase
+        .from('test_answer_options')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return testId;
+    },
+    onSuccess: (testId) => {
+      queryClient.invalidateQueries({ queryKey: ['test', testId] });
+    },
+    onError: () => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete answer option',
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
 // Delete answer options for a question
 export const useDeleteAnswerOptions = () => {
   const queryClient = useQueryClient();

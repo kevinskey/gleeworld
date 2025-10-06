@@ -3,6 +3,7 @@ import { Edit, Trash2, GripVertical, Image, Video, Music, FileText } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDeleteQuestion, type TestQuestion, type AnswerOption } from '@/hooks/useTestBuilder';
+import { EditQuestionDialog } from './EditQuestionDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +24,7 @@ interface QuestionListProps {
 export const QuestionList = ({ questions, options, testId }: QuestionListProps) => {
   const deleteQuestion = useDeleteQuestion();
   const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
+  const [questionToEdit, setQuestionToEdit] = useState<TestQuestion | null>(null);
 
   const getQuestionTypeLabel = (type: string) => {
     const labels = {
@@ -103,7 +105,11 @@ export const QuestionList = ({ questions, options, testId }: QuestionListProps) 
                   </div>
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => setQuestionToEdit(question)}
+                    >
                       <Edit className="h-4 w-4" />
                     </Button>
                     <Button
@@ -136,6 +142,14 @@ export const QuestionList = ({ questions, options, testId }: QuestionListProps) 
           );
         })}
       </div>
+
+      <EditQuestionDialog
+        open={!!questionToEdit}
+        onOpenChange={(open) => !open && setQuestionToEdit(null)}
+        testId={testId}
+        question={questionToEdit}
+        existingOptions={questionToEdit ? getQuestionOptions(questionToEdit.id) : []}
+      />
 
       <AlertDialog open={!!questionToDelete} onOpenChange={() => setQuestionToDelete(null)}>
         <AlertDialogContent>
