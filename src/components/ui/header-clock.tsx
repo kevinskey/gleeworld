@@ -86,7 +86,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="absolute w-0.5 h-1.5 sm:h-2 md:h-2.5 bg-blue-200 rounded-full"
+                className="absolute w-0.5 h-1.5 sm:h-2 md:h-2.5 bg-blue-200 rounded-full border border-gray-800"
                 style={{
                   top: '2px',
                   left: '50%',
