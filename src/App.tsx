@@ -37,6 +37,8 @@ import W9FormPage from "./pages/W9FormPage";
 import NotFound from "./pages/NotFound";
 import Accounting from "./pages/Accounting";
 import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
+import TestBuilderPage from "./pages/mus240/TestBuilderPage";
+import TestBuilderEdit from "./pages/TestBuilderEdit";
 
 import AuditionerDashboardPage from "./pages/AuditionerDashboardPage";
 import Mus240Auth from "./pages/Mus240Auth";
@@ -1775,8 +1777,24 @@ const App = () => {
                                       </ProtectedRoute>
                                     } 
                                   />
-                           </Routes>
-                    </Suspense>
+                                   <Route 
+                                     path="/test-builder" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <TestBuilderPage />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/test-builder/:testId" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <TestBuilderEdit />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                            </Routes>
+                     </Suspense>
                    <GlobalMusicPlayer />
                 </div>
               </MusicPlayerProvider>
