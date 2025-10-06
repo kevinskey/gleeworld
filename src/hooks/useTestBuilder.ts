@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+// Test Builder hooks for managing Glee Academy tests
+
 export interface GleeAcademyTest {
   id: string;
   course_id: string;
