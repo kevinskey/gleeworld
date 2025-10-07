@@ -38,36 +38,45 @@ export const TestList = ({ tests, courseId }: TestListProps) => {
         {tests.map((test) => (
           <div
             key={test.id}
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-accent/50 transition-colors"
+            className="group relative flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 border rounded-xl hover:shadow-md transition-all duration-200 bg-card hover:border-primary/30"
           >
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-1">
-                <h3 className="font-semibold">{test.title}</h3>
+            <div className="flex-1 space-y-2 mb-4 sm:mb-0">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <h3 className="font-semibold text-base sm:text-lg">{test.title}</h3>
                 {test.is_published ? (
-                  <Badge variant="default">Published</Badge>
+                  <Badge variant="default" className="shadow-sm">Published</Badge>
                 ) : (
-                  <Badge variant="secondary">Draft</Badge>
+                  <Badge variant="secondary" className="border">Draft</Badge>
                 )}
               </div>
               {test.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
+                <p className="text-sm text-muted-foreground line-clamp-2 pr-0 sm:pr-4">
                   {test.description}
                 </p>
               )}
-              <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                <span>{test.total_points} points</span>
-                {test.duration_minutes && <span>{test.duration_minutes} minutes</span>}
-                <span>Pass: {test.passing_score}%</span>
+              <div className="flex flex-wrap gap-3 sm:gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <span className="font-medium text-foreground">{test.total_points}</span> points
+                </span>
+                {test.duration_minutes && (
+                  <span className="flex items-center gap-1">
+                    <span className="font-medium text-foreground">{test.duration_minutes}</span> min
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  Pass: <span className="font-medium text-foreground">{test.passing_score}%</span>
+                </span>
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {test.id === 'original-midterm' ? (
                 <>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => navigate('/classes/mus240/midterm')}
+                    className="hover:bg-accent hover:border-primary/30"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     View
@@ -76,6 +85,7 @@ export const TestList = ({ tests, courseId }: TestListProps) => {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate('/classes/mus240/instructor/console?tab=grades')}
+                    className="hover:bg-accent hover:border-primary/30"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Grades
@@ -87,22 +97,26 @@ export const TestList = ({ tests, courseId }: TestListProps) => {
                     variant="outline"
                     size="sm"
                     onClick={() => navigate(`/test-builder/${test.id}`)}
+                    className="hover:bg-accent hover:border-primary/30 transition-all"
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit
                   </Button>
                   <Button
-                    variant="outline"
+                    variant="default"
                     size="sm"
                     onClick={() => navigate(`/test/${test.id}/preview`)}
+                    className="relative overflow-hidden bg-primary hover:bg-primary/90 shadow-sm hover:shadow-md transition-all group/preview"
                   >
-                    <Eye className="h-4 w-4 mr-2" />
-                    Preview
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary-glow/20 to-transparent opacity-0 group-hover/preview:opacity-100 transition-opacity" />
+                    <Eye className="h-4 w-4 mr-2 relative z-10" />
+                    <span className="relative z-10">Preview</span>
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setTestToDelete(test.id)}
+                    className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete

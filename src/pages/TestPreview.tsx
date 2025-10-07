@@ -53,57 +53,79 @@ export default function TestPreview() {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto py-4 md:py-6 space-y-4 md:space-y-6">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link to="/dashboard?module=test-builder" className="hover:text-foreground">
+          <Link to="/dashboard?module=test-builder" className="hover:text-foreground transition-colors">
             Test Builder
           </Link>
           <span>/</span>
-          <Link to={`/test-builder/${testId}`} className="hover:text-foreground">
+          <Link to={`/test-builder/${testId}`} className="hover:text-foreground transition-colors">
             {test.title}
           </Link>
           <span>/</span>
-          <span className="text-foreground">Preview</span>
+          <span className="text-foreground font-medium">Preview</span>
         </div>
 
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" onClick={() => navigate(`/test-builder/${testId}`)}>
+        {/* Header Actions */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate(`/test-builder/${testId}`)}
+            className="hover:bg-accent"
+          >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Editor
           </Button>
-          <div className="flex gap-2">
-            <Badge variant={test.is_published ? 'default' : 'secondary'}>
+          <div className="flex flex-wrap gap-2">
+            <Badge 
+              variant={test.is_published ? 'default' : 'secondary'}
+              className={test.is_published ? 'shadow-sm' : 'border'}
+            >
               {test.is_published ? 'Published' : 'Draft'}
             </Badge>
-            <Button variant="outline" size="sm" onClick={() => navigate(`/test-builder/${testId}`)}>
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={() => navigate(`/test-builder/${testId}`)}
+              className="shadow-sm hover:shadow-md transition-all"
+            >
               <Edit className="h-4 w-4 mr-2" />
               Edit Test
             </Button>
           </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-3xl">{test.title}</CardTitle>
-            {test.description && (
-              <CardDescription className="text-base">{test.description}</CardDescription>
-            )}
-            <div className="flex gap-4 pt-4">
+        {/* Test Header Card */}
+        <Card className="shadow-sm">
+          <CardHeader className="space-y-4">
+            <div>
+              <CardTitle className="text-2xl md:text-3xl mb-2">{test.title}</CardTitle>
+              {test.description && (
+                <CardDescription className="text-base">{test.description}</CardDescription>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-4 pt-2 border-t">
               {test.duration_minutes && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4" />
-                  <span>{test.duration_minutes} minutes</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <span className="font-medium">{test.duration_minutes}</span>
+                  <span className="text-muted-foreground">minutes</span>
                 </div>
               )}
               {test.passing_score && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Trophy className="h-4 w-4" />
-                  <span>Passing score: {test.passing_score}%</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  <span className="text-muted-foreground">Passing:</span>
+                  <span className="font-medium">{test.passing_score}%</span>
                 </div>
               )}
-              <div className="text-sm text-muted-foreground">
-                {questions.length} {questions.length === 1 ? 'question' : 'questions'}
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-medium">{questions.length}</span>
+                <span className="text-muted-foreground">
+                  {questions.length === 1 ? 'question' : 'questions'}
+                </span>
               </div>
             </div>
           </CardHeader>
