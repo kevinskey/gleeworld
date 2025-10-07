@@ -214,6 +214,37 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     );
   };
 
+  // Define content render functions BEFORE they're used
+  const renderWardrobeContent = () => {
+    return <WardrobeManagementHub />;
+  };
+
+  const renderLibrariesContent = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <BookOpen className="h-5 w-5" />
+          Libraries Management
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-xs text-muted-foreground">Library management tools are coming soon.</p>
+      </CardContent>
+    </Card>
+  );
+
+  const renderSystemContent = () => (
+    <div className="space-y-6">
+      <AdminSummaryStats users={users} activityLogs={activityLogs} loading={loading || logsLoading} />
+      <SystemSettings />
+      <ActivityLogs />
+    </div>
+  );
+
+  const renderOverviewContent = () => (
+    <AdminSummaryStats users={users} activityLogs={activityLogs} loading={loading || logsLoading} />
+  );
+
   const renderRightPanelContent = () => {
     // Handle subcategory content first
     if (selectedSubcategory) {
@@ -400,10 +431,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     return <StudentIntakeProcessor />;
   };
 
-  const renderWardrobeContent = () => {
-    return <WardrobeManagementHub />;
-  };
-
   const renderMemberManagementContent = () => (
     <Card>
       <CardHeader>
@@ -436,19 +463,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     </Card>
   );
 
-  const renderLibrariesContent = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5" />
-          Libraries Management
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-xs text-muted-foreground">Library management tools are coming soon.</p>
-      </CardContent>
-    </Card>
-  );
 
   const renderFinancesContent = () => (
     <Card>
@@ -490,17 +504,6 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
     </Card>
   );
 
-  const renderSystemContent = () => (
-    <div className="space-y-6">
-      <AdminSummaryStats users={users} activityLogs={activityLogs} loading={loading || logsLoading} />
-      <SystemSettings />
-      <ActivityLogs />
-    </div>
-  );
-
-  const renderOverviewContent = () => (
-    <AdminSummaryStats users={users} activityLogs={activityLogs} loading={loading || logsLoading} />
-  );
 
   return (
     <div className="min-h-screen bg-muted/30 p-3 sm:p-6 -m-3 sm:-m-6">

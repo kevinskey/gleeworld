@@ -639,7 +639,7 @@ export const KaraokeModule: React.FC = () => {
     const end = encoder.flush();
     if (end.length > 0) mp3Data.push(end);
 
-    return new Blob(mp3Data, { type: 'audio/mpeg' });
+    return new Blob(mp3Data as BlobPart[], { type: 'audio/mpeg' });
   };
   const mixAndEncode = async () => {
     if (mixing) return;
