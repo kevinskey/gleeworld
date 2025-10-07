@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export default function TestBuilderPage() {
   return (
     <UniversalLayout>
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto py-2 md:py-6 space-y-2 md:space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Test Builder - All Courses</CardTitle>
