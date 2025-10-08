@@ -165,11 +165,11 @@ export const InstructorConsole = () => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => navigate('/classes/mus240')}
+              onClick={() => navigate('/classes/mus240/admin')}
               className="flex items-center gap-2"
             >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Course</span>
+              <Home className="h-4 w-4" />
+              <span className="hidden sm:inline">Admin Home</span>
             </Button>
           </div>
         </div>
