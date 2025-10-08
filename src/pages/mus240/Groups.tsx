@@ -491,7 +491,7 @@ export default function Groups() {
                   const colorScheme = pastelColors[index % pastelColors.length];
                   
                   return (
-                <Card key={group.id} className={`${colorScheme.bg} ${colorScheme.border} shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]`}>
+                <Card key={group.id} className="bg-white border shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
                     <CardHeader>
                        <div className="flex justify-between items-start">
                          <div className="flex-1">
