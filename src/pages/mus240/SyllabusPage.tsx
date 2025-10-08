@@ -336,67 +336,115 @@ export default function Syllabus() {
                       <div className="space-y-4">
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 1:</span>
-                          <span className="text-gray-700">Introduction to African American Musical Traditions → Listening Journal 1: African Roots (Due 8/29)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Introduction to African American Musical Traditions</div>
+                            <div className="text-sm text-gray-600">8/19/2025 - 8/23/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 2:</span>
-                          <span className="text-gray-700">Spirituals and Vocal Traditions → Listening Journal 2 (Due 9/5). Introduce AI Project.</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Spirituals and Vocal Traditions</div>
+                            <div className="text-sm text-gray-600">8/24/2025 - 8/30/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 3:</span>
-                          <span className="text-gray-700">Blues: Foundation of American Popular Music → Listening Journal 3 (Due 9/12), Reflection Paper 1 (Due 9/15)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Blues: Foundation of American Popular Music</div>
+                            <div className="text-sm text-gray-600">9/2/2025 - 9/8/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 4:</span>
-                          <span className="text-gray-700">Jazz Origins and Early Development → Listening Journal 4 (Due 9/19)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Jazz Origins and Early Development</div>
+                            <div className="text-sm text-gray-600">9/9/2025 - 9/15/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 5:</span>
-                          <span className="text-gray-700">Gospel Music and the Great Migration → Listening Journal 5 (Due 10/17)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Gospel Music and the Great Migration</div>
+                            <div className="text-sm text-gray-600">10/7/2025 - 10/13/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 6:</span>
-                          <span className="text-gray-700">R&B and Soul Music → Listening Journal 6 (Due 10/24), Group Project Proposal (Due 10/22)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">R&B and Soul Music</div>
+                            <div className="text-sm text-gray-600">10/14/2025 - 10/20/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 7:</span>
-                          <span className="text-gray-700">Motown and the Sound of Young America → Listening Journal 7 (Due 10/31), Reflection Paper 2 (Due 10/29)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Motown and the Sound of Young America</div>
+                            <div className="text-sm text-gray-600">10/21/2025 - 10/27/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 8:</span>
-                          <span className="text-gray-700">Funk and the Rhythmic Revolution → <strong>Midterm Exam (Sept 26)</strong></span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Funk and the Rhythmic Revolution</div>
+                            <div className="text-sm text-gray-600">9/21/2025 - 9/25/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 9:</span>
-                          <span className="text-gray-700">Hip-Hop Culture and Rap Music → Listening Journal 8 (Due 11/7)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Hip-Hop Culture and Rap Music</div>
+                            <div className="text-sm text-gray-600">10/28/2025 - 11/3/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 10:</span>
-                          <span className="text-gray-700">Contemporary R&B and Neo-Soul → Listening Journal 9 (Due 11/14), Annotated Bibliography (Due 11/12)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Contemporary R&B and Neo-Soul</div>
+                            <div className="text-sm text-gray-600">11/4/2025 - 11/10/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 11:</span>
-                          <span className="text-gray-700">Gospel's Modern Evolution → Listening Journal 10 (Due 11/21)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Gospel's Modern Evolution</div>
+                            <div className="text-sm text-gray-600">11/11/2025 - 11/17/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 12:</span>
-                          <span className="text-gray-700">Jazz Fusion and Modern Jazz → Listening Journal 11 (Due 11/26), Reflection Paper 3 (Due 11/24)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Jazz Fusion and Modern Jazz</div>
+                            <div className="text-sm text-gray-600">11/18/2025 - 11/24/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 13:</span>
-                          <span className="text-gray-700">African American Music in Popular Culture → Listening Journal 12 (Due 12/5)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">African American Music in Popular Culture</div>
+                            <div className="text-sm text-gray-600">11/25/2025 - 12/1/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 14:</span>
-                          <span className="text-gray-700">Music and Social Justice → Listening Journal 13 (Due 12/12)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Music and Social Justice</div>
+                            <div className="text-sm text-gray-600">12/2/2025 - 12/8/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 15:</span>
-                          <span className="text-gray-700">Future Directions and Legacy → Group Project Final Presentation (Due 12/17)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Future Directions and Legacy</div>
+                            <div className="text-sm text-gray-600">12/9/2025 - 12/15/2025</div>
+                          </div>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 16:</span>
-                          <span className="text-gray-700">Final Presentations and Course Reflection → Final Reflection Essay (Due 12/23)</span>
+                          <div>
+                            <div className="text-gray-900 font-medium">Final Presentations and Course Reflection</div>
+                            <div className="text-sm text-gray-600">12/16/2025 - 12/22/2025</div>
+                          </div>
                         </div>
                       </div>
                     </CardContent>
