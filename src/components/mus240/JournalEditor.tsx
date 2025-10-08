@@ -168,7 +168,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
         
         <CardContent className="space-y-4">
           <Alert>
-            <Lock className="h-4 w-4" />
+            <Upload className="h-4 w-4" />
             <AlertDescription>
               Copy and paste is disabled. You must type your journal entry directly. 
               Aim for 250-300 words focusing on the assignment prompt below.
