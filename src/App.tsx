@@ -183,6 +183,7 @@ import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { StudentMidtermGrading } from "./pages/mus240/StudentMidtermGrading";
 import { StudentWorkOverview } from "./pages/mus240/StudentWorkOverview";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
+import { StudentDashboard } from "./pages/mus240/StudentDashboard";
 import { BulkJournalGradingPage } from "./pages/mus240/BulkJournalGradingPage";
 import MidtermExam from "./pages/mus240/MidtermExam";
 import SMUS100MidtermExamPage from "./pages/SMUS100MidtermExamPage";
@@ -1586,14 +1587,24 @@ const App = () => {
                               } 
                              />
                               {/* MUS 240 Class Pages - Protected by enrollment */}
-                              <Route 
+                               <Route 
                                 path="/mus240" 
                                 element={<ClassLanding />}
                                />
-                               <Route 
-                                path="/classes/mus240" 
-                                element={<ClassLanding />}
-                               />
+                                <Route 
+                                 path="/classes/mus240" 
+                                 element={<ClassLanding />}
+                                />
+                                <Route 
+                                 path="/classes/mus240/student/dashboard" 
+                                 element={
+                                   <ProtectedRoute>
+                                     <Mus240EnrollmentRoute>
+                                       <StudentDashboard />
+                                     </Mus240EnrollmentRoute>
+                                   </ProtectedRoute>
+                                 }
+                                />
                              <Route 
                                path="/classes/mus240/syllabus" 
                                 element={

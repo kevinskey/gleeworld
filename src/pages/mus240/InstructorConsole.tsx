@@ -31,6 +31,8 @@ export const InstructorConsole = () => {
   const { isAdmin, loading } = useUserRole();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
+  const [assignmentSubTab, setAssignmentSubTab] = useState('journals');
+  const [testSubTab, setTestSubTab] = useState('tests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
   const { data: tests, isLoading: testsLoading } = useTests('mus240');
@@ -55,7 +57,6 @@ export const InstructorConsole = () => {
     const combinedTests = [...(tests || [])];
     
     if (midtermConfig) {
-      // Add the original midterm as a special test entry
       combinedTests.unshift({
         id: 'original-midterm',
         course_id: 'mus240',
@@ -92,14 +93,13 @@ export const InstructorConsole = () => {
 
   const navItems = [
     { value: 'assignments', label: 'Assignments', icon: BookOpen },
-    { value: 'scores', label: 'Scores', icon: Trophy },
-    { value: 'journals', label: 'Journals', icon: FileText },
-    { value: 'midterms', label: 'Midterm', icon: ClipboardCheck },
+    { value: 'tests', label: 'Tests', icon: ClipboardCheck },
+    { value: 'polls', label: 'Polls', icon: BarChart3 },
+    { value: 'grades', label: 'Grades', icon: Trophy },
+    { value: 'communications', label: 'Communications', icon: Users },
     { value: 'students', label: 'Students', icon: UserPlus },
-    { value: 'tests', label: 'Tests', icon: FileText },
     { value: 'analytics', label: 'Analytics', icon: BarChart },
     { value: 'resources', label: 'Resources', icon: BookOpen },
-    { value: 'polls', label: 'Polls', icon: BarChart3 },
     { value: 'ai-assistant', label: 'AI Assistant', icon: Brain },
     { value: 'settings', label: 'Settings', icon: Settings },
   ];
@@ -219,42 +219,131 @@ export const InstructorConsole = () => {
 
         {/* Content Area */}
         <main className="flex-1 p-4 md:p-6">
-          {activeTab === 'assignments' && <AssignmentManager />}
-          {activeTab === 'scores' && <StudentScoresViewer />}
-          {activeTab === 'journals' && <ComprehensiveJournalAdmin />}
-          {activeTab === 'midterms' && <MidtermGradingManager />}
-          {activeTab === 'students' && <EnrollmentManager />}
-          {activeTab === 'tests' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  MUS 240 Tests
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {testsLoading ? (
-                  <p className="text-muted-foreground">Loading tests...</p>
-                ) : allTests && allTests.length > 0 ? (
-                  <TestList tests={allTests} courseId="mus240" />
-                ) : (
-                  <div className="text-center py-12">
-                    <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">No tests assigned to MUS 240</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Create tests in the Test Builder and assign them to MUS 240
-                    </p>
-                    <Button onClick={() => navigate('/dashboard?module=test-builder')}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Go to Test Builder
+          {/* Assignments Tab with Sub-tabs */}
+          {activeTab === 'assignments' && (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5" />
+                    Assignments
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2 border-b mb-4">
+                    <Button
+                      variant={assignmentSubTab === 'journals' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setAssignmentSubTab('journals')}
+                    >
+                      Journals
+                    </Button>
+                    <Button
+                      variant={assignmentSubTab === 'papers' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setAssignmentSubTab('papers')}
+                    >
+                      Papers
+                    </Button>
+                    <Button
+                      variant={assignmentSubTab === 'group-projects' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setAssignmentSubTab('group-projects')}
+                    >
+                      Group Projects
                     </Button>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+
+                  {assignmentSubTab === 'journals' && <ComprehensiveJournalAdmin />}
+                  {assignmentSubTab === 'papers' && (
+                    <div className="text-center py-12">
+                      <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Papers</h3>
+                      <p className="text-muted-foreground">Paper assignments will be managed here</p>
+                    </div>
+                  )}
+                  {assignmentSubTab === 'group-projects' && (
+                    <div className="text-center py-12">
+                      <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Group Projects</h3>
+                      <p className="text-muted-foreground">Group project assignments will be managed here</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
-          {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
-          {activeTab === 'resources' && <ResourcesAdmin />}
+
+          {/* Tests Tab with Sub-tabs */}
+          {activeTab === 'tests' && (
+            <div className="space-y-4">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <ClipboardCheck className="h-5 w-5" />
+                    Tests & Exams
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-2 border-b mb-4">
+                    <Button
+                      variant={testSubTab === 'tests' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setTestSubTab('tests')}
+                    >
+                      Tests
+                    </Button>
+                    <Button
+                      variant={testSubTab === 'midterm' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setTestSubTab('midterm')}
+                    >
+                      Midterm
+                    </Button>
+                    <Button
+                      variant={testSubTab === 'final' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setTestSubTab('final')}
+                    >
+                      Final
+                    </Button>
+                  </div>
+
+                  {testSubTab === 'tests' && (
+                    testsLoading ? (
+                      <p className="text-muted-foreground">Loading tests...</p>
+                    ) : allTests && allTests.length > 0 ? (
+                      <TestList tests={allTests} courseId="mus240" />
+                    ) : (
+                      <div className="text-center py-12">
+                        <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No tests created</h3>
+                        <p className="text-muted-foreground mb-4">
+                          Create tests in the Test Builder and assign them to MUS 240
+                        </p>
+                        <Button onClick={() => navigate('/dashboard?module=test-builder')}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Go to Test Builder
+                        </Button>
+                      </div>
+                    )
+                  )}
+
+                  {testSubTab === 'midterm' && <MidtermGradingManager />}
+
+                  {testSubTab === 'final' && (
+                    <div className="text-center py-12">
+                      <ClipboardCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <h3 className="text-lg font-medium mb-2">Final Exam</h3>
+                      <p className="text-muted-foreground">Final exam management will be available here</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Polls Tab */}
           {activeTab === 'polls' && (
             <div className="space-y-6">
               <PollParticipationTracker />
@@ -269,6 +358,40 @@ export const InstructorConsole = () => {
               </Card>
             </div>
           )}
+
+          {/* Grades Tab */}
+          {activeTab === 'grades' && (
+            <div className="space-y-4">
+              <StudentScoresViewer />
+              <GradeCalculationSystem />
+            </div>
+          )}
+
+          {/* Communications Tab */}
+          {activeTab === 'communications' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Communications
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Student Communications</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Email and text messaging system for communicating with students
+                  </p>
+                  <p className="text-sm text-muted-foreground">Coming soon</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'students' && <EnrollmentManager />}
+          {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
+          {activeTab === 'resources' && <ResourcesAdmin />}
           {activeTab === 'ai-assistant' && <AIAssistant />}
           {activeTab === 'settings' && (
             <Card>
