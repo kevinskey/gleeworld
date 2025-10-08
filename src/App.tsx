@@ -1689,16 +1689,26 @@ const App = () => {
                                    </ProtectedRoute>
                                  } 
                                 />
-                                <Route 
-                                 path="/classes/mus240/midterm-exam" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <Mus240EnrollmentRoute>
-                                       <MidtermExam />
-                                     </Mus240EnrollmentRoute>
-                                   </ProtectedRoute>
-                                 } 
-                                />
+                                 <Route 
+                                  path="/classes/mus240/midterm" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <Mus240EnrollmentRoute>
+                                        <MidtermExam />
+                                      </Mus240EnrollmentRoute>
+                                    </ProtectedRoute>
+                                  } 
+                                 />
+                                 <Route 
+                                  path="/classes/mus240/midterm-exam" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <Mus240EnrollmentRoute>
+                                        <MidtermExam />
+                                      </Mus240EnrollmentRoute>
+                                    </ProtectedRoute>
+                                  } 
+                                 />
                                 <Route 
                                   path="/classes/mus240/grades"
                                 element={
