@@ -186,65 +186,55 @@ export const useMus240Journals = () => {
   const saveJournal = async (assignmentId: string, content: string): Promise<boolean> => {
     if (!user) return false;
 
+    setLoading(true);
     try {
       const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
 
-      // First check if an entry already exists
-      const existingResponse = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}&select=id`);
-      
-      let response;
-      if (existingResponse.ok) {
-        const existingEntries = await existingResponse.json();
-        
-        if (existingEntries && existingEntries.length > 0) {
-          // Update existing entry
-          response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({
-              content,
-              word_count: wordCount,
-              updated_at: new Date().toISOString()
-            })
-          });
-        } else {
-          // Create new entry
-          response = await apiCall('mus240_journal_entries', {
-            method: 'POST',
-            headers: {
-              'Prefer': 'return=minimal'
-            },
-            body: JSON.stringify({
-              assignment_id: assignmentId,
-              student_id: user.id,
-              content,
-              word_count: wordCount,
-              is_published: false
-            })
-          });
+      // Check if entry exists
+      const { data: existing, error: checkError } = await supabase
+        .from('mus240_journal_entries')
+        .select('id')
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', user.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('Error checking existing entry:', checkError);
+        throw new Error(checkError.message);
+      }
+
+      if (existing) {
+        // Update existing entry
+        const { error: updateError } = await supabase
+          .from('mus240_journal_entries')
+          .update({
+            content,
+            word_count: wordCount,
+            updated_at: new Date().toISOString()
+          })
+          .eq('assignment_id', assignmentId)
+          .eq('student_id', user.id);
+
+        if (updateError) {
+          console.error('Error updating journal:', updateError);
+          throw new Error(updateError.message);
         }
       } else {
-        // Create new entry if we can't check for existing
-        response = await apiCall('mus240_journal_entries', {
-          method: 'POST',
-          headers: {
-            'Prefer': 'return=minimal'
-          },
-          body: JSON.stringify({
+        // Create new entry
+        const { error: insertError } = await supabase
+          .from('mus240_journal_entries')
+          .insert({
             assignment_id: assignmentId,
             student_id: user.id,
             content,
             word_count: wordCount,
             is_published: false
-          })
-        });
-      }
+          });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to save journal: ${errorText}`);
+        if (insertError) {
+          console.error('Error inserting journal:', insertError);
+          throw new Error(insertError.message);
+        }
       }
 
       toast({
@@ -257,10 +247,12 @@ export const useMus240Journals = () => {
       console.error('Error saving journal:', error);
       toast({
         title: "Error Saving Journal",
-        description: error.message || "Failed to save journal",
+        description: error.message || "Failed to save journal. Please try again.",
         variant: "destructive"
       });
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
