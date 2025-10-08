@@ -22,6 +22,9 @@ interface JournalEntry {
   submitted_at: string;
   student_name?: string;
   student_email?: string;
+  has_grade?: boolean;
+  grade_score?: number;
+  grade_letter?: string;
 }
 
 interface JournalComment {
@@ -130,12 +133,28 @@ export const ComprehensiveJournalAdmin = () => {
         studentProfiles = profiles || [];
       }
 
+      // Get grades for all journal entries
+      const journalIds = data?.map(entry => entry.id).filter(Boolean) || [];
+      let grades = [];
+      
+      if (journalIds.length > 0) {
+        const { data: gradeData } = await supabase
+          .from('mus240_journal_grades')
+          .select('journal_id, overall_score, letter_grade')
+          .in('journal_id', journalIds);
+        grades = gradeData || [];
+      }
+
       const entries = (data || []).map(entry => {
         const profile = studentProfiles.find(p => p.user_id === entry.student_id);
+        const grade = grades.find(g => g.journal_id === entry.id);
         return {
           ...entry,
           student_name: profile?.full_name || 'Unknown Student',
-          student_email: profile?.email || ''
+          student_email: profile?.email || '',
+          has_grade: !!grade,
+          grade_score: grade?.overall_score,
+          grade_letter: grade?.letter_grade
         };
       });
 
@@ -465,6 +484,9 @@ export const ComprehensiveJournalAdmin = () => {
                       <Badge variant="outline">{getAssignmentName(entry.assignment_id)}</Badge>
                       <Badge variant={entry.is_published ? "default" : "secondary"}>
                         {entry.is_published ? "Published" : "Draft"}
+                      </Badge>
+                      <Badge variant={entry.has_grade ? "default" : "secondary"}>
+                        {entry.has_grade ? `Graded: ${entry.grade_letter}` : "Ungraded"}
                       </Badge>
                       <Badge variant="outline">{entry.word_count} words</Badge>
                     </div>
