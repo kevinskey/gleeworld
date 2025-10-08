@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { ArrowLeft, BookOpen, Calendar, Award, Users, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, BookOpen, Calendar, Award, Users, CheckCircle2, FileText } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 
 export default function Syllabus() {
@@ -478,6 +478,105 @@ export default function Syllabus() {
                       <div>
                         <h4 className="font-semibold text-gray-900 mb-2">Accessibility</h4>
                         <p className="text-gray-700 text-sm">Students requiring accommodations should contact the Office of Disability Services and provide documentation to the instructor.</p>
+                      </div>
+                    </CardContent>
+                  </AccordionContent>
+                </Card>
+              </AccordionItem>
+
+              {/* Appendix: Rubrics */}
+              <AccordionItem value="rubrics">
+                <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
+                  <AccordionTrigger className="hover:no-underline px-6 py-4">
+                    <CardTitle className="flex items-center gap-2 text-gray-900 text-left">
+                      <FileText className="h-5 w-5 text-amber-600" />
+                      Appendix: Grading Rubrics
+                    </CardTitle>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <CardContent className="pt-0 space-y-6">
+                      {/* AI Group Project Rubric */}
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-4 text-lg">AI Group Project Rubric (100 points)</h4>
+                        
+                        <div className="space-y-4">
+                          {/* Weekly Updates */}
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-gray-900 mb-2">Weekly Updates (20 points)</h5>
+                            <ul className="space-y-1 text-sm text-gray-700">
+                              <li>• Consistent weekly progress reports every Wednesday (10 pts)</li>
+                              <li>• Quality and depth of updates (5 pts)</li>
+                              <li>• Team collaboration evidence (5 pts)</li>
+                            </ul>
+                          </div>
+
+                          {/* Deep Dive Sessions */}
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-gray-900 mb-2">Deep Dive Sessions (15 points)</h5>
+                            <ul className="space-y-1 text-sm text-gray-700">
+                              <li>• Active participation in Friday sessions (8 pts)</li>
+                              <li>• Quality of questions and discussions (4 pts)</li>
+                              <li>• Peer feedback and collaboration (3 pts)</li>
+                            </ul>
+                          </div>
+
+                          {/* Research Component */}
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-gray-900 mb-2">Research Component (25 points)</h5>
+                            <ul className="space-y-1 text-sm text-gray-700">
+                              <li>• Depth and quality of research (10 pts)</li>
+                              <li>• Use of credible sources (5 pts)</li>
+                              <li>• Analysis and critical thinking (5 pts)</li>
+                              <li>• Connection to African American music (5 pts)</li>
+                            </ul>
+                          </div>
+
+                          {/* Creative/Media Work */}
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-gray-900 mb-2">Creative/Media Work (15 points)</h5>
+                            <ul className="space-y-1 text-sm text-gray-700">
+                              <li>• Originality and creativity (6 pts)</li>
+                              <li>• Technical quality (5 pts)</li>
+                              <li>• Relevance to project theme (4 pts)</li>
+                            </ul>
+                          </div>
+
+                          {/* Merchandise Prototype */}
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-gray-900 mb-2">Merchandise Prototype (10 points)</h5>
+                            <ul className="space-y-1 text-sm text-gray-700">
+                              <li>• Design quality and innovation (5 pts)</li>
+                              <li>• Market viability (3 pts)</li>
+                              <li>• Connection to project theme (2 pts)</li>
+                            </ul>
+                          </div>
+
+                          {/* GleeWorld.org Contribution */}
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <h5 className="font-semibold text-gray-900 mb-2">GleeWorld.org Contribution (10 points)</h5>
+                            <ul className="space-y-1 text-sm text-gray-700">
+                              <li>• Quality of content contribution (5 pts)</li>
+                              <li>• Integration with existing platform (3 pts)</li>
+                              <li>• Educational value (2 pts)</li>
+                            </ul>
+                          </div>
+
+                          {/* Final Showcase */}
+                          <div className="border border-gray-200 rounded-lg p-4 bg-amber-50">
+                            <h5 className="font-semibold text-gray-900 mb-2">Final Showcase Presentation (5 points)</h5>
+                            <ul className="space-y-1 text-sm text-gray-700">
+                              <li>• Clarity and organization of presentation (2 pts)</li>
+                              <li>• Engagement and delivery (2 pts)</li>
+                              <li>• Time management (1 pt)</li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <p className="text-sm text-blue-900">
+                            <strong>Note:</strong> Each team member will also complete a peer evaluation, which may adjust individual grades by ±10% based on contribution level.
+                          </p>
+                        </div>
                       </div>
                     </CardContent>
                   </AccordionContent>
