@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, Send, AlertTriangle, Lock, Type, Trash2 } from 'lucide-react';
+import { Save, Send, AlertTriangle, Type, Trash2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
 import { useJournalGrading } from '@/hooks/useJournalGrading';
