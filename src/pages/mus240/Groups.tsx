@@ -479,14 +479,14 @@ export default function Groups() {
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {groups.map((group, index) => {
                   const pastelColors = [
-                    { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-900' },
-                    { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-900' }, 
-                    { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900' },
-                    { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-900' },
-                    { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-900' },
-                    { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-900' },
-                    { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-900' },
-                    { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-900' }
+                    { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-900', fg: 'text-slate-900' },
+                    { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-900', fg: 'text-blue-900' }, 
+                    { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900', fg: 'text-emerald-900' },
+                    { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-900', fg: 'text-amber-900' },
+                    { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-900', fg: 'text-violet-900' },
+                    { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-900', fg: 'text-rose-900' },
+                    { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-900', fg: 'text-cyan-900' },
+                    { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-900', fg: 'text-orange-900' }
                   ];
                   const colorScheme = pastelColors[index % pastelColors.length];
                   
@@ -496,7 +496,7 @@ export default function Groups() {
                        <div className="flex justify-between items-start">
                          <div className="flex-1">
                            <CardTitle className={`${colorScheme.text}`}>{group.name}</CardTitle>
-                           <CardDescription className="text-foreground/80">
+                           <CardDescription className={`${colorScheme.fg}`}>
                              {group.description}
                            </CardDescription>
                         </div>
@@ -528,8 +528,8 @@ export default function Groups() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-foreground/70" />
-                          <span className="text-base text-foreground font-medium">
+                          <Users className={`h-4 w-4 ${colorScheme.fg}`} />
+                          <span className={`text-base ${colorScheme.fg} font-medium`}>
                             {group.member_count || 0} / {group.max_members || 4} members
                           </span>
                         </div>
@@ -537,12 +537,12 @@ export default function Groups() {
                         {/* Display group members */}
                         {group.members && group.members.length > 0 && (
                           <div className="space-y-2">
-                            <h4 className="text-sm font-medium text-foreground">Members:</h4>
+                            <h4 className={`text-sm font-medium ${colorScheme.fg}`}>Members:</h4>
                             <div className="space-y-1">
                               {group.members.map((member) => (
                                 <div key={member.member_id} className="flex items-center gap-2 text-xs">
                                   <div className={`w-2 h-2 rounded-full ${member.role === 'leader' ? 'bg-blue-600' : 'bg-slate-400'}`}></div>
-                                  <span className="text-foreground/80">
+                                  <span className={colorScheme.fg}>
                                     {member.gw_profiles?.full_name || member.gw_profiles?.email || 'Unknown Member'}
                                     {member.role === 'leader' && (
                                       <Badge variant="secondary" className="ml-1 text-xs py-0 px-1">Leader</Badge>
