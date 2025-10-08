@@ -3,19 +3,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Edit, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus, FileText } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
-import { JournalsAdmin } from '@/components/mus240/instructor/JournalsAdmin';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
 import { GradeCalculationSystem } from '@/components/mus240/admin/GradeCalculationSystem';
 import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
+import { ComprehensiveJournalAdmin } from '@/components/mus240/admin/ComprehensiveJournalAdmin';
+import { StudentScoresViewer } from '@/components/mus240/admin/StudentScoresViewer';
+import { MidtermGradingManager } from '@/components/mus240/admin/MidtermGradingManager';
+import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
+import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
+import { PollResultsViewer } from '@/components/mus240/admin/PollResultsViewer';
+import { PollParticipationTracker } from '@/components/mus240/admin/PollParticipationTracker';
+import { Mus240PollSystem } from '@/components/mus240/Mus240PollSystem';
+import { OpenAITestButton } from '@/components/mus240/admin/OpenAITestButton';
 import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
 import { TestList } from '@/components/test-builder/TestList';
 import { useTests } from '@/hooks/useTestBuilder';
-import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -201,55 +208,83 @@ export const InstructorConsole = () => {
 
         {/* Main Console */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-7 h-auto gap-0.5 md:gap-1 p-0.5 md:p-1">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 md:grid-cols-11 h-auto gap-0.5 p-0.5 md:p-1 bg-white/90">
             <TabsTrigger 
               value="assignments" 
-              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
             >
               <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Assignments</span>
+              <span className="text-[10px] md:text-xs">Assign</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="scores" 
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
+            >
+              <Trophy className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-[10px] md:text-xs">Scores</span>
             </TabsTrigger>
             <TabsTrigger 
               value="journals" 
-              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
             >
-              <Eye className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Journals</span>
+              <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-[10px] md:text-xs">Journals</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="grades" 
-              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+              value="midterms" 
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
             >
-              <BarChart3 className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Grades</span>
+              <ClipboardCheck className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-[10px] md:text-xs">Midterm</span>
             </TabsTrigger>
             <TabsTrigger 
               value="students" 
-              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
             >
               <UserPlus className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Students</span>
+              <span className="text-[10px] md:text-xs">Students</span>
             </TabsTrigger>
             <TabsTrigger 
               value="tests" 
-              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
             >
               <FileText className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Tests</span>
+              <span className="text-[10px] md:text-xs">Tests</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="grade-calculation" 
-              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+              value="analytics" 
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
             >
-              <Users className="h-3 w-3 md:h-4 md:w-4" />
-              <span>Calculate</span>
+              <Brain className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-[10px] md:text-xs">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="resources" 
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
+            >
+              <FileText className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-[10px] md:text-xs">Resources</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="polls" 
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
+            >
+              <BarChart className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-[10px] md:text-xs">Polls</span>
             </TabsTrigger>
             <TabsTrigger 
               value="ai-assistant" 
-              className="touch-target flex flex-col md:flex-row items-center gap-1 text-xs md:text-sm p-2 md:p-3 min-h-[50px] md:min-h-0"
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
             >
               <Brain className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">AI </span>Assistant
+              <span className="text-[10px] md:text-xs">AI</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="settings" 
+              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
+            >
+              <Settings className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="text-[10px] md:text-xs">Settings</span>
             </TabsTrigger>
           </TabsList>
 
@@ -257,12 +292,20 @@ export const InstructorConsole = () => {
             <AssignmentManager />
           </TabsContent>
 
-          <TabsContent value="journals" className="mt-1 md:mt-3">
-            <JournalsAdmin />
+          <TabsContent value="scores" className="mt-1 md:mt-3">
+            <StudentScoresViewer />
           </TabsContent>
 
-          <TabsContent value="grades" className="mt-1 md:mt-3">
-            <GradesAdmin />
+          <TabsContent value="journals" className="mt-1 md:mt-3">
+            <ComprehensiveJournalAdmin />
+          </TabsContent>
+
+          <TabsContent value="midterms" className="mt-1 md:mt-3">
+            <MidtermGradingManager />
+          </TabsContent>
+
+          <TabsContent value="students" className="mt-1 md:mt-3">
+            <EnrollmentManager />
           </TabsContent>
 
           <TabsContent value="tests" className="mt-1 md:mt-3">
@@ -295,16 +338,52 @@ export const InstructorConsole = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="grade-calculation" className="mt-1 md:mt-3">
-            <GradeCalculationSystem />
+          <TabsContent value="analytics" className="mt-1 md:mt-3">
+            <StudentAnalyticsDashboard />
           </TabsContent>
 
-          <TabsContent value="students" className="mt-1 md:mt-3">
-            <EnrollmentManager />
+          <TabsContent value="resources" className="mt-1 md:mt-3">
+            <ResourcesAdmin />
+          </TabsContent>
+
+          <TabsContent value="polls" className="mt-1 md:mt-3">
+            <div className="space-y-6">
+              <PollParticipationTracker />
+              <PollResultsViewer />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Poll Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Mus240PollSystem />
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="ai-assistant" className="mt-1 md:mt-3">
             <AIAssistant />
+          </TabsContent>
+
+          <TabsContent value="settings" className="mt-1 md:mt-3">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Course Settings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    Course settings and configuration options
+                  </p>
+                  <div className="flex gap-2">
+                    <OpenAITestButton />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
