@@ -62,7 +62,7 @@ export const useMus240Progress = () => {
         .from('mus240_grade_summaries')
         .select('*')
         .eq('student_id', user.id)
-        .eq('semester', 'Fall 2025')
+        .eq('semester', 'Fall 2024')
         .maybeSingle();
 
       if (summaryError) throw summaryError;
@@ -72,7 +72,7 @@ export const useMus240Progress = () => {
         .from('mus240_participation_grades')
         .select('*')
         .eq('student_id', user.id)
-        .eq('semester', 'Fall 2025')
+        .eq('semester', 'Fall 2024')
         .maybeSingle();
 
       if (participationError) throw participationError;
@@ -94,7 +94,7 @@ export const useMus240Progress = () => {
       if (!summaryData) {
         const { data: calculatedData, error: calcError } = await supabase.rpc(
           'calculate_mus240_grade_summary',
-          { student_id_param: user.id, semester_param: 'Fall 2025' }
+          { student_id_param: user.id, semester_param: 'Fall 2024' }
         );
 
         if (calcError) {
@@ -105,7 +105,7 @@ export const useMus240Progress = () => {
             .from('mus240_grade_summaries')
             .select('*')
             .eq('student_id', user.id)
-            .eq('semester', 'Fall 2025')
+            .eq('semester', 'Fall 2024')
             .maybeSingle();
           
           setGradeSummary(updatedSummary);
