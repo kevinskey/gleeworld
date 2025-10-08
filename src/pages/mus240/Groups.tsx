@@ -530,7 +530,7 @@ export default function Groups() {
                         <div className="flex items-center gap-2">
                           <Users className={`h-4 w-4 ${colorScheme.fg}`} />
                           <span className={`text-base ${colorScheme.fg} font-medium`}>
-                            {group.member_count || 0} / {group.max_members || 4} members
+                            {group.members?.length || 0} / {group.max_members || 4} members
                           </span>
                         </div>
                         
