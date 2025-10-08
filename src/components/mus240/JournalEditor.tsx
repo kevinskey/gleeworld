@@ -51,7 +51,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
       }
     };
     loadExistingEntry();
-  }, [assignment.id, fetchUserEntry, fetchStudentGrade]);
+  }, [assignment.id]);
 
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(word => word.length > 0);
@@ -64,15 +64,8 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault();
-    // Use toast instead of alert for better UX
-    toast({
-      title: "Copy and paste disabled",
-      description: "Please type your journal entry directly.",
-      variant: "destructive"
-    });
+    // Allow paste (no restrictions)
   };
-
   const handleSave = async () => {
     const result = await saveJournal(assignment.id, content);
     if (result) {
