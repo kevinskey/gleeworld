@@ -322,26 +322,6 @@ export const ComprehensiveJournalAdmin = () => {
     }
   };
 
-  const debugRaw = async () => {
-    const url = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/grade-journal`;
-    const anon = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg";
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${anon}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        student_id: "4e6c2ec0-1f83-449a-a984-8920f6056ab5",
-        assignment_id: "lj2",
-        journal_text: "test",
-        rubric: { criteria: [] }
-      })
-    });
-    const text = await res.text();
-    console.log("Status:", res.status, "Body:", text);
-    alert(`Status ${res.status}: ${text}`);
-  };
 
   const handleAIGrading = async (entry: JournalEntry) => {
     toast({
@@ -397,29 +377,20 @@ export const ComprehensiveJournalAdmin = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-4xl font-bold text-white leading-relaxed p-4">Complete Journal Administration</h3>
+          <h3 className="text-4xl font-bold text-white">Complete Journal Administration</h3>
           <p className="text-muted-foreground">View all journal entries, comments, and file submissions</p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={loadAllData}
-            disabled={loading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh All Data
-          </Button>
-          <Button
-            variant="outline"
-            onClick={debugRaw}
-            className="flex items-center gap-2"
-          >
-            Debug Raw
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          onClick={loadAllData}
+          disabled={loading}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh All Data
+        </Button>
       </div>
 
       <div className="flex gap-4 items-center">
