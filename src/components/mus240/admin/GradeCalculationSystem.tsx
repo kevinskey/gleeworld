@@ -246,48 +246,51 @@ export const GradeCalculationSystem: React.FC = () => {
         const profile = profiles?.find(p => p.user_id === enrollment.student_id);
         if (!profile) continue;
 
-        // Get midterm score
+        // Get midterm score (out of 100 points)
         const midtermRecord = midtermScores?.find(m => m.user_id === enrollment.student_id);
         const agg = midtermAggregateByUser.get(enrollment.student_id);
         const midtermFromAgg = agg && agg.possible > 0 ? (agg.score / agg.possible) * 100 : null;
         const midtermScore = (midtermRecord?.grade as number | null) ?? midtermFromAgg ?? null;
 
-        // Get assignment scores
+        // Get assignment submissions (essays, papers, etc.)
         const studentAssignments = assignments?.filter(a => a.student_id === enrollment.student_id) || [];
         const assignmentScores = studentAssignments.map(a => ({
           assignment_id: a.assignment_id,
-          assignment_name: a.assignment_id, // You might want to join with assignments table for actual names
+          assignment_name: a.assignment_id,
           score: a.grade || 0,
-          max_points: 100 // Default, you might want to get actual max points from assignments table
+          max_points: 20 // Default journal points
         }));
 
-        // Get journal scores
+        // Get journal grades (13 journals @ 20 pts each = 260 pts)
         const studentJournals = journalGrades?.filter(j => 
           (j.mus240_journal_entries as any)?.student_id === enrollment.student_id
         ) || [];
         const journalScores = studentJournals.map(j => ({
           journal_id: j.journal_id,
           score: j.overall_score || 0,
-          max_points: 100
+          max_points: 20
         }));
 
-        // Get participation score
+        // Get participation score (50 pts total)
         const participationRecord = participation?.find(p => p.student_id === enrollment.student_id);
         const participationScore = participationRecord?.points_earned || 0;
 
-        // Calculate weighted totals
-        const midtermPoints = midtermScore ? (midtermScore * weights.midterm / 100) : 0;
-        const assignmentPoints = assignmentScores.length > 0 
-          ? (assignmentScores.reduce((sum, a) => sum + a.score, 0) / assignmentScores.length) * weights.assignments / 100
-          : 0;
-        const journalPoints = journalScores.length > 0 
-          ? (journalScores.reduce((sum, j) => sum + j.score, 0) / journalScores.length) * weights.journals / 100
-          : 0;
-        const participationPoints = participationScore * weights.participation / 100;
+        // Calculate totals based on syllabus: 760 total points
+        // Journals: 260 pts (13×20)
+        // Research: 150 pts (3×50)  
+        // AI Group: 150 pts (20+30+100)
+        // Midterm: 100 pts
+        // Final Essay: 50 pts
+        // Participation: 50 pts
+        
+        const journalPoints = journalScores.reduce((sum, j) => sum + j.score, 0);
+        const assignmentPoints = assignmentScores.reduce((sum, a) => sum + a.score, 0);
+        const midtermPoints = midtermScore || 0;
+        const participationPoints = participationScore;
 
-        const totalPoints = midtermPoints + assignmentPoints + journalPoints + participationPoints;
-        const totalPossible = 100;
-        const percentage = totalPoints;
+        const totalPoints = journalPoints + assignmentPoints + midtermPoints + participationPoints;
+        const totalPossible = 760;
+        const percentage = (totalPoints / totalPossible) * 100;
 
         // Calculate letter grade
         const letterGrade = getLetterGrade(percentage);
@@ -317,19 +320,24 @@ export const GradeCalculationSystem: React.FC = () => {
     mutationFn: async () => {
       if (!studentGrades) return;
 
-      const updates = studentGrades.map(student => ({
-        student_id: student.student_id,
-        semester: student.semester,
-        assignment_points: student.assignment_scores.reduce((sum, a) => sum + a.score, 0),
-        assignment_possible: student.assignment_scores.length * 100,
-        participation_points: student.participation_score,
-        participation_possible: 100,
-        overall_points: student.total_points,
-        overall_possible: student.total_possible,
-        overall_percentage: student.percentage,
-        letter_grade: student.letter_grade,
-        calculated_at: new Date().toISOString()
-      }));
+      const updates = studentGrades.map(student => {
+        const journalPoints = student.journal_scores.reduce((sum, j) => sum + j.score, 0);
+        const assignmentPoints = student.assignment_scores.reduce((sum, a) => sum + a.score, 0);
+        
+        return {
+          student_id: student.student_id,
+          semester: student.semester,
+          assignment_points: journalPoints + assignmentPoints + (student.midterm_score || 0),
+          assignment_possible: 760, // Total possible from syllabus
+          participation_points: student.participation_score,
+          participation_possible: 50,
+          overall_points: student.total_points,
+          overall_possible: 760,
+          overall_percentage: student.percentage,
+          letter_grade: student.letter_grade,
+          calculated_at: new Date().toISOString()
+        };
+      });
 
       for (const update of updates) {
         const { error } = await supabase
