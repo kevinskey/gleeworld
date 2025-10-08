@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
@@ -25,11 +24,14 @@ import { TestList } from '@/components/test-builder/TestList';
 import { useTests } from '@/hooks/useTestBuilder';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export const InstructorConsole = () => {
   const { isAdmin, loading } = useUserRole();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
   const { data: tests, isLoading: testsLoading } = useTests('mus240');
   
@@ -88,227 +90,141 @@ export const InstructorConsole = () => {
     return <Navigate to="/classes/mus240" replace />;
   }
 
+  const navItems = [
+    { value: 'assignments', label: 'Assignments', icon: BookOpen },
+    { value: 'scores', label: 'Scores', icon: Trophy },
+    { value: 'journals', label: 'Journals', icon: FileText },
+    { value: 'midterms', label: 'Midterm', icon: ClipboardCheck },
+    { value: 'students', label: 'Students', icon: UserPlus },
+    { value: 'tests', label: 'Tests', icon: FileText },
+    { value: 'analytics', label: 'Analytics', icon: BarChart },
+    { value: 'resources', label: 'Resources', icon: BookOpen },
+    { value: 'polls', label: 'Polls', icon: BarChart3 },
+    { value: 'ai-assistant', label: 'AI Assistant', icon: Brain },
+    { value: 'settings', label: 'Settings', icon: Settings },
+  ];
+
+  const SidebarNav = ({ isMobile = false }) => (
+    <nav className="space-y-1">
+      {navItems.map((item) => {
+        const Icon = item.icon;
+        return (
+          <button
+            key={item.value}
+            onClick={() => {
+              setActiveTab(item.value);
+              if (isMobile) setSidebarOpen(false);
+            }}
+            className={cn(
+              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+              activeTab === item.value
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+          >
+            <Icon className="h-4 w-4 flex-shrink-0" />
+            <span>{item.label}</span>
+          </button>
+        );
+      })}
+    </nav>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="page-container max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center justify-between mb-1 md:mb-2">
-          <div className="flex items-center space-x-1 md:space-x-2 text-xs md:text-sm text-gray-600">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate('/classes/mus240')}
-              className="touch-target p-1 md:p-2 hover:bg-gray-100"
-            >
-              <Home className="h-3 w-3 md:h-4 md:w-4" />
-            </Button>
-            <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="text-gray-400">MUS 240</span>
-            <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="font-medium text-gray-900 text-xs md:text-sm">Instructor Console</span>
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b">
+        <div className="flex items-center justify-between px-4 py-3 max-w-[2000px] mx-auto">
+          <div className="flex items-center gap-3">
+            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+              <SheetTrigger asChild className="lg:hidden">
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64 p-4">
+                <div className="mb-6">
+                  <h2 className="text-lg font-bold">MUS 240 Console</h2>
+                  <p className="text-xs text-muted-foreground mt-1">Dr. Kevin Phillip Johnson</p>
+                </div>
+                <SidebarNav isMobile />
+              </SheetContent>
+            </Sheet>
+
+            <div>
+              <h1 className="text-lg md:text-xl font-bold">MUS 240 Instructor Console</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block">Survey of African American Music</p>
+            </div>
           </div>
-          
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => navigate('/classes/mus240')}
-            className="touch-target flex items-center gap-1 md:gap-2 text-xs md:text-sm px-2 md:px-3"
-          >
-            <ArrowLeft className="h-3 w-3 md:h-4 md:w-4" />
-            <span className="hidden sm:inline">Back to</span> Course
-          </Button>
+
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs hidden md:flex">
+              <Brain className="h-3 w-3 mr-1" />
+              AI-Enhanced
+            </Badge>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => navigate('/classes/mus240')}
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Course</span>
+            </Button>
+          </div>
         </div>
 
-        {/* Header */}
-        <div className="mb-2 md:mb-4">
-          <h1 className="page-title-large text-gray-900">
-            MUS 240 Instructor Console
-          </h1>
-          <p className="text-xs md:text-sm text-gray-600 mb-1">
-            Survey of African American Music - Dr. Kevin Phillip Johnson
-          </p>
-          <Badge variant="secondary" className="text-xs">
-            <Brain className="h-2.5 w-2.5 md:h-3 md:w-3 mr-1" />
-            AI-Enhanced Teaching Platform
-          </Badge>
+        {/* Compact Stats Bar */}
+        <div className="border-t bg-muted/30">
+          <div className="max-w-[2000px] mx-auto px-4 py-2">
+            <div className="flex items-center gap-4 overflow-x-auto">
+              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
+                <BookOpen className="h-3.5 w-3.5 text-blue-600" />
+                <span className="text-muted-foreground">Assignments:</span>
+                <span className="font-bold">{statsLoading ? '...' : stats.activeAssignments}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
+                <Eye className="h-3.5 w-3.5 text-green-600" />
+                <span className="text-muted-foreground">Journals:</span>
+                <span className="font-bold">{statsLoading ? '...' : stats.totalJournals}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
+                <BarChart3 className="h-3.5 w-3.5 text-orange-600" />
+                <span className="text-muted-foreground">Pending:</span>
+                <span className="font-bold">{statsLoading ? '...' : stats.pendingGrades}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
+                <GraduationCap className="h-3.5 w-3.5 text-purple-600" />
+                <span className="text-muted-foreground">Students:</span>
+                <span className="font-bold">{statsLoading ? '...' : stats.totalStudents}</span>
+              </div>
+              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
+                <Users className="h-3.5 w-3.5 text-indigo-600" />
+                <span className="text-muted-foreground">Average:</span>
+                <span className="font-bold">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
+              </div>
+            </div>
+          </div>
         </div>
+      </header>
 
-        {/* Quick Stats */}
-        <div className="responsive-grid-4 mb-2 md:mb-4">
-          <Card className="card-compact">
-            <CardContent className="p-2 md:p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600">Active Assignments</p>
-                  <p className="text-lg md:text-xl font-bold">
-                    {statsLoading ? '...' : stats.activeAssignments}
-                  </p>
-                </div>
-                <BookOpen className="h-5 w-5 md:h-6 md:w-6 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="card-compact">
-            <CardContent className="p-2 md:p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600">Total Journals</p>
-                  <p className="text-lg md:text-xl font-bold">
-                    {statsLoading ? '...' : stats.totalJournals}
-                  </p>
-                </div>
-                <Eye className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="card-compact">
-            <CardContent className="p-2 md:p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600">Pending Grades</p>
-                  <p className="text-lg md:text-xl font-bold">
-                    {statsLoading ? '...' : stats.pendingGrades}
-                  </p>
-                </div>
-                <BarChart3 className="h-5 w-5 md:h-6 md:w-6 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="card-compact">
-            <CardContent className="p-2 md:p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600">Enrolled Students</p>
-                  <p className="text-lg md:text-xl font-bold">
-                    {statsLoading ? '...' : stats.totalStudents}
-                  </p>
-                </div>
-                <GraduationCap className="h-5 w-5 md:h-6 md:w-6 text-purple-600" />
-              </div>
-            </CardContent>
-          </Card>
+      {/* Main Layout */}
+      <div className="flex max-w-[2000px] mx-auto">
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:block w-64 border-r bg-white/50 backdrop-blur min-h-[calc(100vh-120px)] sticky top-[120px]">
+          <div className="p-4">
+            <SidebarNav />
+          </div>
+        </aside>
 
-          <Card className="card-compact">
-            <CardContent className="p-2 md:p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600">Class Average</p>
-                  <p className="text-lg md:text-xl font-bold">
-                    {statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}
-                  </p>
-                </div>
-                <Users className="h-5 w-5 md:h-6 md:w-6 text-indigo-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main Console */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5 md:grid-cols-11 h-auto gap-0.5 p-0.5 md:p-1 bg-white/90">
-            <TabsTrigger 
-              value="assignments" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Assign</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="scores" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <Trophy className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Scores</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="journals" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Journals</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="midterms" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <ClipboardCheck className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Midterm</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="students" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <UserPlus className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Students</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="tests" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <FileText className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Tests</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="analytics" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <Brain className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="resources" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <FileText className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Resources</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="polls" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <BarChart className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Polls</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="ai-assistant" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <Brain className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">AI</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="settings" 
-              className="touch-target flex flex-col items-center gap-1 text-xs p-2 min-h-[50px] md:min-h-[60px]"
-            >
-              <Settings className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="text-[10px] md:text-xs">Settings</span>
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="assignments" className="mt-1 md:mt-3">
-            <AssignmentManager />
-          </TabsContent>
-
-          <TabsContent value="scores" className="mt-1 md:mt-3">
-            <StudentScoresViewer />
-          </TabsContent>
-
-          <TabsContent value="journals" className="mt-1 md:mt-3">
-            <ComprehensiveJournalAdmin />
-          </TabsContent>
-
-          <TabsContent value="midterms" className="mt-1 md:mt-3">
-            <MidtermGradingManager />
-          </TabsContent>
-
-          <TabsContent value="students" className="mt-1 md:mt-3">
-            <EnrollmentManager />
-          </TabsContent>
-
-          <TabsContent value="tests" className="mt-1 md:mt-3">
+        {/* Content Area */}
+        <main className="flex-1 p-4 md:p-6">
+          {activeTab === 'assignments' && <AssignmentManager />}
+          {activeTab === 'scores' && <StudentScoresViewer />}
+          {activeTab === 'journals' && <ComprehensiveJournalAdmin />}
+          {activeTab === 'midterms' && <MidtermGradingManager />}
+          {activeTab === 'students' && <EnrollmentManager />}
+          {activeTab === 'tests' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -336,17 +252,10 @@ export const InstructorConsole = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="analytics" className="mt-1 md:mt-3">
-            <StudentAnalyticsDashboard />
-          </TabsContent>
-
-          <TabsContent value="resources" className="mt-1 md:mt-3">
-            <ResourcesAdmin />
-          </TabsContent>
-
-          <TabsContent value="polls" className="mt-1 md:mt-3">
+          )}
+          {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
+          {activeTab === 'resources' && <ResourcesAdmin />}
+          {activeTab === 'polls' && (
             <div className="space-y-6">
               <PollParticipationTracker />
               <PollResultsViewer />
@@ -359,13 +268,9 @@ export const InstructorConsole = () => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          <TabsContent value="ai-assistant" className="mt-1 md:mt-3">
-            <AIAssistant />
-          </TabsContent>
-
-          <TabsContent value="settings" className="mt-1 md:mt-3">
+          )}
+          {activeTab === 'ai-assistant' && <AIAssistant />}
+          {activeTab === 'settings' && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -384,8 +289,8 @@ export const InstructorConsole = () => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          )}
+        </main>
       </div>
     </div>
   );
