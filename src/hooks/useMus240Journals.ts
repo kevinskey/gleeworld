@@ -149,7 +149,15 @@ export const useMus240Journals = () => {
   };
 
   const addJournalComment = async (journalId: string, content: string): Promise<boolean> => {
-    if (!user) return false;
+    if (!user) {
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to comment on journals.",
+        variant: "destructive"
+      });
+      return false;
+    }
+
 
     try {
       const response = await apiCall('mus240_journal_comments', {

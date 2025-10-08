@@ -10,6 +10,9 @@ import { useMus240Journals } from '@/hooks/useMus240Journals';
 import { useJournalGrading } from '@/hooks/useJournalGrading';
 import { Assignment } from '@/data/mus240Assignments';
 import { JournalGradeDisplay } from './JournalGradeDisplay';
+import { useFileUpload } from '@/integrations/supabase/hooks/useFileUpload';
+import { useAuth } from '@/contexts/AuthContext';
+
 
 interface JournalEditorProps {
   assignment: Assignment;
@@ -36,7 +39,10 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
     loading 
   } = useMus240Journals();
 
+  const { uploadFile } = useFileUpload();
+  const { user } = useAuth();
   const { fetchStudentGrade } = useJournalGrading();
+
 
   useEffect(() => {
     const loadExistingEntry = async () => {
@@ -102,12 +108,26 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
           description: "Text file content has been loaded into the editor."
         });
       } else {
-        // For PDF/Word files, inform user to use copy/paste from the document
-        toast({
-          title: "File Type Notice",
-          description: "Please open your PDF or Word document, copy the text, and paste it into the editor.",
-          variant: "default"
-        });
+        // For PDF/Word files, upload and insert link at the top of the journal
+        const timestamp = Date.now();
+        const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const targetPath = `journals/${assignment.id}/${user?.id || 'anonymous'}/${timestamp}-${safeName}`;
+        const url = await uploadFile(file, 'mus240-resources', targetPath);
+        if (url) {
+          setContent(prev => `Attachment: ${file.name}\n${url}\n\n${prev}`);
+          setHasChanges(true);
+          toast({
+            title: "File Attached",
+            description: `${file.name} uploaded and linked at the top of your journal.`
+          });
+        } else {
+          toast({
+            title: "Upload Failed",
+            description: "We couldn’t upload your file. You can still copy and paste the text into the editor.",
+            variant: "destructive"
+          });
+        }
+
       }
     } catch (error) {
       console.error('Error reading file:', error);
@@ -222,7 +242,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
           <Alert>
             <FileText className="h-4 w-4" />
             <AlertDescription>
-              You can type directly, paste text, or upload a text file (.txt) for your journal entry. 
+              You can type directly, paste text, or upload a file (.txt, .pdf, .doc, .docx). PDFs/Word files will be attached and linked at the top of your journal.
               Aim for 250-300 words focusing on the assignment prompt below.
             </AlertDescription>
           </Alert>
