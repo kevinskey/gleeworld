@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ClockProps {
   className?: string;
@@ -8,6 +9,7 @@ interface ClockProps {
 export const HeaderClock = ({ className = "" }: ClockProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showCountdown, setShowCountdown] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Initialize with current time
@@ -71,23 +73,73 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     return currentTime.getMinutes() * 6; // 6 degrees per minute
   };
 
-  return (
-    <div className={`relative ${className}`}>
-      <div className="flex items-center gap-2">
+  // Mobile: Circular analog clock
+  if (isMobile) {
+    return (
+      <div className={`relative ${className}`}>
         <div
-          className="relative px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-spelman-blue-light/30 cursor-pointer hover:bg-white/30 hover:border-spelman-blue-light/50 transition-all duration-300 shadow-sm flex-shrink-0"
+          className="relative cursor-pointer"
           onMouseEnter={() => setShowCountdown(true)}
           onMouseLeave={() => setShowCountdown(false)}
           onClick={() => setShowCountdown(!showCountdown)}
         >
-          <span className="text-xs sm:text-sm font-semibold text-gray-800 whitespace-nowrap">
+          {/* Circular clock face */}
+          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md border-2 border-primary/30 hover:bg-white/30 hover:border-primary/50 transition-all duration-300 shadow-sm relative">
+            {/* Clock center dot */}
+            <div className="absolute top-1/2 left-1/2 w-1 h-1 bg-primary rounded-full -translate-x-1/2 -translate-y-1/2 z-10" />
+            
+            {/* Hour hand */}
+            <div 
+              className="absolute top-1/2 left-1/2 w-0.5 h-3 bg-primary rounded-full origin-bottom transition-transform duration-500"
+              style={{ 
+                transform: `translate(-50%, -100%) rotate(${getHourAngle()}deg)`,
+              }}
+            />
+            
+            {/* Minute hand */}
+            <div 
+              className="absolute top-1/2 left-1/2 w-0.5 h-4 bg-primary/80 rounded-full origin-bottom transition-transform duration-500"
+              style={{ 
+                transform: `translate(-50%, -100%) rotate(${getMinuteAngle()}deg)`,
+              }}
+            />
+          </div>
+        </div>
+        
+        {/* Hover Tooltip with countdown */}
+        {showCountdown && (
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120]">
+            <Badge 
+              variant="secondary" 
+              className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
+            >
+              🎄 {getCountdownText()}
+            </Badge>
+            <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop: Rectangular digital clock
+  return (
+    <div className={`relative ${className}`}>
+      <div className="flex items-center gap-2">
+        <div
+          className="relative px-2 py-0.5 rounded bg-white/20 backdrop-blur-md border border-primary/30 cursor-pointer hover:bg-white/30 hover:border-primary/50 transition-all duration-300 shadow-sm flex-shrink-0"
+          onMouseEnter={() => setShowCountdown(true)}
+          onMouseLeave={() => setShowCountdown(false)}
+          onClick={() => setShowCountdown(!showCountdown)}
+        >
+          <span className="text-xs sm:text-sm font-semibold text-foreground whitespace-nowrap">
             {formatTime(currentTime)}
           </span>
         </div>
         
-        {/* Countdown Text - Visible on large screens, hidden on smaller screens where it becomes hover-only */}
+        {/* Countdown Text - Visible on large screens */}
         <div className="hidden xl:block">
-          <span className="text-sm text-gray-700 font-medium whitespace-nowrap">
+          <span className="text-sm text-foreground/80 font-medium whitespace-nowrap">
             🎄 {getCountdownText()}
           </span>
         </div>
@@ -98,12 +150,11 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120] xl:hidden">
           <Badge 
             variant="secondary" 
-            className="bg-spelman-blue-dark text-white px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
+            className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
           >
             🎄 {getCountdownText()}
           </Badge>
-          {/* Arrow pointing to clock */}
-          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-spelman-blue-dark rotate-45 border-l border-t border-white/20"></div>
+          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
         </div>
       )}
     </div>
