@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { Save, Send, AlertTriangle, Type, Trash2, Upload } from 'lucide-react';
+import { Save, Send, AlertTriangle, Type, Trash2, Upload, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
 import { useJournalGrading } from '@/hooks/useJournalGrading';
@@ -23,7 +23,9 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   const [isPublished, setIsPublished] = useState(false);
   const [userEntry, setUserEntry] = useState<any>(null);
   const [grade, setGrade] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
   const { 
@@ -66,6 +68,63 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   const handlePaste = (e: React.ClipboardEvent) => {
     // Allow paste (no restrictions)
   };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file type
+    const allowedTypes = [
+      'text/plain',
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/msword'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Unsupported File Type",
+        description: "Please upload a TXT, PDF, or Word document.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // For text files, read directly
+      if (file.type === 'text/plain') {
+        const text = await file.text();
+        setContent(text);
+        setHasChanges(true);
+        toast({
+          title: "File Loaded",
+          description: "Text file content has been loaded into the editor."
+        });
+      } else {
+        // For PDF/Word files, inform user to use copy/paste from the document
+        toast({
+          title: "File Type Notice",
+          description: "Please open your PDF or Word document, copy the text, and paste it into the editor.",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error('Error reading file:', error);
+      toast({
+        title: "Error Reading File",
+        description: "Failed to read the file. Please try copying and pasting the content instead.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleSave = async () => {
     const result = await saveJournal(assignment.id, content);
     if (result) {
@@ -161,31 +220,57 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
         
         <CardContent className="space-y-4">
           <Alert>
-            <Upload className="h-4 w-4" />
+            <FileText className="h-4 w-4" />
             <AlertDescription>
-              Copy and paste is disabled. You must type your journal entry directly. 
+              You can type directly, paste text, or upload a text file (.txt) for your journal entry. 
               Aim for 250-300 words focusing on the assignment prompt below.
             </AlertDescription>
           </Alert>
 
-          <div className="relative">
-            <Textarea
-              ref={textareaRef}
-              value={content}
-              onChange={handleContentChange}
-              onPaste={handlePaste}
-              disabled={isPublished || loading}
-              placeholder="Begin typing your journal entry here. Remember to focus on the assignment instructions and provide thoughtful analysis..."
-              className="min-h-[300px] resize-none"
-            />
-            
-            {isPublished && (
-              <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
-                <Badge variant="outline" className="bg-background">
-                  Journal Published - No Further Edits Allowed
-                </Badge>
-              </div>
-            )}
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.pdf,.doc,.docx"
+                onChange={handleFileUpload}
+                className="hidden"
+                disabled={isPublished || loading || uploading}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isPublished || loading || uploading}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {uploading ? 'Loading...' : 'Upload File'}
+              </Button>
+              <span className="text-sm text-muted-foreground self-center">
+                Supported: .txt, .pdf, .doc, .docx
+              </span>
+            </div>
+
+            <div className="relative">
+              <Textarea
+                ref={textareaRef}
+                value={content}
+                onChange={handleContentChange}
+                onPaste={handlePaste}
+                disabled={isPublished || loading || uploading}
+                placeholder="Begin typing your journal entry here, paste text, or upload a file. Remember to focus on the assignment instructions and provide thoughtful analysis..."
+                className="min-h-[300px] resize-none"
+              />
+              
+              {isPublished && (
+                <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
+                  <Badge variant="outline" className="bg-background">
+                    Journal Published - No Further Edits Allowed
+                  </Badge>
+                </div>
+              )}
+            </div>
           </div>
 
           {!isMinimumLength && (
