@@ -52,14 +52,15 @@ export const MySubmissionsComprehensive: React.FC = () => {
     return { journals, essays, exams, upcoming, overdue };
   }, [assignments]);
 
-  // Calculate overall grade (total points / 725)
+  // Calculate overall grade (total points / 550 total)
   const overallGrade = useMemo(() => {
     if (!gradeSummary) return null;
     
     const assignmentPoints = gradeSummary.assignment_points || 0;
     const participationPoints = participationGrade?.points_earned || 0;
     const totalPoints = assignmentPoints + participationPoints;
-    const percentage = (totalPoints / 725) * 100;
+    const totalPossible = 550; // 100 journals + 150 research + 100 group + 100 midterm + 50 reflection + 50 participation
+    const percentage = (totalPoints / totalPossible) * 100;
     
     let letterGrade = 'F';
     if (percentage >= 97) letterGrade = 'A+';
@@ -77,6 +78,7 @@ export const MySubmissionsComprehensive: React.FC = () => {
 
     return {
       totalPoints,
+      totalPossible,
       percentage: percentage.toFixed(1),
       letterGrade,
       assignmentPoints,
@@ -198,18 +200,19 @@ export const MySubmissionsComprehensive: React.FC = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Points</p>
-                <p className="text-3xl font-semibold">{overallGrade.totalPoints}/725</p>
+                <p className="text-3xl font-semibold">{overallGrade.totalPoints}/{overallGrade.totalPossible}</p>
                 <p className="text-xs mt-1">
                   Assignments: {overallGrade.assignmentPoints} | Participation: {overallGrade.participationPoints}
                 </p>
               </div>
               <div className="text-xs space-y-1 text-muted-foreground">
                 <p className="font-semibold text-sm">Grading Formula:</p>
-                <p>• Journals: 300 pts (15×20)</p>
-                <p>• Essays/Papers: 250 pts</p>
+                <p>• Journals: 100 pts (10×10)</p>
+                <p>• Research: 150 pts</p>
+                <p>• AI Group: 100 pts</p>
                 <p>• Midterm: 100 pts</p>
-                <p>• Final Project: 50 pts</p>
-                <p>• Participation: 25 pts</p>
+                <p>• Final Essay: 50 pts</p>
+                <p>• Participation: 50 pts</p>
               </div>
             </div>
           </CardContent>
