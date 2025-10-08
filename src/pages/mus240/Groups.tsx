@@ -419,7 +419,7 @@ export default function Groups() {
                 focus deep dives on Fridays.
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 inline-block">
-                <p className="text-slate-800 font-medium">
+                <p className="text-sm text-slate-800 font-medium">
                   <strong className="text-blue-700">Final Showcase:</strong> Integrated GleeWorld.org knowledge hub showcasing your research and findings.
                 </p>
               </div>
