@@ -335,40 +335,68 @@ export default function Syllabus() {
                     <CardContent className="pt-0">
                       <div className="space-y-4">
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 1–2:</span>
-                          <span className="text-gray-700">African Roots, Spirituals, Vocal Traditions → Journals #1–2. Week 2: Introduce AI Project.</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 1:</span>
+                          <span className="text-gray-700">Introduction to African American Musical Traditions → Listening Journal 1: African Roots (Due 8/29)</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 3–4:</span>
-                          <span className="text-gray-700">Blues, Ragtime, Harlem Renaissance, Jazz → Journals #3–4. AI updates begin, Group 1 focus (Week 4).</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 2:</span>
+                          <span className="text-gray-700">Spirituals and Vocal Traditions → Listening Journal 2 (Due 9/5). Introduce AI Project.</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 5–6:</span>
-                          <span className="text-gray-700">Gospel, Swing, R&B, Soul → Journals #5–6. Research Proposal due (Week 6). Group 2 + 3 focus.</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 3:</span>
+                          <span className="text-gray-700">Blues: Foundation of American Popular Music → Listening Journal 3 (Due 9/12), Reflection Paper 1 (Due 9/15)</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 7–8:</span>
-                          <span className="text-gray-700">Motown, Funk, Civil Rights Music → Journal #7. Midterm Exam (Week 8). Groups 4 + 5 focus.</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 4:</span>
+                          <span className="text-gray-700">Jazz Origins and Early Development → Listening Journal 4 (Due 9/19)</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 9–10:</span>
-                          <span className="text-gray-700">Hip-Hop, Funk, Soul → Journals #8–9. Annotated Bibliography due (Week 10). Groups 1 + 2 second focus.</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 5:</span>
+                          <span className="text-gray-700">Gospel Music and the Great Migration → Listening Journal 5 (Due 10/17)</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 11–12:</span>
-                          <span className="text-gray-700">Contemporary R&B, Gospel, Jazz Fusion → Journals #10–11. Groups 3 + 4 second focus.</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 6:</span>
+                          <span className="text-gray-700">R&B and Soul Music → Listening Journal 6 (Due 10/24), Group Project Proposal (Due 10/22)</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Weeks 13–14:</span>
-                          <span className="text-gray-700">Popular Culture, Music & Social Justice → Journals #12–13. Group 5 second focus, all polish final projects.</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 7:</span>
+                          <span className="text-gray-700">Motown and the Sound of Young America → Listening Journal 7 (Due 10/31), Reflection Paper 2 (Due 10/29)</span>
                         </div>
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
+                          <span className="font-semibold min-w-24 text-amber-800">Week 8:</span>
+                          <span className="text-gray-700">Funk and the Rhythmic Revolution → <strong>Midterm Exam (Sept 26)</strong></span>
+                        </div>
+                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                          <span className="font-semibold min-w-24 text-amber-800">Week 9:</span>
+                          <span className="text-gray-700">Hip-Hop Culture and Rap Music → Listening Journal 8 (Due 11/7)</span>
+                        </div>
+                        <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
+                          <span className="font-semibold min-w-24 text-amber-800">Week 10:</span>
+                          <span className="text-gray-700">Contemporary R&B and Neo-Soul → Listening Journal 9 (Due 11/14), Annotated Bibliography (Due 11/12)</span>
+                        </div>
+                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                          <span className="font-semibold min-w-24 text-amber-800">Week 11:</span>
+                          <span className="text-gray-700">Gospel's Modern Evolution → Listening Journal 10 (Due 11/21)</span>
+                        </div>
+                        <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
+                          <span className="font-semibold min-w-24 text-amber-800">Week 12:</span>
+                          <span className="text-gray-700">Jazz Fusion and Modern Jazz → Listening Journal 11 (Due 11/26), Reflection Paper 3 (Due 11/24)</span>
+                        </div>
+                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                          <span className="font-semibold min-w-24 text-amber-800">Week 13:</span>
+                          <span className="text-gray-700">African American Music in Popular Culture → Listening Journal 12 (Due 12/5)</span>
+                        </div>
+                        <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
+                          <span className="font-semibold min-w-24 text-amber-800">Week 14:</span>
+                          <span className="text-gray-700">Music and Social Justice → Listening Journal 13 (Due 12/12)</span>
+                        </div>
+                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 15:</span>
-                          <span className="text-gray-700">Future Directions & Legacy → Research Project Presentations + AI Final Showcase.</span>
+                          <span className="text-gray-700">Future Directions and Legacy → Group Project Final Presentation (Due 12/17)</span>
                         </div>
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
                           <span className="font-semibold min-w-24 text-amber-800">Week 16:</span>
-                          <span className="text-gray-700">Final Reflection Essay due.</span>
+                          <span className="text-gray-700">Final Presentations and Course Reflection → Final Reflection Essay (Due 12/23)</span>
                         </div>
                       </div>
                     </CardContent>
