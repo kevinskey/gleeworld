@@ -91,11 +91,9 @@ export default function Groups() {
       toast.error('Failed to create group');
     }
   };
-
   const handleEditGroup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!editingGroup) return;
-    
     const formData = new FormData(e.currentTarget);
     try {
       await updateGroup(editingGroup.id, {
@@ -383,7 +381,7 @@ export default function Groups() {
   }
   return <UniversalLayout showHeader={true} showFooter={false}>
       <Mus240UserAvatar />
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header with back navigation */}
           <div className="mb-8">
@@ -404,26 +402,12 @@ export default function Groups() {
               Project Groups
             </h1>
             
-            <p className="text-lg md:text-xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Form collaborative groups for the AI music project.
-            </p>
+            
           </div>
 
           {/* Instructions */}
           <div className="mb-12">
-            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-lg max-w-4xl mx-auto">
-              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">AI Group Project Teams</h2>
-              <p className="text-slate-700 text-lg leading-relaxed mb-4">
-                Join one of six themed research groups exploring AI's impact on music. Each group has a maximum of 4 members, 
-                with the first person to join becoming the group leader. Groups meet for weekly updates on Wednesdays and 
-                focus deep dives on Fridays.
-              </p>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 inline-block">
-                <p className="text-sm text-slate-800 font-medium">
-                  <strong className="text-blue-700">Final Showcase:</strong> Integrated GleeWorld.org knowledge hub showcasing your research and findings.
-                </p>
-              </div>
-            </div>
+            
           </div>
 
           {/* Status badges and Admin Controls */}
@@ -478,25 +462,46 @@ export default function Groups() {
 
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {groups.map((group, index) => {
-                  const pastelColors = [
-                    { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-900', fg: 'text-slate-900' },
-                    { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-900', fg: 'text-blue-900' }, 
-                    { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-900', fg: 'text-emerald-900' },
-                    { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-900', fg: 'text-amber-900' },
-                    { bg: 'bg-violet-50', border: 'border-violet-200', text: 'text-violet-900', fg: 'text-violet-900' },
-                    { bg: 'bg-rose-50', border: 'border-rose-200', text: 'text-rose-900', fg: 'text-rose-900' },
-                    { bg: 'bg-cyan-50', border: 'border-cyan-200', text: 'text-cyan-900', fg: 'text-cyan-900' },
-                    { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-900', fg: 'text-orange-900' }
-                  ];
+                  const pastelColors = [{
+                    bg: 'bg-slate-50',
+                    border: 'border-slate-200',
+                    text: 'text-slate-900'
+                  }, {
+                    bg: 'bg-blue-50',
+                    border: 'border-blue-200',
+                    text: 'text-blue-900'
+                  }, {
+                    bg: 'bg-emerald-50',
+                    border: 'border-emerald-200',
+                    text: 'text-emerald-900'
+                  }, {
+                    bg: 'bg-amber-50',
+                    border: 'border-amber-200',
+                    text: 'text-amber-900'
+                  }, {
+                    bg: 'bg-violet-50',
+                    border: 'border-violet-200',
+                    text: 'text-violet-900'
+                  }, {
+                    bg: 'bg-rose-50',
+                    border: 'border-rose-200',
+                    text: 'text-rose-900'
+                  }, {
+                    bg: 'bg-cyan-50',
+                    border: 'border-cyan-200',
+                    text: 'text-cyan-900'
+                  }, {
+                    bg: 'bg-orange-50',
+                    border: 'border-orange-200',
+                    text: 'text-orange-900'
+                  }];
                   const colorScheme = pastelColors[index % pastelColors.length];
-                  
-                  return (
-                <Card key={group.id} className="bg-white border shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]">
+                  return <Card key={group.id} className={`${colorScheme.bg} ${colorScheme.border} shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02]`}>
                     <CardHeader>
-                       <div className="flex justify-between items-start">
+                      <div className="flex justify-between items-start">
                          <div className="flex-1">
                            <CardTitle className={`${colorScheme.text}`}>{group.name}</CardTitle>
-                           <CardDescription className={`${colorScheme.fg}`}>
+                           <CardDescription className="text-slate-600">
                              {group.description}
                            </CardDescription>
                         </div>
@@ -506,17 +511,11 @@ export default function Groups() {
                               <Info className="h-4 w-4" />
                             </Button>
                           </Link>
-                          <Button 
-                            onClick={() => setEditingGroup({
-                              id: group.id,
-                              name: group.name,
-                              description: group.description || ''
-                            })} 
-                            variant="ghost" 
-                            size="sm" 
-                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                            title="Edit Group"
-                          >
+                          <Button onClick={() => setEditingGroup({
+                            id: group.id,
+                            name: group.name,
+                            description: group.description || ''
+                          })} variant="ghost" size="sm" className="text-green-600 hover:text-green-700 hover:bg-green-50" title="Edit Group">
                             <Edit2 className="h-4 w-4" />
                           </Button>
                           {hasAdminAccess && <Button onClick={() => handleDeleteGroup(group.id)} variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-500/20">
@@ -528,31 +527,25 @@ export default function Groups() {
                     <CardContent>
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                          <Users className={`h-4 w-4 ${colorScheme.fg}`} />
-                          <span className={`text-base ${colorScheme.fg} font-medium`}>
-                            {group.members?.length || 0} / {group.max_members || 4} members
+                          <Users className="h-4 w-4 text-slate-600" />
+                          <span className="text-base text-slate-700 font-medium">
+                            {group.member_count || 0} / {group.max_members || 4} members
                           </span>
                         </div>
                         
                         {/* Display group members */}
-                        {group.members && group.members.length > 0 && (
-                          <div className="space-y-2">
-                            <h4 className={`text-sm font-medium ${colorScheme.fg}`}>Members:</h4>
+                        {group.members && group.members.length > 0 && <div className="space-y-2">
+                            <h4 className="text-sm font-medium text-slate-700">Members:</h4>
                             <div className="space-y-1">
-                              {group.members.map((member) => (
-                                <div key={member.member_id} className="flex items-center gap-2 text-xs">
+                              {group.members.map(member => <div key={member.member_id} className="flex items-center gap-2 text-xs">
                                   <div className={`w-2 h-2 rounded-full ${member.role === 'leader' ? 'bg-blue-600' : 'bg-slate-400'}`}></div>
-                                  <span className={colorScheme.fg}>
+                                  <span className="text-slate-600">
                                     {member.gw_profiles?.full_name || member.gw_profiles?.email || 'Unknown Member'}
-                                    {member.role === 'leader' && (
-                                      <Badge variant="secondary" className="ml-1 text-xs py-0 px-1">Leader</Badge>
-                                    )}
+                                    {member.role === 'leader' && <Badge variant="secondary" className="ml-1 text-xs py-0 px-1">Leader</Badge>}
                                   </span>
-                                </div>
-                              ))}
+                                </div>)}
                             </div>
-                          </div>
-                        )}
+                          </div>}
                         
                         {group.is_official && <Badge className="bg-green-100 text-green-700 border-green-200">
                             <CheckCircle className="h-3 w-3 mr-1" />
@@ -573,21 +566,14 @@ export default function Groups() {
                                <UserCheck className="h-3 w-3 mr-1" />
                                Your Group
                              </Badge>
-                             <Button 
-                               onClick={() => handleLeaveGroup(group.id)} 
-                               variant="outline" 
-                               size="sm" 
-                               className="text-red-600 border-red-300 hover:bg-red-50"
-                               title="Leave Group"
-                             >
+                             <Button onClick={() => handleLeaveGroup(group.id)} variant="outline" size="sm" className="text-red-600 border-red-300 hover:bg-red-50" title="Leave Group">
                                <X className="h-4 w-4" />
                              </Button>
                             </div>}
                        </div>
                     </CardContent>
-                  </Card>
-                  );
-                 })}
+                  </Card>;
+                })}
               </div>
 
               {groups.length === 0 && <div className="text-center py-12">
@@ -625,16 +611,11 @@ export default function Groups() {
                             <Link to={`/classes/mus240/groups/${userGroup.id}`} className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors">
                               Go to Group Workspace
                             </Link>
-                            <Button
-                              onClick={() => setEditingGroup({
-                                id: userGroup.id,
-                                name: userGroup.name,
-                                description: userGroup.description
-                              })}
-                              variant="outline"
-                              size="sm"
-                              className="inline-flex items-center gap-2 px-4 py-2 border-blue-300 text-blue-700 hover:bg-blue-50"
-                            >
+                            <Button onClick={() => setEditingGroup({
+                            id: userGroup.id,
+                            name: userGroup.name,
+                            description: userGroup.description
+                          })} variant="outline" size="sm" className="inline-flex items-center gap-2 px-4 py-2 border-blue-300 text-blue-700 hover:bg-blue-50">
                               <Edit2 className="h-4 w-4" />
                               Edit
                             </Button>
@@ -709,23 +690,11 @@ export default function Groups() {
           <form onSubmit={handleEditGroup} className="space-y-4">
             <div>
               <Label htmlFor="edit_name">Group Name *</Label>
-              <Input 
-                id="edit_name" 
-                name="name" 
-                required 
-                defaultValue={editingGroup?.name || ''} 
-                placeholder="Enter group name" 
-              />
+              <Input id="edit_name" name="name" required defaultValue={editingGroup?.name || ''} placeholder="Enter group name" />
             </div>
             <div>
               <Label htmlFor="edit_description">Description</Label>
-              <Textarea 
-                id="edit_description" 
-                name="description" 
-                defaultValue={editingGroup?.description || ''} 
-                placeholder="Describe your group's focus or goals" 
-                rows={3} 
-              />
+              <Textarea id="edit_description" name="description" defaultValue={editingGroup?.description || ''} placeholder="Describe your group's focus or goals" rows={3} />
             </div>
             <div className="flex gap-2">
               <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700 text-white">
