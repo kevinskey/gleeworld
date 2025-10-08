@@ -259,19 +259,18 @@ export const useMus240Journals = () => {
   const publishJournal = async (assignmentId: string): Promise<boolean> => {
     if (!user) return false;
 
+    setLoading(true);
     try {
-      const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Prefer': 'return=minimal'
-        },
-        body: JSON.stringify({
+      const { error } = await supabase
+        .from('mus240_journal_entries')
+        .update({
           is_published: true,
           submitted_at: new Date().toISOString()
         })
-      });
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', user.id);
 
-      if (!response.ok) throw new Error('Failed to publish journal');
+      if (error) throw error;
 
       toast({
         title: "Journal Published",
@@ -287,28 +286,57 @@ export const useMus240Journals = () => {
         variant: "destructive"
       });
       return false;
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteJournal = async (assignmentId: string): Promise<boolean> => {
     if (!user) return false;
 
+    setLoading(true);
     try {
-      // Check if journal has comments first
-      const commentsResponse = await apiCall(`mus240_journal_comments?journal_entry_id=eq.${assignmentId}&select=id`);
+      // Find the user's journal entry for this assignment
+      const { data: entry, error: entryError } = await supabase
+        .from('mus240_journal_entries')
+        .select('id')
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', user.id)
+        .maybeSingle();
 
-      if (commentsResponse.ok) {
-        const comments = await commentsResponse.json();
-        if (comments && comments.length > 0) {
-          throw new Error('Cannot delete journal with existing comments');
-        }
+      if (entryError) throw entryError;
+      if (!entry) return true; // nothing to delete
+
+      // Check if comments exist for this journal
+      const { data: existingComments, error: commentsError } = await supabase
+        .from('mus240_journal_comments')
+        .select('id', { count: 'exact', head: true })
+        .eq('journal_id', entry.id);
+
+      if (commentsError) throw commentsError;
+      if ((existingComments as any) === null) {
+        // head: true returns null data; use count via response headers (handled internally by supabase-js)
       }
 
-      const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`, {
-        method: 'DELETE'
-      });
+      // If count is returned in meta, supabase-js v2 doesn't expose it easily here.
+      // Safer approach: fetch minimal list and check length.
+      const { data: commentsList, error: listErr } = await supabase
+        .from('mus240_journal_comments')
+        .select('id')
+        .eq('journal_id', entry.id)
+        .limit(1);
+      if (listErr) throw listErr;
+      if (commentsList && commentsList.length > 0) {
+        throw new Error('Cannot delete journal with existing comments');
+      }
 
-      if (!response.ok) throw new Error('Failed to delete journal');
+      // Delete the journal entry
+      const { error: deleteError } = await supabase
+        .from('mus240_journal_entries')
+        .delete()
+        .eq('id', entry.id);
+
+      if (deleteError) throw deleteError;
 
       toast({
         title: "Journal Deleted",
@@ -319,6 +347,8 @@ export const useMus240Journals = () => {
     } catch (error: any) {
       console.error('Error deleting journal:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
