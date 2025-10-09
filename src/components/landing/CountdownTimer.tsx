@@ -20,10 +20,63 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
 
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" className="text-foreground">
-      {/* Clock face */}
+      <defs>
+        {/* Gradient for 3D effect */}
+        <radialGradient id="globeGradient" cx="40%" cy="40%">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.3" />
+          <stop offset="50%" stopColor="currentColor" stopOpacity="0.15" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" />
+        </radialGradient>
+        
+        {/* Globe pattern group */}
+        <g id="globePattern">
+          {/* Longitude lines (vertical curves) */}
+          {[...Array(12)].map((_, i) => {
+            const angle = (i * 30);
+            return (
+              <ellipse
+                key={`long-${i}`}
+                cx="14"
+                cy="14"
+                rx={13 * Math.abs(Math.cos(angle * Math.PI / 180))}
+                ry="13"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="0.3"
+                opacity="0.3"
+              />
+            );
+          })}
+          
+          {/* Latitude lines (horizontal) */}
+          {[-8, -4, 0, 4, 8].map((offset) => (
+            <ellipse
+              key={`lat-${offset}`}
+              cx="14"
+              cy={14 + offset}
+              rx={Math.sqrt(169 - offset * offset)}
+              ry={Math.sqrt(169 - offset * offset) * 0.3}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="0.3"
+              opacity="0.3"
+            />
+          ))}
+        </g>
+      </defs>
+      
+      {/* Globe base with gradient */}
+      <circle cx="14" cy="14" r="13" fill="url(#globeGradient)"/>
+      
+      {/* Outer ring */}
       <circle cx="14" cy="14" r="13" fill="none" stroke="currentColor" strokeWidth="1.5"/>
       
-      {/* Hour markers */}
+      {/* Spinning globe pattern */}
+      <g className="animate-[spin_60s_linear_infinite]" style={{ transformOrigin: '14px 14px' }}>
+        <use href="#globePattern" />
+      </g>
+      
+      {/* Hour markers - stationary */}
       {[...Array(12)].map((_, i) => {
         const angle = (i * 30) - 90;
         const x1 = 14 + 10.5 * Math.cos(angle * Math.PI / 180);
@@ -35,7 +88,7 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
         );
       })}
       
-      {/* Hour hand */}
+      {/* Hour hand - stationary */}
       <line 
         x1="14" y1="14" 
         x2={14 + 7 * Math.cos(hourAngle * Math.PI / 180)} 
@@ -46,7 +99,7 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
         style={{ transition: 'all 0.5s ease-in-out' }}
       />
       
-      {/* Minute hand */}
+      {/* Minute hand - stationary */}
       <line 
         x1="14" y1="14" 
         x2={14 + 9.5 * Math.cos(minuteAngle * Math.PI / 180)} 
@@ -57,7 +110,7 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
         style={{ transition: 'all 0.5s ease-in-out' }}
       />
       
-      {/* Second hand */}
+      {/* Second hand - stationary */}
       <line 
         x1="14" y1="14" 
         x2={14 + 10.5 * Math.cos(secondAngle * Math.PI / 180)} 
@@ -68,7 +121,7 @@ const ClockFace = ({ currentTime }: { currentTime: Date }) => {
         style={{ transition: 'all 0.1s ease-in-out' }}
       />
       
-      {/* Center dot */}
+      {/* Center dot - stationary */}
       <circle cx="14" cy="14" r="1.5" fill="currentColor"/>
     </svg>
   );
