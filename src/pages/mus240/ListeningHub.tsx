@@ -116,6 +116,16 @@ export default function ListeningHub() {
 
               {/* Weekly Listening Tab */}
               <TabsContent value="weekly-listening">
+                {/* Info Banner */}
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-blue-900 text-sm">
+                    <strong>Note:</strong> To submit your listening journals, go to{' '}
+                    <Link to="/classes/mus240/assignments" className="underline font-semibold hover:text-blue-700">
+                      Weekly Assignments
+                    </Link>
+                  </p>
+                </div>
+
                 {/* Results Counter */}
                 {q && (
                   <div className="mb-6 text-center text-gray-700">
@@ -126,12 +136,8 @@ export default function ListeningHub() {
                 {/* Week Cards Grid */}
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {items.map((week) => (
-                    <Link 
-                      key={week.number} 
-                      to={`/classes/mus240/listening/${week.number}`}
-                      className="group block"
-                    >
-                      <Card className="hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105 relative">
+                    <div key={week.number} className="group">
+                      <Card className="hover:shadow-xl transition-all duration-300 relative">
                         {/* Week Number Badge */}
                         <div className="absolute -top-3 -right-3 bg-gradient-to-br from-amber-500 to-orange-600 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-lg">
                           {week.number}
@@ -151,7 +157,7 @@ export default function ListeningHub() {
                           </div>
 
                           {/* Title */}
-                          <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl font-semibold text-gray-900 mb-4 leading-tight group-hover:text-amber-600 transition-colors">
+                          <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl font-semibold text-gray-900 mb-4 leading-tight">
                             {week.title}
                           </h3>
 
@@ -163,16 +169,31 @@ export default function ListeningHub() {
                             </span>
                           </div>
 
-                          {/* Visual indicator */}
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
-                              <Play className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-white" />
-                            </div>
-                            <span className="font-medium">Start Listening</span>
+                          {/* Action Buttons */}
+                          <div className="space-y-2">
+                            <Link 
+                              to={`/classes/mus240/listening/${week.number}`}
+                              className="flex items-center gap-2 text-gray-600 hover:text-amber-600 transition-colors"
+                            >
+                              <div className="p-2 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg">
+                                <Play className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-white" />
+                              </div>
+                              <span className="font-medium">Listen to Tracks</span>
+                            </Link>
+                            
+                            <Link 
+                              to="/classes/mus240/assignments"
+                              className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
+                            >
+                              <div className="p-2 bg-blue-500 rounded-lg">
+                                <Music className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 text-white" />
+                              </div>
+                              <span className="font-medium">Submit Journal</span>
+                            </Link>
                           </div>
                         </CardContent>
                       </Card>
-                    </Link>
+                    </div>
                   ))}
                 </div>
 
