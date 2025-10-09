@@ -42,6 +42,16 @@ export const MusicLibraryModule = () => {
 
       if (error) throw error;
       
+      console.log('📚 Fetched sheet music:', data?.length, 'items');
+      console.log('📚 Sample piece data:', data?.[0] ? {
+        id: data[0].id,
+        title: data[0].title,
+        has_xml_content: !!data[0].xml_content,
+        xml_content_length: data[0].xml_content?.length || 0,
+        has_pdf_url: !!data[0].pdf_url,
+        columns: Object.keys(data[0])
+      } : 'No data');
+      
       setMusicLibrary(data || []);
     } catch (error: any) {
       console.error('Error fetching sheet music:', error);
