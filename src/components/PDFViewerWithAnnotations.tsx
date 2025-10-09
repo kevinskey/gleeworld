@@ -642,7 +642,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     return () => {
       cancelled = true;
     };
-  }, [signedUrl, currentPage]);
+  }, [signedUrl, currentPage, annotationMode]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
