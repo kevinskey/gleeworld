@@ -862,7 +862,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       {/* PDF Content */}
       <CardContent className="p-0">
         <div 
-          className="relative w-full h-auto"
+          className="relative w-full overflow-y-auto overflow-x-hidden"
+          style={{ maxHeight: 'calc(100vh - 12rem)' }}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -882,7 +883,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => { setError(null); setIsLoading(true); setAnnotationMode(true); }}
+                onClick={() => { 
+                  setError(null); 
+                  setAnnotationMode(true); 
+                }}
                 aria-label="Enable annotations"
                 title="Annotate"
               >
@@ -905,8 +909,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
-            <div className="w-full" ref={containerRef}>
-            <div className="relative w-full h-full">
+            <div className="w-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 18rem)' }} ref={containerRef}>
+            <div className="relative w-full">
                 <canvas
                   ref={canvasRef}
                   className="w-full bg-white block transition-opacity duration-300"
@@ -914,7 +918,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 />
                   <canvas
                     ref={drawingCanvasRef}
-                    className={`absolute inset-0 w-full h-full pt-5 pointer-events-auto z-20 ${
+                    className={`absolute top-0 left-0 w-full h-full pointer-events-auto z-20 ${
                       activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
                     }`}
                     onMouseDown={handleStart}
