@@ -334,7 +334,7 @@ export default function Syllabus() {
                   <AccordionContent>
                     <CardContent className="pt-0">
                       <div className="space-y-4">
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-blue-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 1</span>
                           <div>
                             <div className="text-gray-900 font-medium">Introduction to African American Musical Traditions</div>
@@ -352,7 +352,7 @@ export default function Syllabus() {
                           </div>
                         </div>
                         
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-blue-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 3</span>
                           <div>
                             <div className="text-gray-900 font-medium">Blues: Foundation of American Popular Music</div>
@@ -370,7 +370,7 @@ export default function Syllabus() {
                           </div>
                         </div>
                         
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-blue-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 5</span>
                           <div>
                             <div className="text-gray-900 font-medium">Jazz Origins and Early Development</div>
@@ -388,7 +388,7 @@ export default function Syllabus() {
                           </div>
                         </div>
                         
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-blue-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 7</span>
                           <div>
                             <div className="text-gray-900 font-medium">1939–1969: From Spirituals to Swing to King</div>
@@ -406,7 +406,7 @@ export default function Syllabus() {
                           </div>
                         </div>
                         
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-blue-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 9</span>
                           <div>
                             <div className="text-gray-900 font-medium">Hip-Hop Culture and Rap Music</div>
@@ -424,7 +424,7 @@ export default function Syllabus() {
                           </div>
                         </div>
                         
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-blue-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 11</span>
                           <div>
                             <div className="text-gray-900 font-medium">Gospel's Modern Evolution</div>
@@ -442,7 +442,7 @@ export default function Syllabus() {
                           </div>
                         </div>
                         
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-blue-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 13</span>
                           <div>
                             <div className="text-gray-900 font-medium">Hip-Hop II: Contemporary Directions</div>
@@ -460,7 +460,7 @@ export default function Syllabus() {
                           </div>
                         </div>
                         
-                        <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
+                        <div className="flex gap-4 p-3 bg-blue-50 rounded-lg">
                           <span className="font-semibold min-w-24 text-amber-800">Week 15</span>
                           <div>
                             <div className="text-gray-900 font-medium">Group AI Presentations</div>
