@@ -5,9 +5,26 @@ import { Link } from 'react-router-dom';
 
 const GrandStaffClassroom = () => {
   const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const [staffCount, setStaffCount] = React.useState(12);
 
   useEffect(() => {
     document.title = 'Grand Staff Classroom | GleeWorld Academy';
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if user has scrolled near the bottom
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const threshold = document.documentElement.scrollHeight - 500;
+      
+      if (scrollPosition >= threshold) {
+        // Add more staves
+        setStaffCount(prev => prev + 6);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const toggleFullscreen = () => {
@@ -67,9 +84,9 @@ const GrandStaffClassroom = () => {
 
       {/* Main Content - Music Staves */}
       <div className="max-w-7xl mx-auto">
-        {/* Multiple staves for classroom use */}
+        {/* Infinite scroll staves */}
         <div className="space-y-12 sm:space-y-16 text-gray-800">
-          {[...Array(12)].map((_, index) => (
+          {[...Array(staffCount)].map((_, index) => (
             <div key={index}>
               <Staff />
             </div>
