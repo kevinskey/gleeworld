@@ -86,15 +86,15 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 4,
-    topic: "Jazz Origins and Early Development",
+    topic: "Ragtime",
     startDate: "2025-09-15",
     endDate: "2025-09-19",
     assignments: [
       {
         id: "lj4",
-        title: "Listening Journal 4: Jazz Origins",
-        description: "Examine the emergence of jazz in New Orleans and its early development.",
-        instructions: "Listen to early jazz recordings and analyze the fusion of ragtime, blues, and band music.",
+        title: "Listening Journal 4: Ragtime",
+        description: "Examine Scott Joplin and the evolution of ragtime piano music.",
+        instructions: "Listen to ragtime recordings and analyze syncopation as sophistication. Focus on early Black composers and the evolution of musical notation.",
         dueDate: "2025-09-24",
         type: "listening-journal",
         estimatedTime: "45 minutes",
@@ -104,15 +104,15 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 5,
-    topic: "Gospel Music and the Great Migration",
+    topic: "Jazz Origins and Early Development",
     startDate: "2025-09-22",
     endDate: "2025-09-26",
     assignments: [
       {
         id: "lj5",
-        title: "Listening Journal 5: Gospel Traditions",
-        description: "Study the development of gospel music and its relationship to spirituals.",
-        instructions: "Compare traditional and contemporary gospel styles, noting influences from blues and jazz.",
+        title: "Listening Journal 5: Jazz Origins",
+        description: "Examine the emergence of jazz from New Orleans to Harlem.",
+        instructions: "Listen to early jazz recordings and analyze the emergence of improvisation, swing, and ensemble conversation. Focus on how ragtime, blues, and band music fused into jazz.",
         dueDate: "2025-10-01",
         type: "listening-journal",
         estimatedTime: "40 minutes",
@@ -122,15 +122,15 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 6,
-    topic: "R&B and Soul Music",
+    topic: "Jubilee Quartets",
     startDate: "2025-09-29",
     endDate: "2025-10-03",
     assignments: [
       {
         id: "lj6",
-        title: "Listening Journal 6: R&B Evolution",
-        description: "Trace the evolution from rhythm and blues to soul music.",
-        instructions: "Analyze vocal techniques, instrumentation, and lyrical themes in R&B and soul.",
+        title: "Listening Journal 6: Jubilee Quartets",
+        description: "Study jubilee quartets from Fisk to the Golden Gate Quartet.",
+        instructions: "Analyze vocal harmony as community statement and spiritual expression. Focus on the evolution from spirituals to arranged quartet singing.",
         dueDate: "2025-10-08",
         type: "listening-journal",
         estimatedTime: "45 minutes",
@@ -150,15 +150,15 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 7,
-    topic: "Motown and the Sound of Young America",
+    topic: "1939–1969: From Spirituals to Swing to King",
     startDate: "2025-10-06",
     endDate: "2025-10-10",
     assignments: [
       {
         id: "lj7",
-        title: "Listening Journal 7: Motown Sound",
-        description: "Examine the Motown production style and its cultural impact.",
-        instructions: "Listen to key Motown recordings and analyze the 'Motown Sound' formula.",
+        title: "Listening Journal 7: Spirituals to Swing to King",
+        description: "Examine the evolution from sacred song to social anthem.",
+        instructions: "Listen to recordings from Carnegie Hall's 'Spirituals to Swing,' Civil Rights music, and the Harlem Cultural Festival. Analyze how music evolved from spiritual expression to protest anthem.",
         dueDate: "2025-10-15",
         type: "listening-journal",
         estimatedTime: "40 minutes",
@@ -166,9 +166,9 @@ export const mus240Assignments: WeekAssignments[] = [
       },
       {
         id: "rp2",
-        title: "Reflection Paper 2: Motown and Cultural Identity",
-        description: "Analyze Motown's role in shaping African American cultural identity during the Civil Rights era.",
-        instructions: "Write a 2-3 page essay examining how Motown Records influenced both African American identity and mainstream American culture. Present a clear thesis with evidence from course materials and connect to historical/cultural contexts. Format: MLA or Chicago style, double-spaced.",
+        title: "Reflection Paper 2: Music and the Civil Rights Movement",
+        description: "Analyze music's role in the Civil Rights Movement from 1939-1969.",
+        instructions: "Write a 2-3 page essay examining how music evolved from sacred spirituals to protest anthems during this transformative period. Present a clear thesis with evidence from course materials connecting musical developments to social movements. Format: MLA or Chicago style, double-spaced.",
         dueDate: "2025-10-13",
         type: "reflection-paper",
         estimatedTime: "3 hours",
@@ -178,7 +178,7 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 8,
-    topic: "Funk and the Rhythmic Revolution",
+    topic: "1970s: James Brown, Funk, Disco, and Detroit Techno",
     startDate: "2025-10-13",
     endDate: "2025-10-17",
     assignments: [
@@ -288,15 +288,15 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 13,
-    topic: "African American Music in Popular Culture",
+    topic: "Hip-Hop II: Contemporary Directions",
     startDate: "2025-11-17",
     endDate: "2025-11-21",
     assignments: [
       {
         id: "lj12",
-        title: "Listening Journal 12: Global Influence",
-        description: "Examine the global influence of African American music on world music.",
-        instructions: "Analyze how African American musical styles have influenced international artists and genres.",
+        title: "Listening Journal 12: Contemporary Hip-Hop",
+        description: "Examine trap, drill, and conscious rap in contemporary hip-hop.",
+        instructions: "Analyze contemporary hip-hop artists like Kendrick Lamar, J. Cole, and Megan Thee Stallion. Focus on global hip-hop identity and diverse sub-genres.",
         dueDate: "2025-11-26",
         type: "listening-journal",
         estimatedTime: "40 minutes",
@@ -306,15 +306,15 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 14,
-    topic: "Music and Social Justice",
+    topic: "AI Workday",
     startDate: "2025-11-24",
     endDate: "2025-11-28",
     assignments: [
       {
         id: "lj13",
-        title: "Listening Journal 13: Protest and Resistance",
-        description: "Study the role of African American music in social movements.",
-        instructions: "Analyze protest songs from different eras and their impact on social change.",
+        title: "AI Workshop Reflection",
+        description: "Workshop on AI-assisted music creation and exploration of authorship, ethics, and innovation.",
+        instructions: "Participate in hands-on AI music creation workshop. Reflect on the tools explored, ethical considerations, and the future of AI in African American music.",
         dueDate: "2025-12-03",
         type: "listening-journal",
         estimatedTime: "45 minutes",
@@ -324,15 +324,15 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 15,
-    topic: "Future Directions and Legacy",
+    topic: "Group AI Presentations",
     startDate: "2025-12-01",
     endDate: "2025-12-05",
     assignments: [
       {
         id: "final-research-project",
-        title: "Group Project Final Presentation: AI and Music",
-        description: "Conduct an in-depth group study of AI's impact on African American music and present findings in a professional digital format.",
-        instructions: "Create a digital group project (video, website, podcast, or interactive format) presenting your research findings on AI and music. Your presentation should demonstrate: content accuracy about AI technologies in music, depth of research on impact to African American musical traditions, integration of historical/cultural context, organization and clarity, creativity in presentation format, and effective group collaboration. Address both opportunities and challenges that AI presents for African American musicians and the broader musical community. Build upon your group's proposal and annotated bibliography.",
+        title: "Group AI Presentations: From Spirituals to Swing to King to Code",
+        description: "Present your group's research connecting African American music history to the digital present through AI.",
+        instructions: "Create a digital group project (video, website, podcast, or interactive format) presenting 'From Spirituals to Swing to King to Code' - connecting historical African American musical traditions to contemporary AI technologies. Your presentation should demonstrate: content accuracy about AI technologies in music, depth of research on impact to African American musical traditions, integration of historical/cultural context, organization and clarity, creativity in presentation format, and effective group collaboration. Address both opportunities and challenges that AI presents for African American musicians and the broader musical community. Build upon your group's proposal and annotated bibliography.",
         dueDate: "2025-12-08",
         type: "project",
         estimatedTime: "6 hours",
@@ -342,15 +342,15 @@ export const mus240Assignments: WeekAssignments[] = [
   },
   {
     week: 16,
-    topic: "Final Presentations and Course Reflection",
+    topic: "Final Exam & Reflection",
     startDate: "2025-12-08",
     endDate: "2025-12-12",
     assignments: [
       {
         id: "final-reflection-essay",
-        title: "Final Reflection Essay",
-        description: "Synthesize semester's learning and connect to personal perspective.",
-        instructions: "Write a 4–5-page essay reflecting on course themes, personal insights, and the role of music as cultural force. Draw on examples from at least three styles studied in the course. Focus on integrating course themes, demonstrating depth of reflection, maintaining clarity, and effectively using examples from the semester. Format: MLA or Chicago style, double-spaced.",
+        title: "Final Exam & Reflection",
+        description: "Comprehensive review and reflection on the enduring soul of African American music in a technological age.",
+        instructions: "Write a 4–5-page essay reflecting on course themes, personal insights, and the role of music as cultural force in the digital age. Draw on examples from at least three styles studied in the course. Discuss how African American music continues to evolve in our technological present. Focus on integrating course themes, demonstrating depth of reflection, maintaining clarity, and effectively using examples from the semester. Format: MLA or Chicago style, double-spaced.",
         dueDate: "2025-12-14",
         type: "essay",
         estimatedTime: "4 hours",
