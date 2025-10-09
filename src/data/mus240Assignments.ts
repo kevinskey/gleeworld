@@ -176,9 +176,9 @@ export const mus240Assignments: WeekAssignments[] = [
       },
       {
         id: "rp2",
-        title: "Reflection Paper 2: Music and the Civil Rights Movement",
-        description: "Analyze music's role in the Civil Rights Movement from 1939-1969.",
-        instructions: "Write a 2-3 page essay examining how music evolved from sacred spirituals to protest anthems during this transformative period. Present a clear thesis with evidence from course materials connecting musical developments to social movements. Format: MLA or Chicago style, double-spaced.",
+        title: "Reflection Paper 2: Summer of Soul",
+        description: "Analyze the concert and give insight into the importance of at least 4 performers on the concert and the impact they made on African American Music up to 1969.",
+        instructions: "Write a 2-3 page essay analyzing the Summer of Soul concert. Select at least 4 performers from the concert and discuss their significance and impact on African American music leading up to 1969. Present a clear thesis with evidence from the documentary and course materials. Format: MLA or Chicago style, double-spaced.",
         dueDate: "2025-10-13",
         type: "reflection-paper",
         estimatedTime: "3 hours",
