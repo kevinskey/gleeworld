@@ -21,7 +21,7 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
   musicId
 }) => {
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => onOpenChange(nextOpen)}>
+    <Dialog open={open} onOpenChange={(nextOpen) => { console.log('InAppPDFViewerDialog onOpenChange:', nextOpen); onOpenChange(nextOpen); }}>
       <DialogContent 
         className="max-w-7xl h-[90vh] p-0"
       >

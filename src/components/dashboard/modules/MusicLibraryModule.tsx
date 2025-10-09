@@ -23,6 +23,7 @@ export const MusicLibraryModule = () => {
   const [selectedPdf, setSelectedPdf] = useState<{ url: string; title: string; id: string } | null>(null);
   const [selectedMusicXML, setSelectedMusicXML] = useState<{ content: string; title: string } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const closeGuardUntilRef = React.useRef(0);
   const itemsPerPage = 12; // Show 12 items per page
   const { toast } = useToast();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -65,10 +66,16 @@ export const MusicLibraryModule = () => {
     }
   };
 
+  const openPdfViewer = (piece: any) => {
+    if (Date.now() < closeGuardUntilRef.current) {
+      console.log('Open suppressed due to recent close');
+      return;
+    }
+    setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
+  };
   const togglePlay = (id: string) => {
     setIsPlaying(isPlaying === id ? null : id);
   };
-
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Beginner': return 'bg-green-100 text-green-800';
@@ -189,7 +196,7 @@ export const MusicLibraryModule = () => {
                         setSelectedMusicXML({ content: piece.xml_content, title: piece.title });
                       } else if (piece.pdf_url) {
                         console.log('Opening PDF viewer');
-                        setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
+                        openPdfViewer(piece);
                       } else {
                         console.warn('No content available for this piece');
                         toast({
@@ -334,10 +341,10 @@ export const MusicLibraryModule = () => {
                       if (piece.xml_content && piece.xml_content.trim()) {
                         console.log('Opening MusicXML viewer with content length:', piece.xml_content.length);
                         setSelectedMusicXML({ content: piece.xml_content, title: piece.title });
-                      } else if (piece.pdf_url) {
-                        console.log('Opening PDF viewer');
-                        setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
-                      } else {
+                        } else if (piece.pdf_url) {
+                          console.log('Opening PDF viewer');
+                          openPdfViewer(piece);
+                        } else {
                         console.warn('No content available for this piece');
                         toast({
                           title: "No content available",
@@ -468,7 +475,7 @@ export const MusicLibraryModule = () => {
                   <Card 
                     key={piece.id} 
                     className="p-4 cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
+                    onClick={() => piece.pdf_url && openPdfViewer(piece)}
                   >
                     <h3 className="font-medium text-sm mb-1">{piece.title}</h3>
                     <p className="text-xs text-muted-foreground">{piece.composer}</p>
@@ -494,7 +501,7 @@ export const MusicLibraryModule = () => {
                   <Card 
                     key={piece.id} 
                     className="p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
+                    onClick={() => piece.pdf_url && openPdfViewer(piece)}
                   >
                     <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
                       {piece.pdf_url ? (
@@ -555,7 +562,13 @@ export const MusicLibraryModule = () => {
       {selectedPdf && (
         <InAppPDFViewerDialog
           open={!!selectedPdf}
-          onOpenChange={(open) => !open && setSelectedPdf(null)}
+          onOpenChange={(open) => {
+            console.log('MusicLibraryModule onOpenChange:', open);
+            if (!open) {
+              closeGuardUntilRef.current = Date.now() + 400;
+              setSelectedPdf(null);
+            }
+          }}
           pdfUrl={selectedPdf.url}
           title={selectedPdf.title}
           musicId={selectedPdf.id}
