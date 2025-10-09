@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Music, Clock, MapPin, User, GraduationCap, BookOpen, Award, Calendar, CheckCircle, FileMusic } from 'lucide-react';
+import { Music, Clock, MapPin, User, GraduationCap, BookOpen, Award, Calendar, CheckCircle, FileMusic, FileText } from 'lucide-react';
 import { SightSingingWidget } from '@/components/shared/SightSingingWidget';
 
 const MusicTheoryFundamentals = () => {
@@ -85,8 +85,14 @@ const MusicTheoryFundamentals = () => {
               Master the building blocks of music with comprehensive lessons in theory, notation, and ear training
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
+              <Link to="/grand-staff-classroom">
+                <Button size="lg" className="gap-2">
+                  <FileText className="w-5 h-5" />
+                  Course Materials (PDF)
+                </Button>
+              </Link>
               <Link to="/academy-student-registration">
-                <Button size="lg" className="gap-2" variant="default">
+                <Button size="lg" className="gap-2" variant="outline">
                   <GraduationCap className="w-5 h-5" />
                   Register as Student
                 </Button>

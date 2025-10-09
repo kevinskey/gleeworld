@@ -193,6 +193,7 @@ import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
 
 import GrandStaves from "./pages/GrandStaves";
+import GrandStaffClassroom from "./pages/GrandStaffClassroom";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
 import MySubmissionsPage from "./pages/student/MySubmissionsPage";
 // Preview triggers disabled to prevent accidental email sends during development
@@ -356,6 +357,15 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <MusicTheoryFundamentals />
+                  </PublicRoute>
+                } 
+              />
+              {/* Grand Staff Classroom page */}
+              <Route 
+                path="/grand-staff-classroom" 
+                element={
+                  <PublicRoute>
+                    <GrandStaffClassroom />
                   </PublicRoute>
                 } 
               />
