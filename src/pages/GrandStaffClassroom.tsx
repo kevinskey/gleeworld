@@ -69,17 +69,17 @@ const GrandStaffClassroom = () => {
   );
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
+    <div className="min-h-screen bg-background p-2 sm:p-4 md:p-8">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-6">
-        <div className="flex items-center justify-between">
+      <div className="max-w-7xl mx-auto mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
           <Link to="/music-theory-fundamentals">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="w-full sm:w-auto">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Fundamentals
             </Button>
           </Link>
-          <Button variant="outline" size="sm" onClick={toggleFullscreen}>
+          <Button variant="outline" size="sm" onClick={toggleFullscreen} className="w-full sm:w-auto">
             {isFullscreen ? (
               <>
                 <Minimize2 className="h-4 w-4 mr-2" />
@@ -96,26 +96,26 @@ const GrandStaffClassroom = () => {
       </div>
 
       {/* Main Content - Grand Staves */}
-      <div className="max-w-7xl mx-auto space-y-12">
-        <h1 className="text-2xl md:text-3xl font-bold text-center mb-8">
+      <div className="max-w-7xl mx-auto space-y-8 sm:space-y-12">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-4 sm:mb-8">
           Grand Staff Practice
         </h1>
 
         {/* Multiple Grand Staves for classroom use */}
-        <div className="space-y-16">
-          <div className="bg-card rounded-lg p-6 shadow-sm">
+        <div className="space-y-8 sm:space-y-16">
+          <div className="bg-card rounded-lg p-3 sm:p-6 shadow-sm">
             <GrandStaff />
           </div>
           
-          <div className="bg-card rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-3 sm:p-6 shadow-sm">
             <GrandStaff />
           </div>
           
-          <div className="bg-card rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-3 sm:p-6 shadow-sm">
             <GrandStaff />
           </div>
           
-          <div className="bg-card rounded-lg p-6 shadow-sm">
+          <div className="bg-card rounded-lg p-3 sm:p-6 shadow-sm">
             <GrandStaff />
           </div>
         </div>

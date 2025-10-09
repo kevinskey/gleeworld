@@ -72,41 +72,41 @@ const MusicTheoryFundamentals = () => {
                 <Music className="w-12 h-12 text-primary" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
               Music Theory Fundamentals
             </h1>
-            <p className="text-xl text-slate-300 mb-2">
+            <p className="text-lg sm:text-xl text-slate-300 mb-2">
               Fundamentals of Music – Theory & Ear Training Component
             </p>
-            <p className="text-lg text-slate-400 mb-6">
+            <p className="text-base sm:text-lg text-slate-400 mb-6">
               with Dr. Kevin P. Johnson
             </p>
-            <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-8">
+            <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto mb-8 px-4">
               Master the building blocks of music with comprehensive lessons in theory, notation, and ear training
             </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <Link to="/grand-staff-classroom">
-                <Button size="lg" className="gap-2 shadow-lg">
-                  <FileText className="w-5 h-5" />
-                  Course Materials (PDF)
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center px-4">
+              <Link to="/grand-staff-classroom" className="w-full sm:w-auto">
+                <Button size="lg" className="gap-2 shadow-lg w-full sm:w-auto">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">Course Materials</span>
                 </Button>
               </Link>
-              <Link to="/academy-student-registration">
-                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700" variant="outline">
-                  <GraduationCap className="w-5 h-5" />
-                  Register as Student
+              <Link to="/academy-student-registration" className="w-full sm:w-auto">
+                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700 w-full sm:w-auto" variant="outline">
+                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">Register</span>
                 </Button>
               </Link>
-              <Link to="/auth?tab=login">
-                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700" variant="outline">
-                  <BookOpen className="w-5 h-5" />
-                  Student Login
+              <Link to="/auth?tab=login" className="w-full sm:w-auto">
+                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700 w-full sm:w-auto" variant="outline">
+                  <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">Student Login</span>
                 </Button>
               </Link>
-              <Link to="/dashboard?module=music-library">
-                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700" variant="outline">
-                  <Music className="w-5 h-5" />
-                  Music Library
+              <Link to="/dashboard?module=music-library" className="w-full sm:w-auto">
+                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700 w-full sm:w-auto" variant="outline">
+                  <Music className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">Music Library</span>
                 </Button>
               </Link>
             </div>
