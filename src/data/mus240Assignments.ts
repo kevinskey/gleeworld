@@ -22,7 +22,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 1,
     topic: "Introduction to African American Musical Traditions",
     startDate: "2025-08-25",
-    endDate: "2025-08-31",
+    endDate: "2025-08-29",
     assignments: [
       {
         id: "lj1",
@@ -40,7 +40,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 2,
     topic: "Spirituals and Vocal Traditions",
     startDate: "2025-09-01",
-    endDate: "2025-09-07",
+    endDate: "2025-09-05",
     assignments: [
       {
         id: "lj2",
@@ -58,7 +58,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 3,
     topic: "Blues: Foundation of American Popular Music",
     startDate: "2025-09-08",
-    endDate: "2025-09-14",
+    endDate: "2025-09-12",
     assignments: [
       {
         id: "lj3",
@@ -86,7 +86,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 4,
     topic: "Jazz Origins and Early Development",
     startDate: "2025-09-15",
-    endDate: "2025-09-21",
+    endDate: "2025-09-19",
     assignments: [
       {
         id: "lj4",
@@ -104,7 +104,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 8,
     topic: "Funk and the Rhythmic Revolution",
     startDate: "2025-10-13",
-    endDate: "2025-10-19",
+    endDate: "2025-10-17",
     assignments: [
       {
         id: "midterm-exam",
@@ -122,7 +122,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 5,
     topic: "Gospel Music and the Great Migration",
     startDate: "2025-09-22",
-    endDate: "2025-09-28",
+    endDate: "2025-09-26",
     assignments: [
       {
         id: "lj5",
@@ -140,7 +140,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 6,
     topic: "R&B and Soul Music",
     startDate: "2025-09-29",
-    endDate: "2025-10-05",
+    endDate: "2025-10-03",
     assignments: [
       {
         id: "lj6",
@@ -168,7 +168,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 7,
     topic: "Motown and the Sound of Young America",
     startDate: "2025-10-06",
-    endDate: "2025-10-12",
+    endDate: "2025-10-10",
     assignments: [
       {
         id: "lj7",
@@ -196,7 +196,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 9,
     topic: "Hip-Hop Culture and Rap Music",
     startDate: "2025-10-20",
-    endDate: "2025-10-26",
+    endDate: "2025-10-24",
     assignments: [
       {
         id: "lj8",
@@ -214,7 +214,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 10,
     topic: "Contemporary R&B and Neo-Soul",
     startDate: "2025-10-27",
-    endDate: "2025-11-02",
+    endDate: "2025-10-31",
     assignments: [
       {
         id: "lj9",
@@ -242,7 +242,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 11,
     topic: "Gospel's Modern Evolution",
     startDate: "2025-11-03",
-    endDate: "2025-11-09",
+    endDate: "2025-11-07",
     assignments: [
       {
         id: "lj10",
@@ -260,7 +260,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 12,
     topic: "Jazz Fusion and Modern Jazz",
     startDate: "2025-11-10",
-    endDate: "2025-11-16",
+    endDate: "2025-11-14",
     assignments: [
       {
         id: "lj11",
@@ -288,7 +288,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 13,
     topic: "African American Music in Popular Culture",
     startDate: "2025-11-17",
-    endDate: "2025-11-23",
+    endDate: "2025-11-21",
     assignments: [
       {
         id: "lj12",
@@ -306,7 +306,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 14,
     topic: "Music and Social Justice",
     startDate: "2025-11-24",
-    endDate: "2025-11-30",
+    endDate: "2025-11-28",
     assignments: [
       {
         id: "lj13",
@@ -324,7 +324,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 15,
     topic: "Future Directions and Legacy",
     startDate: "2025-12-01",
-    endDate: "2025-12-07",
+    endDate: "2025-12-05",
     assignments: [
       {
         id: "final-research-project",
@@ -342,7 +342,7 @@ export const mus240Assignments: WeekAssignments[] = [
     week: 16,
     topic: "Final Presentations and Course Reflection",
     startDate: "2025-12-08",
-    endDate: "2025-12-14",
+    endDate: "2025-12-12",
     assignments: [
       {
         id: "final-reflection-essay",
