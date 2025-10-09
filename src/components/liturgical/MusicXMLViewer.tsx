@@ -1,7 +1,15 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { OpenSheetMusicDisplay } from 'opensheetmusicdisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Music, Download, Eye } from 'lucide-react';
+import { Music, Download, RefreshCw, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface MusicXMLViewerProps {
   musicxml: string;
@@ -15,35 +23,112 @@ export const MusicXMLViewer: React.FC<MusicXMLViewerProps> = ({
   title = "MusicXML Viewer" 
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const osmdRef = useRef<OpenSheetMusicDisplay | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
+  // Initialize OSMD when component mounts
   useEffect(() => {
-    // In a real implementation, we would use a library like OpenSheetMusicDisplay
-    // For now, we'll show the XML content with basic formatting
-    if (containerRef.current && musicxml) {
-      // Simple XML formatting for display
-      const formattedXML = musicxml
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br/>');
-      
-      containerRef.current.innerHTML = `<pre style="white-space: pre-wrap; font-family: monospace; font-size: 12px;">${formattedXML}</pre>`;
+    if (containerRef.current && !osmdRef.current) {
+      try {
+        osmdRef.current = new OpenSheetMusicDisplay(containerRef.current, {
+          autoResize: true,
+          backend: 'svg',
+          drawTitle: true,
+          drawComposer: true,
+          drawCredits: false,
+          drawLyrics: true,
+          drawPartNames: true,
+          coloringMode: 0,
+          pageFormat: 'A4_P',
+          pageBackgroundColor: '#FFFFFF',
+        });
+        console.log('OSMD initialized successfully');
+      } catch (error) {
+        console.error('Error initializing OSMD:', error);
+        setError('Failed to initialize music display');
+      }
+    }
+  }, []);
+
+  // Load music when XML content changes
+  useEffect(() => {
+    if (osmdRef.current && musicxml) {
+      loadMusic();
     }
   }, [musicxml]);
+
+  const loadMusic = async () => {
+    if (!osmdRef.current) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Clear previous content
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
+
+      // Reinitialize OSMD for new content
+      if (containerRef.current) {
+        osmdRef.current = new OpenSheetMusicDisplay(containerRef.current, {
+          autoResize: true,
+          backend: 'svg',
+          drawTitle: true,
+          drawComposer: true,
+          drawCredits: false,
+          drawLyrics: true,
+          drawPartNames: true,
+          coloringMode: 0,
+          pageFormat: 'A4_P',
+          pageBackgroundColor: '#FFFFFF',
+        });
+      }
+
+      // Create blob URL from XML content
+      const blob = new Blob([musicxml], { type: 'application/xml' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      try {
+        await osmdRef.current.load(blobUrl);
+        await osmdRef.current.render();
+        
+        console.log('Music loaded and rendered successfully');
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+
+    } catch (error) {
+      console.error('Error loading music:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(errorMessage);
+      
+      toast({
+        title: "Loading Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const downloadXML = () => {
     const blob = new Blob([musicxml], { type: 'text/xml' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'responsorial-psalm.xml';
+    a.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xml`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
-  return (
-    <Card className="w-full max-w-4xl mx-auto">
+  const content = (
+    <Card className="w-full border-0 shadow-none">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
@@ -54,49 +139,59 @@ export const MusicXMLViewer: React.FC<MusicXMLViewerProps> = ({
             <Button
               variant="outline"
               size="sm"
+              onClick={loadMusic}
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={downloadXML}
             >
               <Download className="h-4 w-4 mr-1" />
               Download
             </Button>
-            {onClose && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-              >
-                ×
-              </Button>
-            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          <div className="p-4 bg-muted/30 rounded-lg border">
-            <p className="text-sm text-muted-foreground mb-2">
-              MusicXML Content Preview:
-            </p>
-            <div 
-              ref={containerRef}
-              className="max-h-96 overflow-y-auto bg-background p-3 rounded border text-xs"
-            />
-          </div>
-          
-          <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-start gap-2">
-              <Eye className="h-4 w-4 text-blue-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-blue-900 mb-1">Music Notation Viewer</p>
-                <p className="text-blue-700">
-                  To display the musical notation, you would need to integrate a MusicXML rendering library 
-                  like OpenSheetMusicDisplay or VexFlow. The XML content above shows the structured musical data.
-                </p>
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-10 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span>Loading sheet music...</span>
               </div>
             </div>
-          </div>
+          )}
+          
+          <div 
+            ref={containerRef}
+            className="bg-white rounded-md border p-4 min-h-[400px] overflow-auto"
+          />
+          
+          {error && (
+            <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
   );
+
+  // If onClose is provided, wrap in Dialog
+  if (onClose) {
+    return (
+      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="max-w-7xl h-[90vh] p-0">
+          {content}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Otherwise return card directly
+  return content;
 };
