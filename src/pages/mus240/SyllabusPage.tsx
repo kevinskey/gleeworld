@@ -594,8 +594,8 @@ export default function Syllabus() {
 
                           {/* Final Showcase */}
                           <div className="border border-gray-200 rounded-lg p-4 bg-amber-50">
-                            <h5 className="font-semibold text-white mb-2">Final Showcase Presentation (5 points)</h5>
-                            <ul className="space-y-1 text-sm text-white">
+                            <h5 className="font-semibold text-gray-900 mb-2">Final Showcase Presentation (5 points)</h5>
+                            <ul className="space-y-1 text-sm text-gray-700">
                               <li>• Clarity and organization of presentation (2 pts)</li>
                               <li>• Engagement and delivery (2 pts)</li>
                               <li>• Time management (1 pt)</li>
