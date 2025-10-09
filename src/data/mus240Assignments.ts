@@ -167,7 +167,7 @@ export const mus240Assignments: WeekAssignments[] = [
       {
         id: "lj7",
         title: "Listening Journal 7: Spirituals to Swing to King",
-        description: "Examine the evolution from sacred song to social anthem.",
+        description: "Discuss the evolution of African American Music from 1939 Spirituals to Swing Concert to 1969's concert in the park in the movie Summer of Soul.",
         instructions: "Listen to recordings from Carnegie Hall's 'Spirituals to Swing,' Civil Rights music, and the Harlem Cultural Festival. Analyze how music evolved from spiritual expression to protest anthem.",
         dueDate: "2025-10-15",
         type: "listening-journal",
