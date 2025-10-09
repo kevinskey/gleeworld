@@ -1,3 +1,5 @@
+// MUS 240 Assignment Schedule - Updated for Fall 2025
+// Class meets MWF, weeks run Monday-Friday
 export interface Assignment {
   id: string;
   title: string;
