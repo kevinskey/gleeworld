@@ -141,7 +141,11 @@ export const MusicLibraryModule = () => {
             ) : viewMode === 'grid' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredMusic.map((piece) => (
-                  <Card key={piece.id} className="p-4 hover:shadow-md transition-shadow">
+                  <Card 
+                    key={piece.id} 
+                    className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
+                  >
                     <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative">
                       <Music className="w-12 h-12 text-primary/50" />
                       <Button
@@ -188,7 +192,10 @@ export const MusicLibraryModule = () => {
                               size="sm" 
                               variant="outline" 
                               className="h-8 w-8 p-0"
-                              onClick={() => togglePlay(piece.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                togglePlay(piece.id);
+                              }}
                             >
                               {isPlaying === piece.id ? 
                                 <Pause className="w-3 h-3" /> : 
@@ -201,7 +208,10 @@ export const MusicLibraryModule = () => {
                               size="sm" 
                               variant="outline" 
                               className="h-8 w-8 p-0"
-                              onClick={() => window.open(piece.pdf_url, '_blank')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(piece.pdf_url, '_blank');
+                              }}
                             >
                               <Download className="w-3 h-3" />
                             </Button>
@@ -215,7 +225,11 @@ export const MusicLibraryModule = () => {
             ) : (
               <div className="space-y-2">
                 {filteredMusic.map((piece) => (
-                  <Card key={piece.id} className="p-4 hover:bg-muted/50 transition-colors">
+                  <Card 
+                    key={piece.id} 
+                    className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
+                  >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg flex items-center justify-center">
                         <Music className="w-6 h-6 text-primary/50" />
@@ -246,11 +260,28 @@ export const MusicLibraryModule = () => {
                           {new Date(piece.created_at).toLocaleDateString()}
                         </span>
                         <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "h-8 w-8",
+                              isFavorite(piece.id) && "text-destructive"
+                            )}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(piece.id);
+                            }}
+                          >
+                            <Heart className={cn("h-4 w-4", isFavorite(piece.id) && "fill-current")} />
+                          </Button>
                           {piece.audio_url && (
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => togglePlay(piece.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                togglePlay(piece.id);
+                              }}
                             >
                               {isPlaying === piece.id ? 
                                 <Pause className="w-4 h-4 mr-2" /> : 
@@ -263,7 +294,10 @@ export const MusicLibraryModule = () => {
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => window.open(piece.pdf_url, '_blank')}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                window.open(piece.pdf_url, '_blank');
+                              }}
                             >
                               <Download className="w-4 h-4 mr-2" />
                               Sheet
@@ -314,7 +348,11 @@ export const MusicLibraryModule = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {favoritedMusic.map((piece) => (
-                  <Card key={piece.id} className="p-4 hover:shadow-md transition-shadow">
+                  <Card 
+                    key={piece.id} 
+                    className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
+                  >
                     <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative">
                       <Music className="w-12 h-12 text-primary/50" />
                       <Button
@@ -337,7 +375,10 @@ export const MusicLibraryModule = () => {
                           size="sm" 
                           variant="outline"
                           className="flex-1"
-                          onClick={() => window.open(piece.pdf_url, '_blank')}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            window.open(piece.pdf_url, '_blank');
+                          }}
                         >
                           <Download className="w-3 h-3 mr-1" />
                           View
