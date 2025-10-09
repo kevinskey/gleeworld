@@ -1,21 +1,26 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface CourseTA {
   id: string;
   user_id: string;
   course_code: string;
-  assigned_by: string;
+  assigned_by: string | null;
   assigned_at: string;
   is_active: boolean;
-  notes?: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export const useCourseTA = (courseCode: string = 'MUS240') => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [isTA, setIsTA] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [taAssignment, setTaAssignment] = useState<CourseTA | null>(null);
 
   useEffect(() => {
     const checkTAStatus = async () => {
@@ -39,6 +44,7 @@ export const useCourseTA = (courseCode: string = 'MUS240') => {
           setIsTA(false);
         } else {
           setIsTA(!!data);
+          setTaAssignment(data);
         }
       } catch (error) {
         console.error('Exception checking TA status:', error);
@@ -51,76 +57,113 @@ export const useCourseTA = (courseCode: string = 'MUS240') => {
     checkTAStatus();
   }, [user, courseCode]);
 
-  return { isTA, loading };
-};
-
-export const useCourseTeachingAssistants = (courseCode: string = 'MUS240') => {
-  const [tas, setTAs] = useState<CourseTA[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchTAs = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('course_teaching_assistants')
-        .select('*')
-        .eq('course_code', courseCode)
-        .eq('is_active', true)
-        .order('assigned_at', { ascending: false });
-
-      if (error) throw error;
-      setTAs(data || []);
-    } catch (error) {
-      console.error('Error fetching TAs:', error);
-    } finally {
-      setLoading(false);
+  const assignTA = async (userId: string, notes?: string) => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to assign TAs',
+        variant: 'destructive',
+      });
+      return false;
     }
-  };
 
-  useEffect(() => {
-    fetchTAs();
-  }, [courseCode]);
-
-  const addTA = async (userId: string, notes?: string) => {
     try {
       const { error } = await supabase
         .from('course_teaching_assistants')
         .insert({
           user_id: userId,
           course_code: courseCode,
-          notes,
+          assigned_by: user.id,
+          notes: notes || null,
+          is_active: true,
         });
 
       if (error) throw error;
-      await fetchTAs();
-      return { success: true };
+
+      toast({
+        title: 'Success',
+        description: 'TA assigned successfully',
+      });
+      return true;
     } catch (error: any) {
-      console.error('Error adding TA:', error);
-      return { success: false, error: error.message };
+      console.error('Error assigning TA:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to assign TA',
+        variant: 'destructive',
+      });
+      return false;
     }
   };
 
-  const removeTA = async (taId: string) => {
+  const removeTA = async (userId: string) => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to remove TAs',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
     try {
       const { error } = await supabase
         .from('course_teaching_assistants')
-        .update({ is_active: false })
-        .eq('id', taId);
+        .update({ is_active: false, updated_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('course_code', courseCode);
 
       if (error) throw error;
-      await fetchTAs();
-      return { success: true };
+
+      toast({
+        title: 'Success',
+        description: 'TA removed successfully',
+      });
+      return true;
     } catch (error: any) {
       console.error('Error removing TA:', error);
-      return { success: false, error: error.message };
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to remove TA',
+        variant: 'destructive',
+      });
+      return false;
+    }
+  };
+
+  const getAllTAs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('course_teaching_assistants')
+        .select(`
+          *,
+          user:user_id (
+            email
+          )
+        `)
+        .eq('course_code', courseCode)
+        .eq('is_active', true)
+        .order('assigned_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    } catch (error: any) {
+      console.error('Error fetching TAs:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch TAs',
+        variant: 'destructive',
+      });
+      return [];
     }
   };
 
   return {
-    tas,
+    isTA,
     loading,
-    addTA,
+    taAssignment,
+    assignTA,
     removeTA,
-    refetch: fetchTAs,
+    getAllTAs,
   };
 };
