@@ -20,17 +20,10 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
   title,
   musicId
 }) => {
-  const handleClose = () => {
-    console.log('Closing PDF dialog');
-    onOpenChange(false);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(nextOpen) => onOpenChange(nextOpen)}>
       <DialogContent 
         className="max-w-7xl h-[90vh] p-0"
-        onPointerDownOutside={handleClose}
-        onEscapeKeyDown={handleClose}
       >
         <div className="flex flex-col h-full">
           {title && (
