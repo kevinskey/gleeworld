@@ -109,9 +109,9 @@ export const AnnotationShareButton = ({ annotationIds, musicTitle }: AnnotationS
       if (isOpen) loadShares();
     }}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Share2 className="h-4 w-4 mr-2" />
-          Share Annotations
+        <Button variant="outline" size="sm" className="h-7 px-1.5 sm:h-8 sm:px-2">
+          <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />
+          <span className="text-xs">Share</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">

@@ -9,7 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Pencil, 
   Eraser, 
   Save, 
@@ -752,7 +757,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     <Card className={cn("w-full", className)}>
       {/* Annotation Toolbar */}
         {annotationMode && (
-          <div className="flex flex-wrap items-center gap-2 p-2 sm:gap-1.5 sm:p-2 bg-muted/50 rounded-t-lg border-b">
+          <div className="flex flex-wrap items-center gap-1.5 p-1.5 sm:gap-2 sm:p-2 bg-muted/50 rounded-t-lg border-b">
             {/* Annotation Toggle */}
             <Button
               variant={annotationMode ? "default" : "outline"}
@@ -760,7 +765,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               onClick={async () => {
                 setError(null);
                 setIsLoading(true);
-                // If exiting annotation mode, prompt to save if there are unsaved annotations
                 const canExit = await promptToSaveIfDirty();
                 if (canExit) {
                   setAnnotationMode(false);
@@ -768,61 +772,74 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   setIsLoading(false);
                 }
               }}
-              className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
+              className="h-7 px-1.5 text-xs sm:h-8 sm:px-2"
             >
-              <Palette className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">{annotationMode ? "Exit Annotations" : "Annotate"}</span>
-              <span className="sm:hidden">Exit</span>
+              <Palette className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />
+              <span className="hidden sm:inline text-xs">Exit</span>
             </Button>
 
             {/* Tool Selection */}
-            <div className="flex gap-1">
+            <div className="flex gap-0.5 sm:gap-1">
               <Button
                 variant={activeTool === "select" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("select")}
-                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
               >
-                <MousePointer className="h-3 w-3 sm:h-4 sm:w-4" />
+                <MousePointer className="h-3 w-3" />
               </Button>
               <Button
                 variant={activeTool === "draw" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("draw")}
-                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
               >
-                <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Pencil className="h-3 w-3" />
               </Button>
               <Button
                 variant={activeTool === "erase" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("erase")}
-                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
               >
-                <Eraser className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Eraser className="h-3 w-3" />
               </Button>
             </div>
 
-            {/* Colors */}
-            <div className="flex gap-1">
-              {colors.map((color) => (
+            {/* Color Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
-                  key={color}
                   variant="outline"
                   size="sm"
-                  className="w-7 h-7 sm:w-8 sm:h-8 p-0 rounded-full"
-                  style={{ backgroundColor: color }}
-                  onClick={() => setBrushColor(color)}
+                  className="h-7 w-7 p-0 sm:h-8 sm:w-8 rounded-full border-2"
+                  style={{ backgroundColor: brushColor, borderColor: 'hsl(var(--border))' }}
                 >
-                  {brushColor === color && (
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full" />
-                  )}
+                  <span className="sr-only">Select color</span>
                 </Button>
-              ))}
-            </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-auto p-2 bg-popover">
+                <div className="grid grid-cols-3 gap-1.5">
+                  {colors.map((color) => (
+                    <Button
+                      key={color}
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0 rounded-full"
+                      style={{ backgroundColor: color }}
+                      onClick={() => setBrushColor(color)}
+                    >
+                      {brushColor === color && (
+                        <div className="w-2 h-2 bg-white rounded-full" />
+                      )}
+                    </Button>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Size */}
-            <div className="flex items-center gap-1.5 min-w-16 sm:min-w-20">
+            <div className="flex items-center gap-1 min-w-14 sm:min-w-16">
               <Slider
                 value={brushSize}
                 onValueChange={setBrushSize}
@@ -831,11 +848,11 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 step={1}
                 className="flex-1"
               />
-              <Badge variant="outline" className="text-xs px-1.5 py-0.5">{brushSize[0]}</Badge>
+              <Badge variant="outline" className="text-xs px-1 py-0">{brushSize[0]}</Badge>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-1 ml-auto">
+            <div className="flex gap-0.5 sm:gap-1 ml-auto">
               <Button
                 variant="outline"
                 size="sm"
