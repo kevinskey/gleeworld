@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { InAppPDFViewerDialog } from '@/components/music-library/InAppPDFViewerDialog';
 
 export const MusicLibraryModule = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -15,6 +16,7 @@ export const MusicLibraryModule = () => {
   const [musicLibrary, setMusicLibrary] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedPdf, setSelectedPdf] = useState<{ url: string; title: string; id: string } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -267,7 +269,11 @@ export const MusicLibraryModule = () => {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {musicLibrary.slice(0, 12).map((piece) => (
-                  <Card key={piece.id} className="p-4">
+                  <Card 
+                    key={piece.id} 
+                    className="p-4 cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
+                  >
                     <h3 className="font-medium text-sm mb-1">{piece.title}</h3>
                     <p className="text-xs text-muted-foreground">{piece.composer}</p>
                     <p className="text-xs text-muted-foreground mt-2">
@@ -292,6 +298,16 @@ export const MusicLibraryModule = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {selectedPdf && (
+        <InAppPDFViewerDialog
+          open={!!selectedPdf}
+          onOpenChange={(open) => !open && setSelectedPdf(null)}
+          pdfUrl={selectedPdf.url}
+          title={selectedPdf.title}
+          musicId={selectedPdf.id}
+        />
+      )}
     </div>
   );
 };
