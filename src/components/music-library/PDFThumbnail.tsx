@@ -22,7 +22,6 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [useViewerNg, setUseViewerNg] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
-  const { canDownloadPDF } = useUserRole();
   const { signedUrl } = useSheetMusicUrl(pdfUrl);
 
   useEffect(() => {
@@ -63,29 +62,11 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   return (
     <div 
       ref={elementRef}
-      className={`w-full h-full flex flex-col bg-white border-2 rounded-lg overflow-hidden ${
-        canDownloadPDF() 
-          ? 'border-gray-200' 
-          : 'border-red-200 bg-red-50/50'
-      }`}
+      className="w-full h-full flex flex-col bg-white border-2 border-gray-200 rounded-lg overflow-hidden"
     >
       {/* Preview Area */}
       <div className="flex-1 relative">
-        {!canDownloadPDF() ? (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-red-50 p-4">
-            <div className="flex flex-col items-center space-y-2">
-              <div className="p-3 bg-red-100 rounded-full">
-                <Lock className="h-8 w-8 text-red-600" />
-              </div>
-              <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded">
-                Restricted
-              </span>
-              <span className="text-xs text-center text-red-600">
-                Admin/Librarian access required
-              </span>
-            </div>
-          </div>
-        ) : isInView && !previewError ? (
+        {isInView && !previewError ? (
           <>
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
