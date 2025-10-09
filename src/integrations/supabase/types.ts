@@ -10710,6 +10710,35 @@ export type Database = {
           },
         ]
       }
+      gw_sheet_music_favorites: {
+        Row: {
+          created_at: string | null
+          id: string
+          sheet_music_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          sheet_music_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          sheet_music_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sheet_music_favorites_sheet_music_id_fkey"
+            columns: ["sheet_music_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_sheet_music_notes: {
         Row: {
           author_id: string

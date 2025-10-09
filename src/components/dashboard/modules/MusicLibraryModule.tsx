@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Music, Search, Download, Play, Pause, Filter, Grid, List } from 'lucide-react';
+import { Music, Search, Download, Play, Pause, Filter, Grid, List, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useFavorites } from '@/hooks/useFavorites';
+import { cn } from '@/lib/utils';
 import { InAppPDFViewerDialog } from '@/components/music-library/InAppPDFViewerDialog';
 
 export const MusicLibraryModule = () => {
@@ -18,6 +20,7 @@ export const MusicLibraryModule = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPdf, setSelectedPdf] = useState<{ url: string; title: string; id: string } | null>(null);
   const { toast } = useToast();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     fetchSheetMusic();
@@ -65,6 +68,8 @@ export const MusicLibraryModule = () => {
     piece.composer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     piece.genre?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const favoritedMusic = musicLibrary.filter(piece => isFavorite(piece.id));
 
   return (
     <div className="h-full flex flex-col">
@@ -137,8 +142,22 @@ export const MusicLibraryModule = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredMusic.map((piece) => (
                   <Card key={piece.id} className="p-4 hover:shadow-md transition-shadow">
-                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center">
+                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative">
                       <Music className="w-12 h-12 text-primary/50" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "absolute top-2 right-2 h-8 w-8",
+                          isFavorite(piece.id) && "text-destructive"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(piece.id);
+                        }}
+                      >
+                        <Heart className={cn("h-4 w-4", isFavorite(piece.id) && "fill-current")} />
+                      </Button>
                     </div>
                     
                     <div className="space-y-2">
@@ -287,9 +306,49 @@ export const MusicLibraryModule = () => {
         </TabsContent>
 
         <TabsContent value="favorites" className="flex-1">
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <p>Your favorite pieces will appear here</p>
-          </div>
+          <ScrollArea className="flex-1 p-6">
+            {favoritedMusic.length === 0 ? (
+              <div className="flex items-center justify-center text-muted-foreground py-12">
+                <p>No favorite pieces yet. Click the heart icon on any piece to add it to your favorites!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {favoritedMusic.map((piece) => (
+                  <Card key={piece.id} className="p-4 hover:shadow-md transition-shadow">
+                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative">
+                      <Music className="w-12 h-12 text-primary/50" />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 h-8 w-8 text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(piece.id);
+                        }}
+                      >
+                        <Heart className="h-4 w-4 fill-current" />
+                      </Button>
+                    </div>
+                    <h3 className="font-medium text-sm mb-1 line-clamp-2">{piece.title}</h3>
+                    <p className="text-xs text-muted-foreground mb-2">{piece.composer}</p>
+                    <div className="flex gap-1">
+                      {piece.pdf_url && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="flex-1"
+                          onClick={() => window.open(piece.pdf_url, '_blank')}
+                        >
+                          <Download className="w-3 h-3 mr-1" />
+                          View
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
         </TabsContent>
 
         <TabsContent value="current" className="flex-1">
