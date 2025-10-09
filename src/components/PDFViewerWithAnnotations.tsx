@@ -493,12 +493,19 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       };
 
       // Save annotation to database using the hook
+      const positionData = {
+        x: 0,
+        y: 0,
+        width: drawingCanvasRef.current.width,
+        height: drawingCanvasRef.current.height,
+      };
+
       const savedAnnotation = await saveAnnotation(
         musicId,
         currentPage,
         'drawing',
         annotationData,
-        null // No position data needed for freehand drawings
+        positionData
       );
       
       if (!savedAnnotation) {
