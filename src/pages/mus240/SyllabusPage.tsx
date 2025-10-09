@@ -335,115 +335,146 @@ export default function Syllabus() {
                     <CardContent className="pt-0">
                       <div className="space-y-4">
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 1:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 1</span>
                           <div>
-                            <div className="text-white font-medium">Introduction to African American Musical Traditions</div>
-                            <div className="text-sm text-white/90">8/19/2025 - 8/23/2025</div>
+                            <div className="text-gray-900 font-medium">Introduction to African American Musical Traditions</div>
+                            <div className="text-sm text-gray-600">August 25</div>
+                            <div className="text-sm text-gray-700 mt-1">Overview of themes: survival, innovation, community. Sound as resistance and identity.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 2:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 2</span>
                           <div>
-                            <div className="text-white font-medium">Spirituals and Vocal Traditions</div>
-                            <div className="text-sm text-white/90">8/24/2025 - 8/30/2025</div>
+                            <div className="text-gray-900 font-medium">Spirituals and Vocal Traditions</div>
+                            <div className="text-sm text-gray-600">September 1</div>
+                            <div className="text-sm text-gray-700 mt-1">The music of enslavement and early freedom. Call-and-response, coded messages, and the sacred-secular bridge.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 3:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 3</span>
                           <div>
-                            <div className="text-white font-medium">Blues: Foundation of American Popular Music</div>
-                            <div className="text-sm text-white/90">9/2/2025 - 9/8/2025</div>
+                            <div className="text-gray-900 font-medium">Blues: Foundation of American Popular Music</div>
+                            <div className="text-sm text-gray-600">September 8</div>
+                            <div className="text-sm text-gray-700 mt-1">Origins in the rural South. The 12-bar form, field hollers, and emotional truth.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 4:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 4</span>
                           <div>
-                            <div className="text-white font-medium">Jazz Origins and Early Development</div>
-                            <div className="text-sm text-white/90">9/9/2025 - 9/15/2025</div>
+                            <div className="text-gray-900 font-medium">Ragtime</div>
+                            <div className="text-sm text-gray-600">September 15</div>
+                            <div className="text-sm text-gray-700 mt-1">Scott Joplin and syncopation as sophistication. Early Black composers and the evolution of notation.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 5:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 5</span>
                           <div>
-                            <div className="text-white font-medium">Gospel Music and the Great Migration</div>
-                            <div className="text-sm text-white/90">10/7/2025 - 10/13/2025</div>
+                            <div className="text-gray-900 font-medium">Jazz Origins and Early Development</div>
+                            <div className="text-sm text-gray-600">September 22</div>
+                            <div className="text-sm text-gray-700 mt-1">From New Orleans to Harlem. The emergence of improvisation, swing, and ensemble conversation.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 6:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 6</span>
                           <div>
-                            <div className="text-white font-medium">R&B and Soul Music</div>
-                            <div className="text-sm text-white/90">10/14/2025 - 10/20/2025</div>
+                            <div className="text-gray-900 font-medium">Jubilee Quartets</div>
+                            <div className="text-sm text-gray-600">September 29</div>
+                            <div className="text-sm text-gray-700 mt-1">From Fisk to the Golden Gate Quartet. Vocal harmony as community statement and spiritual expression.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 7:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 7</span>
                           <div>
-                            <div className="text-white font-medium">Motown and the Sound of Young America</div>
-                            <div className="text-sm text-white/90">10/21/2025 - 10/27/2025</div>
+                            <div className="text-gray-900 font-medium">1939–1969: From Spirituals to Swing to King</div>
+                            <div className="text-sm text-gray-600">October 6</div>
+                            <div className="text-sm text-gray-700 mt-1">The evolution from sacred song to social anthem. Carnegie Hall's "Spirituals to Swing," Civil Rights music, and the Harlem Cultural Festival (Summer of Soul).</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 8:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 8</span>
                           <div>
-                            <div className="text-white font-medium">Funk and the Rhythmic Revolution</div>
-                            <div className="text-sm text-white/90">9/21/2025 - 9/25/2025</div>
+                            <div className="text-gray-900 font-medium">1970s: James Brown, Funk, Disco, and Detroit Techno</div>
+                            <div className="text-sm text-gray-600">October 13</div>
+                            <div className="text-sm text-gray-700 mt-1">Groove as power; rhythm as protest. Funk, Afrofuturism, and the rise of Black electronic sound.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 9:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 9</span>
                           <div>
-                            <div className="text-white font-medium">Hip-Hop Culture and Rap Music</div>
-                            <div className="text-sm text-white/90">10/28/2025 - 11/3/2025</div>
+                            <div className="text-gray-900 font-medium">Hip-Hop Culture and Rap Music</div>
+                            <div className="text-sm text-gray-600">October 20</div>
+                            <div className="text-sm text-gray-700 mt-1">From the Bronx to the world. The DJ, the MC, and the politics of the street.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 10:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 10</span>
                           <div>
-                            <div className="text-white font-medium">Contemporary R&B and Neo-Soul</div>
-                            <div className="text-sm text-white/90">11/4/2025 - 11/10/2025</div>
+                            <div className="text-gray-900 font-medium">Contemporary R&B and Neo-Soul</div>
+                            <div className="text-sm text-gray-600">October 27</div>
+                            <div className="text-sm text-gray-700 mt-1">The soul revival and the return of live musicianship. Lauryn Hill, D'Angelo, Erykah Badu, and the 1990s renaissance.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 11:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 11</span>
                           <div>
-                            <div className="text-white font-medium">Gospel's Modern Evolution</div>
-                            <div className="text-sm text-white/90">11/11/2025 - 11/17/2025</div>
+                            <div className="text-gray-900 font-medium">Gospel's Modern Evolution</div>
+                            <div className="text-sm text-gray-600">November 3</div>
+                            <div className="text-sm text-gray-700 mt-1">From traditional quartet to praise and worship. Kirk Franklin, Yolanda Adams, and the fusion of sacred and pop idioms.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 12:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 12</span>
                           <div>
-                            <div className="text-white font-medium">Jazz Fusion and Modern Jazz</div>
-                            <div className="text-sm text-white/90">11/18/2025 - 11/24/2025</div>
+                            <div className="text-gray-900 font-medium">Jazz Fusion and Modern Jazz</div>
+                            <div className="text-sm text-gray-600">November 10</div>
+                            <div className="text-sm text-gray-700 mt-1">Miles Davis and Herbie Hancock's electric turn. Hip-hop jazz, Robert Glasper, Kamasi Washington.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 13:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 13</span>
                           <div>
-                            <div className="text-white font-medium">African American Music in Popular Culture</div>
-                            <div className="text-sm text-white/90">11/25/2025 - 12/1/2025</div>
+                            <div className="text-gray-900 font-medium">Hip-Hop II: Contemporary Directions</div>
+                            <div className="text-sm text-gray-600">November 17</div>
+                            <div className="text-sm text-gray-700 mt-1">Trap, drill, and conscious rap. Kendrick Lamar, J. Cole, Megan Thee Stallion, and global hip-hop identity.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 14:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 14</span>
                           <div>
-                            <div className="text-white font-medium">Music and Social Justice</div>
-                            <div className="text-sm text-white/90">12/2/2025 - 12/8/2025</div>
+                            <div className="text-gray-900 font-medium">AI Workday</div>
+                            <div className="text-sm text-gray-600">November 24 (Monday)</div>
+                            <div className="text-sm text-gray-700 mt-1">Workshop on AI-assisted music creation. Exploration of authorship, ethics, and innovation.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-amber-50 rounded-lg">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 15:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 15</span>
                           <div>
-                            <div className="text-white font-medium">Future Directions and Legacy</div>
-                            <div className="text-sm text-white/90">12/9/2025 - 12/15/2025</div>
+                            <div className="text-gray-900 font-medium">Group AI Presentations</div>
+                            <div className="text-sm text-gray-600">December 1</div>
+                            <div className="text-sm text-gray-700 mt-1">"From Spirituals to Swing to King to Code": student projects connecting history to the digital present.</div>
                           </div>
                         </div>
+                        
                         <div className="flex gap-4 p-3 bg-white rounded-lg border border-gray-200">
-                          <span className="font-semibold min-w-24 text-amber-800">Week 16:</span>
+                          <span className="font-semibold min-w-24 text-amber-800">Week 16</span>
                           <div>
-                            <div className="text-white font-medium">Final Presentations and Course Reflection</div>
-                            <div className="text-sm text-white/90">12/16/2025 - 12/22/2025</div>
+                            <div className="text-gray-900 font-medium">Final Exam & Reflection</div>
+                            <div className="text-sm text-gray-600">December 8</div>
+                            <div className="text-sm text-gray-700 mt-1">Comprehensive review. Discussion: The enduring soul of African American music in a technological age.</div>
                           </div>
                         </div>
                       </div>
