@@ -767,11 +767,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 className="h-7 px-1.5 text-xs sm:h-8 sm:px-2"
               >
                 {isSaving ? (
-                  <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1 animate-spin" />
+                  <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" />
                 ) : (
-                  <Save className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />
+                  <span className="text-xs">Save</span>
                 )}
-                <span className="text-xs">Save</span>
               </Button>
             )}
 
