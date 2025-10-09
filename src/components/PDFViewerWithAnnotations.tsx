@@ -897,19 +897,20 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
 
           {!annotationMode && (
-            <div className="absolute top-3 left-3 z-20">
+            <div className="absolute top-3 left-3 z-30">
               <Button
-                size="sm"
-                variant="outline"
+                size="lg"
+                variant="default"
                 onClick={() => { 
                   setError(null); 
                   setAnnotationMode(true); 
                 }}
                 aria-label="Enable annotations"
-                title="Annotate"
+                title="Click to enable drawing and annotations"
+                className="shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
               >
-                <Palette className="h-4 w-4 mr-2" />
-                Annotate
+                <Palette className="h-5 w-5 mr-2" />
+                <span className="font-semibold">Annotate</span>
               </Button>
             </div>
           )}
