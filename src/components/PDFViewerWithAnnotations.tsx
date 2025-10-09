@@ -158,7 +158,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   // Touch navigation functions
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (annotationMode && activeTool !== "select") return; // Don't interfere with drawing
+    // Don't handle navigation when in annotation mode
+    if (annotationMode) return;
     
     const touch = e.touches[0];
     setTouchStart({
@@ -167,7 +168,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       time: Date.now()
     });
     setTouchEnd(null);
-  }, [annotationMode, activeTool]);
+  }, [annotationMode]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchStart) return;
@@ -182,7 +183,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (!touchStart) return;
-    if (annotationMode && activeTool !== "select") return;
+    // Don't handle navigation when in annotation mode
+    if (annotationMode) return;
 
     // Prevent synthetic click from firing after touch
     e.preventDefault();
@@ -937,16 +939,34 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 />
                   <canvas
                     ref={drawingCanvasRef}
-                    className={`absolute top-0 left-0 w-full h-full pointer-events-auto z-20 ${
+                    className={`absolute top-0 left-0 w-full h-full pointer-events-auto z-20 touch-none ${
                       activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
                     }`}
                     onMouseDown={handleStart}
                     onMouseMove={handleMove}
                     onMouseUp={handleEnd}
                     onMouseLeave={() => setIsDrawing(false)}
-                    onTouchStart={handleStart}
-                    onTouchMove={handleMove}
-                    onTouchEnd={handleEnd}
+                    onTouchStart={(e) => {
+                      if (activeTool !== "select") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleStart(e);
+                      }
+                    }}
+                    onTouchMove={(e) => {
+                      if (activeTool !== "select" && isDrawing) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleMove(e);
+                      }
+                    }}
+                    onTouchEnd={(e) => {
+                      if (activeTool !== "select") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleEnd();
+                      }
+                    }}
                     onTouchCancel={() => setIsDrawing(false)}
                   />
                 </div>
