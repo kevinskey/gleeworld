@@ -544,7 +544,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   };
 
   useEffect(() => {
-    if (!signedUrl || annotationMode) return;
+    if (!signedUrl) return;
 
     let cancelled = false;
 
@@ -642,7 +642,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     return () => {
       cancelled = true;
     };
-  }, [signedUrl, currentPage, annotationMode]);
+  }, [signedUrl, currentPage]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
