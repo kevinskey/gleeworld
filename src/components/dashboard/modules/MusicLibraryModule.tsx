@@ -20,6 +20,8 @@ export const MusicLibraryModule = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPdf, setSelectedPdf] = useState<{ url: string; title: string; id: string } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12; // Show 12 items per page
   const { toast } = useToast();
   const { isFavorite, toggleFavorite } = useFavorites();
 
@@ -71,6 +73,17 @@ export const MusicLibraryModule = () => {
   );
 
   const favoritedMusic = musicLibrary.filter(piece => isFavorite(piece.id));
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredMusic.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedMusic = filteredMusic.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search term changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="h-full flex flex-col">
@@ -140,8 +153,9 @@ export const MusicLibraryModule = () => {
                 </p>
               </div>
             ) : viewMode === 'grid' ? (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {filteredMusic.map((piece) => (
+                {paginatedMusic.map((piece) => (
                   <Card 
                     key={piece.id} 
                     className="p-4 hover:shadow-md transition-shadow cursor-pointer"
@@ -233,9 +247,37 @@ export const MusicLibraryModule = () => {
                   </Card>
                 ))}
               </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+              </>
+
             ) : (
+              <>
               <div className="space-y-2">
-                {filteredMusic.map((piece) => (
+                {paginatedMusic.map((piece) => (
                   <Card 
                     key={piece.id} 
                     className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
@@ -320,6 +362,32 @@ export const MusicLibraryModule = () => {
                   </Card>
                 ))}
               </div>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-6">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+              </>
             )}
           </ScrollArea>
         </TabsContent>
