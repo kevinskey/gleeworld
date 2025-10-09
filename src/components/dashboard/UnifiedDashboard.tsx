@@ -102,7 +102,7 @@ export const UnifiedDashboard = () => {
   // If module specified via query param, render it directly
   if (activeModuleId && activeModuleId !== 'collapsed-toggle' && viewMode === 'default') {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div className="px-6 py-4">
+        <div>
           <ModuleDisplay selectedModule={activeModuleId} />
         </div>
       </div>;
