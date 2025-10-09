@@ -238,59 +238,59 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
   // Handle window resize to maintain consistent formatting
   useEffect(() => {
+    let resizeTimeout: NodeJS.Timeout;
+    
     const handleResize = () => {
-      if (osmdRef.current && scoreRef.current && musicXML) {
-        try {
-          const containerWidth = scoreRef.current.clientWidth;
-          console.log('Resizing OSMD display, container width:', containerWidth);
-          
-          // Use a debounced approach to avoid excessive re-renders
-          setTimeout(() => {
-            if (osmdRef.current && scoreRef.current) {
-              const isMobile = containerWidth < 640;
-              const baseWidth = 800;
-              const zoomFactor = containerWidth / baseWidth;
-              osmdRef.current.zoom = Math.max(0.5, Math.min(1.5, zoomFactor));
+      // Clear any pending resize operations
+      clearTimeout(resizeTimeout);
+      
+      // Debounce the resize operation
+      resizeTimeout = setTimeout(() => {
+        if (osmdRef.current && scoreRef.current && musicXML) {
+          try {
+            const containerWidth = scoreRef.current.clientWidth;
+            const isMobile = containerWidth < 640;
+            const baseWidth = 800;
+            const zoomFactor = containerWidth / baseWidth;
+            
+            // Update zoom
+            osmdRef.current.zoom = Math.max(0.5, Math.min(1.5, zoomFactor));
+            
+            // Re-render
+            osmdRef.current.render();
+            
+            // Make SVG responsive
+            const svgs = scoreRef.current!.querySelectorAll('svg');
+            svgs.forEach((svgEl) => {
+              const originalWidth = svgEl.getAttribute('width');
+              const originalHeight = svgEl.getAttribute('height');
               
-              osmdRef.current.render();
+              if (originalWidth && originalHeight) {
+                svgEl.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
+              }
               
-              // Make SVG fully responsive
-              const svgs = scoreRef.current.querySelectorAll('svg');
-              svgs.forEach((svgEl) => {
-                const originalWidth = svgEl.getAttribute('width');
-                const originalHeight = svgEl.getAttribute('height');
-                
-                if (originalWidth && originalHeight) {
-                  svgEl.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
-                }
-                
-                svgEl.removeAttribute('width');
-                svgEl.removeAttribute('height');
-                svgEl.setAttribute('preserveAspectRatio', 'xMinYMin meet');
-                (svgEl as SVGElement).style.width = '100%';
-                (svgEl as SVGElement).style.maxWidth = '100%';
-                (svgEl as SVGElement).style.height = 'auto';
-                (svgEl as SVGElement).style.display = 'block';
-              });
-            }
-          }, 250);
-        } catch (error) {
-          console.error('Error resizing score:', error);
+              svgEl.removeAttribute('width');
+              svgEl.removeAttribute('height');
+              svgEl.setAttribute('preserveAspectRatio', 'xMinYMin meet');
+              (svgEl as SVGElement).style.width = '100%';
+              (svgEl as SVGElement).style.maxWidth = '100%';
+              (svgEl as SVGElement).style.height = 'auto';
+              (svgEl as SVGElement).style.display = 'block';
+            });
+            
+            console.log('Score resized successfully');
+          } catch (error) {
+            console.error('Error resizing score:', error);
+          }
         }
-      }
+      }, 300); // Increased debounce time for better performance
     };
 
-    const debouncedResize = (() => {
-      let timeoutId: NodeJS.Timeout;
-      return () => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(handleResize, 250);
-      };
-    })();
-
-    window.addEventListener('resize', debouncedResize);
+    window.addEventListener('resize', handleResize);
+    
     return () => {
-      window.removeEventListener('resize', debouncedResize);
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
     };
   }, [musicXML]);
 
@@ -373,9 +373,10 @@ export const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         {musicXML && (
           <div 
             ref={scoreRef}
-            className="flex-1 min-h-[180px] sm:min-h-[250px] lg:min-h-[300px] w-full bg-white rounded border shadow-sm py-1 sm:p-2 px-0 sm:px-2 overflow-auto"
+            className="flex-1 min-h-[180px] sm:min-h-[250px] lg:min-h-[300px] w-full bg-white rounded border shadow-sm py-1 sm:p-2 px-0 sm:px-2 overflow-auto resize-y"
             style={{ 
               width: '100%',
+              maxHeight: '80vh',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center'
