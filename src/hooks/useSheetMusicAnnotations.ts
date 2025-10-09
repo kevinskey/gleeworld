@@ -89,9 +89,9 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
       });
 
       return data;
-    } catch (error) {
-      console.error('Error saving annotation:', error);
-      toast.error('Failed to save annotation');
+    } catch (error: any) {
+      console.error('Error saving annotation:', error, { musicId, pageNumber, type });
+      toast.error(`Failed to save annotation: ${error?.message || error?.hint || 'Unknown error'}`);
       return null;
     }
   }, [user?.id]);
