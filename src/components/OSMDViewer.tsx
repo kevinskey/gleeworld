@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Download, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 
 interface OSMDViewerProps {
   xmlUrl?: string;
@@ -23,6 +24,7 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { signedUrl: resolvedXmlUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(xmlUrl || null);
 
   // Preprocess MusicXML: insert <print new-system="yes"/> every 4 measures
   const insertSystemBreaks = (xml: string, measuresPerSystem: number = 4) => {
@@ -152,11 +154,11 @@ export const OSMDViewer: React.FC<OSMDViewerProps> = ({
 
   // Load music when URL or content changes
   useEffect(() => {
-    console.log('OSMDViewer: URL/content changed', { xmlUrl, xmlContent: !!xmlContent });
-    if (osmdRef.current && (xmlUrl || xmlContent)) {
+    console.log('OSMDViewer: URL/content changed', { xmlUrl, resolvedXmlUrl, xmlContent: !!xmlContent, urlLoading, urlError });
+    if (osmdRef.current && (resolvedXmlUrl || xmlContent)) {
       loadMusic();
     }
-  }, [xmlUrl, xmlContent]);
+  }, [resolvedXmlUrl, xmlContent]);
 
   const loadMusic = async () => {
     if (!osmdRef.current) {
