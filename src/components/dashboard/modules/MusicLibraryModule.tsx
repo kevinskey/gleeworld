@@ -162,14 +162,31 @@ export const MusicLibraryModule = () => {
               <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 md:gap-4">
                 {paginatedMusic.map((piece) => (
-                   <Card 
+                  <Card 
                     key={piece.id} 
                     className="p-2 md:p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => {
-                      if (piece.xml_content) {
+                      console.log('Piece clicked:', { 
+                        id: piece.id, 
+                        title: piece.title,
+                        hasXmlContent: !!piece.xml_content,
+                        xmlContentLength: piece.xml_content?.length || 0,
+                        hasPdfUrl: !!piece.pdf_url 
+                      });
+                      
+                      if (piece.xml_content && piece.xml_content.trim()) {
+                        console.log('Opening MusicXML viewer with content length:', piece.xml_content.length);
                         setSelectedMusicXML({ content: piece.xml_content, title: piece.title });
                       } else if (piece.pdf_url) {
+                        console.log('Opening PDF viewer');
                         setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
+                      } else {
+                        console.warn('No content available for this piece');
+                        toast({
+                          title: "No content available",
+                          description: "This music piece has no sheet music or MusicXML file attached.",
+                          variant: "destructive",
+                        });
                       }
                     }}
                   >
@@ -296,10 +313,27 @@ export const MusicLibraryModule = () => {
                     key={piece.id} 
                     className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
                     onClick={() => {
-                      if (piece.xml_content) {
+                      console.log('Piece clicked (list view):', { 
+                        id: piece.id, 
+                        title: piece.title,
+                        hasXmlContent: !!piece.xml_content,
+                        xmlContentLength: piece.xml_content?.length || 0,
+                        hasPdfUrl: !!piece.pdf_url 
+                      });
+                      
+                      if (piece.xml_content && piece.xml_content.trim()) {
+                        console.log('Opening MusicXML viewer with content length:', piece.xml_content.length);
                         setSelectedMusicXML({ content: piece.xml_content, title: piece.title });
                       } else if (piece.pdf_url) {
+                        console.log('Opening PDF viewer');
                         setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
+                      } else {
+                        console.warn('No content available for this piece');
+                        toast({
+                          title: "No content available",
+                          description: "This music piece has no sheet music or MusicXML file attached.",
+                          variant: "destructive",
+                        });
                       }
                     }}
                   >

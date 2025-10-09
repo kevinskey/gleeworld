@@ -34,8 +34,22 @@ export const MusicXMLViewer: React.FC<MusicXMLViewerProps> = ({
   }, [musicxml]);
 
   const loadMusic = async () => {
-    if (!containerRef.current || !musicxml) {
-      console.error('MusicXMLViewer: No container or musicxml content');
+    console.log('MusicXMLViewer.loadMusic called:', {
+      hasContainer: !!containerRef.current,
+      hasMusicXML: !!musicxml,
+      musicXMLLength: musicxml?.length || 0,
+      musicXMLPreview: musicxml?.substring(0, 100)
+    });
+    
+    if (!containerRef.current) {
+      console.error('MusicXMLViewer: No container ref');
+      setError('Display container not ready');
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!musicxml || !musicxml.trim()) {
+      console.error('MusicXMLViewer: No musicxml content provided');
       setError('No music content provided');
       setIsLoading(false);
       return;
