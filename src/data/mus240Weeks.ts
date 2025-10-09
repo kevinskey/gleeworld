@@ -67,11 +67,11 @@ export const WEEKS: Week[] = [
   {
     number: 7,
     date: "2025-10-08",
-    title: "Freedom Songs and the Civil Rights Era",
+    title: "1939–1969: From Spirituals to Swing to Summer of Soul",
     tracks: [
-      { title: "We Shall Overcome – SNCC Freedom Singers", source: "YouTube", url: "https://www.youtube.com/watch?v=QhnPVP23rzo" },
+      { title: "Spirituals to Swing Concert (1938-1939) – Carnegie Hall recordings", source: "YouTube", url: "https://www.youtube.com/watch?v=QhnPVP23rzo" },
       { title: "Sam Cooke – A Change Is Gonna Come", source: "YouTube", url: "https://www.youtube.com/watch?v=wEBlaMOmKV4" },
-      { title: "Nina Simone – Mississippi Goddam", source: "YouTube", url: "https://www.youtube.com/watch?v=ghhaREDM3X8" }
+      { title: "Summer of Soul (1969) – Harlem Cultural Festival clips", source: "YouTube", url: "https://www.youtube.com/watch?v=ghhaREDM3X8" }
     ]
   },
   {
