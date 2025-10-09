@@ -516,7 +516,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   };
 
   useEffect(() => {
-    if (!signedUrl) return;
+    if (!signedUrl || annotationMode) return;
 
     let cancelled = false;
 
@@ -533,22 +533,36 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     const loadPdf = async () => {
       try {
         setIsLoading(true);
-        console.log('Loading PDF for viewing/annotation:', signedUrl);
+        console.log('PDFViewerWithAnnotations: Loading PDF for viewing:', signedUrl);
 
         // Ensure canvas exists
         const ready = await waitForCanvas();
-        if (!ready) return;
+        if (!ready) {
+          console.error('PDFViewerWithAnnotations: Canvas not ready after waiting');
+          return;
+        }
 
         let doc;
         try {
           // Try loading by URL first
-          doc = await pdfjsLib.getDocument({ url: signedUrl }).promise;
+          console.log('PDFViewerWithAnnotations: Attempting to load PDF from URL');
+          doc = await pdfjsLib.getDocument({ 
+            url: signedUrl,
+            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
+            cMapPacked: true
+          }).promise;
+          console.log('PDFViewerWithAnnotations: PDF loaded successfully, pages:', doc.numPages);
         } catch (primaryErr) {
-          console.warn('Primary PDF load failed, retrying with ArrayBuffer', primaryErr);
+          console.warn('PDFViewerWithAnnotations: Primary PDF load failed, retrying with ArrayBuffer', primaryErr);
           const resp = await fetch(signedUrl);
           if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
           const ab = await resp.arrayBuffer();
-          doc = await pdfjsLib.getDocument({ data: ab }).promise;
+          doc = await pdfjsLib.getDocument({ 
+            data: ab,
+            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
+            cMapPacked: true
+          }).promise;
+          console.log('PDFViewerWithAnnotations: PDF loaded with ArrayBuffer method, pages:', doc.numPages);
         }
 
         if (cancelled) return;
@@ -556,11 +570,18 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         setTotalPages(doc.numPages);
 
         // Render current page
+        console.log('PDFViewerWithAnnotations: Rendering page', currentPage);
         const page = await doc.getPage(currentPage);
         const canvas = canvasRef.current;
-        if (!canvas) return;
+        if (!canvas) {
+          console.error('PDFViewerWithAnnotations: Canvas ref lost during render');
+          return;
+        }
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+        if (!ctx) {
+          console.error('PDFViewerWithAnnotations: Could not get canvas context');
+          return;
+        }
 
         // Render at full scale to show complete score length
         const baseViewport = page.getViewport({ scale: 1 });
@@ -572,13 +593,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
+        console.log('PDFViewerWithAnnotations: Canvas dimensions set:', { width: canvas.width, height: canvas.height, scale: fitScale });
+
         const renderContext = { canvasContext: ctx, viewport } as const;
         await page.render(renderContext).promise;
         setScale(fitScale);
-        console.log('PDF page rendered successfully');
+        console.log('PDFViewerWithAnnotations: PDF page rendered successfully');
         setError(null);
       } catch (err) {
-        console.error('Error loading PDF:', err);
+        console.error('PDFViewerWithAnnotations: Error loading PDF:', err);
         toast.error('Failed to load PDF');
         setError('Failed to load PDF');
       } finally {
@@ -591,7 +614,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     return () => {
       cancelled = true;
     };
-  }, [signedUrl, currentPage, scale, annotationMode]);
+  }, [signedUrl, currentPage, annotationMode]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
