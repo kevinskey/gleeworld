@@ -12,6 +12,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
 import { InAppPDFViewerDialog } from '@/components/music-library/InAppPDFViewerDialog';
 import { PDFThumbnail } from '@/components/music-library/PDFThumbnail';
+import { MusicXMLViewer } from '@/components/liturgical/MusicXMLViewer';
 
 export const MusicLibraryModule = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -20,6 +21,7 @@ export const MusicLibraryModule = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedPdf, setSelectedPdf] = useState<{ url: string; title: string; id: string } | null>(null);
+  const [selectedMusicXML, setSelectedMusicXML] = useState<{ content: string; title: string } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12; // Show 12 items per page
   const { toast } = useToast();
@@ -160,10 +162,16 @@ export const MusicLibraryModule = () => {
               <>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 md:gap-4">
                 {paginatedMusic.map((piece) => (
-                  <Card 
+                   <Card 
                     key={piece.id} 
                     className="p-2 md:p-4 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
+                    onClick={() => {
+                      if (piece.xml_content) {
+                        setSelectedMusicXML({ content: piece.xml_content, title: piece.title });
+                      } else if (piece.pdf_url) {
+                        setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
+                      }
+                    }}
                   >
                     <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-2 md:mb-3 flex items-center justify-center relative overflow-hidden">
                       {piece.pdf_url ? (
@@ -287,7 +295,13 @@ export const MusicLibraryModule = () => {
                   <Card 
                     key={piece.id} 
                     className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                    onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
+                    onClick={() => {
+                      if (piece.xml_content) {
+                        setSelectedMusicXML({ content: piece.xml_content, title: piece.title });
+                      } else if (piece.pdf_url) {
+                        setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg flex items-center justify-center">
@@ -501,6 +515,14 @@ export const MusicLibraryModule = () => {
           pdfUrl={selectedPdf.url}
           title={selectedPdf.title}
           musicId={selectedPdf.id}
+        />
+      )}
+
+      {selectedMusicXML && (
+        <MusicXMLViewer
+          musicxml={selectedMusicXML.content}
+          onClose={() => setSelectedMusicXML(null)}
+          title={selectedMusicXML.title}
         />
       )}
     </div>
