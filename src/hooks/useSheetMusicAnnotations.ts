@@ -75,9 +75,6 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
 
       if (error) throw error;
 
-      // Optimistic update: rely on fetchAnnotations to refresh UI after save
-      
-      
       // Log analytics
       await supabase.rpc('log_sheet_music_analytics', {
         sheet_music_id_param: musicId,
@@ -87,7 +84,8 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
         device_type_param: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
       });
 
-      return data;
+      // Success (we'll refetch annotations after save)
+      return true;
     } catch (error: any) {
       console.error('Error saving annotation:', error, { musicId, pageNumber, type });
       toast.error(`Failed to save annotation: ${error?.message || error?.hint || 'Unknown error'}`);
