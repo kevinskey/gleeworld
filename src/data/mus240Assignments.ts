@@ -103,24 +103,6 @@ export const mus240Assignments: WeekAssignments[] = [
     ]
   },
   {
-    week: 8,
-    topic: "Funk and the Rhythmic Revolution",
-    startDate: "2025-10-13",
-    endDate: "2025-10-17",
-    assignments: [
-      {
-        id: "midterm-exam",
-        title: "Midterm Exam",
-        description: "Assess understanding of music styles, genres, and cultural contexts (Weeks 1–8).",
-        instructions: "Part 1: Listening Identification - Identify musical examples and key characteristics. Part 2: Short Essays on genres, performers, and cultural significance. Completed in class during mid-semester examination period (Sept 26). Focus on identification accuracy, strength of explanations, proper terminology, and historical/cultural integration.",
-        dueDate: "2025-10-17",
-        type: "exam",
-        estimatedTime: "2 hours",
-        points: 100
-      }
-    ]
-  },
-  {
     week: 5,
     topic: "Gospel Music and the Great Migration",
     startDate: "2025-09-22",
@@ -191,6 +173,24 @@ export const mus240Assignments: WeekAssignments[] = [
         type: "reflection-paper",
         estimatedTime: "3 hours",
         points: 50
+      }
+    ]
+  },
+  {
+    week: 8,
+    topic: "Funk and the Rhythmic Revolution",
+    startDate: "2025-10-13",
+    endDate: "2025-10-17",
+    assignments: [
+      {
+        id: "midterm-exam",
+        title: "Midterm Exam",
+        description: "Assess understanding of music styles, genres, and cultural contexts (Weeks 1–8).",
+        instructions: "Part 1: Listening Identification - Identify musical examples and key characteristics. Part 2: Short Essays on genres, performers, and cultural significance. Completed in class during mid-semester examination period (Sept 26). Focus on identification accuracy, strength of explanations, proper terminology, and historical/cultural integration.",
+        dueDate: "2025-10-17",
+        type: "exam",
+        estimatedTime: "2 hours",
+        points: 100
       }
     ]
   },
