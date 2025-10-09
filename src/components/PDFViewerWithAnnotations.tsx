@@ -752,7 +752,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     <Card className={cn("w-full", className)}>
       {/* Annotation Toolbar */}
         {annotationMode && (
-          <div className="flex flex-wrap items-center gap-3 p-4 sm:gap-2 sm:p-3 bg-muted/50 rounded-t-lg border-b">
+          <div className="flex flex-wrap items-center gap-2 p-2 sm:gap-1.5 sm:p-2 bg-muted/50 rounded-t-lg border-b">
             {/* Annotation Toggle */}
             <Button
               variant={annotationMode ? "default" : "outline"}
@@ -768,56 +768,61 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   setIsLoading(false);
                 }
               }}
+              className="h-8 px-2 text-xs sm:h-9 sm:px-3 sm:text-sm"
             >
-              <Palette className="h-4 w-4 mr-2" />
-              {annotationMode ? "Exit Annotations" : "Annotate"}
+              <Palette className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">{annotationMode ? "Exit Annotations" : "Annotate"}</span>
+              <span className="sm:hidden">Exit</span>
             </Button>
 
             {/* Tool Selection */}
-            <div className="flex gap-2 sm:gap-1">
+            <div className="flex gap-1">
               <Button
                 variant={activeTool === "select" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("select")}
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
-                <MousePointer className="h-4 w-4" />
+                <MousePointer className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <Button
                 variant={activeTool === "draw" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("draw")}
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
-                <Pencil className="h-4 w-4" />
+                <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <Button
                 variant={activeTool === "erase" ? "default" : "outline"}
                 size="sm"
                 onClick={() => setActiveTool("erase")}
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
-                <Eraser className="h-4 w-4" />
+                <Eraser className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
             </div>
 
             {/* Colors */}
-            <div className="flex gap-2 sm:gap-1">
+            <div className="flex gap-1">
               {colors.map((color) => (
                 <Button
                   key={color}
                   variant="outline"
                   size="sm"
-                  className="w-6 h-6 p-0 rounded-full"
+                  className="w-7 h-7 sm:w-8 sm:h-8 p-0 rounded-full"
                   style={{ backgroundColor: color }}
                   onClick={() => setBrushColor(color)}
                 >
                   {brushColor === color && (
-                    <div className="w-2 h-2 bg-white rounded-full" />
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full" />
                   )}
                 </Button>
               ))}
             </div>
 
             {/* Size */}
-            <div className="flex items-center gap-2 min-w-20">
+            <div className="flex items-center gap-1.5 min-w-16 sm:min-w-20">
               <Slider
                 value={brushSize}
                 onValueChange={setBrushSize}
@@ -826,39 +831,42 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 step={1}
                 className="flex-1"
               />
-              <Badge variant="outline">{brushSize[0]}</Badge>
+              <Badge variant="outline" className="text-xs px-1.5 py-0.5">{brushSize[0]}</Badge>
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 sm:gap-1 ml-auto">
+            <div className="flex gap-1 ml-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleUndo}
                 disabled={paths.length === 0}
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
-                <Undo className="h-4 w-4" />
+                <Undo className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleClear}
                 disabled={paths.length === 0}
+                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               {hasAnnotations && (
                 <Button
                   size="sm"
                   onClick={handleSave}
                   disabled={isSaving || !musicId}
+                  className="h-8 px-2 sm:h-9 sm:px-3"
                 >
                   {isSaving ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
                   ) : (
-                    <Save className="h-4 w-4" />
+                    <Save className="h-3 w-3 sm:h-4 sm:w-4" />
                   )}
-                  Save
+                  <span className="ml-1 text-xs sm:text-sm">Save</span>
                 </Button>
               )}
               {annotations.length > 0 && musicTitle && (
