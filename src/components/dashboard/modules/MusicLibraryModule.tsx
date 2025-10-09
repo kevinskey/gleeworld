@@ -88,60 +88,64 @@ export const MusicLibraryModule = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-6 border-b border-border bg-background">
-        <div className="flex items-center gap-2 mb-4">
-          <Music className="w-5 h-5 text-primary" />
-          <h2 className="text-lg font-semibold">Music Library</h2>
+      <div className="p-3 md:p-6 border-b border-border bg-background">
+        <div className="flex items-center gap-2 mb-3 md:mb-4">
+          <Music className="w-4 h-4 md:w-5 md:h-5 text-primary" />
+          <h2 className="text-base md:text-lg font-semibold">Music Library</h2>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-4">
+          <div className="relative flex-1 max-w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input 
-              placeholder="Search by title, composer, genre..." 
-              className="pl-10"
+              placeholder="Search..." 
+              className="pl-10 h-10 md:h-9 text-base md:text-sm"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <Button variant="outline" size="sm">
-            <Filter className="w-4 h-4 mr-2" />
-            Filter
-          </Button>
-          
-          <div className="flex gap-1">
-            <Button 
-              variant={viewMode === 'grid' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setViewMode('grid')}
-            >
-              <Grid className="w-4 h-4" />
+          <div className="flex gap-2 md:gap-4">
+            <Button variant="outline" size="sm" className="flex-1 md:flex-none h-10 md:h-9">
+              <Filter className="w-4 h-4 mr-2" />
+              <span className="md:inline">Filter</span>
             </Button>
-            <Button 
-              variant={viewMode === 'list' ? 'default' : 'outline'} 
-              size="sm"
-              onClick={() => setViewMode('list')}
-            >
-              <List className="w-4 h-4" />
-            </Button>
+            
+            <div className="flex gap-1 md:gap-1">
+              <Button 
+                variant={viewMode === 'grid' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="h-10 md:h-9 px-3 md:px-2"
+              >
+                <Grid className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant={viewMode === 'list' ? 'default' : 'outline'} 
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="h-10 md:h-9 px-3 md:px-2"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="all" className="flex-1 flex flex-col">
-        <div className="px-6 pt-4">
-          <TabsList>
-            <TabsTrigger value="all">All Music ({musicLibrary.length})</TabsTrigger>
-            <TabsTrigger value="recent">Recently Added</TabsTrigger>
-            <TabsTrigger value="favorites">Favorites</TabsTrigger>
-            <TabsTrigger value="current">Current Repertoire</TabsTrigger>
+        <div className="px-3 md:px-6 pt-3 md:pt-4">
+          <TabsList className="w-full md:w-auto grid grid-cols-4 md:inline-flex">
+            <TabsTrigger value="all" className="text-xs md:text-sm">All ({musicLibrary.length})</TabsTrigger>
+            <TabsTrigger value="recent" className="text-xs md:text-sm">Recent</TabsTrigger>
+            <TabsTrigger value="favorites" className="text-xs md:text-sm">Favorites</TabsTrigger>
+            <TabsTrigger value="current" className="text-xs md:text-sm">Current</TabsTrigger>
           </TabsList>
         </div>
 
         <TabsContent value="all" className="flex-1 mt-0">
-          <ScrollArea className="flex-1 p-6">
+          <ScrollArea className="flex-1 p-3 md:p-6">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-muted-foreground">Loading music library...</p>
@@ -154,14 +158,14 @@ export const MusicLibraryModule = () => {
               </div>
             ) : viewMode === 'grid' ? (
               <>
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 md:gap-4">
                 {paginatedMusic.map((piece) => (
                   <Card 
                     key={piece.id} 
-                    className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    className="p-2 md:p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
                   >
-                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-2 md:mb-3 flex items-center justify-center relative overflow-hidden">
                       {piece.pdf_url ? (
                         <PDFThumbnail
                           pdfUrl={piece.pdf_url}
@@ -171,13 +175,13 @@ export const MusicLibraryModule = () => {
                           className="w-full h-full"
                         />
                       ) : (
-                        <Music className="w-12 h-12 text-primary/50" />
+                        <Music className="w-8 h-8 md:w-12 md:h-12 text-primary/50" />
                       )}
                       <Button
                         variant="ghost"
                         size="icon"
                         className={cn(
-                          "absolute top-2 right-2 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90",
+                          "absolute top-1 right-1 md:top-2 md:right-2 h-6 w-6 md:h-8 md:w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90",
                           isFavorite(piece.id) && "text-destructive"
                         )}
                         onClick={(e) => {
@@ -185,38 +189,38 @@ export const MusicLibraryModule = () => {
                           toggleFavorite(piece.id);
                         }}
                       >
-                        <Heart className={cn("h-4 w-4", isFavorite(piece.id) && "fill-current")} />
+                        <Heart className={cn("h-3 w-3 md:h-4 md:w-4", isFavorite(piece.id) && "fill-current")} />
                       </Button>
                     </div>
                     
-                    <div className="space-y-2">
-                      <h3 className="font-medium text-sm line-clamp-2">{piece.title}</h3>
-                      <p className="text-xs text-muted-foreground">{piece.composer || 'Unknown'}</p>
+                    <div className="space-y-1 md:space-y-2">
+                      <h3 className="font-medium text-xs md:text-sm line-clamp-2">{piece.title}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-1">{piece.composer || 'Unknown'}</p>
                       
                       <div className="flex flex-wrap gap-1">
                         {piece.voice_part && (
-                          <Badge variant="outline" className="text-xs">{piece.voice_part}</Badge>
+                          <Badge variant="outline" className="text-xs px-1 py-0">{piece.voice_part}</Badge>
                         )}
                         {piece.difficulty && (
-                          <Badge className={`text-xs ${getDifficultyColor(piece.difficulty)}`}>
+                          <Badge className={`text-xs px-1 py-0 ${getDifficultyColor(piece.difficulty)}`}>
                             {piece.difficulty}
                           </Badge>
                         )}
                         {piece.genre && (
-                          <Badge variant="secondary" className="text-xs">{piece.genre}</Badge>
+                          <Badge variant="secondary" className="text-xs px-1 py-0 hidden md:inline-flex">{piece.genre}</Badge>
                         )}
                       </div>
                       
-                      <div className="flex items-center justify-between pt-2">
-                        <span className="text-xs text-muted-foreground">
+                      <div className="flex items-center justify-between pt-1 md:pt-2">
+                        <span className="text-xs text-muted-foreground hidden md:block">
                           {new Date(piece.created_at).toLocaleDateString()}
                         </span>
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 ml-auto">
                           {piece.audio_url && (
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 md:h-8 md:w-8 p-0"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 togglePlay(piece.id);
@@ -232,7 +236,7 @@ export const MusicLibraryModule = () => {
                             <Button 
                               size="sm" 
                               variant="outline" 
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 md:h-8 md:w-8 p-0"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 window.open(piece.pdf_url, '_blank');
@@ -250,16 +254,17 @@ export const MusicLibraryModule = () => {
               
               {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6">
+                <div className="flex items-center justify-center gap-2 mt-4 md:mt-6">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
+                    className="h-9 md:h-8 px-3 md:px-4"
                   >
                     Previous
                   </Button>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs md:text-sm text-muted-foreground px-2">
                     Page {currentPage} of {totalPages}
                   </span>
                   <Button
@@ -267,6 +272,7 @@ export const MusicLibraryModule = () => {
                     size="sm"
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
+                    className="h-9 md:h-8 px-3 md:px-4"
                   >
                     Next
                   </Button>
@@ -419,7 +425,7 @@ export const MusicLibraryModule = () => {
         </TabsContent>
 
         <TabsContent value="favorites" className="flex-1">
-          <ScrollArea className="flex-1 p-6">
+          <ScrollArea className="flex-1 p-3 md:p-6">
             {favoritedMusic.length === 0 ? (
               <div className="flex items-center justify-center text-muted-foreground py-12">
                 <p>No favorite pieces yet. Click the heart icon on any piece to add it to your favorites!</p>
