@@ -407,7 +407,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
       <CardContent className="p-0">
         <div 
           ref={containerRef}
-          className="relative w-full h-[calc(100dvh-10rem)] min-h-[60vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)]"
+          className="relative w-full h-[calc(100dvh-10rem)] min-h-[60vh] md:h-[calc(100dvh-9rem)] lg:h-[calc(100dvh-8rem)] overflow-y-auto overflow-x-hidden"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onClick={handleMouseClick}
