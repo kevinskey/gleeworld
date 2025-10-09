@@ -3,15 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Calendar, BookOpen, Music, FileText, GraduationCap, CheckCircle2, AlertCircle, Star, ArrowLeft } from 'lucide-react';
+import { Calendar, BookOpen, Music, FileText, GraduationCap, CheckCircle2, AlertCircle, Star, ArrowLeft, Edit } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { mus240Assignments } from '@/data/mus240Assignments';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
+import { useUserRole } from '@/hooks/useUserRole';
 
 const AssignmentWeek: React.FC = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -246,10 +248,22 @@ const AssignmentWeek: React.FC = () => {
                 
                 <div className="space-y-4">
                   {weekData.assignments.map((assignment) => (
-                 <div key={assignment.id} className="bg-white/95 backdrop-blur-sm rounded-xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-lg border border-white/30 hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+                  <div key={assignment.id} className="bg-white/95 backdrop-blur-sm rounded-xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-lg border border-white/30 hover:bg-white hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                       <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl mb-2 text-gray-900">{assignment.title}</h4>
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <h4 className="font-semibold text-xl sm:text-2xl md:text-3xl lg:text-2xl xl:text-3xl text-gray-900">{assignment.title}</h4>
+                            {isAdmin() && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate(`/classes/mus240/assignments/${assignment.id}`)}
+                                className="flex-shrink-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                           <p className="text-lg sm:text-sm md:text-xl lg:text-base xl:text-lg text-gray-600 mb-3">
                             {assignment.description}
                           </p>
