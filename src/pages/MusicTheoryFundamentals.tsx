@@ -85,10 +85,16 @@ const MusicTheoryFundamentals = () => {
               Master the building blocks of music with comprehensive lessons in theory, notation, and ear training
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
-              <Link to="/dashboard?module=music-library">
-                <Button size="lg" className="gap-2">
+              <Link to="/academy-student-registration">
+                <Button size="lg" className="gap-2" variant="default">
+                  <GraduationCap className="w-5 h-5" />
+                  Register as Student
+                </Button>
+              </Link>
+              <Link to="/auth?tab=login">
+                <Button size="lg" className="gap-2" variant="outline">
                   <BookOpen className="w-5 h-5" />
-                  Course Materials (PDF)
+                  Student Login
                 </Button>
               </Link>
             </div>

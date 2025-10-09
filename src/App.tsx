@@ -161,7 +161,7 @@ import FirstYearHub from "./pages/FirstYearHub";
 import FirstYearConsolePage from "./pages/console/FirstYearConsolePage";
 import SetupCrewPage from "./pages/SetupCrewPage";
 import { Onboarding } from "./pages/Onboarding";
-import StudentRegistration from "./pages/StudentRegistration";
+import AcademyStudentRegistration from "./pages/AcademyStudentRegistration";
 import { ProviderDashboard } from "./components/providers/ProviderDashboard";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
@@ -334,10 +334,10 @@ const App = () => {
                 } 
               />
               <Route 
-                path="/student-registration" 
+                path="/academy-student-registration" 
                 element={
                   <PublicRoute>
-                    <StudentRegistration />
+                    <AcademyStudentRegistration />
                   </PublicRoute>
                 } 
               />
