@@ -242,7 +242,7 @@ const AssignmentWeek: React.FC = () => {
                     Week {weekData.week}: {weekData.topic}
                   </h3>
                   <p className="text-sm text-white/70">
-                    {new Date(weekData.startDate).toLocaleDateString()} - {new Date(weekData.endDate).toLocaleDateString()}
+                    {new Date(weekData.startDate + 'T12:00:00').toLocaleDateString()} - {new Date(weekData.endDate + 'T12:00:00').toLocaleDateString()}
                   </p>
                 </div>
                 
