@@ -366,6 +366,13 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     
     annotationsToRedraw.forEach(path => {
       if (path.points && path.points.length > 1) {
+        // Set compositing mode for eraser to actually erase pixels
+        if (path.tool === 'erase') {
+          ctx.globalCompositeOperation = 'destination-out';
+        } else {
+          ctx.globalCompositeOperation = 'source-over';
+        }
+        
         ctx.strokeStyle = path.color;
         ctx.lineWidth = path.size;
         ctx.lineCap = 'round';
@@ -379,6 +386,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         }
         
         ctx.stroke();
+        
+        // Reset to default compositing
+        ctx.globalCompositeOperation = 'source-over';
       }
     });
   };
@@ -417,7 +427,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     
     const newPath = {
       points: [pos],
-      color: activeTool === "erase" ? "#ffffff" : brushColor,
+      color: brushColor, // Always use brush color, erasing handled by compositing mode
       size: activeTool === "erase" ? brushSize[0] * 2 : brushSize[0],
       tool: activeTool
     };
