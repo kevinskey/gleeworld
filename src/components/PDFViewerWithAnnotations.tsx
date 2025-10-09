@@ -81,6 +81,8 @@ const scrollModePluginInstance = scrollModePlugin();
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; time: number } | null>(null);
   const [touchEnd, setTouchEnd] = useState<{ x: number; y: number; time: number } | null>(null);
 
+  const suppressClickUntilRef = useRef<number>(0);
+
   console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
   console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
   console.log('PDFViewerWithAnnotations: Component state:', { isLoading, error, annotationMode, hasAnnotations });
@@ -128,17 +130,19 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   const nextPage = useCallback(() => {
     console.log('PDFViewerWithAnnotations: nextPage called', { currentPage, totalPages });
+    if (isLoading) return;
     if (currentPage < (totalPages || (pdf?.numPages ?? 0) || 1)) {
       goToPage(currentPage + 1);
     }
-  }, [currentPage, totalPages, pdf, goToPage]);
+  }, [currentPage, totalPages, pdf, isLoading, goToPage]);
 
   const prevPage = useCallback(() => {
     console.log('PDFViewerWithAnnotations: prevPage called', { currentPage, totalPages });
+    if (isLoading) return;
     if (currentPage > 1) {
       goToPage(currentPage - 1);
     }
-  }, [currentPage, goToPage]);
+  }, [currentPage, isLoading, goToPage]);
 
   // Touch navigation functions
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -167,6 +171,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (!touchStart) return;
     if (annotationMode && activeTool !== "select") return;
+
+    // Prevent synthetic click from firing after touch
+    e.preventDefault();
+    e.stopPropagation();
     
     const touch = e.changedTouches[0];
     const touchEndPos = {
@@ -184,7 +192,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     const maxSwipeTime = 300;
     
     if (Math.abs(deltaX) > minSwipeDistance && deltaTime < maxSwipeTime && Math.abs(deltaY) < Math.abs(deltaX)) {
-      e.preventDefault();
       if (deltaX > 0) {
         // Swipe right - previous page
         prevPage();
@@ -210,6 +217,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       }
     }
     
+    // Suppress the following click event triggered by touch
+    suppressClickUntilRef.current = Date.now() + 500;
+    
     setTouchStart(null);
     setTouchEnd(null);
   }, [touchStart, annotationMode, activeTool, prevPage, nextPage]);
@@ -217,6 +227,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   // Mouse click navigation for desktop
   const handleMouseClick = useCallback((e: React.MouseEvent) => {
     if (annotationMode && activeTool !== "select") return;
+
+    // Ignore the synthetic click following a touch interaction
+    if (Date.now() < suppressClickUntilRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+
+    if (isLoading) return;
     
     const containerRect = containerRef.current?.getBoundingClientRect();
     if (containerRect) {
@@ -231,7 +250,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         nextPage();
       }
     }
-  }, [annotationMode, activeTool, prevPage, nextPage]);
+  }, [annotationMode, activeTool, isLoading, prevPage, nextPage]);
 
   useEffect(() => {
     if (startInAnnotationMode && !annotationMode) {
@@ -878,8 +897,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             <div className="w-full" ref={containerRef}>
               <canvas
                 ref={canvasRef}
-                className="w-full max-w-full block bg-white"
-                style={{ height: 'auto', minHeight: '100%', width: '100%', maxWidth: '100%' }}
+                className="w-full max-w-full block bg-white transition-opacity duration-300"
+                style={{ height: 'auto', minHeight: '100%', width: '100%', maxWidth: '100%', opacity: isLoading ? 0.6 : 1 }}
               />
             </div>
           )}
@@ -887,12 +906,12 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
             <div className="w-full" ref={containerRef}>
-              <div className="relative w-full h-full">
-                  <canvas
-                    ref={canvasRef}
-                    className="w-full bg-white block"
-                    style={{ height: 'auto', minHeight: '100%' }}
-                  />
+            <div className="relative w-full h-full">
+                <canvas
+                  ref={canvasRef}
+                  className="w-full bg-white block transition-opacity duration-300"
+                  style={{ height: 'auto', minHeight: '100%', opacity: isLoading ? 0.6 : 1 }}
+                />
                   <canvas
                     ref={drawingCanvasRef}
                     className={`absolute inset-0 w-full h-full pt-5 pointer-events-auto z-20 ${
