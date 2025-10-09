@@ -49,7 +49,8 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
     return () => observer.disconnect();
   }, [isInView]);
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (roleLoading) return;
     
     if (!canDownloadPDF()) {
