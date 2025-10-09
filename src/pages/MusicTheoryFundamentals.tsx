@@ -63,61 +63,61 @@ const MusicTheoryFundamentals = () => {
   return (
     <PublicLayout>
 
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         {/* Hero Section */}
-        <section className="py-16 px-6">
+        <section className="py-16 px-6 bg-gradient-to-b from-slate-900/50 to-transparent">
           <div className="max-w-4xl mx-auto text-center">
             <div className="flex justify-center mb-6">
-              <div className="p-4 bg-primary/10 rounded-full">
+              <div className="p-4 bg-primary/20 rounded-full shadow-lg shadow-primary/20">
                 <Music className="w-12 h-12 text-primary" />
               </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Music Theory Fundamentals
             </h1>
-            <p className="text-xl text-muted-foreground mb-2">
+            <p className="text-xl text-slate-300 mb-2">
               Fundamentals of Music – Theory & Ear Training Component
             </p>
-            <p className="text-lg text-muted-foreground mb-6">
+            <p className="text-lg text-slate-400 mb-6">
               with Dr. Kevin P. Johnson
             </p>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+            <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-8">
               Master the building blocks of music with comprehensive lessons in theory, notation, and ear training
             </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link to="/grand-staff-classroom">
-                <Button size="lg" className="gap-2">
+                <Button size="lg" className="gap-2 shadow-lg">
                   <FileText className="w-5 h-5" />
                   Course Materials (PDF)
                 </Button>
               </Link>
               <Link to="/academy-student-registration">
-                <Button size="lg" className="gap-2" variant="outline">
+                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700" variant="outline">
                   <GraduationCap className="w-5 h-5" />
                   Register as Student
                 </Button>
               </Link>
               <Link to="/auth?tab=login">
-                <Button size="lg" className="gap-2" variant="outline">
+                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700" variant="outline">
                   <BookOpen className="w-5 h-5" />
                   Student Login
                 </Button>
               </Link>
               <Link to="/dashboard?module=music-library">
-                <Button size="lg" className="gap-2" variant="outline">
+                <Button size="lg" className="gap-2 bg-slate-800 hover:bg-slate-700 text-white border-slate-700" variant="outline">
                   <Music className="w-5 h-5" />
                   Music Library
                 </Button>
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground mt-4">
+            <p className="text-sm text-slate-400 mt-4">
               Register or login as a student to access course materials and the music library
             </p>
           </div>
         </section>
 
         {/* Course Info Cards */}
-        <section className="py-12 px-6">
+        <section className="py-12 px-6 bg-slate-900/30">
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               <Card>
