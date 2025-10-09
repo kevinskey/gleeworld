@@ -58,6 +58,23 @@ export const QuickActions: React.FC = () => {
     variant: 'outline' as const
   }];
   return <Card className="w-full overflow-hidden">
-      
+      <CardContent className="p-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {actions.map((action, index) => (
+            <Button
+              key={index}
+              variant={action.variant}
+              onClick={action.action}
+              className="h-auto py-4 flex flex-col items-center gap-2 text-center"
+            >
+              {action.icon}
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-medium">{action.label}</span>
+                <span className="text-xs opacity-70">{action.description}</span>
+              </div>
+            </Button>
+          ))}
+        </div>
+      </CardContent>
     </Card>;
 };
