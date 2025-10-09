@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useFavorites } from '@/hooks/useFavorites';
 import { cn } from '@/lib/utils';
 import { InAppPDFViewerDialog } from '@/components/music-library/InAppPDFViewerDialog';
+import { PDFThumbnail } from '@/components/music-library/PDFThumbnail';
 
 export const MusicLibraryModule = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -146,13 +147,23 @@ export const MusicLibraryModule = () => {
                     className="p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
                   >
-                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative">
-                      <Music className="w-12 h-12 text-primary/50" />
+                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                      {piece.pdf_url ? (
+                        <PDFThumbnail
+                          pdfUrl={piece.pdf_url}
+                          alt={piece.title}
+                          title={piece.title}
+                          musicId={piece.id}
+                          className="w-full h-full"
+                        />
+                      ) : (
+                        <Music className="w-12 h-12 text-primary/50" />
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
                         className={cn(
-                          "absolute top-2 right-2 h-8 w-8",
+                          "absolute top-2 right-2 h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background/90",
                           isFavorite(piece.id) && "text-destructive"
                         )}
                         onClick={(e) => {
@@ -353,12 +364,22 @@ export const MusicLibraryModule = () => {
                     className="p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => piece.pdf_url && setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id })}
                   >
-                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative">
-                      <Music className="w-12 h-12 text-primary/50" />
+                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                      {piece.pdf_url ? (
+                        <PDFThumbnail
+                          pdfUrl={piece.pdf_url}
+                          alt={piece.title}
+                          title={piece.title}
+                          musicId={piece.id}
+                          className="w-full h-full"
+                        />
+                      ) : (
+                        <Music className="w-12 h-12 text-primary/50" />
+                      )}
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="absolute top-2 right-2 h-8 w-8 text-destructive"
+                        className="absolute top-2 right-2 h-8 w-8 text-destructive bg-background/80 backdrop-blur-sm hover:bg-background/90"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleFavorite(piece.id);
