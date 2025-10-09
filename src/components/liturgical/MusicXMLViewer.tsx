@@ -89,35 +89,26 @@ export const MusicXMLViewer: React.FC<MusicXMLViewerProps> = ({
       });
       console.log('MusicXMLViewer: OSMD initialized');
 
-      // Create blob URL from XML content
-      console.log('MusicXMLViewer: Creating blob URL...');
-      const blob = new Blob([musicxml], { type: 'application/xml' });
-      const blobUrl = URL.createObjectURL(blob);
-
-      try {
-        console.log('MusicXMLViewer: Loading XML into OSMD...');
-        await osmdRef.current.load(blobUrl);
-        console.log('MusicXMLViewer: XML loaded, now rendering...');
-        
-        await osmdRef.current.render();
-        console.log('MusicXMLViewer: Rendering complete');
-        
-        // Verify SVG was created
-        const svgs = containerRef.current.querySelectorAll('svg');
-        console.log('MusicXMLViewer: SVG elements found:', svgs.length);
-        
-        if (svgs.length === 0) {
-          throw new Error('No musical notation was rendered');
-        }
-
-        toast({
-          title: "Success",
-          description: "Sheet music loaded successfully"
-        });
-
-      } finally {
-        URL.revokeObjectURL(blobUrl);
+      // Load XML content directly (not via blob URL to avoid CSP issues)
+      console.log('MusicXMLViewer: Loading XML into OSMD...');
+      await osmdRef.current.load(musicxml);
+      console.log('MusicXMLViewer: XML loaded, now rendering...');
+      
+      await osmdRef.current.render();
+      console.log('MusicXMLViewer: Rendering complete');
+      
+      // Verify SVG was created
+      const svgs = containerRef.current.querySelectorAll('svg');
+      console.log('MusicXMLViewer: SVG elements found:', svgs.length);
+      
+      if (svgs.length === 0) {
+        throw new Error('No musical notation was rendered');
       }
+
+      toast({
+        title: "Success",
+        description: "Sheet music loaded successfully"
+      });
 
     } catch (error) {
       console.error('MusicXMLViewer: Error loading music:', error);
