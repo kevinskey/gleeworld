@@ -62,7 +62,7 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
     if (!user?.id || !musicId) return null;
 
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('gw_sheet_music_annotations')
         .insert({
           sheet_music_id: musicId,
@@ -71,13 +71,12 @@ export const useSheetMusicAnnotations = (sheetMusicId?: string) => {
           annotation_type: type,
           annotation_data: annotationData,
           position_data: positionData
-        })
-        .select()
-        .single();
+        });
 
       if (error) throw error;
 
-      setAnnotations(prev => [...prev, data as Annotation]);
+      // Optimistic update: rely on fetchAnnotations to refresh UI after save
+      
       
       // Log analytics
       await supabase.rpc('log_sheet_music_analytics', {
