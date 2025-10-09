@@ -10666,6 +10666,41 @@ export type Database = {
           },
         ]
       }
+      gw_sheet_music_annotation_shares: {
+        Row: {
+          annotation_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          shared_by: string
+          shared_with: string
+        }
+        Insert: {
+          annotation_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          shared_by: string
+          shared_with: string
+        }
+        Update: {
+          annotation_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          shared_by?: string
+          shared_with?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_sheet_music_annotation_shares_annotation_id_fkey"
+            columns: ["annotation_id"]
+            isOneToOne: false
+            referencedRelation: "gw_sheet_music_annotations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_sheet_music_annotations: {
         Row: {
           annotation_data: Json
