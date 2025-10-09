@@ -184,7 +184,6 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
 
     const renderCurrentPage = async () => {
       console.log('FastPDFViewer: Starting to render page', currentPage);
-      setIsLoading(true);
       
       // Try to get page from cache first
       const cachedCanvas = getPage(currentPage);
@@ -205,6 +204,8 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         }
       } else {
         console.log('FastPDFViewer: Page not in cache, preloading', currentPage);
+        setIsLoading(true);
+        
         // Render page if not in cache
         await preloadPage(currentPage);
         const newCachedCanvas = getPage(currentPage);
@@ -224,6 +225,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         } else {
           console.error('FastPDFViewer: Failed to get cached page after preload', currentPage);
         }
+        
         setIsLoading(false);
       }
 
@@ -421,13 +423,14 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
           
           <canvas
             ref={canvasRef}
-            className="w-full h-auto block mx-auto border"
+            className="w-full h-auto block mx-auto border transition-opacity duration-300"
             style={{ 
               maxHeight: '100%', 
               objectFit: 'contain',
               background: 'white',
               minHeight: '400px',
-              border: '1px solid #ddd'
+              border: '1px solid #ddd',
+              opacity: isLoading ? 0.5 : 1
             }}
           />
 
