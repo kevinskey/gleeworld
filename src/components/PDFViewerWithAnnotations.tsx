@@ -32,7 +32,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 import { useSheetMusicAnnotations } from '@/hooks/useSheetMusicAnnotations';
 import { cn } from '@/lib/utils';
-import { AnnotationSharingDialog } from '@/components/marked-scores/AnnotationSharingDialog';
+import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import * as pdfjsLib from 'pdfjs-dist';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
@@ -861,16 +861,11 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   Save
                 </Button>
               )}
-              {currentMarkedScoreId && musicTitle && (
-                <AnnotationSharingDialog 
-                  markedScoreId={currentMarkedScoreId} 
+              {annotations.length > 0 && musicTitle && (
+                <AnnotationShareButton 
+                  annotationIds={annotations.map(a => a.id)}
                   musicTitle={musicTitle}
-                >
-                  <Button variant="outline" size="sm">
-                    <Share2 className="h-4 w-4" />
-                    Share
-                  </Button>
-                </AnnotationSharingDialog>
+                />
               )}
             </div>
           </div>
