@@ -176,9 +176,9 @@ export const mus240Assignments: WeekAssignments[] = [
       },
       {
         id: "rp2",
-        title: "Reflection Paper 2: Summer of Soul",
-        description: "Analyze the concert and give insight into the importance of at least 4 performers on the concert and the impact they made on African American Music up to 1969.",
-        instructions: "Write a 2-3 page essay analyzing the Summer of Soul concert. Select at least 4 performers from the concert and discuss their significance and impact on African American music leading up to 1969. Present a clear thesis with evidence from the documentary and course materials. Format: MLA or Chicago style, double-spaced.",
+        title: "Reflection Paper 2: Music and the Civil Rights Movement",
+        description: "Reflect on how an undrafted Willie T. Johnson, the lead singer of the Golden Gate Quartet can go from a famous singer on radio, Carnegie Hall and Major Motion Picture appearances to a choir director in the US Navy.",
+        instructions: "Write a 2-3 page essay analyzing Willie T. Johnson's remarkable career trajectory from celebrated performer with the Golden Gate Quartet to his role as a Navy choir director. Consider the cultural, social, and economic factors that influenced this transition during the Civil Rights era. Present a clear thesis with evidence from course materials. Format: MLA or Chicago style, double-spaced.",
         dueDate: "2025-10-13",
         type: "reflection-paper",
         estimatedTime: "3 hours",
