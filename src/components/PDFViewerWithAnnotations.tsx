@@ -758,25 +758,22 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       {/* Annotation Toolbar */}
         {annotationMode && (
           <div className="flex flex-wrap items-center gap-1.5 p-1.5 sm:gap-2 sm:p-2 bg-muted/50 rounded-t-lg border-b">
-            {/* Annotation Toggle */}
-            <Button
-              variant={annotationMode ? "default" : "outline"}
-              size="sm"
-              onClick={async () => {
-                setError(null);
-                setIsLoading(true);
-                const canExit = await promptToSaveIfDirty();
-                if (canExit) {
-                  setAnnotationMode(false);
-                } else {
-                  setIsLoading(false);
-                }
-              }}
-              className="h-7 px-1.5 text-xs sm:h-8 sm:px-2"
-            >
-              <Palette className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />
-              <span className="hidden sm:inline text-xs">Exit</span>
-            </Button>
+            {/* Save Button */}
+            {hasAnnotations && (
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isSaving || !musicId}
+                className="h-7 px-1.5 text-xs sm:h-8 sm:px-2"
+              >
+                {isSaving ? (
+                  <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1 animate-spin" />
+                ) : (
+                  <Save className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-0.5 sm:mr-1" />
+                )}
+                <span className="text-xs">Save</span>
+              </Button>
+            )}
 
             {/* Tool Selection */}
             <div className="flex gap-0.5 sm:gap-1">
@@ -871,21 +868,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               >
                 <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
-              {hasAnnotations && (
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isSaving || !musicId}
-                  className="h-8 px-2 sm:h-9 sm:px-3"
-                >
-                  {isSaving ? (
-                    <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                  ) : (
-                    <Save className="h-3 w-3 sm:h-4 sm:w-4" />
-                  )}
-                  <span className="ml-1 text-xs sm:text-sm">Save</span>
-                </Button>
-              )}
               {annotations.length > 0 && musicTitle && (
                 <AnnotationShareButton 
                   annotationIds={annotations.map(a => a.id)}
