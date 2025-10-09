@@ -97,7 +97,16 @@ const MusicTheoryFundamentals = () => {
                   Student Login
                 </Button>
               </Link>
+              <Link to="/dashboard?module=music-library">
+                <Button size="lg" className="gap-2" variant="outline">
+                  <Music className="w-5 h-5" />
+                  Music Library
+                </Button>
+              </Link>
             </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              Register or login as a student to access course materials and the music library
+            </p>
           </div>
         </section>
 
