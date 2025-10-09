@@ -120,6 +120,15 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
       isDefault: true
     },
     {
+      id: 'music-library',
+      title: 'Music Library',
+      description: 'Browse sheet music & recordings',
+      icon: 'Music',
+      color: 'purple',
+      action: () => onModuleSelect('music-library'),
+      isDefault: true
+    },
+    {
       id: 'academy',
       title: 'Academy',
       description: 'Learning & education hub',
