@@ -225,7 +225,7 @@ export const JournalReader: React.FC<JournalReaderProps> = ({ assignment }) => {
                   
                   {comments.length > 0 ? (
                     <div className="space-y-3">
-                      {comments.map((comment) => (
+                      {comments.filter(comment => comment && comment.author_name).map((comment) => (
                         <div key={comment.id} className="bg-muted/50 p-3 rounded-lg">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-sm font-medium">{comment.author_name}</span>
