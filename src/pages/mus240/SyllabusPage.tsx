@@ -465,7 +465,6 @@ export default function Syllabus() {
                           <div>
                             <div className="text-gray-900 font-medium">Group AI Presentations</div>
                             <div className="text-sm text-gray-600">December 1</div>
-                            <div className="text-sm text-gray-700 mt-1">"From Spirituals to Swing to King to Code": student projects connecting history to the digital present.</div>
                           </div>
                         </div>
                         
