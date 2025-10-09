@@ -28,7 +28,7 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
         <div className="flex flex-col h-full">
           {title && (
             <div className="px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+              <h2 className="text-sm font-semibold text-foreground">{title}</h2>
             </div>
           )}
           <div className="flex-1 overflow-hidden">
