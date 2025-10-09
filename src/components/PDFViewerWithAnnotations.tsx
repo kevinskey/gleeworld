@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
+import { useSheetMusicAnnotations } from '@/hooks/useSheetMusicAnnotations';
 import { cn } from '@/lib/utils';
 import { AnnotationSharingDialog } from '@/components/marked-scores/AnnotationSharingDialog';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -58,6 +59,12 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
 }: PDFViewerWithAnnotationsProps, ref) => {
   const { user } = useAuth();
   const { signedUrl, loading: urlLoading, error: urlError } = useSheetMusicUrl(pdfUrl);
+  const { 
+    annotations, 
+    loading: annotationsLoading, 
+    saveAnnotation, 
+    fetchAnnotations 
+  } = useSheetMusicAnnotations(musicId);
   
   // Initialize the default layout plugin
 const scrollModePluginInstance = scrollModePlugin();
@@ -466,82 +473,75 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     
     setIsSaving(true);
     try {
-      // Convert drawing canvas to blob
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        drawingCanvasRef.current?.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Failed to create blob'));
-        }, 'image/png', 0.9);
-      });
-      
-      // Upload to storage
-      const fileName = `${Date.now()}_${user.id}_${musicId}.png`;
-      const filePath = `marked-scores/${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('marked-scores')
-        .upload(filePath, blob);
-      if (uploadError) {
-        console.error('Storage upload failed:', uploadError);
-        throw new Error(`Upload failed: ${uploadError.message || uploadError.name || 'Unknown error'}`);
-      }
+      // Convert paths to annotation data format
+      const annotationData = {
+        paths: paths,
+        brushSize: brushSize[0],
+        brushColor: brushColor,
+        canvasWidth: drawingCanvasRef.current.width,
+        canvasHeight: drawingCanvasRef.current.height
+      };
 
-      // Generate a signed URL (bucket is private by design)
-      let signedUrl: string | null = null;
-      const { data: signedData, error: signError } = await supabase.storage
-        .from('marked-scores')
-        .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year
-      if (signError) {
-        console.warn('Creating signed URL failed, falling back to public URL (bucket must be public to work):', signError);
-        const { data: pub } = supabase.storage.from('marked-scores').getPublicUrl(filePath);
-        signedUrl = pub.publicUrl;
-      } else {
-        signedUrl = signedData?.signedUrl || null;
-      }
-
-      if (!signedUrl) {
-        throw new Error('Could not generate a URL for the saved annotation image');
+      // Save annotation to database using the hook
+      const savedAnnotation = await saveAnnotation(
+        musicId,
+        currentPage,
+        'drawing',
+        annotationData,
+        null // No position data needed for freehand drawings
+      );
+      
+      if (!savedAnnotation) {
+        throw new Error('Failed to save annotation');
       }
       
-      // Save to database
-      const { data, error: dbError } = await supabase
-        .from('gw_marked_scores')
-        .insert({
-          music_id: musicId,
-          uploader_id: user.id,
-          voice_part: 'Annotated',
-          file_url: signedUrl,
-          description: `Annotated ${musicTitle || 'Score'}`,
-          canvas_data: JSON.stringify(paths),
-          is_shareable: true
-        })
-        .select()
-        .maybeSingle();
-      
-      if (dbError) {
-        console.error('DB insert failed:', dbError);
-        throw new Error(dbError.message || 'Failed to save metadata');
-      }
-      
-      // Store the marked score ID for sharing
-      if (data) {
-        setCurrentMarkedScoreId((data as any).id);
-      }
-      
-      toast.success('Annotated score saved successfully!');
+      toast.success('Annotations saved successfully!');
       
       // Clear annotations after saving
       setPaths([]);
       setHasAnnotations(false);
       redrawAnnotations([]);
-      setAnnotationMode(false);
+      
+      // Refresh annotations from database
+      if (musicId) {
+        await fetchAnnotations(musicId, currentPage);
+      }
     } catch (error: any) {
-      console.error('Error saving annotated score:', error);
-      toast.error(`Failed to save annotated score: ${error?.message || 'Unknown error'}`);
+      console.error('Error saving annotations:', error);
+      toast.error(`Failed to save annotations: ${error?.message || 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }
   };
+
+  // Load saved annotations when page changes
+  useEffect(() => {
+    if (musicId && annotationMode) {
+      fetchAnnotations(musicId, currentPage);
+    }
+  }, [musicId, currentPage, annotationMode, fetchAnnotations]);
+
+  // Render loaded annotations on canvas
+  useEffect(() => {
+    if (!annotations || annotations.length === 0 || !annotationMode) return;
+    
+    const pageAnnotations = annotations.filter(ann => ann.page_number === currentPage);
+    if (pageAnnotations.length === 0) return;
+
+    // Load and render saved annotations
+    const loadedPaths = pageAnnotations
+      .filter(ann => ann.annotation_type === 'drawing')
+      .flatMap(ann => {
+        const data = ann.annotation_data as any;
+        return data?.paths || [];
+      });
+
+    if (loadedPaths.length > 0) {
+      setPaths(loadedPaths);
+      setHasAnnotations(true);
+      redrawAnnotations(loadedPaths);
+    }
+  }, [annotations, currentPage, annotationMode]);
 
   useEffect(() => {
     if (!signedUrl) return;
