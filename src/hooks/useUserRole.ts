@@ -110,6 +110,13 @@ export const useUserRole = () => {
     return profile.is_admin || profile.is_super_admin || profile.exec_board_role === 'wardrobe_manager';
   };
 
+  const isCourseTA = (courseCode: string = 'MUS240') => {
+    // This is a simplified check - the full check is done in useCourseTA hook
+    // This is just for basic permission checking
+    if (!profile) return false;
+    return profile.is_admin || profile.is_super_admin;
+  };
+
   return {
     profile,
     loading,
@@ -124,5 +131,6 @@ export const useUserRole = () => {
     isAuditioner,
     isAlumna,
     isMember,
+    isCourseTA,
   };
 };

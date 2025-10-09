@@ -1910,6 +1910,42 @@ export type Database = {
           },
         ]
       }
+      course_teaching_assistants: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          course_code: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          notes: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          course_code: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          course_code?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          notes?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       dashboard_settings: {
         Row: {
           created_at: string
@@ -18835,6 +18871,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      current_user_is_course_ta: {
+        Args: { _course_code: string }
+        Returns: boolean
+      }
       debug_audition_permissions: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -19161,6 +19201,10 @@ export type Database = {
       }
       is_coordinator_for_cohort: {
         Args: { cohort_id_param: string }
+        Returns: boolean
+      }
+      is_course_ta: {
+        Args: { _course_code: string; _user_id: string }
         Returns: boolean
       }
       is_current_user_admin: {
