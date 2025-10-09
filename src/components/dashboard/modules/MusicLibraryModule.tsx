@@ -213,7 +213,6 @@ export const MusicLibraryModule = () => {
                           pdfUrl={piece.pdf_url}
                           alt={piece.title}
                           title={piece.title}
-                          musicId={piece.id}
                           className="w-full h-full"
                         />
                       ) : (
@@ -509,7 +508,6 @@ export const MusicLibraryModule = () => {
                           pdfUrl={piece.pdf_url}
                           alt={piece.title}
                           title={piece.title}
-                          musicId={piece.id}
                           className="w-full h-full"
                         />
                       ) : (

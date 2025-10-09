@@ -322,7 +322,6 @@ export const SheetMusicLibrary = ({
                         pdfUrl={item.pdf_url}
                         alt={`${item.title} thumbnail`}
                         title={item.title}
-                        musicId={item.id}
                         className="w-full h-full"
                       />
                     </div>
@@ -454,7 +453,6 @@ export const SheetMusicLibrary = ({
                         pdfUrl={item.pdf_url}
                         alt={`${item.title} thumbnail`}
                         title={item.title}
-                        musicId={item.id}
                         className="w-full h-full"
                       />
                     ) : (item.xml_content || item.xml_url) ? (

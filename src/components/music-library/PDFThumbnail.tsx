@@ -1,34 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FileText, Download, Eye, Loader2, Lock } from 'lucide-react';
+import { FileText, Loader2, Lock } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
-import { useToast } from '@/hooks/use-toast';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
-import { InAppPDFViewerDialog } from './InAppPDFViewerDialog';
 
 interface PDFThumbnailProps {
   pdfUrl: string;
   alt: string;
   className?: string;
   title?: string;
-  musicId?: string;
 }
 
 export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({ 
   pdfUrl, 
   alt, 
   className = "w-full h-full",
-  title,
-  musicId 
+  title
 }) => {
   const [isInView, setIsInView] = useState(false);
   const [previewLoaded, setPreviewLoaded] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [useViewerNg, setUseViewerNg] = useState(false);
-  const [showDialog, setShowDialog] = useState(false);
   const elementRef = useRef<HTMLDivElement>(null);
-  const { canDownloadPDF, loading: roleLoading } = useUserRole();
-  const { toast } = useToast();
+  const { canDownloadPDF } = useUserRole();
   const { signedUrl } = useSheetMusicUrl(pdfUrl);
 
   useEffect(() => {
@@ -48,22 +42,6 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
 
     return () => observer.disconnect();
   }, [isInView]);
-
-  const handleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (roleLoading) return;
-    
-    if (!canDownloadPDF()) {
-      toast({
-        title: "Access Denied",
-        description: "Only admins and librarians can download PDFs.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setShowDialog(true);
-  };
 
   const handlePreviewLoad = () => {
     setPreviewLoaded(true);
@@ -85,12 +63,11 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
   return (
     <div 
       ref={elementRef}
-      className={`w-full h-full flex flex-col bg-white border-2 rounded-lg transition-all duration-200 overflow-hidden ${
+      className={`w-full h-full flex flex-col bg-white border-2 rounded-lg overflow-hidden ${
         canDownloadPDF() 
-          ? 'border-gray-200 cursor-pointer hover:border-primary hover:shadow-md' 
+          ? 'border-gray-200' 
           : 'border-red-200 bg-red-50/50'
       }`}
-      onClick={handleClick}
     >
       {/* Preview Area */}
       <div className="flex-1 relative">
@@ -154,28 +131,6 @@ export const PDFThumbnail: React.FC<PDFThumbnailProps> = ({
         </div>
       )}
       
-      {/* Action Hint */}
-      <div className="flex items-center justify-center space-x-2 p-2 bg-gray-50 border-t border-gray-100">
-        {canDownloadPDF() ? (
-          <>
-            <Eye className="h-3 w-3 text-gray-400" />
-            <span className="text-xs text-gray-500">Click to open</span>
-          </>
-        ) : (
-          <>
-            <Lock className="h-3 w-3 text-red-400" />
-            <span className="text-xs text-red-500">Access restricted</span>
-          </>
-        )}
-      </div>
-
-      <InAppPDFViewerDialog
-        open={showDialog}
-        onOpenChange={setShowDialog}
-        pdfUrl={pdfUrl}
-        title={title}
-        musicId={musicId}
-      />
     </div>
   );
 };
