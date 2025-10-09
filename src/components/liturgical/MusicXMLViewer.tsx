@@ -28,9 +28,18 @@ export const MusicXMLViewer: React.FC<MusicXMLViewerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Load music when XML content changes
+  // Load music when XML content changes AND container is ready
   useEffect(() => {
-    loadMusic();
+    // Wait for next tick to ensure container ref is attached
+    const timer = setTimeout(() => {
+      if (containerRef.current && musicxml) {
+        loadMusic();
+      } else if (!containerRef.current) {
+        console.warn('MusicXMLViewer: Container ref not ready yet, will retry...');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [musicxml]);
 
   const loadMusic = async () => {
