@@ -65,10 +65,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (error) {
           console.error('AuthContext: Error getting session:', error);
-          // If we get a JWT error, clean up auth state and continue
-          if (error.message?.includes('JWT') || error.message?.includes('exp')) {
-            console.log('AuthContext: JWT expired, cleaning up auth state');
+          // If we get a JWT error, clean up auth state and force sign out
+          if (error.message?.includes('JWT') || error.message?.includes('exp') || error.message?.includes('InvalidJWT')) {
+            console.log('AuthContext: JWT expired/invalid, cleaning up and signing out');
             cleanupAuthState();
+            await supabase.auth.signOut({ scope: 'global' });
+            if (mountedRef.current) {
+              setSession(null);
+              setUser(null);
+              setLoading(false);
+            }
+            return;
           }
         }
         
