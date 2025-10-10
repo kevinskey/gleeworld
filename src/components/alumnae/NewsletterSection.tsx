@@ -74,14 +74,28 @@ export const NewsletterSection = () => {
       const currentMonth = currentDate.getMonth() + 1;
       const currentYear = currentDate.getFullYear();
 
-      // Fetch current newsletter
-      const { data: newsletterData, error: newsletterError } = await supabase
+      // Try to fetch current month's newsletter first
+      let { data: newsletterData, error: newsletterError } = await supabase
         .from('alumnae_newsletters')
         .select('*')
         .eq('is_published', true)
         .eq('month', currentMonth)
         .eq('year', currentYear)
         .maybeSingle();
+
+      // If no newsletter for current month, get the most recent one
+      if (!newsletterData) {
+        const { data: recentNewsletter } = await supabase
+          .from('alumnae_newsletters')
+          .select('*')
+          .eq('is_published', true)
+          .order('year', { ascending: false })
+          .order('month', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        newsletterData = recentNewsletter;
+      }
 
       if (newsletterError) throw newsletterError;
       setNewsletter(newsletterData);
@@ -159,8 +173,10 @@ export const NewsletterSection = () => {
         </CardHeader>
         <CardContent className="text-center py-8">
           <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No newsletter available for this month</p>
-          <p className="text-sm text-muted-foreground mt-2">Check back soon for the latest updates!</p>
+          <p className="text-muted-foreground font-semibold mb-2">No newsletter available yet</p>
+          <p className="text-sm text-muted-foreground">
+            Alumnae liaisons and admins can create and publish newsletters using the Management Panel below.
+          </p>
         </CardContent>
       </Card>
     );
