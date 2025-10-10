@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Save, Eye, EyeOff } from "lucide-react";
+import { Plus, Save, Eye, EyeOff, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,8 @@ export const NewsletterManager = () => {
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sendingEmails, setSendingEmails] = useState(false);
+  const [currentNewsletterId, setCurrentNewsletterId] = useState<string | null>(null);
 
   const handleSave = async () => {
     if (!title || !content) {
@@ -40,15 +42,22 @@ export const NewsletterManager = () => {
         published_at: isPublished ? new Date().toISOString() : null
       };
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('alumnae_newsletters')
         .upsert(newsletterData, {
           onConflict: 'month,year'
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
       toast.success("Newsletter saved successfully!");
+      
+      // Store the newsletter ID for sending emails
+      if (data) {
+        setCurrentNewsletterId(data.id);
+      }
       
       // Reset form
       setTitle("");
@@ -61,6 +70,32 @@ export const NewsletterManager = () => {
       toast.error(error.message || "Failed to save newsletter");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendNotifications = async () => {
+    if (!currentNewsletterId) {
+      toast.error("Please save the newsletter first");
+      return;
+    }
+
+    setSendingEmails(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-newsletter-notification', {
+        body: { newsletter_id: currentNewsletterId }
+      });
+
+      if (error) throw error;
+
+      toast.success(
+        `Email notifications sent! ${data.stats.successful} successful, ${data.stats.failed} failed`,
+        { duration: 5000 }
+      );
+    } catch (error: any) {
+      console.error('Error sending notifications:', error);
+      toast.error(error.message || "Failed to send email notifications");
+    } finally {
+      setSendingEmails(false);
     }
   };
 
@@ -143,7 +178,7 @@ export const NewsletterManager = () => {
         />
       </div>
 
-      <div className="flex items-center justify-between pt-4 border-t">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t">
         <Button
           variant={isPublished ? "destructive" : "default"}
           onClick={() => setIsPublished(!isPublished)}
@@ -153,10 +188,24 @@ export const NewsletterManager = () => {
           {isPublished ? "Unpublish" : "Publish"}
         </Button>
 
-        <Button onClick={handleSave} disabled={saving} className="gap-2">
-          <Save className="h-4 w-4" />
-          {saving ? "Saving..." : "Save Newsletter"}
-        </Button>
+        <div className="flex gap-2">
+          {currentNewsletterId && (
+            <Button 
+              onClick={handleSendNotifications} 
+              disabled={sendingEmails}
+              variant="secondary"
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" />
+              {sendingEmails ? "Sending..." : "Send to Alumnae"}
+            </Button>
+          )}
+          
+          <Button onClick={handleSave} disabled={saving} className="gap-2">
+            <Save className="h-4 w-4" />
+            {saving ? "Saving..." : "Save Newsletter"}
+          </Button>
+        </div>
       </div>
     </div>
   );
