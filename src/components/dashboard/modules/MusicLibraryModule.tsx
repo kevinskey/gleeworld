@@ -159,7 +159,7 @@ export const MusicLibraryModule = () => {
             <TabsTrigger value="all" className="text-xs md:text-sm">All ({musicLibrary.length})</TabsTrigger>
             <TabsTrigger value="recent" className="text-xs md:text-sm">Recent</TabsTrigger>
             <TabsTrigger value="favorites" className="text-xs md:text-sm">Favorites</TabsTrigger>
-            <TabsTrigger value="current" className="text-xs md:text-sm">Current</TabsTrigger>
+            <TabsTrigger value="current" className="text-xs md:text-sm">Setlists</TabsTrigger>
           </TabsList>
         </div>
 
