@@ -5,6 +5,7 @@ import { RecipientSelector } from './RecipientSelector';
 import { ChannelSelector } from './ChannelSelector';
 import { SendControls } from './SendControls';
 import { SimplifiedNotificationsPanel } from './SimplifiedNotificationsPanel';
+import { ImportResendContacts } from './ImportResendContacts';
 import { useCommunication } from '@/hooks/useCommunication';
 import { RecipientGroup } from '@/types/communication';
 import { ArrowLeft, MessageCircle } from 'lucide-react';
@@ -169,6 +170,13 @@ export const CommunicationHub = () => {
                   <Button variant="outline" onClick={() => navigate('/admin/announcements/new')}>Create Announcement</Button>
                 </CardContent>
               </Card>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="import-contacts">
+            <AccordionTrigger>Import Contacts</AccordionTrigger>
+            <AccordionContent>
+              <ImportResendContacts />
             </AccordionContent>
           </AccordionItem>
         </Accordion>
