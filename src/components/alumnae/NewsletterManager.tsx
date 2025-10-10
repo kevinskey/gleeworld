@@ -8,6 +8,7 @@ import { Plus, Save, Eye, EyeOff, Send } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { NewsletterContentManager } from "./NewsletterContentManager";
 
 export const NewsletterManager = () => {
   const { user } = useAuth();
@@ -207,6 +208,12 @@ export const NewsletterManager = () => {
           </Button>
         </div>
       </div>
+
+      {currentNewsletterId && (
+        <div className="pt-6 border-t">
+          <NewsletterContentManager newsletterId={currentNewsletterId} />
+        </div>
+      )}
     </div>
   );
 };
