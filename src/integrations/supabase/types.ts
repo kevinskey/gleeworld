@@ -319,6 +319,132 @@ export type Database = {
         }
         Relationships: []
       }
+      alumnae_newsletter_announcements: {
+        Row: {
+          content: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          newsletter_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          newsletter_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          newsletter_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumnae_newsletter_announcements_newsletter_id_fkey"
+            columns: ["newsletter_id"]
+            isOneToOne: false
+            referencedRelation: "alumnae_newsletters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alumnae_newsletter_hero_slides: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          image_url: string
+          newsletter_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url: string
+          newsletter_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          newsletter_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumnae_newsletter_hero_slides_newsletter_id_fkey"
+            columns: ["newsletter_id"]
+            isOneToOne: false
+            referencedRelation: "alumnae_newsletters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alumnae_newsletter_spotlights: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          name: string
+          newsletter_id: string | null
+          photo_url: string | null
+          spotlight_type: string
+          title: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name: string
+          newsletter_id?: string | null
+          photo_url?: string | null
+          spotlight_type: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          name?: string
+          newsletter_id?: string | null
+          photo_url?: string | null
+          spotlight_type?: string
+          title?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumnae_newsletter_spotlights_newsletter_id_fkey"
+            columns: ["newsletter_id"]
+            isOneToOne: false
+            referencedRelation: "alumnae_newsletters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alumnae_newsletters: {
         Row: {
           content: string
