@@ -213,11 +213,44 @@ export const NewsletterSection = () => {
   );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-10 gap-6 animate-fade-in">
-      {/* Left Column - 40% */}
-      <div className="lg:col-span-4 space-y-6">
-        {/* Alumnae Spotlight */}
-        <SpotlightCard spotlight={spotlights.alumnae} type="Alumnae" />
+    <div className="space-y-6 animate-fade-in">
+      {/* Hero Section */}
+      {heroSlides.length > 0 && (
+        <Card className="overflow-hidden">
+          <Carousel className="w-full">
+            <CarouselContent>
+              {heroSlides.map((slide) => (
+                <CarouselItem key={slide.id}>
+                  <div className="relative aspect-[21/9] w-full">
+                    <img
+                      src={slide.image_url}
+                      alt={slide.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 text-white">
+                      <h2 className="text-3xl md:text-4xl font-bold mb-2">{slide.title}</h2>
+                      {slide.description && <p className="text-lg">{slide.description}</p>}
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            {heroSlides.length > 1 && (
+              <>
+                <CarouselPrevious className="left-4" />
+                <CarouselNext className="right-4" />
+              </>
+            )}
+          </Carousel>
+        </Card>
+      )}
+
+      {/* Two Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-10 gap-6">
+        {/* Left Column - 40% */}
+        <div className="lg:col-span-4 space-y-6">
+          {/* Alumnae Spotlight */}
+          <SpotlightCard spotlight={spotlights.alumnae} type="Alumnae" />
 
         {/* Student Spotlight */}
         <SpotlightCard spotlight={spotlights.student} type="Student" />
@@ -257,40 +290,9 @@ export const NewsletterSection = () => {
         </Card>
       </div>
 
-      {/* Right Column - 60% */}
-      <div className="lg:col-span-6 space-y-6">
-        {/* Hero Carousel */}
-        {heroSlides.length > 0 && (
-          <Card className="overflow-hidden">
-            <Carousel className="w-full">
-              <CarouselContent>
-                {heroSlides.map((slide) => (
-                  <CarouselItem key={slide.id}>
-                    <div className="relative aspect-video w-full">
-                      <img
-                        src={slide.image_url}
-                        alt={slide.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6 text-white">
-                        <h3 className="text-2xl font-bold mb-2">{slide.title}</h3>
-                        {slide.description && <p className="text-sm">{slide.description}</p>}
-                      </div>
-                    </div>
-                  </CarouselItem>
-                ))}
-              </CarouselContent>
-              {heroSlides.length > 1 && (
-                <>
-                  <CarouselPrevious className="left-4" />
-                  <CarouselNext className="right-4" />
-                </>
-              )}
-            </Carousel>
-          </Card>
-        )}
-
-        {/* Current Performances */}
+        {/* Right Column - 60% */}
+        <div className="lg:col-span-6 space-y-6">
+          {/* Current Performances */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -352,6 +354,7 @@ export const NewsletterSection = () => {
             )}
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );
