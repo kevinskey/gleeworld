@@ -2,23 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  GraduationCap, 
-  Calendar, 
-  Heart, 
-  Users, 
-  MapPin, 
-  Briefcase,
-  Camera,
-  Award,
-  MessageCircle,
-  ExternalLink,
-  Star,
-  Music,
-  BookOpen,
-  Network,
-  Clock
-} from "lucide-react";
+import { GraduationCap, Calendar, Heart, Users, MapPin, Briefcase, Camera, Award, MessageCircle, ExternalLink, Star, Music, BookOpen, Network, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,8 +14,6 @@ import { NewsletterSection } from "@/components/alumnae/NewsletterSection";
 import { InterviewSegments } from "@/components/alumnae/InterviewSegments";
 import { AlumnaeManagementPanel } from "@/components/alumnae/AlumnaeManagementPanel";
 import { useUserRole } from "@/hooks/useUserRole";
-
-
 interface AlumnaeStats {
   classYear: number | null;
   yearsOut: number;
@@ -39,7 +21,6 @@ interface AlumnaeStats {
   eventsAttended: number;
   memoriesShared: number;
 }
-
 interface ReunionEvent {
   id: string;
   title: string;
@@ -48,7 +29,6 @@ interface ReunionEvent {
   targetClassYear: number | null;
   isRegistered: boolean;
 }
-
 interface ClassmateUpdate {
   id: string;
   name: string;
@@ -58,26 +38,29 @@ interface ClassmateUpdate {
   profession: string;
   profilePhoto?: string;
 }
-
 export default function AlumnaeLanding() {
-  const { user } = useAuth();
-  const { userProfile, loading } = useUserProfile(user);
-  const { profile: roleProfile } = useUserRole();
+  const {
+    user
+  } = useAuth();
+  const {
+    userProfile,
+    loading
+  } = useUserProfile(user);
+  const {
+    profile: roleProfile
+  } = useUserRole();
   const [alumnaeStats, setAlumnaeStats] = useState<AlumnaeStats | null>(null);
   const [reunionEvents, setReunionEvents] = useState<ReunionEvent[]>([]);
   const [classmateUpdates, setClassmateUpdates] = useState<ClassmateUpdate[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
   // Check if user is alumnae liaison
-  const isAlumnaeLiaison = roleProfile?.exec_board_role === 'alumnae_liaison' || 
-                           roleProfile?.is_admin || 
-                           roleProfile?.is_super_admin;
+  const isAlumnaeLiaison = roleProfile?.exec_board_role === 'alumnae_liaison' || roleProfile?.is_admin || roleProfile?.is_super_admin;
 
   // Redirect if not authenticated
   if (!loading && !user) {
     return <Navigate to="/auth" replace />;
   }
-
   useEffect(() => {
     if (user && userProfile) {
       fetchAlumnaeStats();
@@ -85,19 +68,18 @@ export default function AlumnaeLanding() {
       fetchClassmateUpdates();
     }
   }, [user, userProfile]);
-
   const fetchAlumnaeStats = async () => {
     try {
       const classYear = userProfile?.graduation_year || userProfile?.class_year;
       const currentYear = new Date().getFullYear();
       const yearsOut = classYear ? currentYear - classYear : 0;
-
       setAlumnaeStats({
         classYear,
         yearsOut,
         mentorStatus: userProfile?.mentor_opt_in || false,
-        eventsAttended: 0, // This would come from event tracking
-        memoriesShared: 0  // This would come from memory wall tracking
+        eventsAttended: 0,
+        // This would come from event tracking
+        memoriesShared: 0 // This would come from memory wall tracking
       });
     } catch (error) {
       console.error('Error setting alumnae stats:', error);
@@ -105,24 +87,21 @@ export default function AlumnaeLanding() {
       setLoadingStats(false);
     }
   };
-
   const fetchReunionEvents = async () => {
     try {
-      const { data: events } = await supabase
-        .from('gw_events')
-        .select('*')
-        .or('event_type.eq.reunion,event_type.eq.alumni')
-        .gte('start_date', new Date().toISOString())
-        .order('start_date', { ascending: true })
-        .limit(3);
-
+      const {
+        data: events
+      } = await supabase.from('gw_events').select('*').or('event_type.eq.reunion,event_type.eq.alumni').gte('start_date', new Date().toISOString()).order('start_date', {
+        ascending: true
+      }).limit(3);
       if (events) {
         setReunionEvents(events.map(event => ({
           id: event.id,
           title: event.title,
           date: event.start_date,
           location: event.location || 'TBA',
-          targetClassYear: null, // This would be extracted from event details
+          targetClassYear: null,
+          // This would be extracted from event details
           isRegistered: false // This would come from RSVP tracking
         })));
       }
@@ -130,102 +109,83 @@ export default function AlumnaeLanding() {
       console.error('Error fetching reunion events:', error);
     }
   };
-
   const fetchClassmateUpdates = async () => {
     try {
       // This would fetch recent updates from classmates
       // For now, we'll use sample data
-      setClassmateUpdates([
-        {
-          id: '1',
-          name: 'Sarah Williams',
-          classYear: 2018,
-          update: 'Just got promoted to Senior Marketing Director at Warner Music!',
-          location: 'Nashville, TN',
-          profession: 'Music Industry Executive'
-        },
-        {
-          id: '2', 
-          name: 'Maya Chen',
-          classYear: 2020,
-          update: 'Excited to announce my debut album is dropping next month!',
-          location: 'Los Angeles, CA',
-          profession: 'Recording Artist'
-        }
-      ]);
+      setClassmateUpdates([{
+        id: '1',
+        name: 'Sarah Williams',
+        classYear: 2018,
+        update: 'Just got promoted to Senior Marketing Director at Warner Music!',
+        location: 'Nashville, TN',
+        profession: 'Music Industry Executive'
+      }, {
+        id: '2',
+        name: 'Maya Chen',
+        classYear: 2020,
+        update: 'Excited to announce my debut album is dropping next month!',
+        location: 'Los Angeles, CA',
+        profession: 'Recording Artist'
+      }]);
     } catch (error) {
       console.error('Error fetching classmate updates:', error);
     }
   };
-
   const handleMentorToggle = async () => {
     try {
       const newMentorStatus = !alumnaeStats?.mentorStatus;
-      
-      const { error } = await supabase
-        .from('gw_profiles')
-        .update({ mentor_opt_in: newMentorStatus })
-        .eq('user_id', user?.id);
-
+      const {
+        error
+      } = await supabase.from('gw_profiles').update({
+        mentor_opt_in: newMentorStatus
+      }).eq('user_id', user?.id);
       if (error) throw error;
-
-      setAlumnaeStats(prev => prev ? { ...prev, mentorStatus: newMentorStatus } : null);
-      
-      toast.success(
-        newMentorStatus 
-          ? "Thank you for becoming a mentor! Students will love your guidance." 
-          : "You've opted out of mentoring. You can always opt back in."
-      );
+      setAlumnaeStats(prev => prev ? {
+        ...prev,
+        mentorStatus: newMentorStatus
+      } : null);
+      toast.success(newMentorStatus ? "Thank you for becoming a mentor! Students will love your guidance." : "You've opted out of mentoring. You can always opt back in.");
     } catch (error) {
       console.error('Error updating mentor status:', error);
       toast.error("There was an issue updating your mentor status. Please try again.");
     }
   };
-
   const handleReunionRSVP = async (eventId: string) => {
     try {
-      const { error } = await supabase
-        .from('gw_event_rsvps')
-        .insert({
-          event_id: eventId,
-          user_id: user?.id,
-          status: 'yes'
-        });
-
+      const {
+        error
+      } = await supabase.from('gw_event_rsvps').insert({
+        event_id: eventId,
+        user_id: user?.id,
+        status: 'yes'
+      });
       if (error) throw error;
-      
       toast.success("RSVP confirmed! We can't wait to see you at the reunion!");
-      
+
       // Update local state
-      setReunionEvents(prev => 
-        prev.map(event => 
-          event.id === eventId ? { ...event, isRegistered: true } : event
-        )
-      );
+      setReunionEvents(prev => prev.map(event => event.id === eventId ? {
+        ...event,
+        isRegistered: true
+      } : event));
     } catch (error) {
       console.error('Error submitting RSVP:', error);
       toast.error("There was an issue with your RSVP. Please try again.");
     }
   };
-
   if (loading || loadingStats) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+    return <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
         <UniversalHeader />
         <div className="flex items-center justify-center min-h-[60vh]">
           <LoadingSpinner />
         </div>
-      </div>
-    );
+      </div>;
   }
-
   const getClassYearDisplay = () => {
     if (!alumnaeStats?.classYear) return "Class of ----";
     return `Class of '${alumnaeStats.classYear.toString().slice(-2)}`;
   };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+  return <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       <UniversalHeader />
       
       <div className="container mx-auto px-4 py-6 space-y-6">
@@ -242,128 +202,14 @@ export default function AlumnaeLanding() {
         </div>
 
         {/* Alumnae Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-r from-purple-50 to-violet-50 border-purple-200 hover-scale animate-fade-in">
-            <CardContent className="p-4 text-center">
-              <GraduationCap className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-purple-700">{alumnaeStats?.yearsOut || 0}</p>
-              <p className="text-sm text-purple-600">Years Out</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-rose-50 to-pink-50 border-rose-200 hover-scale animate-fade-in">
-            <CardContent className="p-4 text-center">
-              <Heart className="h-8 w-8 text-rose-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-rose-700">
-                {alumnaeStats?.mentorStatus ? 'Active' : 'Available'}
-              </p>
-              <p className="text-sm text-rose-600">Mentor Status</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200 hover-scale animate-fade-in">
-            <CardContent className="p-4 text-center">
-              <Calendar className="h-8 w-8 text-amber-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-amber-700">{alumnaeStats?.eventsAttended || 0}</p>
-              <p className="text-sm text-amber-600">Events Attended</p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 hover-scale animate-fade-in">
-            <CardContent className="p-4 text-center">
-              <Camera className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-emerald-700">{alumnaeStats?.memoriesShared || 0}</p>
-              <p className="text-sm text-emerald-600">Memories Shared</p>
-            </CardContent>
-          </Card>
-        </div>
+        
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Reunion Events */}
-          <Card className="animate-fade-in">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Upcoming Reunions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {reunionEvents.length > 0 ? (
-                reunionEvents.map((event) => (
-                  <div key={event.id} className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200 hover-scale">
-                    <div>
-                      <h4 className="font-medium text-purple-800">{event.title}</h4>
-                      <p className="text-sm text-purple-600">
-                        {new Date(event.date).toLocaleDateString()} • {event.location}
-                      </p>
-                      {event.targetClassYear && (
-                        <Badge variant="secondary" className="text-xs mt-1 bg-purple-100 text-purple-700">
-                          Class of '{event.targetClassYear.toString().slice(-2)} Focus
-                        </Badge>
-                      )}
-                    </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleReunionRSVP(event.id)}
-                      disabled={event.isRegistered}
-                      className={event.isRegistered ? "bg-green-500" : "bg-purple-500 hover:bg-purple-600"}
-                    >
-                      {event.isRegistered ? "Registered" : "RSVP"}
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8">
-                  <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No upcoming reunions at this time</p>
-                  <Button variant="outline" className="mt-2">
-                    Plan a Reunion
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          
 
           {/* Mentorship Program */}
-          <Card className="animate-fade-in">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Heart className="h-5 w-5" />
-                Mentorship Program
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center p-6 bg-gradient-to-r from-rose-50 to-pink-50 rounded-lg border border-rose-200">
-                <Heart className="h-12 w-12 text-rose-500 mx-auto mb-4" />
-                <h4 className="font-medium text-rose-800 mb-2">
-                  {alumnaeStats?.mentorStatus ? "You're a Mentor!" : "Become a Mentor"}
-                </h4>
-                <p className="text-sm text-rose-600 mb-4">
-                  {alumnaeStats?.mentorStatus 
-                    ? "Thank you for giving back to current students. Your guidance makes a difference!"
-                    : "Share your experience and help current students navigate their journey."
-                  }
-                </p>
-                <Button 
-                  onClick={handleMentorToggle}
-                  variant={alumnaeStats?.mentorStatus ? "outline" : "default"}
-                  className={alumnaeStats?.mentorStatus ? "border-rose-300 text-rose-700 hover:bg-rose-50" : "bg-rose-500 hover:bg-rose-600"}
-                >
-                  {alumnaeStats?.mentorStatus ? "Update Mentor Profile" : "Join as Mentor"}
-                </Button>
-              </div>
-              
-              <div className="space-y-2">
-                <h5 className="font-medium text-sm">Mentorship Areas:</h5>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="text-xs">Career Guidance</Badge>
-                  <Badge variant="outline" className="text-xs">Performance Tips</Badge>
-                  <Badge variant="outline" className="text-xs">Industry Connections</Badge>
-                  <Badge variant="outline" className="text-xs">Life Advice</Badge>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          
         </div>
 
         {/* Newsletter Section */}
@@ -373,9 +219,7 @@ export default function AlumnaeLanding() {
         <InterviewSegments />
 
         {/* Management Panel for Alumnae Liaison */}
-        {isAlumnaeLiaison && (
-          <AlumnaeManagementPanel />
-        )}
+        {isAlumnaeLiaison && <AlumnaeManagementPanel />}
 
         {/* Classmate Updates */}
         <Card className="animate-fade-in">
@@ -386,10 +230,8 @@ export default function AlumnaeLanding() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {classmateUpdates.length > 0 ? (
-              <div className="space-y-4">
-                {classmateUpdates.map((update) => (
-                  <div key={update.id} className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg hover-scale">
+            {classmateUpdates.length > 0 ? <div className="space-y-4">
+                {classmateUpdates.map(update => <div key={update.id} className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg hover-scale">
                     <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-semibold">
                       {update.name.split(' ').map(n => n[0]).join('')}
                     </div>
@@ -415,18 +257,14 @@ export default function AlumnaeLanding() {
                     <Button variant="outline" size="sm">
                       <MessageCircle className="h-4 w-4" />
                     </Button>
-                  </div>
-                ))}
+                  </div>)}
                 <div className="text-center">
                   <Button variant="outline">View All Updates</Button>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-8">
+              </div> : <div className="text-center py-8">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">No recent updates from classmates</p>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
 
@@ -492,6 +330,5 @@ export default function AlumnaeLanding() {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 }
