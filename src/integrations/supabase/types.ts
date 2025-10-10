@@ -19496,6 +19496,10 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      is_admin_or_librarian: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       is_alumnae_liaison: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -20021,7 +20025,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user" | "super-admin" | "auditioner" | "student"
+      app_role:
+        | "admin"
+        | "user"
+        | "super-admin"
+        | "auditioner"
+        | "student"
+        | "librarian"
       assignment_status:
         | "assigned"
         | "in_progress"
@@ -20241,7 +20251,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user", "super-admin", "auditioner", "student"],
+      app_role: [
+        "admin",
+        "user",
+        "super-admin",
+        "auditioner",
+        "student",
+        "librarian",
+      ],
       assignment_status: [
         "assigned",
         "in_progress",
