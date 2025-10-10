@@ -347,6 +347,14 @@ export const PublicDashboardMonitor = () => {
         </div>
         <div className="flex items-center gap-3">
           <Button
+            onClick={() => window.location.href = '/admin/communications'}
+            variant="outline"
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Import Contacts
+          </Button>
+          <Button
             onClick={() => setEditMode(!editMode)}
             variant={editMode ? "destructive" : "secondary"}
             size="sm"
