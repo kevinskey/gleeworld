@@ -26,6 +26,10 @@ import { Navigate, Link } from "react-router-dom";
 import { UniversalHeader } from "@/components/layout/UniversalHeader";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { toast } from "sonner";
+import { NewsletterSection } from "@/components/alumnae/NewsletterSection";
+import { InterviewSegments } from "@/components/alumnae/InterviewSegments";
+import { AlumnaeManagementPanel } from "@/components/alumnae/AlumnaeManagementPanel";
+import { useUserRole } from "@/hooks/useUserRole";
 
 
 interface AlumnaeStats {
@@ -58,10 +62,16 @@ interface ClassmateUpdate {
 export default function AlumnaeLanding() {
   const { user } = useAuth();
   const { userProfile, loading } = useUserProfile(user);
+  const { profile: roleProfile } = useUserRole();
   const [alumnaeStats, setAlumnaeStats] = useState<AlumnaeStats | null>(null);
   const [reunionEvents, setReunionEvents] = useState<ReunionEvent[]>([]);
   const [classmateUpdates, setClassmateUpdates] = useState<ClassmateUpdate[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+
+  // Check if user is alumnae liaison
+  const isAlumnaeLiaison = roleProfile?.exec_board_role === 'alumnae_liaison' || 
+                           roleProfile?.is_admin || 
+                           roleProfile?.is_super_admin;
 
   // Redirect if not authenticated
   if (!loading && !user) {
@@ -355,6 +365,17 @@ export default function AlumnaeLanding() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Newsletter Section */}
+        <NewsletterSection />
+
+        {/* Interview Segments */}
+        <InterviewSegments />
+
+        {/* Management Panel for Alumnae Liaison */}
+        {isAlumnaeLiaison && (
+          <AlumnaeManagementPanel />
+        )}
 
         {/* Classmate Updates */}
         <Card className="animate-fade-in">

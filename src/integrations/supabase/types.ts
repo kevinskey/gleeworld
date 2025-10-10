@@ -217,6 +217,72 @@ export type Database = {
         }
         Relationships: []
       }
+      alumnae_interviews: {
+        Row: {
+          audio_url: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          excerpt: string | null
+          id: string
+          interview_type: string | null
+          interviewee_class_year: number | null
+          interviewee_name: string
+          interviewee_user_id: string | null
+          is_featured: boolean | null
+          is_published: boolean | null
+          published_at: string | null
+          published_by: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          transcript: string | null
+          updated_at: string | null
+          video_url: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          excerpt?: string | null
+          id?: string
+          interview_type?: string | null
+          interviewee_class_year?: number | null
+          interviewee_name: string
+          interviewee_user_id?: string | null
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          published_at?: string | null
+          published_by?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          transcript?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          excerpt?: string | null
+          id?: string
+          interview_type?: string | null
+          interviewee_class_year?: number | null
+          interviewee_name?: string
+          interviewee_user_id?: string | null
+          is_featured?: boolean | null
+          is_published?: boolean | null
+          published_at?: string | null
+          published_by?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          transcript?: string | null
+          updated_at?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       alumnae_messages: {
         Row: {
           content: string
@@ -250,6 +316,51 @@ export type Database = {
           target_graduation_year?: number | null
           updated_at?: string | null
           visible_to?: string | null
+        }
+        Relationships: []
+      }
+      alumnae_newsletters: {
+        Row: {
+          content: string
+          cover_image_url: string | null
+          created_at: string | null
+          id: string
+          is_published: boolean | null
+          month: number
+          pdf_url: string | null
+          published_at: string | null
+          published_by: string | null
+          title: string
+          updated_at: string | null
+          year: number
+        }
+        Insert: {
+          content: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          month: number
+          pdf_url?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          title: string
+          updated_at?: string | null
+          year: number
+        }
+        Update: {
+          content?: string
+          cover_image_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_published?: boolean | null
+          month?: number
+          pdf_url?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          title?: string
+          updated_at?: string | null
+          year?: number
         }
         Relationships: []
       }
