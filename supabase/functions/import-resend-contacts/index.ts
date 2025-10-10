@@ -20,21 +20,35 @@ interface ResendAudience {
   name: string;
 }
 
+interface ImportRequest {
+  send_invite_emails?: boolean;
+  default_role?: string;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const { send_invite_emails = false, default_role = "alumna" }: ImportRequest = 
+      req.method === "POST" ? await req.json() : {};
+
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       throw new Error("RESEND_API_KEY not configured");
     }
 
-    // Initialize Supabase client
-    const supabaseClient = createClient(
+    // Initialize Supabase Admin client (bypasses RLS)
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
     console.log("Fetching audiences from Resend...");
@@ -58,7 +72,8 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Found ${audiences.length} audiences`);
 
     let totalContacts = 0;
-    const importedContacts = [];
+    const importedUsers = [];
+    const failedImports = [];
 
     // Fetch contacts from each audience
     for (const audience of audiences) {
@@ -87,51 +102,89 @@ const handler = async (req: Request): Promise<Response> => {
       for (const contact of contacts) {
         if (contact.unsubscribed) continue;
 
-        // Check if contact already exists
-        const { data: existingProfile } = await supabaseClient
-          .from("gw_profiles")
-          .select("id, email")
-          .eq("email", contact.email)
-          .single();
+        // Check if user already exists in auth.users
+        const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
+        const userExists = existingUser?.users?.some(u => u.email === contact.email);
 
-        if (!existingProfile) {
-          importedContacts.push({
+        if (userExists) {
+          console.log(`User ${contact.email} already exists, skipping...`);
+          continue;
+        }
+
+        try {
+          // Create auth user
+          const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email: contact.email,
-            first_name: contact.first_name,
-            last_name: contact.last_name,
-            full_name: [contact.first_name, contact.last_name].filter(Boolean).join(" ") || null,
-            role: "alumna",
-            created_at: new Date().toISOString(),
+            email_confirm: !send_invite_emails, // Auto-confirm if not sending invites
+            user_metadata: {
+              first_name: contact.first_name || "",
+              last_name: contact.last_name || "",
+              full_name: [contact.first_name, contact.last_name].filter(Boolean).join(" ") || contact.email,
+            },
           });
+
+          if (createError) {
+            console.error(`Failed to create user ${contact.email}:`, createError);
+            failedImports.push({ email: contact.email, error: createError.message });
+            continue;
+          }
+
+          console.log(`Created user: ${contact.email}`);
+
+          // Update profile with role information
+          if (newUser?.user) {
+            const { error: profileError } = await supabaseAdmin
+              .from("gw_profiles")
+              .update({
+                role: default_role,
+                first_name: contact.first_name,
+                last_name: contact.last_name,
+                full_name: [contact.first_name, contact.last_name].filter(Boolean).join(" ") || contact.email,
+              })
+              .eq("user_id", newUser.user.id);
+
+            if (profileError) {
+              console.error(`Failed to update profile for ${contact.email}:`, profileError);
+            }
+
+            // Send invite email if requested
+            if (send_invite_emails) {
+              const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(contact.email);
+              if (inviteError) {
+                console.error(`Failed to send invite to ${contact.email}:`, inviteError);
+              } else {
+                console.log(`Sent invite email to ${contact.email}`);
+              }
+            }
+          }
+
+          importedUsers.push({
+            email: contact.email,
+            name: [contact.first_name, contact.last_name].filter(Boolean).join(" "),
+          });
+
+        } catch (error: any) {
+          console.error(`Error importing ${contact.email}:`, error);
+          failedImports.push({ email: contact.email, error: error.message });
         }
       }
 
       totalContacts += contacts.length;
     }
 
-    console.log(`Importing ${importedContacts.length} new contacts...`);
-
-    // Bulk insert new contacts
-    if (importedContacts.length > 0) {
-      const { error: insertError } = await supabaseClient
-        .from("gw_profiles")
-        .insert(importedContacts);
-
-      if (insertError) {
-        console.error("Error inserting contacts:", insertError);
-        throw insertError;
-      }
-    }
-
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Imported ${importedContacts.length} new contacts from ${audiences.length} audiences`,
+        message: `Imported ${importedUsers.length} new users from ${audiences.length} Resend audiences`,
         stats: {
           audiences: audiences.length,
           total_contacts: totalContacts,
-          new_contacts: importedContacts.length,
+          imported_users: importedUsers.length,
+          failed_imports: failedImports.length,
+          invite_emails_sent: send_invite_emails,
         },
+        imported_users: importedUsers,
+        failed_imports: failedImports,
       }),
       {
         status: 200,
