@@ -68,7 +68,7 @@ export const SpotlightSection = () => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:max-w-[50%]">
           {spotlights.map((spotlight) => (
             <div 
               key={spotlight.id} 
