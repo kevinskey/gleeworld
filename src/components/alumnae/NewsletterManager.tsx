@@ -4,24 +4,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Save, Eye, EyeOff, Send } from "lucide-react";
+import { Plus, Save, Eye, EyeOff, Send, Upload, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { NewsletterContentManager } from "./NewsletterContentManager";
+import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
 
 export const NewsletterManager = () => {
   const { user } = useAuth();
+  const { uploadFile, uploading } = useFileUpload();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
   const [pdfUrl, setPdfUrl] = useState("");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sendingEmails, setSendingEmails] = useState(false);
   const [currentNewsletterId, setCurrentNewsletterId] = useState<string | null>(null);
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      toast.error("Please upload a PDF file");
+      return;
+    }
+
+    setPdfFile(file);
+    toast.success(`${file.name} ready to upload`);
+  };
 
   const handleSave = async () => {
     if (!title || !content) {
@@ -31,12 +47,25 @@ export const NewsletterManager = () => {
 
     setSaving(true);
     try {
+      let finalPdfUrl = pdfUrl;
+
+      // Upload PDF file if one was selected
+      if (pdfFile) {
+        const uploadedUrl = await uploadFile(pdfFile, 'alumnae-newsletters', `newsletters/${year}/${month}`);
+        if (uploadedUrl) {
+          finalPdfUrl = uploadedUrl;
+          toast.success("PDF uploaded successfully");
+        } else {
+          throw new Error("Failed to upload PDF");
+        }
+      }
+
       const newsletterData = {
         title,
         content,
         month,
         year,
-        pdf_url: pdfUrl || null,
+        pdf_url: finalPdfUrl || null,
         cover_image_url: coverImageUrl || null,
         is_published: isPublished,
         published_by: user?.id,
@@ -64,6 +93,7 @@ export const NewsletterManager = () => {
       setTitle("");
       setContent("");
       setPdfUrl("");
+      setPdfFile(null);
       setCoverImageUrl("");
       setIsPublished(false);
     } catch (error: any) {
@@ -170,13 +200,36 @@ export const NewsletterManager = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="pdfUrl">PDF URL (Optional)</Label>
-        <Input
-          id="pdfUrl"
-          placeholder="https://..."
-          value={pdfUrl}
-          onChange={(e) => setPdfUrl(e.target.value)}
-        />
+        <Label htmlFor="pdfUpload">Newsletter PDF (Optional)</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            id="pdfUpload"
+            type="file"
+            accept=".pdf"
+            onChange={handlePdfUpload}
+            className="cursor-pointer"
+          />
+          {pdfFile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setPdfFile(null)}
+              className="gap-1"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {pdfFile && (
+          <p className="text-sm text-muted-foreground">
+            Ready to upload: {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
+          </p>
+        )}
+        {pdfUrl && !pdfFile && (
+          <p className="text-sm text-muted-foreground">
+            Current: <a href={pdfUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View PDF</a>
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t">
