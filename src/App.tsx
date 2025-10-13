@@ -85,6 +85,7 @@ import WellnessSuite from "./pages/WellnessSuite";
 import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/FeedbackDashboard";
 import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
+import AlumnaeManagement from "./pages/AlumnaeManagement";
 import SendNotificationPage from "./pages/SendNotificationPage";
 import AuditionPage from "./pages/AuditionPage";
 import Handbook from "./pages/Handbook";
@@ -523,16 +524,16 @@ const App = () => {
                     </ProtectedRoute>
                    } 
                  />
-                 <Route 
-                  path="/dashboard/alumnae" 
-                  element={
-                    <ProtectedRoute>
-                      <UniversalLayout>
-                        <UnifiedDashboard />
-                      </UniversalLayout>
-                    </ProtectedRoute>
-                   } 
-                 />
+                  <Route 
+                   path="/dashboard/alumnae" 
+                   element={
+                     <ProtectedRoute>
+                       <UniversalLayout>
+                         <AlumnaeManagement />
+                       </UniversalLayout>
+                     </ProtectedRoute>
+                    } 
+                  />
                  <Route 
                   path="/dashboard/mus240" 
                   element={
