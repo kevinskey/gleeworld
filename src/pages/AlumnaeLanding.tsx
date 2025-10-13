@@ -2,18 +2,19 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Calendar, Heart, Users, MapPin, Briefcase, Camera, Award, MessageCircle, ExternalLink, Star, Music, BookOpen, Network, Clock } from "lucide-react";
+import { GraduationCap, Heart, Users, MapPin, Briefcase, Camera, Award, MessageCircle, Star, Music, BookOpen, Network, Sparkles, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { Navigate, Link } from "react-router-dom";
-import { UniversalHeader } from "@/components/layout/UniversalHeader";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { toast } from "sonner";
 import { NewsletterSection } from "@/components/alumnae/NewsletterSection";
 import { InterviewSegments } from "@/components/alumnae/InterviewSegments";
-import { AlumnaeManagementPanel } from "@/components/alumnae/AlumnaeManagementPanel";
 import { useUserRole } from "@/hooks/useUserRole";
+import { HeroSlideshow } from "@/components/alumnae/HeroSlideshow";
+import { SpotlightSection } from "@/components/alumnae/SpotlightSection";
+import { AnnouncementSection } from "@/components/alumnae/AnnouncementSection";
 interface AlumnaeStats {
   classYear: number | null;
   yearsOut: number;
@@ -56,11 +57,6 @@ export default function AlumnaeLanding() {
 
   // Check if user is alumnae liaison
   const isAlumnaeLiaison = roleProfile?.exec_board_role === 'alumnae_liaison' || roleProfile?.is_admin || roleProfile?.is_super_admin;
-
-  // Redirect if not authenticated
-  if (!loading && !user) {
-    return <Navigate to="/auth" replace />;
-  }
   useEffect(() => {
     if (user && userProfile) {
       fetchAlumnaeStats();
@@ -174,52 +170,51 @@ export default function AlumnaeLanding() {
     }
   };
   if (loading || loadingStats) {
-    return <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-        <UniversalHeader />
+    return (
+      <UniversalLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner />
+          <LoadingSpinner size="lg" text="Loading alumnae portal..." />
         </div>
-      </div>;
+      </UniversalLayout>
+    );
   }
   const getClassYearDisplay = () => {
     if (!alumnaeStats?.classYear) return "Class of ----";
     return `Class of '${alumnaeStats.classYear.toString().slice(-2)}`;
   };
-  return <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
-      <UniversalHeader />
-      
-      <div className="container mx-auto px-4 py-6 space-y-6">
+  return (
+    <UniversalLayout>
+      <div className="container mx-auto px-4 py-8 space-y-8">
         
-        {/* Welcome Hero Section */}
-        <div className="text-center space-y-4 py-8 relative animate-fade-in">
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-100/50 via-pink-50/50 to-rose-100/50 rounded-3xl -z-10"></div>
-          <GraduationCap className="h-16 w-16 text-primary mx-auto animate-pulse" />
-          <h1 className="text-4xl font-bold text-primary">Welcome Back, {userProfile?.first_name || 'Alumna'}!</h1>
-          <p className="text-xl text-muted-foreground">{getClassYearDisplay()}</p>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        {/* Hero Slideshow */}
+        <HeroSlideshow />
+
+        {/* Welcome Section */}
+        <div className="text-center space-y-4 animate-fade-in">
+          <div className="flex items-center justify-center gap-3">
+            <GraduationCap className="h-12 w-12 text-primary" />
+            <h1 className="text-5xl font-serif text-primary">
+              Welcome Back, {userProfile?.first_name || 'Alumna'}!
+            </h1>
+            <Sparkles className="h-12 w-12 text-primary" />
+          </div>
+          <p className="text-2xl text-muted-foreground font-medium">{getClassYearDisplay()}</p>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Once a Glee Club member, always family. Stay connected with your sisterhood and continue the legacy.
           </p>
         </div>
 
-        {/* Alumnae Stats Cards */}
-        
+        {/* Announcements */}
+        <AnnouncementSection />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Reunion Events */}
-          
-
-          {/* Mentorship Program */}
-          
-        </div>
+        {/* Spotlights */}
+        <SpotlightSection />
 
         {/* Newsletter Section */}
         <NewsletterSection />
 
         {/* Interview Segments */}
         <InterviewSegments />
-
-        {/* Management Panel for Alumnae Liaison */}
-        {isAlumnaeLiaison && <AlumnaeManagementPanel />}
 
         {/* Classmate Updates */}
         <Card className="animate-fade-in">
@@ -330,5 +325,6 @@ export default function AlumnaeLanding() {
           </CardContent>
         </Card>
       </div>
-    </div>;
+    </UniversalLayout>
+  );
 }

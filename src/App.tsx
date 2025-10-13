@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
+import { AlumnaeRoute } from "@/components/routes/AlumnaeRoute";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
@@ -905,13 +906,13 @@ const App = () => {
                            } 
                          />
                        <Route 
-                         path="/alumnae" 
-                         element={
-                           <ProtectedRoute>
-                             <AlumnaeLanding />
-                           </ProtectedRoute>
-                         } 
-                       />
+                          path="/alumnae" 
+                          element={
+                            <AlumnaeRoute>
+                              <AlumnaeLanding />
+                            </AlumnaeRoute>
+                          } 
+                        />
                         <Route 
                           path="/admin/alumnae" 
                           element={
