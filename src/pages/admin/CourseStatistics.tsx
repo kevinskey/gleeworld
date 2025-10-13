@@ -7,6 +7,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, TrendingUp, Users, CheckCircle, Clock } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format } from 'date-fns';
+import { StudentAssignmentSubmission } from '@/hooks/useStudentAssignmentSubmissions';
 
 interface SubmissionStats {
   totalSubmissions: number;
@@ -21,6 +24,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export const CourseStatistics: React.FC = () => {
   const [stats, setStats] = useState<SubmissionStats | null>(null);
+  const [allSubmissions, setAllSubmissions] = useState<StudentAssignmentSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { isAdmin, loading: roleLoading } = useUserRole();
@@ -33,12 +37,16 @@ export const CourseStatistics: React.FC = () => {
     try {
       setLoading(true);
 
-      // Fetch all submissions
+      // Fetch all submissions with full details
       const { data: submissions, error } = await supabase
         .from('assignment_submissions')
-        .select('assignment_id, status, grade, submitted_at');
+        .select('*')
+        .order('submitted_at', { ascending: false });
 
       if (error) throw error;
+      
+      // Set all submissions for the table
+      setAllSubmissions(submissions || []);
 
       if (!submissions) {
         setStats({
@@ -278,6 +286,79 @@ export const CourseStatistics: React.FC = () => {
                 <Bar dataKey="count" fill="#00C49F" name="Number of Students" />
               </BarChart>
             </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* All Submissions Table */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>All Submissions</CardTitle>
+            <CardDescription>Complete list of student assignment submissions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student ID</TableHead>
+                    <TableHead>Assignment</TableHead>
+                    <TableHead>Submitted</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Grade</TableHead>
+                    <TableHead>File</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allSubmissions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        No submissions found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    allSubmissions.map((submission) => (
+                      <TableRow key={submission.id}>
+                        <TableCell className="font-mono text-sm">
+                          {submission.student_id.slice(0, 8)}...
+                        </TableCell>
+                        <TableCell className="font-medium">{submission.assignment_id}</TableCell>
+                        <TableCell>{format(new Date(submission.submitted_at), 'MMM d, yyyy HH:mm')}</TableCell>
+                        <TableCell>
+                          <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                            submission.status === 'graded' 
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                          }`}>
+                            {submission.status}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          {submission.grade !== null ? (
+                            <span className="font-semibold">{submission.grade}/20</span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {submission.file_url ? (
+                            <a 
+                              href={submission.file_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline text-sm"
+                            >
+                              {submission.file_name || 'View file'}
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
