@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, MoveUp, MoveDown, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, MoveUp, MoveDown, Image as ImageIcon, X, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
 
 interface HeroSlide {
   id: string;
@@ -19,9 +20,11 @@ interface HeroSlide {
 }
 
 export const HeroManager = () => {
+  const { uploadFile, uploading } = useFileUpload();
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [newsletters, setNewsletters] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [editingSlide, setEditingSlide] = useState<Partial<HeroSlide>>({
     title: "",
     description: "",
@@ -59,27 +62,54 @@ export const HeroManager = () => {
     setNewsletters(data || []);
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    setImageFile(file);
+    toast.success(`${file.name} ready to upload`);
+  };
+
   const handleSave = async () => {
-    if (!editingSlide.title || !editingSlide.image_url) {
-      toast.error("Please fill in title and image URL");
+    if (!imageFile && !editingSlide.image_url) {
+      toast.error("Please upload an image");
       return;
     }
 
     setLoading(true);
 
-    const { error } = await supabase
-      .from("alumnae_newsletter_hero_slides")
-      .insert({
-        title: editingSlide.title,
-        description: editingSlide.description,
-        image_url: editingSlide.image_url,
-        newsletter_id: editingSlide.newsletter_id,
-        display_order: slides.length,
-      });
+    try {
+      let finalImageUrl = editingSlide.image_url;
 
-    if (error) {
-      toast.error("Failed to save hero slide");
-    } else {
+      // Upload image if one was selected
+      if (imageFile) {
+        const imagePath = `hero-slides/${Date.now()}-${imageFile.name}`;
+        const uploadedUrl = await uploadFile(imageFile, 'alumnae-newsletters', imagePath);
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+          toast.success("Image uploaded successfully");
+        } else {
+          throw new Error("Failed to upload image");
+        }
+      }
+
+      const { error } = await supabase
+        .from("alumnae_newsletter_hero_slides")
+        .insert({
+          title: editingSlide.title || "",
+          description: editingSlide.description,
+          image_url: finalImageUrl,
+          newsletter_id: editingSlide.newsletter_id,
+          display_order: slides.length,
+        });
+
+      if (error) throw error;
+
       toast.success("Hero slide saved successfully");
       setEditingSlide({
         title: "",
@@ -88,10 +118,14 @@ export const HeroManager = () => {
         newsletter_id: null,
         display_order: 0,
       });
+      setImageFile(null);
       fetchSlides();
+    } catch (error: any) {
+      console.error('Error saving hero slide:', error);
+      toast.error(error.message || "Failed to save hero slide");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -152,9 +186,42 @@ export const HeroManager = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Hero Image *</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="heroImageUpload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="cursor-pointer"
+              />
+              {imageFile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setImageFile(null)}
+                  className="gap-1"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+            {imageFile && (
+              <p className="text-sm text-muted-foreground">
+                Ready to upload: {imageFile.name} ({(imageFile.size / 1024 / 1024).toFixed(2)} MB)
+              </p>
+            )}
+            {editingSlide.image_url && !imageFile && (
+              <p className="text-sm text-muted-foreground">
+                Current: <a href={editingSlide.image_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View Image</a>
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Title *</Label>
+              <Label>Title (Optional)</Label>
               <Input
                 value={editingSlide.title}
                 onChange={(e) =>
@@ -191,31 +258,20 @@ export const HeroManager = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Image URL *</Label>
-            <Input
-              value={editingSlide.image_url}
-              onChange={(e) =>
-                setEditingSlide({ ...editingSlide, image_url: e.target.value })
-              }
-              placeholder="https://..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Description (Optional)</Label>
+            <Label>Call to Action / Description (Optional)</Label>
             <Textarea
               value={editingSlide.description || ""}
               onChange={(e) =>
                 setEditingSlide({ ...editingSlide, description: e.target.value })
               }
-              placeholder="Brief description of the hero slide"
+              placeholder="e.g., Join us for our upcoming spring concert..."
               rows={3}
             />
           </div>
 
-          <Button onClick={handleSave} disabled={loading} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Hero Slide
+          <Button onClick={handleSave} disabled={loading || uploading} className="w-full gap-2">
+            <Upload className="h-4 w-4" />
+            {loading || uploading ? "Uploading..." : "Add Hero Slide"}
           </Button>
         </CardContent>
       </Card>
