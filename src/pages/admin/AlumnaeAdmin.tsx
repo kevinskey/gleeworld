@@ -425,7 +425,7 @@ export default function AlumnaeAdmin() {
           {/* Landing Page Content Management */}
           <TabsContent value="content">
             <Card>
-              <CardHeader>
+              <CardHeader className="pt-4 md:pt-6">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <CardTitle className="text-base md:text-lg flex items-center gap-1">
