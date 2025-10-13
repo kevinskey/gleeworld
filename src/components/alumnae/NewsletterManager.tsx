@@ -221,27 +221,36 @@ export const NewsletterManager = () => {
     }
   };
 
-  const handleSendNotifications = async () => {
+  const handleSendBroadcast = async () => {
     if (!currentNewsletterId) {
       toast.error("Please save the newsletter first");
       return;
     }
 
+    if (!isPublished) {
+      toast.error("Newsletter must be published before sending");
+      return;
+    }
+
     setSendingEmails(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-newsletter-notification', {
-        body: { newsletter_id: currentNewsletterId }
+      const { data, error } = await supabase.functions.invoke('send-newsletter-broadcast', {
+        body: { 
+          newsletter_id: currentNewsletterId,
+          from_name: "Spelman College Glee Club",
+          from_email: "onboarding@resend.dev"
+        }
       });
 
       if (error) throw error;
 
       toast.success(
-        `Email notifications sent! ${data.stats.successful} successful, ${data.stats.failed} failed`,
+        "Newsletter broadcast sent successfully to all verified alumnae!",
         { duration: 5000 }
       );
     } catch (error: any) {
-      console.error('Error sending notifications:', error);
-      toast.error(error.message || "Failed to send email notifications");
+      console.error('Error sending broadcast:', error);
+      toast.error(error.message || "Failed to send newsletter broadcast");
     } finally {
       setSendingEmails(false);
     }
@@ -425,15 +434,15 @@ export const NewsletterManager = () => {
         </Button>
 
         <div className="flex gap-2">
-          {currentNewsletterId && (
+          {currentNewsletterId && isPublished && (
             <Button 
-              onClick={handleSendNotifications} 
+              onClick={handleSendBroadcast} 
               disabled={sendingEmails}
               variant="secondary"
               className="gap-2"
             >
               <Send className="h-4 w-4" />
-              {sendingEmails ? "Sending..." : "Send to Alumnae"}
+              {sendingEmails ? "Sending..." : "Send to All Alumnae"}
             </Button>
           )}
           
