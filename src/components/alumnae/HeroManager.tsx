@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, MoveUp, MoveDown, Image as ImageIcon, X, Upload } from "lucide-react";
+import { Plus, Trash2, MoveUp, MoveDown, Image as ImageIcon, X, Upload, Edit } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
@@ -25,6 +25,7 @@ export const HeroManager = () => {
   const [newsletters, setNewsletters] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [editingSlide, setEditingSlide] = useState<Partial<HeroSlide>>({
     title: "",
     description: "",
@@ -98,19 +99,36 @@ export const HeroManager = () => {
         }
       }
 
-      const { error } = await supabase
-        .from("alumnae_newsletter_hero_slides")
-        .insert({
-          title: editingSlide.title || "",
-          description: editingSlide.description,
-          image_url: finalImageUrl,
-          newsletter_id: editingSlide.newsletter_id,
-          display_order: slides.length,
-        });
+      if (isEditing && editingSlide.id) {
+        // Update existing slide
+        const { error } = await supabase
+          .from("alumnae_newsletter_hero_slides")
+          .update({
+            title: editingSlide.title || "",
+            description: editingSlide.description,
+            image_url: finalImageUrl,
+            newsletter_id: editingSlide.newsletter_id,
+          })
+          .eq("id", editingSlide.id);
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Hero slide updated successfully");
+      } else {
+        // Insert new slide
+        const { error } = await supabase
+          .from("alumnae_newsletter_hero_slides")
+          .insert({
+            title: editingSlide.title || "",
+            description: editingSlide.description,
+            image_url: finalImageUrl,
+            newsletter_id: editingSlide.newsletter_id,
+            display_order: slides.length,
+          });
 
-      toast.success("Hero slide saved successfully");
+        if (error) throw error;
+        toast.success("Hero slide saved successfully");
+      }
+
       setEditingSlide({
         title: "",
         description: "",
@@ -119,6 +137,7 @@ export const HeroManager = () => {
         display_order: 0,
       });
       setImageFile(null);
+      setIsEditing(false);
       fetchSlides();
     } catch (error: any) {
       console.error('Error saving hero slide:', error);
@@ -126,6 +145,25 @@ export const HeroManager = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEdit = (slide: HeroSlide) => {
+    setEditingSlide(slide);
+    setIsEditing(true);
+    setImageFile(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSlide({
+      title: "",
+      description: "",
+      image_url: "",
+      newsletter_id: null,
+      display_order: 0,
+    });
+    setImageFile(null);
+    setIsEditing(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -177,12 +215,12 @@ export const HeroManager = () => {
 
   return (
     <div className="space-y-6">
-      {/* Add New Slide Form */}
+      {/* Add/Edit Slide Form */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Plus className="h-5 w-5" />
-            Add New Hero Slide
+            {isEditing ? <Edit className="h-5 w-5" /> : <Plus className="h-5 w-5" />}
+            {isEditing ? "Edit Hero Slide" : "Add New Hero Slide"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -269,10 +307,17 @@ export const HeroManager = () => {
             />
           </div>
 
-          <Button onClick={handleSave} disabled={loading || uploading} className="w-full gap-2">
-            <Upload className="h-4 w-4" />
-            {loading || uploading ? "Uploading..." : "Add Hero Slide"}
-          </Button>
+          <div className="flex gap-2">
+            {isEditing && (
+              <Button onClick={handleCancelEdit} variant="outline" className="flex-1">
+                Cancel
+              </Button>
+            )}
+            <Button onClick={handleSave} disabled={loading || uploading} className="flex-1 gap-2">
+              <Upload className="h-4 w-4" />
+              {loading || uploading ? "Uploading..." : isEditing ? "Update Hero Slide" : "Add Hero Slide"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -313,8 +358,17 @@ export const HeroManager = () => {
                     <Button
                       variant="outline"
                       size="icon"
+                      onClick={() => handleEdit(slide)}
+                      title="Edit slide"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
                       onClick={() => moveSlide(slide.id, "up")}
                       disabled={index === 0}
+                      title="Move up"
                     >
                       <MoveUp className="h-4 w-4" />
                     </Button>
@@ -323,6 +377,7 @@ export const HeroManager = () => {
                       size="icon"
                       onClick={() => moveSlide(slide.id, "down")}
                       disabled={index === slides.length - 1}
+                      title="Move down"
                     >
                       <MoveDown className="h-4 w-4" />
                     </Button>
@@ -330,6 +385,7 @@ export const HeroManager = () => {
                       variant="destructive"
                       size="icon"
                       onClick={() => handleDelete(slide.id)}
+                      title="Delete slide"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
