@@ -20,8 +20,17 @@ import {
   UserX,
   Heart,
   Layout,
-  ArrowRight
+  ArrowRight,
+  Video,
+  Image,
+  Star,
+  Calendar
 } from "lucide-react";
+import { NewsletterManager } from "@/components/alumnae/NewsletterManager";
+import { InterviewManager } from "@/components/alumnae/InterviewManager";
+import { HeroManager } from "@/components/alumnae/HeroManager";
+import { SpotlightManager } from "@/components/alumnae/SpotlightManager";
+import { AnnouncementManager } from "@/components/alumnae/AnnouncementManager";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -372,34 +381,123 @@ export default function AlumnaeAdmin() {
           </Card>
         </div>
 
-        {/* Landing Page Management Card */}
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-xl flex items-center gap-2">
-                  <Layout className="h-5 w-5" />
-                  Landing Page Content Management
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Manage newsletters, interviews, hero images, spotlights, and announcements
-                </p>
-              </div>
-              <Button onClick={() => navigate('/alumnae')} size="lg" className="gap-2">
-                View Alumnae Page
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-        </Card>
-
         {/* Main Content Tabs */}
-        <Tabs defaultValue="stories" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="content" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+            <TabsTrigger value="content" className="flex items-center gap-1">
+              <Layout className="h-4 w-4" />
+              <span className="hidden sm:inline">Content</span>
+            </TabsTrigger>
+            <TabsTrigger value="newsletters" className="flex items-center gap-1">
+              <BookOpen className="h-4 w-4" />
+              <span className="hidden sm:inline">Newsletters</span>
+            </TabsTrigger>
+            <TabsTrigger value="interviews" className="flex items-center gap-1">
+              <Video className="h-4 w-4" />
+              <span className="hidden sm:inline">Interviews</span>
+            </TabsTrigger>
+            <TabsTrigger value="hero" className="flex items-center gap-1">
+              <Image className="h-4 w-4" />
+              <span className="hidden sm:inline">Hero</span>
+            </TabsTrigger>
+            <TabsTrigger value="spotlights" className="flex items-center gap-1">
+              <Star className="h-4 w-4" />
+              <span className="hidden sm:inline">Spotlights</span>
+            </TabsTrigger>
+            <TabsTrigger value="announcements" className="flex items-center gap-1">
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:inline">Announce</span>
+            </TabsTrigger>
             <TabsTrigger value="stories">Pending Stories</TabsTrigger>
-            <TabsTrigger value="messages">Pending Messages</TabsTrigger>
-            <TabsTrigger value="alumnae">Alumnae Management</TabsTrigger>
+            <TabsTrigger value="messages">Messages</TabsTrigger>
           </TabsList>
+
+          {/* Landing Page Content Management */}
+          <TabsContent value="content">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-xl flex items-center gap-2">
+                      <Layout className="h-5 w-5" />
+                      Landing Page Content Overview
+                    </CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Manage all alumnae landing page content from the tabs above
+                    </p>
+                  </div>
+                  <Button onClick={() => navigate('/alumnae')} size="lg" className="gap-2">
+                    View Alumnae Page
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <Card className="border-2">
+                    <CardContent className="pt-6">
+                      <BookOpen className="h-8 w-8 text-primary mb-2" />
+                      <h3 className="font-semibold mb-1">Newsletters</h3>
+                      <p className="text-sm text-muted-foreground">Manage newsletter content and distribution</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-2">
+                    <CardContent className="pt-6">
+                      <Video className="h-8 w-8 text-primary mb-2" />
+                      <h3 className="font-semibold mb-1">Interviews</h3>
+                      <p className="text-sm text-muted-foreground">Feature alumnae interviews and stories</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-2">
+                    <CardContent className="pt-6">
+                      <Image className="h-8 w-8 text-primary mb-2" />
+                      <h3 className="font-semibold mb-1">Hero Slides</h3>
+                      <p className="text-sm text-muted-foreground">Manage hero carousel images</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-2">
+                    <CardContent className="pt-6">
+                      <Star className="h-8 w-8 text-primary mb-2" />
+                      <h3 className="font-semibold mb-1">Spotlights</h3>
+                      <p className="text-sm text-muted-foreground">Feature outstanding alumnae</p>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-2">
+                    <CardContent className="pt-6">
+                      <Calendar className="h-8 w-8 text-primary mb-2" />
+                      <h3 className="font-semibold mb-1">Announcements</h3>
+                      <p className="text-sm text-muted-foreground">Post important announcements</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Newsletters Management */}
+          <TabsContent value="newsletters">
+            <NewsletterManager />
+          </TabsContent>
+
+          {/* Interviews Management */}
+          <TabsContent value="interviews">
+            <InterviewManager />
+          </TabsContent>
+
+          {/* Hero Management */}
+          <TabsContent value="hero">
+            <HeroManager />
+          </TabsContent>
+
+          {/* Spotlights Management */}
+          <TabsContent value="spotlights">
+            <SpotlightManager />
+          </TabsContent>
+
+          {/* Announcements Management */}
+          <TabsContent value="announcements">
+            <AnnouncementManager />
+          </TabsContent>
 
           {/* Pending Stories */}
           <TabsContent value="stories">
