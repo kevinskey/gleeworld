@@ -384,38 +384,40 @@ export default function AlumnaeAdmin() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="content" className="space-y-2 md:space-y-4">
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9 h-auto gap-0.5 p-0.5">
-            <TabsTrigger value="members" className="flex items-center gap-1 py-1.5 px-2 text-xs md:text-sm">
-              <Users className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Members</span>
-            </TabsTrigger>
-            <TabsTrigger value="content" className="flex items-center gap-1 py-1.5 px-2 text-xs md:text-sm">
-              <Layout className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Content</span>
-            </TabsTrigger>
-            <TabsTrigger value="newsletters" className="flex items-center gap-1 py-1.5 px-2 text-xs md:text-sm">
-              <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Newsletters</span>
-            </TabsTrigger>
-            <TabsTrigger value="interviews" className="flex items-center gap-1 py-1.5 px-2 text-xs md:text-sm">
-              <Video className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Interviews</span>
-            </TabsTrigger>
-            <TabsTrigger value="hero" className="flex items-center gap-1 py-1.5 px-2 text-xs md:text-sm">
-              <Image className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Hero</span>
-            </TabsTrigger>
-            <TabsTrigger value="spotlights" className="flex items-center gap-1 py-1.5 px-2 text-xs md:text-sm">
-              <Star className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Spotlights</span>
-            </TabsTrigger>
-            <TabsTrigger value="announcements" className="flex items-center gap-1 py-1.5 px-2 text-xs md:text-sm">
-              <Calendar className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Announce</span>
-            </TabsTrigger>
-            <TabsTrigger value="stories" className="py-1.5 px-2 text-xs md:text-sm">Pending Stories</TabsTrigger>
-            <TabsTrigger value="messages" className="py-1.5 px-2 text-xs md:text-sm">Messages</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto -mx-4 px-4">
+            <TabsList className="inline-flex w-auto min-w-full h-auto gap-0.5 p-0.5">
+              <TabsTrigger value="members" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
+                <Users className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Members</span>
+              </TabsTrigger>
+              <TabsTrigger value="content" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
+                <Layout className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Content</span>
+              </TabsTrigger>
+              <TabsTrigger value="newsletters" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
+                <BookOpen className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Newsletters</span>
+              </TabsTrigger>
+              <TabsTrigger value="interviews" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
+                <Video className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Interviews</span>
+              </TabsTrigger>
+              <TabsTrigger value="hero" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
+                <Image className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Hero</span>
+              </TabsTrigger>
+              <TabsTrigger value="spotlights" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
+                <Star className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Spotlights</span>
+              </TabsTrigger>
+              <TabsTrigger value="announcements" className="flex items-center gap-1 py-2 px-3 text-xs md:text-sm whitespace-nowrap">
+                <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden sm:inline">Announce</span>
+              </TabsTrigger>
+              <TabsTrigger value="stories" className="py-2 px-3 text-xs md:text-sm whitespace-nowrap">Pending Stories</TabsTrigger>
+              <TabsTrigger value="messages" className="py-2 px-3 text-xs md:text-sm whitespace-nowrap">Messages</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Alumnae Members Tab */}
           <TabsContent value="members">
