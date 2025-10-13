@@ -71,7 +71,8 @@ export const NewsletterManager = () => {
 
       // Upload cover image if one was selected
       if (coverImageFile) {
-        const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-newsletters', `newsletters/${year}/${month}`);
+        const coverPath = `newsletters/${year}/${month}/${Date.now()}-${coverImageFile.name}`;
+        const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-newsletters', coverPath);
         if (uploadedUrl) {
           finalCoverImageUrl = uploadedUrl;
           toast.success("Cover image uploaded successfully");
@@ -82,7 +83,8 @@ export const NewsletterManager = () => {
 
       // Upload PDF file if one was selected
       if (pdfFile) {
-        const uploadedUrl = await uploadFile(pdfFile, 'alumnae-newsletters', `newsletters/${year}/${month}`);
+        const pdfPath = `newsletters/${year}/${month}/${Date.now()}-${pdfFile.name}`;
+        const uploadedUrl = await uploadFile(pdfFile, 'alumnae-newsletters', pdfPath);
         if (uploadedUrl) {
           finalPdfUrl = uploadedUrl;
           toast.success("PDF uploaded successfully");
