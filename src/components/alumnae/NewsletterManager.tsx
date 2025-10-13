@@ -54,8 +54,13 @@ export const NewsletterManager = () => {
   };
 
   const handleSave = async () => {
-    if (!title || !content) {
-      toast.error("Please fill in all required fields");
+    if (!title) {
+      toast.error("Please enter a newsletter title");
+      return;
+    }
+
+    if (!pdfFile && !pdfUrl) {
+      toast.error("Please upload a PDF or provide a PDF URL");
       return;
     }
 
@@ -88,7 +93,7 @@ export const NewsletterManager = () => {
 
       const newsletterData = {
         title,
-        content,
+        content: content || '', // Optional content field
         month,
         year,
         pdf_url: finalPdfUrl || null,
@@ -195,24 +200,12 @@ export const NewsletterManager = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="title">Newsletter Title</Label>
+        <Label htmlFor="title">Newsletter Title *</Label>
         <Input
           id="title"
-          placeholder="Enter newsletter title"
+          placeholder="e.g., March 2025 Newsletter"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="content">Newsletter Content</Label>
-        <Textarea
-          id="content"
-          placeholder="Enter newsletter content (supports HTML)"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          rows={10}
-          className="font-mono text-sm"
         />
       </div>
 
@@ -250,7 +243,7 @@ export const NewsletterManager = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="pdfUpload">Newsletter PDF (Optional)</Label>
+        <Label htmlFor="pdfUpload">Newsletter PDF *</Label>
         <div className="flex items-center gap-2">
           <Input
             id="pdfUpload"
@@ -281,6 +274,18 @@ export const NewsletterManager = () => {
           </p>
         )}
       </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="content">Additional Notes (Optional)</Label>
+        <Textarea
+          id="content"
+          placeholder="Add any additional notes or description about this newsletter..."
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={4}
+        />
+      </div>
+
 
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t">
         <Button
