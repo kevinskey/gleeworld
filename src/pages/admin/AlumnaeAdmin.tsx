@@ -427,12 +427,12 @@ export default function AlumnaeAdmin() {
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-xl flex items-center gap-2">
-                      <Layout className="h-5 w-5" />
+                  <div className="space-y-0.5">
+                    <CardTitle className="text-base md:text-lg flex items-center gap-1">
+                      <Layout className="h-4 w-4" />
                       Landing Page Content Overview
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       Manage all alumnae landing page content from the tabs above
                     </p>
                   </div>
