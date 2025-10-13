@@ -18,7 +18,9 @@ import {
   Eye,
   UserCheck,
   UserX,
-  Heart
+  Heart,
+  Layout,
+  ArrowRight
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -369,6 +371,27 @@ export default function AlumnaeAdmin() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Landing Page Management Card */}
+        <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Layout className="h-5 w-5" />
+                  Landing Page Content Management
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Manage newsletters, interviews, hero images, spotlights, and announcements
+                </p>
+              </div>
+              <Button onClick={() => navigate('/dashboard/alumnae')} size="lg" className="gap-2">
+                Manage Content
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+        </Card>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="stories" className="space-y-6">
