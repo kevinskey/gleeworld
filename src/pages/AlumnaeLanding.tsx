@@ -214,6 +214,9 @@ export default function AlumnaeLanding() {
           )}
         </div>
 
+        {/* Hero Slideshow */}
+        <HeroSlideshow />
+
         {/* Announcements */}
         <AnnouncementSection />
 
