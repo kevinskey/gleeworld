@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ export const NewsletterManager = () => {
   const [content, setContent] = useState("");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [volume, setVolume] = useState(1);
   const [pdfUrl, setPdfUrl] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState("");
@@ -26,6 +27,91 @@ export const NewsletterManager = () => {
   const [saving, setSaving] = useState(false);
   const [sendingEmails, setSendingEmails] = useState(false);
   const [currentNewsletterId, setCurrentNewsletterId] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Auto-generate title based on year and volume
+  useEffect(() => {
+    const autoTitle = `SCGC Alumnae Newsletter ${year} Vol. ${volume}`;
+    setTitle(autoTitle);
+  }, [year, volume]);
+
+  // Auto-save functionality - saves every 30 seconds if there are changes
+  const autoSave = useCallback(async () => {
+    if (!hasUnsavedChanges || !title || (!pdfFile && !pdfUrl)) {
+      return;
+    }
+
+    try {
+      let finalPdfUrl = pdfUrl;
+      let finalCoverImageUrl = coverImageUrl;
+
+      if (coverImageFile) {
+        const coverPath = `newsletters/${year}/${month}/${Date.now()}-${coverImageFile.name}`;
+        const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-newsletters', coverPath);
+        if (uploadedUrl) {
+          finalCoverImageUrl = uploadedUrl;
+          setCoverImageUrl(uploadedUrl);
+          setCoverImageFile(null);
+        }
+      }
+
+      if (pdfFile) {
+        const pdfPath = `newsletters/${year}/${month}/${Date.now()}-${pdfFile.name}`;
+        const uploadedUrl = await uploadFile(pdfFile, 'alumnae-newsletters', pdfPath);
+        if (uploadedUrl) {
+          finalPdfUrl = uploadedUrl;
+          setPdfUrl(uploadedUrl);
+          setPdfFile(null);
+        }
+      }
+
+      const newsletterData = {
+        title,
+        content: content || '',
+        month,
+        year,
+        volume,
+        pdf_url: finalPdfUrl || null,
+        cover_image_url: finalCoverImageUrl || null,
+        is_published: isPublished,
+        published_by: user?.id,
+        published_at: isPublished ? new Date().toISOString() : null
+      };
+
+      const { data, error } = await supabase
+        .from('alumnae_newsletters')
+        .upsert(newsletterData, {
+          onConflict: 'month,year'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setCurrentNewsletterId(data.id);
+      }
+      
+      setHasUnsavedChanges(false);
+      toast.success("Auto-saved", { duration: 2000 });
+    } catch (error: any) {
+      console.error('Auto-save error:', error);
+    }
+  }, [hasUnsavedChanges, title, content, month, year, volume, pdfFile, pdfUrl, coverImageFile, coverImageUrl, isPublished, user, uploadFile]);
+
+  // Set up auto-save interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      autoSave();
+    }, 30000); // Auto-save every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [autoSave]);
+
+  // Track changes
+  useEffect(() => {
+    setHasUnsavedChanges(true);
+  }, [content, month, year, volume, pdfFile, coverImageFile, isPublished]);
 
   const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -75,6 +161,8 @@ export const NewsletterManager = () => {
         const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-newsletters', coverPath);
         if (uploadedUrl) {
           finalCoverImageUrl = uploadedUrl;
+          setCoverImageUrl(uploadedUrl);
+          setCoverImageFile(null);
           toast.success("Cover image uploaded successfully");
         } else {
           throw new Error("Failed to upload cover image");
@@ -87,6 +175,8 @@ export const NewsletterManager = () => {
         const uploadedUrl = await uploadFile(pdfFile, 'alumnae-newsletters', pdfPath);
         if (uploadedUrl) {
           finalPdfUrl = uploadedUrl;
+          setPdfUrl(uploadedUrl);
+          setPdfFile(null);
           toast.success("PDF uploaded successfully");
         } else {
           throw new Error("Failed to upload PDF");
@@ -95,9 +185,10 @@ export const NewsletterManager = () => {
 
       const newsletterData = {
         title,
-        content: content || '', // Optional content field
+        content: content || '',
         month,
         year,
+        volume,
         pdf_url: finalPdfUrl || null,
         cover_image_url: finalCoverImageUrl || null,
         is_published: isPublished,
@@ -117,19 +208,11 @@ export const NewsletterManager = () => {
 
       toast.success("Newsletter saved successfully!");
       
-      // Store the newsletter ID for sending emails
       if (data) {
         setCurrentNewsletterId(data.id);
       }
       
-      // Reset form
-      setTitle("");
-      setContent("");
-      setPdfUrl("");
-      setPdfFile(null);
-      setCoverImageUrl("");
-      setCoverImageFile(null);
-      setIsPublished(false);
+      setHasUnsavedChanges(false);
     } catch (error: any) {
       console.error('Error saving newsletter:', error);
       toast.error(error.message || "Failed to save newsletter");
@@ -171,7 +254,7 @@ export const NewsletterManager = () => {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="month">Month</Label>
           <Select value={month.toString()} onValueChange={(val) => setMonth(parseInt(val))}>
@@ -199,15 +282,26 @@ export const NewsletterManager = () => {
             max={2100}
           />
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="volume">Volume</Label>
+          <Input
+            id="volume"
+            type="number"
+            value={volume}
+            onChange={(e) => setVolume(parseInt(e.target.value))}
+            min={1}
+          />
+        </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="title">Newsletter Title *</Label>
+        <Label htmlFor="title">Newsletter Title (Auto-Generated)</Label>
         <Input
           id="title"
-          placeholder="e.g., March 2025 Newsletter"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          disabled
+          className="bg-muted"
         />
       </div>
 
