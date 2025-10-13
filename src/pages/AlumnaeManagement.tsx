@@ -34,7 +34,7 @@ export default function AlumnaeManagement() {
       <div className="space-y-2">
         <Button
           variant="ghost"
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/dashboard/alumnae')}
           className="gap-2 mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
