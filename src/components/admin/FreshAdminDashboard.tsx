@@ -57,6 +57,7 @@ const adminModules = [
   { id: 'documents', name: 'Documents & Forms', icon: FileText, description: 'Contracts, W9s, and official paperwork', route: '/admin/documents' },
   { id: 'access-control', name: 'Access Control', icon: Shield, description: 'Role assignments and security policies', route: '/admin/access' },
   { id: 'analytics', name: 'Analytics', icon: BarChart3, description: 'Platform analytics', route: '/admin/analytics' },
+  { id: 'course-statistics', name: 'Course Statistics', icon: BarChart3, description: 'MUS 240 submission analytics', route: '/admin/course-statistics' },
   { id: 'database', name: 'Database', icon: Database, description: 'Database management', route: '/admin/database' },
   { id: 'system-settings', name: 'System Settings', icon: Settings, description: 'Platform configuration', route: '/admin/settings' },
   { id: 'module-access', name: 'Module Access', icon: Shield, description: 'Assign module visibility to users', route: '/admin/module-access' },

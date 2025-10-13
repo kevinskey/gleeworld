@@ -189,6 +189,7 @@ import { StudentDashboard } from "./pages/mus240/StudentDashboard";
 import { BulkJournalGradingPage } from "./pages/mus240/BulkJournalGradingPage";
 import MidtermExam from "./pages/mus240/MidtermExam";
 import SMUS100MidtermExamPage from "./pages/SMUS100MidtermExamPage";
+import CourseStatistics from "./pages/admin/CourseStatistics";
 import MUS100SightSingingPage from "./pages/MUS100SightSingingPage";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
@@ -997,6 +998,16 @@ const App = () => {
                                 element={
                                   <ProtectedRoute>
                                     <InventoryShop />
+                                  </ProtectedRoute>
+                                } 
+                              />
+                              <Route 
+                                path="/admin/course-statistics" 
+                                element={
+                                  <ProtectedRoute>
+                                    <AdminOnlyRoute>
+                                      <CourseStatistics />
+                                    </AdminOnlyRoute>
                                   </ProtectedRoute>
                                 } 
                               />
