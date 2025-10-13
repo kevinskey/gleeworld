@@ -31,6 +31,7 @@ import { InterviewManager } from "@/components/alumnae/InterviewManager";
 import { HeroManager } from "@/components/alumnae/HeroManager";
 import { SpotlightManager } from "@/components/alumnae/SpotlightManager";
 import { AnnouncementManager } from "@/components/alumnae/AnnouncementManager";
+import { AlumnaeMemberList } from "@/components/alumnae/AlumnaeMemberList";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -383,7 +384,11 @@ export default function AlumnaeAdmin() {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="content" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9">
+            <TabsTrigger value="members" className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Members</span>
+            </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-1">
               <Layout className="h-4 w-4" />
               <span className="hidden sm:inline">Content</span>
@@ -411,6 +416,11 @@ export default function AlumnaeAdmin() {
             <TabsTrigger value="stories">Pending Stories</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
           </TabsList>
+
+          {/* Alumnae Members Tab */}
+          <TabsContent value="members">
+            <AlumnaeMemberList />
+          </TabsContent>
 
           {/* Landing Page Content Management */}
           <TabsContent value="content">
