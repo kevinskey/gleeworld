@@ -185,10 +185,6 @@ export default function AlumnaeLanding() {
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-8 space-y-8">
-        
-        {/* Hero Slideshow */}
-        <HeroSlideshow />
-
         {/* Welcome Section */}
         <div className="text-center space-y-4 animate-fade-in">
           <div className="flex items-center justify-center gap-3">
