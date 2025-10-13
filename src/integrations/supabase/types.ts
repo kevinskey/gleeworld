@@ -458,6 +458,7 @@ export type Database = {
           published_by: string | null
           title: string
           updated_at: string | null
+          volume: number | null
           year: number
         }
         Insert: {
@@ -472,6 +473,7 @@ export type Database = {
           published_by?: string | null
           title: string
           updated_at?: string | null
+          volume?: number | null
           year: number
         }
         Update: {
@@ -486,6 +488,7 @@ export type Database = {
           published_by?: string | null
           title?: string
           updated_at?: string | null
+          volume?: number | null
           year?: number
         }
         Relationships: []
