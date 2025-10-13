@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { GraduationCap, Heart, Users, MapPin, Briefcase, Camera, Award, MessageCircle, Star, Music, BookOpen, Network, Sparkles, Calendar } from "lucide-react";
+import { GraduationCap, Heart, Users, MapPin, Briefcase, Camera, Award, MessageCircle, Star, Music, BookOpen, Network, Sparkles, Calendar, Settings } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ interface ClassmateUpdate {
   profilePhoto?: string;
 }
 export default function AlumnaeLanding() {
+  const navigate = useNavigate();
   const {
     user
   } = useAuth();
@@ -55,8 +57,8 @@ export default function AlumnaeLanding() {
   const [classmateUpdates, setClassmateUpdates] = useState<ClassmateUpdate[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // Check if user is alumnae liaison
-  const isAlumnaeLiaison = roleProfile?.exec_board_role === 'alumnae_liaison' || roleProfile?.is_admin || roleProfile?.is_super_admin;
+  // Check if user is alumnae liaison or admin
+  const canAccessAdmin = roleProfile?.exec_board_role === 'alumnae_liaison' || roleProfile?.is_admin || roleProfile?.is_super_admin;
   useEffect(() => {
     if (user && userProfile) {
       fetchAlumnaeStats();
@@ -198,6 +200,18 @@ export default function AlumnaeLanding() {
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Once a Glee Club member, always family. Stay connected with your sisterhood and continue the legacy.
           </p>
+          {canAccessAdmin && (
+            <div className="pt-4">
+              <Button 
+                onClick={() => navigate('/admin/alumnae')}
+                className="gap-2"
+                variant="outline"
+              >
+                <Settings className="h-4 w-4" />
+                Manage Alumnae Content
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Announcements */}
