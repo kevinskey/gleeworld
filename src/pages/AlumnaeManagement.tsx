@@ -1,18 +1,20 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Video, Image, Users, Star, Calendar, TrendingUp } from "lucide-react";
+import { BookOpen, Video, Image, Users, Star, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { NewsletterManager } from "@/components/alumnae/NewsletterManager";
 import { InterviewManager } from "@/components/alumnae/InterviewManager";
 import { HeroManager } from "@/components/alumnae/HeroManager";
 import { SpotlightManager } from "@/components/alumnae/SpotlightManager";
 import { AnnouncementManager } from "@/components/alumnae/AnnouncementManager";
 import { useExecutiveBoardAccess } from "@/hooks/useExecutiveBoardAccess";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 
 export default function AlumnaeManagement() {
   const { canAccessAdminModules, loading } = useExecutiveBoardAccess();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -30,6 +32,14 @@ export default function AlumnaeManagement() {
     <div className="container mx-auto px-4 py-8 space-y-6">
       {/* Header */}
       <div className="space-y-2">
+        <Button
+          variant="ghost"
+          onClick={() => navigate(-1)}
+          className="gap-2 mb-4"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back
+        </Button>
         <h1 className="text-4xl font-bold text-primary">Alumnae Content Management</h1>
         <p className="text-lg text-muted-foreground">
           Manage newsletters, interviews, hero images, spotlights, and announcements for the alumnae portal
