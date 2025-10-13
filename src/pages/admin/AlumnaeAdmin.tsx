@@ -385,8 +385,8 @@ export default function AlumnaeAdmin() {
                   Manage newsletters, interviews, hero images, spotlights, and announcements
                 </p>
               </div>
-              <Button onClick={() => navigate('/dashboard/alumnae')} size="lg" className="gap-2">
-                Manage Content
+              <Button onClick={() => navigate('/alumnae')} size="lg" className="gap-2">
+                View Alumnae Page
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </div>

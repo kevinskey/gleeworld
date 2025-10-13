@@ -255,14 +255,14 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
     { id: 'personal', label: 'My Dashboard', icon: User, route: '/dashboard' },
     { id: 'member', label: 'Member Dashboard', icon: Users, route: '/dashboard/member' },
     { id: 'fan', label: 'Fan', icon: Heart, route: '/dashboard/fan' },
-    { id: 'alumnae', label: 'Alumnae', icon: GraduationCap, route: '/dashboard/alumnae' },
+    { id: 'alumnae', label: 'Alumnae', icon: GraduationCap, route: '/alumnae' },
     { id: 'public', label: 'Public', icon: Globe, route: '/dashboard/public' }
   ];
 
   const getCurrentDashboardView = () => {
     if (location.pathname === '/dashboard/member') return 'Member Dashboard';
     if (location.pathname === '/dashboard/fan') return 'Fan';
-    if (location.pathname === '/dashboard/alumnae') return 'Alumnae';
+    if (location.pathname === '/alumnae') return 'Alumnae';
     if (location.pathname === '/dashboard/public') return 'Public';
     if (location.pathname === '/dashboard') return 'My Dashboard';
     return 'Super Admin Dashboard';

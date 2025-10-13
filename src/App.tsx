@@ -523,19 +523,9 @@ const App = () => {
                         <UnifiedDashboard />
                       </UniversalLayout>
                     </ProtectedRoute>
-                   } 
-                 />
-                  <Route 
-                   path="/dashboard/alumnae" 
-                   element={
-                     <ProtectedRoute>
-                       <UniversalLayout>
-                         <AlumnaeManagement />
-                       </UniversalLayout>
-                     </ProtectedRoute>
-                    } 
-                  />
-                 <Route 
+                 } 
+                />
+                <Route
                   path="/dashboard/mus240" 
                   element={
                     <ProtectedRoute>

@@ -205,9 +205,9 @@ export const AlumnaeDashboardMonitor = () => {
             Refresh
           </Button>
           <Button asChild>
-            <a href="/dashboard/alumnae" target="_blank" rel="noopener noreferrer">
+            <a href="/alumnae" target="_blank" rel="noopener noreferrer">
               <Eye className="h-4 w-4 mr-2" />
-              View Alumnae Dashboard
+              View Alumnae Page
               <ExternalLink className="h-3 w-3 ml-1" />
             </a>
           </Button>

@@ -32,7 +32,7 @@ export const UniversalLayout = ({
   const usePublicHeaderPaths = [
     '/dashboard/public',
     '/dashboard/fan', 
-    '/dashboard/alumnae'
+    '/alumnae'
   ];
   
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);

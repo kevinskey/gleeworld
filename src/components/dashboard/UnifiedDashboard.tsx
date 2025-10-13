@@ -40,7 +40,6 @@ export const UnifiedDashboard = () => {
   const [showMessages, setShowMessages] = useState(false);
   const [activeModuleId, setActiveModuleId] = useState<string | null>(null);
   const [calendarCollapsed, setCalendarCollapsed] = useState(true);
-  const [alumnaeViewMode, setAlumnaeViewMode] = useState<'monitor' | 'experience'>('monitor');
   const [fanViewMode, setFanViewMode] = useState<'monitor' | 'experience'>('monitor');
   const [publicViewMode, setPublicViewMode] = useState<'monitor' | 'experience'>('monitor');
   const location = useLocation();
@@ -54,7 +53,6 @@ export const UnifiedDashboard = () => {
   const viewMode = useMemo(() => {
     if (location.pathname === '/dashboard/member') return 'member';
     if (location.pathname === '/dashboard/fan') return 'fan';
-    if (location.pathname === '/dashboard/alumnae') return 'alumnae';
     if (location.pathname === '/dashboard/mus240') return 'mus240';
     if (location.pathname === '/dashboard/public') return 'public';
     return 'default'; // /dashboard route
@@ -221,32 +219,6 @@ export const UnifiedDashboard = () => {
     } else {
       // Show the actual fan dashboard experience for fans
       return <FanDashboard />;
-    }
-  }
-  if (viewMode === 'alumnae') {
-    // Show monitoring interface for admins viewing alumnae dashboard
-    if (profile?.role === 'super-admin' || profile?.role === 'admin') {
-      return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-          <div className="px-6 py-4">
-            <div className="mb-6">
-              <div className="flex items-center gap-4 mb-4">
-                <h1 className="text-2xl font-bold">Alumnae Dashboard</h1>
-                <div className="flex bg-muted rounded-lg p-1">
-                  <button onClick={() => setAlumnaeViewMode('monitor')} className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${alumnaeViewMode === 'monitor' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                    Admin Monitor
-                  </button>
-                  <button onClick={() => setAlumnaeViewMode('experience')} className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${alumnaeViewMode === 'experience' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>
-                    Alumnae Experience
-                  </button>
-                </div>
-              </div>
-            </div>
-            {alumnaeViewMode === 'monitor' ? <AlumnaeDashboardMonitor /> : <AlumnaeLanding />}
-          </div>
-        </div>;
-    } else {
-      // Show the actual alumnae landing page for alumnae
-      return <AlumnaeLanding />;
     }
   }
   if (viewMode === 'mus240') {
