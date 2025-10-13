@@ -247,6 +247,36 @@ export const NewsletterManager = () => {
     }
   };
 
+  const handleTogglePublish = async () => {
+    if (!currentNewsletterId) {
+      toast.error("Please save the newsletter first before publishing");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const newPublishState = !isPublished;
+      
+      const { error } = await supabase
+        .from('alumnae_newsletters')
+        .update({
+          is_published: newPublishState,
+          published_at: newPublishState ? new Date().toISOString() : null
+        })
+        .eq('id', currentNewsletterId);
+
+      if (error) throw error;
+
+      setIsPublished(newPublishState);
+      toast.success(newPublishState ? "Newsletter published!" : "Newsletter unpublished");
+    } catch (error: any) {
+      console.error('Error toggling publish state:', error);
+      toast.error(error.message || "Failed to update publish state");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -386,11 +416,12 @@ export const NewsletterManager = () => {
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t">
         <Button
           variant={isPublished ? "destructive" : "default"}
-          onClick={() => setIsPublished(!isPublished)}
+          onClick={handleTogglePublish}
+          disabled={saving || !currentNewsletterId}
           className="gap-2"
         >
           {isPublished ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          {isPublished ? "Unpublish" : "Publish"}
+          {saving ? "Saving..." : isPublished ? "Unpublish" : "Publish"}
         </Button>
 
         <div className="flex gap-2">
