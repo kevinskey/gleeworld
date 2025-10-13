@@ -21,10 +21,24 @@ export const NewsletterManager = () => {
   const [pdfUrl, setPdfUrl] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [isPublished, setIsPublished] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sendingEmails, setSendingEmails] = useState(false);
   const [currentNewsletterId, setCurrentNewsletterId] = useState<string | null>(null);
+
+  const handleCoverImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    setCoverImageFile(file);
+    toast.success(`${file.name} ready to upload`);
+  };
 
   const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -48,6 +62,18 @@ export const NewsletterManager = () => {
     setSaving(true);
     try {
       let finalPdfUrl = pdfUrl;
+      let finalCoverImageUrl = coverImageUrl;
+
+      // Upload cover image if one was selected
+      if (coverImageFile) {
+        const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-newsletters', `newsletters/${year}/${month}`);
+        if (uploadedUrl) {
+          finalCoverImageUrl = uploadedUrl;
+          toast.success("Cover image uploaded successfully");
+        } else {
+          throw new Error("Failed to upload cover image");
+        }
+      }
 
       // Upload PDF file if one was selected
       if (pdfFile) {
@@ -66,7 +92,7 @@ export const NewsletterManager = () => {
         month,
         year,
         pdf_url: finalPdfUrl || null,
-        cover_image_url: coverImageUrl || null,
+        cover_image_url: finalCoverImageUrl || null,
         is_published: isPublished,
         published_by: user?.id,
         published_at: isPublished ? new Date().toISOString() : null
@@ -95,6 +121,7 @@ export const NewsletterManager = () => {
       setPdfUrl("");
       setPdfFile(null);
       setCoverImageUrl("");
+      setCoverImageFile(null);
       setIsPublished(false);
     } catch (error: any) {
       console.error('Error saving newsletter:', error);
@@ -190,13 +217,36 @@ export const NewsletterManager = () => {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="coverImage">Cover Image URL (Optional)</Label>
-        <Input
-          id="coverImage"
-          placeholder="https://..."
-          value={coverImageUrl}
-          onChange={(e) => setCoverImageUrl(e.target.value)}
-        />
+        <Label htmlFor="coverImageUpload">Cover Image (Optional)</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            id="coverImageUpload"
+            type="file"
+            accept="image/*"
+            onChange={handleCoverImageUpload}
+            className="cursor-pointer"
+          />
+          {coverImageFile && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setCoverImageFile(null)}
+              className="gap-1"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        {coverImageFile && (
+          <p className="text-sm text-muted-foreground">
+            Ready to upload: {coverImageFile.name} ({(coverImageFile.size / 1024 / 1024).toFixed(2)} MB)
+          </p>
+        )}
+        {coverImageUrl && !coverImageFile && (
+          <p className="text-sm text-muted-foreground">
+            Current: <a href={coverImageUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View Image</a>
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
