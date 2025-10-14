@@ -48,6 +48,7 @@ import Mus240Auth from "./pages/Mus240Auth";
 import EventPlanner from "./pages/EventPlanner";
 import BudgetApprovals from "./pages/BudgetApprovals";
 import { Shop } from "./pages/Shop";
+import { AlumnaeShop } from "./pages/AlumnaeShop";
 import { CheckoutPage } from "./pages/CheckoutPage";
 import { OrderConfirmationPage } from "./pages/OrderConfirmationPage";
 import Payments from "./pages/Payments";
@@ -714,6 +715,14 @@ const App = () => {
                     <PublicRoute>
                       <Shop />
                     </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/alumnae-shop" 
+                  element={
+                    <AlumnaeRoute>
+                      <AlumnaeShop />
+                    </AlumnaeRoute>
                   } 
                 />
                 <Route 
