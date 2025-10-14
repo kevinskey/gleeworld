@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, ReactNode } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { FanRoute } from "@/components/routes/FanRoute";
 import { AlumnaeRoute } from "@/components/routes/AlumnaeRoute";
@@ -211,7 +211,7 @@ const queryClient = new QueryClient({
 });
 
 // Protected route wrapper
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   try {
     const { user, loading } = useAuth();
   
@@ -253,7 +253,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 // Public route wrapper - no auth check needed
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+const PublicRoute = ({ children }: { children: ReactNode }) => {
   return <>{children}</>;
 };
 
