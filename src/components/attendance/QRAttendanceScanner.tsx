@@ -106,8 +106,26 @@ export const QRAttendanceScanner = () => {
     stopScanner(); // Stop scanning while processing
 
     try {
-      // Parse QR code data - expecting a token string
-      const qrToken = qrData.trim();
+      // Parse QR code data - can be either a URL or a token string
+      let qrToken = qrData.trim();
+      
+      // If it's a URL, extract the token parameter
+      if (qrToken.includes('token=')) {
+        try {
+          const url = new URL(qrToken);
+          const tokenParam = url.searchParams.get('token');
+          if (tokenParam) {
+            qrToken = tokenParam;
+          }
+        } catch (e) {
+          // Not a valid URL, try to extract token from string
+          const match = qrToken.match(/token=([^&]+)/);
+          if (match) {
+            qrToken = decodeURIComponent(match[1]);
+          }
+        }
+      }
+      
       console.log('Parsed QR token:', qrToken);
       
       if (!qrToken) {
