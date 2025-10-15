@@ -69,20 +69,43 @@ export const useMus240Journals = () => {
     if (assignmentId) {
       // Refresh specific assignment data
       try {
-        const published = await fetchPublishedJournals(assignmentId);
-        setEntries(published);
+        const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&is_published=eq.true&order=created_at.desc`);
+        if (!response.ok) throw new Error('Failed to fetch published journals');
+        
+        const journals = await response.json();
+        
+        // Get author names
+        if (journals.length > 0) {
+          const studentIds = [...new Set(journals.map((j: any) => j.student_id))];
+          const { data: profiles } = await supabase
+            .from('gw_profiles')
+            .select('user_id, full_name')
+            .in('user_id', studentIds as string[]);
+
+          const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+
+          const enriched = journals.map((journal: any) => ({
+            ...journal,
+            author_name: profileMap.get(journal.student_id) || 'Anonymous'
+          }));
+          setEntries(enriched);
+        }
       } catch (error) {
         console.error('Error syncing journal data:', error);
       }
     }
   }, []);
 
-  const fetchUserEntry = async (assignmentId: string): Promise<JournalEntry | null> => {
+  const fetchUserEntry = useCallback(async (assignmentId: string): Promise<JournalEntry | null> => {
     if (!user) return null;
     
     try {
       const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`);
-      if (!response.ok) throw new Error('Failed to fetch user entry');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to fetch user entry:', response.status, errorText);
+        throw new Error(`Failed to fetch user entry: ${response.statusText}`);
+      }
       
       const data = await response.json();
       return data[0] || null;
@@ -90,12 +113,16 @@ export const useMus240Journals = () => {
       console.error('Error fetching user entry:', error);
       return null;
     }
-  };
+  }, [user]);
 
-  const fetchPublishedJournals = async (assignmentId: string): Promise<JournalEntry[]> => {
+  const fetchPublishedJournals = useCallback(async (assignmentId: string): Promise<JournalEntry[]> => {
     try {
       const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&is_published=eq.true&order=created_at.desc`);
-      if (!response.ok) throw new Error('Failed to fetch published journals');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Failed to fetch published journals:', response.status, errorText);
+        throw new Error(`Failed to fetch published journals: ${response.statusText}`);
+      }
       
       const journals = await response.json();
       
@@ -118,7 +145,7 @@ export const useMus240Journals = () => {
       console.error('Error fetching published journals:', error);
       return [];
     }
-  };
+  }, []);
 
   const fetchJournalComments = async (journalId: string): Promise<JournalComment[]> => {
     try {
@@ -192,7 +219,14 @@ export const useMus240Journals = () => {
   };
 
   const saveJournal = async (assignmentId: string, content: string): Promise<boolean> => {
-    if (!user) return false;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to save journal entries.",
+        variant: "destructive"
+      });
+      return false;
+    }
 
     setLoading(true);
     try {
@@ -208,6 +242,11 @@ export const useMus240Journals = () => {
 
       if (checkError) {
         console.error('Error checking existing entry:', checkError);
+        toast({
+          title: "Database Error",
+          description: `Failed to check existing entry: ${checkError.message}. Please contact your instructor.`,
+          variant: "destructive"
+        });
         throw new Error(checkError.message);
       }
 
@@ -225,6 +264,11 @@ export const useMus240Journals = () => {
 
         if (updateError) {
           console.error('Error updating journal:', updateError);
+          toast({
+            title: "Save Failed",
+            description: `Could not update journal: ${updateError.message}. Please try again or contact your instructor.`,
+            variant: "destructive"
+          });
           throw new Error(updateError.message);
         }
       } else {
@@ -241,6 +285,11 @@ export const useMus240Journals = () => {
 
         if (insertError) {
           console.error('Error inserting journal:', insertError);
+          toast({
+            title: "Save Failed",
+            description: `Could not create journal entry: ${insertError.message}. Please try again or contact your instructor.`,
+            variant: "destructive"
+          });
           throw new Error(insertError.message);
         }
       }
@@ -253,11 +302,14 @@ export const useMus240Journals = () => {
       return true;
     } catch (error: any) {
       console.error('Error saving journal:', error);
-      toast({
-        title: "Error Saving Journal",
-        description: error.message || "Failed to save journal. Please try again.",
-        variant: "destructive"
-      });
+      // Don't show toast again if we already showed a specific error
+      if (!error.message?.includes('journal')) {
+        toast({
+          title: "Error Saving Journal",
+          description: error.message || "An unexpected error occurred. Please try again.",
+          variant: "destructive"
+        });
+      }
       return false;
     } finally {
       setLoading(false);
