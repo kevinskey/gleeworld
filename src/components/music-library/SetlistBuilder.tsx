@@ -156,7 +156,8 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
       
       // Only filter by created_by if user is not an admin or librarian
       if (!isAdmin && !hasLibrarianRole) {
-        query = query.eq('created_by', user?.id);
+        // Show user's own setlists or public ones
+        query = query.or(`created_by.eq.${user?.id},is_public.eq.true`);
       }
       
       const { data, error } = await query;
