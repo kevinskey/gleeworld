@@ -497,6 +497,83 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
         </div>
       </Card>
 
+      {/* Favorites Section */}
+      {moduleFavorites.size > 0 && (
+        <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Star className="h-5 w-5 text-primary fill-current" />
+              Favorites
+              <Badge variant="secondary" className="ml-2">
+                {moduleFavorites.size}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from(moduleFavorites).map(moduleId => {
+                const module = allModules.find(m => m.id === moduleId);
+                if (!module) return null;
+                
+                const moduleConfig = ModuleRegistry.getModule(moduleId);
+                const enrichedModule = {
+                  ...module,
+                  icon: moduleConfig?.icon || Calendar,
+                  iconColor: moduleConfig?.iconColor || 'blue',
+                  component: moduleConfig?.component,
+                  isNew: moduleConfig?.isNew || false
+                };
+                
+                return (
+                  <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3 flex-1">
+                          {enrichedModule.icon && (
+                            <div className={`p-2 rounded-lg bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
+                              <enrichedModule.icon className={`h-4 w-4 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-sm font-medium leading-tight line-clamp-2">
+                              {enrichedModule.title}
+                            </CardTitle>
+                            <CardDescription className="text-xs mt-1 line-clamp-2">
+                              {enrichedModule.description}
+                            </CardDescription>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(moduleId);
+                          }}
+                          className="p-1 h-auto text-red-500 hover:text-red-600 transition-colors"
+                        >
+                          <Heart className="h-4 w-4 fill-current" />
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full" 
+                        onClick={() => handleModuleSelect(moduleId)}
+                      >
+                        Open Module
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Filter Controls - Collapsible */}
       <Collapsible open={!filterControlsCollapsed} onOpenChange={(open) => setFilterControlsCollapsed(!open)}>
         <Card className="bg-background/95 backdrop-blur-sm border-2">
@@ -580,6 +657,8 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                     navigate={navigate}
                     isPinned={isModulePinned(module.category, module.id)}
                     onTogglePin={() => toggleModulePin(module.category, module.id)}
+                    isFavorite={isFavorite(module.id)}
+                    onToggleFavorite={() => toggleFavorite(module.id)}
                   />
                 ))}
               </div>
@@ -626,14 +705,16 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                           {modules.map(module => (
-                            <SortableModuleCard
-                              key={module.id}
-                              module={module}
-                              onModuleClick={handleModuleSelect}
-                              navigate={navigate}
-                              isPinned={isModulePinned(category, module.id)}
-                              onTogglePin={() => toggleModulePin(category, module.id)}
-                            />
+                          <SortableModuleCard
+                            key={module.id}
+                            module={module}
+                            onModuleClick={handleModuleSelect}
+                            navigate={navigate}
+                            isPinned={isModulePinned(category, module.id)}
+                            onTogglePin={() => toggleModulePin(category, module.id)}
+                            isFavorite={isFavorite(module.id)}
+                            onToggleFavorite={() => toggleFavorite(module.id)}
+                          />
                           ))}
                         </div>
                       </SortableContext>
