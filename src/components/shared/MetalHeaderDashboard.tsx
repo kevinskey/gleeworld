@@ -500,17 +500,17 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
       {/* Favorites Section */}
       {moduleFavorites.size > 0 && (
         <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary fill-current" />
+          <CardHeader className="pb-1">
+            <CardTitle className="text-xs flex items-center gap-1">
+              <Star className="h-2.5 w-2.5 text-primary fill-current" />
               Favorites
-              <Badge variant="secondary" className="ml-2">
+              <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
                 {moduleFavorites.size}
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <CardContent className="pt-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
               {Array.from(moduleFavorites).map(moduleId => {
                 const module = allModules.find(m => m.id === moduleId);
                 if (!module) return null;
@@ -525,20 +525,20 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                 };
                 
                 return (
-                  <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2">
-                    <CardHeader className="pb-3">
+                  <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border">
+                    <CardHeader className="pb-1 pt-1.5 px-2">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-3 flex-1">
+                        <div className="flex items-center gap-1.5 flex-1">
                           {enrichedModule.icon && (
-                            <div className={`p-2 rounded-lg bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
-                              <enrichedModule.icon className={`h-4 w-4 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
+                            <div className={`p-1 rounded bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
+                              <enrichedModule.icon className={`h-2 w-2 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-sm font-medium leading-tight line-clamp-2">
+                            <CardTitle className="text-[10px] font-medium leading-tight line-clamp-1">
                               {enrichedModule.title}
                             </CardTitle>
-                            <CardDescription className="text-xs mt-1 line-clamp-2">
+                            <CardDescription className="text-[8px] mt-0.5 line-clamp-1">
                               {enrichedModule.description}
                             </CardDescription>
                           </div>
@@ -550,20 +550,20 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                             e.stopPropagation();
                             toggleFavorite(moduleId);
                           }}
-                          className="p-1 h-auto text-red-500 hover:text-red-600 transition-colors"
+                          className="p-0.5 h-auto text-red-500 hover:text-red-600 transition-colors"
                         >
-                          <Heart className="h-4 w-4 fill-current" />
+                          <Heart className="h-2 w-2 fill-current" />
                         </Button>
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-0">
+                    <CardContent className="pt-0 px-2 pb-1.5">
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        className="w-full" 
+                        className="w-full h-5 text-[9px] px-1" 
                         onClick={() => handleModuleSelect(moduleId)}
                       >
-                        Open Module
+                        Open
                       </Button>
                     </CardContent>
                   </Card>
