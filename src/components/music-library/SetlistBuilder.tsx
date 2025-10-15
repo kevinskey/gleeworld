@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -610,12 +611,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                         )}
                       </div>
                     </div>
-                    {setlist.is_public && (
-                      <Badge variant="secondary" className="ml-2">
-                        <Users className="h-3 w-3 mr-1" />
-                        Public
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {setlist.is_public && (
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                          <Users className="h-3 w-3 mr-1" />
+                          All Members
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
                 
