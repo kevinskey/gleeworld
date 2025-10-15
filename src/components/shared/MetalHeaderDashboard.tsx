@@ -510,7 +510,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
               {Array.from(moduleFavorites).map(moduleId => {
                 const module = allModules.find(m => m.id === moduleId);
                 if (!module) return null;
