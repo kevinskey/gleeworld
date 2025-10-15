@@ -535,7 +535,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-[10px] font-medium leading-tight line-clamp-1">
+                            <CardTitle className="text-[8px] font-medium leading-tight line-clamp-1">
                               {enrichedModule.title}
                             </CardTitle>
                             <CardDescription className="text-[8px] mt-0.5 line-clamp-1">
