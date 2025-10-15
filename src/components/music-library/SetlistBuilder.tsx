@@ -77,6 +77,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
   const [sheetMusic, setSheetMusic] = useState<SheetMusic[]>([]);
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [editingSetlist, setEditingSetlist] = useState<Setlist | null>(null);
   const [loading, setLoading] = useState(true);
   const [createLoading, setCreateLoading] = useState(false);
   const [sheetMusicSearch, setSheetMusicSearch] = useState('');
@@ -297,6 +298,60 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
     }
   };
 
+  const updateSetlist = async () => {
+    if (!editingSetlist) return;
+
+    if (!formData.title.trim()) {
+      toast({
+        title: "Title Required",
+        description: "Please enter a setlist title.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setCreateLoading(true);
+    
+    try {
+      const updateData = {
+        title: formData.title.trim(),
+        description: formData.description?.trim() || null,
+        venue: formData.venue?.trim() || null,
+        performance_date: formData.performance_date ? format(formData.performance_date, 'yyyy-MM-dd') : null,
+        is_public: formData.is_public,
+      };
+
+      const { data, error } = await supabase
+        .from('setlists')
+        .update(updateData)
+        .eq('id', editingSetlist.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setSetlists(setlists.map(s => s.id === data.id ? data : s));
+      setIsEditing(false);
+      setEditingSetlist(null);
+      resetForm();
+      
+      toast({
+        title: "Success",
+        description: "Setlist updated successfully!",
+      });
+    } catch (error) {
+      console.error('Error updating setlist:', error);
+      toast({
+        title: "Error",
+        description: `Failed to update setlist: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
+      });
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+
   const addToSetlist = async (sheetMusicId: string) => {
     if (!selectedSetlist) return;
 
@@ -449,6 +504,20 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
       performance_date: undefined,
       is_public: false,
     });
+    setEditingSetlist(null);
+  };
+
+  const handleEditSetlist = (setlist: Setlist) => {
+    setEditingSetlist(setlist);
+    setFormData({
+      title: setlist.title,
+      description: setlist.description || '',
+      venue: setlist.venue || '',
+      performance_date: setlist.performance_date ? new Date(setlist.performance_date) : undefined,
+      is_public: setlist.is_public,
+    });
+    setIsEditing(true);
+    setIsCreating(false);
   };
 
   const openSetlistPlayer = (setlistId: string) => {
@@ -612,6 +681,18 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditSetlist(setlist);
+                        }}
+                        className="h-7 px-2"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
                       {setlist.is_public && (
                         <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
                           <Users className="h-3 w-3 mr-1" />
@@ -724,11 +805,13 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
           </CardContent>
         </Card>
 
-        {/* Create Setlist Form */}
-        {isCreating && (
+        {/* Create/Edit Setlist Form */}
+        {(isCreating || isEditing) && (
           <Card className="mt-6">
             <CardHeader>
-              <CardTitle className="text-base">Create New Setlist</CardTitle>
+              <CardTitle className="text-base">
+                {isEditing ? 'Edit Setlist' : 'Create New Setlist'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
@@ -814,11 +897,12 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                   </Label>
                 </div>
                 
-                <div className="flex gap-2">
+              <div className="flex gap-2">
                   <Button 
                     variant="outline" 
                     onClick={() => { 
-                      setIsCreating(false); 
+                      setIsCreating(false);
+                      setIsEditing(false);
                       resetForm(); 
                     }}
                     disabled={createLoading}
@@ -826,11 +910,11 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                     Cancel
                   </Button>
                   <Button 
-                    onClick={createSetlist}
+                    onClick={isEditing ? updateSetlist : createSetlist}
                     disabled={createLoading || !formData.title.trim()}
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {createLoading ? 'Creating...' : 'Create Setlist'}
+                    {createLoading ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Setlist' : 'Create Setlist')}
                   </Button>
                 </div>
               </div>
