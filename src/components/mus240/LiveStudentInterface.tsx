@@ -448,25 +448,52 @@ export const LiveStudentInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white/95 backdrop-blur-sm rounded-2xl border border-white/30 shadow-xl overflow-hidden">
-      {/* Compact Header - Fixed */}
-      <div className="flex-shrink-0 px-4 py-3 bg-gradient-to-r from-slate-600 to-slate-500 border-b border-slate-400/20">
-        <div className="flex items-center justify-between text-white">
-          <div className="flex items-center gap-3">
-            <span className="text-xl font-bold">{activePoll.title}</span>
-            <Badge className="bg-rose-500 text-white animate-pulse border-0 text-xs">
-              <div className="w-1.5 h-1.5 bg-white rounded-full mr-1.5 animate-bounce"></div>
-              LIVE
+    <div className="h-full flex flex-col bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 rounded-2xl border border-orange-200 shadow-2xl overflow-hidden">
+      {/* Dynamic Header with Progress */}
+      <div className="flex-shrink-0 bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 relative overflow-hidden">
+        {/* Animated Background */}
+        <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 animate-pulse"></div>
+        
+        <div className="relative px-4 py-4">
+          {/* Title Row */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="text-2xl animate-bounce">🎵</div>
+              <div>
+                <h2 className="text-xl font-bold text-white">{activePoll.title}</h2>
+                <p className="text-xs text-orange-100">Music Theory Live Poll</p>
+              </div>
+            </div>
+            <Badge className="bg-rose-500 text-white animate-pulse border-0 shadow-lg">
+              <div className="w-2 h-2 bg-white rounded-full mr-2 animate-ping"></div>
+              LIVE NOW
             </Badge>
           </div>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" />
-              <span>Q {activePoll.current_question_index + 1}/{activePoll.questions.length}</span>
+
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-white text-sm">
+              <span className="font-medium">Question {activePoll.current_question_index + 1} of {activePoll.questions.length}</span>
+              <span className="text-orange-100">{Math.round(((activePoll.current_question_index + 1) / activePoll.questions.length) * 100)}% Complete</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5" />
-              <span>{totalResponses}</span>
+            <div className="h-2 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+              <div 
+                className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full transition-all duration-500 shadow-lg"
+                style={{ width: `${((activePoll.current_question_index + 1) / activePoll.questions.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Live Stats */}
+          <div className="flex items-center justify-between mt-3 text-white text-sm">
+            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <Users className="h-4 w-4" />
+              <span className="font-semibold">{totalResponses}</span>
+              <span className="text-orange-100">answered</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <Clock className="h-4 w-4" />
+              <span className="text-orange-100">Live</span>
             </div>
           </div>
         </div>
@@ -475,153 +502,248 @@ export const LiveStudentInterface: React.FC = () => {
       {/* Main Content - Scrollable */}
       <ScrollArea className="flex-1">
         <div className="p-4 space-y-4">
-          {/* Stats Bar - Compact */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-3 text-center border border-blue-100">
-              <div className="text-2xl font-light text-gray-800">{totalResponses}</div>
-              <div className="text-xs text-gray-600">Responses</div>
-            </div>
-            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 text-center border border-purple-100">
-              <div className="text-2xl font-light text-gray-800">{activePoll.current_question_index + 1}/{activePoll.questions.length}</div>
-              <div className="text-xs text-gray-600">Progress</div>
-            </div>
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3 text-center border border-amber-100">
-              <div className="text-2xl font-light text-gray-800">{totalResponses > 0 ? Math.round((totalResponses / 30) * 100) : 0}%</div>
-              <div className="text-xs text-gray-600">Class Rate</div>
-            </div>
-          </div>
-
-          {/* Question */}
-          <div className="bg-gradient-to-r from-slate-700 to-slate-600 rounded-xl p-4 border border-slate-400/20">
-            <h3 className="text-lg font-semibold text-white leading-snug">
-              {currentQuestion.question}
-            </h3>
-            {currentQuestion.audio_url && (
-              <div className="flex items-center gap-2 text-amber-300 text-sm mt-2">
-                <span>🎵</span>
-                <span>{currentQuestion.audio_url}</span>
-              </div>
-            )}
-          </div>
-
           {!activePoll.show_results ? (
-            // Answer Selection Mode
-            <div className="space-y-2">
-              {/* Submission Status */}
+            // ========== ANSWER MODE ==========
+            <>
+              {/* Question Card */}
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                <div className="relative bg-gradient-to-br from-orange-600 via-amber-600 to-orange-500 rounded-2xl p-6 shadow-xl border-2 border-orange-300">
+                  <div className="absolute top-3 right-3 text-2xl opacity-20">🎼</div>
+                  <h3 className="text-xl font-bold text-white leading-relaxed mb-2">
+                    {currentQuestion.question}
+                  </h3>
+                  {currentQuestion.audio_url && (
+                    <div className="flex items-center gap-2 mt-3 bg-white/10 px-3 py-2 rounded-lg backdrop-blur-sm">
+                      <span className="text-2xl">🎵</span>
+                      <span className="text-sm text-amber-100">{currentQuestion.audio_url}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Messages */}
               {justSubmitted && (
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white p-3 rounded-xl mb-2 animate-pulse">
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="text-xl">✅</div>
-                    <div>
-                      <div className="font-bold">Submitted!</div>
-                      <div className="text-xs text-emerald-100">Response recorded</div>
+                <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white p-4 rounded-2xl shadow-xl animate-scale-in border-2 border-emerald-300">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl animate-bounce">✅</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-lg">Answer Submitted!</div>
+                      <div className="text-sm text-emerald-100">Your response has been recorded</div>
                     </div>
                   </div>
                 </div>
               )}
               
               {hasSubmitted && !justSubmitted && (
-                <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 p-3 rounded-xl border border-emerald-200 mb-2 text-sm">
-                  <CheckCircle className="h-5 w-5 flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold">Response Recorded</div>
-                    <div className="text-xs">Waiting for results...</div>
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border-2 border-emerald-300 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-6 w-6 text-emerald-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="font-bold text-emerald-900">Response Recorded ✓</div>
+                      <div className="text-sm text-emerald-700">Waiting for instructor to reveal results...</div>
+                    </div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-emerald-600 border-t-transparent"></div>
+                  </div>
+                </div>
+              )}
+
+              {!hasSubmitted && (
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-2xl border-2 border-blue-200 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">👆</div>
+                    <div>
+                      <div className="font-bold text-blue-900">Select Your Answer</div>
+                      <div className="text-sm text-blue-700">Choose the option you think is correct</div>
+                    </div>
                   </div>
                 </div>
               )}
               
-              {/* Options */}
-              {currentQuestion.options.map((option, index) => (
-                <Button
-                  key={index}
-                  onClick={() => submitResponse(index)}
-                  disabled={hasSubmitted || submitting}
-                  className={`w-full text-left justify-start p-4 h-auto transition-all relative ${
-                    submitting && userResponse !== index
-                      ? 'opacity-50'
-                      : userResponse === index && submissionAnimation
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg animate-pulse'
-                      : userResponse === index
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
-                      : hasSubmitted
-                      ? 'bg-gray-100 text-gray-500 cursor-not-allowed border border-gray-200'
-                      : 'bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 hover:border-gray-300 shadow-sm'
-                  }`}
-                >
-                  <div className="flex items-center w-full gap-3">
-                    <span className="font-bold text-base flex-shrink-0">
-                      {String.fromCharCode(65 + index)}.
-                    </span>
-                    <span className="flex-1 text-sm">{option}</span>
-                    {userResponse === index && hasSubmitted && (
-                      <CheckCircle className="h-4 w-4 flex-shrink-0" />
+              {/* Answer Options */}
+              <div className="space-y-3">
+                {currentQuestion.options.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => submitResponse(index)}
+                    disabled={hasSubmitted || submitting}
+                    className={`group w-full text-left p-5 rounded-2xl transition-all duration-300 transform ${
+                      userResponse === index && submissionAnimation
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-2xl scale-105 animate-pulse'
+                        : userResponse === index
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-xl'
+                        : hasSubmitted
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200'
+                        : 'bg-white hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 text-gray-900 border-2 border-orange-200 hover:border-orange-400 hover:shadow-xl hover:scale-102 active:scale-98'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${
+                        userResponse === index
+                          ? 'bg-white text-emerald-600'
+                          : hasSubmitted
+                          ? 'bg-gray-200 text-gray-400'
+                          : 'bg-gradient-to-br from-orange-400 to-amber-500 text-white group-hover:from-orange-500 group-hover:to-amber-600'
+                      }`}>
+                        {String.fromCharCode(65 + index)}
+                      </div>
+                      <span className="flex-1 text-base font-medium">{option}</span>
+                      {userResponse === index && hasSubmitted && (
+                        <CheckCircle className="h-6 w-6 flex-shrink-0 animate-scale-in" />
+                      )}
+                      {submitting && userResponse === index && (
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent flex-shrink-0"></div>
+                      )}
+                      {!hasSubmitted && userResponse !== index && (
+                        <div className="text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity">→</div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* What's Next Indicator */}
+              {!hasSubmitted && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-200">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🔮</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-purple-900">What's Next?</div>
+                      <div className="text-sm text-purple-700">After you submit, wait for instructor to show results</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            // ========== RESULTS MODE ==========
+            <div className="space-y-4">
+              {/* Results Header */}
+              <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 shadow-xl border-2 border-indigo-300 text-white animate-fade-in">
+                <div className="text-center">
+                  <div className="text-4xl mb-2 animate-bounce">📊</div>
+                  <h3 className="text-2xl font-bold mb-1">Live Results!</h3>
+                  <p className="text-indigo-100 text-sm">Here's how everyone answered</p>
+                </div>
+              </div>
+
+              {/* Quick Stats Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {responseStats.map((stat, index) => (
+                  <div
+                    key={index}
+                    className={`relative overflow-hidden rounded-2xl p-5 text-center transition-all duration-500 animate-scale-in border-2 ${
+                      stat.isCorrect
+                        ? 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300 shadow-xl scale-105'
+                        : 'bg-gradient-to-br from-gray-100 to-gray-200 border-gray-300'
+                    }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {stat.isCorrect && (
+                      <div className="absolute top-2 right-2 text-3xl animate-bounce">⭐</div>
                     )}
-                    {submitting && userResponse === index && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white flex-shrink-0"></div>
+                    <div className={`text-4xl font-bold mb-1 ${stat.isCorrect ? 'text-white' : 'text-gray-700'}`}>
+                      {stat.count}
+                    </div>
+                    <div className={`text-xl font-bold mb-1 ${stat.isCorrect ? 'text-emerald-100' : 'text-gray-600'}`}>
+                      {String.fromCharCode(65 + index)}
+                    </div>
+                    <div className={`text-lg ${stat.isCorrect ? 'text-white' : 'text-gray-500'}`}>
+                      {stat.percentage.toFixed(0)}%
+                    </div>
+                    {stat.isCorrect && (
+                      <div className="mt-2 text-sm font-bold text-emerald-100">Correct!</div>
                     )}
                   </div>
-                </Button>
-              ))}
-            </div>
-          ) : (
-            // Results Display Mode
-            <div className="space-y-3">
-              {/* Results Grid */}
-              <div className="bg-gradient-to-br from-slate-700 to-slate-600 p-4 rounded-xl border border-slate-400/20">
-                <div className="text-center mb-3">
-                  <div className="text-2xl text-white font-light">📊 Live Results</div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  {responseStats.map((stat, index) => (
-                    <div key={index} className="bg-white/95 rounded-lg p-3 text-center border border-gray-200">
-                      <div className="text-3xl font-light text-gray-800">{stat.count}</div>
-                      <div className="text-base font-medium text-gray-700">{String.fromCharCode(65 + index)}</div>
-                      <div className="text-sm text-gray-600">{stat.percentage.toFixed(0)}%</div>
-                      {stat.isCorrect && <div className="text-lg mt-1">🌟</div>}
-                    </div>
-                  ))}
-                </div>
-                <div className="text-sm text-white/80 text-center">
-                  {totalResponses} responses ✨
+                ))}
+              </div>
+
+              {/* Participation Badge */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border-2 border-amber-300 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">👥</div>
+                  <div className="flex-1">
+                    <div className="font-bold text-amber-900">{totalResponses} Students Responded</div>
+                    <div className="text-sm text-amber-700">Great participation! 🎉</div>
+                  </div>
                 </div>
               </div>
               
-              {/* Detailed Results */}
-              {responseStats.map((stat, index) => (
-                <div
-                  key={index}
-                  className={`p-3 rounded-lg border-2 ${
-                    stat.isCorrect
-                      ? 'border-green-300 bg-green-50'
-                      : userResponse === index && !stat.isCorrect
-                      ? 'border-red-300 bg-red-50'
-                      : 'border-gray-200 bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-sm font-medium text-gray-900">
-                      {String.fromCharCode(65 + index)}. {stat.option}
-                    </span>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {stat.isCorrect && (
-                        <Badge className="bg-green-600 text-white text-xs">✓</Badge>
-                      )}
-                      {userResponse === index && (
-                        <Badge className="bg-blue-600 text-white text-xs">You</Badge>
-                      )}
-                      <span className="text-xs font-medium text-gray-600 bg-white px-1.5 py-0.5 rounded">
-                        {stat.count}
-                      </span>
+              {/* Detailed Breakdown */}
+              <div className="space-y-2">
+                {responseStats.map((stat, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 animate-fade-in ${
+                      stat.isCorrect
+                        ? 'border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 shadow-lg'
+                        : 'border-gray-200 bg-white'
+                    }`}
+                    style={{ animationDelay: `${(index + 2) * 100}ms` }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                          stat.isCorrect
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-200 text-gray-600'
+                        }`}>
+                          {String.fromCharCode(65 + index)}
+                        </div>
+                        <span className={`font-medium ${stat.isCorrect ? 'text-green-900' : 'text-gray-700'}`}>
+                          {stat.option}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {stat.isCorrect && (
+                          <Badge className="bg-green-600 text-white">✓ Correct</Badge>
+                        )}
+                        <span className={`font-bold ${stat.isCorrect ? 'text-green-700' : 'text-gray-600'}`}>
+                          {stat.percentage.toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+                    <Progress 
+                      value={stat.percentage} 
+                      className={`h-3 ${stat.isCorrect ? 'bg-green-100' : ''}`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Explanation */}
+              {currentQuestion.explanation && (
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-5 rounded-2xl border-2 border-blue-200 shadow-md animate-fade-in">
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl flex-shrink-0">💡</div>
+                    <div>
+                      <h4 className="font-bold text-blue-900 mb-2">Explanation</h4>
+                      <p className="text-blue-800 text-sm leading-relaxed">{currentQuestion.explanation}</p>
                     </div>
                   </div>
-                  <Progress value={stat.percentage} className="h-2" />
                 </div>
-              ))}
-              
-              {currentQuestion.explanation && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="text-sm font-semibold text-blue-900 mb-1">💡 Explanation</h4>
-                  <p className="text-xs text-blue-800">{currentQuestion.explanation}</p>
+              )}
+
+              {/* What's Next in Results Mode */}
+              {!isLastQuestion ? (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-300 shadow-md animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl animate-bounce">→</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-purple-900">Up Next...</div>
+                      <div className="text-sm text-purple-700">Instructor will move to Question {activePoll.current_question_index + 2} soon</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border-2 border-amber-300 shadow-md animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">🏁</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-amber-900">Final Question!</div>
+                      <div className="text-sm text-amber-700">This is the last question. Full results coming up!</div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -629,5 +751,282 @@ export const LiveStudentInterface: React.FC = () => {
         </div>
       </ScrollArea>
     </div>
+              <span className="font-medium">Question {activePoll.current_question_index + 1} of {activePoll.questions.length}</span>
+              <span className="text-orange-100">{Math.round(((activePoll.current_question_index + 1) / activePoll.questions.length) * 100)}% Complete</span>
+            </div>
+            <div className="h-2 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+              <div 
+                className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 rounded-full transition-all duration-500 shadow-lg"
+                style={{ width: `${((activePoll.current_question_index + 1) / activePoll.questions.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Live Stats */}
+          <div className="flex items-center justify-between mt-3 text-white text-sm">
+            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <Users className="h-4 w-4" />
+              <span className="font-semibold">{totalResponses}</span>
+              <span className="text-orange-100">answered</span>
+            </div>
+            <div className="flex items-center gap-2 bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <Clock className="h-4 w-4" />
+              <span className="text-orange-100">Live</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content - Scrollable */}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          {!activePoll.show_results ? (
+            // ========== ANSWER MODE ==========
+            <>
+              {/* Question Card */}
+              <div className="relative">
+                <div className="absolute -top-2 -left-2 w-16 h-16 bg-gradient-to-br from-orange-400 to-amber-500 rounded-full blur-2xl opacity-50 animate-pulse"></div>
+                <div className="relative bg-gradient-to-br from-orange-600 via-amber-600 to-orange-500 rounded-2xl p-6 shadow-xl border-2 border-orange-300">
+                  <div className="absolute top-3 right-3 text-2xl opacity-20">🎼</div>
+                  <h3 className="text-xl font-bold text-white leading-relaxed mb-2">
+                    {currentQuestion.question}
+                  </h3>
+                  {currentQuestion.audio_url && (
+                    <div className="flex items-center gap-2 mt-3 bg-white/10 px-3 py-2 rounded-lg backdrop-blur-sm">
+                      <span className="text-2xl">🎵</span>
+                      <span className="text-sm text-amber-100">{currentQuestion.audio_url}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Messages */}
+              {justSubmitted && (
+                <div className="bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white p-4 rounded-2xl shadow-xl animate-scale-in border-2 border-emerald-300">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl animate-bounce">✅</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-lg">Answer Submitted!</div>
+                      <div className="text-sm text-emerald-100">Your response has been recorded</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {hasSubmitted && !justSubmitted && (
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-2xl border-2 border-emerald-300 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-6 w-6 text-emerald-600 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="font-bold text-emerald-900">Response Recorded ✓</div>
+                      <div className="text-sm text-emerald-700">Waiting for instructor to reveal results...</div>
+                    </div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-emerald-600 border-t-transparent"></div>
+                  </div>
+                </div>
+              )}
+
+              {!hasSubmitted && (
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-2xl border-2 border-blue-200 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">👆</div>
+                    <div>
+                      <div className="font-bold text-blue-900">Select Your Answer</div>
+                      <div className="text-sm text-blue-700">Choose the option you think is correct</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Answer Options */}
+              <div className="space-y-3">
+                {currentQuestion.options.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => submitResponse(index)}
+                    disabled={hasSubmitted || submitting}
+                    className={`group w-full text-left p-5 rounded-2xl transition-all duration-300 transform ${
+                      userResponse === index && submissionAnimation
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-2xl scale-105 animate-pulse'
+                        : userResponse === index
+                        ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-xl'
+                        : hasSubmitted
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed border-2 border-gray-200'
+                        : 'bg-white hover:bg-gradient-to-r hover:from-orange-50 hover:to-amber-50 text-gray-900 border-2 border-orange-200 hover:border-orange-400 hover:shadow-xl hover:scale-102 active:scale-98'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg transition-colors ${
+                        userResponse === index
+                          ? 'bg-white text-emerald-600'
+                          : hasSubmitted
+                          ? 'bg-gray-200 text-gray-400'
+                          : 'bg-gradient-to-br from-orange-400 to-amber-500 text-white group-hover:from-orange-500 group-hover:to-amber-600'
+                      }`}>
+                        {String.fromCharCode(65 + index)}
+                      </div>
+                      <span className="flex-1 text-base font-medium">{option}</span>
+                      {userResponse === index && hasSubmitted && (
+                        <CheckCircle className="h-6 w-6 flex-shrink-0 animate-scale-in" />
+                      )}
+                      {submitting && userResponse === index && (
+                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent flex-shrink-0"></div>
+                      )}
+                      {!hasSubmitted && userResponse !== index && (
+                        <div className="text-orange-400 opacity-0 group-hover:opacity-100 transition-opacity">→</div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* What's Next Indicator */}
+              {!hasSubmitted && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-200">
+                  <div className="flex items-center gap-3">
+                    <div className="text-2xl">🔮</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-purple-900">What's Next?</div>
+                      <div className="text-sm text-purple-700">After you submit, wait for instructor to show results</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            // ========== RESULTS MODE ==========
+            <div className="space-y-4">
+              {/* Results Header */}
+              <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-2xl p-6 shadow-xl border-2 border-indigo-300 text-white animate-fade-in">
+                <div className="text-center">
+                  <div className="text-4xl mb-2 animate-bounce">📊</div>
+                  <h3 className="text-2xl font-bold mb-1">Live Results!</h3>
+                  <p className="text-indigo-100 text-sm">Here's how everyone answered</p>
+                </div>
+              </div>
+
+              {/* Quick Stats Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {responseStats.map((stat, index) => (
+                  <div
+                    key={index}
+                    className={`relative overflow-hidden rounded-2xl p-5 text-center transition-all duration-500 animate-scale-in border-2 ${
+                      stat.isCorrect
+                        ? 'bg-gradient-to-br from-emerald-400 to-teal-500 border-emerald-300 shadow-xl scale-105'
+                        : 'bg-gradient-to-br from-gray-100 to-gray-200 border-gray-300'
+                    }`}
+                    style={{ animationDelay: `${index * 100}ms` }}
+                  >
+                    {stat.isCorrect && (
+                      <div className="absolute top-2 right-2 text-3xl animate-bounce">⭐</div>
+                    )}
+                    <div className={`text-4xl font-bold mb-1 ${stat.isCorrect ? 'text-white' : 'text-gray-700'}`}>
+                      {stat.count}
+                    </div>
+                    <div className={`text-xl font-bold mb-1 ${stat.isCorrect ? 'text-emerald-100' : 'text-gray-600'}`}>
+                      {String.fromCharCode(65 + index)}
+                    </div>
+                    <div className={`text-lg ${stat.isCorrect ? 'text-white' : 'text-gray-500'}`}>
+                      {stat.percentage.toFixed(0)}%
+                    </div>
+                    {stat.isCorrect && (
+                      <div className="mt-2 text-sm font-bold text-emerald-100">Correct!</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Participation Badge */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border-2 border-amber-300 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">👥</div>
+                  <div className="flex-1">
+                    <div className="font-bold text-amber-900">{totalResponses} Students Responded</div>
+                    <div className="text-sm text-amber-700">Great participation! 🎉</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Detailed Breakdown */}
+              <div className="space-y-2">
+                {responseStats.map((stat, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 rounded-xl border-2 transition-all duration-300 animate-fade-in ${
+                      stat.isCorrect
+                        ? 'border-green-400 bg-gradient-to-r from-green-50 to-emerald-50 shadow-lg'
+                        : 'border-gray-200 bg-white'
+                    }`}
+                    style={{ animationDelay: `${(index + 2) * 100}ms` }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${
+                          stat.isCorrect
+                            ? 'bg-green-500 text-white'
+                            : 'bg-gray-200 text-gray-600'
+                        }`}>
+                          {String.fromCharCode(65 + index)}
+                        </div>
+                        <span className={`font-medium ${stat.isCorrect ? 'text-green-900' : 'text-gray-700'}`}>
+                          {stat.option}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {stat.isCorrect && (
+                          <Badge className="bg-green-600 text-white">✓ Correct</Badge>
+                        )}
+                        <span className={`font-bold ${stat.isCorrect ? 'text-green-700' : 'text-gray-600'}`}>
+                          {stat.percentage.toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+                    <Progress 
+                      value={stat.percentage} 
+                      className={`h-3 ${stat.isCorrect ? 'bg-green-100' : ''}`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Explanation */}
+              {currentQuestion.explanation && (
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-5 rounded-2xl border-2 border-blue-200 shadow-md animate-fade-in">
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl flex-shrink-0">💡</div>
+                    <div>
+                      <h4 className="font-bold text-blue-900 mb-2">Explanation</h4>
+                      <p className="text-blue-800 text-sm leading-relaxed">{currentQuestion.explanation}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* What's Next in Results Mode */}
+              {!isLastQuestion ? (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-2xl border-2 border-purple-300 shadow-md animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl animate-bounce">→</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-purple-900">Up Next...</div>
+                      <div className="text-sm text-purple-700">Instructor will move to Question {activePoll.current_question_index + 2} soon</div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 p-4 rounded-2xl border-2 border-amber-300 shadow-md animate-fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="text-3xl">🏁</div>
+                    <div className="flex-1">
+                      <div className="font-bold text-amber-900">Final Question!</div>
+                      <div className="text-sm text-amber-700">This is the last question. Full results coming up!</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </ScrollArea>
   );
 };
