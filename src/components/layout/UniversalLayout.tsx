@@ -54,9 +54,7 @@ export const UniversalLayout = ({
       <main className={`flex-1 w-full overflow-x-hidden ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth}>
-            <div className="py-1 sm:py-2">
-              {children}
-            </div>
+            {children}
           </ResponsiveContainer>
         ) : (
           children
