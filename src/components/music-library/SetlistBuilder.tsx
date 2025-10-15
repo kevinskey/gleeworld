@@ -24,7 +24,8 @@ import {
   Edit,
   Eye,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Play
 } from 'lucide-react';
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -680,13 +681,13 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
   console.log('SetlistBuilder render: isCreating =', isCreating, 'createLoading =', createLoading);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Music className="h-5 w-5" />
-            Setlist Builder
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+            <Music className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            <span className="truncate">Setlist Builder</span>
           </h3>
         </div>
         <Button 
@@ -694,12 +695,14 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
             console.log('SetlistBuilder: New Setlist button clicked');
             setIsCreating(!isCreating);
           }} 
-          className="flex items-center gap-2"
+          className="flex items-center gap-1 sm:gap-2 h-9 px-3 sm:px-4 touch-target flex-shrink-0"
           disabled={createLoading}
           variant={isCreating ? "secondary" : "default"}
+          size="sm"
         >
           <Plus className="h-4 w-4" />
-          {isCreating ? 'Cancel' : 'New Setlist'}
+          <span className="hidden xs:inline">{isCreating ? 'Cancel' : 'New'}</span>
+          <span className="xs:hidden">+</span>
         </Button>
       </div>
 
@@ -753,7 +756,7 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <Button
                         size="sm"
                         variant="outline"
@@ -761,13 +764,13 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                           e.stopPropagation();
                           handleEditSetlist(setlist);
                         }}
-                        className="h-7 px-2"
+                        className="h-8 sm:h-7 px-2 sm:px-2 touch-target"
                       >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Edit
+                        <Edit className="h-4 w-4 sm:h-3 sm:w-3 sm:mr-1" />
+                        <span className="hidden sm:inline ml-1">Edit</span>
                       </Button>
                       {setlist.is_public && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200">
+                        <Badge variant="secondary" className="bg-green-100 text-green-800 border-green-200 hidden sm:flex">
                           <Users className="h-3 w-3 mr-1" />
                           All Members
                         </Badge>
@@ -778,52 +781,58 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
                 
                 {/* Setlist Items - Show below the card when selected */}
                 {selectedSetlist?.id === setlist.id && (
-                  <div className="ml-4 pl-4 border-l-2 border-muted space-y-2">
+                  <div className="ml-2 sm:ml-4 pl-2 sm:pl-4 border-l-2 border-muted space-y-2">
                     {selectedSetlist.items?.map((item, index) => (
-                      <div key={item.id} className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
-                        <span className="text-xs font-medium text-muted-foreground min-w-[1.5rem]">
-                          {index + 1}.
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <h5 className="text-sm font-medium truncate">
-                            {item.sheet_music?.title}
-                          </h5>
-                          {item.sheet_music?.composer && (
-                            <p className="text-xs text-muted-foreground">
-                              {item.sheet_music.composer}
-                            </p>
-                          )}
-                          {item.notes && (
-                            <p className="text-xs text-muted-foreground italic">
-                              {item.notes}
-                            </p>
-                          )}
+                      <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 sm:p-3 bg-muted/30 rounded-lg">
+                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                          <span className="text-xs sm:text-sm font-medium text-muted-foreground min-w-[1.5rem] mt-0.5">
+                            {index + 1}.
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <h5 className="text-sm sm:text-base font-medium truncate">
+                              {item.sheet_music?.title}
+                            </h5>
+                            {item.sheet_music?.composer && (
+                              <p className="text-xs sm:text-sm text-muted-foreground">
+                                {item.sheet_music.composer}
+                              </p>
+                            )}
+                            {item.notes && (
+                              <p className="text-xs sm:text-sm text-muted-foreground italic mt-1">
+                                {item.notes}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
+                        {/* Mobile: Stack buttons vertically, Desktop: horizontal */}
+                        <div className="flex flex-row sm:flex-row items-center gap-2 w-full sm:w-auto">
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => handleViewPdf(item)}
                             disabled={!item.sheet_music?.pdf_url}
-                            className="h-7 w-7 p-0"
+                            className="flex-1 sm:flex-none h-9 sm:h-8 touch-target"
                           >
-                            <FileText className="h-3 w-3" />
+                            <FileText className="h-4 w-4 sm:h-3 sm:w-3 sm:mr-0" />
+                            <span className="sm:hidden ml-2">View PDF</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="default"
                             onClick={() => openSetlistPlayer(selectedSetlist.id)}
-                            className="h-7 px-2 text-xs"
+                            className="flex-1 sm:flex-none h-9 sm:h-8 px-3 sm:px-2 text-xs sm:text-xs touch-target"
                           >
-                            Open Player
+                            <Play className="h-4 w-4 sm:h-3 sm:w-3 mr-1" />
+                            <span className="hidden sm:inline">Player</span>
+                            <span className="sm:hidden">Open Player</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => removeFromSetlist(item.id)}
-                            className="h-7 w-7 p-0"
+                            className="h-9 sm:h-8 w-9 sm:w-8 p-0 touch-target flex-shrink-0"
                           >
-                            <Trash2 className="h-3 w-3" />
+                            <Trash2 className="h-4 w-4 sm:h-3 sm:w-3" />
                           </Button>
                         </div>
                       </div>
