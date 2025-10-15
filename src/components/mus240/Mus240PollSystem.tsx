@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Brain, Plus, Play, Square, BarChart3, Users, Trash2 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useCourseTA } from '@/hooks/useCourseTA';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { LivePollResults } from './LivePollResults';
@@ -28,6 +29,7 @@ interface Poll {
 
 export const Mus240PollSystem = () => {
   const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
+  const { isTA, loading: taLoading } = useCourseTA('MUS240');
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(false);
   const [newPollTitle, setNewPollTitle] = useState('');
@@ -39,13 +41,13 @@ export const Mus240PollSystem = () => {
   const [editingPollId, setEditingPollId] = useState<string | null>(null);
   const [showEditor, setShowEditor] = useState(false);
 
-  const hasAdminAccess = isAdmin() || isSuperAdmin();
+  const hasAdminAccess = isAdmin() || isSuperAdmin() || isTA;
 
   useEffect(() => {
-    if (!roleLoading) {
+    if (!roleLoading && !taLoading) {
       fetchPolls();
     }
-  }, [roleLoading]);
+  }, [roleLoading, taLoading]);
 
   const fetchPolls = async () => {
     setLoading(true);
@@ -261,7 +263,7 @@ export const Mus240PollSystem = () => {
     }
   };
 
-  if (roleLoading) {
+  if (roleLoading || taLoading) {
     return <div className="text-center py-8">Loading...</div>;
   }
 
