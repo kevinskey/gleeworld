@@ -16,25 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
-import { 
-  Calendar, 
-  Search, 
-  Filter, 
-  SortAsc, 
-  SortDesc, 
-  ChevronDown, 
-  ChevronUp, 
-  GripVertical, 
-  Pin, 
-  PinOff,
-  Shield,
-  Clock,
-  BarChart3,
-  GraduationCap,
-  Key,
-  Heart,
-  Star
-} from "lucide-react";
+import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star } from "lucide-react";
 
 // Sortable Module Card Component
 interface SortableModuleCardProps {
@@ -47,7 +29,6 @@ interface SortableModuleCardProps {
   isFavorite?: boolean;
   onToggleFavorite?: () => void;
 }
-
 const SortableModuleCard = ({
   module,
   onModuleClick,
@@ -68,17 +49,13 @@ const SortableModuleCard = ({
   } = useSortable({
     id: module.id
   });
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isSortableDragging ? 0.5 : 1
   };
-
   const IconComponent = module.icon;
-
-  return (
-    <div ref={setNodeRef} style={style} {...attributes}>
+  return <div ref={setNodeRef} style={style} {...attributes}>
       <Card className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
@@ -86,11 +63,9 @@ const SortableModuleCard = ({
               <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
-              {IconComponent && (
-                <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
+              {IconComponent && <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
                   <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
-                </div>
-              )}
+                </div>}
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-sm font-medium leading-tight line-clamp-2">
                   {module.title}
@@ -101,57 +76,38 @@ const SortableModuleCard = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleFavorite?.();
-                }}
-                className={`p-1 h-auto ${isFavorite ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500 transition-colors`}
-              >
+              <Button variant="ghost" size="sm" onClick={e => {
+              e.stopPropagation();
+              onToggleFavorite?.();
+            }} className={`p-1 h-auto ${isFavorite ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500 transition-colors`}>
                 <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTogglePin?.();
-                }}
-                className={`p-1 h-auto ${isPinned ? 'text-primary' : 'text-muted-foreground'}`}
-              >
+              <Button variant="ghost" size="sm" onClick={e => {
+              e.stopPropagation();
+              onTogglePin?.();
+            }} className={`p-1 h-auto ${isPinned ? 'text-primary' : 'text-muted-foreground'}`}>
                 {isPinned ? <Pin className="h-4 w-4" /> : <PinOff className="h-4 w-4" />}
               </Button>
-              {module.isNew && (
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+              {module.isNew && <Badge variant="secondary" className="text-xs px-2 py-0.5">
                   New
-                </Badge>
-              )}
+                </Badge>}
             </div>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full" 
-            onClick={() => {
-              if (module.id === 'librarian') {
-                navigate('/librarian-dashboard');
-              } else {
-                onModuleClick(module.id);
-              }
-            }}
-          >
+          <Button variant="outline" size="sm" className="w-full" onClick={() => {
+          if (module.id === 'librarian') {
+            navigate('/librarian-dashboard');
+          } else {
+            onModuleClick(module.id);
+          }
+        }}>
             Open Module
           </Button>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
-
 interface MetalHeaderDashboardProps {
   user: {
     id: string;
@@ -163,11 +119,12 @@ interface MetalHeaderDashboardProps {
     created_at: string;
   };
 }
-
-export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
+export const MetalHeaderDashboard = ({
+  user
+}: MetalHeaderDashboardProps) => {
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
-  
+
   // Get the user's first name from full_name
   const getFirstName = (fullName: string) => {
     return fullName?.split(' ')[0] || 'User';
@@ -180,7 +137,6 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     if (user.is_exec_board) return 'executive';
     return user.role || 'user';
   };
-
   const isAdmin = user.role === 'super-admin' || user.role === 'admin';
 
   // Get modules available to this user
@@ -193,13 +149,11 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     userRole: getUserRole(),
     isAdmin
   });
-
   const {
     saveCategoryOrder,
     toggleModulePin,
     isModulePinned
   } = useModuleOrdering(user.id);
-
   const {
     favorites: moduleFavorites,
     toggleFavorite,
@@ -208,7 +162,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
 
   // Navigation hooks
   const location = useLocation();
-  
+
   // State management
   const [selectedModule, setSelectedModule] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -225,14 +179,16 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
   }, [location.search]);
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-  
+
   // Ensure categories default to collapsed on load (without causing loops)
   useEffect(() => {
     if (!categories || categories.length === 0) return;
     setCollapsedSections(prev => {
       let changed = false;
-      const next = { ...prev } as Record<string, boolean>;
-      categories.forEach((categoryId) => {
+      const next = {
+        ...prev
+      } as Record<string, boolean>;
+      categories.forEach(categoryId => {
         if (next[categoryId] === undefined) {
           next[categoryId] = true;
           changed = true;
@@ -241,15 +197,10 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
       return changed ? next : prev;
     });
   }, [categories]);
-  
   const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates
-    })
-  );
+  const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates
+  }));
 
   // Create modulesByCategory object from the function
   const modulesByCategory = useMemo(() => {
@@ -288,7 +239,6 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
               };
             }
           }).filter(Boolean);
-          
           if (modules.length > 0) {
             result[category] = modules;
           }
@@ -305,20 +255,14 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
 
   // Sort and filter modules
   const filteredAndSortedModules = useMemo(() => {
-    const allModules = Object.entries(modulesByCategory).flatMap(([category, modules]) => 
-      modules.map(module => ({ ...module, category }))
-    );
-
-    let filtered = allModules.filter(module => 
-      module.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      module.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      module.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
+    const allModules = Object.entries(modulesByCategory).flatMap(([category, modules]) => modules.map(module => ({
+      ...module,
+      category
+    })));
+    let filtered = allModules.filter(module => module.title?.toLowerCase().includes(searchQuery.toLowerCase()) || module.description?.toLowerCase().includes(searchQuery.toLowerCase()) || module.category.toLowerCase().includes(searchQuery.toLowerCase()));
     if (filterCategory !== 'all') {
       filtered = filtered.filter(module => module.category === filterCategory);
     }
-
     filtered.sort((a, b) => {
       let aValue, bValue;
       switch (sortBy) {
@@ -341,41 +285,34 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
       const comparison = aValue.localeCompare(bValue);
       return sortOrder === 'asc' ? comparison : -comparison;
     });
-
     return filtered;
   }, [modulesByCategory, searchQuery, filterCategory, sortBy, sortOrder]);
 
   // Sort modules within categories based on custom ordering and pinning
   const sortedModulesByCategory = useMemo(() => {
     const result: Record<string, any[]> = {};
-
     if (modulesByCategory && typeof modulesByCategory === 'object') {
       Object.entries(modulesByCategory).forEach(([category, categoryModules]) => {
         if (!categoryModules) {
           result[category] = [];
           return;
         }
-
-        const pinnedModules = categoryModules.filter(module => 
-          isModulePinned(category, module.id)
-        );
-        const unpinnedModules = categoryModules.filter(module => 
-          !isModulePinned(category, module.id)
-        );
-
+        const pinnedModules = categoryModules.filter(module => isModulePinned(category, module.id));
+        const unpinnedModules = categoryModules.filter(module => !isModulePinned(category, module.id));
         result[category] = [...pinnedModules, ...unpinnedModules];
       });
     }
     return result;
   }, [modulesByCategory, isModulePinned]);
-
   const handleDragEnd = (event: DragEndEvent, category: string) => {
-    const { active, over } = event;
+    const {
+      active,
+      over
+    } = event;
     if (over && active.id !== over.id) {
       const categoryModules = sortedModulesByCategory[category];
       const oldIndex = categoryModules.findIndex(module => module.id === active.id);
       const newIndex = categoryModules.findIndex(module => module.id === over.id);
-      
       if (oldIndex !== -1 && newIndex !== -1) {
         const newOrder = arrayMove(categoryModules, oldIndex, newIndex);
         const orderedModuleKeys = newOrder.map(module => module.id);
@@ -383,7 +320,6 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
       }
     }
   };
-
   const toggleSectionCollapse = (sectionName: string) => {
     setCollapsedSections(prev => ({
       ...prev,
@@ -397,16 +333,19 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     // Update URL with module parameter
     const params = new URLSearchParams(location.search);
     params.set('module', moduleId);
-    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+    navigate(`${location.pathname}?${params.toString()}`, {
+      replace: true
+    });
   };
-
   const handleBackToModules = () => {
     setSelectedModule(null);
     // Remove module parameter from URL
     const params = new URLSearchParams(location.search);
     params.delete('module');
     const newSearch = params.toString();
-    navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, { replace: true });
+    navigate(`${location.pathname}${newSearch ? `?${newSearch}` : ''}`, {
+      replace: true
+    });
   };
 
   // If a module is selected, render it
@@ -414,8 +353,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
     if (moduleConfig?.component) {
       const ModuleComponent = moduleConfig.component;
-      return (
-        <div className="space-y-4">
+      return <div className="space-y-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
             <Button variant="ghost" size="sm" onClick={handleBackToModules} className="p-0 h-auto">
               {getFirstName(user.full_name)}'s Dashboard
@@ -424,31 +362,21 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
             <span className="text-foreground font-medium">{moduleConfig.title}</span>
           </div>
           
-          <ModuleComponent 
-            user={{
-              ...user,
-              is_admin: isAdmin,
-              is_super_admin: user.role === 'super-admin'
-            }} 
-            isFullPage={true} 
-            onNavigate={handleModuleSelect} 
-          />
-        </div>
-      );
+          <ModuleComponent user={{
+          ...user,
+          is_admin: isAdmin,
+          is_super_admin: user.role === 'super-admin'
+        }} isFullPage={true} onNavigate={handleModuleSelect} />
+        </div>;
     }
   }
-
-  return (
-    <div className="space-y-4 relative min-h-screen">
+  return <div className="space-y-4 relative min-h-screen">
       {/* Background Image */}
-      <div 
-        className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none"
-        style={{ 
-          backgroundImage: `url(${gleeSculptureBg})`,
-          backgroundPosition: 'center 15%',
-          filter: 'sepia(0.15) saturate(1.2)'
-        }}
-      />
+      <div className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" style={{
+      backgroundImage: `url(${gleeSculptureBg})`,
+      backgroundPosition: 'center 15%',
+      filter: 'sepia(0.15) saturate(1.2)'
+    }} />
       {/* Metal Plate Header */}
       <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg p-5">
         {/* Left Rivet */}
@@ -462,10 +390,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
         </div>
 
         {/* Key Ignition - Top Right */}
-        <button
-          onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
-          className="absolute top-3 right-12 w-8 h-8 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
-        >
+        <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="absolute top-3 right-12 w-8 h-8 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group">
           <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
         </button>
         
@@ -475,12 +400,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
         </h1>
 
         {/* Quick Actions Panel - slides out from underneath */}
-        <QuickActionsPanel 
-          user={user} 
-          onModuleSelect={handleModuleSelect}
-          isOpen={isQuickActionsOpen}
-          onClose={() => setIsQuickActionsOpen(false)}
-        />
+        <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} />
       </div>
 
 
@@ -488,18 +408,12 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
       <Card className="p-4 bg-background/95 backdrop-blur-sm border-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search modules..." 
-            value={searchQuery} 
-            onChange={e => setSearchQuery(e.target.value)} 
-            className="pl-10" 
-          />
+          <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
       </Card>
 
       {/* Favorites Section */}
-      {moduleFavorites.size > 0 && (
-        <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
+      {moduleFavorites.size > 0 && <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
           <CardHeader className="pb-1">
             <CardTitle className="text-xs flex items-center gap-1">
               <Star className="h-2.5 w-2.5 text-primary fill-current" />
@@ -512,70 +426,49 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
           <CardContent className="pt-1">
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
               {Array.from(moduleFavorites).map(moduleId => {
-                const module = allModules.find(m => m.id === moduleId);
-                if (!module) return null;
-                
-                const moduleConfig = ModuleRegistry.getModule(moduleId);
-                const enrichedModule = {
-                  ...module,
-                  icon: moduleConfig?.icon || Calendar,
-                  iconColor: moduleConfig?.iconColor || 'blue',
-                  component: moduleConfig?.component,
-                  isNew: moduleConfig?.isNew || false
-                };
-                
-                return (
-                  <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border">
+            const module = allModules.find(m => m.id === moduleId);
+            if (!module) return null;
+            const moduleConfig = ModuleRegistry.getModule(moduleId);
+            const enrichedModule = {
+              ...module,
+              icon: moduleConfig?.icon || Calendar,
+              iconColor: moduleConfig?.iconColor || 'blue',
+              component: moduleConfig?.component,
+              isNew: moduleConfig?.isNew || false
+            };
+            return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border">
                     <CardHeader className="pb-1 pt-1.5 px-2">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-1.5 flex-1">
-                          {enrichedModule.icon && (
-                            <div className={`p-1 rounded bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
+                          {enrichedModule.icon && <div className={`p-1 rounded bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
                               <enrichedModule.icon className={`h-2 w-2 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
-                            </div>
-                          )}
+                            </div>}
                           <div className="flex-1 min-w-0">
                             <CardTitle className="text-[8px] font-medium leading-tight line-clamp-1">
                               {enrichedModule.title}
                             </CardTitle>
-                            <CardDescription className="text-[8px] mt-0.5 line-clamp-1">
-                              {enrichedModule.description}
-                            </CardDescription>
+                            
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(moduleId);
-                          }}
-                          className="p-0.5 h-auto text-red-500 hover:text-red-600 transition-colors"
-                        >
+                        <Button variant="ghost" size="sm" onClick={e => {
+                    e.stopPropagation();
+                    toggleFavorite(moduleId);
+                  }} className="p-0.5 h-auto text-red-500 hover:text-red-600 transition-colors">
                           <Heart className="h-2 w-2 fill-current" />
                         </Button>
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0 px-2 pb-1.5">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="w-full h-5 text-[9px] px-1" 
-                        onClick={() => handleModuleSelect(moduleId)}
-                      >
-                        Open
-                      </Button>
+                      
                     </CardContent>
-                  </Card>
-                );
-              })}
+                  </Card>;
+          })}
             </div>
           </CardContent>
-        </Card>
-      )}
+        </Card>}
 
       {/* Filter Controls - Collapsible */}
-      <Collapsible open={!filterControlsCollapsed} onOpenChange={(open) => setFilterControlsCollapsed(!open)}>
+      <Collapsible open={!filterControlsCollapsed} onOpenChange={open => setFilterControlsCollapsed(!open)}>
         <Card className="bg-background/95 backdrop-blur-sm border-2">
           <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-2">
@@ -594,11 +487,9 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
+                    {categories.map(category => <SelectItem key={category} value={category}>
                         {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                      </SelectItem>
-                    ))}
+                      </SelectItem>)}
                   </SelectContent>
                 </Select>
 
@@ -613,24 +504,18 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                   </SelectContent>
                 </Select>
 
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} 
-                  className="flex items-center gap-2"
-                >
+                <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
                   {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
                   {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
                 </Button>
               </div>
 
               {/* Filtered Results Count */}
-              {(searchQuery || filterCategory !== 'all') && (
-                <div className="mt-4 text-sm text-muted-foreground">
+              {(searchQuery || filterCategory !== 'all') && <div className="mt-4 text-sm text-muted-foreground">
                   Found {filteredAndSortedModules.length} modules
                   {searchQuery && ` matching "${searchQuery}"`}
                   {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
-                </div>
-              )}
+                </div>}
             </div>
           </CollapsibleContent>
         </Card>
@@ -639,8 +524,7 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
       {/* Modules Display */}
       <div className="space-y-6">
         {/* Show search results when there's a search query or filter */}
-        {(searchQuery.trim() || filterCategory !== 'all') ? (
-          <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
+        {searchQuery.trim() || filterCategory !== 'all' ? <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Search className="h-5 w-5" />
@@ -649,34 +533,14 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredAndSortedModules.map(module => (
-                  <SortableModuleCard
-                    key={module.id}
-                    module={module}
-                    onModuleClick={handleModuleSelect}
-                    navigate={navigate}
-                    isPinned={isModulePinned(module.category, module.id)}
-                    onTogglePin={() => toggleModulePin(module.category, module.id)}
-                    isFavorite={isFavorite(module.id)}
-                    onToggleFavorite={() => toggleFavorite(module.id)}
-                  />
-                ))}
+                {filteredAndSortedModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={handleModuleSelect} navigate={navigate} isPinned={isModulePinned(module.category, module.id)} onTogglePin={() => toggleModulePin(module.category, module.id)} isFavorite={isFavorite(module.id)} onToggleFavorite={() => toggleFavorite(module.id)} />)}
               </div>
-              {filteredAndSortedModules.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
+              {filteredAndSortedModules.length === 0 && <div className="text-center py-8 text-muted-foreground">
                   No modules found matching your criteria.
-                </div>
-              )}
+                </div>}
             </CardContent>
-          </Card>
-        ) : (
-          /* Show modules by category */
-          Object.entries(sortedModulesByCategory).map(([category, modules]) => (
-            <Collapsible 
-              key={category}
-              open={!collapsedSections[category]}
-              onOpenChange={() => toggleSectionCollapse(category)}
-            >
+          </Card> : (/* Show modules by category */
+      Object.entries(sortedModulesByCategory).map(([category, modules]) => <Collapsible key={category} open={!collapsedSections[category]} onOpenChange={() => toggleSectionCollapse(category)}>
               <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
                 <CollapsibleTrigger className="w-full p-6 hover:bg-accent transition-colors">
                   <div className="flex items-center justify-between">
@@ -686,46 +550,22 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
                         {modules.length}
                       </Badge>
                     </CardTitle>
-                    {collapsedSections[category] ? 
-                      <ChevronDown className="h-5 w-5" /> : 
-                      <ChevronUp className="h-5 w-5" />
-                    }
+                    {collapsedSections[category] ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <CardContent className="pt-0">
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={(event) => handleDragEnd(event, category)}
-                    >
-                      <SortableContext
-                        items={modules.map(m => m.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={event => handleDragEnd(event, category)}>
+                      <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {modules.map(module => (
-                          <SortableModuleCard
-                            key={module.id}
-                            module={module}
-                            onModuleClick={handleModuleSelect}
-                            navigate={navigate}
-                            isPinned={isModulePinned(category, module.id)}
-                            onTogglePin={() => toggleModulePin(category, module.id)}
-                            isFavorite={isFavorite(module.id)}
-                            onToggleFavorite={() => toggleFavorite(module.id)}
-                          />
-                          ))}
+                          {modules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={handleModuleSelect} navigate={navigate} isPinned={isModulePinned(category, module.id)} onTogglePin={() => toggleModulePin(category, module.id)} isFavorite={isFavorite(module.id)} onToggleFavorite={() => toggleFavorite(module.id)} />)}
                         </div>
                       </SortableContext>
                     </DndContext>
                   </CardContent>
                 </CollapsibleContent>
               </Card>
-            </Collapsible>
-          ))
-        )}
+            </Collapsible>))}
       </div>
-    </div>
-  );
+    </div>;
 };
