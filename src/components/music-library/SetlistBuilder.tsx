@@ -232,12 +232,56 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
         throw error;
       }
       
+      // Process items to ensure fresh signed URLs for PDFs
+      const processedItems = await Promise.all((data || []).map(async (item: any) => {
+        if (item.sheet_music?.pdf_url) {
+          // Extract the path from the existing URL and generate a fresh signed URL
+          const urlPath = item.sheet_music.pdf_url;
+          
+          // Check if it's a Supabase storage URL that needs refreshing
+          if (urlPath.includes('supabase.co/storage')) {
+            try {
+              // Extract the file path from the URL
+              const pathMatch = urlPath.match(/\/object\/(sign|public)\/([^?]+)/);
+              if (pathMatch) {
+                const [, , filePath] = pathMatch;
+                const decodedPath = decodeURIComponent(filePath);
+                
+                // Split into bucket and path
+                const [bucket, ...pathParts] = decodedPath.split('/');
+                const path = pathParts.join('/');
+                
+                console.log('SetlistBuilder: Refreshing signed URL for:', { bucket, path });
+                
+                // Generate a fresh signed URL
+                const { data: signedData, error: signError } = await supabase.storage
+                  .from(bucket)
+                  .createSignedUrl(path, 3600); // 1 hour expiry
+                
+                if (!signError && signedData?.signedUrl) {
+                  return {
+                    ...item,
+                    sheet_music: {
+                      ...item.sheet_music,
+                      pdf_url: signedData.signedUrl
+                    }
+                  };
+                }
+              }
+            } catch (urlError) {
+              console.warn('SetlistBuilder: Failed to refresh signed URL:', urlError);
+            }
+          }
+        }
+        return item;
+      }));
+      
       // Update the selected setlist with the loaded items
       setSelectedSetlist(prev => {
         if (prev && prev.id === setlistId) {
           return {
             ...prev,
-            items: data || []
+            items: processedItems
           };
         }
         return prev;
