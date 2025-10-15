@@ -29,7 +29,7 @@ import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 import { PermissionsModule } from '../modules/PermissionsModule';
 import { BowmanScholarsModule } from '../modules/BowmanScholarsModule';
 import { RadioManagement } from '../admin/RadioManagement';
-import GleeAcademy from '../../pages/GleeAcademy';
+import { GleeAcademyModule } from '../modules/GleeAcademyModule';
 import { QRCodeManagementModule } from '../modules/QRCodeManagementModule';
 import { Mus240GroupsModule } from '../modules/Mus240GroupsModule';
 import { TestBuilder } from '../test-builder/TestBuilder';
@@ -111,7 +111,7 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'bowman-scholars':
         return <BowmanScholarsModule />;
       case 'glee-academy':
-        return <GleeAcademy />;
+        return <GleeAcademyModule isFullPage={false} />;
       case 'qr-code-management':
         return <QRCodeManagementModule />;
       case 'mus240-groups':
