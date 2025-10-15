@@ -450,12 +450,7 @@ export const MetalHeaderDashboard = ({
                             
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" onClick={e => {
-                    e.stopPropagation();
-                    toggleFavorite(moduleId);
-                  }} className="p-0.5 h-auto text-red-500 hover:text-red-600 transition-colors">
-                          <Heart className="h-2 w-2 fill-current" />
-                        </Button>
+                        
                       </div>
                     </CardHeader>
                     <CardContent className="pt-0 px-2 pb-1.5">
