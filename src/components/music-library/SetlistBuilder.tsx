@@ -231,12 +231,16 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
         throw error;
       }
       
-      if (selectedSetlist) {
-        setSelectedSetlist({
-          ...selectedSetlist,
-          items: data || []
-        });
-      }
+      // Update the selected setlist with the loaded items
+      setSelectedSetlist(prev => {
+        if (prev && prev.id === setlistId) {
+          return {
+            ...prev,
+            items: data || []
+          };
+        }
+        return prev;
+      });
     } catch (error) {
       console.error('Error loading setlist items:', error);
     }
