@@ -444,7 +444,7 @@ export const MetalHeaderDashboard = ({
                 component: moduleConfig?.component,
                 isNew: moduleConfig?.isNew || false
               };
-              return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border">
+              return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border" onClick={() => handleModuleSelect(moduleId)}>
                       <CardHeader className="pb-1 pt-1.5 px-2">
                         <div className="flex items-start justify-between">
                           <div className="flex items-center gap-1.5 flex-1">
