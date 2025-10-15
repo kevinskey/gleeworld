@@ -196,8 +196,9 @@ export const MusicLibrary = () => {
                     <div className="flex items-center justify-between card-compact">
                       <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
                       console.log('Study Scores button clicked, current state:', studyOpen);
-                      setStudyOpen(o => !o);
-                      setCurrentSection(studyOpen ? null : 'study-scores');
+                      const newState = !studyOpen;
+                      setStudyOpen(newState);
+                      setCurrentSection(newState ? 'study-scores' : null);
                     }}>
                         {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
                       </button>
@@ -211,8 +212,9 @@ export const MusicLibrary = () => {
                   <div className="w-full overflow-hidden border rounded">
                     <div className="flex items-center justify-between card-compact">
                       <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
-                      setCollectionsOpen(o => !o);
-                      setCurrentSection(collectionsOpen ? null : 'my-collections');
+                      const newState = !collectionsOpen;
+                      setCollectionsOpen(newState);
+                      setCurrentSection(newState ? 'my-collections' : null);
                     }}>
                         {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
                       </button>
@@ -226,8 +228,9 @@ export const MusicLibrary = () => {
                   <div className="w-full overflow-hidden border rounded">
                     <div className="flex items-center justify-between card-compact">
                       <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
-                      setSetlistOpen(o => !o);
-                      setCurrentSection(setlistOpen ? null : 'setlists');
+                      const newState = !setlistOpen;
+                      setSetlistOpen(newState);
+                      setCurrentSection(newState ? 'setlists' : null);
                     }}>
                         {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
                       </button>
@@ -241,8 +244,9 @@ export const MusicLibrary = () => {
                   <div className="w-full overflow-hidden border rounded">
                     <div className="flex items-center justify-between card-compact">
                       <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
-                      setLibraryOpen(o => !o);
-                      setCurrentSection(libraryOpen ? null : 'music-library');
+                      const newState = !libraryOpen;
+                      setLibraryOpen(newState);
+                      setCurrentSection(newState ? 'music-library' : null);
                     }}>
                         {libraryOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Music Library
                       </button>
