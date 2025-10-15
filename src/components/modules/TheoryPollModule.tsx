@@ -6,6 +6,7 @@ import { BarChart, ExternalLink, Users, BarChart3 } from 'lucide-react';
 import { ModuleWrapper } from './ModuleWrapper';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useCourseTA } from '@/hooks/useCourseTA';
 
 interface PollData {
   id: string;
@@ -22,6 +23,7 @@ export const TheoryPollModule = () => {
   const [polls, setPolls] = useState<PollData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const { isTA, loading: taLoading } = useCourseTA('MUS240');
 
   useEffect(() => {
     checkAdminStatus();
@@ -39,6 +41,8 @@ export const TheoryPollModule = () => {
     
     setIsSuperAdmin(profile?.is_super_admin || profile?.is_admin || false);
   };
+
+  const canAdminister = isSuperAdmin || isTA;
 
   const loadPolls = async () => {
     try {
@@ -80,7 +84,7 @@ export const TheoryPollModule = () => {
     window.open('/music-theory-fundamentals/student.html', '_blank');
   };
 
-  if (isLoading) {
+  if (isLoading || taLoading) {
     return (
       <ModuleWrapper title="Theory Poll System" icon={BarChart}>
         <div className="flex items-center justify-center py-8">
@@ -95,13 +99,15 @@ export const TheoryPollModule = () => {
       <div className="space-y-6">
         {/* Interface Access Cards */}
         <div className="grid md:grid-cols-2 gap-4">
-          {isSuperAdmin && (
+          {canAdminister && (
             <Card className="border-orange-200 bg-orange-50">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-orange-800">
                   <BarChart3 className="h-5 w-5" />
                   Instructor Interface
-                  <Badge variant="secondary" className="bg-orange-200 text-orange-800">Admin Only</Badge>
+                  <Badge variant="secondary" className="bg-orange-200 text-orange-800">
+                    {isTA ? 'TA Access' : 'Admin Only'}
+                  </Badge>
                 </CardTitle>
                 <CardDescription className="text-orange-700">
                   Create and manage theory polls, view real-time responses
@@ -157,7 +163,7 @@ export const TheoryPollModule = () => {
             <div className="space-y-4">
               {polls.length === 0 ? (
                 <p className="text-muted-foreground text-center py-4">
-                  No polls found. {isSuperAdmin ? 'Create your first poll using the instructor interface.' : 'Check back when polls are available.'}
+                  No polls found. {canAdminister ? 'Create your first poll using the instructor interface.' : 'Check back when polls are available.'}
                 </p>
               ) : (
                 polls.map((poll) => (
@@ -184,7 +190,7 @@ export const TheoryPollModule = () => {
           </CardContent>
         </Card>
 
-        {!isSuperAdmin && (
+        {!canAdminister && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 text-yellow-800">
@@ -192,7 +198,7 @@ export const TheoryPollModule = () => {
                 <span className="font-medium">Limited Access</span>
               </div>
               <p className="text-yellow-700 mt-1">
-                Full polling management requires superadmin privileges. Contact an administrator for access.
+                Full polling management requires TA or admin privileges. Contact an administrator for access.
               </p>
             </CardContent>
           </Card>
