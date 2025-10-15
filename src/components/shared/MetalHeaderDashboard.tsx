@@ -3,6 +3,7 @@ import gleeSculptureBg from '@/assets/glee-sculpture-bg.png';
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
+import { useModuleFavorites } from "@/hooks/useModuleFavorites";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -30,7 +31,9 @@ import {
   Clock,
   BarChart3,
   GraduationCap,
-  Key
+  Key,
+  Heart,
+  Star
 } from "lucide-react";
 
 // Sortable Module Card Component
@@ -41,6 +44,8 @@ interface SortableModuleCardProps {
   isDragging?: boolean;
   isPinned?: boolean;
   onTogglePin?: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
 const SortableModuleCard = ({
@@ -49,7 +54,9 @@ const SortableModuleCard = ({
   navigate,
   isDragging,
   isPinned = false,
-  onTogglePin
+  onTogglePin,
+  isFavorite = false,
+  onToggleFavorite
 }: SortableModuleCardProps) => {
   const {
     attributes,
@@ -94,6 +101,17 @@ const SortableModuleCard = ({
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFavorite?.();
+                }}
+                className={`p-1 h-auto ${isFavorite ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500 transition-colors`}
+              >
+                <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -181,6 +199,12 @@ export const MetalHeaderDashboard = ({ user }: MetalHeaderDashboardProps) => {
     toggleModulePin,
     isModulePinned
   } = useModuleOrdering(user.id);
+
+  const {
+    favorites: moduleFavorites,
+    toggleFavorite,
+    isFavorite
+  } = useModuleFavorites(user.id);
 
   // Navigation hooks
   const location = useLocation();
