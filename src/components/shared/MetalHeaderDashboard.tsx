@@ -198,6 +198,7 @@ export const MetalHeaderDashboard = ({
     });
   }, [categories]);
   const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);
+  const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
     coordinateGetter: sortableKeyboardCoordinates
   }));
@@ -413,54 +414,63 @@ export const MetalHeaderDashboard = ({
       </Card>
 
       {/* Favorites Section */}
-      {moduleFavorites.size > 0 && <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-xs flex items-center gap-1">
-              <Star className="h-2.5 w-2.5 text-primary fill-current" />
-              Favorites
-              <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
-                {moduleFavorites.size}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-1">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
-              {Array.from(moduleFavorites).map(moduleId => {
-            const module = allModules.find(m => m.id === moduleId);
-            if (!module) return null;
-            const moduleConfig = ModuleRegistry.getModule(moduleId);
-            const enrichedModule = {
-              ...module,
-              icon: moduleConfig?.icon || Calendar,
-              iconColor: moduleConfig?.iconColor || 'blue',
-              component: moduleConfig?.component,
-              isNew: moduleConfig?.isNew || false
-            };
-            return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border">
-                    <CardHeader className="pb-1 pt-1.5 px-2">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-1.5 flex-1">
-                          {enrichedModule.icon && <div className={`p-1 rounded bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
-                              <enrichedModule.icon className={`h-2 w-2 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
-                            </div>}
-                          <div className="flex-1 min-w-0">
-                            <CardTitle className="text-[8px] font-medium leading-tight line-clamp-2">
-                              {enrichedModule.title}
-                            </CardTitle>
-                            
+      {moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
+        <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
+          <CollapsibleTrigger className="w-full">
+            <CardHeader className="pb-1 hover:bg-muted/50 transition-colors cursor-pointer">
+              <CardTitle className="text-xs flex items-center gap-1 justify-between">
+                <div className="flex items-center gap-1">
+                  <Star className="h-2.5 w-2.5 text-primary fill-current" />
+                  Favorites
+                  <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                    {moduleFavorites.size}
+                  </Badge>
+                </div>
+                {favoritesCollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+              </CardTitle>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="pt-1">
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                {Array.from(moduleFavorites).map(moduleId => {
+              const module = allModules.find(m => m.id === moduleId);
+              if (!module) return null;
+              const moduleConfig = ModuleRegistry.getModule(moduleId);
+              const enrichedModule = {
+                ...module,
+                icon: moduleConfig?.icon || Calendar,
+                iconColor: moduleConfig?.iconColor || 'blue',
+                component: moduleConfig?.component,
+                isNew: moduleConfig?.isNew || false
+              };
+              return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border">
+                      <CardHeader className="pb-1 pt-1.5 px-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-1.5 flex-1">
+                            {enrichedModule.icon && <div className={`p-1 rounded bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
+                                <enrichedModule.icon className={`h-2 w-2 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
+                              </div>}
+                            <div className="flex-1 min-w-0">
+                              <CardTitle className="text-[8px] font-medium leading-tight line-clamp-2">
+                                {enrichedModule.title}
+                              </CardTitle>
+                              
+                            </div>
                           </div>
+                          
                         </div>
+                      </CardHeader>
+                      <CardContent className="pt-0 px-2 pb-1.5">
                         
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0 px-2 pb-1.5">
-                      
-                    </CardContent>
-                  </Card>;
-          })}
-            </div>
-          </CardContent>
-        </Card>}
+                      </CardContent>
+                    </Card>;
+            })}
+              </div>
+            </CardContent>
+          </CollapsibleContent>
+        </Card>
+      </Collapsible>}
 
       {/* Filter Controls - Collapsible */}
       <Collapsible open={!filterControlsCollapsed} onOpenChange={open => setFilterControlsCollapsed(!open)}>
