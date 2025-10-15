@@ -444,7 +444,7 @@ export const MetalHeaderDashboard = ({
                               <enrichedModule.icon className={`h-2 w-2 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
                             </div>}
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-[8px] font-medium leading-tight line-clamp-1">
+                            <CardTitle className="text-[8px] font-medium leading-tight line-clamp-2">
                               {enrichedModule.title}
                             </CardTitle>
                             
