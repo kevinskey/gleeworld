@@ -161,6 +161,12 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     // Don't handle navigation when in annotation mode
     if (annotationMode) return;
     
+    // Don't track touch if it's on a button or interactive element
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('[role="button"]')) {
+      return;
+    }
+    
     const touch = e.touches[0];
     setTouchStart({
       x: touch.clientX,
@@ -185,6 +191,14 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     if (!touchStart) return;
     // Don't handle navigation when in annotation mode
     if (annotationMode) return;
+
+    // Don't prevent default if touching a button or interactive element
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('[role="button"]')) {
+      setTouchStart(null);
+      setTouchEnd(null);
+      return;
+    }
 
     // Prevent synthetic click from firing after touch
     e.preventDefault();
