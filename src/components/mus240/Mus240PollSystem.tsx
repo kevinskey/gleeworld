@@ -14,6 +14,7 @@ import { StudentPollInterface } from './StudentPollInterface';
 import { LiveQuestionController } from './LiveQuestionController';
 import { LiveStudentInterface } from './LiveStudentInterface';
 import { TextPollCreator } from './TextPollCreator';
+import { PollEditor } from './PollEditor';
 
 interface Poll {
   id: string;
@@ -35,6 +36,8 @@ export const Mus240PollSystem = () => {
   const [numQuestions, setNumQuestions] = useState(3);
   const [generatingPoll, setGeneratingPoll] = useState(false);
   const [viewMode, setViewMode] = useState<'student' | 'admin'>('student');
+  const [editingPollId, setEditingPollId] = useState<string | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
 
   const hasAdminAccess = isAdmin() || isSuperAdmin();
 
@@ -427,12 +430,22 @@ export const Mus240PollSystem = () => {
                             <span>{Array.isArray(poll.questions) ? poll.questions.length : 0} questions</span>
                             <span>Created {new Date(poll.created_at).toLocaleDateString()}</span>
                           </div>
-                        </div>
+                         </div>
                          <div className="flex items-center gap-3">
+                           <Button
+                             onClick={() => {
+                               setEditingPollId(poll.id);
+                               setShowEditor(true);
+                             }}
+                             variant="outline"
+                             className="border-blue-500 text-blue-700 hover:bg-blue-50"
+                           >
+                             Edit
+                           </Button>
                            <Button
                              onClick={() => togglePoll(poll.id, poll.is_active)}
                              className={`transition-all duration-300 shadow-lg flex items-center gap-2 ${
-                               poll.is_active 
+                               poll.is_active
                                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700' 
                                  : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700'
                              }`}
@@ -498,6 +511,22 @@ export const Mus240PollSystem = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Poll Editor Modal */}
+      {showEditor && (
+        <PollEditor
+          pollId={editingPollId}
+          onClose={() => {
+            setShowEditor(false);
+            setEditingPollId(null);
+          }}
+          onSave={() => {
+            fetchPolls();
+            setShowEditor(false);
+            setEditingPollId(null);
+          }}
+        />
+      )}
     </div>
   );
 };
