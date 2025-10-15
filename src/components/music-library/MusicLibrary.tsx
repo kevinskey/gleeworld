@@ -19,6 +19,7 @@ import { MusicLibraryHeader } from '@/components/music-library/MusicLibraryHeade
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Breadcrumbs } from './Breadcrumbs';
 
 export const MusicLibrary = () => {
   const [leftColumnCollapsed, setLeftColumnCollapsed] = useState(false);
@@ -66,6 +67,9 @@ export const MusicLibrary = () => {
   const {
     toast
   } = useToast();
+  
+  // Breadcrumb state
+  const [currentSection, setCurrentSection] = useState<string | null>(null);
   const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
     console.log('MusicLibrary: PDF selected:', {
       pdfUrl,
@@ -193,6 +197,7 @@ export const MusicLibrary = () => {
                       <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
                       console.log('Study Scores button clicked, current state:', studyOpen);
                       setStudyOpen(o => !o);
+                      setCurrentSection(studyOpen ? null : 'study-scores');
                     }}>
                         {studyOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Study Scores
                       </button>
@@ -205,7 +210,10 @@ export const MusicLibrary = () => {
                   {/* My Collections */}
                   <div className="w-full overflow-hidden border rounded">
                     <div className="flex items-center justify-between card-compact">
-                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setCollectionsOpen(o => !o)}>
+                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
+                      setCollectionsOpen(o => !o);
+                      setCurrentSection(collectionsOpen ? null : 'my-collections');
+                    }}>
                         {collectionsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} My Collections
                       </button>
                     </div>
@@ -217,7 +225,10 @@ export const MusicLibrary = () => {
                   {/* Setlists */}
                   <div className="w-full overflow-hidden border rounded">
                     <div className="flex items-center justify-between card-compact">
-                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setSetlistOpen(o => !o)}>
+                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
+                      setSetlistOpen(o => !o);
+                      setCurrentSection(setlistOpen ? null : 'setlists');
+                    }}>
                         {setlistOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Setlists
                       </button>
                     </div>
@@ -229,7 +240,10 @@ export const MusicLibrary = () => {
                   {/* Music Library list */}
                   <div className="w-full overflow-hidden border rounded">
                     <div className="flex items-center justify-between card-compact">
-                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => setLibraryOpen(o => !o)}>
+                      <button className="flex items-center gap-1 md:gap-2 mobile-text-lg font-medium touch-target" onClick={() => {
+                      setLibraryOpen(o => !o);
+                      setCurrentSection(libraryOpen ? null : 'music-library');
+                    }}>
                         {libraryOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />} Music Library
                       </button>
                     </div>
@@ -267,6 +281,26 @@ export const MusicLibrary = () => {
 
           {/* Right column - PDF viewer */}
           <Panel defaultSize={leftColumnCollapsed ? 100 : selectedPdf ? 80 : 65} className="flex flex-col min-h-[120vh] lg:h-auto overflow-visible">
+            {/* Breadcrumbs */}
+            {currentSection && (
+              <div className="mb-2 px-1 lg:px-0">
+                <Breadcrumbs
+                  items={[
+                    {
+                      label: 'Music Library',
+                      onClick: () => setCurrentSection(null)
+                    },
+                    {
+                      label: currentSection === 'study-scores' ? 'Study Scores' :
+                             currentSection === 'my-collections' ? 'My Collections' :
+                             currentSection === 'setlists' ? 'Setlists' : 'Music Library',
+                      isActive: true
+                    }
+                  ]}
+                />
+              </div>
+            )}
+            
             <div className="flex items-center justify-between mb-1 md:mb-4 px-1 lg:px-0">
               <h2 className="page-header">PDF Viewer</h2>
               <div className="flex items-center gap-2">
