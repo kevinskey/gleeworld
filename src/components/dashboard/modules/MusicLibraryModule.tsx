@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { InAppPDFViewerDialog } from '@/components/music-library/InAppPDFViewerDialog';
 import { PDFThumbnail } from '@/components/music-library/PDFThumbnail';
 import { MusicXMLViewer } from '@/components/liturgical/MusicXMLViewer';
+import { SetlistBuilder } from '@/components/music-library/SetlistBuilder';
 
 export const MusicLibraryModule = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -550,10 +551,19 @@ export const MusicLibraryModule = () => {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="current" className="flex-1">
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <p>Current repertoire will appear here</p>
-          </div>
+        <TabsContent value="current" className="flex-1 mt-0">
+          <ScrollArea className="flex-1 p-2 md:p-6">
+            <SetlistBuilder 
+              onPdfSelect={(url, title, id) => {
+                if (id) {
+                  setSelectedPdf({ url, title, id });
+                }
+              }}
+              onOpenPlayer={(setlistId) => {
+                console.log('Opening setlist player:', setlistId);
+              }}
+            />
+          </ScrollArea>
         </TabsContent>
       </Tabs>
 
