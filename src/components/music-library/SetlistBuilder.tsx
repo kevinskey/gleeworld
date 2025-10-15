@@ -131,11 +131,35 @@ export const SetlistBuilder: React.FC<SetlistBuilderProps> = ({ onPdfSelect, onO
   const loadSetlists = async () => {
     console.log('SetlistBuilder: Loading setlists for user:', user?.id);
     try {
-      const { data, error } = await supabase
+      // Librarians and admins should see all setlists
+      let query = supabase
         .from('setlists')
         .select('*')
-        .eq('created_by', user?.id)
         .order('created_at', { ascending: false });
+      
+      // Regular users only see their own setlists
+      // RLS will handle permissions, but we filter here for optimization
+      const { data: profileData } = await supabase
+        .from('gw_profiles')
+        .select('role, is_admin, is_super_admin')
+        .eq('user_id', user?.id)
+        .single();
+      
+      const { data: rolesData } = await supabase
+        .from('app_roles')
+        .select('role')
+        .eq('user_id', user?.id)
+        .eq('is_active', true);
+      
+      const hasLibrarianRole = rolesData?.some(r => r.role === 'librarian');
+      const isAdmin = profileData?.is_admin || profileData?.is_super_admin;
+      
+      // Only filter by created_by if user is not an admin or librarian
+      if (!isAdmin && !hasLibrarianRole) {
+        query = query.eq('created_by', user?.id);
+      }
+      
+      const { data, error } = await query;
 
       console.log('SetlistBuilder: Setlists query result:', { data, error });
       if (error) {
