@@ -18,7 +18,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { SheetMusicEditDialog } from "./SheetMusicEditDialog";
-import { SheetMusicViewDialog } from "./SheetMusicViewDialog";
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog";
 import { PDFThumbnail } from "./PDFThumbnail";
 import { OSMDViewer } from "@/components/OSMDViewer";
@@ -69,10 +68,6 @@ export const SheetMusicLibrary = ({
   const [loading, setLoading] = useState(true);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [editDialog, setEditDialog] = useState<{ open: boolean; item: SheetMusic | null }>({
-    open: false,
-    item: null,
-  });
-  const [viewDialog, setViewDialog] = useState<{ open: boolean; item: SheetMusic | null }>({
     open: false,
     item: null,
   });
@@ -172,10 +167,6 @@ export const SheetMusicLibrary = ({
 
   const handleEdit = (item: SheetMusic) => {
     setEditDialog({ open: true, item });
-  };
-
-  const handleView = (item: SheetMusic) => {
-    setViewDialog({ open: true, item });
   };
 
   const handleDelete = (item: SheetMusic) => {
@@ -554,12 +545,6 @@ export const SheetMusicLibrary = ({
         onOpenChange={(open) => setEditDialog({ open, item: null })}
         item={editDialog.item}
         onSave={fetchSheetMusic}
-      />
-
-      <SheetMusicViewDialog
-        open={viewDialog.open}
-        onOpenChange={(open) => setViewDialog({ open, item: null })}
-        item={viewDialog.item}
       />
 
       <DeleteConfirmDialog
