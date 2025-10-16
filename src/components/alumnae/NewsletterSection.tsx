@@ -109,12 +109,24 @@ export const NewsletterSection = () => {
           setSecurePdfUrl(secureUrl);
         }
 
-        // Fetch hero slides
-        const {
-          data: slidesData
-        } = await supabase.from('alumnae_newsletter_hero_slides').select('*').eq('newsletter_id', newsletterData.id).order('display_order');
+        // Fetch hero slides - try newsletter-specific first, then fall back to generic
+        let { data: slidesData } = await supabase
+          .from('alumnae_newsletter_hero_slides')
+          .select('*')
+          .eq('newsletter_id', newsletterData.id)
+          .order('display_order');
         
-        if (slidesData) {
+        // If no newsletter-specific slides, get generic ones (null newsletter_id)
+        if (!slidesData || slidesData.length === 0) {
+          const { data: genericSlides } = await supabase
+            .from('alumnae_newsletter_hero_slides')
+            .select('*')
+            .is('newsletter_id', null)
+            .order('display_order');
+          slidesData = genericSlides;
+        }
+        
+        if (slidesData && slidesData.length > 0) {
           setHeroSlides(slidesData);
           
           // Convert hero image URLs to secure blob URLs
@@ -130,10 +142,24 @@ export const NewsletterSection = () => {
           setSecureHeroUrls(urlMap);
         }
 
-        // Fetch spotlights
-        const {
-          data: spotlightsData
-        } = await supabase.from('alumnae_newsletter_spotlights').select('*').eq('newsletter_id', newsletterData.id).order('display_order');
+        // Fetch spotlights - try newsletter-specific first, then fall back to generic
+        let { data: spotlightsData } = await supabase
+          .from('alumnae_newsletter_spotlights')
+          .select('*')
+          .eq('newsletter_id', newsletterData.id)
+          .order('display_order');
+        
+        // If no newsletter-specific spotlights, get generic ones (null newsletter_id)
+        if (!spotlightsData || spotlightsData.length === 0) {
+          const { data: genericSpotlights } = await supabase
+            .from('alumnae_newsletter_spotlights')
+            .select('*')
+            .is('newsletter_id', null)
+            .order('display_order')
+            .limit(6);
+          spotlightsData = genericSpotlights;
+        }
+        
         const alumnaeSpotlight = spotlightsData?.find(s => s.spotlight_type === 'alumnae') as Spotlight | undefined;
         const studentSpotlight = spotlightsData?.find(s => s.spotlight_type === 'student') as Spotlight | undefined;
         setSpotlights({
@@ -141,10 +167,23 @@ export const NewsletterSection = () => {
           student: studentSpotlight
         });
 
-        // Fetch announcements
-        const {
-          data: announcementsData
-        } = await supabase.from('alumnae_newsletter_announcements').select('*').eq('newsletter_id', newsletterData.id).order('display_order');
+        // Fetch announcements - try newsletter-specific first, then fall back to generic
+        let { data: announcementsData } = await supabase
+          .from('alumnae_newsletter_announcements')
+          .select('*')
+          .eq('newsletter_id', newsletterData.id)
+          .order('display_order');
+        
+        // If no newsletter-specific announcements, get generic ones (null newsletter_id)
+        if (!announcementsData || announcementsData.length === 0) {
+          const { data: genericAnnouncements } = await supabase
+            .from('alumnae_newsletter_announcements')
+            .select('*')
+            .is('newsletter_id', null)
+            .order('display_order');
+          announcementsData = genericAnnouncements;
+        }
+        
         setAnnouncements(announcementsData || []);
       }
 
