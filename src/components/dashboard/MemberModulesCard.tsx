@@ -4,6 +4,7 @@ import { Users, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ModuleRegistry } from "@/utils/moduleRegistry";
+import { STANDARD_MEMBER_MODULE_IDS } from "@/config/executive-modules";
 
 interface Module {
   id: string;
@@ -39,7 +40,7 @@ export const MemberModulesCard = () => {
         return;
       }
 
-      const memberIds = members.map(m => m.user_id);
+      const memberIds = members.map(m => m.user_id).filter(id => id !== null);
 
       // Get modules assigned to ALL members
       const { data: permissions, error: permissionsError } = await supabase
@@ -57,9 +58,12 @@ export const MemberModulesCard = () => {
         moduleCounts.set(permission.module_id, count + 1);
       });
 
-      // Filter modules that are assigned to ALL members
+      // Filter modules that are assigned to ALL members and are standard member modules
       const universalModuleIds = Array.from(moduleCounts.entries())
-        .filter(([_, count]) => count === memberIds.length)
+        .filter(([moduleId, count]) => 
+          count === memberIds.length && 
+          STANDARD_MEMBER_MODULE_IDS.includes(moduleId)
+        )
         .map(([moduleId]) => moduleId);
 
       // Get module details
@@ -70,7 +74,7 @@ export const MemberModulesCard = () => {
 
           return {
             id: moduleConfig.id,
-            name: moduleConfig.title, // Use title as name
+            name: moduleConfig.title,
             title: moduleConfig.title,
             description: moduleConfig.description,
             icon: moduleConfig.icon || Settings,

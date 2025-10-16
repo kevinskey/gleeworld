@@ -4,6 +4,7 @@ import { Shield, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ModuleRegistry } from "@/utils/moduleRegistry";
+import { EXECUTIVE_MODULE_IDS } from "@/config/executive-modules";
 
 interface Module {
   id: string;
@@ -30,6 +31,11 @@ export const ExecBoardModulesCard = ({ userId }: ExecBoardModulesCardProps) => {
   const fetchExecBoardModules = async () => {
     try {
       setLoading(true);
+      
+      if (!userId) {
+        setExecModules([]);
+        return;
+      }
       
       // Check if user is exec board member
       const { data: profile, error: profileError } = await supabase
@@ -62,15 +68,16 @@ export const ExecBoardModulesCard = ({ userId }: ExecBoardModulesCardProps) => {
         return;
       }
 
-      // Get module details
+      // Filter to only executive board modules and get module details
       const modules = permissions
+        .filter(permission => EXECUTIVE_MODULE_IDS.includes(permission.module_id))
         .map(permission => {
           const moduleConfig = ModuleRegistry.getModule(permission.module_id);
           if (!moduleConfig) return null;
 
           return {
             id: moduleConfig.id,
-            name: moduleConfig.title, // Use title as name
+            name: moduleConfig.title,
             title: moduleConfig.title,
             description: moduleConfig.description,
             icon: moduleConfig.icon || Settings,
