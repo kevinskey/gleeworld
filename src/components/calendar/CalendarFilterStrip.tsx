@@ -193,7 +193,7 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
   }
 
   return (
-    <Card className="border border-border/50 bg-muted/30">
+    <Card className="border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-background to-secondary/5 shadow-md">
       <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
         <CardContent className="p-3">
           <div className="flex items-center justify-between">

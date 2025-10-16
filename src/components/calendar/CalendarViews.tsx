@@ -57,12 +57,12 @@ export const CalendarViews = () => {
   }
   return <TooltipProvider>
       <div className="space-y-4">
-        <Card className="glass-dashboard-card">
+        <Card className="glass-dashboard-card bg-gradient-to-br from-primary/5 via-background to-secondary/5 border-2 border-primary/20 shadow-lg">
           <CardHeader className="p-0">
             {/* Member Controls */}
-            <div className="bg-muted/30 rounded-lg border border-border/50">
-              <div className="flex items-center justify-between gap-2 p-2">
-                <h3 className="text-xs sm:text-sm font-medium text-muted-foreground">Member Controls</h3>
+            <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-t-lg border-b-2 border-primary/30">
+              <div className="flex items-center justify-between gap-2 p-3">
+                <h3 className="text-sm font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Member Controls</h3>
               </div>
               <div className="grid grid-cols-3 gap-2 p-3 w-full">
                 <div className="flex justify-center">
@@ -96,8 +96,8 @@ export const CalendarViews = () => {
         <CardContent className="px-0 pt-2 pb-0 md:px-1.5">
           <div className="relative">
             {/* Apple-style Header with View Selector */}
-            <div className="flex items-center justify-between px-4 py-3 mb-4 bg-gradient-to-r from-background/80 to-background/60 backdrop-blur-sm border-b border-border/30">
-              <h2 className="text-xl font-semibold tracking-tight">Calendar</h2>
+            <div className="flex items-center justify-between px-4 py-4 mb-4 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent backdrop-blur-sm border-b-2 border-primary/30 rounded-lg shadow-sm">
+              <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Calendar</h2>
               <CalendarViewSelector 
                 activeView={activeView} 
                 onViewChange={setActiveView}
