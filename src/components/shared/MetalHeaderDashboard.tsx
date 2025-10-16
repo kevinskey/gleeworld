@@ -491,6 +491,15 @@ export const MetalHeaderDashboard = ({
       </div>
 
 
+      {/* Favorites Card for Members */}
+      {isMember && groupedModules && !searchQuery && filterCategory === 'all' && (
+        <FavoritesCard
+          favorites={groupedModules.favorites}
+          onModuleClick={handleModuleSelect}
+          onToggleFavorite={toggleFavorite}
+        />
+      )}
+
       {/* Search Field */}
       <Card className="p-4 bg-background/95 backdrop-blur-sm border-2">
         <div className="relative">
@@ -502,12 +511,6 @@ export const MetalHeaderDashboard = ({
       {/* Member Quick Access Groups */}
       {isMember && groupedModules && !searchQuery && filterCategory === 'all' ? (
         <div className="space-y-4">
-          {/* Favorites Card */}
-          <FavoritesCard
-            favorites={groupedModules.favorites}
-            onModuleClick={handleModuleSelect}
-            onToggleFavorite={toggleFavorite}
-          />
 
           {/* Communications Group */}
           {groupedModules.communications.length > 0 && (
