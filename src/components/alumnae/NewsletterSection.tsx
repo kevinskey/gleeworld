@@ -61,6 +61,8 @@ export const NewsletterSection = () => {
   const [loading, setLoading] = useState(true);
   const [securePdfUrl, setSecurePdfUrl] = useState<string | null>(null);
   const [secureHeroUrls, setSecureHeroUrls] = useState<Map<string, string>>(new Map());
+  const [numPages, setNumPages] = useState<number | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
   useEffect(() => {
     fetchNewsletterData();
   }, []);
@@ -286,30 +288,73 @@ export const NewsletterSection = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* PDF Cover Preview */}
+            {/* Enhanced PDF Preview */}
             {securePdfUrl && (
-              <div className="border rounded-lg overflow-hidden bg-gray-50">
-                <Document
-                  file={securePdfUrl}
-                  loading={
-                    <div className="flex items-center justify-center p-12">
-                      <LoadingSpinner />
+              <div className="space-y-4">
+                <div className="relative border-2 border-primary/20 rounded-xl overflow-hidden bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 shadow-lg">
+                  <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/10 to-transparent h-20 pointer-events-none z-10" />
+                  <Document
+                    file={securePdfUrl}
+                    onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                    loading={
+                      <div className="flex flex-col items-center justify-center p-16 min-h-[400px]">
+                        <LoadingSpinner size="lg" />
+                        <p className="text-sm text-muted-foreground mt-4">Loading newsletter preview...</p>
+                      </div>
+                    }
+                    error={
+                      <div className="p-12 text-center min-h-[400px] flex flex-col items-center justify-center">
+                        <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
+                        <p className="text-base font-medium text-muted-foreground mb-2">Unable to preview PDF</p>
+                        <p className="text-sm text-muted-foreground">You can still download the full newsletter below</p>
+                      </div>
+                    }
+                  >
+                    <div className="flex items-center justify-center bg-white dark:bg-gray-900 p-4">
+                      <Page 
+                        pageNumber={pageNumber} 
+                        width={Math.min(600, window.innerWidth - 100)}
+                        renderTextLayer={false}
+                        renderAnnotationLayer={false}
+                        className="shadow-xl"
+                      />
                     </div>
-                  }
-                  error={
-                    <div className="p-8 text-center">
-                      <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">Unable to preview PDF</p>
+                  </Document>
+                  {numPages && numPages > 1 && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+                      <div className="flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-full shadow-lg">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setPageNumber(prev => Math.max(1, prev - 1))}
+                          disabled={pageNumber <= 1}
+                          className="h-8 w-8 p-0 hover:bg-white/20"
+                        >
+                          <span className="sr-only">Previous page</span>
+                          ←
+                        </Button>
+                        <span className="text-sm font-medium min-w-[80px] text-center">
+                          Page {pageNumber} of {numPages}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setPageNumber(prev => Math.min(numPages, prev + 1))}
+                          disabled={pageNumber >= numPages}
+                          className="h-8 w-8 p-0 hover:bg-white/20"
+                        >
+                          <span className="sr-only">Next page</span>
+                          →
+                        </Button>
+                      </div>
                     </div>
-                  }
-                >
-                  <Page 
-                    pageNumber={1} 
-                    width={600}
-                    renderTextLayer={false}
-                    renderAnnotationLayer={false}
-                  />
-                </Document>
+                  )}
+                </div>
+                {numPages && numPages > 1 && (
+                  <p className="text-xs text-center text-muted-foreground">
+                    Use the navigation controls to browse through {numPages} pages
+                  </p>
+                )}
               </div>
             )}
 
@@ -322,20 +367,33 @@ export const NewsletterSection = () => {
               )}
             </div>
 
-            {securePdfUrl && <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => {
-                  // Download the PDF using the secure blob URL
-                  const link = document.createElement('a');
-                  link.href = securePdfUrl;
-                  link.download = `${newsletter.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
-                  link.click();
-                }}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Download Full Newsletter PDF
-              </Button>}
+            {securePdfUrl && (
+              <div className="flex gap-3">
+                <Button 
+                  variant="default" 
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  onClick={() => {
+                    // Download the PDF using the secure blob URL
+                    const link = document.createElement('a');
+                    link.href = securePdfUrl;
+                    link.download = `${newsletter.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+                    link.click();
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Full Newsletter
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    window.open(securePdfUrl, '_blank', 'noopener,noreferrer');
+                  }}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Open in New Tab
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
         </div>
