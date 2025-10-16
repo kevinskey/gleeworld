@@ -3,8 +3,8 @@ import { MessagesPanel } from './MessagesPanel';
 import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye, Music } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye, Music, ArrowLeft } from 'lucide-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useUserRole } from '@/hooks/useUserRole';
 import { SuperAdminDashboard } from '@/components/member-view/dashboards/SuperAdminDashboard';
 import { PublicDashboardMonitor } from '@/components/admin/PublicDashboardMonitor';
@@ -45,6 +45,7 @@ export const UnifiedDashboard = () => {
   const [fanViewMode, setFanViewMode] = useState<'monitor' | 'experience'>('monitor');
   const [publicViewMode, setPublicViewMode] = useState<'monitor' | 'experience'>('monitor');
   const location = useLocation();
+  const navigate = useNavigate();
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const moduleId = params.get('module');
@@ -104,6 +105,16 @@ export const UnifiedDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="px-6 py-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/dashboard/member')}
+            className="mb-4 hover:bg-primary/10"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
+          </Button>
           <ModuleDisplay selectedModule={activeModuleId} />
         </div>
         {profile && (
