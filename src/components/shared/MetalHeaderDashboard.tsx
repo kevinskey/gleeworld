@@ -275,23 +275,8 @@ export const MetalHeaderDashboard = ({
     }
   }, [categories, getAccessibleModules]);
 
-  // Default modules that all members should have access to
-  // Prefer global STANDARD_MEMBER_MODULE_IDS, but exclude admin-only and community modules
-  const EXCLUDED_MEMBER_DEFAULTS = [
-    'attendance-management',
-    'time-tracking',
-    'community-hub',
-    'calendar-management',
-    // legacy aliases
-    'attendance',
-    'check-in-check-out',
-    'calendar'
-  ];
-  const DEFAULT_MEMBER_MODULES = Array.from(new Set([
-    ...STANDARD_MEMBER_MODULE_IDS.filter((id) => !EXCLUDED_MEMBER_DEFAULTS.includes(id)),
-    'music-library',
-    'member-sight-reading-studio'
-  ]));
+  // Default modules - now empty, members only see explicitly assigned modules
+  const DEFAULT_MEMBER_MODULES: string[] = [];
 
   // Group modules for members: Favorites, Communications, Other Assigned, and Default Modules
   const groupedModules = useMemo(() => {
