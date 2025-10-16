@@ -85,8 +85,9 @@ export const AttendanceDashboard = () => {
       
       setCanTakeAttendance(isSuperAdmin || isExecBoard || isSecretary || hasSecretaryRole);
       
-      // Collapse personal attendance section by default for executive board members
-      if (isExecBoard || isSecretary || hasSecretaryRole) {
+      // Collapse personal attendance section by default for admins only
+      const isAdminLike = isSuperAdmin || fetchedGwProfile?.is_admin || fetchedGwProfile?.role === 'admin' || fetchedGwProfile?.role === 'super-admin';
+      if (isAdminLike) {
         setUserSectionCollapsed(true);
       }
     } catch (error) {
