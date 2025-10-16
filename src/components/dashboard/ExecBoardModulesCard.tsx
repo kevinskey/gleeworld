@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ModuleRegistry } from "@/utils/moduleRegistry";
 import { EXECUTIVE_MODULE_IDS } from "@/config/executive-modules";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Module {
   id: string;
@@ -23,6 +24,8 @@ export const ExecBoardModulesCard = ({ userId }: ExecBoardModulesCardProps) => {
   const [execModules, setExecModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
   const [isExecBoard, setIsExecBoard] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchExecBoardModules();
@@ -125,7 +128,13 @@ export const ExecBoardModulesCard = ({ userId }: ExecBoardModulesCardProps) => {
               return (
                 <div
                   key={module.id}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  role="button"
+                  onClick={() => {
+                    const params = new URLSearchParams(location.search);
+                    params.set('module', module.id);
+                    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+                  }}
+                  className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                 >
                   {IconComponent && (
                     <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>

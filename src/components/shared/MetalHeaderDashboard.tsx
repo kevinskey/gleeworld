@@ -477,29 +477,47 @@ export const MetalHeaderDashboard = ({
     });
   };
 
-  // If a module is selected, render it
+  // If a module is selected, render it with back button
   if (selectedModule) {
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
     if (moduleConfig?.component) {
       const ModuleComponent = moduleConfig.component;
-      return <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-            <Button variant="ghost" size="sm" onClick={handleBackToModules} className="p-0 h-auto">
-              {getFirstName(user.full_name)}'s Dashboard
-            </Button>
-            <span>/</span>
-            <span className="text-foreground font-medium">{moduleConfig.title}</span>
-          </div>
+      return <div className="space-y-4 relative min-h-screen">
+          {/* Background Image */}
+          <div
+            className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none"
+            style={{
+              backgroundImage: `url(${gleeSculptureBg})`,
+              backgroundPosition: 'center 15%'
+            }}
+          />
           
-          <ModuleComponent user={{
-          ...user,
-          is_admin: isAdmin,
-          is_super_admin: user.role === 'super-admin'
-        }} isFullPage={true} onNavigate={handleModuleSelect} />
+          <div className="relative z-10">
+            {/* Back navigation */}
+            <div className="flex items-center gap-2 mb-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleBackToModules}
+                className="flex items-center gap-2"
+              >
+                ← Back to Dashboard
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {getFirstName(user.full_name)}'s Dashboard / {moduleConfig.title}
+              </span>
+            </div>
+            
+            <ModuleComponent user={{
+              ...user,
+              is_admin: isAdmin,
+              is_super_admin: user.role === 'super-admin'
+            }} isFullPage={true} onNavigate={handleModuleSelect} />
+          </div>
         </div>;
     }
   }
-  // Member simplified view: only two cards, no category grouping
+  // Member simplified view: favorites card on top, search/filters, then module cards
   if (isMember) {
     return (
       <div className="space-y-4 relative min-h-screen">
@@ -551,8 +569,103 @@ export const MetalHeaderDashboard = ({
           />
         </div>
 
+        {/* Favorites Card */}
+        {groupedModules && groupedModules.favorites.length > 0 && (
+          <div className="relative z-10">
+            <FavoritesCard
+              favorites={groupedModules.favorites}
+              onModuleClick={handleModuleSelect}
+              onToggleFavorite={toggleFavorite}
+            />
+          </div>
+        )}
+
+        {/* Search and Filter Tools */}
+        <div className="relative z-10 space-y-3">
+          {/* Search Field */}
+          <Card className="p-4 bg-background/95 backdrop-blur-sm border-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search modules..." 
+                value={searchQuery} 
+                onChange={e => setSearchQuery(e.target.value)} 
+                className="pl-10" 
+              />
+            </div>
+          </Card>
+
+          {/* Filter Controls */}
+          <Card className="bg-background/95 backdrop-blur-sm border-2">
+            <Collapsible open={!filterControlsCollapsed} onOpenChange={() => setFilterControlsCollapsed(!filterControlsCollapsed)}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex items-center justify-between p-4">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4" />
+                    <span className="font-medium">Filters & Sorting</span>
+                  </div>
+                  {filterControlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 pb-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Category</label>
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map(cat => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Sort By</label>
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="category">Category</SelectItem>
+                        <SelectItem value="status">Status</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Order</label>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start" 
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    >
+                      {sortOrder === 'asc' ? (
+                        <>
+                          <SortAsc className="h-4 w-4 mr-2" />
+                          Ascending
+                        </>
+                      ) : (
+                        <>
+                          <SortDesc className="h-4 w-4 mr-2" />
+                          Descending
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </Card>
+        </div>
+
         {/* Module Overview Cards */}
-        <div className="relative z-10 grid grid-cols-1 gap-4 mt-6">
+        <div className="relative z-10 grid grid-cols-1 gap-4">
           <MemberModulesCard userId={user.id} />
           <ExecBoardModulesCard userId={user.id} />
         </div>
