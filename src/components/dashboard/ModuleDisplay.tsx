@@ -4,7 +4,7 @@ import { MusicLibraryModule } from './modules/MusicLibraryModule';
 import { CalendarModule } from './modules/CalendarModule';
 import { WardrobeModule } from './modules/WardrobeModule';
 import { FinancesModule } from './modules/FinancesModule';
-import { AttendanceModule } from './modules/AttendanceModule';
+import { AttendanceModule } from '../modules/AttendanceModule';
 import { RadioModule } from './modules/RadioModule';
 import { HandbookModule } from './modules/HandbookModule';
 import { DirectoryModule } from './modules/DirectoryModule';
