@@ -261,11 +261,19 @@ export const NewsletterSection = () => {
               }} />
             </div>
 
-            {newsletter.pdf_url && <Button variant="outline" className="w-full" asChild>
-                <a href={newsletter.pdf_url} download>
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Full Newsletter PDF
-                </a>
+            {newsletter.pdf_url && <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => {
+                  // Ensure URL is HTTPS to avoid mixed content warnings
+                  const secureUrl = newsletter.pdf_url.startsWith('http://') 
+                    ? newsletter.pdf_url.replace('http://', 'https://') 
+                    : newsletter.pdf_url;
+                  window.open(secureUrl, '_blank', 'noopener,noreferrer');
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download Full Newsletter PDF
               </Button>}
           </CardContent>
         </Card>
