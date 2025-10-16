@@ -12,8 +12,11 @@ import { Link } from "react-router-dom";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { convertToSecureUrl } from "@/utils/secureFileAccess";
 
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Use local PDF.js worker to avoid CDN blocking
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 interface Newsletter {
   id: string;
   title: string;

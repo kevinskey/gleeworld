@@ -46,9 +46,12 @@ export const parseStorageUrl = (url: string): { bucket: string; path: string } |
       return null;
     }
 
+    // URL decode the path to handle encoded characters
+    const decodedPath = decodeURIComponent(match[2]);
+
     return {
       bucket: match[1],
-      path: match[2]
+      path: decodedPath
     };
   } catch (error) {
     console.error('Error parsing storage URL:', error);
