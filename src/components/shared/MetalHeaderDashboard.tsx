@@ -501,8 +501,7 @@ export const MetalHeaderDashboard = ({
       {/* Background Image */}
       <div className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" style={{
       backgroundImage: `url(${gleeSculptureBg})`,
-      backgroundPosition: 'center 15%',
-      filter: 'sepia(0.15) saturate(1.2)'
+      backgroundPosition: 'center 15%'
     }} />
       {/* Metal Plate Header */}
       <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg p-5">
