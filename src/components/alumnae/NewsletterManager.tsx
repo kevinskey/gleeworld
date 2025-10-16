@@ -35,6 +35,29 @@ export const NewsletterManager = () => {
     setTitle(autoTitle);
   }, [year, volume]);
 
+  // Load existing newsletter on mount
+  useEffect(() => {
+    const loadExistingNewsletter = async () => {
+      const { data, error } = await supabase
+        .from('alumnae_newsletters')
+        .select('*')
+        .eq('month', month)
+        .eq('year', year)
+        .maybeSingle();
+
+      if (data && !error) {
+        setCurrentNewsletterId(data.id);
+        setContent(data.content || '');
+        setPdfUrl(data.pdf_url || '');
+        setCoverImageUrl(data.cover_image_url || '');
+        setIsPublished(data.is_published || false);
+        setVolume(data.volume || 1);
+      }
+    };
+
+    loadExistingNewsletter();
+  }, [month, year]);
+
   // Auto-save functionality - saves every 30 seconds if there are changes
   const autoSave = useCallback(async () => {
     if (!hasUnsavedChanges || !title || (!pdfFile && !pdfUrl)) {
