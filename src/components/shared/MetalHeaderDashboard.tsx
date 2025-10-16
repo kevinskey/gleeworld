@@ -623,6 +623,60 @@ export const MetalHeaderDashboard = ({
             </Card>
           )}
 
+          {/* Filter Controls - Collapsible */}
+          <Collapsible open={!filterControlsCollapsed} onOpenChange={open => setFilterControlsCollapsed(!open)}>
+            <Card className="bg-background/95 backdrop-blur-sm border-2">
+              <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  <span className="font-medium">Filter & Sort Options</span>
+                </div>
+                {filterControlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-4 pb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Select value={filterCategory} onValueChange={setFilterCategory}>
+                      <SelectTrigger>
+                        <Filter className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Filter by category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        {categories.map(category => <SelectItem key={category} value={category}>
+                            {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+
+                    <Select value={sortBy} onValueChange={(value: 'name' | 'category' | 'status') => setSortBy(value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Name</SelectItem>
+                        <SelectItem value="category">Category</SelectItem>
+                        <SelectItem value="status">Status</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
+                      {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
+                      {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                    </Button>
+                  </div>
+
+                  {/* Filtered Results Count */}
+                  {(searchQuery || filterCategory !== 'all') && <div className="mt-4 text-sm text-muted-foreground">
+                      Found {filteredAndSortedModules.length} modules
+                      {searchQuery && ` matching "${searchQuery}"`}
+                      {filterCategory !== 'all' && ` in ${String(filterCategory).split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
+                    </div>}
+                </div>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>
+
           {/* My Modules Card */}
           <MyModulesCard
             modules={groupedModules.allModules}
@@ -692,59 +746,6 @@ export const MetalHeaderDashboard = ({
         </>
       )}
 
-      {/* Filter Controls - Collapsible */}
-      <Collapsible open={!filterControlsCollapsed} onOpenChange={open => setFilterControlsCollapsed(!open)}>
-        <Card className="bg-background/95 backdrop-blur-sm border-2">
-          <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              <span className="font-medium">Filter & Sort Options</span>
-            </div>
-            {filterControlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="px-4 pb-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger>
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Filter by category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map(category => <SelectItem key={category} value={category}>
-                        {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-
-                <Select value={sortBy} onValueChange={(value: 'name' | 'category' | 'status') => setSortBy(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">Name</SelectItem>
-                    <SelectItem value="category">Category</SelectItem>
-                    <SelectItem value="status">Status</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
-                  {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-                  {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-                </Button>
-              </div>
-
-              {/* Filtered Results Count */}
-              {(searchQuery || filterCategory !== 'all') && <div className="mt-4 text-sm text-muted-foreground">
-                  Found {filteredAndSortedModules.length} modules
-                  {searchQuery && ` matching "${searchQuery}"`}
-                  {filterCategory !== 'all' && ` in ${filterCategory.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
-                </div>}
-            </div>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>
 
       {/* Modules Display */}
       <div className="space-y-6">
