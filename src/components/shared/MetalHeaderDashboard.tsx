@@ -274,13 +274,14 @@ export const MetalHeaderDashboard = ({
   }, [categories, getAccessibleModules]);
 
   // Default modules that all members should have access to
+  // Using correct module keys from the database
   const DEFAULT_MEMBER_MODULES = [
-    'notifications',
-    'music-library', 
-    'calendar',
-    'attendance-management',
-    'time-clock',
-    'member-sight-reading-studio'
+    'internal-communications', // Notifications
+    'music-library',
+    'calendar-management', // Calendar
+    'attendance-management', // Attendance
+    'time-tracking', // Check In/Out
+    'member-sight-reading-studio' // Sight Reading
   ];
 
   // Group modules for members: Favorites, Communications, Other Assigned, and Default Modules
@@ -335,6 +336,7 @@ export const MetalHeaderDashboard = ({
     });
 
     // Default modules - always shown to members
+    // Check using id field (modules use 'id' in the unified system)
     const defaultModules = accessibleModules.filter(m => 
       DEFAULT_MEMBER_MODULES.includes(m.id)
     ).map(module => {
@@ -346,6 +348,14 @@ export const MetalHeaderDashboard = ({
         component: moduleConfig?.component,
         isNew: moduleConfig?.isNew || false
       };
+    });
+
+    console.log('🔍 Default modules filtering:', {
+      defaultModuleIds: DEFAULT_MEMBER_MODULES,
+      accessibleModuleCount: accessibleModules.length,
+      accessibleModuleIds: accessibleModules.map(m => ({ id: m.id, name: m.name })),
+      defaultModulesFound: defaultModules.length,
+      defaultModulesData: defaultModules.map(m => ({ id: m.id, title: m.title }))
     });
 
     // Create a Set of unique module IDs to avoid duplicates
