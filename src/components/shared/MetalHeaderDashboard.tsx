@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { useModuleFavorites } from "@/hooks/useModuleFavorites";
+import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -16,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
-import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star } from "lucide-react";
+import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare } from "lucide-react";
 
 // Sortable Module Card Component
 interface SortableModuleCardProps {
@@ -162,6 +163,15 @@ export const MetalHeaderDashboard = ({
     toggleFavorite,
     isFavorite
   } = useModuleFavorites(user.id);
+  const {
+    quickActions: memberQuickActions,
+    loading: quickActionsLoading,
+    isMember,
+    addQuickAction,
+    removeQuickAction,
+    isInQuickActions,
+    getVisibleQuickActions
+  } = useMemberQuickActions(user.id, user.role);
 
   // Navigation hooks
   const location = useLocation();
@@ -261,7 +271,65 @@ export const MetalHeaderDashboard = ({
     }
   }, [categories, getAccessibleModules]);
 
-  // Sort and filter modules
+  // Group modules for members: Favorites, Communications, Other Assigned
+  const groupedModules = useMemo(() => {
+    if (!isMember) return null;
+    
+    const accessibleModules = getAccessibleModules();
+    const visibleQuickActionModuleIds = getVisibleQuickActions().map(qa => qa.module_id);
+    
+    // Favorites group
+    const favoritesGroup = accessibleModules.filter(m => 
+      isFavorite(m.id) && visibleQuickActionModuleIds.includes(m.id)
+    ).map(module => {
+      const moduleConfig = ModuleRegistry.getModule(module.id);
+      return {
+        ...module,
+        icon: moduleConfig?.icon || Calendar,
+        iconColor: moduleConfig?.iconColor || 'blue',
+        component: moduleConfig?.component,
+        isNew: moduleConfig?.isNew || false
+      };
+    });
+
+    // Communications group (modules in 'communications' category)
+    const communicationsGroup = accessibleModules.filter(m => 
+      m.category === 'communications' && visibleQuickActionModuleIds.includes(m.id)
+    ).map(module => {
+      const moduleConfig = ModuleRegistry.getModule(module.id);
+      return {
+        ...module,
+        icon: moduleConfig?.icon || Calendar,
+        iconColor: moduleConfig?.iconColor || 'blue',
+        component: moduleConfig?.component,
+        isNew: moduleConfig?.isNew || false
+      };
+    });
+
+    // Other assigned modules (not in favorites or communications)
+    const otherGroup = accessibleModules.filter(m => 
+      visibleQuickActionModuleIds.includes(m.id) &&
+      !isFavorite(m.id) &&
+      m.category !== 'communications'
+    ).map(module => {
+      const moduleConfig = ModuleRegistry.getModule(module.id);
+      return {
+        ...module,
+        icon: moduleConfig?.icon || Calendar,
+        iconColor: moduleConfig?.iconColor || 'blue',
+        component: moduleConfig?.component,
+        isNew: moduleConfig?.isNew || false
+      };
+    });
+
+    return {
+      favorites: favoritesGroup,
+      communications: communicationsGroup,
+      other: otherGroup
+    };
+  }, [isMember, getAccessibleModules, getVisibleQuickActions, isFavorite]);
+
+  // Sort and filter modules (for non-members or search/filter)
   const filteredAndSortedModules = useMemo(() => {
     const allModules = Object.entries(modulesByCategory).flatMap(([category, modules]) => modules.map(module => ({
       ...module,
@@ -408,7 +476,17 @@ export const MetalHeaderDashboard = ({
         </h1>
 
         {/* Quick Actions Panel - slides out from underneath */}
-        <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} />
+        <QuickActionsPanel 
+          user={user} 
+          onModuleSelect={handleModuleSelect} 
+          isOpen={isQuickActionsOpen} 
+          onClose={() => setIsQuickActionsOpen(false)}
+          quickActions={isMember ? {
+            addQuickAction,
+            removeQuickAction,
+            isInQuickActions
+          } : undefined}
+        />
       </div>
 
 
@@ -420,64 +498,164 @@ export const MetalHeaderDashboard = ({
         </div>
       </Card>
 
-      {/* Favorites Section */}
-      {moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
-        <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
-          <CollapsibleTrigger className="w-full">
-            <CardHeader className="pb-1 hover:bg-muted/50 transition-colors cursor-pointer">
-              <CardTitle className="text-xs flex items-center gap-1 justify-between">
-                <div className="flex items-center gap-1">
-                  <Star className="h-2.5 w-2.5 text-primary fill-current" />
+      {/* Member Quick Access Groups */}
+      {isMember && groupedModules && !searchQuery && filterCategory === 'all' ? (
+        <div className="space-y-4">
+          {/* Favorites Group */}
+          {groupedModules.favorites.length > 0 && (
+            <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Star className="h-4 w-4 text-primary fill-current" />
                   Favorites
-                  <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
-                    {moduleFavorites.size}
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {groupedModules.favorites.length}
                   </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {groupedModules.favorites.map(module => (
+                    <SortableModuleCard
+                      key={module.id}
+                      module={module}
+                      onModuleClick={handleModuleSelect}
+                      navigate={navigate}
+                      isPinned={false}
+                      onTogglePin={() => {}}
+                      isFavorite={true}
+                      onToggleFavorite={() => toggleFavorite(module.id)}
+                    />
+                  ))}
                 </div>
-                {favoritesCollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
-              </CardTitle>
-            </CardHeader>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <CardContent className="pt-1">
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                {Array.from(moduleFavorites).map(moduleId => {
-              const module = allModules.find(m => m.id === moduleId);
-              if (!module) return null;
-              const moduleConfig = ModuleRegistry.getModule(moduleId);
-              const enrichedModule = {
-                ...module,
-                icon: moduleConfig?.icon || Calendar,
-                iconColor: moduleConfig?.iconColor || 'blue',
-                component: moduleConfig?.component,
-                isNew: moduleConfig?.isNew || false
-              };
-              return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border" onClick={() => handleModuleSelect(moduleId)}>
-                      <CardHeader className="pb-1 pt-1.5 px-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-1.5 flex-1">
-                            {enrichedModule.icon && <div className={`p-1 rounded bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
-                                <enrichedModule.icon className={`h-2 w-2 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
-                              </div>}
-                            <div className="flex-1 min-w-0">
-                              <CardTitle className="text-[8px] font-medium leading-tight line-clamp-2">
-                                {enrichedModule.title}
-                              </CardTitle>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Communications Group */}
+          {groupedModules.communications.length > 0 && (
+            <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Communications
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {groupedModules.communications.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {groupedModules.communications.map(module => (
+                    <SortableModuleCard
+                      key={module.id}
+                      module={module}
+                      onModuleClick={handleModuleSelect}
+                      navigate={navigate}
+                      isPinned={false}
+                      onTogglePin={() => {}}
+                      isFavorite={isFavorite(module.id)}
+                      onToggleFavorite={() => toggleFavorite(module.id)}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Other Assigned Modules Group */}
+          {groupedModules.other.length > 0 && (
+            <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Other Modules
+                  <Badge variant="secondary" className="ml-1 text-xs">
+                    {groupedModules.other.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {groupedModules.other.map(module => (
+                    <SortableModuleCard
+                      key={module.id}
+                      module={module}
+                      onModuleClick={handleModuleSelect}
+                      navigate={navigate}
+                      isPinned={false}
+                      onTogglePin={() => {}}
+                      isFavorite={isFavorite(module.id)}
+                      onToggleFavorite={() => toggleFavorite(module.id)}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Favorites Section (for non-members or when filtering) */}
+          {moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
+            <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
+              <CollapsibleTrigger className="w-full">
+                <CardHeader className="pb-1 hover:bg-muted/50 transition-colors cursor-pointer">
+                  <CardTitle className="text-xs flex items-center gap-1 justify-between">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-2.5 w-2.5 text-primary fill-current" />
+                      Favorites
+                      <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0">
+                        {moduleFavorites.size}
+                      </Badge>
+                    </div>
+                    {favoritesCollapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+                  </CardTitle>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="pt-1">
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
+                    {Array.from(moduleFavorites).map(moduleId => {
+                  const module = allModules.find(m => m.id === moduleId);
+                  if (!module) return null;
+                  const moduleConfig = ModuleRegistry.getModule(moduleId);
+                  const enrichedModule = {
+                    ...module,
+                    icon: moduleConfig?.icon || Calendar,
+                    iconColor: moduleConfig?.iconColor || 'blue',
+                    component: moduleConfig?.component,
+                    isNew: moduleConfig?.isNew || false
+                  };
+                  return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border" onClick={() => handleModuleSelect(moduleId)}>
+                          <CardHeader className="pb-1 pt-1.5 px-2">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-1.5 flex-1">
+                                {enrichedModule.icon && <div className={`p-1 rounded bg-${enrichedModule.iconColor}-100 dark:bg-${enrichedModule.iconColor}-900/20`}>
+                                    <enrichedModule.icon className={`h-2 w-2 text-${enrichedModule.iconColor}-600 dark:text-${enrichedModule.iconColor}-400`} />
+                                  </div>}
+                                <div className="flex-1 min-w-0">
+                                  <CardTitle className="text-[8px] font-medium leading-tight line-clamp-2">
+                                    {enrichedModule.title}
+                                  </CardTitle>
+                                  
+                                </div>
+                              </div>
                               
                             </div>
-                          </div>
-                          
-                        </div>
-                      </CardHeader>
-                      <CardContent className="pt-0 px-2 pb-1.5">
-                        
-                      </CardContent>
-                    </Card>;
-            })}
-              </div>
-            </CardContent>
-          </CollapsibleContent>
-        </Card>
-      </Collapsible>}
+                          </CardHeader>
+                          <CardContent className="pt-0 px-2 pb-1.5">
+                            
+                          </CardContent>
+                        </Card>;
+                })}
+                  </div>
+                </CardContent>
+              </CollapsibleContent>
+            </Card>
+          </Collapsible>}
+        </>
+      )}
 
       {/* Filter Controls - Collapsible */}
       <Collapsible open={!filterControlsCollapsed} onOpenChange={open => setFilterControlsCollapsed(!open)}>

@@ -45,11 +45,17 @@ interface QuickActionsPanelProps {
   onModuleSelect: (moduleId: string) => void;
   isOpen: boolean;
   onClose: () => void;
+  quickActions?: {
+    addQuickAction: (moduleId: string) => Promise<boolean>;
+    removeQuickAction: (moduleId: string) => Promise<boolean>;
+    isInQuickActions: (moduleId: string) => boolean;
+  };
 }
 
-export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: QuickActionsPanelProps) => {
+export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quickActions }: QuickActionsPanelProps) => {
   const navigate = useNavigate();
   const isAdmin = user.role === 'super-admin' || user.role === 'admin';
+  const isMember = user.role === 'member';
   const [isManaging, setIsManaging] = useState(false);
   const [customActions, setCustomActions] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -223,6 +229,29 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
     toast.success('Quick action removed successfully!');
   };
 
+  // Handle adding module to member quick actions
+  const handleAddToQuickActions = async (moduleId: string) => {
+    if (!quickActions) {
+      toast.error('Quick actions not available');
+      return;
+    }
+
+    const success = await quickActions.addQuickAction(moduleId);
+    if (success) {
+      onClose();
+    }
+  };
+
+  // Handle removing module from member quick actions
+  const handleRemoveFromQuickActions = async (moduleId: string) => {
+    if (!quickActions) {
+      toast.error('Quick actions not available');
+      return;
+    }
+
+    const success = await quickActions.removeQuickAction(moduleId);
+  };
+
   const getIconComponent = (iconName: string) => {
     return availableIcons[iconName as keyof typeof availableIcons] || Zap;
   };
@@ -360,6 +389,47 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
 
           {/* Actions Grid */}
           <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
+            {/* For members, show option to browse all modules and add them */}
+            {isMember && quickActions && (
+              <div className="mb-4 p-3 bg-slate-400/10 dark:bg-slate-600/10 rounded-lg border border-slate-400 dark:border-slate-500">
+                <p className="text-xs text-slate-700 dark:text-slate-200 font-mono mb-2">
+                  Browse available modules below and click + to add them to your quick actions
+                </p>
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {availableModules.map((module) => {
+                    const inQuickActions = quickActions.isInQuickActions(module.name);
+                    return (
+                      <div key={module.id} className="flex items-center gap-2 p-2 bg-background rounded">
+                        <div className="flex-1">
+                          <div className="text-xs font-semibold text-foreground">{module.title}</div>
+                          <div className="text-[10px] text-muted-foreground">{module.category}</div>
+                        </div>
+                        {inQuickActions ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-red-600 hover:bg-red-500/20"
+                            onClick={() => handleRemoveFromQuickActions(module.name)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-green-600 hover:bg-green-500/20"
+                            onClick={() => handleAddToQuickActions(module.name)}
+                          >
+                            <Plus className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {allActions.map((action) => {
               const IconComponent = getIconComponent(action.icon);
               return (
@@ -395,7 +465,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose }: Qui
                 </div>
               );
             })}
-            {allActions.length === 0 && (
+            {allActions.length === 0 && !isMember && (
               <div className="text-center py-8 text-slate-600 dark:text-slate-300">
                 <p className="text-sm font-mono">No quick actions configured</p>
               </div>
