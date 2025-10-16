@@ -86,7 +86,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
           doc = await pdfjsLib.getDocument({ 
             url: signedUrl,
             withCredentials: false,
-            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
+            cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.3.31/cmaps/',
             cMapPacked: true
           }).promise;
           console.log('FastPDFViewer: PDF loaded with direct method, pages:', doc.numPages);
@@ -143,7 +143,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
             
             doc = await pdfjsLib.getDocument({ 
               data: ab,
-              cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
+              cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.3.31/cmaps/',
               cMapPacked: true
             }).promise;
             console.log('FastPDFViewer: PDF loaded with ArrayBuffer method, pages:', doc.numPages);

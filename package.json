@@ -84,7 +84,7 @@
     "numpy": "^0.0.1",
     "opensheetmusicdisplay": "^1.9.2",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^5.3.93",
+    "pdfjs-dist": "^5.3.31",
     "qr-scanner": "^1.4.2",
     "qrcode": "^1.5.4",
     "react": "^18.3.1",
