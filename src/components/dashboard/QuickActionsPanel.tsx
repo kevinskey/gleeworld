@@ -107,24 +107,6 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
   };
 
   const defaultActions = [
-    ...(isAdmin ? [{
-      id: 'permissions',
-      title: 'Permissions',
-      description: 'Manage access control',
-      icon: 'Shield',
-      color: 'orange',
-      action: () => onModuleSelect('permissions'),
-      isDefault: true
-    }] : []),
-    {
-      id: 'calendar',
-      title: 'Calendar',
-      description: 'View events & schedule',
-      icon: 'Calendar',
-      color: 'green',
-      action: () => onModuleSelect('calendar'),
-      isDefault: true
-    },
     {
       id: 'music-library',
       title: 'Music Library',
@@ -135,41 +117,14 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       isDefault: true
     },
     {
-      id: 'academy',
-      title: 'Academy',
-      description: 'Learning & education hub',
-      icon: 'BookOpen',
-      color: 'blue',
-      action: () => onModuleSelect('academy'),
+      id: 'calendar',
+      title: 'Calendar',
+      description: 'View events & schedule',
+      icon: 'Calendar',
+      color: 'green',
+      action: () => onModuleSelect('calendar'),
       isDefault: true
-    },
-    ...(isAdmin || user.is_exec_board ? [{
-      id: 'appointments',
-      title: 'Appointments',
-      description: 'Schedule meetings',
-      icon: 'Clock',
-      color: 'cyan',
-      action: () => navigate('/appointments'),
-      isDefault: true
-    }] : []),
-    {
-      id: 'attendance',
-      title: 'Attendance',
-      description: 'Track participation',
-      icon: 'Users',
-      color: 'purple',
-      action: () => onModuleSelect('attendance'),
-      isDefault: true
-    },
-    ...(isAdmin ? [{
-      id: 'analytics',
-      title: 'Analytics',
-      description: 'View insights',
-      icon: 'BarChart3',
-      color: 'blue',
-      action: () => onModuleSelect('analytics'),
-      isDefault: true
-    }] : [])
+    }
   ];
 
   const allActions = [...defaultActions, ...customActions];
@@ -389,47 +344,6 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
 
           {/* Actions Grid */}
           <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
-            {/* For members, show option to browse all modules and add them */}
-            {isMember && quickActions && (
-              <div className="mb-4 p-3 bg-slate-400/10 dark:bg-slate-600/10 rounded-lg border border-slate-400 dark:border-slate-500">
-                <p className="text-xs text-slate-700 dark:text-slate-200 font-mono mb-2">
-                  Browse available modules below and click + to add them to your quick actions
-                </p>
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {availableModules.map((module) => {
-                    const inQuickActions = quickActions.isInQuickActions(module.name);
-                    return (
-                      <div key={module.id} className="flex items-center gap-2 p-2 bg-background rounded">
-                        <div className="flex-1">
-                          <div className="text-xs font-semibold text-foreground">{module.title}</div>
-                          <div className="text-[10px] text-muted-foreground">{module.category}</div>
-                        </div>
-                        {inQuickActions ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 text-red-600 hover:bg-red-500/20"
-                            onClick={() => handleRemoveFromQuickActions(module.name)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0 text-green-600 hover:bg-green-500/20"
-                            onClick={() => handleAddToQuickActions(module.name)}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {allActions.map((action) => {
               const IconComponent = getIconComponent(action.icon);
               return (
@@ -465,7 +379,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                 </div>
               );
             })}
-            {allActions.length === 0 && !isMember && (
+            {allActions.length === 0 && (
               <div className="text-center py-8 text-slate-600 dark:text-slate-300">
                 <p className="text-sm font-mono">No quick actions configured</p>
               </div>
