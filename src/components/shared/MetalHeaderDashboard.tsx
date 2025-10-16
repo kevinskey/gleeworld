@@ -139,15 +139,18 @@ export const MetalHeaderDashboard = ({
   };
   const isAdmin = user.role === 'super-admin' || user.role === 'admin';
 
-  // Get modules available to this user
+  // Get modules available to this user - ONLY modules they have access to
   const {
     modules: allModules,
     categories,
     loading: modulesLoading,
-    getModulesByCategory
+    getModulesByCategory,
+    getAccessibleModules
   } = useUnifiedModules({
     userRole: getUserRole(),
-    isAdmin
+    userId: user.id,
+    isAdmin,
+    showInactive: false // Only show active modules user can access
   });
   const {
     saveCategoryOrder,
@@ -203,17 +206,38 @@ export const MetalHeaderDashboard = ({
     coordinateGetter: sortableKeyboardCoordinates
   }));
 
-  // Create modulesByCategory object from the function
+  // Create modulesByCategory object - ONLY show modules user can access
   const modulesByCategory = useMemo(() => {
     try {
       const result: Record<string, any[]> = {};
+      const accessibleModules = getAccessibleModules();
+      
       categories.forEach(category => {
         try {
-          const modules = getModulesByCategory(category).map(module => {
-            try {
-              const moduleConfig = ModuleRegistry.getModule(module.id);
-              if (!moduleConfig) {
-                console.warn(`Module config not found for: ${module.id}, using fallback`);
+          const modules = accessibleModules
+            .filter(m => m.category === category)
+            .map(module => {
+              try {
+                const moduleConfig = ModuleRegistry.getModule(module.id);
+                if (!moduleConfig) {
+                  console.warn(`Module config not found for: ${module.id}, using fallback`);
+                  return {
+                    ...module,
+                    icon: (module as any).icon || Calendar,
+                    iconColor: (module as any).iconColor || 'blue',
+                    component: null,
+                    isNew: false
+                  };
+                }
+                return {
+                  ...module,
+                  icon: moduleConfig.icon,
+                  iconColor: moduleConfig.iconColor || 'blue',
+                  component: moduleConfig.component,
+                  isNew: moduleConfig.isNew || false
+                };
+              } catch (error) {
+                console.error(`Error processing module ${module.id}:`, error);
                 return {
                   ...module,
                   icon: (module as any).icon || Calendar,
@@ -222,24 +246,7 @@ export const MetalHeaderDashboard = ({
                   isNew: false
                 };
               }
-              return {
-                ...module,
-                icon: moduleConfig.icon,
-                iconColor: moduleConfig.iconColor || 'blue',
-                component: moduleConfig.component,
-                isNew: moduleConfig.isNew || false
-              };
-            } catch (error) {
-              console.error(`Error processing module ${module.id}:`, error);
-              return {
-                ...module,
-                icon: (module as any).icon || Calendar,
-                iconColor: (module as any).iconColor || 'blue',
-                component: null,
-                isNew: false
-              };
-            }
-          }).filter(Boolean);
+            }).filter(Boolean);
           if (modules.length > 0) {
             result[category] = modules;
           }
@@ -252,7 +259,7 @@ export const MetalHeaderDashboard = ({
       console.error('Error in modulesByCategory useMemo:', error);
       return {};
     }
-  }, [categories, getModulesByCategory]);
+  }, [categories, getAccessibleModules]);
 
   // Sort and filter modules
   const filteredAndSortedModules = useMemo(() => {
