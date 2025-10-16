@@ -59,10 +59,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
   const [isManaging, setIsManaging] = useState(false);
   const [customActions, setCustomActions] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newActionTitle, setNewActionTitle] = useState('');
-  const [newActionDescription, setNewActionDescription] = useState('');
-  const [newActionIcon, setNewActionIcon] = useState('Zap');
-  const [newActionModule, setNewActionModule] = useState('');
+  const [selectedModuleToAdd, setSelectedModuleToAdd] = useState('');
   
   // Debug logging
   console.log('QuickActionsPanel user:', {
@@ -140,42 +137,47 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
     }
   };
 
-  const handleAddAction = () => {
-    if (!newActionTitle.trim()) {
-      toast.error('Please enter a title for the action');
+  const handleAddAction = async () => {
+    if (!selectedModuleToAdd || selectedModuleToAdd === 'none') {
+      toast.error('Please select a module');
       return;
     }
 
-    const selectedModule = availableModules.find(m => m.name === newActionModule);
+    // If member with quickActions, use the hook
+    if (isMember && quickActions) {
+      const success = await quickActions.addQuickAction(selectedModuleToAdd);
+      if (success) {
+        setSelectedModuleToAdd('');
+        setShowAddDialog(false);
+      }
+      return;
+    }
+
+    // Otherwise, add to custom actions (for non-members)
+    const selectedModule = availableModules.find(m => m.name === selectedModuleToAdd);
+    if (!selectedModule) {
+      toast.error('Module not found');
+      return;
+    }
     
     const newAction = {
       id: `custom_${Date.now()}`,
-      title: newActionTitle.trim(),
-      description: newActionDescription.trim() || (selectedModule ? selectedModule.description : 'Custom action'),
-      icon: newActionIcon,
+      title: selectedModule.title,
+      description: selectedModule.description,
+      icon: 'Zap',
       color: 'blue',
-      action: () => {
-        if (newActionModule) {
-          onModuleSelect(newActionModule);
-        } else {
-          toast.info(`${newActionTitle} action clicked!`);
-        }
-      },
+      action: () => onModuleSelect(selectedModuleToAdd),
       isDefault: false,
-      moduleId: newActionModule || null
+      moduleId: selectedModuleToAdd
     };
 
     const updatedActions = [...customActions, newAction];
     saveCustomActions(updatedActions);
     
-    // Reset form
-    setNewActionTitle('');
-    setNewActionDescription('');
-    setNewActionIcon('Zap');
-    setNewActionModule('');
+    setSelectedModuleToAdd('');
     setShowAddDialog(false);
     
-    toast.success(`Quick action "${newActionTitle}" added successfully!`);
+    toast.success(`Quick action "${selectedModule.title}" added successfully!`);
   };
 
   const handleDeleteAction = (actionId: string) => {
@@ -246,58 +248,27 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                   <DialogHeader>
                     <DialogTitle>Add Quick Action</DialogTitle>
                     <DialogDescription>
-                      Create a custom quick action for your dashboard
+                      Select a module to add to your quick actions
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div>
-                      <label className="text-sm font-medium">Title</label>
-                      <Input
-                        value={newActionTitle}
-                        onChange={(e) => setNewActionTitle(e.target.value)}
-                        placeholder="Action title"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Description</label>
-                      <Input
-                        value={newActionDescription}
-                        onChange={(e) => setNewActionDescription(e.target.value)}
-                        placeholder="Action description"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Icon</label>
-                      <Select value={newActionIcon} onValueChange={setNewActionIcon}>
-                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50">
-                          <SelectValue />
+                      <label className="text-sm font-medium">Select Module</label>
+                      <Select value={selectedModuleToAdd} onValueChange={setSelectedModuleToAdd}>
+                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
+                          <SelectValue placeholder="Choose a module to add" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50 max-h-48 overflow-y-auto">
-                          {Object.keys(availableIcons).map((iconName) => {
-                            const IconComponent = availableIcons[iconName as keyof typeof availableIcons];
-                            return (
-                              <SelectItem key={iconName} value={iconName}>
-                                <div className="flex items-center gap-2">
-                                  <IconComponent className="h-4 w-4" />
-                                  {iconName}
-                                </div>
-                              </SelectItem>
-                            );
-                          })}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium">Module</label>
-                      <Select value={newActionModule} onValueChange={setNewActionModule}>
-                        <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50">
-                          <SelectValue placeholder="Select a module (optional)" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 z-50 max-h-60 overflow-y-auto">
-                          <SelectItem value="none">
-                            <span className="text-gray-500">No module (custom action)</span>
-                          </SelectItem>
-                          {availableModules.map((module) => (
+                        <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 max-h-60 overflow-y-auto">
+                          {availableModules
+                            .filter(module => {
+                              // For members, filter out modules already in quick actions
+                              if (isMember && quickActions) {
+                                return !quickActions.isInQuickActions(module.name);
+                              }
+                              // For non-members, filter out modules already in custom actions
+                              return !customActions.some(action => action.moduleId === module.name);
+                            })
+                            .map((module) => (
                             <SelectItem key={module.id} value={module.name}>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
@@ -312,17 +283,17 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                           ))}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Select a module to integrate with, or leave empty for a custom action
-                      </p>
                     </div>
                     <div className="flex gap-2 pt-4">
                       <Button onClick={handleAddAction} className="flex-1">
-                        Add Action
+                        Add to Quick Actions
                       </Button>
                       <Button 
                         variant="outline" 
-                        onClick={() => setShowAddDialog(false)}
+                        onClick={() => {
+                          setShowAddDialog(false);
+                          setSelectedModuleToAdd('');
+                        }}
                         className="flex-1"
                       >
                         Cancel
