@@ -149,7 +149,8 @@ export const MetalHeaderDashboard = ({
     categories,
     loading: modulesLoading,
     getModulesByCategory,
-    getAccessibleModules
+    getAccessibleModules,
+    getModuleById
   } = useUnifiedModules({
     userRole: getUserRole(),
     userId: user.id,
@@ -338,20 +339,20 @@ export const MetalHeaderDashboard = ({
     });
 
     // Default modules - always shown to members
-    // Check using id field (modules use 'id' in the unified system)
-    const pool = accessibleModules.length > 0 ? accessibleModules : allModules;
-    const defaultModules = pool.filter(m => 
-      DEFAULT_MEMBER_MODULES.includes(m.id)
-    ).map(module => {
-      const moduleConfig = ModuleRegistry.getModule(module.id);
-      return {
-        ...module,
-        icon: moduleConfig?.icon || Calendar,
-        iconColor: moduleConfig?.iconColor || 'blue',
-        component: moduleConfig?.component,
-        isNew: moduleConfig?.isNew || false
-      };
-    });
+    // Resolve by ID via hook (unfiltered) and fall back to registry so they render even without grants
+    const defaultModules = DEFAULT_MEMBER_MODULES
+      .map((id) => getModuleById(id) || ({ id, name: id, title: id, description: '', category: 'general' } as any))
+      .filter(Boolean)
+      .map((module: any) => {
+        const moduleConfig = ModuleRegistry.getModule(module.id);
+        return {
+          ...module,
+          icon: moduleConfig?.icon || Calendar,
+          iconColor: moduleConfig?.iconColor || 'blue',
+          component: moduleConfig?.component,
+          isNew: moduleConfig?.isNew || false,
+        };
+      });
 
     console.log('🔍 Default modules filtering:', {
       defaultModuleIds: DEFAULT_MEMBER_MODULES,
