@@ -289,7 +289,6 @@ export const MetalHeaderDashboard = ({
   ];
   const DEFAULT_MEMBER_MODULES = Array.from(new Set([
     ...STANDARD_MEMBER_MODULE_IDS.filter((id) => !EXCLUDED_MEMBER_DEFAULTS.includes(id)),
-    'internal-communications',
     'music-library',
     'member-sight-reading-studio'
   ]));
