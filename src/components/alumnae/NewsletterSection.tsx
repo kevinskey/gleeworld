@@ -12,11 +12,11 @@ import { Link } from "react-router-dom";
 import { Document, Page, pdfjs } from 'react-pdf';
 import { convertToSecureUrl } from "@/utils/secureFileAccess";
 
-// Use local PDF.js worker to avoid CDN blocking
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
-  import.meta.url,
-).toString();
+// Use worker asset URL so Vite bundles it correctly
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import workerSrc from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 interface Newsletter {
   id: string;
   title: string;
@@ -66,9 +66,17 @@ export const NewsletterSection = () => {
   const [secureHeroUrls, setSecureHeroUrls] = useState<Map<string, string>>(new Map());
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
+  const [pdfError, setPdfError] = useState(false);
   useEffect(() => {
     fetchNewsletterData();
   }, []);
+
+  useEffect(() => {
+    // Reset viewer state when URL changes
+    setPdfError(false);
+    setPageNumber(1);
+    setNumPages(null);
+  }, [securePdfUrl]);
   const fetchNewsletterData = async () => {
     try {
       const currentDate = new Date();
@@ -296,33 +304,48 @@ export const NewsletterSection = () => {
               <div className="space-y-4">
                 <div className="relative border-2 border-primary/20 rounded-xl overflow-hidden bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/20 dark:to-blue-950/20 shadow-lg">
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/10 to-transparent h-20 pointer-events-none z-10" />
-                  <Document
-                    file={securePdfUrl}
-                    onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-                    loading={
-                      <div className="flex flex-col items-center justify-center p-16 min-h-[400px]">
-                        <LoadingSpinner size="lg" />
-                        <p className="text-sm text-muted-foreground mt-4">Loading newsletter preview...</p>
+                  {!pdfError ? (
+                    <Document
+                      file={securePdfUrl}
+                      onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+                      onLoadError={(err) => {
+                        console.error('PDF load error:', err);
+                        setPdfError(true);
+                      }}
+                      loading={
+                        <div className="flex flex-col items-center justify-center p-16 min-h-[400px]">
+                          <LoadingSpinner size="lg" />
+                          <p className="text-sm text-muted-foreground mt-4">Loading newsletter preview...</p>
+                        </div>
+                      }
+                      error={
+                        <div className="p-12 text-center min-h-[400px] flex flex-col items-center justify-center">
+                          <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
+                          <p className="text-base font-medium text-muted-foreground mb-2">Unable to preview PDF</p>
+                          <p className="text-sm text-muted-foreground">You can still download the full newsletter below</p>
+                        </div>
+                      }
+                    >
+                      <div className="flex items-center justify-center bg-white dark:bg-gray-900 p-4">
+                        <Page 
+                          pageNumber={pageNumber} 
+                          width={Math.min(600, window.innerWidth - 100)}
+                          renderTextLayer={false}
+                          renderAnnotationLayer={false}
+                          className="shadow-xl"
+                        />
                       </div>
-                    }
-                    error={
-                      <div className="p-12 text-center min-h-[400px] flex flex-col items-center justify-center">
-                        <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
-                        <p className="text-base font-medium text-muted-foreground mb-2">Unable to preview PDF</p>
-                        <p className="text-sm text-muted-foreground">You can still download the full newsletter below</p>
-                      </div>
-                    }
-                  >
-                    <div className="flex items-center justify-center bg-white dark:bg-gray-900 p-4">
-                      <Page 
-                        pageNumber={pageNumber} 
-                        width={Math.min(600, window.innerWidth - 100)}
-                        renderTextLayer={false}
-                        renderAnnotationLayer={false}
-                        className="shadow-xl"
+                    </Document>
+                  ) : (
+                    <div className="bg-white dark:bg-gray-900">
+                      <iframe
+                        src={securePdfUrl}
+                        className="w-full h-[600px]"
+                        title="Newsletter Preview"
                       />
                     </div>
-                  </Document>
+                  )}
+                </div>
                   {numPages && numPages > 1 && (
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
                       <div className="flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-full shadow-lg">

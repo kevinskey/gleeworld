@@ -65,6 +65,21 @@ export const parseStorageUrl = (url: string): { bucket: string; path: string } |
 export const convertToSecureUrl = async (storageUrl: string): Promise<string | null> => {
   const parsed = parseStorageUrl(storageUrl);
   if (!parsed) return null;
-  
-  return await getSecureFileUrl(parsed.bucket, parsed.path);
+
+  // Try original location
+  let blob = await getSecureFileUrl(parsed.bucket, parsed.path);
+  if (blob) return blob;
+
+  // Fallback mapping for renamed bucket/paths
+  // alumnae-newsletters/newsletters/* -> alumnae-docs/publications/*
+  const needsFallback = parsed.bucket === 'alumnae-newsletters' || parsed.path.startsWith('newsletters/');
+  if (needsFallback) {
+    const fallbackBucket = 'alumnae-docs';
+    const fallbackPath = parsed.path.replace(/^newsletters\//, 'publications/');
+    console.warn('Primary download failed. Trying fallback storage mapping:', { fallbackBucket, fallbackPath });
+    blob = await getSecureFileUrl(fallbackBucket, fallbackPath);
+    if (blob) return blob;
+  }
+
+  return null;
 };
