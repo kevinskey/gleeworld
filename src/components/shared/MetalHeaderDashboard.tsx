@@ -273,7 +273,17 @@ export const MetalHeaderDashboard = ({
     }
   }, [categories, getAccessibleModules]);
 
-  // Group modules for members: Favorites, Communications, Other Assigned
+  // Default modules that all members should have access to
+  const DEFAULT_MEMBER_MODULES = [
+    'notifications',
+    'music-library', 
+    'calendar',
+    'attendance-management',
+    'time-clock',
+    'member-sight-reading-studio'
+  ];
+
+  // Group modules for members: Favorites, Communications, Other Assigned, and Default Modules
   const groupedModules = useMemo(() => {
     if (!isMember) return null;
     
@@ -324,10 +334,36 @@ export const MetalHeaderDashboard = ({
       };
     });
 
+    // Default modules - always shown to members
+    const defaultModules = accessibleModules.filter(m => 
+      DEFAULT_MEMBER_MODULES.includes(m.id)
+    ).map(module => {
+      const moduleConfig = ModuleRegistry.getModule(module.id);
+      return {
+        ...module,
+        icon: moduleConfig?.icon || Calendar,
+        iconColor: moduleConfig?.iconColor || 'blue',
+        component: moduleConfig?.component,
+        isNew: moduleConfig?.isNew || false
+      };
+    });
+
+    // Create a Set of unique module IDs to avoid duplicates
+    const existingIds = new Set([
+      ...favoritesGroup.map(m => m.id),
+      ...communicationsGroup.map(m => m.id),
+      ...otherGroup.map(m => m.id)
+    ]);
+
+    // Add default modules that aren't already in other groups
+    const uniqueDefaultModules = defaultModules.filter(m => !existingIds.has(m.id));
+
     return {
       favorites: favoritesGroup,
       communications: communicationsGroup,
-      other: otherGroup
+      other: otherGroup,
+      defaultModules: uniqueDefaultModules,
+      allModules: [...favoritesGroup, ...communicationsGroup, ...otherGroup, ...uniqueDefaultModules]
     };
   }, [isMember, getAccessibleModules, getVisibleQuickActions, isFavorite]);
 
@@ -577,7 +613,7 @@ export const MetalHeaderDashboard = ({
 
           {/* My Modules Card */}
           <MyModulesCard
-            modules={[...groupedModules.favorites, ...groupedModules.communications, ...groupedModules.other]}
+            modules={groupedModules.allModules}
             onModuleClick={handleModuleSelect}
           />
         </div>
