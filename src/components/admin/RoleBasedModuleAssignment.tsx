@@ -102,6 +102,8 @@ export const RoleBasedModuleAssignment = () => {
 
       if (permissionsError) throw permissionsError;
 
+      console.log('🔍 Role module permissions:', permissions);
+
       // Count how many users have each module
       const moduleCounts = new Map<string, number>();
       permissions?.forEach(permission => {
@@ -109,10 +111,15 @@ export const RoleBasedModuleAssignment = () => {
         moduleCounts.set(permission.module_id, count + 1);
       });
 
+      console.log('🔍 Module counts:', Array.from(moduleCounts.entries()));
+      console.log('🔍 Total users with role:', userIds.length);
+
       // Only select modules that ALL users with this role have
       const universalModuleIds = Array.from(moduleCounts.entries())
         .filter(([_, count]) => count === userIds.length)
         .map(([moduleId]) => moduleId);
+
+      console.log('🔍 Universal module IDs for role:', universalModuleIds);
 
       setSelectedModules(universalModuleIds);
     } catch (error) {
