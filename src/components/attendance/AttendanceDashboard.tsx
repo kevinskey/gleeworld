@@ -252,39 +252,37 @@ export const AttendanceDashboard = () => {
           </div>
         )}
 
-        {/* Collapsible Content */}
-        {!userSectionCollapsed && (
-          <div className="p-3 sm:p-6 space-y-4">
-            {/* My Attendance Section */}
-            <div>
-              {!isAdmin && (
-                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-                  <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="truncate">My Attendance</span>
-                </h2>
-              )}
-              <MyAttendance />
-            </div>
-
-            {/* My Excuse Requests */}
-            <div className="pt-4 border-t border-gray-200/50">
-              <MyExcuseRequests onEditRequest={(request) => {
-                // Access the edit function exposed globally
-                if ((window as any).editExcuseRequest) {
-                  (window as any).editExcuseRequest(request);
-                }
-              }} />
-            </div>
-
-            {/* Excuse Generator */}
-            <div className="pt-4 border-t border-gray-200/50">
-              <ExcuseGenerator onRequestEdited={() => {
-                // Reload the page or refresh the request list
-                window.location.reload();
-              }} />
-            </div>
+        {/* Content */}
+        <div className="p-3 sm:p-6 space-y-4">
+          {/* My Attendance Section */}
+          <div>
+            {!isAdmin && (
+              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
+                <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="truncate">My Attendance</span>
+              </h2>
+            )}
+            <MyAttendance />
           </div>
-        )}
+
+          {/* My Excuse Requests */}
+          <div className="pt-4 border-t border-gray-200/50">
+            <MyExcuseRequests onEditRequest={(request) => {
+              // Access the edit function exposed globally
+              if ((window as any).editExcuseRequest) {
+                (window as any).editExcuseRequest(request);
+              }
+            }} />
+          </div>
+
+          {/* Excuse Generator */}
+          <div className="pt-4 border-t border-gray-200/50">
+            <ExcuseGenerator onRequestEdited={() => {
+              // Reload the page or refresh the request list
+              window.location.reload();
+            }} />
+          </div>
+        </div>
       </div>
 
       {/* Class Schedule Manager - Separate Collapsible Section */}
@@ -294,31 +292,10 @@ export const AttendanceDashboard = () => {
             <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="truncate">Class Schedule Manager</span>
           </h2>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setClassScheduleCollapsed(!classScheduleCollapsed)}
-            className="flex items-center gap-1"
-          >
-            {classScheduleCollapsed ? (
-              <>
-                <span className="text-sm">Show</span>
-                <ChevronDown className="h-4 w-4" />
-              </>
-            ) : (
-              <>
-                <span className="text-sm">Hide</span>
-                <ChevronUp className="h-4 w-4" />
-              </>
-            )}
-          </Button>
         </div>
-        
-        {!classScheduleCollapsed && (
-          <div className="p-3 sm:p-6">
-            <ClassScheduleManager />
-          </div>
-        )}
+        <div className="p-3 sm:p-6">
+          <ClassScheduleManager />
+        </div>
       </div>
 
       {/* Admin/Secretary Attendance Management - Bottom Section */}
