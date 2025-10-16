@@ -13,6 +13,7 @@ interface Calendar {
   name: string;
   color: string;
   is_visible: boolean;
+  is_default?: boolean;
 }
 
 interface CalendarFilterStripProps {
@@ -46,7 +47,7 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
     try {
       const { data, error } = await supabase
         .from('gw_calendars')
-        .select('id, name, color, is_visible')
+        .select('id, name, color, is_visible, is_default')
         .eq('is_visible', true)
         .order('name', { ascending: true });
 
@@ -54,9 +55,12 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
 
       setCalendars(data || []);
       
-      // Initially select all visible calendars
-      const allCalendarIds = (data || []).map(cal => cal.id);
-      setSelectedCalendarIds(allCalendarIds);
+      // Default to member-specific calendars: prefer is_default or names containing 'member'
+      const defaultCalendars = (data || []).filter((cal: any) => cal.is_default || /member/i.test(cal.name));
+      const initialIds = defaultCalendars.length > 0
+        ? defaultCalendars.map((cal: any) => cal.id)
+        : (data || []).map((cal: any) => cal.id);
+      setSelectedCalendarIds(initialIds);
     } catch (error) {
       console.error('Error loading calendars:', error);
       toast({
