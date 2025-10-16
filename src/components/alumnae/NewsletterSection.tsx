@@ -9,6 +9,12 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Headshot } from "@/components/ui/headshot";
 import { Link } from "react-router-dom";
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+
+// Configure PDF.js worker
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 interface Newsletter {
   id: string;
   title: string;
@@ -254,11 +260,40 @@ export const NewsletterSection = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* PDF Cover Preview */}
+            {newsletter.pdf_url && (
+              <div className="border rounded-lg overflow-hidden bg-gray-50">
+                <Document
+                  file={newsletter.pdf_url}
+                  loading={
+                    <div className="flex items-center justify-center p-12">
+                      <LoadingSpinner />
+                    </div>
+                  }
+                  error={
+                    <div className="p-8 text-center">
+                      <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">Unable to preview PDF</p>
+                    </div>
+                  }
+                >
+                  <Page 
+                    pageNumber={1} 
+                    width={600}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                  />
+                </Document>
+              </div>
+            )}
+
             <div>
               <h3 className="text-xl font-semibold mb-3">{newsletter.title}</h3>
-              <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{
-                __html: newsletter.content
-              }} />
+              {newsletter.content && (
+                <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{
+                  __html: newsletter.content
+                }} />
+              )}
             </div>
 
             {newsletter.pdf_url && <Button 
