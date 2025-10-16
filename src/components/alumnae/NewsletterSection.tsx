@@ -345,8 +345,8 @@ export const NewsletterSection = () => {
                       />
                     </div>
                   )}
-                </div>
-                  {numPages && numPages > 1 && (
+                  
+                  {!pdfError && numPages && numPages > 1 && (
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
                       <div className="flex items-center gap-2 bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-full shadow-lg">
                         <Button
@@ -376,7 +376,8 @@ export const NewsletterSection = () => {
                     </div>
                   )}
                 </div>
-                {numPages && numPages > 1 && (
+                
+                {!pdfError && numPages && numPages > 1 && (
                   <p className="text-xs text-center text-muted-foreground">
                     Use the navigation controls to browse through {numPages} pages
                   </p>
