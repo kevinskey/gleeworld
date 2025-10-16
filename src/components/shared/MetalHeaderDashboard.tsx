@@ -494,17 +494,18 @@ export const MetalHeaderDashboard = ({
           
           <div className="relative z-10 space-y-4">
             {/* Module Header with Back Button */}
-            <div className="flex items-center justify-between py-4">
-              <h1 className="text-2xl font-bold text-foreground">
+            <div className="flex items-center justify-between gap-2 py-3 px-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
                 {moduleConfig.title}
               </h1>
               <Button 
                 variant="ghost" 
-                size="default" 
+                size="sm" 
                 onClick={handleBackToModules}
-                className="flex items-center gap-2 text-foreground hover:text-foreground/80"
+                className="flex items-center gap-1 text-foreground hover:text-foreground/80 shrink-0"
               >
-                ← Back to Dashboard
+                <span className="hidden sm:inline">← Back to Dashboard</span>
+                <span className="sm:hidden">← Back</span>
               </Button>
             </div>
             
