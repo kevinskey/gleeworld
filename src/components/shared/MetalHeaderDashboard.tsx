@@ -688,6 +688,8 @@ export const MetalHeaderDashboard = ({
           <MyModulesCard
             modules={groupedModules.allModules}
             onModuleClick={handleModuleSelect}
+            onToggleFavorite={toggleFavorite}
+            isFavorite={isFavorite}
           />
         </div>
       ) : (

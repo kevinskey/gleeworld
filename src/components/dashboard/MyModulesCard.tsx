@@ -1,14 +1,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Grid3x3 } from "lucide-react";
+import { Grid3x3, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface MyModulesCardProps {
   modules: any[];
   onModuleClick: (moduleId: string) => void;
+  onToggleFavorite: (moduleId: string) => void;
+  isFavorite: (moduleId: string) => boolean;
 }
 
-export const MyModulesCard = ({ modules, onModuleClick }: MyModulesCardProps) => {
+export const MyModulesCard = ({ modules, onModuleClick, onToggleFavorite, isFavorite }: MyModulesCardProps) => {
   const navigate = useNavigate();
 
   if (modules.length === 0) {
@@ -43,28 +45,41 @@ export const MyModulesCard = ({ modules, onModuleClick }: MyModulesCardProps) =>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {modules.map((module) => {
             const IconComponent = module.icon;
+            const isModuleFavorited = isFavorite(module.id);
             return (
-              <Button
-                key={module.id}
-                variant="outline"
-                className="h-auto flex-col gap-2 p-4 hover:bg-accent/50"
-                onClick={() => {
-                  if (module.id === 'librarian') {
-                    navigate('/librarian-dashboard');
-                  } else {
-                    onModuleClick(module.id);
-                  }
-                }}
-              >
-                {IconComponent && (
-                  <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
-                    <IconComponent className={`h-5 w-5 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
-                  </div>
-                )}
-                <span className="text-xs font-medium text-center line-clamp-2">
-                  {module.title}
-                </span>
-              </Button>
+              <div key={module.id} className="relative group">
+                <Button
+                  variant="outline"
+                  className="h-auto flex-col gap-2 p-4 hover:bg-accent/50 w-full"
+                  onClick={() => {
+                    if (module.id === 'librarian') {
+                      navigate('/librarian-dashboard');
+                    } else {
+                      onModuleClick(module.id);
+                    }
+                  }}
+                >
+                  {IconComponent && (
+                    <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
+                      <IconComponent className={`h-5 w-5 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
+                    </div>
+                  )}
+                  <span className="text-xs font-medium text-center line-clamp-2">
+                    {module.title}
+                  </span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(module.id);
+                  }}
+                  className={`absolute top-1 right-1 p-1 h-auto ${isModuleFavorited ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500 transition-colors`}
+                >
+                  <Heart className={`h-3 w-3 ${isModuleFavorited ? 'fill-current' : ''}`} />
+                </Button>
+              </div>
             );
           })}
         </div>
