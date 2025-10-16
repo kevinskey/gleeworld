@@ -14,8 +14,8 @@ export const FavoritesCard = ({ favorites, onModuleClick, onToggleFavorite }: Fa
 
   if (favorites.length === 0) {
     return (
-      <Card className="bg-background/95 backdrop-blur-sm">
-        <CardHeader>
+      <Card className="bg-background/95 backdrop-blur-sm mt-0">
+        <CardHeader className="pt-4 pb-3">
           <CardTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-red-500" />
             Favorites
