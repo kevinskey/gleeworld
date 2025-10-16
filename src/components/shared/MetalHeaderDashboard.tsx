@@ -20,6 +20,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { MyModulesCard } from "@/components/dashboard/MyModulesCard";
+import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
+import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare } from "lucide-react";
 
 // Sortable Module Card Component
@@ -540,6 +542,12 @@ export const MetalHeaderDashboard = ({
         />
       </div>
 
+
+      {/* Module Overview Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <MemberModulesCard />
+        <ExecBoardModulesCard userId={user.id} />
+      </div>
 
       {/* Favorites Card for Members */}
       {isMember && groupedModules && !searchQuery && filterCategory === 'all' && (
