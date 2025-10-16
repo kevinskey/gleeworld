@@ -13,6 +13,7 @@ import { UpcomingEventsWidget } from '@/components/attendance/UpcomingEventsWidg
 import { ActionGrid } from '@/components/actions/ActionGrid';
 import { ExcuseGenerator } from '@/components/attendance/ExcuseGenerator';
 import { AttendancePolicyModal } from '@/components/attendance/AttendancePolicyModal';
+import { AttendanceDashboard } from '@/components/attendance/AttendanceDashboard';
 
 const AttendancePage = () => {
   const { attendance, loading, getAttendanceStats } = useAttendance();
@@ -20,6 +21,19 @@ const AttendancePage = () => {
   const { userProfile } = useUserProfile(user);
   const navigate = useNavigate();
   const [isPolicyModalOpen, setIsPolicyModalOpen] = useState(false);
+
+  // Show full AttendanceDashboard for exec board or admins
+  const isAdminLike = Boolean(userProfile?.is_admin || userProfile?.is_super_admin || userProfile?.role === 'admin' || userProfile?.role === 'super-admin');
+  const isExecBoard = Boolean(userProfile?.is_exec_board);
+  if (isAdminLike || isExecBoard) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 p-6">
+        <div className="max-w-7xl mx-auto animate-fade-in">
+          <AttendanceDashboard />
+        </div>
+      </div>
+    );
+  }
   
   if (loading) {
     return (
