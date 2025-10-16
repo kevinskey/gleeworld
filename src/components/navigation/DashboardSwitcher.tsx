@@ -20,12 +20,8 @@ export const DashboardSwitcher = () => {
     return null;
   }
 
-  // Check admin permissions using profile flags
+  // All users get the dashboard switcher to toggle between admin and personal views
   const hasAdminAccess = userProfile.is_admin || userProfile.is_super_admin || userProfile.is_exec_board;
-  
-  if (!hasAdminAccess) {
-    return null;
-  }
 
   const isOnMemberDashboard = location.pathname.startsWith('/dashboard/member-view/');
   const isOnAdminDashboard = location.pathname === '/dashboard';
@@ -57,8 +53,19 @@ export const DashboardSwitcher = () => {
         <DropdownMenuItem asChild>
           <Link to="/dashboard" className="flex items-center cursor-pointer">
             <Shield className="mr-2 h-4 w-4" />
-            Dashboard
+            {hasAdminAccess ? 'Admin Dashboard' : 'My Dashboard'}
             {isOnAdminDashboard && (
+              <Badge variant="secondary" className="ml-auto text-xs">
+                Current
+              </Badge>
+            )}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to={`/dashboard/member-view/${user.id}`} className="flex items-center cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            Personal View
+            {isOnMemberDashboard && (
               <Badge variant="secondary" className="ml-auto text-xs">
                 Current
               </Badge>

@@ -99,6 +99,7 @@ import { SectionalManagement } from "./pages/SectionalManagement";
 import ExecutiveBoardMonitor from "./pages/admin/ExecutiveBoardMonitor";
 import { ExecutiveBoardPermissionPanel } from '@/components/admin/ExecutiveBoardPermissionPanel';
 import { SRFManagement } from "./pages/SRFManagement";
+import { MemberViewDashboard } from "@/components/member-view/MemberViewDashboard";
 
 // Admin module pages
 import FinancialManagement from "./pages/admin/FinancialManagement";
@@ -565,14 +566,14 @@ const App = () => {
                    </ProtectedRoute>
                  } 
                />
-               <Route 
-                 path="/dashboard/member-view/:userId" 
-                 element={
-                   <ProtectedRoute>
-                     <Navigate to="/dashboard" replace />
-                   </ProtectedRoute>
-                 } 
-               />
+                <Route 
+                  path="/dashboard/member-view/:userId" 
+                  element={
+                    <ProtectedRoute>
+                      <MemberViewDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
                <Route 
                  path="/dashboard/auditioner" 
                  element={<Navigate to="/auditioner" replace />} 
