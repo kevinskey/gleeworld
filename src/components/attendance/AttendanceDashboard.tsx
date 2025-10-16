@@ -264,24 +264,6 @@ export const AttendanceDashboard = () => {
             )}
             <MyAttendance />
           </div>
-
-          {/* My Excuse Requests */}
-          <div className="pt-4 border-t border-gray-200/50">
-            <MyExcuseRequests onEditRequest={(request) => {
-              // Access the edit function exposed globally
-              if ((window as any).editExcuseRequest) {
-                (window as any).editExcuseRequest(request);
-              }
-            }} />
-          </div>
-
-          {/* Excuse Generator */}
-          <div className="pt-4 border-t border-gray-200/50">
-            <ExcuseGenerator onRequestEdited={() => {
-              // Reload the page or refresh the request list
-              window.location.reload();
-            }} />
-          </div>
         </div>
       </div>
 
