@@ -792,7 +792,7 @@ export const MetalHeaderDashboard = ({
       </div>
 
       {/* Module Overview Cards - at bottom of page */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-6">
+      <div className="grid grid-cols-1 gap-4 mt-6">
         <MemberModulesCard />
         <ExecBoardModulesCard userId={user.id} />
       </div>
