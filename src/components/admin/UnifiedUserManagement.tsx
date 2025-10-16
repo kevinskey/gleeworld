@@ -59,6 +59,7 @@ import { ResetPasswordDialog } from './ResetPasswordDialog';
 import { PasswordResetTool } from './PasswordResetTool';
 import { UserPermissionManagement } from './UserPermissionManagement';
 import { UserModuleAssignment } from './UserModuleAssignment';
+import { RoleBasedModuleAssignment } from './RoleBasedModuleAssignment';
 import { UsernamePermissionsManager } from './UsernamePermissionsManager';
 import { PermissionErrorBoundary } from './PermissionErrorBoundary';
 import { useAutoEnrollUser } from '@/hooks/useAutoEnrollUser';
@@ -762,6 +763,7 @@ export const UnifiedUserManagement = () => {
         
         <TabsContent value="modules" className="space-y-4">
           <PermissionErrorBoundary>
+            <RoleBasedModuleAssignment />
             <UserModuleAssignment />
           </PermissionErrorBoundary>
         </TabsContent>
