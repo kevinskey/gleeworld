@@ -482,7 +482,7 @@ export const MetalHeaderDashboard = ({
     const moduleConfig = ModuleRegistry.getModule(selectedModule);
     if (moduleConfig?.component) {
       const ModuleComponent = moduleConfig.component;
-      return <div className="space-y-4 relative min-h-screen">
+      return <div className="space-y-6 relative min-h-screen">
           {/* Background Image */}
           <div
             className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none"
@@ -492,22 +492,27 @@ export const MetalHeaderDashboard = ({
             }}
           />
           
-          <div className="relative z-10">
-            {/* Back navigation */}
-            <div className="flex items-center gap-2 mb-4">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleBackToModules}
-                className="flex items-center gap-2"
-              >
-                ← Back to Dashboard
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {getFirstName(user.full_name)}'s Dashboard / {moduleConfig.title}
-              </span>
-            </div>
+          <div className="relative z-10 space-y-4">
+            {/* Prominent Back Navigation Card */}
+            <Card className="bg-background/95 backdrop-blur-sm border-2 shadow-lg">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <Button 
+                    variant="default" 
+                    size="lg" 
+                    onClick={handleBackToModules}
+                    className="flex items-center gap-2"
+                  >
+                    ← Back to Dashboard
+                  </Button>
+                  <div className="text-sm text-muted-foreground">
+                    {getFirstName(user.full_name)}'s Dashboard → <span className="font-semibold text-foreground">{moduleConfig.title}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
             
+            {/* Module Content */}
             <ModuleComponent user={{
               ...user,
               is_admin: isAdmin,
