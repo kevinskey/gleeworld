@@ -281,15 +281,16 @@ export const MetalHeaderDashboard = ({
     'attendance-management',
     'time-tracking',
     'community-hub',
+    'calendar-management',
     // legacy aliases
     'attendance',
-    'check-in-check-out'
+    'check-in-check-out',
+    'calendar'
   ];
   const DEFAULT_MEMBER_MODULES = Array.from(new Set([
     ...STANDARD_MEMBER_MODULE_IDS.filter((id) => !EXCLUDED_MEMBER_DEFAULTS.includes(id)),
     'internal-communications',
     'music-library',
-    'calendar-management',
     'member-sight-reading-studio'
   ]));
 
