@@ -90,7 +90,7 @@ export const HeroManager = () => {
       // Upload image if one was selected
       if (imageFile) {
         const imagePath = `hero-slides/${Date.now()}-${imageFile.name}`;
-        const uploadedUrl = await uploadFile(imageFile, 'alumnae-newsletters', imagePath);
+        const uploadedUrl = await uploadFile(imageFile, 'alumnae-docs', imagePath);
         if (uploadedUrl) {
           finalImageUrl = uploadedUrl;
           toast.success("Image uploaded successfully");

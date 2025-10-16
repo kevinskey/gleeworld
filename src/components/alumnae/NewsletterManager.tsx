@@ -70,7 +70,7 @@ export const NewsletterManager = () => {
 
       if (coverImageFile) {
         const coverPath = `newsletters/${year}/${month}/${Date.now()}-${coverImageFile.name}`;
-        const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-newsletters', coverPath);
+        const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-docs', coverPath);
         if (uploadedUrl) {
           finalCoverImageUrl = uploadedUrl;
           setCoverImageUrl(uploadedUrl);
@@ -80,7 +80,7 @@ export const NewsletterManager = () => {
 
       if (pdfFile) {
         const pdfPath = `newsletters/${year}/${month}/${Date.now()}-${pdfFile.name}`;
-        const uploadedUrl = await uploadFile(pdfFile, 'alumnae-newsletters', pdfPath);
+        const uploadedUrl = await uploadFile(pdfFile, 'alumnae-docs', pdfPath);
         if (uploadedUrl) {
           finalPdfUrl = uploadedUrl;
           setPdfUrl(uploadedUrl);
@@ -181,7 +181,7 @@ export const NewsletterManager = () => {
       // Upload cover image if one was selected
       if (coverImageFile) {
         const coverPath = `newsletters/${year}/${month}/${Date.now()}-${coverImageFile.name}`;
-        const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-newsletters', coverPath);
+        const uploadedUrl = await uploadFile(coverImageFile, 'alumnae-docs', coverPath);
         if (uploadedUrl) {
           finalCoverImageUrl = uploadedUrl;
           setCoverImageUrl(uploadedUrl);
@@ -195,7 +195,7 @@ export const NewsletterManager = () => {
       // Upload PDF file if one was selected
       if (pdfFile) {
         const pdfPath = `newsletters/${year}/${month}/${Date.now()}-${pdfFile.name}`;
-        const uploadedUrl = await uploadFile(pdfFile, 'alumnae-newsletters', pdfPath);
+        const uploadedUrl = await uploadFile(pdfFile, 'alumnae-docs', pdfPath);
         if (uploadedUrl) {
           finalPdfUrl = uploadedUrl;
           setPdfUrl(uploadedUrl);
