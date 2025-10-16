@@ -6,6 +6,7 @@ import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { useModuleFavorites } from "@/hooks/useModuleFavorites";
 import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
+import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -274,15 +275,16 @@ export const MetalHeaderDashboard = ({
   }, [categories, getAccessibleModules]);
 
   // Default modules that all members should have access to
-  // Using correct module keys from the database
-  const DEFAULT_MEMBER_MODULES = [
-    'internal-communications', // Notifications
+  // Prefer global STANDARD_MEMBER_MODULE_IDS; include legacy aliases to maximize matches
+  const DEFAULT_MEMBER_MODULES = Array.from(new Set([
+    ...STANDARD_MEMBER_MODULE_IDS,
+    'internal-communications', // Notifications alias
     'music-library',
-    'calendar-management', // Calendar
-    'attendance-management', // Attendance
-    'time-tracking', // Check In/Out
+    'calendar-management', // Calendar alias
+    'attendance-management', // Attendance alias
+    'time-tracking', // Check In/Out alias
     'member-sight-reading-studio' // Sight Reading
-  ];
+  ]));
 
   // Group modules for members: Favorites, Communications, Other Assigned, and Default Modules
   const groupedModules = useMemo(() => {
@@ -337,7 +339,8 @@ export const MetalHeaderDashboard = ({
 
     // Default modules - always shown to members
     // Check using id field (modules use 'id' in the unified system)
-    const defaultModules = accessibleModules.filter(m => 
+    const pool = accessibleModules.length > 0 ? accessibleModules : allModules;
+    const defaultModules = pool.filter(m => 
       DEFAULT_MEMBER_MODULES.includes(m.id)
     ).map(module => {
       const moduleConfig = ModuleRegistry.getModule(module.id);
