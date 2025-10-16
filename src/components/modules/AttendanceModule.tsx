@@ -23,7 +23,7 @@ export const AttendanceModule = ({ user, isFullPage = false }: ModuleProps) => {
       try {
         const { data: profile } = await supabase
           .from('gw_profiles')
-          .select('is_admin, is_super_admin, role, exec_board_role')
+          .select('is_admin, is_super_admin, role, exec_board_role, is_exec_board')
           .eq('user_id', authUser.id)
           .single();
         
@@ -32,6 +32,7 @@ export const AttendanceModule = ({ user, isFullPage = false }: ModuleProps) => {
                                profile.is_super_admin || 
                                profile.role === 'admin' || 
                                profile.role === 'super-admin' ||
+                               profile.is_exec_board ||
                                profile.exec_board_role === 'secretary';
           setCanManageAttendance(hasPermission);
         }
