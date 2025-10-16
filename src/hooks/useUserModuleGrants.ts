@@ -62,31 +62,36 @@ export function useUserModuleGrants(userId?: string) {
           return;
         }
 
-        // For now, skip the complex permission groups integration due to type issues
-        // TODO: Fix types and re-enable this integration later
-
-        // Fallback: Try the RPC function
-        const { data, error } = await supabase.rpc('get_user_modules', { 
-          p_user: targetUserId 
-        });
+        // Query gw_user_module_permissions directly instead of RPC
+        const { data: userPermissions, error: permError } = await supabase
+          .from('gw_user_module_permissions')
+          .select(`
+            module_id,
+            can_view,
+            can_manage,
+            gw_modules!inner(key, name, category)
+          `)
+          .eq('user_id', targetUserId)
+          .eq('is_active', true);
 
         if (!cancelled) {
-          if (error) {
-            console.error('🔧 useUserModuleGrants: RPC error:', error);
-            setError(error.message);
+          if (permError) {
+            console.error('🔧 useUserModuleGrants: Permission query error:', permError);
+            setError(permError.message);
             setGrants([]);
           } else {
-            console.log('🔧 useUserModuleGrants: RPC data:', data);
-            // The RPC returns array of objects with module data
-            const parsedGrants: ModuleGrant[] = (data || []).map((item: any) => {
+            console.log('🔧 useUserModuleGrants: User permissions data:', userPermissions);
+            // Map permissions to grants
+            const parsedGrants: ModuleGrant[] = (userPermissions || []).map((item: any) => {
+              const module = item.gw_modules;
               return {
-                module_key: item.module_key || item.module_name || 'unknown',
-                module_name: item.module_name || item.module_key || 'unknown',
+                module_key: module?.key || item.module_id,
+                module_name: module?.name || item.module_id,
                 can_view: item.can_view ?? true,
-                can_manage: item.can_manage ?? item.can_edit ?? false,
-                category: item.category || 'general'
+                can_manage: item.can_manage ?? false,
+                category: module?.category || 'general'
               };
-            }).filter(grant => grant.module_key !== 'unknown');
+            }).filter(grant => grant.module_key);
             
             console.log('🔧 useUserModuleGrants: Parsed grants:', parsedGrants);
             setGrants(parsedGrants);
