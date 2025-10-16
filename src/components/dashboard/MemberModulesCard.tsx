@@ -15,61 +15,46 @@ interface Module {
   iconColor: string;
 }
 
-export const MemberModulesCard = () => {
+interface MemberModulesCardProps {
+  userId: string;
+}
+
+export const MemberModulesCard = ({ userId }: MemberModulesCardProps) => {
   const [memberModules, setMemberModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchMemberModules();
-  }, []);
+  }, [userId]);
 
   const fetchMemberModules = async () => {
     try {
       setLoading(true);
       
-      // Get all users with role 'member'
-      const { data: members, error: membersError } = await supabase
-        .from('gw_profiles')
-        .select('user_id')
-        .eq('role', 'member');
-
-      if (membersError) throw membersError;
-
-      if (!members || members.length === 0) {
+      if (!userId) {
         setMemberModules([]);
         return;
       }
-
-      const memberIds = members.map(m => m.user_id).filter(id => id !== null);
-
-      // Get modules assigned to ALL members
+      
+      // Get modules assigned to THIS user that are member modules
       const { data: permissions, error: permissionsError } = await supabase
         .from('gw_user_module_permissions')
         .select('module_id')
-        .in('user_id', memberIds)
+        .eq('user_id', userId)
         .eq('is_active', true);
 
       if (permissionsError) throw permissionsError;
 
-      // Count occurrences of each module
-      const moduleCounts = new Map<string, number>();
-      permissions?.forEach(permission => {
-        const count = moduleCounts.get(permission.module_id) || 0;
-        moduleCounts.set(permission.module_id, count + 1);
-      });
+      if (!permissions || permissions.length === 0) {
+        setMemberModules([]);
+        return;
+      }
 
-      // Filter modules that are assigned to ALL members and are standard member modules
-      const universalModuleIds = Array.from(moduleCounts.entries())
-        .filter(([moduleId, count]) => 
-          count === memberIds.length && 
-          STANDARD_MEMBER_MODULE_IDS.includes(moduleId)
-        )
-        .map(([moduleId]) => moduleId);
-
-      // Get module details
-      const modules = universalModuleIds
-        .map(moduleId => {
-          const moduleConfig = ModuleRegistry.getModule(moduleId);
+      // Filter to only standard member modules and get module details
+      const modules = permissions
+        .filter(permission => STANDARD_MEMBER_MODULE_IDS.includes(permission.module_id))
+        .map(permission => {
+          const moduleConfig = ModuleRegistry.getModule(permission.module_id);
           if (!moduleConfig) return null;
 
           return {
@@ -97,9 +82,9 @@ export const MemberModulesCard = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Universal Member Modules
+            My Member Modules
           </CardTitle>
-          <CardDescription>Modules assigned to all members</CardDescription>
+          <CardDescription>Modules assigned to you</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">Loading...</p>
@@ -113,17 +98,17 @@ export const MemberModulesCard = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
-          Universal Member Modules
+          My Member Modules
           <Badge variant="secondary" className="ml-2">
             {memberModules.length}
           </Badge>
         </CardTitle>
-        <CardDescription>Modules assigned to all members</CardDescription>
+        <CardDescription>Modules assigned to you</CardDescription>
       </CardHeader>
       <CardContent>
         {memberModules.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No modules are currently assigned to all members
+            No member modules are currently assigned to you
           </p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
