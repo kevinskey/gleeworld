@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
+import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare } from "lucide-react";
 
 // Sortable Module Card Component
@@ -501,36 +502,12 @@ export const MetalHeaderDashboard = ({
       {/* Member Quick Access Groups */}
       {isMember && groupedModules && !searchQuery && filterCategory === 'all' ? (
         <div className="space-y-4">
-          {/* Favorites Group */}
-          {groupedModules.favorites.length > 0 && (
-            <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Star className="h-4 w-4 text-primary fill-current" />
-                  Favorites
-                  <Badge variant="secondary" className="ml-1 text-xs">
-                    {groupedModules.favorites.length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupedModules.favorites.map(module => (
-                    <SortableModuleCard
-                      key={module.id}
-                      module={module}
-                      onModuleClick={handleModuleSelect}
-                      navigate={navigate}
-                      isPinned={false}
-                      onTogglePin={() => {}}
-                      isFavorite={true}
-                      onToggleFavorite={() => toggleFavorite(module.id)}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Favorites Card */}
+          <FavoritesCard
+            favorites={groupedModules.favorites}
+            onModuleClick={handleModuleSelect}
+            onToggleFavorite={toggleFavorite}
+          />
 
           {/* Communications Group */}
           {groupedModules.communications.length > 0 && (
