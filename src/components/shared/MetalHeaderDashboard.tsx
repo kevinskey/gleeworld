@@ -493,24 +493,20 @@ export const MetalHeaderDashboard = ({
           />
           
           <div className="relative z-10 space-y-4">
-            {/* Prominent Back Navigation Card */}
-            <Card className="bg-background/95 backdrop-blur-sm border-2 shadow-lg">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <Button 
-                    variant="default" 
-                    size="lg" 
-                    onClick={handleBackToModules}
-                    className="flex items-center gap-2"
-                  >
-                    ← Back to Dashboard
-                  </Button>
-                  <div className="text-sm text-muted-foreground">
-                    {getFirstName(user.full_name)}'s Dashboard → <span className="font-semibold text-foreground">{moduleConfig.title}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Module Header with Back Button */}
+            <div className="flex items-center justify-between py-4">
+              <h1 className="text-2xl font-bold text-foreground">
+                {moduleConfig.title}
+              </h1>
+              <Button 
+                variant="ghost" 
+                size="default" 
+                onClick={handleBackToModules}
+                className="flex items-center gap-2 text-foreground hover:text-foreground/80"
+              >
+                ← Back to Dashboard
+              </Button>
+            </div>
             
             {/* Module Content */}
             <ModuleComponent user={{
