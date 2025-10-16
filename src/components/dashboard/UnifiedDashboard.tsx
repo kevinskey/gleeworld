@@ -22,7 +22,9 @@ import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
   default: m.CommunityHubModule
 })));
-const DashboardFeaturesCarousel = lazy(() => import('@/components/hero/DashboardFeaturesCarousel'));
+const DashboardFeaturesCarousel = lazy(() => import('@/components/hero/DashboardFeaturesCarousel').then(m => ({
+  default: m.default
+})));
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({
   default: m.MemberNavigation
 })));
