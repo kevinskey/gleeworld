@@ -48,35 +48,12 @@ export const AttendanceModule = ({ user, isFullPage = false }: ModuleProps) => {
   
   if (loading) {
     return (
-      <ModuleWrapper
-        id="attendance"
-        title="Attendance"
-        description="Loading..."
-        icon={ClipboardCheck}
-        iconColor="green"
-        fullPage={isFullPage}
-        defaultOpen={!!isFullPage}
-        isLoading={true}
-      >
-        <div />
-      </ModuleWrapper>
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
     );
   }
   
-  return (
-    <ModuleWrapper
-      id="attendance"
-      title={canManageAttendance ? "Attendance Management" : "My Attendance"}
-      description={canManageAttendance 
-        ? "Comprehensive attendance tracking, QR codes, excuse management, and reporting" 
-        : "View your attendance records and status"}
-      icon={ClipboardCheck}
-      iconColor="green"
-      fullPage={isFullPage}
-      defaultOpen={true}
-      collapsible={false}
-    >
-      {canManageAttendance ? <AttendanceDashboard /> : <MyAttendance />}
-    </ModuleWrapper>
-  );
+  // Render without ModuleWrapper when in dashboard - components have their own layouts
+  return canManageAttendance ? <AttendanceDashboard /> : <MyAttendance />;
 };
