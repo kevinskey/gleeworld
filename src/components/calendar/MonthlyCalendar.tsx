@@ -179,25 +179,25 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
 
   return (
     <div className="space-y-2 md:space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-base md:text-lg font-semibold">
           <span className="hidden sm:inline">{format(currentDate, 'MMMM yyyy')}</span>
           <span className="sm:hidden">{format(currentDate, 'MMM yy')}</span>
         </h3>
-        <div className="flex gap-1 md:gap-2">
+        <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigateMonth('prev')}
-            className="h-7 w-7 md:h-8 md:w-8 p-0"
+            className="h-9 w-9 md:h-8 md:w-8 p-0 touch-manipulation"
           >
-            <ChevronLeft className="h-3 w-3 md:h-4 md:w-4" />
+            <ChevronLeft className="h-5 w-5 md:h-4 md:w-4" />
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setCurrentDate(new Date())}
-            className="h-7 px-2 md:h-8 md:px-3 text-xs md:text-sm"
+            className="h-9 px-3 md:h-8 md:px-3 text-sm font-medium touch-manipulation"
           >
             <span className="hidden sm:inline">Today</span>
             <span className="sm:hidden">Now</span>
@@ -206,9 +206,9 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
             variant="outline"
             size="sm"
             onClick={() => navigateMonth('next')}
-            className="h-7 w-7 md:h-8 md:w-8 p-0"
+            className="h-9 w-9 md:h-8 md:w-8 p-0 touch-manipulation"
           >
-            <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
+            <ChevronRight className="h-5 w-5 md:h-4 md:w-4" />
           </Button>
         </div>
       </div>
