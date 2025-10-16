@@ -276,8 +276,8 @@ export const MetalHeaderDashboard = ({
     }
   }, [categories, getAccessibleModules]);
 
-  // Default modules - now empty, members only see explicitly assigned modules
-  const DEFAULT_MEMBER_MODULES: string[] = [];
+  // Default modules that all members should see
+  const DEFAULT_MEMBER_MODULES: string[] = STANDARD_MEMBER_MODULE_IDS;
 
   // Group modules for members: Favorites, Communications, Other Assigned, and Default Modules
   const groupedModules = useMemo(() => {
