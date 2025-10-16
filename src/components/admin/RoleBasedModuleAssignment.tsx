@@ -91,7 +91,16 @@ export const RoleBasedModuleAssignment = () => {
         return;
       }
 
-      const userIds = users.map(u => u.user_id);
+      // Build list of valid user IDs (filter out nulls)
+      const userIds = users
+        .map(u => u.user_id)
+        .filter((id): id is string => !!id);
+
+      if (userIds.length === 0) {
+        setSelectedModules([]);
+        setLoading(false);
+        return;
+      }
 
       // Get modules assigned to ALL users with this role
       const { data: permissions, error: permissionsError } = await supabase
