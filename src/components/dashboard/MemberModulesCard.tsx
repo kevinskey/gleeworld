@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ModuleRegistry } from "@/utils/moduleRegistry";
 import { STANDARD_MEMBER_MODULE_IDS } from "@/config/executive-modules";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface Module {
   id: string;
@@ -22,6 +23,8 @@ interface MemberModulesCardProps {
 export const MemberModulesCard = ({ userId }: MemberModulesCardProps) => {
   const [memberModules, setMemberModules] = useState<Module[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchMemberModules();
@@ -39,7 +42,7 @@ export const MemberModulesCard = ({ userId }: MemberModulesCardProps) => {
       // Get modules assigned to THIS user that are member modules
       const { data: permissions, error: permissionsError } = await supabase
         .from('gw_user_module_permissions')
-        .select('module_id')
+        .select('module_id, can_view, can_manage')
         .eq('user_id', userId)
         .eq('is_active', true);
 
@@ -50,9 +53,10 @@ export const MemberModulesCard = ({ userId }: MemberModulesCardProps) => {
         return;
       }
 
-      // Map all assigned modules for this user
-      const modules = permissions
-        .map(permission => {
+      // Map all assigned modules for this user (only those with view access)
+      const enabled = (permissions || []).filter((p: any) => p.can_view !== false);
+      const modules = enabled
+        .map((permission: any) => {
           const moduleConfig = ModuleRegistry.getModule(permission.module_id);
           if (!moduleConfig) return null;
 
@@ -116,7 +120,13 @@ export const MemberModulesCard = ({ userId }: MemberModulesCardProps) => {
               return (
                 <div
                   key={module.id}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                  role="button"
+                  onClick={() => {
+                    const params = new URLSearchParams(location.search);
+                    params.set('module', module.id);
+                    navigate(`${location.pathname}?${params.toString()}`, { replace: true });
+                  }}
+                  className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                 >
                   {IconComponent && (
                     <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>

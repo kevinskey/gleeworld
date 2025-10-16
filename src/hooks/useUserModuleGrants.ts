@@ -62,15 +62,10 @@ export function useUserModuleGrants(userId?: string) {
           return;
         }
 
-        // Query gw_user_module_permissions directly instead of RPC
+        // Query user module permissions (no join to avoid FK dependency)
         const { data: userPermissions, error: permError } = await supabase
           .from('gw_user_module_permissions')
-          .select(`
-            module_id,
-            can_view,
-            can_manage,
-            gw_modules!inner(key, name, category)
-          `)
+          .select('module_id, can_view, can_manage')
           .eq('user_id', targetUserId)
           .eq('is_active', true);
 
@@ -81,18 +76,42 @@ export function useUserModuleGrants(userId?: string) {
             setGrants([]);
           } else {
             console.log('🔧 useUserModuleGrants: User permissions data:', userPermissions);
-            // Map permissions to grants
+
+            const moduleIds = (userPermissions || [])
+              .map((p: any) => p.module_id)
+              .filter(Boolean);
+
+            if (moduleIds.length === 0) {
+              setGrants([]);
+              setLoading(false);
+              return;
+            }
+
+            // Fetch corresponding modules to get stable keys/names/categories
+            const { data: modulesData, error: modulesError } = await supabase
+              .from('gw_modules')
+              .select('id, key, name, category, is_active')
+              .in('id', moduleIds)
+              .eq('is_active', true);
+
+            if (modulesError) {
+              console.error('🔧 useUserModuleGrants: Modules fetch error:', modulesError);
+            }
+
+            const moduleById = new Map((modulesData || []).map((m: any) => [m.id, m]));
+
+            // Map permissions to grants using module keys
             const parsedGrants: ModuleGrant[] = (userPermissions || []).map((item: any) => {
-              const module = item.gw_modules;
+              const module = moduleById.get(item.module_id);
               return {
-                module_key: module?.key || item.module_id,
-                module_name: module?.name || item.module_id,
+                module_key: module?.key || module?.id || item.module_id,
+                module_name: module?.name || module?.key || item.module_id,
                 can_view: item.can_view ?? true,
                 can_manage: item.can_manage ?? false,
                 category: module?.category || 'general'
               };
             }).filter(grant => grant.module_key);
-            
+
             console.log('🔧 useUserModuleGrants: Parsed grants:', parsedGrants);
             setGrants(parsedGrants);
           }
