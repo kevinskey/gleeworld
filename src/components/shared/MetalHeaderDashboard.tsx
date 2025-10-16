@@ -345,20 +345,29 @@ export const MetalHeaderDashboard = ({
     });
 
     // Default modules - always shown to members
-    // Resolve by ID via hook (unfiltered) and fall back to registry so they render even without grants
+    // Fetch directly from registry to ensure they show even without explicit grants
     const defaultModules = DEFAULT_MEMBER_MODULES
-      .map((id) => getModuleById(id) || ({ id, name: id, title: id, description: '', category: 'general' } as any))
-      .filter(Boolean)
-      .map((module: any) => {
-        const moduleConfig = ModuleRegistry.getModule(module.id);
+      .map((id) => {
+        const moduleConfig = ModuleRegistry.getModule(id);
+        if (!moduleConfig) return null;
+        
         return {
-          ...module,
-          icon: moduleConfig?.icon || Calendar,
-          iconColor: moduleConfig?.iconColor || 'blue',
-          component: moduleConfig?.component,
-          isNew: moduleConfig?.isNew || false,
+          id: moduleConfig.id,
+          name: moduleConfig.title, // Use title as name
+          title: moduleConfig.title,
+          description: moduleConfig.description,
+          category: moduleConfig.category,
+          icon: moduleConfig.icon,
+          iconColor: moduleConfig.iconColor || 'blue',
+          component: moduleConfig.component,
+          isNew: moduleConfig.isNew || false,
+          isActive: true,
+          canAccess: true,
+          canManage: false,
+          hasPermission: true
         };
-      });
+      })
+      .filter(Boolean);
 
     console.log('🔍 Default modules filtering:', {
       defaultModuleIds: DEFAULT_MEMBER_MODULES,
