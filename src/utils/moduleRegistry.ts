@@ -34,43 +34,52 @@ interface LegacyModuleCategory {
 export class ModuleRegistry {
   private static modules: Map<string, LegacyModuleConfig> = new Map();
   private static categories: Map<string, LegacyModuleCategory> = new Map();
+  private static initialized = false;
 
   static initialize() {
-    // Initialize with unified modules
-    UNIFIED_MODULE_CATEGORIES.forEach(category => {
-      const legacyCategory: LegacyModuleCategory = {
-        id: category.id,
-        title: category.title,
-        description: category.description,
-        icon: category.icon,
-        color: category.color,
-        modules: []
-      };
-      this.categories.set(category.id, legacyCategory);
-    });
+    if (this.initialized) return; // Prevent double initialization
+    
+    try {
+      // Initialize with unified modules
+      UNIFIED_MODULE_CATEGORIES.forEach(category => {
+        const legacyCategory: LegacyModuleCategory = {
+          id: category.id,
+          title: category.title,
+          description: category.description,
+          icon: category.icon,
+          color: category.color,
+          modules: []
+        };
+        this.categories.set(category.id, legacyCategory);
+      });
 
-    UNIFIED_MODULES.forEach(module => {
-      const legacyModule: LegacyModuleConfig = {
-        id: module.id,
-        title: module.title,
-        description: module.description,
-        icon: module.icon,
-        iconColor: module.iconColor,
-        category: module.category,
-        isNew: module.isNew,
-        requiredPermissions: module.requiredRoles,
-        component: module.component,
-        fullPageComponent: module.fullPageComponent
-      };
+      UNIFIED_MODULES.forEach(module => {
+        const legacyModule: LegacyModuleConfig = {
+          id: module.id,
+          title: module.title,
+          description: module.description,
+          icon: module.icon,
+          iconColor: module.iconColor,
+          category: module.category,
+          isNew: module.isNew,
+          requiredPermissions: module.requiredRoles,
+          component: module.component,
+          fullPageComponent: module.fullPageComponent
+        };
+        
+        this.modules.set(module.id, legacyModule);
+        
+        // Add to category
+        const category = this.categories.get(module.category);
+        if (category) {
+          category.modules.push(legacyModule);
+        }
+      });
       
-      this.modules.set(module.id, legacyModule);
-      
-      // Add to category
-      const category = this.categories.get(module.category);
-      if (category) {
-        category.modules.push(legacyModule);
-      }
-    });
+      this.initialized = true;
+    } catch (error) {
+      console.error('Error initializing ModuleRegistry:', error);
+    }
   }
 
   static registerModule(module: LegacyModuleConfig) {
@@ -132,11 +141,10 @@ export class ModuleRegistry {
   }
 }
 
-// Initialize on import
-ModuleRegistry.initialize();
-
-// Re-initialize to make sure new modules are included
-setTimeout(() => ModuleRegistry.initialize(), 0);
+// Delay initialization to allow all imports to complete
+setTimeout(() => {
+  ModuleRegistry.initialize();
+}, 0);
 
 // Register the UserModuleAssignment component as a special module
 ModuleRegistry.registerModule({
