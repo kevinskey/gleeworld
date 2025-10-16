@@ -62,10 +62,10 @@ export function useUserModuleGrants(userId?: string) {
           return;
         }
 
-        // Query user module permissions (no join to avoid FK dependency)
+        // Query user module permissions
         const { data: userPermissions, error: permError } = await supabase
           .from('gw_user_module_permissions')
-          .select('module_id, can_view, can_manage')
+          .select('module_id')
           .eq('user_id', targetUserId)
           .eq('is_active', true);
 
@@ -100,14 +100,14 @@ export function useUserModuleGrants(userId?: string) {
 
             const moduleById = new Map((modulesData || []).map((m: any) => [m.id, m]));
 
-            // Map permissions to grants using module keys
+            // Map permissions to grants (all assigned modules have view + manage)
             const parsedGrants: ModuleGrant[] = (userPermissions || []).map((item: any) => {
               const module = moduleById.get(item.module_id);
               return {
                 module_key: module?.key || module?.id || item.module_id,
                 module_name: module?.name || module?.key || item.module_id,
-                can_view: item.can_view ?? true,
-                can_manage: item.can_manage ?? false,
+                can_view: true,
+                can_manage: true,
                 category: module?.category || 'general'
               };
             }).filter(grant => grant.module_key);

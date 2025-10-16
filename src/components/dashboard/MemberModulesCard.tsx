@@ -42,7 +42,7 @@ export const MemberModulesCard = ({ userId }: MemberModulesCardProps) => {
       // Get modules assigned to THIS user that are member modules
       const { data: permissions, error: permissionsError } = await supabase
         .from('gw_user_module_permissions')
-        .select('module_id, can_view, can_manage')
+        .select('module_id')
         .eq('user_id', userId)
         .eq('is_active', true);
 
@@ -53,10 +53,9 @@ export const MemberModulesCard = ({ userId }: MemberModulesCardProps) => {
         return;
       }
 
-      // Map all assigned modules for this user (only those with view access)
-      const enabled = (permissions || []).filter((p: any) => p.can_view !== false);
-      const modules = enabled
-        .map((permission: any) => {
+      // Map all assigned modules for this user
+      const modules = permissions
+        .map(permission => {
           const moduleConfig = ModuleRegistry.getModule(permission.module_id);
           if (!moduleConfig) return null;
 
