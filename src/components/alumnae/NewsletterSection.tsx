@@ -10,6 +10,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Headshot } from "@/components/ui/headshot";
 import { Link } from "react-router-dom";
 import { Document, Page, pdfjs } from 'react-pdf';
+import { convertToSecureUrl } from "@/utils/secureFileAccess";
 
 // Configure PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -58,6 +59,8 @@ export const NewsletterSection = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [securePdfUrl, setSecurePdfUrl] = useState<string | null>(null);
+  const [secureHeroUrls, setSecureHeroUrls] = useState<Map<string, string>>(new Map());
   useEffect(() => {
     fetchNewsletterData();
   }, []);
@@ -87,11 +90,32 @@ export const NewsletterSection = () => {
       if (newsletterError) throw newsletterError;
       setNewsletter(newsletterData);
       if (newsletterData) {
+        // Convert PDF URL to secure blob URL if needed
+        if (newsletterData.pdf_url) {
+          const secureUrl = await convertToSecureUrl(newsletterData.pdf_url);
+          setSecurePdfUrl(secureUrl);
+        }
+
         // Fetch hero slides
         const {
           data: slidesData
         } = await supabase.from('alumnae_newsletter_hero_slides').select('*').eq('newsletter_id', newsletterData.id).order('display_order');
-        setHeroSlides(slidesData || []);
+        
+        if (slidesData) {
+          setHeroSlides(slidesData);
+          
+          // Convert hero image URLs to secure blob URLs
+          const urlMap = new Map<string, string>();
+          for (const slide of slidesData) {
+            if (slide.image_url) {
+              const secureUrl = await convertToSecureUrl(slide.image_url);
+              if (secureUrl) {
+                urlMap.set(slide.id, secureUrl);
+              }
+            }
+          }
+          setSecureHeroUrls(urlMap);
+        }
 
         // Fetch spotlights
         const {
@@ -168,7 +192,11 @@ export const NewsletterSection = () => {
             <CarouselContent>
               {heroSlides.map(slide => <CarouselItem key={slide.id}>
                   <div className="relative aspect-[21/9] w-full">
-                    <img src={slide.image_url} alt={slide.title} className="w-full h-full object-contain" />
+                    <img 
+                      src={secureHeroUrls.get(slide.id) || slide.image_url} 
+                      alt={slide.title} 
+                      className="w-full h-full object-contain" 
+                    />
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8 text-white">
                       <h2 className="text-3xl md:text-4xl font-bold mb-2">{slide.title}</h2>
                       {slide.description && <p className="text-lg">{slide.description}</p>}
@@ -259,10 +287,10 @@ export const NewsletterSection = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* PDF Cover Preview */}
-            {newsletter.pdf_url && (
+            {securePdfUrl && (
               <div className="border rounded-lg overflow-hidden bg-gray-50">
                 <Document
-                  file={newsletter.pdf_url}
+                  file={securePdfUrl}
                   loading={
                     <div className="flex items-center justify-center p-12">
                       <LoadingSpinner />
@@ -294,15 +322,15 @@ export const NewsletterSection = () => {
               )}
             </div>
 
-            {newsletter.pdf_url && <Button 
+            {securePdfUrl && <Button 
                 variant="outline" 
                 className="w-full"
                 onClick={() => {
-                  // Ensure URL is HTTPS to avoid mixed content warnings
-                  const secureUrl = newsletter.pdf_url.startsWith('http://') 
-                    ? newsletter.pdf_url.replace('http://', 'https://') 
-                    : newsletter.pdf_url;
-                  window.open(secureUrl, '_blank', 'noopener,noreferrer');
+                  // Download the PDF using the secure blob URL
+                  const link = document.createElement('a');
+                  link.href = securePdfUrl;
+                  link.download = `${newsletter.title.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+                  link.click();
                 }}
               >
                 <Download className="h-4 w-4 mr-2" />

@@ -1,6 +1,53 @@
 import { useState, useCallback } from 'react';
-import { sanitizeInput, createRateLimiter, logSecurityEvent } from '@/utils/secureFileAccess';
 import { supabase } from '@/integrations/supabase/client';
+
+// Security utility functions
+const sanitizeInput = (input: string): string => {
+  return input
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .trim();
+};
+
+const createRateLimiter = (maxAttempts: number, windowMs: number) => {
+  const attempts = new Map<string, { count: number; resetTime: number }>();
+  
+  return (identifier: string): boolean => {
+    const now = Date.now();
+    const record = attempts.get(identifier);
+    
+    if (!record || now > record.resetTime) {
+      attempts.set(identifier, { count: 1, resetTime: now + windowMs });
+      return true;
+    }
+    
+    if (record.count >= maxAttempts) {
+      return false;
+    }
+    
+    record.count++;
+    return true;
+  };
+};
+
+const logSecurityEvent = async (
+  actionType: string,
+  resourceType: string,
+  resourceId?: string,
+  details?: Record<string, any>
+): Promise<void> => {
+  try {
+    await supabase.from('gw_security_audit_log').insert({
+      action_type: actionType,
+      resource_type: resourceType,
+      resource_id: resourceId,
+      details: details || {},
+      user_id: (await supabase.auth.getUser()).data.user?.id
+    });
+  } catch (error) {
+    console.error('Failed to log security event:', error);
+  }
+};
 
 // Enhanced security hook for authentication and form validation
 export const useSecurityEnhanced = () => {
