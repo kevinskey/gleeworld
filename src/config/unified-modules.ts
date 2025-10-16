@@ -337,7 +337,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     icon: GraduationCap,
     iconColor: "gold",
     category: "member-management",
-    isActive: true,
+    isActive: false,
     component: BowmanScholarsModule,
     dbFunctionName: "bowman-scholars"
   },
