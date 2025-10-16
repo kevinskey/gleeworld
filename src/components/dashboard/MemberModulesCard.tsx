@@ -50,9 +50,8 @@ export const MemberModulesCard = ({ userId }: MemberModulesCardProps) => {
         return;
       }
 
-      // Filter to only standard member modules and get module details
+      // Map all assigned modules for this user
       const modules = permissions
-        .filter(permission => STANDARD_MEMBER_MODULE_IDS.includes(permission.module_id))
         .map(permission => {
           const moduleConfig = ModuleRegistry.getModule(permission.module_id);
           if (!moduleConfig) return null;

@@ -54,39 +54,10 @@ export const ExecBoardModulesCard = ({ userId }: ExecBoardModulesCardProps) => {
         return;
       }
 
-      // Get modules assigned to this exec board user
-      const { data: permissions, error: permissionsError } = await supabase
-        .from('gw_user_module_permissions')
-        .select('module_id')
-        .eq('user_id', userId)
-        .eq('is_active', true);
-
-      if (permissionsError) throw permissionsError;
-
-      if (!permissions || permissions.length === 0) {
-        setExecModules([]);
-        return;
-      }
-
-      // Filter to only executive board modules and get module details
-      const modules = permissions
-        .filter(permission => EXECUTIVE_MODULE_IDS.includes(permission.module_id))
-        .map(permission => {
-          const moduleConfig = ModuleRegistry.getModule(permission.module_id);
-          if (!moduleConfig) return null;
-
-          return {
-            id: moduleConfig.id,
-            name: moduleConfig.title,
-            title: moduleConfig.title,
-            description: moduleConfig.description,
-            icon: moduleConfig.icon || Settings,
-            iconColor: moduleConfig.iconColor || 'blue'
-          };
-        })
-        .filter(Boolean) as Module[];
-
-      setExecModules(modules);
+      // Executive modules are derived from position; do not include manually assigned modules
+      // TODO: Map exec positions to modules when data is available
+      setExecModules([]);
+      return;
     } catch (error) {
       console.error('Error fetching exec board modules:', error);
     } finally {
