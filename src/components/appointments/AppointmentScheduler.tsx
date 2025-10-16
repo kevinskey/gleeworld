@@ -9,7 +9,7 @@ export const AppointmentScheduler = () => {
     <Button 
       variant="outline" 
       size="sm" 
-      className="gap-2 w-full h-auto min-h-[4rem] border-primary/30 hover:bg-primary/10 px-4 py-3 flex flex-col sm:flex-row items-center justify-center"
+      className="gap-2 w-full h-auto min-h-[4rem] border-primary/30 hover:bg-primary/10 px-8 py-3 flex flex-col sm:flex-row items-center justify-center"
       onClick={() => navigate('/booking')}
     >
       <CalendarIcon className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
