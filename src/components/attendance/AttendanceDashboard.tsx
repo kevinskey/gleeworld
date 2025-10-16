@@ -43,6 +43,7 @@ export const AttendanceDashboard = () => {
   const [userSectionCollapsed, setUserSectionCollapsed] = useState(false);
   const [classScheduleCollapsed, setClassScheduleCollapsed] = useState(false);
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [gwProfile, setGwProfile] = useState<any>(null);
   const [stats, setStats] = useState({
     myAttendance: 0,
     eventsThisWeek: 0,
@@ -55,7 +56,7 @@ export const AttendanceDashboard = () => {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
-  const isAdmin = profile?.role === 'admin' || profile?.role === 'super-admin';
+  const isAdmin = gwProfile?.is_admin || gwProfile?.is_super_admin || gwProfile?.is_exec_board || gwProfile?.role === 'admin' || gwProfile?.role === 'super-admin';
 
   // Check if user can take attendance (all executive board members or super-admin)
   const checkAttendancePermissions = useCallback(async () => {
@@ -65,19 +66,22 @@ export const AttendanceDashboard = () => {
     }
 
     try {
-      const { data: gwProfile, error } = await supabase
+      const { data: fetchedGwProfile, error } = await supabase
         .from('gw_profiles')
-        .select('is_admin, is_super_admin, is_exec_board, exec_board_role, special_roles')
+        .select('is_admin, is_super_admin, is_exec_board, exec_board_role, special_roles, role')
         .eq('user_id', user.id)
         .single();
 
       if (error) throw error;
 
+      // Store the profile for use in isAdmin check
+      setGwProfile(fetchedGwProfile);
+
       // Check if user is super-admin, any executive board member, or has secretary designation
-      const isSuperAdmin = gwProfile?.is_super_admin;
-      const isExecBoard = gwProfile?.is_exec_board;
-      const isSecretary = gwProfile?.exec_board_role?.toLowerCase() === 'secretary';
-      const hasSecretaryRole = gwProfile?.special_roles?.includes('secretary');
+      const isSuperAdmin = fetchedGwProfile?.is_super_admin;
+      const isExecBoard = fetchedGwProfile?.is_exec_board;
+      const isSecretary = fetchedGwProfile?.exec_board_role?.toLowerCase() === 'secretary';
+      const hasSecretaryRole = fetchedGwProfile?.special_roles?.includes('secretary');
       
       setCanTakeAttendance(isSuperAdmin || isExecBoard || isSecretary || hasSecretaryRole);
       
