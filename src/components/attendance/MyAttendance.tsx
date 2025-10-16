@@ -7,6 +7,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { MyExcuseRequests } from './MyExcuseRequests';
+import { ExcuseGenerator } from './ExcuseGenerator';
 import { 
   Calendar, 
   TrendingUp, 
@@ -353,6 +355,23 @@ export const MyAttendance = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Excuse Requests Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* My Excuse Requests */}
+        <MyExcuseRequests onEditRequest={(request) => {
+          // Handle edit functionality if needed
+          if ((window as any).editExcuseRequest) {
+            (window as any).editExcuseRequest(request);
+          }
+        }} />
+        
+        {/* Request New Excuse */}
+        <ExcuseGenerator onRequestEdited={() => {
+          // Refresh attendance data after submitting excuse
+          loadAttendanceData();
+        }} />
+      </div>
 
     </div>
   );
