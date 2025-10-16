@@ -158,7 +158,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   // Touch navigation functions
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // Don't handle navigation when in annotation mode
+    // Don't handle navigation when in annotation mode or on scrollable areas
     if (annotationMode) return;
     
     // Don't track touch if it's on a button or interactive element
@@ -167,6 +167,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       return;
     }
     
+    // Only handle if the touch is directly on the PDF canvas or navigation zone
     const touch = e.touches[0];
     setTouchStart({
       x: touch.clientX,
@@ -896,12 +897,11 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       {/* PDF Content */}
       <CardContent className="p-0">
         <div 
-          className="relative w-full overflow-y-auto overflow-x-hidden"
-          style={{ maxHeight: 'calc(100vh - 12rem)' }}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          onClick={handleMouseClick}
+          className="relative w-full overflow-y-auto overflow-x-hidden touch-pan-y"
+          style={{ 
+            maxHeight: 'calc(100vh - 12rem)',
+            WebkitOverflowScrolling: 'touch'
+          } as React.CSSProperties}
         >
           {isLoading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
@@ -933,7 +933,14 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
-            <div className="w-full" ref={containerRef}>
+            <div 
+              className="w-full" 
+              ref={containerRef}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onClick={handleMouseClick}
+            >
               <canvas
                 ref={canvasRef}
                 className="w-full max-w-full block bg-white transition-opacity duration-300"
@@ -944,7 +951,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {/* Annotation Mode: PDF + Overlay Canvas */}
           {annotationMode && (
-            <div className="w-full overflow-y-auto" style={{ maxHeight: 'calc(100vh - 18rem)' }} ref={containerRef}>
+            <div className="w-full overflow-y-auto touch-pan-y" style={{ maxHeight: 'calc(100vh - 18rem)', WebkitOverflowScrolling: 'touch' } as React.CSSProperties} ref={containerRef}>
             <div className="relative w-full">
                 <canvas
                   ref={canvasRef}
