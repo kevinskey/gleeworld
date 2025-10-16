@@ -300,9 +300,9 @@ export const MetalHeaderDashboard = ({
     const accessibleModules = getAccessibleModules();
     const visibleQuickActionModuleIds = getVisibleQuickActions().map(qa => qa.module_id);
     
-    // Favorites group
+    // Favorites group - show ALL favorited modules, not just quick actions
     const favoritesGroup = accessibleModules.filter(m => 
-      isFavorite(m.id) && visibleQuickActionModuleIds.includes(m.id)
+      isFavorite(m.id)
     ).map(module => {
       const moduleConfig = ModuleRegistry.getModule(module.id);
       return {
