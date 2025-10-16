@@ -16,6 +16,14 @@ export const useSheetMusicUrl = (pdfUrl: string | null) => {
       return;
     }
 
+    // Blob/data URLs are already safe to use directly
+    if (pdfUrl.startsWith('blob:') || pdfUrl.startsWith('data:')) {
+      setSignedUrl(pdfUrl);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     const getUrl = async () => {
       setLoading(true);
       setError(null);
