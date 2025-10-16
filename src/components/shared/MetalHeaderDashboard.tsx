@@ -19,7 +19,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
-import { MyModulesCard } from "@/components/dashboard/MyModulesCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare } from "lucide-react";
@@ -680,13 +679,6 @@ export const MetalHeaderDashboard = ({
             </Card>
           </Collapsible>
 
-          {/* My Modules Card */}
-          <MyModulesCard
-            modules={groupedModules.allModules}
-            onModuleClick={handleModuleSelect}
-            onToggleFavorite={toggleFavorite}
-            isFavorite={isFavorite}
-          />
         </div>
       ) : (
         <>
