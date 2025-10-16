@@ -140,8 +140,7 @@ export const ExecBoardModulePanel = () => {
       'community-hub': Home,
       'music-library': Music,
       'calendar': Calendar,
-      'attendance': CheckSquare,
-      'check-in-check-out': CheckSquare
+      'attendance': CheckSquare
     };
     return icons[moduleId as keyof typeof icons] || Home;
   };

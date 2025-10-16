@@ -61,6 +61,5 @@ export const STANDARD_MEMBER_MODULE_IDS = [
   'community-hub',
   'music-library', 
   'calendar',
-  'attendance',
-  'check-in-check-out'
+  'attendance'
 ];

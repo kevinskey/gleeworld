@@ -23,7 +23,7 @@ import { CalendarManagementModule } from '../modules/CalendarManagementModule';
 import { BucketsOfLoveModule } from '../modules/BucketsOfLoveModule';
 import { FanEngagementModule } from '../modules/FanEngagementModule';
 import { SchedulingModule } from '../modules/SchedulingModule';
-import { CheckInCheckOutModule } from '../modules/CheckInCheckOutModule';
+
 import { GleeWritingWidget } from '../writing/GleeWritingWidget';
 import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 import { PermissionsModule } from '../modules/PermissionsModule';
@@ -92,8 +92,6 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <SightSingingModule />;
       case 'calendar-management':
         return <CalendarManagementModule />;
-      case 'check-in-check-out':
-        return <CheckInCheckOutModule />;
       case 'buckets-of-love':
         return <BucketsOfLoveModule />;
       case 'glee-writing':

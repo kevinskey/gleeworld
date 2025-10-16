@@ -186,7 +186,7 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
           }
 
           // Standard members get essential member modules (hardcoded access)
-          const essentialModules = ['community-hub', 'music-library', 'calendar', 'attendance', 'check-in-check-out', 'member-sight-reading-studio'];
+          const essentialModules = ['community-hub', 'music-library', 'calendar', 'attendance', 'member-sight-reading-studio'];
           if (profile?.role === 'member' && essentialModules.includes(module.id)) {
             return {
               moduleId: module.id,

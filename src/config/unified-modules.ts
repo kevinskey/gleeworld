@@ -143,18 +143,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: AttendanceModule,
     dbFunctionName: "attendance"
   },
-  {
-    id: "check-in-check-out",
-    name: "check-in-check-out",
-    title: "Check In/Check Out",
-    description: "Track arrival and departure times for events and rehearsals",
-    icon: Clock,
-    iconColor: "cyan",
-    category: "member-management",
-    isActive: true,
-    component: CheckInCheckOutModule,
-    dbFunctionName: "check-in-check-out"
-  },
 
   // Communications modules
   {
