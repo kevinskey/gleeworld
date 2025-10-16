@@ -55,11 +55,8 @@ export const CalendarFilterStrip = ({ onCalendarsChange }: CalendarFilterStripPr
 
       setCalendars(data || []);
       
-      // Default to member-specific calendars: prefer is_default or names containing 'member'
-      const defaultCalendars = (data || []).filter((cal: any) => cal.is_default || /member/i.test(cal.name));
-      const initialIds = defaultCalendars.length > 0
-        ? defaultCalendars.map((cal: any) => cal.id)
-        : (data || []).map((cal: any) => cal.id);
+      // Select all calendars by default to show all events
+      const initialIds = (data || []).map((cal: any) => cal.id);
       setSelectedCalendarIds(initialIds);
     } catch (error) {
       console.error('Error loading calendars:', error);
