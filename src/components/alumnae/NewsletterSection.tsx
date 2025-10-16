@@ -90,8 +90,8 @@ export const NewsletterSection = () => {
       if (newsletterData) {
         // Convert PDF URL to secure blob URL if needed
         if (newsletterData.pdf_url) {
-          const secureUrl = await convertToSecureUrl(newsletterData.pdf_url);
-          setSecurePdfUrl(secureUrl);
+          // Use original storage URL; FastPDFViewer will handle signing/public access
+          setSecurePdfUrl(newsletterData.pdf_url);
         }
 
         // Fetch hero slides - try newsletter-specific first, then fall back to generic
