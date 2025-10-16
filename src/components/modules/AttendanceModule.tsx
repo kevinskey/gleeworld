@@ -72,7 +72,8 @@ export const AttendanceModule = ({ user, isFullPage = false }: ModuleProps) => {
       icon={ClipboardCheck}
       iconColor="green"
       fullPage={isFullPage}
-      defaultOpen={!!isFullPage}
+      defaultOpen={true}
+      collapsible={false}
     >
       {canManageAttendance ? <AttendanceDashboard /> : <MyAttendance />}
     </ModuleWrapper>
