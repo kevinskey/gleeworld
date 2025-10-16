@@ -99,13 +99,33 @@ export const UnifiedDashboard = () => {
       </div>;
   }
 
-  // If module specified via query param, render it directly
+  // If module specified via query param, render it directly with member navigation
   if (activeModuleId && activeModuleId !== 'collapsed-toggle' && viewMode === 'default') {
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        <div>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+        <div className="px-6 py-4">
           <ModuleDisplay selectedModule={activeModuleId} />
         </div>
-      </div>;
+        {profile && (
+          <div className="px-6 pb-8">
+            <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded" />}> 
+              <MemberNavigation
+                user={{
+                  id: profile.user_id,
+                  email: profile.email,
+                  full_name: profile.full_name,
+                  role: profile.role,
+                  exec_board_role: profile.exec_board_role,
+                  is_exec_board: profile.is_exec_board,
+                  is_admin: profile.is_admin,
+                  is_super_admin: profile.is_super_admin,
+                }}
+              />
+            </Suspense>
+          </div>
+        )}
+      </div>
+    );
   }
 
   // Show different dashboard content based on view mode
