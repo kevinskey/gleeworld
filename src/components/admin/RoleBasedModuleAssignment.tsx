@@ -48,25 +48,18 @@ export const RoleBasedModuleAssignment = () => {
   const fetchModules = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('gw_modules')
-        .select('key, name, description, category, is_active')
-        .eq('is_active', true)
-        .order('name');
-
-      if (error) throw error;
-
-      const moduleList = (data || []).map(dbModule => {
-        const moduleConfig = ModuleRegistry.getModule(dbModule.key);
-        return {
-          id: dbModule.key,
-          name: dbModule.name,
-          title: dbModule.name,
-          description: dbModule.description || '',
-          icon: moduleConfig?.icon || Settings,
-          iconColor: moduleConfig?.iconColor || 'blue'
-        };
-      });
+      
+      // Get all modules from ModuleRegistry
+      const registryModules = ModuleRegistry.getModules();
+      
+      const moduleList = registryModules.map(module => ({
+        id: module.id,
+        name: module.title,
+        title: module.title,
+        description: module.description || '',
+        icon: module.icon || Settings,
+        iconColor: module.iconColor || 'blue'
+      }));
 
       setModules(moduleList);
     } catch (error) {
@@ -173,10 +166,19 @@ export const RoleBasedModuleAssignment = () => {
       }
 
       // Get current user for granted_by
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error('Not authenticated');
 
-      const userIds = users.map(u => u.user_id);
+      const userIds = users.map(u => u.user_id).filter(id => id); // Filter out any null IDs
+
+      if (userIds.length === 0) {
+        toast({
+          title: 'Error',
+          description: 'No valid user IDs found',
+          variant: 'destructive'
+        });
+        return;
+      }
 
       // Remove all existing permissions for these users
       const { error: deleteError } = await supabase
