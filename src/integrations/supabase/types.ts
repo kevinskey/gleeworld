@@ -18243,6 +18243,102 @@ export type Database = {
           },
         ]
       }
+      user_dashboard_categories: {
+        Row: {
+          category_id: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_collapsed: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_collapsed?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_collapsed?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_dashboard_modules: {
+        Row: {
+          category: string
+          created_at: string | null
+          display_order: number | null
+          id: string
+          is_favorite: boolean | null
+          is_pinned: boolean | null
+          is_visible: boolean | null
+          module_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_favorite?: boolean | null
+          is_pinned?: boolean | null
+          is_visible?: boolean | null
+          module_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          is_favorite?: boolean | null
+          is_pinned?: boolean | null
+          is_visible?: boolean | null
+          module_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_dashboard_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          layout_config: Json | null
+          theme_preferences: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          layout_config?: Json | null
+          theme_preferences?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          layout_config?: Json | null
+          theme_preferences?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_module_permissions: {
         Row: {
           created_at: string
