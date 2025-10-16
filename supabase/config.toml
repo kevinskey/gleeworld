@@ -228,3 +228,6 @@ verify_jwt = true
 
 [functions.import-resend-contacts]
 verify_jwt = true
+
+[functions.upload-attendance-csv]
+verify_jwt = true

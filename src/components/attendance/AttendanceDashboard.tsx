@@ -29,6 +29,7 @@ import { ExcuseRequestApproval } from './ExcuseRequestApproval';
 import { MyExcuseRequests } from './MyExcuseRequests';
 import ClassScheduleManager from './ClassScheduleManager';
 import ScheduleAnalytics from './ScheduleAnalytics';
+import { CSVUploadDialog } from './CSVUploadDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +42,7 @@ export const AttendanceDashboard = () => {
   const [canTakeAttendance, setCanTakeAttendance] = useState(false);
   const [userSectionCollapsed, setUserSectionCollapsed] = useState(false);
   const [classScheduleCollapsed, setClassScheduleCollapsed] = useState(false);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [stats, setStats] = useState({
     myAttendance: 0,
     eventsThisWeek: 0,
@@ -167,10 +169,27 @@ export const AttendanceDashboard = () => {
     }
   };
 
+  const loadUpcomingEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_events')
+        .select('id, title, start_date')
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true })
+        .limit(20);
+      
+      if (error) throw error;
+      setUpcomingEvents(data || []);
+    } catch (error) {
+      console.error('Error loading upcoming events:', error);
+    }
+  };
+
   useEffect(() => {
     checkAttendancePermissions();
     if (user) {
       loadDashboardStats();
+      loadUpcomingEvents();
     }
   }, [checkAttendancePermissions, user]);
 
@@ -316,13 +335,22 @@ export const AttendanceDashboard = () => {
 
           {/* Manual Attendance */}
           <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl p-4 sm:p-6 border shadow-lg">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-white">
-              <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="truncate">Manual Attendance</span>
-              <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
-                {isAdmin ? 'Admin' : 'Secretary'}
-              </Badge>
-            </h2>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 text-white">
+                <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="truncate">Manual Attendance</span>
+                <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
+                  {isAdmin ? 'Admin' : 'Secretary'}
+                </Badge>
+              </h2>
+              <CSVUploadDialog 
+                events={upcomingEvents} 
+                onUploadComplete={() => {
+                  loadDashboardStats();
+                  loadUpcomingEvents();
+                }}
+              />
+            </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
               <TakeAttendance />
             </div>
