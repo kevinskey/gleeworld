@@ -331,7 +331,7 @@ export const ComprehensiveJournalAdmin = () => {
       console.log("Grade OK:", data);
       toast({
         title: "AI Grading Complete",
-        description: `Journal graded successfully! Overall score: ${data.overall_score}/100`,
+        description: `Journal graded successfully! Overall score: ${data.overall_score}/${data.overall_score <= 10 ? '10' : '15'}`,
       });
       loadAllData();
     } catch (e: any) {

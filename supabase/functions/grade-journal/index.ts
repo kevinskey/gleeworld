@@ -138,24 +138,30 @@ serve(async (req) => {
 
     // Build prompt (compact + deterministic structure)
     let gradingPrompt = `You are an expert music professor grading a student listening journal for MUS 240: African American Music.
-Grade on a 17-point scale. Be constructive and specific.
 
-If a rubric is present, follow it closely. If not, assess on:
-- Musical analysis and terminology (0–6)
-- Historical/cultural context (0–6)
-- Writing quality (clarity, structure, evidence) (0–5)
+RETURN A JSON OBJECT with these keys:
+- "rubric_scores": array of objects, each with { "criterion": string, "score": number, "maxScore": number, "feedback": string }
+- "overall_feedback": string (overall comments on the journal)
+- "letter_grade": string (A+, A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F)
 
-Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), letter_grade (string).
+Be constructive and specific in your feedback.
 `;
 
     if (rubric && Array.isArray(rubric.criteria) && rubric.criteria.length) {
-      gradingPrompt += `\nGRADING RUBRIC:\n`;
+      gradingPrompt += `\nGRADE ACCORDING TO THIS RUBRIC:\n`;
       (rubric.criteria as RubricCriterion[]).forEach((c) => {
-        gradingPrompt += `- ${c.name} (${c.max_points} pts)${c.description ? `: ${c.description}` : ""}\n`;
+        gradingPrompt += `- ${c.name} (max ${c.max_points} pts)${c.description ? `: ${c.description}` : ""}\n`;
       });
+    } else {
+      gradingPrompt += `\nGRADE USING THESE DEFAULT CRITERIA:\n`;
+      gradingPrompt += `- Musical Analysis (max 7 pts): Identifies genre, style traits, and musical features\n`;
+      gradingPrompt += `- Historical Context (max 5 pts): Connects musical features to historical and cultural significance\n`;
+      gradingPrompt += `- Terminology Usage (max 3 pts): Uses correct musical terminology appropriately\n`;
+      gradingPrompt += `- Writing Quality (max 2 pts): Clear, organized writing with proper grammar and 250-300 words\n`;
     }
 
     gradingPrompt += `\nJOURNAL ENTRY:\n${journal_text}`;
+
 
     console.log('Making OpenAI API call...');
     
@@ -195,50 +201,64 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
     const raw = aiJson?.choices?.[0]?.message?.content ?? "{}";
 
     // Parse JSON safely
-    let gradingResult: { score?: number; feedback?: string; letter_grade?: string } = {};
+    let gradingResult: { 
+      rubric_scores?: Array<{criterion: string; score: number; maxScore: number; feedback: string}>; 
+      overall_feedback?: string; 
+      letter_grade?: string;
+    } = {};
+    
     try {
       gradingResult = JSON.parse(raw);
     } catch {
-      // Minimal fallback based on word count
+      // Fallback with default rubric
       const fallbackScore = Math.min(Math.max(Math.floor(wordCount / 20), 8), 17);
       gradingResult = {
-        score: fallbackScore,
-        feedback:
-          "Fallback grading applied due to invalid AI response. Your journal shows engagement; expand musical terminology, strengthen historical context, and clarify structure.",
+        rubric_scores: [
+          { criterion: "Musical Analysis", score: 4, maxScore: 7, feedback: "Shows basic understanding of musical elements." },
+          { criterion: "Historical Context", score: 3, maxScore: 5, feedback: "Provides some historical context." },
+          { criterion: "Terminology Usage", score: 2, maxScore: 3, feedback: "Uses some musical terminology." },
+          { criterion: "Writing Quality", score: 1, maxScore: 2, feedback: "Writing is generally clear." }
+        ],
+        overall_feedback: "Fallback grading applied. Expand musical terminology, strengthen historical context, and clarify structure.",
         letter_grade: letterFromScore(fallbackScore),
       };
     }
 
-    // Normalize AI score (0–17) and map to assignment scale if needed
-    const rawScore17 = Math.max(0, Math.min(17, Number(gradingResult.score ?? 0)));
-
-    // Determine target max points per assignment (extend as needed)
+    // Calculate total score from rubric_scores
+    const rubricScores = gradingResult.rubric_scores || [];
+    const totalScore = rubricScores.reduce((sum, item) => sum + item.score, 0);
+    const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 17;
+    
+    // Determine target max points per assignment
     const assignmentMax: Record<string, number> = {
       lj1: 10,
       lj2: 10,
       lj3: 15,
+      lj4: 15,
+      lj5: 15,
+      lj6: 15,
+      lj7: 15,
+      lj8: 15,
     };
-    const targetMax = assignment_id && assignmentMax[assignment_id] ? assignmentMax[assignment_id] : 17;
-    // Convert 0–17 -> 0–targetMax (preserve percentage)
-    const percent = rawScore17 / 17;
+    const targetMax = assignment_id && assignmentMax[assignment_id] ? assignmentMax[assignment_id] : maxPossible;
+    
+    // Convert to target scale (preserve percentage)
+    const percent = maxPossible > 0 ? totalScore / maxPossible : 0;
     const dbScore = Math.max(0, Math.min(targetMax, Math.round(percent * targetMax)));
 
-    const letter = gradingResult.letter_grade || letterFromScore(rawScore17);
-    const feedback =
-      typeof gradingResult.feedback === "string" && gradingResult.feedback.trim().length
-        ? gradingResult.feedback.trim()
-        : "Thank you for your submission. Please see rubric and course guidance for areas to strengthen.";
+    const letter = gradingResult.letter_grade || letterFromScore(totalScore);
+    const feedback = gradingResult.overall_feedback || "Thank you for your submission.";
 
     // Save to DB
     console.log('Saving grade to database:', {
       student_id,
       assignment_id,
       journal_id,
-      raw_score_17: rawScore17,
+      total_score: totalScore,
       mapped_score: dbScore,
       mapped_max: targetMax,
       letter_grade: letter,
-      feedback_length: feedback.length
+      rubric_items: rubricScores.length
     });
 
     // Try to upsert the grade
@@ -254,7 +274,7 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
           feedback: feedback,
           graded_at: new Date().toISOString(),
           ai_model: "gpt-4o-mini",
-          rubric: rubric || { criteria: [] }, // Provide default rubric if not provided
+          rubric: rubricScores, // Save the detailed rubric breakdown
         },
         { onConflict: "student_id,assignment_id" },
       );
@@ -270,7 +290,10 @@ Return ONLY a JSON object with keys: score (number, 0–17), feedback (string), 
     return new Response(
       JSON.stringify({
         success: true,
-        grade: { score: dbScore, letter_grade: letter, feedback },
+        overall_score: dbScore,
+        letter_grade: letter,
+        feedback,
+        rubric_scores: rubricScores,
         message: "Journal graded successfully",
         wordCount,
       }),
