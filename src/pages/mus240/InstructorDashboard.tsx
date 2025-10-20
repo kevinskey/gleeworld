@@ -20,14 +20,16 @@ import { useNavigate } from 'react-router-dom';
 import { useMus240Enrollments } from '@/hooks/useMus240Enrollments';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate } from 'react-router-dom';
+import { useCourseTA } from '@/hooks/useCourseTA';
 
 export const InstructorDashboard = () => {
   const { isAdmin, loading } = useUserRole();
+  const { isTA, loading: taLoading } = useCourseTA('MUS240');
   const { enrollments, loading: enrollmentsLoading } = useMus240Enrollments();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
-  if (loading || enrollmentsLoading) {
+  if (loading || taLoading || enrollmentsLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -35,7 +37,8 @@ export const InstructorDashboard = () => {
     );
   }
 
-  if (!isAdmin()) {
+  // Allow both admins and TAs to access
+  if (!isAdmin() && !isTA) {
     return <Navigate to="/classes/mus240" replace />;
   }
 

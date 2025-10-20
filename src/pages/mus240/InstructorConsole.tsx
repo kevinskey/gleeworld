@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { useCourseTA } from '@/hooks/useCourseTA';
 import { AssignmentManager } from '@/components/mus240/instructor/AssignmentManager';
 import { GradesAdmin } from '@/components/mus240/instructor/GradesAdmin';
 import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
@@ -29,6 +30,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 export const InstructorConsole = () => {
   const { isAdmin, loading } = useUserRole();
+  const { isTA, loading: taLoading } = useCourseTA('MUS240');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
   const [assignmentSubTab, setAssignmentSubTab] = useState('journals');
@@ -79,7 +81,7 @@ export const InstructorConsole = () => {
     return combinedTests;
   }, [tests, midtermConfig]);
 
-  if (loading) {
+  if (loading || taLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -87,7 +89,8 @@ export const InstructorConsole = () => {
     );
   }
 
-  if (!isAdmin()) {
+  // Allow both admins and TAs to access
+  if (!isAdmin() && !isTA) {
     return <Navigate to="/classes/mus240" replace />;
   }
 
