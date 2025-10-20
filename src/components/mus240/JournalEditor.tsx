@@ -237,7 +237,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   };
 
   const isMinimumLength = wordCount >= 250;
-  const isWithinWordLimit = wordCount >= 250 && wordCount <= 300;
+  const isPublishable = isMinimumLength;
 
   return (
     <div className="space-y-6">
@@ -258,7 +258,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
                 </Badge>
               )}
               <Badge variant={isMinimumLength ? "default" : "destructive"}>
-                {wordCount}/250-300 words
+                {wordCount}/250+ words
               </Badge>
             </div>
           </div>
@@ -332,7 +332,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Your journal exceeds the maximum length by {wordCount - 300} words. Please edit to stay within 250-300 words.
+                You’re over 300 words. You can still publish, but aim for 250–300 words for conciseness.
               </AlertDescription>
             </Alert>
           )}
@@ -364,7 +364,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
               
               <Button
                 onClick={handlePublish}
-                disabled={!isWithinWordLimit || isPublished || loading}
+                disabled={!isMinimumLength || isPublished || loading}
               >
                 <Send className="h-4 w-4 mr-2" />
                 Publish for Peer Review
