@@ -69,6 +69,7 @@ import { ExecutiveModule } from '@/components/dashboard/modules/ExecutiveModule'
 import { FanEngagementModule } from '@/components/modules/FanEngagementModule';
 import { KaraokeModule } from '@/components/modules/KaraokeModule';
 import { HeroManagerModule } from '@/components/modules/HeroManagerModule';
+import { DashboardHeroManagerModule } from '@/components/modules/DashboardHeroManagerModule';
 import { PressKitsModule } from '@/components/modules/PressKitsModule';
 import { FirstYearConsoleModule } from '@/components/modules/FirstYearConsoleModule';
 import { AIToolsModule } from '@/components/modules/AIToolsModule';
