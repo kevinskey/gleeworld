@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, Save, RefreshCw, Calendar } from "lucide-react";
+import { Settings, Save, RefreshCw, Calendar, Image } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarControlsAdmin } from "./CalendarControlsAdmin";
+import { DashboardHeroManagerModule } from "@/components/modules/DashboardHeroManagerModule";
 
 export const SystemSettings = () => {
   const [settings, setSettings] = useState({
@@ -69,7 +70,7 @@ export const SystemSettings = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="general" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" />
                 General
@@ -77,6 +78,10 @@ export const SystemSettings = () => {
               <TabsTrigger value="calendar" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 Calendar Controls
+              </TabsTrigger>
+              <TabsTrigger value="hero" className="flex items-center gap-2">
+                <Image className="h-4 w-4" />
+                Dashboard Heroes
               </TabsTrigger>
             </TabsList>
             
@@ -178,6 +183,10 @@ export const SystemSettings = () => {
             
             <TabsContent value="calendar" className="mt-6">
               <CalendarControlsAdmin />
+            </TabsContent>
+            
+            <TabsContent value="hero" className="mt-6">
+              <DashboardHeroManagerModule />
             </TabsContent>
           </Tabs>
         </CardContent>

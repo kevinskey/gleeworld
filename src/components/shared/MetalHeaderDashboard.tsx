@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import gleeSculptureBg from '@/assets/glee-sculpture-bg.png';
 import { useNavigate, useLocation } from "react-router-dom";
+import { DashboardHeroCarousel } from "@/components/dashboard/DashboardHeroCarousel";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { useModuleFavorites } from "@/hooks/useModuleFavorites";
@@ -570,6 +571,9 @@ export const MetalHeaderDashboard = ({
             quickActions={isMember ? { addQuickAction, removeQuickAction, isInQuickActions } : undefined}
           />
         </div>
+
+        {/* Dashboard Hero Carousel */}
+        <DashboardHeroCarousel />
 
         {/* Favorites Card */}
         {groupedModules && groupedModules.favorites.length > 0 && (
