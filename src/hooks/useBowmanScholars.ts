@@ -61,13 +61,20 @@ export const useBowmanScholars = () => {
     }
 
     try {
-      console.log('Attempting to upsert scholar data:', { user_id: user.id, scholarData });
+      const payload: any = { user_id: user.id, ...scholarData };
+      // Normalize types
+      if (typeof payload.grad_year === 'string') {
+        const gy = parseInt(payload.grad_year, 10);
+        payload.grad_year = Number.isFinite(gy) ? gy : null;
+      }
+      if (typeof payload.grad_year === 'number' && !Number.isFinite(payload.grad_year)) {
+        payload.grad_year = null;
+      }
+
+      console.log('Attempting to upsert scholar data:', { user_id: user.id, payload });
       const { data, error } = await supabase
         .from('bowman_scholars')
-        .upsert({
-          user_id: user.id,
-          ...scholarData,
-        })
+        .upsert(payload, { onConflict: 'user_id' })
         .select();
 
       console.log('Upsert response:', { data, error });
