@@ -70,18 +70,18 @@ export const SystemSettings = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="general" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                General
+            <TabsList className="w-full flex flex-col sm:grid sm:grid-cols-3 h-auto">
+              <TabsTrigger value="general" className="flex items-center justify-start gap-2 w-full">
+                <Settings className="h-4 w-4 shrink-0" />
+                <span className="truncate">General</span>
               </TabsTrigger>
-              <TabsTrigger value="calendar" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                Calendar Controls
+              <TabsTrigger value="calendar" className="flex items-center justify-start gap-2 w-full">
+                <Calendar className="h-4 w-4 shrink-0" />
+                <span className="truncate">Calendar</span>
               </TabsTrigger>
-              <TabsTrigger value="hero" className="flex items-center gap-2">
-                <Image className="h-4 w-4" />
-                Dashboard Heroes
+              <TabsTrigger value="hero" className="flex items-center justify-start gap-2 w-full">
+                <Image className="h-4 w-4 shrink-0" />
+                <span className="truncate">Heroes</span>
               </TabsTrigger>
             </TabsList>
             
