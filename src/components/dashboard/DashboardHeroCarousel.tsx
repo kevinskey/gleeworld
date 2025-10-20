@@ -93,7 +93,67 @@ export const DashboardHeroCarousel = () => {
   }
 
   if (slides.length === 0) {
-    return null;
+    // Fallback: show sample slides from public images so the section is always visible
+    const fallbackSlides: HeroSlide[] = [
+      {
+        id: 'fallback-1',
+        title: 'Spelman Glee Club — Live in Concert',
+        description: 'To Amaze and Inspire.',
+        image_url: '/images/hero-glee-1.jpg',
+        display_order: 1,
+      },
+      {
+        id: 'fallback-2',
+        title: 'Christmas at Spelman',
+        description: 'A season of joy and tradition.',
+        image_url: '/images/hero-glee-2.jpg',
+        display_order: 2,
+      },
+      {
+        id: 'fallback-3',
+        title: 'Carols and Classics',
+        description: 'Harmony, heritage, and hope.',
+        image_url: '/images/hero-glee-3.jpg',
+        display_order: 3,
+      },
+    ];
+
+    const visibleFallback = fallbackSlides.slice(0, slidesToShow);
+
+    return (
+      <div className="relative z-10 w-full rounded-lg overflow-hidden group mb-4">
+        <div className={`grid gap-4 ${
+          slidesToShow === 1 ? 'grid-cols-1' : 
+          slidesToShow === 2 ? 'grid-cols-2' : 
+          'grid-cols-3'
+        }`}>
+          {visibleFallback.map((slide, idx) => (
+            <div 
+              key={`${slide.id}-${idx}`}
+              className="relative w-full h-80 rounded-lg overflow-hidden"
+            >
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500"
+                style={{ backgroundImage: `url(${slide.image_url})` }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+              </div>
+
+              {(slide.title || slide.description) && (
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  {slide.title && (
+                    <h3 className="text-2xl font-serif font-bold mb-2">{slide.title}</h3>
+                  )}
+                  {slide.description && (
+                    <p className="text-sm opacity-90 line-clamp-2">{slide.description}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   // Get visible slides for the carousel
