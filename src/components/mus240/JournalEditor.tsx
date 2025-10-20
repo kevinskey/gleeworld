@@ -180,6 +180,12 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
         setIsPublished(true);
         setHasChanges(false);
         
+        // Refresh the entry data to ensure we have the latest
+        const refreshedEntry = await fetchUserEntry(assignment.id);
+        if (refreshedEntry) {
+          setUserEntry(refreshedEntry);
+        }
+        
         // Show success message
         toast({
           title: "Journal Published Successfully! 🎉",
