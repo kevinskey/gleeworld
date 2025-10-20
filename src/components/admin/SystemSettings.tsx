@@ -70,18 +70,27 @@ export const SystemSettings = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="general" className="w-full">
-            <TabsList className="w-full flex flex-col sm:grid sm:grid-cols-3 h-auto">
-              <TabsTrigger value="general" className="flex items-center justify-start gap-2 w-full">
-                <Settings className="h-4 w-4 shrink-0" />
-                <span className="truncate">General</span>
+            <TabsList className="inline-flex h-auto w-full justify-start overflow-x-auto rounded-lg bg-muted p-1 sm:grid sm:grid-cols-3">
+              <TabsTrigger 
+                value="general" 
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                <Settings className="h-4 w-4" />
+                <span>General</span>
               </TabsTrigger>
-              <TabsTrigger value="calendar" className="flex items-center justify-start gap-2 w-full">
-                <Calendar className="h-4 w-4 shrink-0" />
-                <span className="truncate">Calendar</span>
+              <TabsTrigger 
+                value="calendar" 
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Calendar</span>
               </TabsTrigger>
-              <TabsTrigger value="hero" className="flex items-center justify-start gap-2 w-full">
-                <Image className="h-4 w-4 shrink-0" />
-                <span className="truncate">Heroes</span>
+              <TabsTrigger 
+                value="hero" 
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+              >
+                <Image className="h-4 w-4" />
+                <span>Heroes</span>
               </TabsTrigger>
             </TabsList>
             
