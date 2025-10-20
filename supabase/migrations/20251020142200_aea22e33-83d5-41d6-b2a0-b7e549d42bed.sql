@@ -1,0 +1,2 @@
+-- Remove the initial test data with incorrect URLs
+DELETE FROM dashboard_hero_slides WHERE image_url LIKE '%https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/user-files/hero-images/%';
