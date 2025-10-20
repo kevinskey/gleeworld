@@ -13,6 +13,7 @@ import { mus240Assignments, Assignment } from '@/data/mus240Assignments';
 import { useMus240Journals } from '@/hooks/useMus240Journals';
 import { useAssignmentEditor } from '@/hooks/useAssignmentEditor';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useToast } from '@/hooks/use-toast';
 
 const AssignmentJournal: React.FC = () => {
   const { assignmentId } = useParams<{ assignmentId: string }>();
@@ -24,6 +25,7 @@ const AssignmentJournal: React.FC = () => {
   const { fetchUserEntry } = useMus240Journals();
   const { updateAssignment, getUpdatedAssignment } = useAssignmentEditor();
   const { isAdmin } = useUserRole();
+  const { toast } = useToast();
 
   // Find the assignment from our data and check for updates
   const baseAssignment = mus240Assignments
@@ -85,25 +87,25 @@ const AssignmentJournal: React.FC = () => {
     );
   }
 
-  const handleJournalPublished = () => {
+  const handleJournalPublished = async () => {
+    if (!currentAssignment) return;
+    
     try {
-      // Refresh user entry first
-      const loadUserEntry = async () => {
-        if (currentAssignment) {
-          try {
-            const entry = await fetchUserEntry(currentAssignment.id);
-            setUserEntry(entry);
-            // Only switch to read tab after successfully loading the updated entry
-            setActiveTab('read');
-          } catch (error) {
-            console.error('Error loading user entry after publish:', error);
-            // Stay on write tab if there's an error
-          }
-        }
-      };
-      loadUserEntry();
+      // Refresh user entry and wait for it to complete
+      const entry = await fetchUserEntry(currentAssignment.id);
+      setUserEntry(entry);
+      
+      // Only switch to read tab after successfully loading the updated entry
+      if (entry?.is_published) {
+        setActiveTab('read');
+      }
     } catch (error) {
-      console.error('Error in handleJournalPublished:', error);
+      console.error('Error loading user entry after publish:', error);
+      toast({
+        title: "Success!",
+        description: "Your journal was published. Please refresh to see other journals.",
+        variant: "default"
+      });
     }
   };
 
