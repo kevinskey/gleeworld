@@ -291,7 +291,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
                 variant="outline"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={isPublished || loading || uploading}
+                disabled={loading || uploading}
               >
                 <Upload className="h-4 w-4 mr-2" />
                 {uploading ? 'Loading...' : 'Upload File'}
@@ -307,18 +307,10 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
                 value={content}
                 onChange={handleContentChange}
                 onPaste={handlePaste}
-                disabled={isPublished || loading || uploading}
+                disabled={loading || uploading}
                 placeholder="Begin typing your journal entry here, paste text, or upload a file. Remember to focus on the assignment instructions and provide thoughtful analysis..."
                 className="min-h-[300px] resize-none"
               />
-              
-              {isPublished && (
-                <div className="absolute inset-0 bg-muted/50 flex items-center justify-center">
-                  <Badge variant="outline" className="bg-background">
-                    Journal Published - No Further Edits Allowed
-                  </Badge>
-                </div>
-              )}
             </div>
           </div>
 
@@ -340,9 +332,9 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
             </Alert>
           )}
 
-          <div className="flex gap-2 justify-between">
+            <div className="flex gap-2 justify-between">
             <div>
-              {userEntry && !isPublished && (
+              {userEntry && (
                 <Button
                   onClick={handleDelete}
                   disabled={loading}
@@ -358,7 +350,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
             <div className="flex gap-2">
               <Button
                 onClick={handleSave}
-                disabled={!hasChanges || isPublished || loading}
+                disabled={!hasChanges || loading}
                 variant="outline"
               >
                 <Save className="h-4 w-4 mr-2" />
@@ -367,10 +359,10 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
               
               <Button
                 onClick={handlePublish}
-                disabled={!isMinimumLength || isPublished || loading}
+                disabled={!isMinimumLength || loading}
               >
                 <Send className="h-4 w-4 mr-2" />
-                Publish for Peer Review
+                {isPublished ? 'Update & Republish' : 'Publish for Peer Review'}
               </Button>
             </div>
           </div>
