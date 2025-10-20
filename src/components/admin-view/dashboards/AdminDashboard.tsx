@@ -60,6 +60,7 @@ import { AuditionsManagement } from "@/components/admin/AuditionsManagement";
 import { AppointmentSchedulingModule } from "@/components/modules/AppointmentSchedulingModule";
 import { WardrobeManagementHub } from "@/components/wardrobe/WardrobeManagementHub";
 import { StudentIntakeProcessor } from "@/components/admin/StudentIntakeProcessor";
+import { DashboardHeroManagerModule } from "@/components/modules/DashboardHeroManagerModule";
 
 interface AdminDashboardProps {
   user: {
@@ -182,7 +183,11 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
       title: "System",
       icon: Settings,
       color: "gray",
-      description: "Platform settings, logs, and administrative tools"
+      description: "Platform settings, logs, and administrative tools",
+      subcategories: [
+        { id: "settings", title: "Settings", icon: Settings, color: "gray" },
+        { id: "hero-management", title: "Hero Management", icon: Image, color: "blue" }
+      ]
     }
   ];
 
@@ -342,6 +347,10 @@ export const AdminDashboard = ({ user }: AdminDashboardProps) => {
 
   const renderSubcategoryContent = (subcategory: string) => {
     switch (subcategory) {
+      case "settings":
+        return <SystemSettings />;
+      case "hero-management":
+        return <DashboardHeroManagerModule />;
       case "user-management":
         return <EnhancedUserManagement users={users} loading={usersLoading} error={usersError} onRefetch={refetchUsers} />;
       case "permissions":

@@ -10,6 +10,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CalendarControlsAdmin } from "./CalendarControlsAdmin";
 import { DashboardHeroManagerModule } from "@/components/modules/DashboardHeroManagerModule";
+import { useSearchParams } from "react-router-dom";
 
 export const SystemSettings = () => {
   const [settings, setSettings] = useState({
@@ -20,6 +21,8 @@ export const SystemSettings = () => {
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const tabParam = (searchParams.get('tab') as 'general' | 'calendar' | 'hero') ?? 'general';
 
   const handleSave = async () => {
     setLoading(true);
@@ -69,7 +72,7 @@ export const SystemSettings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="general" className="w-full">
+          <Tabs defaultValue={tabParam} className="w-full">
             <TabsList className="inline-flex h-auto w-full justify-start overflow-x-auto rounded-lg bg-muted p-1 sm:grid sm:grid-cols-3">
               <TabsTrigger 
                 value="general" 
