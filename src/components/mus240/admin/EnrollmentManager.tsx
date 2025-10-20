@@ -9,6 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { UserPlus, Users, Search, GraduationCap, Edit3, Trash2, Filter, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCourseTA } from '@/hooks/useCourseTA';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface Enrollment {
   id: string;
@@ -31,6 +34,9 @@ interface UserProfile {
 }
 
 export const EnrollmentManager = () => {
+  const { user } = useAuth();
+  const { isTA } = useCourseTA('MUS240');
+  const { isAdmin } = useUserRole();
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [availableUsers, setAvailableUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -204,6 +210,13 @@ export const EnrollmentManager = () => {
 
   const filteredAndSortedEnrollments = enrollments
     .filter(enrollment => {
+      // If TA, only show their own enrollment
+      if (isTA && !isAdmin()) {
+        if (enrollment.student_id !== user?.id) {
+          return false;
+        }
+      }
+      
       // Search filter
       const matchesSearch = enrollment.gw_profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.gw_profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -283,16 +296,20 @@ export const EnrollmentManager = () => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold">Course Enrollment Management</h3>
-          <p className="text-muted-foreground">Manage student enrollments for MUS 240</p>
+          <p className="text-muted-foreground">
+            {isTA && !isAdmin() ? 'View your MUS 240 enrollment' : 'Manage student enrollments for MUS 240'}
+          </p>
         </div>
         
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Student
-            </Button>
-          </DialogTrigger>
+        {/* Only show Add Student button for admins */}
+        {isAdmin() && (
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Student
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Enroll Student in MUS 240</DialogTitle>
@@ -323,6 +340,7 @@ export const EnrollmentManager = () => {
             </div>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       <div className="space-y-4">
