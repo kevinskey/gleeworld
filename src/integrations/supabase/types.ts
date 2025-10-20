@@ -1578,6 +1578,39 @@ export type Database = {
         }
         Relationships: []
       }
+      children_go_auditions: {
+        Row: {
+          approved: boolean | null
+          email: string
+          id: string
+          notes: string | null
+          student_name: string
+          submitted_at: string
+          video_path: string
+          video_url: string
+        }
+        Insert: {
+          approved?: boolean | null
+          email: string
+          id?: string
+          notes?: string | null
+          student_name: string
+          submitted_at?: string
+          video_path: string
+          video_url: string
+        }
+        Update: {
+          approved?: boolean | null
+          email?: string
+          id?: string
+          notes?: string | null
+          student_name?: string
+          submitted_at?: string
+          video_path?: string
+          video_url?: string
+        }
+        Relationships: []
+      }
       cohort_members: {
         Row: {
           cohort_id: string

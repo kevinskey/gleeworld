@@ -196,6 +196,8 @@ import MUS100SightSingingPage from "./pages/MUS100SightSingingPage";
 import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
+import ChildrenGoAudition from "./pages/ChildrenGoAudition";
+import ChildrenGoAuditionsAdmin from "./pages/admin/ChildrenGoAuditionsAdmin";
 
 import GrandStaves from "./pages/GrandStaves";
 import GrandStaffClassroom from "./pages/GrandStaffClassroom";
@@ -774,6 +776,14 @@ const App = () => {
                     </PublicRoute>
                   } 
                 />
+                <Route 
+                  path="/children-go-rap-audition" 
+                  element={
+                    <PublicRoute>
+                      <ChildrenGoAudition />
+                    </PublicRoute>
+                  } 
+                />
                <Route 
                  path="/events" 
                  element={
@@ -969,6 +979,16 @@ const App = () => {
                                  <AdminProducts />
                                </ProtectedRoute>
                              } 
+                            />
+                            <Route 
+                              path="/admin/children-go-auditions" 
+                              element={
+                                <ProtectedRoute>
+                                  <AdminOnlyRoute>
+                                    <ChildrenGoAuditionsAdmin />
+                                  </AdminOnlyRoute>
+                                </ProtectedRoute>
+                              } 
                             />
                                {/* Admin module routes */}
                               <Route 
