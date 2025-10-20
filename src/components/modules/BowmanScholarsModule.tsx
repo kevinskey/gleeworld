@@ -37,6 +37,7 @@ export const BowmanScholarsModule = () => {
   const [editingWorksheet, setEditingWorksheet] = useState<LiturgicalWorksheet | undefined>();
   const [showCamera, setShowCamera] = useState(false);
   const [uploadingResume, setUploadingResume] = useState(false);
+  const [uploadingHeadshot, setUploadingHeadshot] = useState(false);
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -134,6 +135,43 @@ export const BowmanScholarsModule = () => {
         description: "Failed to upload photo",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleHeadshotUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploadingHeadshot(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/headshot.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('bowman-scholars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage
+        .from('bowman-scholars')
+        .getPublicUrl(fileName);
+
+      setFormData(prev => ({ ...prev, headshot_url: data.publicUrl }));
+      
+      toast({
+        title: "Success",
+        description: "Photo uploaded successfully",
+      });
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload photo",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingHeadshot(false);
     }
   };
 
@@ -458,38 +496,57 @@ export const BowmanScholarsModule = () => {
                      </div>
                    </div>
 
-                   {/* Profile Photo */}
-                   <div className="space-y-4">
-                     <h3 className="text-lg font-semibold">Profile Photo</h3>
-                     <div className="flex items-center gap-4">
-                       <Avatar className="h-20 w-20">
-                         <AvatarImage src={formData.headshot_url} />
-                         <AvatarFallback>
-                           <GraduationCap className="h-10 w-10" />
-                         </AvatarFallback>
-                       </Avatar>
-                       <div className="flex gap-2">
-                         <Button 
-                           type="button" 
-                           variant="outline" 
-                           onClick={() => setShowCamera(true)}
-                         >
-                           <Camera className="h-4 w-4 mr-2" />
-                           Take Selfie
-                         </Button>
-                         <div>
-                           <Label htmlFor="headshot_url">Or enter URL:</Label>
-                           <Input
-                             id="headshot_url"
-                             value={formData.headshot_url}
-                             onChange={(e) => handleInputChange('headshot_url', e.target.value)}
-                             placeholder="Image URL"
-                             className="mt-1"
-                           />
-                         </div>
-                       </div>
-                     </div>
-                   </div>
+                    {/* Profile Photo */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Profile Photo</h3>
+                      <div className="flex flex-col sm:flex-row items-start gap-4">
+                        <Avatar className="h-20 w-20">
+                          <AvatarImage src={formData.headshot_url} />
+                          <AvatarFallback>
+                            <GraduationCap className="h-10 w-10" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={() => setShowCamera(true)}
+                              disabled={uploadingHeadshot}
+                            >
+                              <Camera className="h-4 w-4 mr-2" />
+                              Take Selfie
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => document.getElementById('headshot-upload')?.click()}
+                              disabled={uploadingHeadshot}
+                            >
+                              <Upload className="h-4 w-4 mr-2" />
+                              {uploadingHeadshot ? 'Uploading...' : 'Upload Photo'}
+                            </Button>
+                            <Input
+                              id="headshot-upload"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleHeadshotUpload}
+                              className="hidden"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="headshot_url" className="text-sm">Or enter URL:</Label>
+                            <Input
+                              id="headshot_url"
+                              value={formData.headshot_url}
+                              onChange={(e) => handleInputChange('headshot_url', e.target.value)}
+                              placeholder="Image URL"
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                    {/* Resume Upload */}
                    <div className="space-y-4">
