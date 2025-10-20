@@ -398,7 +398,7 @@ export const ComprehensiveJournalAdmin = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h3 className="text-4xl font-bold text-white">Complete Journal Administration</h3>
+          <h3 className="text-2xl font-bold">Complete Journal Administration</h3>
           <p className="text-muted-foreground">View all journal entries, comments, and file submissions</p>
         </div>
         <Button
