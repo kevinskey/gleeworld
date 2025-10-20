@@ -26,22 +26,51 @@ import {
 export const StudentAnalyticsDashboard: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
 
-  // Fetch session analytics
+  // Fetch enrolled students with their analytics if available
   const { data: sessionAnalytics, isLoading: loadingSession } = useQuery({
     queryKey: ['session-analytics'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mus240_session_analytics')
+      // Get all enrolled students
+      const { data: enrollments, error: enrollError } = await supabase
+        .from('mus240_enrollments')
         .select(`
-          *,
-          mus240_midterm_submissions(
-            gw_profiles(full_name, email)
-          )
+          student_id,
+          gw_profiles(full_name, email)
         `)
+        .eq('semester', 'Fall 2025')
+        .eq('enrollment_status', 'enrolled');
+
+      if (enrollError) throw enrollError;
+
+      // Get session analytics for students who have taken tests
+      const { data: analytics, error: analyticsError } = await supabase
+        .from('mus240_session_analytics')
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+      if (analyticsError && analyticsError.code !== 'PGRST116') throw analyticsError;
+
+      // Merge enrollment data with analytics
+      const mergedData = enrollments?.map(enrollment => {
+        const studentAnalytics = analytics?.find(a => a.student_id === enrollment.student_id);
+        return {
+          id: studentAnalytics?.id || enrollment.student_id,
+          student_id: enrollment.student_id,
+          total_active_time_seconds: studentAnalytics?.total_active_time_seconds || 0,
+          ai_likelihood_score: studentAnalytics?.ai_likelihood_score || 0,
+          struggle_areas: studentAnalytics?.struggle_areas || [],
+          strength_areas: studentAnalytics?.strength_areas || [],
+          average_typing_speed: studentAnalytics?.average_typing_speed || 0,
+          consistency_score: studentAnalytics?.consistency_score || 0,
+          revision_frequency: studentAnalytics?.revision_frequency || 0,
+          created_at: studentAnalytics?.created_at || new Date().toISOString(),
+          mus240_midterm_submissions: {
+            gw_profiles: enrollment.gw_profiles
+          }
+        };
+      }) || [];
+
+      return mergedData;
     },
   });
 
