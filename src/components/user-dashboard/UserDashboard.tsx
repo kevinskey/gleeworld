@@ -15,9 +15,7 @@ import { WelcomeCard } from "./WelcomeCard";
 import { QuickActionsSection } from "./sections/QuickActionsSection";
 import { QuickActions } from "@/components/community/QuickActions";
 import { GleeClubSpotlightSection } from "./sections/GleeClubSpotlightSection";
-
-
-
+import { DashboardHeroManagerModule } from "@/components/modules/DashboardHeroManagerModule";
 import { DashboardModulesSection } from "./sections/DashboardModulesSection";
 import { CommunityHubWidget } from "@/components/unified/CommunityHubWidget";
 import { NotificationsSection } from "./sections/NotificationsSection";
@@ -141,7 +139,7 @@ const UserDashboard = React.memo(() => {
       const renderModuleComponent = () => {
         switch (selectedModule) {
           case 'hero-management':
-            return <HeroManagement />;
+            return <DashboardHeroManagerModule />;
           case 'dashboard-settings':
             return <DashboardSettings />;
           case 'youtube-management':
