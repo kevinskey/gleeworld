@@ -93,19 +93,23 @@ const AssignmentJournal: React.FC = () => {
     try {
       // Refresh user entry and wait for it to complete
       const entry = await fetchUserEntry(currentAssignment.id);
-      setUserEntry(entry);
       
-      // Only switch to read tab after successfully loading the updated entry
-      if (entry?.is_published) {
+      if (entry) {
+        setUserEntry(entry);
+        
+        // Only switch to read tab if successfully published
+        if (entry.is_published) {
+          setActiveTab('read');
+        }
+      } else {
+        // If entry fetch fails, just switch to read tab anyway
+        // The user published successfully, we just couldn't refresh the data
         setActiveTab('read');
       }
     } catch (error) {
       console.error('Error loading user entry after publish:', error);
-      toast({
-        title: "Success!",
-        description: "Your journal was published. Please refresh to see other journals.",
-        variant: "default"
-      });
+      // Still switch to read tab even if refresh failed
+      setActiveTab('read');
     }
   };
 
