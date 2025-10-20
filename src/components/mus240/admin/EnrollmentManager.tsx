@@ -210,13 +210,6 @@ export const EnrollmentManager = () => {
 
   const filteredAndSortedEnrollments = enrollments
     .filter(enrollment => {
-      // If TA, only show their own enrollment
-      if (isTA && !isAdmin()) {
-        if (enrollment.student_id !== user?.id) {
-          return false;
-        }
-      }
-      
       // Search filter
       const matchesSearch = enrollment.gw_profiles?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         enrollment.gw_profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -296,20 +289,16 @@ export const EnrollmentManager = () => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-2xl font-bold">Course Enrollment Management</h3>
-          <p className="text-muted-foreground">
-            {isTA && !isAdmin() ? 'View your MUS 240 enrollment' : 'Manage student enrollments for MUS 240'}
-          </p>
+          <p className="text-muted-foreground">Manage student enrollments for MUS 240</p>
         </div>
         
-        {/* Only show Add Student button for admins */}
-        {isAdmin() && (
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <UserPlus className="h-4 w-4 mr-2" />
-                Add Student
-              </Button>
-            </DialogTrigger>
+        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+          <DialogTrigger asChild>
+            <Button>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Student
+            </Button>
+          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Enroll Student in MUS 240</DialogTitle>
@@ -340,7 +329,6 @@ export const EnrollmentManager = () => {
             </div>
           </DialogContent>
         </Dialog>
-        )}
       </div>
 
       <div className="space-y-4">
