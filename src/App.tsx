@@ -169,6 +169,7 @@ import AcademyStudentRegistration from "./pages/AcademyStudentRegistration";
 import { ProviderDashboard } from "./components/providers/ProviderDashboard";
 import { AdminOnlyRoute } from "./components/auth/AdminOnlyRoute";
 import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
+import { Mus240StaffRoute } from "./components/auth/Mus240StaffRoute";
 import TimesheetPage from "./pages/TimesheetPage";
 import BownaScholarLanding from "./pages/BownaScholarLanding";
 
@@ -1772,9 +1773,9 @@ const App = () => {
                                     path="/classes/mus240/instructor/console" 
                                     element={
                                       <ProtectedRoute>
-                                        <AdminOnlyRoute>
+                                        <Mus240StaffRoute>
                                           <InstructorConsole />
-                                        </AdminOnlyRoute>
+                                        </Mus240StaffRoute>
                                       </ProtectedRoute>
                                     } 
                                   />
