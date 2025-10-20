@@ -43,10 +43,15 @@ export const DashboardHeroCarousel = () => {
 
       if (error) throw error;
       setSlides(data || []);
+      console.log('DashboardHeroCarousel: slides fetched', {
+        count: (data || []).length,
+        sample: (data || []).slice(0, 3)
+      });
     } catch (error) {
       console.error('Error fetching dashboard hero slides:', error);
     } finally {
       setLoading(false);
+      console.log('DashboardHeroCarousel: loading complete');
     }
   };
 
