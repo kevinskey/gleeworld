@@ -334,6 +334,27 @@ export const GleeWorldLanding = () => {
       </section>
 
 
+      {/* Children Go Audition CTA */}
+      <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+        <div className="w-full max-w-screen-2xl mx-auto">
+          <Card className="p-6 sm:p-8 md:p-10 bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10 backdrop-blur-sm border-2 border-primary/20 shadow-xl">
+            <div className="text-center">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-4">
+                Children Go Where I Send Thee - Rap Auditions
+              </h2>
+              <p className="text-lg sm:text-xl text-muted-foreground mb-6 max-w-2xl mx-auto">
+                Submit your rap verse for our innovative holiday performance
+              </p>
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg px-8 py-6" asChild>
+                <Link to="/children-go-rap-audition">
+                  Submit Your Audition <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </Card>
+        </div>
+      </section>
+
       {/* Upcoming Events Section */}
       <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
