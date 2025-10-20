@@ -722,6 +722,9 @@ export const MetalHeaderDashboard = ({
       </div>
 
 
+      {/* Dashboard Hero Carousel */}
+      <DashboardHeroCarousel />
+
       {/* Favorites Card for Members */}
       {isMember && groupedModules && !searchQuery && filterCategory === 'all' && (
         <FavoritesCard
