@@ -84,9 +84,9 @@ export const DashboardHeroCarousel = () => {
   // Calculate how many slides to show
   const getSlidesToShow = () => {
     const width = window.innerWidth;
-    if (width < 768) return 1; // Mobile
-    if (width >= 768 && width < 1024) return 2; // iPad
-    return 3; // Desktop
+    if (width < 768) return 2; // Mobile: 2 slides
+    if (width >= 768 && width < 1024) return 3; // iPad: 3 slides
+    return 4; // Desktop: 4 slides
   };
 
   const slidesToShow = getSlidesToShow();
@@ -128,14 +128,14 @@ export const DashboardHeroCarousel = () => {
     return (
       <div className="relative z-50 w-full rounded-lg overflow-hidden group mb-4">
         <div className={`grid gap-4 ${
-          slidesToShow === 1 ? 'grid-cols-1' : 
           slidesToShow === 2 ? 'grid-cols-2' : 
-          'grid-cols-3'
+          slidesToShow === 3 ? 'grid-cols-3' : 
+          'grid-cols-4'
         }`}>
           {visibleFallback.map((slide, idx) => (
             <div 
               key={`${slide.id}-${idx}`}
-              className="relative w-full h-80 rounded-lg overflow-hidden"
+              className="relative w-full h-40 rounded-lg overflow-hidden"
             >
               <div 
                 className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500"
@@ -175,14 +175,14 @@ export const DashboardHeroCarousel = () => {
   return (
     <div className="relative z-50 w-full rounded-lg overflow-hidden group mb-4">
       <div className={`grid gap-4 ${
-        slidesToShow === 1 ? 'grid-cols-1' : 
         slidesToShow === 2 ? 'grid-cols-2' : 
-        'grid-cols-3'
+        slidesToShow === 3 ? 'grid-cols-3' : 
+        'grid-cols-4'
       }`}>
         {visibleSlides.map((slide, idx) => (
           <div 
             key={`${slide.id}-${idx}`}
-            className="relative w-full h-80 rounded-lg overflow-hidden"
+            className="relative w-full h-40 rounded-lg overflow-hidden"
           >
             {/* Background Image */}
             <div 
