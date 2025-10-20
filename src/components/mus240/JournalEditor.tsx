@@ -180,17 +180,20 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
         setIsPublished(true);
         setHasChanges(false);
         
-        // Safely call the onPublished callback
-        try {
-          onPublished?.();
-        } catch (callbackError) {
-          console.error('Error in onPublished callback:', callbackError);
-          // Don't prevent the publish from being marked successful
-          toast({
-            title: "Journal Published",
-            description: "Your journal was published successfully. Refresh the page to see it in the Read tab.",
-          });
-        }
+        // Show success message
+        toast({
+          title: "Journal Published Successfully! 🎉",
+          description: "Your journal is now available for peer review. Redirecting you to read other journals...",
+        });
+        
+        // Call the onPublished callback to navigate
+        setTimeout(() => {
+          try {
+            onPublished?.();
+          } catch (callbackError) {
+            console.error('Error in onPublished callback:', callbackError);
+          }
+        }, 1500); // Give user time to see the success message
       }
     } catch (error) {
       console.error('Error during publish:', error);
