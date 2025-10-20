@@ -71,7 +71,9 @@ export const BowmanScholarsModule = () => {
       return;
     }
 
+    console.log('Saving Bowman Scholar profile:', { user_id: user.id, formData });
     const result = await updateScholar(formData);
+    console.log('Save result:', result);
     if (result.success) {
       setEditMode(false);
     }

@@ -61,12 +61,16 @@ export const useBowmanScholars = () => {
     }
 
     try {
-      const { error } = await supabase
+      console.log('Attempting to upsert scholar data:', { user_id: user.id, scholarData });
+      const { data, error } = await supabase
         .from('bowman_scholars')
         .upsert({
           user_id: user.id,
           ...scholarData,
-        });
+        })
+        .select();
+
+      console.log('Upsert response:', { data, error });
 
       if (error) {
         throw error;
