@@ -165,17 +165,40 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
       return;
     }
 
-    // Save first if there are changes
-    if (hasChanges) {
-      const saved = await saveJournal(assignment.id, content);
-      if (!saved) return;
-    }
+    try {
+      // Save first if there are changes
+      if (hasChanges) {
+        const saved = await saveJournal(assignment.id, content);
+        if (!saved) {
+          console.error('Failed to save journal before publishing');
+          return;
+        }
+      }
 
-    const published = await publishJournal(assignment.id);
-    if (published) {
-      setIsPublished(true);
-      setHasChanges(false);
-      onPublished?.();
+      const published = await publishJournal(assignment.id);
+      if (published) {
+        setIsPublished(true);
+        setHasChanges(false);
+        
+        // Safely call the onPublished callback
+        try {
+          onPublished?.();
+        } catch (callbackError) {
+          console.error('Error in onPublished callback:', callbackError);
+          // Don't prevent the publish from being marked successful
+          toast({
+            title: "Journal Published",
+            description: "Your journal was published successfully. Refresh the page to see it in the Read tab.",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error during publish:', error);
+      toast({
+        title: "Publish Error",
+        description: "An error occurred while publishing. Please try again or contact your instructor.",
+        variant: "destructive"
+      });
     }
   };
 

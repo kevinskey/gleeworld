@@ -86,15 +86,25 @@ const AssignmentJournal: React.FC = () => {
   }
 
   const handleJournalPublished = () => {
-    setActiveTab('read');
-    // Refresh user entry
-    const loadUserEntry = async () => {
-      if (currentAssignment) {
-        const entry = await fetchUserEntry(currentAssignment.id);
-        setUserEntry(entry);
-      }
-    };
-    loadUserEntry();
+    try {
+      // Refresh user entry first
+      const loadUserEntry = async () => {
+        if (currentAssignment) {
+          try {
+            const entry = await fetchUserEntry(currentAssignment.id);
+            setUserEntry(entry);
+            // Only switch to read tab after successfully loading the updated entry
+            setActiveTab('read');
+          } catch (error) {
+            console.error('Error loading user entry after publish:', error);
+            // Stay on write tab if there's an error
+          }
+        }
+      };
+      loadUserEntry();
+    } catch (error) {
+      console.error('Error in handleJournalPublished:', error);
+    }
   };
 
   const handleAssignmentUpdate = (updatedAssignment: Assignment) => {
