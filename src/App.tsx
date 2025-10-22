@@ -1805,9 +1805,9 @@ const App = () => {
                                     path="/classes/mus240/instructor/bulk-grading" 
                                     element={
                                       <ProtectedRoute>
-                                        <AdminOnlyRoute>
+                                        <Mus240StaffRoute>
                                           <BulkJournalGradingPage />
-                                        </AdminOnlyRoute>
+                                        </Mus240StaffRoute>
                                       </ProtectedRoute>
                                     } 
                                   />

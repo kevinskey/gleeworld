@@ -233,7 +233,7 @@ export const InstructorConsole = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-2 border-b mb-4">
+                  <div className="flex gap-2 border-b mb-4 flex-wrap">
                     <Button
                       variant={assignmentSubTab === 'journals' ? 'default' : 'ghost'}
                       size="sm"
@@ -254,6 +254,15 @@ export const InstructorConsole = () => {
                       onClick={() => setAssignmentSubTab('group-projects')}
                     >
                       Group Projects
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/classes/mus240/instructor/bulk-grading')}
+                      className="ml-auto flex items-center gap-2"
+                    >
+                      <ClipboardCheck className="h-4 w-4" />
+                      Bulk Grading
                     </Button>
                   </div>
 
