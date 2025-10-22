@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { GraduationCap, Search, Download, Eye, TrendingUp, Award, RefreshCw } from 'lucide-react';
+import { GraduationCap, Search, Download, Eye, TrendingUp, Award, RefreshCw, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -265,6 +265,32 @@ export const StudentScoresViewer = () => {
         <CardContent className="flex items-center justify-center py-8">
           <RefreshCw className="h-6 w-6 animate-spin mr-2" />
           Loading student scores...
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Check if grades need to be calculated
+  const needsCalculation = students.length > 0 && students.every(s => 
+    s.assignment_points === 0 && s.participation_points === 0 && s.overall_points === 0
+  );
+
+  if (needsCalculation) {
+    return (
+      <Card className="bg-white/95 backdrop-blur-sm border border-white/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-amber-600" />
+            Grades Need Calculation
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-muted-foreground">
+            Student grades have not been calculated yet. Please use the Grade Calculation System below to calculate and save grades.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Once grades are calculated, you'll see individual student scores, letter grades, and performance metrics here.
+          </p>
         </CardContent>
       </Card>
     );
