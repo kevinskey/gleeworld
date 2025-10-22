@@ -33,13 +33,27 @@ export const useUsernamePermissions = (userEmail?: string) => {
       setLoading(true);
       setError(null);
       
+      // Primary: use RPC to resolve permissions by email (can include complex logic)
       const { data, error } = await supabase.rpc('get_user_username_permissions', {
         user_email_param: email
       });
 
       if (error) throw error;
 
-      const permissionsList = data?.map((p: UserPermissionSummary) => p.module_name) || [];
+      let permissionsList: string[] = data?.map((p: UserPermissionSummary) => p.module_name) || [];
+
+      // Fallback: direct lookup on username_permissions with case-insensitive email match
+      if (!permissionsList.length) {
+        const { data: rows, error: fallbackErr } = await supabase
+          .from('username_permissions')
+          .select('module_name')
+          .eq('is_active', true)
+          .ilike('user_email', email);
+        if (!fallbackErr && rows) {
+          permissionsList = rows.map((r: { module_name: string }) => r.module_name);
+        }
+      }
+
       setPermissions(permissionsList);
     } catch (err: any) {
       console.error('Error fetching username permissions:', err);
@@ -177,12 +191,29 @@ export const useUsernamePermissionsAdmin = () => {
 
   const getUserPermissions = async (userEmail: string): Promise<UserPermissionSummary[]> => {
     try {
+      // Primary via RPC
       const { data, error } = await supabase.rpc('get_user_username_permissions', {
         user_email_param: userEmail
       });
+      if (!error && data?.length) {
+        return data as UserPermissionSummary[];
+      }
 
-      if (error) throw error;
-      return data || [];
+      // Fallback: direct table lookup (case-insensitive email)
+      const { data: rows, error: fbErr } = await supabase
+        .from('username_permissions')
+        .select('module_name, created_at, expires_at, notes')
+        .eq('is_active', true)
+        .ilike('user_email', userEmail);
+
+      if (fbErr || !rows) return [];
+
+      return rows.map((r: any) => ({
+        module_name: r.module_name,
+        granted_at: r.created_at,
+        expires_at: r.expires_at,
+        notes: r.notes,
+      }));
     } catch (err: any) {
       console.error('Error fetching user permissions:', err);
       return [];
