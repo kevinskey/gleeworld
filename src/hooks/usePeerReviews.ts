@@ -9,10 +9,8 @@ interface PeerReview {
   reviewer_id: string;
   feedback: string;
   created_at: string;
-  reviewer?: {
-    full_name: string;
-    email: string;
-  };
+  reviewer_name?: string;
+  reviewer_email?: string;
 }
 
 export const usePeerReviews = (journalId?: string) => {
@@ -31,17 +29,33 @@ export const usePeerReviews = (journalId?: string) => {
     
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      const { data: reviewData, error } = await supabase
         .from('mus240_peer_reviews')
-        .select(`
-          *,
-          reviewer:gw_profiles!reviewer_id(full_name, email)
-        `)
+        .select('*')
         .eq('journal_id', journalId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setReviews(data || []);
+
+      // Fetch reviewer details separately
+      const reviewerIds = [...new Set(reviewData?.map(r => r.reviewer_id) || [])];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('id, full_name, email')
+        .in('id', reviewerIds);
+
+      const profileMap = (profiles || []).reduce((acc, p) => {
+        acc[p.id] = { full_name: p.full_name, email: p.email };
+        return acc;
+      }, {} as Record<string, { full_name: string; email: string }>);
+
+      const enrichedReviews: PeerReview[] = (reviewData || []).map(review => ({
+        ...review,
+        reviewer_name: profileMap[review.reviewer_id]?.full_name,
+        reviewer_email: profileMap[review.reviewer_id]?.email
+      }));
+
+      setReviews(enrichedReviews);
     } catch (error) {
       console.error('Error fetching peer reviews:', error);
       toast.error('Failed to load peer reviews');

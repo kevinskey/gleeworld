@@ -42,9 +42,9 @@ export const useAllStudentAssignments = () => {
         if (journalsError) throw journalsError;
 
         // Fetch journal grades
-        const { data: journalGrades, error: gradesError } = await supabase
+        const { data: journalGrades, error: gradesError} = await supabase
           .from('mus240_journal_grades')
-          .select('assignment_id, overall_score, letter_grade, feedback, graded_at')
+          .select('assignment_id, overall_score, letter_grade, ai_feedback, instructor_feedback, graded_at')
           .eq('student_id', user.id);
 
         if (gradesError) throw gradesError;
@@ -91,7 +91,7 @@ export const useAllStudentAssignments = () => {
             submitted_at: journal?.submitted_at,
             grade: grade?.overall_score,
             letter_grade: grade?.letter_grade,
-            feedback: grade?.feedback,
+            feedback: grade?.instructor_feedback || grade?.ai_feedback,
             graded_at: grade?.graded_at
           });
         });

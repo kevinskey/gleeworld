@@ -76,7 +76,7 @@ export const GradesAdmin = () => {
             overall_score: grade.overall_score || 0,
             letter_grade: grade.letter_grade || 'N/A',
             graded_at: grade.graded_at,
-            feedback: grade.feedback || '',
+            feedback: grade.ai_feedback || grade.instructor_feedback || '',
             rubric_scores: [],
             type: 'journal' as const
           };

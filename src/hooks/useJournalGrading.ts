@@ -12,10 +12,12 @@ export interface JournalGrade {
   overall_score: number;
   letter_grade: string;
   rubric: any;
-  feedback: string;
+  ai_feedback?: string;
+  instructor_feedback?: string;
   ai_model?: string;
   graded_by?: string;
   graded_at: string;
+  instructor_graded_at?: string;
 }
 
 export type GradeBreakdown = Record<string, number>;

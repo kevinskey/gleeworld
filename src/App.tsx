@@ -190,6 +190,8 @@ import { StudentWorkOverview } from "./pages/mus240/StudentWorkOverview";
 import { Mus240GradesPage } from "./pages/mus240/Mus240GradesPage";
 import { StudentDashboard } from "./pages/mus240/StudentDashboard";
 import { BulkJournalGradingPage } from "./pages/mus240/BulkJournalGradingPage";
+import { PeerReviewBrowserPage } from "./pages/mus240/PeerReviewBrowserPage";
+import { JournalReviewPage } from "./pages/mus240/JournalReviewPage";
 import MidtermExam from "./pages/mus240/MidtermExam";
 import SMUS100MidtermExamPage from "./pages/SMUS100MidtermExamPage";
 import CourseStatistics from "./pages/admin/CourseStatistics";
@@ -1810,17 +1812,23 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
-                                    path="/classes/mus240/instructor/bulk-grading" 
+                                    path="/classes/mus240/peer-review" 
                                     element={
                                       <ProtectedRoute>
-                                        <AdminOnlyRoute>
-                                          <BulkJournalGradingPage />
-                                        </AdminOnlyRoute>
+                                        <PeerReviewBrowserPage />
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
+                                    path="/classes/mus240/journal/:journalId/review" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <JournalReviewPage />
                                       </ProtectedRoute>
                                     } 
                                   />
                                    <Route 
-                                     path="/test-builder" 
+                                     path="/test-builder"
                                      element={
                                        <ProtectedRoute>
                                          <TestBuilderPage />

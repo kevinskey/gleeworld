@@ -8,10 +8,8 @@ interface PeerReview {
   id: string;
   feedback: string;
   created_at: string;
-  reviewer?: {
-    full_name: string;
-    email: string;
-  };
+  reviewer_name?: string;
+  reviewer_email?: string;
 }
 
 interface PeerReviewListProps {
@@ -43,7 +41,7 @@ export const PeerReviewList: React.FC<PeerReviewListProps> = ({ reviews }) => {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div>
-                <CardTitle className="text-base">{review.reviewer?.full_name || 'Anonymous'}</CardTitle>
+                <CardTitle className="text-base">{review.reviewer_name || 'Anonymous'}</CardTitle>
                 <p className="text-xs text-muted-foreground">
                   {format(new Date(review.created_at), 'MMM d, yyyy')}
                 </p>

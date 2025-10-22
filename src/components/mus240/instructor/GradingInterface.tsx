@@ -111,7 +111,7 @@ export const GradingInterface: React.FC = () => {
       // Load grades separately and link them
       const { data: gradesData, error: gradesError } = await supabase
         .from('mus240_journal_grades')
-        .select('journal_id, overall_score, feedback, graded_at, graded_by');
+        .select('journal_id, overall_score, ai_feedback, instructor_feedback, graded_at, graded_by');
 
       if (gradesError) {
         console.error('❌ Grades data error:', gradesError);

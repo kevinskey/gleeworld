@@ -15,12 +15,8 @@ interface JournalEntry {
   published_at: string;
   assignment_id: string;
   student_id: string;
-  student?: {
-    full_name: string;
-  };
-  assignment?: {
-    title: string;
-  };
+  student_name?: string;
+  assignment_title?: string;
   review_count?: number;
   has_reviewed?: boolean;
 }
@@ -44,16 +40,36 @@ export const JournalBrowserForReview: React.FC = () => {
       // Fetch published journals (not by current user)
       const { data: journalData, error: journalError } = await supabase
         .from('mus240_journal_entries')
-        .select(`
-          *,
-          student:gw_profiles!student_id(full_name),
-          assignment:mus240_assignments!assignment_id(title)
-        `)
+        .select('*')
         .eq('is_published', true)
         .neq('student_id', user.id)
         .order('published_at', { ascending: false });
 
       if (journalError) throw journalError;
+
+      // Fetch student names separately
+      const studentIds = [...new Set(journalData?.map(j => j.student_id) || [])];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('id, full_name')
+        .in('id', studentIds);
+
+      const profileMap = (profiles || []).reduce((acc, p) => {
+        acc[p.id] = p.full_name;
+        return acc;
+      }, {} as Record<string, string>);
+
+      // Fetch assignment titles separately
+      const assignmentIds = [...new Set(journalData?.map(j => j.assignment_id).filter(Boolean) || [])];
+      const { data: assignments } = await supabase
+        .from('mus240_assignments')
+        .select('id, title')
+        .in('id', assignmentIds);
+
+      const assignmentMap = (assignments || []).reduce((acc, a) => {
+        acc[a.id] = a.title;
+        return acc;
+      }, {} as Record<string, string>);
 
       // Fetch peer review counts for each journal
       const { data: reviewCounts, error: countError } = await supabase
@@ -77,8 +93,10 @@ export const JournalBrowserForReview: React.FC = () => {
         return acc;
       }, {} as Record<string, number>);
 
-      const enrichedJournals = (journalData || []).map(journal => ({
+      const enrichedJournals: JournalEntry[] = (journalData || []).map(journal => ({
         ...journal,
+        student_name: profileMap[journal.student_id],
+        assignment_title: journal.assignment_id ? assignmentMap[journal.assignment_id] : undefined,
         review_count: countByJournal[journal.id] || 0,
         has_reviewed: reviewedJournalIds.has(journal.id)
       }));
@@ -119,11 +137,11 @@ export const JournalBrowserForReview: React.FC = () => {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <CardTitle className="text-lg">{journal.assignment?.title || 'Untitled'}</CardTitle>
+                  <CardTitle className="text-lg">{journal.assignment_title || 'Untitled'}</CardTitle>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <User className="h-3 w-3" />
-                      {journal.student?.full_name || 'Anonymous'}
+                      {journal.student_name || 'Anonymous'}
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
