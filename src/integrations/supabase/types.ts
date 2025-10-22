@@ -20,7 +20,7 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resource_id: string | null
           resource_type: string
           user_agent: string | null
@@ -31,7 +31,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type: string
           user_agent?: string | null
@@ -42,7 +42,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type?: string
           user_agent?: string | null
@@ -1916,7 +1916,7 @@ export type Database = {
           embedded_signatures: Json | null
           id: string
           pdf_storage_path: string | null
-          signer_ip: unknown | null
+          signer_ip: unknown
           status: string
           updated_at: string
         }
@@ -1931,7 +1931,7 @@ export type Database = {
           embedded_signatures?: Json | null
           id?: string
           pdf_storage_path?: string | null
-          signer_ip?: unknown | null
+          signer_ip?: unknown
           status?: string
           updated_at?: string
         }
@@ -1946,7 +1946,7 @@ export type Database = {
           embedded_signatures?: Json | null
           id?: string
           pdf_storage_path?: string | null
-          signer_ip?: unknown | null
+          signer_ip?: unknown
           status?: string
           updated_at?: string
         }
@@ -4305,7 +4305,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           qr_code_id: string
           scan_location: Json | null
           scanned_at: string
@@ -4315,7 +4315,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           qr_code_id: string
           scan_location?: Json | null
           scanned_at?: string
@@ -4325,7 +4325,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           qr_code_id?: string
           scan_location?: Json | null
           scanned_at?: string
@@ -9473,7 +9473,7 @@ export type Database = {
           additional_data: Json | null
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           qr_code_id: string
           scan_location: Json | null
           scanned_at: string | null
@@ -9484,7 +9484,7 @@ export type Database = {
           additional_data?: Json | null
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           qr_code_id: string
           scan_location?: Json | null
           scanned_at?: string | null
@@ -9495,7 +9495,7 @@ export type Database = {
           additional_data?: Json | null
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           qr_code_id?: string
           scan_location?: Json | null
           scanned_at?: string | null
@@ -10407,7 +10407,7 @@ export type Database = {
           created_at: string | null
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resource_id: string | null
           resource_type: string
           user_agent: string | null
@@ -10418,7 +10418,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type: string
           user_agent?: string | null
@@ -10429,7 +10429,7 @@ export type Database = {
           created_at?: string | null
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type?: string
           user_agent?: string | null
@@ -11902,7 +11902,7 @@ export type Database = {
           action_type: string
           created_at: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           referrer: string | null
           spotlight_id: string
           user_agent: string | null
@@ -11912,7 +11912,7 @@ export type Database = {
           action_type: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           referrer?: string | null
           spotlight_id: string
           user_agent?: string | null
@@ -11922,7 +11922,7 @@ export type Database = {
           action_type?: string
           created_at?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           referrer?: string | null
           spotlight_id?: string
           user_agent?: string | null
@@ -14845,14 +14845,19 @@ export type Database = {
       }
       mus240_journal_grades: {
         Row: {
+          ai_feedback: string | null
           ai_model: string | null
           assignment_db_id: string | null
           assignment_id: string
           created_at: string
-          feedback: string | null
           graded_at: string
           graded_by: string | null
           id: string
+          instructor_feedback: string | null
+          instructor_graded_at: string | null
+          instructor_id: string | null
+          instructor_letter_grade: string | null
+          instructor_score: number | null
           journal_id: string | null
           letter_grade: string | null
           overall_score: number
@@ -14861,14 +14866,19 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ai_feedback?: string | null
           ai_model?: string | null
           assignment_db_id?: string | null
           assignment_id: string
           created_at?: string
-          feedback?: string | null
           graded_at?: string
           graded_by?: string | null
           id?: string
+          instructor_feedback?: string | null
+          instructor_graded_at?: string | null
+          instructor_id?: string | null
+          instructor_letter_grade?: string | null
+          instructor_score?: number | null
           journal_id?: string | null
           letter_grade?: string | null
           overall_score: number
@@ -14877,14 +14887,19 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ai_feedback?: string | null
           ai_model?: string | null
           assignment_db_id?: string | null
           assignment_id?: string
           created_at?: string
-          feedback?: string | null
           graded_at?: string
           graded_by?: string | null
           id?: string
+          instructor_feedback?: string | null
+          instructor_graded_at?: string | null
+          instructor_id?: string | null
+          instructor_letter_grade?: string | null
+          instructor_score?: number | null
           journal_id?: string | null
           letter_grade?: string | null
           overall_score?: number
@@ -15101,6 +15116,41 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      mus240_peer_reviews: {
+        Row: {
+          created_at: string
+          feedback: string
+          id: string
+          journal_id: string
+          reviewer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          feedback: string
+          id?: string
+          journal_id: string
+          reviewer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: string
+          id?: string
+          journal_id?: string
+          reviewer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mus240_peer_reviews_journal_id_fkey"
+            columns: ["journal_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mus240_performance_levels: {
         Row: {
@@ -15896,7 +15946,7 @@ export type Database = {
           date_signed: string
           full_name: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           is_valid: boolean
           onboarding_step: string
           signature_data: string
@@ -15911,7 +15961,7 @@ export type Database = {
           date_signed?: string
           full_name: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_valid?: boolean
           onboarding_step?: string
           signature_data: string
@@ -15926,7 +15976,7 @@ export type Database = {
           date_signed?: string
           full_name?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_valid?: boolean
           onboarding_step?: string
           signature_data?: string
@@ -16702,7 +16752,7 @@ export type Database = {
           created_at: string | null
           event_id: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           qr_token: string
           scan_location: string | null
           scan_result: Json | null
@@ -16715,7 +16765,7 @@ export type Database = {
           created_at?: string | null
           event_id?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           qr_token: string
           scan_location?: string | null
           scan_result?: Json | null
@@ -16728,7 +16778,7 @@ export type Database = {
           created_at?: string | null
           event_id?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           qr_token?: string
           scan_location?: string | null
           scan_result?: Json | null
@@ -17033,7 +17083,7 @@ export type Database = {
           changed_at: string | null
           changed_by: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_role: string
           old_role: string | null
           reason: string | null
@@ -17044,7 +17094,7 @@ export type Database = {
           changed_at?: string | null
           changed_by: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_role: string
           old_role?: string | null
           reason?: string | null
@@ -17055,7 +17105,7 @@ export type Database = {
           changed_at?: string | null
           changed_by?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_role?: string
           old_role?: string | null
           reason?: string | null
@@ -19231,14 +19281,8 @@ export type Database = {
         Args: { semester_name_param?: string; user_id_param: string }
         Returns: undefined
       }
-      can_manage_appointments: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      can_view_auditioner_profiles: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      can_manage_appointments: { Args: never; Returns: boolean }
+      can_view_auditioner_profiles: { Args: never; Returns: boolean }
       check_appointment_availability: {
         Args: {
           p_appointment_date: string
@@ -19248,26 +19292,26 @@ export type Database = {
         }
         Returns: Json
       }
-      check_executive_board_access: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      check_rate_limit: {
-        Args:
-          | {
-              action_type_param: string
-              identifier_param: string
-              max_attempts?: number
-              window_minutes?: number
-            }
-          | {
+      check_executive_board_access: { Args: never; Returns: boolean }
+      check_rate_limit:
+        | {
+            Args: {
               p_action_type: string
               p_max_requests?: number
               p_user_id: string
               p_window_minutes?: number
             }
-        Returns: boolean
-      }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              action_type_param: string
+              identifier_param: string
+              max_attempts?: number
+              window_minutes?: number
+            }
+            Returns: boolean
+          }
       check_rate_limit_secure: {
         Args: {
           action_type_param: string
@@ -19277,42 +19321,18 @@ export type Database = {
         }
         Returns: boolean
       }
-      check_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      check_user_admin_simple: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      check_user_exists_simple: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      check_user_admin: { Args: never; Returns: boolean }
+      check_user_admin_simple: { Args: never; Returns: boolean }
+      check_user_exists_simple: { Args: never; Returns: boolean }
       check_vocal_health_alerts: {
         Args: { target_user_id: string }
         Returns: boolean
       }
-      clean_admin_bootstrap: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      cleanup_expired_notifications: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_old_rehearsals: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      cleanup_user_duplicate_buckets: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      convert_auditioner_images_to_avatars: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      clean_admin_bootstrap: { Args: never; Returns: boolean }
+      cleanup_expired_notifications: { Args: never; Returns: number }
+      cleanup_old_rehearsals: { Args: never; Returns: number }
+      cleanup_user_duplicate_buckets: { Args: never; Returns: Json }
+      convert_auditioner_images_to_avatars: { Args: never; Returns: number }
       create_notification_with_delivery: {
         Args: {
           p_action_label?: string
@@ -19382,26 +19402,17 @@ export type Database = {
         }
         Returns: string
       }
-      current_user_can_access_admin_modules: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      current_user_can_access_admin_modules: { Args: never; Returns: boolean }
       current_user_has_executive_function_access: {
         Args: { function_name_param: string; permission_type_param?: string }
         Returns: boolean
       }
-      current_user_is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      current_user_is_admin: { Args: never; Returns: boolean }
       current_user_is_course_ta: {
         Args: { _course_code: string }
         Returns: boolean
       }
-      debug_audition_permissions: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      debug_audition_permissions: { Args: never; Returns: Json }
       decrypt_square_token: {
         Args: { encrypted_token: string }
         Returns: string
@@ -19410,14 +19421,8 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: boolean
       }
-      emergency_admin_bootstrap: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      encrypt_square_token: {
-        Args: { token: string }
-        Returns: string
-      }
+      emergency_admin_bootstrap: { Args: never; Returns: boolean }
+      encrypt_square_token: { Args: { token: string }; Returns: string }
       generate_course_qr_code: {
         Args: {
           p_content: string
@@ -19436,14 +19441,8 @@ export type Database = {
         }
         Returns: string
       }
-      generate_qr_token: {
-        Args: { event_id_param: string }
-        Returns: string
-      }
-      generate_secure_password: {
-        Args: { length?: number }
-        Returns: string
-      }
+      generate_qr_token: { Args: { event_id_param: string }; Returns: string }
+      generate_secure_password: { Args: { length?: number }; Returns: string }
       generate_secure_qr_token: {
         Args: { event_id_param: string }
         Returns: string
@@ -19457,10 +19456,7 @@ export type Database = {
         }
         Returns: string
       }
-      generate_sight_singing_share_token: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_sight_singing_share_token: { Args: never; Returns: string }
       get_accessible_sheet_music: {
         Args: { user_id_param: string }
         Returns: {
@@ -19473,7 +19469,7 @@ export type Database = {
         }[]
       }
       get_all_user_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           email: string
@@ -19486,16 +19482,10 @@ export type Database = {
         Args: { assignment_id_param: string }
         Returns: number
       }
-      get_audition_application_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      get_audition_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      get_audition_application_count: { Args: never; Returns: number }
+      get_audition_stats: { Args: never; Returns: Json }
       get_auditioner_images_for_conversion: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           email: string
           full_name: string
@@ -19513,12 +19503,9 @@ export type Database = {
           start_time: string
         }[]
       }
-      get_avatar_url: {
-        Args: { user_id_param: string }
-        Returns: string
-      }
+      get_avatar_url: { Args: { user_id_param: string }; Returns: string }
       get_blocked_dates: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           blocked_date: string
           created_at: string
@@ -19527,13 +19514,21 @@ export type Database = {
           reason: string
         }[]
       }
-      get_booked_audition_slots: {
-        Args: { p_end: string; p_start: string } | { selected_date: string }
-        Returns: {
-          audition_time_slot: string
-          auditioner_name: string
-        }[]
-      }
+      get_booked_audition_slots:
+        | {
+            Args: { selected_date: string }
+            Returns: {
+              audition_time_slot: string
+              auditioner_name: string
+            }[]
+          }
+        | {
+            Args: { p_end: string; p_start: string }
+            Returns: {
+              audition_time_slot: string
+              auditioner_name: string
+            }[]
+          }
       get_cohort_summary_stats: {
         Args: { cohort_param: string }
         Returns: {
@@ -19544,33 +19539,18 @@ export type Database = {
           total_students: number
         }[]
       }
-      get_current_user_admin_status: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      get_current_user_email: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_profile_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_admin_status: { Args: never; Returns: boolean }
+      get_current_user_email: { Args: never; Returns: string }
+      get_current_user_profile_role: { Args: never; Returns: string }
+      get_current_user_role: { Args: never; Returns: string }
       get_current_week_dates: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           week_end: string
           week_start: string
         }[]
       }
-      get_graduation_decade: {
-        Args: { grad_year: number }
-        Returns: string
-      }
+      get_graduation_decade: { Args: { grad_year: number }; Returns: string }
       get_on_this_day_content: {
         Args: { target_date?: string }
         Returns: {
@@ -19593,14 +19573,8 @@ export type Database = {
           student_name: string
         }[]
       }
-      get_scheduled_auditions_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      get_track_like_count: {
-        Args: { track_uuid: string }
-        Returns: number
-      }
+      get_scheduled_auditions_count: { Args: never; Returns: number }
+      get_track_like_count: { Args: { track_uuid: string }; Returns: number }
       get_upcoming_license_expirations: {
         Args: { days_ahead?: number }
         Returns: {
@@ -19611,18 +19585,14 @@ export type Database = {
           music_title: string
         }[]
       }
-      get_user_admin_status: {
-        Args: Record<PropertyKey, never> | { user_id_param: string }
-        Returns: Json
-      }
+      get_user_admin_status:
+        | { Args: { user_id_param: string }; Returns: Json }
+        | { Args: never; Returns: boolean }
       get_user_executive_position: {
         Args: { user_id_param: string }
         Returns: Database["public"]["Enums"]["executive_position"]
       }
-      get_user_fy_student_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_user_fy_student_id: { Args: never; Returns: string }
       get_user_group_permissions: {
         Args: { user_id_param: string }
         Returns: {
@@ -19652,10 +19622,7 @@ export type Database = {
           sources: string[]
         }[]
       }
-      get_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_user_role: { Args: never; Returns: string }
       get_user_username_permissions: {
         Args: { user_email_param: string }
         Returns: {
@@ -19665,10 +19632,7 @@ export type Database = {
           notes: string
         }[]
       }
-      grant_exec_board_all_modules: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      grant_exec_board_all_modules: { Args: never; Returns: Json }
       has_group_permission: {
         Args: {
           permission_id_param: string
@@ -19677,12 +19641,15 @@ export type Database = {
         }
         Returns: boolean
       }
-      has_role: {
-        Args:
-          | { _role: Database["public"]["Enums"]["app_role"]; _user_id: string }
-          | { target: string }
-        Returns: boolean
-      }
+      has_role:
+        | { Args: { target: string }; Returns: boolean }
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
       has_username_permission: {
         Args: { module_name_param: string; user_email_param: string }
         Returns: boolean
@@ -19695,10 +19662,7 @@ export type Database = {
         Args: { message_id_param: string }
         Returns: number
       }
-      increment_play_count: {
-        Args: { track_uuid: string }
-        Returns: undefined
-      }
+      increment_play_count: { Args: { track_uuid: string }; Returns: undefined }
       insert_performance_score: {
         Args: {
           p_categories: string
@@ -19714,18 +19678,10 @@ export type Database = {
         }
         Returns: string
       }
-      is_admin: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_admin_or_librarian: {
-        Args: { _user_id: string }
-        Returns: boolean
-      }
-      is_alumnae_liaison: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_admin_or_librarian: { Args: { _user_id: string }; Returns: boolean }
+      is_admin_user: { Args: never; Returns: boolean }
+      is_alumnae_liaison: { Args: never; Returns: boolean }
       is_coordinator_for_cohort: {
         Args: { cohort_id_param: string }
         Returns: boolean
@@ -19734,46 +19690,22 @@ export type Database = {
         Args: { _course_code: string; _user_id: string }
         Returns: boolean
       }
-      is_current_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_current_user_admin: { Args: never; Returns: boolean }
       is_current_user_admin_or_provider: {
         Args: { provider_user_id: string }
         Returns: boolean
       }
-      is_current_user_admin_or_super_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_admin_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_gw_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_gw_admin_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_current_user_admin_or_super_admin: { Args: never; Returns: boolean }
+      is_current_user_admin_safe: { Args: never; Returns: boolean }
+      is_current_user_gw_admin: { Args: never; Returns: boolean }
+      is_current_user_gw_admin_safe: { Args: never; Returns: boolean }
       is_current_user_provider: {
         Args: { provider_user_id: string }
         Returns: boolean
       }
-      is_current_user_super_admin_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_tour_manager: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_current_user_treasurer: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_current_user_super_admin_safe: { Args: never; Returns: boolean }
+      is_current_user_tour_manager: { Args: never; Returns: boolean }
+      is_current_user_treasurer: { Args: never; Returns: boolean }
       is_enrolled_in_mus240: {
         Args: { user_id_param?: string }
         Returns: boolean
@@ -19782,58 +19714,27 @@ export type Database = {
         Args: { user_id_param: string }
         Returns: boolean
       }
-      is_executive_board_member_or_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_executive_board_or_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_fy_coordinator: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_fy_staff: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_gw_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_gw_admin_safe: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_mus240_student: {
-        Args: { user_id_param: string }
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: Record<PropertyKey, never> | { _user_id: string }
-        Returns: boolean
-      }
-      is_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_executive_board_member_or_admin: { Args: never; Returns: boolean }
+      is_executive_board_or_admin: { Args: never; Returns: boolean }
+      is_fy_coordinator: { Args: never; Returns: boolean }
+      is_fy_staff: { Args: never; Returns: boolean }
+      is_gw_admin: { Args: never; Returns: boolean }
+      is_gw_admin_safe: { Args: never; Returns: boolean }
+      is_mus240_student: { Args: { user_id_param: string }; Returns: boolean }
+      is_super_admin:
+        | { Args: never; Returns: boolean }
+        | { Args: { _user_id: string }; Returns: boolean }
+      is_user_admin: { Args: never; Returns: boolean }
       is_user_admin_or_super_admin: {
         Args: { user_id_param: string }
         Returns: boolean
       }
-      is_user_executive_board_member: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      is_user_executive_board_member: { Args: never; Returns: boolean }
       is_user_tour_manager: {
         Args: { user_id_param: string }
         Returns: boolean
       }
-      is_wardrobe_manager: {
-        Args: { user_id_param: string }
-        Returns: boolean
-      }
+      is_wardrobe_manager: { Args: { user_id_param: string }; Returns: boolean }
       kpi_first_year_vs_overall: {
         Args: {
           cohort_param: string
@@ -19942,24 +19843,27 @@ export type Database = {
         Args: { p_notification_id: string }
         Returns: boolean
       }
-      process_qr_attendance_scan: {
-        Args:
-          | {
+      process_qr_attendance_scan:
+        | {
+            Args: {
               ip_address_param?: unknown
               qr_token_param: string
               scan_location_param?: Json
               user_agent_param?: string
               user_id_param: string
             }
-          | {
+            Returns: Json
+          }
+        | {
+            Args: {
               ip_address_param?: unknown
               qr_token_param: string
               scan_location_param?: string
               user_agent_param?: string
               user_id_param: string
             }
-        Returns: Json
-      }
+            Returns: Json
+          }
       promote_auditioner_to_member: {
         Args: { audition_application_id: string; auditioner_user_id: string }
         Returns: boolean
@@ -19969,17 +19873,14 @@ export type Database = {
         Returns: undefined
       }
       recalculate_missing_midterm_grades: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           calculated_grade: number
           question_count: number
           submission_id: string
         }[]
       }
-      refresh_all_user_permissions: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      refresh_all_user_permissions: { Args: never; Returns: Json }
       require_security_confirmation: {
         Args: {
           operation_type: string
@@ -20046,18 +19947,12 @@ export type Database = {
         }
         Returns: Json
       }
-      simple_admin_bootstrap: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      simple_admin_bootstrap: { Args: never; Returns: undefined }
       submit_budget_for_approval: {
         Args: { p_budget_id: string }
         Returns: Json
       }
-      sync_auditioner_names_from_applications: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
+      sync_auditioner_names_from_applications: { Args: never; Returns: number }
       toggle_love_message_like: {
         Args: { message_id_param: string }
         Returns: Json
@@ -20075,14 +19970,8 @@ export type Database = {
         }
         Returns: boolean
       }
-      trigger_scholarship_update: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      unblock_date: {
-        Args: { block_id: string }
-        Returns: undefined
-      }
+      trigger_scholarship_update: { Args: never; Returns: string }
+      unblock_date: { Args: { block_id: string }; Returns: undefined }
       update_audition_status_with_logging: {
         Args: {
           p_audition_id: string
@@ -20092,10 +19981,7 @@ export type Database = {
         }
         Returns: Json
       }
-      update_google_sheets_scope: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      update_google_sheets_scope: { Args: never; Returns: boolean }
       update_mus240_member_role: {
         Args: {
           p_group_id: string
@@ -20106,7 +19992,7 @@ export type Database = {
         Returns: Json
       }
       update_mus240_student_roles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           new_role: string
           old_role: string
@@ -20152,14 +20038,8 @@ export type Database = {
         Args: { class_list_id_param: string }
         Returns: boolean
       }
-      user_cohort_match: {
-        Args: { cohort_id_param: string }
-        Returns: boolean
-      }
-      user_has_admin_role: {
-        Args: { user_id_param: string }
-        Returns: boolean
-      }
+      user_cohort_match: { Args: { cohort_id_param: string }; Returns: boolean }
+      user_has_admin_role: { Args: { user_id_param: string }; Returns: boolean }
       user_has_alumnae_liaison_role: {
         Args: { user_id_param: string }
         Returns: boolean
@@ -20212,14 +20092,8 @@ export type Database = {
         Args: { module_name_param: string; user_email_param: string }
         Returns: boolean
       }
-      user_is_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      user_is_group_member: {
-        Args: { group_id: string }
-        Returns: boolean
-      }
+      user_is_admin: { Args: never; Returns: boolean }
+      user_is_group_member: { Args: { group_id: string }; Returns: boolean }
       user_owns_study_score: {
         Args: { study_score_id: string }
         Returns: boolean
@@ -20241,10 +20115,7 @@ export type Database = {
         Args: { signature_data: string }
         Returns: boolean
       }
-      verify_admin_access: {
-        Args: { user_id_param: string }
-        Returns: boolean
-      }
+      verify_admin_access: { Args: { user_id_param: string }; Returns: boolean }
     }
     Enums: {
       app_role:

@@ -21,7 +21,7 @@ interface AIGrade {
   overall_score: number;
   letter_grade: string;
   rubric: any; // JSON field containing rubric_scores
-  feedback: string; // instructor_feedback
+  ai_feedback: string; // AI generated feedback
   ai_model: string;
   graded_at: string;
 }
@@ -159,14 +159,14 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId }) => {
         )}
 
         {/* Overall Feedback */}
-        {grade.feedback && (
+        {grade.ai_feedback && (
           <div className="space-y-2">
             <h4 className="font-medium flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4" />
-              Overall Feedback
+              AI Feedback
             </h4>
             <div className="p-3 bg-card border rounded-md max-h-96 overflow-y-auto">
-              <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans">{grade.feedback}</pre>
+              <pre className="text-sm leading-relaxed whitespace-pre-wrap font-sans">{grade.ai_feedback}</pre>
             </div>
           </div>
         )}
