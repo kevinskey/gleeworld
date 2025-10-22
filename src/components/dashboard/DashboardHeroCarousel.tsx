@@ -126,7 +126,7 @@ export const DashboardHeroCarousel = () => {
     const visibleFallback = fallbackSlides.slice(0, slidesToShow);
 
     return (
-      <div className="relative z-50 w-full rounded-lg overflow-hidden group mb-4">
+      <div className="relative w-full rounded-lg overflow-hidden group mb-4">
         <div className={`grid gap-4 ${
           slidesToShow === 2 ? 'grid-cols-2' : 
           slidesToShow === 3 ? 'grid-cols-3' : 
@@ -173,7 +173,7 @@ export const DashboardHeroCarousel = () => {
   const visibleSlides = getVisibleSlides();
 
   return (
-    <div className="relative z-50 w-full rounded-lg overflow-hidden group mb-4">
+    <div className="relative w-full rounded-lg overflow-hidden group mb-4">
       <div className={`grid gap-4 ${
         slidesToShow === 2 ? 'grid-cols-2' : 
         slidesToShow === 3 ? 'grid-cols-3' : 
