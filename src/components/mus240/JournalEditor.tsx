@@ -291,7 +291,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
                 accept=".txt,.pdf,.doc,.docx"
                 onChange={handleFileUpload}
                 className="hidden"
-                disabled={isPublished || loading || uploading}
+                disabled={loading || uploading}
               />
               <Button
                 type="button"
