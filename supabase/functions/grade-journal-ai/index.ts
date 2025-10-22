@@ -125,7 +125,7 @@ Return JSON with this exact shape:
       assignment_id,
       overall_score,
       letter_grade,
-      feedback: overall_feedback,
+      ai_feedback: overall_feedback,
       rubric: { criteria: rubric?.criteria || [], scores: rubric_scores },
       ai_model: 'google/gemini-2.5-flash',
       graded_at: new Date().toISOString(),
@@ -149,7 +149,7 @@ Return JSON with this exact shape:
         student_id,
         assignment_id,
         overall_score,
-        feedback: overall_feedback,
+        ai_feedback: overall_feedback,
         graded_at: new Date().toISOString(),
       };
       const minRes = await supabase
