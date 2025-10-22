@@ -421,13 +421,7 @@ export const useJournalGrading = () => {
     try {
       const { data, error } = await supabase
         .from('mus240_journal_grades')
-        .select(`
-          *,
-          gw_profiles!student_id (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('assignment_id', assignmentId)
         .order('graded_at', { ascending: false });
 
