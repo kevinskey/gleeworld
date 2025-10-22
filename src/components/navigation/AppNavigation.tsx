@@ -19,7 +19,8 @@ import {
   Music,
   ShoppingCart,
   ShoppingBag,
-  LayoutDashboard
+  LayoutDashboard,
+  GraduationCap
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
@@ -35,6 +36,12 @@ export const AppNavigation = () => {
       label: "Library",
       href: "/?tab=library",
       icon: Library,
+      permission: null
+    },
+    {
+      label: "My Grades",
+      href: "/student/my-submissions",
+      icon: GraduationCap,
       permission: null
     },
     {
