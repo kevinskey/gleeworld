@@ -573,7 +573,9 @@ export const MetalHeaderDashboard = ({
         </div>
 
         {/* Dashboard Hero Carousel */}
-        <DashboardHeroCarousel />
+        <div className="relative z-0">
+          <DashboardHeroCarousel />
+        </div>
 
         {/* Favorites Card */}
         {groupedModules && groupedModules.favorites.length > 0 && (
