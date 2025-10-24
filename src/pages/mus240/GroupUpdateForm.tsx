@@ -152,6 +152,20 @@ export default function GroupUpdateForm() {
       return;
     }
 
+    // Validate required fields
+    if (!formData.groupName) {
+      toast.error('Please select a group name');
+      return;
+    }
+    if (!formData.groupModerator) {
+      toast.error('Please select a group moderator');
+      return;
+    }
+    if (!formData.teamMembers) {
+      toast.error('Please list all team members');
+      return;
+    }
+
     setSubmitting(true);
     
     try {
@@ -471,24 +485,23 @@ export default function GroupUpdateForm() {
 
                 {/* Team Members */}
                 <div>
-                  <Label htmlFor="teamMembers">Team Members *</Label>
-                  <Select 
-                    value={formData.teamMembers} 
-                    onValueChange={(value) => handleInputChange('teamMembers', value)}
+                  <Label htmlFor="teamMembers">All Team Members (one per line) *</Label>
+                  <Textarea
+                    id="teamMembers"
+                    value={formData.teamMembers}
+                    onChange={(e) => handleInputChange('teamMembers', e.target.value)}
+                    placeholder={formData.groupName ? "List all team members, one per line..." : "Select a group first"}
                     required
                     disabled={!formData.groupName}
-                  >
-                    <SelectTrigger id="teamMembers">
-                      <SelectValue placeholder={formData.groupName ? "Select team member" : "Select a group first"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {groupMembers.map((member) => (
-                        <SelectItem key={member.id} value={member.full_name}>
-                          {member.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    rows={4}
+                    className="resize-y"
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {groupMembers.length > 0 
+                      ? `Group members: ${groupMembers.map(m => m.full_name).join(', ')}`
+                      : 'Select a group to see registered members'
+                    }
+                  </p>
                 </div>
 
                 {/* My Individual Contribution */}
