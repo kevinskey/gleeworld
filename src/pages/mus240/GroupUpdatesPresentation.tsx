@@ -140,6 +140,17 @@ export default function GroupUpdatesPresentation() {
                       <span className="font-medium">Moderator:</span>
                       <span>{update.group_moderator}</span>
                     </div>
+                    <div className="text-sm text-slate-600">
+                      <span className="font-medium">Team Members:</span>
+                      <div className="mt-1 ml-6 space-y-0.5">
+                        {update.team_members.split('\n').map((member, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <div className="h-1.5 w-1.5 rounded-full bg-slate-400"></div>
+                            <span>{member}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2 text-sm text-slate-600">
                       <Calendar className="h-4 w-4 text-slate-400" />
                       <span className="font-medium">Submitted:</span>
