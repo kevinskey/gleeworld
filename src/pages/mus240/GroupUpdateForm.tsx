@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -33,6 +33,8 @@ export default function GroupUpdateForm() {
   const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(true);
   const [formData, setFormData] = useState({
     groupName: '',
     groupModerator: '',
@@ -46,6 +48,29 @@ export default function GroupUpdateForm() {
     challengesFaced: '',
     completionPlan: ''
   });
+
+  // Fetch groups from database
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('mus240_project_groups')
+          .select('id, name')
+          .eq('semester', 'Fall 2025')
+          .order('name');
+
+        if (error) throw error;
+        setGroups(data || []);
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+        toast.error('Failed to load groups');
+      } finally {
+        setLoadingGroups(false);
+      }
+    };
+
+    fetchGroups();
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -92,7 +117,7 @@ export default function GroupUpdateForm() {
     }
   };
 
-  if (enrollmentLoading || roleLoading) {
+  if (enrollmentLoading || roleLoading || loadingGroups) {
     return (
       <UniversalLayout>
         <div className="flex items-center justify-center h-64">
@@ -217,9 +242,9 @@ export default function GroupUpdateForm() {
                       <SelectValue placeholder="Select your group" />
                     </SelectTrigger>
                     <SelectContent>
-                      {GROUP_OPTIONS.map((group) => (
-                        <SelectItem key={group} value={group}>
-                          {group}
+                      {groups.map((group) => (
+                        <SelectItem key={group.id} value={group.name}>
+                          {group.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
