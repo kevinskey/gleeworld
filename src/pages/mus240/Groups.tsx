@@ -562,10 +562,6 @@ export default function Groups() {
                             </div>
                           </div>}
                         
-                        {group.is_official && <Badge className="bg-green-100 text-green-700 border-green-200">
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Official
-                          </Badge>}
 
                         {!userGroup && group.member_count < (group.max_members || 4) && <div className="flex flex-col gap-2">
                               <Link to={`/classes/mus240/groups/${group.id}`} className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center transition-colors">
