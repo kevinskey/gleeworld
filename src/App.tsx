@@ -133,6 +133,7 @@ import { AuditionsManagement } from "./components/admin/AuditionsManagement";
 import { ShoutcastManagement } from "./pages/admin/ShoutcastManagement";
 import { ReceiptsPage } from "./pages/ReceiptsPage";
 import ApprovalSystemPage from "./pages/ApprovalSystemPage";
+import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
 import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
@@ -1717,7 +1718,15 @@ const App = () => {
                                      <GroupUpdateForm />
                                    </Mus240EnrollmentRoute>
                                  }
-                                />
+                                 />
+                                 <Route 
+                                   path="/classes/mus240/groups/presentation" 
+                                  element={
+                                    <Mus240EnrollmentRoute>
+                                      <GroupUpdatesPresentation />
+                                    </Mus240EnrollmentRoute>
+                                  }
+                                 />
                                 <Route 
                                   path="/classes/mus240/groups/:groupId" 
                                  element={
