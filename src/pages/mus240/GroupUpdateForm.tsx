@@ -11,12 +11,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, CheckCircle, FileText, HelpCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, FileText, HelpCircle, X, GripVertical } from 'lucide-react';
 import { useMus240Enrollment } from '@/hooks/useMus240Enrollment';
 import { useUserRole } from '@/hooks/useUserRole';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Rnd } from 'react-rnd';
 
 const GROUP_OPTIONS = [
   "ANTI AI",
@@ -198,108 +198,133 @@ export default function GroupUpdateForm() {
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <Dialog open={showGuidelines} onOpenChange={setShowGuidelines}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <HelpCircle className="h-5 w-5 text-blue-600" />
-              Questions to Consider
-            </DialogTitle>
-            <DialogDescription>
-              Reflect on these questions with your team before submitting.
-            </DialogDescription>
-          </DialogHeader>
-          <ScrollArea className="h-[50vh] pr-4">
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                  🧭 Project Details
-                </h3>
-                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                  <li>What problem or question are we actually trying to solve in the intersection of AI and music?</li>
-                  <li>Why does this problem matter now? Who is affected by it?</li>
-                  <li>Is our goal clearly stated in one or two sentences that someone outside the class could understand?</li>
-                </ul>
+      {showGuidelines && (
+        <Rnd
+          default={{
+            x: window.innerWidth / 2 - 400,
+            y: window.innerHeight / 2 - 300,
+            width: 800,
+            height: 600,
+          }}
+          minWidth={400}
+          minHeight={400}
+          bounds="window"
+          dragHandleClassName="drag-handle"
+          className="z-50"
+        >
+          <div className="bg-background border rounded-lg shadow-lg h-full flex flex-col">
+            <div className="drag-handle cursor-move bg-muted px-6 py-4 rounded-t-lg flex items-center justify-between border-b">
+              <div className="flex items-center gap-2">
+                <GripVertical className="h-5 w-5 text-muted-foreground" />
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="h-5 w-5 text-blue-600" />
+                  <h2 className="text-lg font-semibold">Questions to Consider</h2>
+                </div>
               </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                  🎯 Thesis Statement / Goal
-                </h3>
-                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                  <li>What is our main claim or idea?</li>
-                  <li>Can we defend it with evidence or examples?</li>
-                  <li>How does it connect to what we've learned about ethics, creativity, or cultural impact in AI music?</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                  🔧 Project Progress Summary
-                </h3>
-                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                  <li>What have we done so far—research, interviews, design, testing, writing?</li>
-                  <li>What results or insights have we gathered?</li>
-                  <li>What's still missing, and why?</li>
-                  <li>How has our direction evolved since the start?</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                  🔗 Links to Sources Found
-                </h3>
-                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                  <li>Which sources most shaped our thinking?</li>
-                  <li>Do we have a balance of scholarly, journalistic, and multimedia sources?</li>
-                  <li>Are all our links still accessible and properly cited?</li>
-                  <li>Have we included any primary sources (e.g., artist interviews, data, or our own recordings)?</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                  🧩 Final Product & Completion
-                </h3>
-                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                  <li>What are we actually creating or presenting—what will the audience see or experience?</li>
-                  <li>How does this product solve or respond to the problem we identified?</li>
-                  <li>What tools or technologies (AI models, DAWs, websites, datasets) are we using?</li>
-                  <li>How will we measure whether our product "works" or communicates its message?</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                  🚧 Challenges Faced
-                </h3>
-                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                  <li>What obstacles slowed us down—technical, creative, scheduling, communication?</li>
-                  <li>How did we address or adapt to those challenges?</li>
-                  <li>Did any surprise discoveries reshape our project?</li>
-                </ul>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
-                  🪜 Plan for Completion
-                </h3>
-                <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
-                  <li>What specific tasks remain (research, editing, coding, rehearsing, etc.)?</li>
-                  <li>Who is responsible for each?</li>
-                  <li>What's our realistic timeline for finalizing everything?</li>
-                  <li>What will success look like on presentation day?</li>
-                </ul>
-              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowGuidelines(false)}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
-          </ScrollArea>
-          <div className="flex justify-end mt-4">
-            <Button onClick={() => setShowGuidelines(false)}>
-              Got it, let's start
-            </Button>
+            <p className="text-sm text-muted-foreground px-6 pt-4">
+              Reflect on these questions with your team before submitting.
+            </p>
+            <ScrollArea className="flex-1 px-6 py-4">
+              <div className="space-y-6 pr-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    🧭 Project Details
+                  </h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                    <li>What problem or question are we actually trying to solve in the intersection of AI and music?</li>
+                    <li>Why does this problem matter now? Who is affected by it?</li>
+                    <li>Is our goal clearly stated in one or two sentences that someone outside the class could understand?</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    🎯 Thesis Statement / Goal
+                  </h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                    <li>What is our main claim or idea?</li>
+                    <li>Can we defend it with evidence or examples?</li>
+                    <li>How does it connect to what we've learned about ethics, creativity, or cultural impact in AI music?</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    🔧 Project Progress Summary
+                  </h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                    <li>What have we done so far—research, interviews, design, testing, writing?</li>
+                    <li>What results or insights have we gathered?</li>
+                    <li>What's still missing, and why?</li>
+                    <li>How has our direction evolved since the start?</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    🔗 Links to Sources Found
+                  </h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                    <li>Which sources most shaped our thinking?</li>
+                    <li>Do we have a balance of scholarly, journalistic, and multimedia sources?</li>
+                    <li>Are all our links still accessible and properly cited?</li>
+                    <li>Have we included any primary sources (e.g., artist interviews, data, or our own recordings)?</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    🧩 Final Product & Completion
+                  </h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                    <li>What are we actually creating or presenting—what will the audience see or experience?</li>
+                    <li>How does this product solve or respond to the problem we identified?</li>
+                    <li>What tools or technologies (AI models, DAWs, websites, datasets) are we using?</li>
+                    <li>How will we measure whether our product "works" or communicates its message?</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    🚧 Challenges Faced
+                  </h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                    <li>What obstacles slowed us down—technical, creative, scheduling, communication?</li>
+                    <li>How did we address or adapt to those challenges?</li>
+                    <li>Did any surprise discoveries reshape our project?</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    🪜 Plan for Completion
+                  </h3>
+                  <ul className="space-y-1 text-sm text-muted-foreground list-disc pl-5">
+                    <li>What specific tasks remain (research, editing, coding, rehearsing, etc.)?</li>
+                    <li>Who is responsible for each?</li>
+                    <li>What's our realistic timeline for finalizing everything?</li>
+                    <li>What will success look like on presentation day?</li>
+                  </ul>
+                </div>
+              </div>
+            </ScrollArea>
+            <div className="flex justify-end px-6 py-4 border-t">
+              <Button onClick={() => setShowGuidelines(false)}>
+                Got it, let's start
+              </Button>
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </Rnd>
+      )}
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
