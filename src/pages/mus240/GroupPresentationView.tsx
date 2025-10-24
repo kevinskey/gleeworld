@@ -79,10 +79,12 @@ function getSlides(update: GroupUpdate): Slide[] {
             <Target className="h-12 w-12" />
             <h2 className="text-5xl font-bold">Thesis / Goal</h2>
           </div>
-          <div className="flex-1 flex items-center">
-            <p className="text-3xl leading-relaxed font-light">
-              {update.thesis_statement}
-            </p>
+          <div className="flex-1 overflow-y-auto">
+            <div className="flex items-start min-h-full">
+              <p className="text-3xl leading-relaxed font-light break-words">
+                {update.thesis_statement}
+              </p>
+            </div>
           </div>
         </div>
       ),
@@ -98,12 +100,12 @@ function getSlides(update: GroupUpdate): Slide[] {
             <Users className="h-12 w-12" />
             <h2 className="text-5xl font-bold">Team Members</h2>
           </div>
-          <div className="flex-1 flex items-center">
-            <div className="text-2xl leading-loose whitespace-pre-line font-light w-full">
+          <div className="flex-1 overflow-y-auto">
+            <div className="text-2xl leading-loose font-light w-full">
               {update.team_members.split('\n').map((member, i) => (
                 <div key={i} className="flex items-center gap-3 mb-4">
-                  <div className="h-3 w-3 rounded-full bg-white/70"></div>
-                  <span>{member}</span>
+                  <div className="h-3 w-3 rounded-full bg-white/70 flex-shrink-0"></div>
+                  <span className="break-words">{member}</span>
                 </div>
               ))}
             </div>
@@ -122,8 +124,8 @@ function getSlides(update: GroupUpdate): Slide[] {
             <CheckSquare className="h-12 w-12" />
             <h2 className="text-5xl font-bold">Individual Contributions</h2>
           </div>
-          <div className="flex-1 flex items-center overflow-y-auto">
-            <p className="text-2xl leading-relaxed font-light whitespace-pre-line">
+          <div className="flex-1 overflow-y-auto pr-4">
+            <p className="text-2xl leading-relaxed font-light whitespace-pre-line break-words">
               {update.individual_contributions}
             </p>
           </div>
@@ -141,8 +143,8 @@ function getSlides(update: GroupUpdate): Slide[] {
             <TrendingUp className="h-12 w-12" />
             <h2 className="text-5xl font-bold">Progress Summary</h2>
           </div>
-          <div className="flex-1 flex items-center overflow-y-auto">
-            <p className="text-2xl leading-relaxed font-light whitespace-pre-line">
+          <div className="flex-1 overflow-y-auto pr-4">
+            <p className="text-2xl leading-relaxed font-light whitespace-pre-line break-words">
               {update.project_progress}
             </p>
           </div>
@@ -160,9 +162,9 @@ function getSlides(update: GroupUpdate): Slide[] {
             <Package className="h-12 w-12" />
             <h2 className="text-5xl font-bold">Final Product</h2>
           </div>
-          <div className="flex-1 flex items-center overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pr-4">
             <div className="w-full">
-              <p className="text-2xl leading-relaxed font-light whitespace-pre-line mb-6">
+              <p className="text-2xl leading-relaxed font-light whitespace-pre-line mb-6 break-words">
                 {update.final_product_description}
               </p>
               {update.final_product_link && (
@@ -170,10 +172,10 @@ function getSlides(update: GroupUpdate): Slide[] {
                   href={update.final_product_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 text-xl bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg transition-all"
+                  className="inline-flex items-center gap-2 text-xl bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg transition-all break-all"
                 >
-                  <ExternalLink className="h-5 w-5" />
-                  View Product
+                  <ExternalLink className="h-5 w-5 flex-shrink-0" />
+                  <span className="break-all">View Product</span>
                 </a>
               )}
             </div>
@@ -195,8 +197,8 @@ function getSlides(update: GroupUpdate): Slide[] {
             <AlertCircle className="h-12 w-12" />
             <h2 className="text-5xl font-bold">Challenges</h2>
           </div>
-          <div className="flex-1 flex items-center overflow-y-auto">
-            <p className="text-2xl leading-relaxed font-light whitespace-pre-line">
+          <div className="flex-1 overflow-y-auto pr-4">
+            <p className="text-2xl leading-relaxed font-light whitespace-pre-line break-words">
               {update.challenges_faced}
             </p>
           </div>
@@ -216,8 +218,8 @@ function getSlides(update: GroupUpdate): Slide[] {
           <CheckSquare className="h-12 w-12" />
           <h2 className="text-5xl font-bold">Next Steps</h2>
         </div>
-        <div className="flex-1 flex items-center overflow-y-auto">
-          <p className="text-2xl leading-relaxed font-light whitespace-pre-line">
+        <div className="flex-1 overflow-y-auto pr-4">
+          <p className="text-2xl leading-relaxed font-light whitespace-pre-line break-words">
             {update.completion_plan}
           </p>
         </div>
@@ -237,8 +239,8 @@ function getSlides(update: GroupUpdate): Slide[] {
             <Link2 className="h-12 w-12" />
             <h2 className="text-5xl font-bold">Sources</h2>
           </div>
-          <div className="flex-1 flex items-center overflow-y-auto">
-            <p className="text-xl leading-relaxed font-light whitespace-pre-line">
+          <div className="flex-1 overflow-y-auto pr-4">
+            <p className="text-xl leading-relaxed font-light whitespace-pre-line break-all">
               {update.source_links}
             </p>
           </div>
