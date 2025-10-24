@@ -199,17 +199,17 @@ export default function GroupUpdateForm() {
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
       <Dialog open={showGuidelines} onOpenChange={setShowGuidelines}>
-        <DialogContent className="max-w-3xl max-h-[90vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-2xl">
-              <HelpCircle className="h-6 w-6 text-blue-600" />
+            <DialogTitle className="flex items-center gap-2">
+              <HelpCircle className="h-5 w-5 text-blue-600" />
               Questions to Consider
             </DialogTitle>
             <DialogDescription>
-              Before completing your group update, reflect on these questions with your team.
+              Reflect on these questions with your team before submitting.
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[calc(90vh-200px)] pr-4">
+          <ScrollArea className="h-[50vh] pr-4">
             <div className="space-y-6">
               <div>
                 <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
