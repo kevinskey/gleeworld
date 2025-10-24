@@ -126,7 +126,7 @@ export default function GroupUpdateForm() {
               <CardTitle className="text-amber-800">MUS240 Enrollment Required</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-amber-700">
+              <p className="text-white">
                 You must be enrolled in MUS240 to submit group updates.
                 Please contact your instructor if you believe this is an error.
               </p>
