@@ -65,21 +65,34 @@ export default function GroupUpdatesPresentation() {
       return;
     }
 
+    // Validate input length
+    if (newGroupName.trim().length > 200) {
+      toast.error('Group name must be less than 200 characters');
+      return;
+    }
+
     try {
-      const { error } = await supabase
+      console.log('Updating group name:', { id: editingUpdate.id, newName: newGroupName.trim() });
+      
+      const { data, error } = await supabase
         .from('group_updates_mus240')
         .update({ group_name: newGroupName.trim() })
-        .eq('id', editingUpdate.id);
+        .eq('id', editingUpdate.id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
 
+      console.log('Update successful:', data);
       toast.success('Group name updated successfully');
       setEditingUpdate(null);
       setNewGroupName('');
       fetchUpdates();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating group name:', error);
-      toast.error('Failed to update group name');
+      toast.error(error.message || 'Failed to update group name');
     }
   };
 
