@@ -3,8 +3,10 @@ import { Link } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Presentation, Eye, Calendar, User } from 'lucide-react';
+import { ArrowLeft, Presentation, Eye, Calendar, User, Edit2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { toast } from 'sonner';
 
@@ -28,6 +30,8 @@ interface GroupUpdate {
 export default function GroupUpdatesPresentation() {
   const [updates, setUpdates] = useState<GroupUpdate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingUpdate, setEditingUpdate] = useState<{ id: string; name: string } | null>(null);
+  const [newGroupName, setNewGroupName] = useState('');
 
   useEffect(() => {
     fetchUpdates();
@@ -47,6 +51,35 @@ export default function GroupUpdatesPresentation() {
       toast.error('Failed to load group updates');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditGroupName = (update: GroupUpdate) => {
+    setEditingUpdate({ id: update.id, name: update.group_name || '' });
+    setNewGroupName(update.group_name || `${update.group_moderator}'s Group`);
+  };
+
+  const handleUpdateGroupName = async () => {
+    if (!editingUpdate || !newGroupName.trim()) {
+      toast.error('Please enter a valid group name');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('group_updates_mus240')
+        .update({ group_name: newGroupName.trim() })
+        .eq('id', editingUpdate.id);
+
+      if (error) throw error;
+
+      toast.success('Group name updated successfully');
+      setEditingUpdate(null);
+      setNewGroupName('');
+      fetchUpdates();
+    } catch (error) {
+      console.error('Error updating group name:', error);
+      toast.error('Failed to update group name');
     }
   };
 
@@ -122,11 +155,22 @@ export default function GroupUpdatesPresentation() {
                 className="hover:shadow-lg transition-shadow duration-200 border-2 border-slate-200 hover:border-blue-400"
               >
                 <CardHeader className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-t-lg">
-                  <div className="flex items-start gap-2 mb-2">
-                    <Presentation className="h-6 w-6 mt-1 flex-shrink-0" />
-                    <CardTitle className="text-xl leading-tight">
-                      {update.group_name || `${update.group_moderator}'s Group`}
-                    </CardTitle>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-start gap-2 flex-1">
+                      <Presentation className="h-6 w-6 mt-1 flex-shrink-0" />
+                      <CardTitle className="text-xl leading-tight">
+                        {update.group_name || `${update.group_moderator}'s Group`}
+                      </CardTitle>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditGroupName(update)}
+                      className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                      title="Edit group name"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
                   </div>
                   <CardDescription className="text-blue-100">
                     {update.thesis_statement.substring(0, 100)}
@@ -185,6 +229,42 @@ export default function GroupUpdatesPresentation() {
           </Card>
         </main>
       </div>
+
+      {/* Edit Group Name Dialog */}
+      <Dialog open={!!editingUpdate} onOpenChange={() => setEditingUpdate(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Group Name</DialogTitle>
+            <DialogDescription>
+              Update the name for this group presentation
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Input
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="Enter new group name"
+                className="w-full"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleUpdateGroupName}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Update
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setEditingUpdate(null)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </UniversalLayout>
   );
 }
