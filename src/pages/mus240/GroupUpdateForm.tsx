@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, CheckCircle, FileText } from 'lucide-react';
 import { useMus240Enrollment } from '@/hooks/useMus240Enrollment';
+import { useUserRole } from '@/hooks/useUserRole';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 const GROUP_OPTIONS = [
@@ -29,6 +30,7 @@ export default function GroupUpdateForm() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { isEnrolled, loading: enrollmentLoading } = useMus240Enrollment();
+  const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
@@ -90,7 +92,7 @@ export default function GroupUpdateForm() {
     }
   };
 
-  if (enrollmentLoading) {
+  if (enrollmentLoading || roleLoading) {
     return (
       <UniversalLayout>
         <div className="flex items-center justify-center h-64">
@@ -117,7 +119,8 @@ export default function GroupUpdateForm() {
     );
   }
 
-  if (!isEnrolled()) {
+  // Allow admins and super admins to bypass enrollment check
+  if (!isEnrolled() && !isAdmin() && !isSuperAdmin()) {
     return (
       <UniversalLayout>
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -126,7 +129,7 @@ export default function GroupUpdateForm() {
               <CardTitle className="text-amber-800">MUS240 Enrollment Required</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-white">
+              <p className="text-amber-700">
                 You must be enrolled in MUS240 to submit group updates.
                 Please contact your instructor if you believe this is an error.
               </p>
