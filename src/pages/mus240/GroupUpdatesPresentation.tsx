@@ -125,7 +125,7 @@ export default function GroupUpdatesPresentation() {
                   <div className="flex items-start gap-2 mb-2">
                     <Presentation className="h-6 w-6 mt-1 flex-shrink-0" />
                     <CardTitle className="text-xl leading-tight">
-                      {update.group_name}
+                      {update.group_name || `${update.group_moderator}'s Group`}
                     </CardTitle>
                   </div>
                   <CardDescription className="text-blue-100">
