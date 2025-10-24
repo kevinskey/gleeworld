@@ -134,6 +134,7 @@ import { ShoutcastManagement } from "./pages/admin/ShoutcastManagement";
 import { ReceiptsPage } from "./pages/ReceiptsPage";
 import ApprovalSystemPage from "./pages/ApprovalSystemPage";
 import GroupUpdatesPresentation from './pages/mus240/GroupUpdatesPresentation';
+import GroupPresentationView from './pages/mus240/GroupPresentationView';
 import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
@@ -1719,14 +1720,22 @@ const App = () => {
                                    </Mus240EnrollmentRoute>
                                  }
                                  />
-                                 <Route 
-                                   path="/classes/mus240/groups/presentation" 
-                                  element={
-                                    <Mus240EnrollmentRoute>
-                                      <GroupUpdatesPresentation />
-                                    </Mus240EnrollmentRoute>
-                                  }
-                                 />
+                                  <Route 
+                                    path="/classes/mus240/groups/presentation" 
+                                   element={
+                                     <Mus240EnrollmentRoute>
+                                       <GroupUpdatesPresentation />
+                                     </Mus240EnrollmentRoute>
+                                   }
+                                  />
+                                  <Route 
+                                    path="/classes/mus240/groups/presentation/:id" 
+                                   element={
+                                     <Mus240EnrollmentRoute>
+                                       <GroupPresentationView />
+                                     </Mus240EnrollmentRoute>
+                                   }
+                                  />
                                 <Route 
                                   path="/classes/mus240/groups/:groupId" 
                                  element={
