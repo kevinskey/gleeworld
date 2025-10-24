@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, ChevronLeft, ChevronRight, Presentation, ExternalLink, Users, Target, TrendingUp, Package, AlertCircle, CheckSquare, Link2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { toast } from 'sonner';
+import { SlideApprovalPanel } from '@/components/mus240/peer-review/SlideApprovalPanel';
 
 interface GroupUpdate {
   id: string;
@@ -366,6 +367,15 @@ export default function GroupPresentationView() {
         <div className="flex-1 relative">
           <div className={`absolute inset-0 bg-gradient-to-br ${currentSlide.bgGradient}`}>
             {currentSlide.content}
+          </div>
+
+          {/* Slide Approval Panel - Top Right */}
+          <div className="absolute top-4 right-4 max-w-sm">
+            <SlideApprovalPanel
+              presentationId={update.id}
+              slideIndex={currentSlideIndex}
+              slideTitle={currentSlide.title}
+            />
           </div>
 
           {/* Slide Footer */}

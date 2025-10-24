@@ -17706,6 +17706,56 @@ export type Database = {
           },
         ]
       }
+      slide_approvals: {
+        Row: {
+          created_at: string
+          id: string
+          presentation_id: string
+          reviewed_at: string | null
+          reviewer_comment: string | null
+          reviewer_id: string | null
+          reviewer_name: string | null
+          slide_index: number
+          slide_title: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          presentation_id: string
+          reviewed_at?: string | null
+          reviewer_comment?: string | null
+          reviewer_id?: string | null
+          reviewer_name?: string | null
+          slide_index: number
+          slide_title: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          presentation_id?: string
+          reviewed_at?: string | null
+          reviewer_comment?: string | null
+          reviewer_id?: string | null
+          reviewer_name?: string | null
+          slide_index?: number
+          slide_title?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slide_approvals_presentation_id_fkey"
+            columns: ["presentation_id"]
+            isOneToOne: false
+            referencedRelation: "group_updates_mus240"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       smaam_comments: {
         Row: {
           author: string | null
