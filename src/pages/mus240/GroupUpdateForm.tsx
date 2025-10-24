@@ -99,7 +99,7 @@ export default function GroupUpdateForm() {
 
         // Fetch members
         const { data: membersData, error: membersError } = await supabase
-          .from('mus240_group_members' as any)
+          .from('mus240_group_memberships' as any)
           .select('member_id, gw_profiles(id, full_name, email)')
           .eq('group_id', selectedGroup.id);
 
