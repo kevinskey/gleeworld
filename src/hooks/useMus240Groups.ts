@@ -40,6 +40,39 @@ export const useMus240Groups = (semester: string = 'Fall 2025') => {
     if (user) {
       fetchGroups();
     }
+
+    // Set up realtime subscription for group changes
+    const channel = supabase
+      .channel('mus240-groups-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_project_groups'
+        },
+        () => {
+          console.log('Group change detected, refetching...');
+          fetchGroups();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_group_memberships'
+        },
+        () => {
+          console.log('Membership change detected, refetching...');
+          fetchGroups();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user, semester]);
 
   const fetchGroups = async () => {
