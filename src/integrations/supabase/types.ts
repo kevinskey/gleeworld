@@ -3538,6 +3538,44 @@ export type Database = {
         }
         Relationships: []
       }
+      group_update_member_contributions: {
+        Row: {
+          contribution: string
+          created_at: string
+          group_update_id: string | null
+          id: string
+          member_id: string | null
+          member_name: string
+          updated_at: string
+        }
+        Insert: {
+          contribution: string
+          created_at?: string
+          group_update_id?: string | null
+          id?: string
+          member_id?: string | null
+          member_name: string
+          updated_at?: string
+        }
+        Update: {
+          contribution?: string
+          created_at?: string
+          group_update_id?: string | null
+          id?: string
+          member_id?: string | null
+          member_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_update_member_contributions_group_update_id_fkey"
+            columns: ["group_update_id"]
+            isOneToOne: false
+            referencedRelation: "group_updates_mus240"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_updates_mus240: {
         Row: {
           challenges_faced: string | null

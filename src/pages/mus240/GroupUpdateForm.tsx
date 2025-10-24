@@ -251,17 +251,20 @@ export default function GroupUpdateForm() {
                   />
                 </div>
 
-                {/* Individual Contributions */}
+                {/* My Individual Contribution */}
                 <div>
-                  <Label htmlFor="individualContributions">Individual Contributions *</Label>
+                  <Label htmlFor="individualContributions">My Individual Contribution *</Label>
                   <Textarea
                     id="individualContributions"
                     value={formData.individualContributions}
                     onChange={(e) => handleInputChange('individualContributions', e.target.value)}
-                    placeholder="Describe each member's role and work"
+                    placeholder="Describe your specific role and work on this project"
                     rows={5}
                     required
                   />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Each group member should submit their own contribution separately.
+                  </p>
                 </div>
               </CardContent>
             </Card>
