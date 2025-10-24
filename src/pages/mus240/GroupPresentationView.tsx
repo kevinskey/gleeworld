@@ -3,7 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, ChevronLeft, ChevronRight, Presentation, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Presentation, ExternalLink, Users, Target, TrendingUp, Package, AlertCircle, CheckSquare, Link2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { toast } from 'sonner';
 
@@ -24,13 +24,21 @@ interface GroupUpdate {
   created_at: string;
 }
 
+interface Slide {
+  title: string;
+  content: React.ReactNode;
+  icon: React.ReactNode;
+  bgGradient: string;
+}
+
 export default function GroupPresentationView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [update, setUpdate] = useState<GroupUpdate | null>(null);
   const [allUpdates, setAllUpdates] = useState<GroupUpdate[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [presentationIndex, setPresentationIndex] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -38,7 +46,6 @@ export default function GroupPresentationView() {
 
   const fetchData = async () => {
     try {
-      // Fetch all updates for navigation
       const { data: allData, error: allError } = await supabase
         .from('group_updates_mus240')
         .select('*')
@@ -47,7 +54,6 @@ export default function GroupPresentationView() {
       if (allError) throw allError;
       setAllUpdates(allData || []);
 
-      // Fetch specific update
       const { data: updateData, error: updateError } = await supabase
         .from('group_updates_mus240')
         .select('*')
@@ -57,9 +63,8 @@ export default function GroupPresentationView() {
       if (updateError) throw updateError;
       setUpdate(updateData);
 
-      // Find current index
       const index = (allData || []).findIndex(u => u.id === id);
-      setCurrentIndex(index);
+      setPresentationIndex(index);
     } catch (error) {
       console.error('Error fetching update:', error);
       toast.error('Failed to load presentation');
@@ -68,220 +73,364 @@ export default function GroupPresentationView() {
     }
   };
 
-  const goToPrevious = () => {
-    if (currentIndex > 0) {
-      navigate(`/classes/mus240/groups/presentation/${allUpdates[currentIndex - 1].id}`);
+  const goToPreviousPresentation = () => {
+    if (presentationIndex > 0) {
+      navigate(`/classes/mus240/groups/presentation/${allUpdates[presentationIndex - 1].id}`);
+      setCurrentSlideIndex(0);
     }
   };
 
-  const goToNext = () => {
-    if (currentIndex < allUpdates.length - 1) {
-      navigate(`/classes/mus240/groups/presentation/${allUpdates[currentIndex + 1].id}`);
+  const goToNextPresentation = () => {
+    if (presentationIndex < allUpdates.length - 1) {
+      navigate(`/classes/mus240/groups/presentation/${allUpdates[presentationIndex + 1].id}`);
+      setCurrentSlideIndex(0);
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowRight') goToNext();
-    if (e.key === 'ArrowLeft') goToPrevious();
-    if (e.key === 'Escape') navigate('/classes/mus240/groups/presentation');
-  };
-
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentIndex, allUpdates.length]);
-
-  if (loading) {
+  if (loading || !update) {
     return (
       <UniversalLayout>
-        <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
           <LoadingSpinner />
         </div>
       </UniversalLayout>
     );
   }
 
-  if (!update) {
-    return (
-      <UniversalLayout>
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <Link 
-            to="/classes/mus240/groups/presentation" 
-            className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="font-medium">Back to Presentations</span>
-          </Link>
-          <div className="text-center py-12">
-            <p className="text-lg text-slate-600">Presentation not found</p>
+  const slides: Slide[] = [
+    // Title Slide
+    {
+      title: 'Title',
+      bgGradient: 'from-blue-600 via-indigo-600 to-purple-700',
+      icon: <Presentation className="h-20 w-20" />,
+      content: (
+        <div className="flex flex-col items-center justify-center h-full text-white px-12">
+          <div className="mb-8 opacity-90">
+            <Presentation className="h-24 w-24 mx-auto mb-6" />
+          </div>
+          <h1 className="text-6xl font-bold mb-6 text-center leading-tight">
+            {update.group_name}
+          </h1>
+          <div className="h-1 w-32 bg-white/50 mb-8"></div>
+          <p className="text-2xl mb-4 opacity-90">Moderator: {update.group_moderator}</p>
+          <p className="text-lg opacity-75">MUS240 Final Project Presentation</p>
+        </div>
+      ),
+    },
+    // Thesis Slide
+    {
+      title: 'Thesis / Goal',
+      bgGradient: 'from-emerald-500 via-teal-600 to-cyan-700',
+      icon: <Target className="h-12 w-12" />,
+      content: (
+        <div className="flex flex-col h-full text-white px-16 py-12">
+          <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-white/30">
+            <Target className="h-12 w-12" />
+            <h2 className="text-5xl font-bold">Thesis / Goal</h2>
+          </div>
+          <div className="flex-1 flex items-center">
+            <p className="text-3xl leading-relaxed font-light">
+              {update.thesis_statement}
+            </p>
           </div>
         </div>
-      </UniversalLayout>
-    );
+      ),
+    },
+    // Team Members Slide
+    {
+      title: 'Team Members',
+      bgGradient: 'from-orange-500 via-red-500 to-pink-600',
+      icon: <Users className="h-12 w-12" />,
+      content: (
+        <div className="flex flex-col h-full text-white px-16 py-12">
+          <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-white/30">
+            <Users className="h-12 w-12" />
+            <h2 className="text-5xl font-bold">Team Members</h2>
+          </div>
+          <div className="flex-1 flex items-center">
+            <div className="text-2xl leading-loose whitespace-pre-line font-light w-full">
+              {update.team_members.split('\n').map((member, i) => (
+                <div key={i} className="flex items-center gap-3 mb-4">
+                  <div className="h-3 w-3 rounded-full bg-white/70"></div>
+                  <span>{member}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    // Individual Contributions Slide
+    {
+      title: 'Individual Contributions',
+      bgGradient: 'from-violet-600 via-purple-600 to-fuchsia-700',
+      icon: <CheckSquare className="h-12 w-12" />,
+      content: (
+        <div className="flex flex-col h-full text-white px-16 py-12">
+          <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-white/30">
+            <CheckSquare className="h-12 w-12" />
+            <h2 className="text-5xl font-bold">Individual Contributions</h2>
+          </div>
+          <div className="flex-1 flex items-center overflow-y-auto">
+            <p className="text-2xl leading-relaxed font-light whitespace-pre-line">
+              {update.individual_contributions}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    // Progress Summary Slide
+    {
+      title: 'Progress Summary',
+      bgGradient: 'from-sky-500 via-blue-600 to-indigo-700',
+      icon: <TrendingUp className="h-12 w-12" />,
+      content: (
+        <div className="flex flex-col h-full text-white px-16 py-12">
+          <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-white/30">
+            <TrendingUp className="h-12 w-12" />
+            <h2 className="text-5xl font-bold">Progress Summary</h2>
+          </div>
+          <div className="flex-1 flex items-center overflow-y-auto">
+            <p className="text-2xl leading-relaxed font-light whitespace-pre-line">
+              {update.project_progress}
+            </p>
+          </div>
+        </div>
+      ),
+    },
+    // Final Product Slide
+    {
+      title: 'Final Product',
+      bgGradient: 'from-amber-500 via-orange-600 to-red-600',
+      icon: <Package className="h-12 w-12" />,
+      content: (
+        <div className="flex flex-col h-full text-white px-16 py-12">
+          <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-white/30">
+            <Package className="h-12 w-12" />
+            <h2 className="text-5xl font-bold">Final Product</h2>
+          </div>
+          <div className="flex-1 flex items-center overflow-y-auto">
+            <div className="w-full">
+              <p className="text-2xl leading-relaxed font-light whitespace-pre-line mb-6">
+                {update.final_product_description}
+              </p>
+              {update.final_product_link && (
+                <a 
+                  href={update.final_product_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-xl bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg transition-all"
+                >
+                  <ExternalLink className="h-5 w-5" />
+                  View Product
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
+  // Add Challenges slide if content exists
+  if (update.challenges_faced) {
+    slides.push({
+      title: 'Challenges',
+      bgGradient: 'from-rose-500 via-red-600 to-pink-700',
+      icon: <AlertCircle className="h-12 w-12" />,
+      content: (
+        <div className="flex flex-col h-full text-white px-16 py-12">
+          <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-white/30">
+            <AlertCircle className="h-12 w-12" />
+            <h2 className="text-5xl font-bold">Challenges</h2>
+          </div>
+          <div className="flex-1 flex items-center overflow-y-auto">
+            <p className="text-2xl leading-relaxed font-light whitespace-pre-line">
+              {update.challenges_faced}
+            </p>
+          </div>
+        </div>
+      ),
+    });
   }
+
+  // Next Steps slide
+  slides.push({
+    title: 'Next Steps',
+    bgGradient: 'from-green-500 via-emerald-600 to-teal-700',
+    icon: <CheckSquare className="h-12 w-12" />,
+    content: (
+      <div className="flex flex-col h-full text-white px-16 py-12">
+        <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-white/30">
+          <CheckSquare className="h-12 w-12" />
+          <h2 className="text-5xl font-bold">Next Steps</h2>
+        </div>
+        <div className="flex-1 flex items-center overflow-y-auto">
+          <p className="text-2xl leading-relaxed font-light whitespace-pre-line">
+            {update.completion_plan}
+          </p>
+        </div>
+      </div>
+    ),
+  });
+
+  // Add Sources slide if content exists
+  if (update.source_links) {
+    slides.push({
+      title: 'Sources',
+      bgGradient: 'from-slate-600 via-gray-700 to-zinc-800',
+      icon: <Link2 className="h-12 w-12" />,
+      content: (
+        <div className="flex flex-col h-full text-white px-16 py-12">
+          <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-white/30">
+            <Link2 className="h-12 w-12" />
+            <h2 className="text-5xl font-bold">Sources</h2>
+          </div>
+          <div className="flex-1 flex items-center overflow-y-auto">
+            <p className="text-xl leading-relaxed font-light whitespace-pre-line">
+              {update.source_links}
+            </p>
+          </div>
+        </div>
+      ),
+    });
+  }
+
+  const currentSlide = slides[currentSlideIndex];
+
+  const nextSlide = () => {
+    if (currentSlideIndex < slides.length - 1) {
+      setCurrentSlideIndex(currentSlideIndex + 1);
+    }
+  };
+
+  const prevSlide = () => {
+    if (currentSlideIndex > 0) {
+      setCurrentSlideIndex(currentSlideIndex - 1);
+    }
+  };
+
+  const handleKeyPress = (e: KeyboardEvent) => {
+    if (e.key === 'ArrowRight') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+    if (e.key === 'Escape') navigate('/classes/mus240/groups/presentation');
+  };
+
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [currentSlideIndex, slides.length]);
 
   return (
     <UniversalLayout showHeader={false} showFooter={false}>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col">
-        {/* Navigation Bar */}
-        <div className="flex justify-between items-center p-4 bg-black/20 backdrop-blur-sm">
+      <div className="min-h-screen bg-slate-900 flex flex-col">
+        {/* Top Navigation Bar */}
+        <div className="flex justify-between items-center px-6 py-3 bg-black/40 backdrop-blur-sm">
           <Link 
             to="/classes/mus240/groups/presentation"
-            className="text-white/80 hover:text-white flex items-center gap-2"
+            className="text-white/80 hover:text-white flex items-center gap-2 text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to List
           </Link>
           <div className="text-white/80 text-sm">
-            {currentIndex + 1} / {allUpdates.length}
+            Slide {currentSlideIndex + 1} / {slides.length} • Presentation {presentationIndex + 1} / {allUpdates.length}
           </div>
-          <div className="w-24" /> {/* Spacer for centering */}
+          <div className="w-24" />
         </div>
 
         {/* Slide Content */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="max-w-6xl w-full bg-white rounded-2xl shadow-2xl p-12 min-h-[600px] flex flex-col">
-            {/* Slide Header */}
-            <div className="mb-8 border-b-4 border-blue-600 pb-4">
-              <div className="flex items-center gap-3 mb-2">
-                <Presentation className="h-8 w-8 text-blue-600" />
-                <h1 className="text-4xl font-bold text-slate-900">{update.group_name}</h1>
-              </div>
-              <p className="text-xl text-slate-600">
-                Moderator: {update.group_moderator}
-              </p>
-            </div>
+        <div className="flex-1 relative">
+          <div className={`absolute inset-0 bg-gradient-to-br ${currentSlide.bgGradient}`}>
+            {currentSlide.content}
+          </div>
 
-            {/* Slide Body - Scrollable */}
-            <div className="flex-1 overflow-y-auto space-y-6">
-              {/* Thesis Statement */}
-              <div>
-                <h2 className="text-2xl font-bold text-blue-700 mb-3">Thesis / Goal</h2>
-                <p className="text-lg text-slate-700 leading-relaxed">
-                  {update.thesis_statement}
-                </p>
-              </div>
-
-              {/* Team Members */}
-              <div>
-                <h2 className="text-2xl font-bold text-blue-700 mb-3">Team Members</h2>
-                <div className="text-lg text-slate-700 whitespace-pre-line">
-                  {update.team_members}
-                </div>
-              </div>
-
-              {/* Individual Contributions */}
-              <div>
-                <h2 className="text-2xl font-bold text-blue-700 mb-3">Individual Contributions</h2>
-                <p className="text-lg text-slate-700 leading-relaxed whitespace-pre-line">
-                  {update.individual_contributions}
-                </p>
-              </div>
-
-              {/* Project Progress */}
-              <div>
-                <h2 className="text-2xl font-bold text-blue-700 mb-3">Progress Summary</h2>
-                <p className="text-lg text-slate-700 leading-relaxed whitespace-pre-line">
-                  {update.project_progress}
-                </p>
-              </div>
-
-              {/* Final Product */}
-              <div>
-                <h2 className="text-2xl font-bold text-blue-700 mb-3">Final Product</h2>
-                <p className="text-lg text-slate-700 leading-relaxed whitespace-pre-line">
-                  {update.final_product_description}
-                </p>
-                {update.final_product_link && (
-                  <a 
-                    href={update.final_product_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline mt-2 inline-flex items-center gap-1"
-                  >
-                    View Product <ExternalLink className="h-4 w-4" />
-                  </a>
-                )}
-              </div>
-
-              {/* Challenges */}
-              {update.challenges_faced && (
-                <div>
-                  <h2 className="text-2xl font-bold text-blue-700 mb-3">Challenges</h2>
-                  <p className="text-lg text-slate-700 leading-relaxed whitespace-pre-line">
-                    {update.challenges_faced}
-                  </p>
-                </div>
-              )}
-
-              {/* Completion Plan */}
-              <div>
-                <h2 className="text-2xl font-bold text-blue-700 mb-3">Next Steps</h2>
-                <p className="text-lg text-slate-700 leading-relaxed whitespace-pre-line">
-                  {update.completion_plan}
-                </p>
-              </div>
-
-              {/* Source Links */}
-              {update.source_links && (
-                <div>
-                  <h2 className="text-2xl font-bold text-blue-700 mb-3">Sources</h2>
-                  <div className="text-sm text-slate-600 whitespace-pre-line">
-                    {update.source_links}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Slide Footer */}
-            <div className="mt-6 pt-4 border-t text-sm text-slate-500 text-right">
-              Submitted by {update.submitter_name} • {new Date(update.created_at).toLocaleDateString()}
+          {/* Slide Footer */}
+          <div className="absolute bottom-0 left-0 right-0 px-8 py-4 bg-black/20 backdrop-blur-sm">
+            <div className="flex justify-between items-center text-white/70 text-sm">
+              <span>{update.group_name}</span>
+              <span>Submitted by {update.submitter_name} • {new Date(update.created_at).toLocaleDateString()}</span>
             </div>
           </div>
         </div>
 
-        {/* Navigation Controls */}
-        <div className="flex justify-center items-center gap-4 p-6 bg-black/20 backdrop-blur-sm">
-          <Button
-            onClick={goToPrevious}
-            disabled={currentIndex === 0}
-            variant="outline"
-            className="bg-white/10 text-white border-white/30 hover:bg-white/20 disabled:opacity-30"
-          >
-            <ChevronLeft className="h-5 w-5 mr-2" />
-            Previous
-          </Button>
-          
-          <div className="flex gap-2">
-            {allUpdates.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => navigate(`/classes/mus240/groups/presentation/${allUpdates[index].id}`)}
-                className={`h-2 w-2 rounded-full transition-all ${
-                  index === currentIndex 
-                    ? 'bg-white w-8' 
-                    : 'bg-white/40 hover:bg-white/60'
-                }`}
-              />
-            ))}
+        {/* Bottom Navigation Controls */}
+        <div className="bg-black/40 backdrop-blur-sm px-6 py-4">
+          <div className="flex justify-between items-center max-w-4xl mx-auto">
+            <Button
+              onClick={prevSlide}
+              disabled={currentSlideIndex === 0}
+              variant="outline"
+              className="bg-white/10 text-white border-white/30 hover:bg-white/20 disabled:opacity-30"
+            >
+              <ChevronLeft className="h-5 w-5 mr-2" />
+              Previous Slide
+            </Button>
+            
+            <div className="flex gap-2">
+              {slides.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlideIndex(index)}
+                  className={`h-2 rounded-full transition-all ${
+                    index === currentSlideIndex 
+                      ? 'bg-white w-8' 
+                      : 'bg-white/40 hover:bg-white/60 w-2'
+                  }`}
+                  title={slides[index].title}
+                />
+              ))}
+            </div>
+
+            <Button
+              onClick={nextSlide}
+              disabled={currentSlideIndex === slides.length - 1}
+              variant="outline"
+              className="bg-white/10 text-white border-white/30 hover:bg-white/20 disabled:opacity-30"
+            >
+              Next Slide
+              <ChevronRight className="h-5 w-5 ml-2" />
+            </Button>
           </div>
 
-          <Button
-            onClick={goToNext}
-            disabled={currentIndex === allUpdates.length - 1}
-            variant="outline"
-            className="bg-white/10 text-white border-white/30 hover:bg-white/20 disabled:opacity-30"
-          >
-            Next
-            <ChevronRight className="h-5 w-5 ml-2" />
-          </Button>
-        </div>
+          {/* Presentation Navigation */}
+          {allUpdates.length > 1 && (
+            <div className="flex justify-center items-center gap-4 mt-4 pt-4 border-t border-white/10">
+              <Button
+                onClick={goToPreviousPresentation}
+                disabled={presentationIndex === 0}
+                variant="ghost"
+                size="sm"
+                className="text-white/70 hover:text-white disabled:opacity-30"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous Group
+              </Button>
+              
+              <span className="text-white/50 text-xs">
+                Switch Presentations
+              </span>
 
-        {/* Keyboard Hints */}
-        <div className="text-center text-white/50 text-xs pb-4">
-          Use ← → arrow keys to navigate • ESC to return to list
+              <Button
+                onClick={goToNextPresentation}
+                disabled={presentationIndex === allUpdates.length - 1}
+                variant="ghost"
+                size="sm"
+                className="text-white/70 hover:text-white disabled:opacity-30"
+              >
+                Next Group
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          )}
+
+          {/* Keyboard Hints */}
+          <div className="text-center text-white/40 text-xs mt-3">
+            Use ← → arrow keys to navigate slides • ESC to return to list
+          </div>
         </div>
       </div>
     </UniversalLayout>
   );
 }
+
