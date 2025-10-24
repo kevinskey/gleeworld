@@ -38,6 +38,7 @@ export default function GroupUpdateForm() {
   const [groups, setGroups] = useState<{ id: string; name: string }[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(true);
   const [showGuidelines, setShowGuidelines] = useState(true);
+  const [groupMembers, setGroupMembers] = useState<{ id: string; full_name: string; email: string }[]>([]);
   const [formData, setFormData] = useState({
     groupName: '',
     groupModerator: '',
@@ -74,6 +75,70 @@ export default function GroupUpdateForm() {
 
     fetchGroups();
   }, []);
+
+  // Fetch group members when group is selected
+  useEffect(() => {
+    const fetchGroupMembers = async () => {
+      if (!formData.groupName) {
+        setGroupMembers([]);
+        return;
+      }
+
+      try {
+        const selectedGroup = groups.find(g => g.name === formData.groupName);
+        if (!selectedGroup) return;
+
+        // Fetch leader
+        const { data: groupData, error: groupError } = await supabase
+          .from('mus240_project_groups')
+          .select('leader_id, gw_profiles!mus240_project_groups_leader_id_fkey(id, full_name, email)')
+          .eq('id', selectedGroup.id)
+          .single();
+
+        if (groupError) throw groupError;
+
+        // Fetch members
+        const { data: membersData, error: membersError } = await supabase
+          .from('mus240_group_members' as any)
+          .select('member_id, gw_profiles(id, full_name, email)')
+          .eq('group_id', selectedGroup.id);
+
+        if (membersError) throw membersError;
+
+        const allMembers: { id: string; full_name: string; email: string }[] = [];
+        
+        // Add leader
+        if (groupData?.gw_profiles) {
+          const leader = groupData.gw_profiles as any;
+          allMembers.push({
+            id: leader.id,
+            full_name: leader.full_name,
+            email: leader.email
+          });
+        }
+
+        // Add other members
+        if (membersData) {
+          membersData.forEach((m: any) => {
+            if (m.gw_profiles) {
+              allMembers.push({
+                id: m.gw_profiles.id,
+                full_name: m.gw_profiles.full_name,
+                email: m.gw_profiles.email
+              });
+            }
+          });
+        }
+
+        setGroupMembers(allMembers);
+      } catch (error) {
+        console.error('Error fetching group members:', error);
+        toast.error('Failed to load group members');
+      }
+    };
+
+    fetchGroupMembers();
+  }, [formData.groupName, groups]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -385,26 +450,45 @@ export default function GroupUpdateForm() {
                 {/* Group Moderator */}
                 <div>
                   <Label htmlFor="groupModerator">Group Moderator *</Label>
-                  <Input
-                    id="groupModerator"
-                    value={formData.groupModerator}
-                    onChange={(e) => handleInputChange('groupModerator', e.target.value)}
-                    placeholder="Name of group moderator"
+                  <Select 
+                    value={formData.groupModerator} 
+                    onValueChange={(value) => handleInputChange('groupModerator', value)}
                     required
-                  />
+                    disabled={!formData.groupName}
+                  >
+                    <SelectTrigger id="groupModerator">
+                      <SelectValue placeholder={formData.groupName ? "Select moderator" : "Select a group first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {groupMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.full_name}>
+                          {member.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Team Members */}
                 <div>
                   <Label htmlFor="teamMembers">Team Members *</Label>
-                  <Textarea
-                    id="teamMembers"
-                    value={formData.teamMembers}
-                    onChange={(e) => handleInputChange('teamMembers', e.target.value)}
-                    placeholder="List all team members (one per line)"
-                    rows={4}
+                  <Select 
+                    value={formData.teamMembers} 
+                    onValueChange={(value) => handleInputChange('teamMembers', value)}
                     required
-                  />
+                    disabled={!formData.groupName}
+                  >
+                    <SelectTrigger id="teamMembers">
+                      <SelectValue placeholder={formData.groupName ? "Select team member" : "Select a group first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {groupMembers.map((member) => (
+                        <SelectItem key={member.id} value={member.full_name}>
+                          {member.full_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* My Individual Contribution */}
