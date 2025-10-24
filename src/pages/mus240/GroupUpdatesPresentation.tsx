@@ -161,17 +161,17 @@ export default function GroupUpdatesPresentation() {
           </Card>
 
           {/* Presentations List */}
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {updates.map((update) => (
               <Card 
                 key={update.id} 
                 className="hover:shadow-lg transition-shadow duration-200 border-2 border-slate-200 hover:border-blue-400"
               >
-                <CardHeader className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-t-lg">
+                <CardHeader className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-t-lg p-4 sm:p-6">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex items-start gap-2 flex-1">
-                      <Presentation className="h-6 w-6 mt-1 flex-shrink-0" />
-                      <CardTitle className="text-xl leading-tight">
+                    <div className="flex items-start gap-2 flex-1 min-w-0">
+                      <Presentation className="h-5 w-5 sm:h-6 sm:w-6 mt-1 flex-shrink-0" />
+                      <CardTitle className="text-lg sm:text-xl leading-tight break-words">
                         {update.group_name || `${update.group_moderator}'s Group`}
                       </CardTitle>
                     </div>
@@ -179,47 +179,46 @@ export default function GroupUpdatesPresentation() {
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEditGroupName(update)}
-                      className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                      className="text-white hover:bg-white/20 h-8 w-8 p-0 flex-shrink-0"
                       title="Edit group name"
                     >
                       <Edit2 className="h-4 w-4" />
                     </Button>
                   </div>
-                  <CardDescription className="text-blue-100">
-                    {update.thesis_statement.substring(0, 100)}
-                    {update.thesis_statement.length > 100 && '...'}
+                  <CardDescription className="text-blue-100 text-sm sm:text-base line-clamp-3">
+                    {update.thesis_statement}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-3 mb-6">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <User className="h-4 w-4 text-slate-400" />
+                <CardContent className="pt-4 sm:pt-6 p-4 sm:p-6">
+                  <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                    <div className="flex items-start sm:items-center gap-2 text-xs sm:text-sm text-slate-600 flex-wrap">
+                      <User className="h-4 w-4 text-slate-400 flex-shrink-0" />
                       <span className="font-medium">Moderator:</span>
-                      <span>{update.group_moderator}</span>
+                      <span className="break-words">{update.group_moderator}</span>
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-xs sm:text-sm text-slate-600">
                       <span className="font-medium">Team Members:</span>
-                      <div className="mt-1 ml-6 space-y-0.5">
+                      <div className="mt-1 ml-4 sm:ml-6 space-y-0.5">
                         {update.team_members.split('\n').map((member, i) => (
-                          <div key={i} className="flex items-center gap-2">
-                            <div className="h-1.5 w-1.5 rounded-full bg-slate-400"></div>
-                            <span>{member}</span>
+                          <div key={i} className="flex items-start gap-2">
+                            <div className="h-1.5 w-1.5 rounded-full bg-slate-400 mt-1.5 flex-shrink-0"></div>
+                            <span className="break-words flex-1">{member}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Calendar className="h-4 w-4 text-slate-400" />
+                    <div className="flex items-start sm:items-center gap-2 text-xs sm:text-sm text-slate-600 flex-wrap">
+                      <Calendar className="h-4 w-4 text-slate-400 flex-shrink-0" />
                       <span className="font-medium">Submitted:</span>
                       <span>{new Date(update.created_at).toLocaleDateString()}</span>
                     </div>
-                    <div className="text-sm text-slate-600">
-                      <span className="font-medium">By:</span> {update.submitter_name}
+                    <div className="text-xs sm:text-sm text-slate-600">
+                      <span className="font-medium">By:</span> <span className="break-words">{update.submitter_name}</span>
                     </div>
                   </div>
 
                   <Link to={`/classes/mus240/groups/presentation/${update.id}`}>
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-sm sm:text-base">
                       <Eye className="h-4 w-4 mr-2" />
                       View Presentation
                     </Button>
