@@ -31,72 +31,8 @@ interface Slide {
   bgGradient: string;
 }
 
-export default function GroupPresentationView() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [update, setUpdate] = useState<GroupUpdate | null>(null);
-  const [allUpdates, setAllUpdates] = useState<GroupUpdate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [presentationIndex, setPresentationIndex] = useState(0);
-
-  useEffect(() => {
-    fetchData();
-  }, [id]);
-
-  const fetchData = async () => {
-    try {
-      const { data: allData, error: allError } = await supabase
-        .from('group_updates_mus240')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (allError) throw allError;
-      setAllUpdates(allData || []);
-
-      const { data: updateData, error: updateError } = await supabase
-        .from('group_updates_mus240')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (updateError) throw updateError;
-      setUpdate(updateData);
-
-      const index = (allData || []).findIndex(u => u.id === id);
-      setPresentationIndex(index);
-    } catch (error) {
-      console.error('Error fetching update:', error);
-      toast.error('Failed to load presentation');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const goToPreviousPresentation = () => {
-    if (presentationIndex > 0) {
-      navigate(`/classes/mus240/groups/presentation/${allUpdates[presentationIndex - 1].id}`);
-      setCurrentSlideIndex(0);
-    }
-  };
-
-  const goToNextPresentation = () => {
-    if (presentationIndex < allUpdates.length - 1) {
-      navigate(`/classes/mus240/groups/presentation/${allUpdates[presentationIndex + 1].id}`);
-      setCurrentSlideIndex(0);
-    }
-  };
-
-  if (loading || !update) {
-    return (
-      <UniversalLayout>
-        <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-          <LoadingSpinner />
-        </div>
-      </UniversalLayout>
-    );
-  }
-
+// Helper function to generate slides from update data
+function getSlides(update: GroupUpdate): Slide[] {
   const slides: Slide[] = [
     // Title Slide
     {
@@ -296,11 +232,71 @@ export default function GroupPresentationView() {
     });
   }
 
-  const currentSlide = slides[currentSlideIndex];
+  return slides;
+}
+
+export default function GroupPresentationView() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [update, setUpdate] = useState<GroupUpdate | null>(null);
+  const [allUpdates, setAllUpdates] = useState<GroupUpdate[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [presentationIndex, setPresentationIndex] = useState(0);
+
+  useEffect(() => {
+    fetchData();
+  }, [id]);
+
+  const fetchData = async () => {
+    try {
+      const { data: allData, error: allError } = await supabase
+        .from('group_updates_mus240')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (allError) throw allError;
+      setAllUpdates(allData || []);
+
+      const { data: updateData, error: updateError } = await supabase
+        .from('group_updates_mus240')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (updateError) throw updateError;
+      setUpdate(updateData);
+
+      const index = (allData || []).findIndex(u => u.id === id);
+      setPresentationIndex(index);
+    } catch (error) {
+      console.error('Error fetching update:', error);
+      toast.error('Failed to load presentation');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const goToPreviousPresentation = () => {
+    if (presentationIndex > 0) {
+      navigate(`/classes/mus240/groups/presentation/${allUpdates[presentationIndex - 1].id}`);
+      setCurrentSlideIndex(0);
+    }
+  };
+
+  const goToNextPresentation = () => {
+    if (presentationIndex < allUpdates.length - 1) {
+      navigate(`/classes/mus240/groups/presentation/${allUpdates[presentationIndex + 1].id}`);
+      setCurrentSlideIndex(0);
+    }
+  };
 
   const nextSlide = () => {
-    if (currentSlideIndex < slides.length - 1) {
-      setCurrentSlideIndex(currentSlideIndex + 1);
+    if (update) {
+      const slides = getSlides(update);
+      if (currentSlideIndex < slides.length - 1) {
+        setCurrentSlideIndex(currentSlideIndex + 1);
+      }
     }
   };
 
@@ -310,16 +306,43 @@ export default function GroupPresentationView() {
     }
   };
 
-  const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowRight') nextSlide();
-    if (e.key === 'ArrowLeft') prevSlide();
-    if (e.key === 'Escape') navigate('/classes/mus240/groups/presentation');
-  };
+  const handleKeyPress = React.useCallback((e: KeyboardEvent) => {
+    if (e.key === 'ArrowRight') {
+      if (update) {
+        const slides = getSlides(update);
+        if (currentSlideIndex < slides.length - 1) {
+          setCurrentSlideIndex(prev => prev + 1);
+        }
+      }
+    }
+    if (e.key === 'ArrowLeft') {
+      if (currentSlideIndex > 0) {
+        setCurrentSlideIndex(prev => prev - 1);
+      }
+    }
+    if (e.key === 'Escape') {
+      navigate('/classes/mus240/groups/presentation');
+    }
+  }, [currentSlideIndex, update, navigate]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentSlideIndex, slides.length]);
+  }, [handleKeyPress]);
+
+  // Early return for loading/error states
+  if (loading || !update) {
+    return (
+      <UniversalLayout>
+        <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+          <LoadingSpinner />
+        </div>
+      </UniversalLayout>
+    );
+  }
+
+  const slides = getSlides(update);
+  const currentSlide = slides[currentSlideIndex];
 
   return (
     <UniversalLayout showHeader={false} showFooter={false}>
@@ -433,4 +456,3 @@ export default function GroupPresentationView() {
     </UniversalLayout>
   );
 }
-
