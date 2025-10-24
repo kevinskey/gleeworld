@@ -3538,6 +3538,63 @@ export type Database = {
         }
         Relationships: []
       }
+      group_updates_mus240: {
+        Row: {
+          challenges_faced: string | null
+          completion_plan: string
+          created_at: string
+          final_product_description: string
+          final_product_link: string | null
+          group_moderator: string
+          group_name: string
+          id: string
+          individual_contributions: string
+          project_progress: string
+          source_links: string | null
+          submitter_id: string | null
+          submitter_name: string
+          team_members: string
+          thesis_statement: string
+          updated_at: string
+        }
+        Insert: {
+          challenges_faced?: string | null
+          completion_plan: string
+          created_at?: string
+          final_product_description: string
+          final_product_link?: string | null
+          group_moderator: string
+          group_name: string
+          id?: string
+          individual_contributions: string
+          project_progress: string
+          source_links?: string | null
+          submitter_id?: string | null
+          submitter_name: string
+          team_members: string
+          thesis_statement: string
+          updated_at?: string
+        }
+        Update: {
+          challenges_faced?: string | null
+          completion_plan?: string
+          created_at?: string
+          final_product_description?: string
+          final_product_link?: string | null
+          group_moderator?: string
+          group_name?: string
+          id?: string
+          individual_contributions?: string
+          project_progress?: string
+          source_links?: string | null
+          submitter_id?: string | null
+          submitter_name?: string
+          team_members?: string
+          thesis_statement?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_agendas: {
         Row: {
           agenda_items: Json

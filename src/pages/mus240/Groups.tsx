@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useMus240Groups } from '@/hooks/useMus240Groups';
-import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2, ArrowLeft, Shuffle, AlertTriangle, Info, Edit2, X } from 'lucide-react';
+import { Users, Plus, Clock, CheckCircle, XCircle, UserCheck, Trash2, ArrowLeft, Shuffle, AlertTriangle, Info, Edit2, X, FileText } from 'lucide-react';
 import backgroundImage from '@/assets/mus240-background.jpg';
 import { Mus240UserAvatar } from '@/components/mus240/Mus240UserAvatar';
 import { supabase } from '@/integrations/supabase/client';
@@ -401,7 +401,16 @@ export default function Groups() {
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-slate-900">
               Project Groups
             </h1>
-            
+
+            {/* Link to Update Form */}
+            <div className="mt-6">
+              <Link to="/classes/mus240/groups/update">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg shadow-lg">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Submit Group Update
+                </Button>
+              </Link>
+            </div>
             
           </div>
 
