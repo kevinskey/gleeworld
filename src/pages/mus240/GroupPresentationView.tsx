@@ -45,12 +45,26 @@ function getSlides(update: GroupUpdate): Slide[] {
           <div className="mb-8 opacity-90">
             <Presentation className="h-24 w-24 mx-auto mb-6" />
           </div>
-          <h1 className="text-6xl font-bold mb-6 text-center leading-tight">
+          <h1 className="text-6xl font-bold mb-8 text-center leading-tight">
             {update.group_name}
           </h1>
           <div className="h-1 w-32 bg-white/50 mb-8"></div>
-          <p className="text-2xl mb-4 opacity-90">Moderator: {update.group_moderator}</p>
-          <p className="text-lg opacity-75">MUS240 Final Project Presentation</p>
+          <div className="mb-6">
+            <p className="text-2xl mb-2 font-semibold">Moderator</p>
+            <p className="text-xl opacity-90">{update.group_moderator}</p>
+          </div>
+          <div className="mt-4">
+            <p className="text-2xl mb-3 font-semibold">Team Members</p>
+            <div className="text-lg leading-relaxed opacity-90 space-y-1">
+              {update.team_members.split('\n').map((member, i) => (
+                <div key={i} className="flex items-center justify-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-white/70"></div>
+                  <span>{member}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="text-base opacity-60 mt-8">MUS240 Final Project Presentation</p>
         </div>
       ),
     },
