@@ -3583,6 +3583,7 @@ export type Database = {
           created_at: string
           final_product_description: string
           final_product_link: string | null
+          group_id: string | null
           group_moderator: string
           group_name: string
           id: string
@@ -3601,6 +3602,7 @@ export type Database = {
           created_at?: string
           final_product_description: string
           final_product_link?: string | null
+          group_id?: string | null
           group_moderator: string
           group_name: string
           id?: string
@@ -3619,6 +3621,7 @@ export type Database = {
           created_at?: string
           final_product_description?: string
           final_product_link?: string | null
+          group_id?: string | null
           group_moderator?: string
           group_name?: string
           id?: string
@@ -3631,7 +3634,15 @@ export type Database = {
           thesis_statement?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "group_updates_mus240_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_project_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_agendas: {
         Row: {

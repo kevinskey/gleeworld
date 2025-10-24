@@ -169,9 +169,13 @@ export default function GroupUpdateForm() {
     setSubmitting(true);
     
     try {
+      // Find the group_id based on the selected group name
+      const selectedGroup = groups.find(g => g.name === formData.groupName);
+      
       const { error } = await supabase
         .from('group_updates_mus240')
         .insert({
+          group_id: selectedGroup?.id || null,
           group_name: formData.groupName,
           group_moderator: formData.groupModerator,
           team_members: formData.teamMembers,
