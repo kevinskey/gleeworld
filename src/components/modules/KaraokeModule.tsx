@@ -875,17 +875,17 @@ export const KaraokeModule: React.FC = () => {
   const renderContent = () => {
     if (mode === 'menu') {
       return (
-        <div className="space-y-4 p-4">
+        <div className="space-y-3 p-2 sm:p-4">
           {/* Title */}
-          <Card className="p-8 border-4 border-foreground bg-background">
+          <Card className="p-4 sm:p-8 border-4 border-foreground bg-background">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-center leading-tight tracking-tight">
-              <span className="inline-block text-outline-bold">A CHOICE</span>
+              <span className="inline-block text-outline-bold text-2xl sm:text-3xl">A CHOICE</span>
               <br />
-              <span className="inline-block text-outline-bold">TO CHANGE</span>
+              <span className="inline-block text-outline-bold text-2xl sm:text-3xl">TO CHANGE</span>
               <br />
-              <span className="inline-block text-outline-bold">THE WORLD</span>
+              <span className="inline-block text-outline-bold text-2xl sm:text-3xl">THE WORLD</span>
               <br />
-              <span className="text-4xl sm:text-5xl md:text-6xl">KARAOKE</span>
+              <span className="text-4xl sm:text-5xl md:text-6xl mt-2 block">KARAOKE</span>
               <br />
               <span className="text-4xl sm:text-5xl md:text-6xl">CHALLENGE</span>
             </h1>
@@ -894,20 +894,20 @@ export const KaraokeModule: React.FC = () => {
           {/* Practice Button */}
           <Button
             onClick={() => setMode('practice')}
-            className="w-full h-16 text-2xl font-black border-4 border-foreground bg-background text-foreground hover:bg-muted text-outline flex items-center justify-start px-6 gap-3"
+            className="w-full h-20 sm:h-24 text-2xl sm:text-3xl font-black border-4 border-foreground bg-background text-foreground hover:bg-muted active:scale-95 transition-transform text-outline flex items-center justify-start px-4 sm:px-6 gap-3"
             variant="outline"
           >
-            <Play className="h-10 w-10 fill-destructive text-destructive" />
+            <Play className="h-12 w-12 sm:h-14 sm:w-14 fill-destructive text-destructive flex-shrink-0" />
             <span className="text-outline">PRACTICE</span>
           </Button>
 
           {/* Record Button */}
           <Button
             onClick={() => setMode('record')}
-            className="w-full h-16 text-2xl font-black border-4 border-foreground bg-background hover:bg-muted flex items-center justify-start px-6 gap-3"
+            className="w-full h-20 sm:h-24 text-2xl sm:text-3xl font-black border-4 border-foreground bg-background hover:bg-muted active:scale-95 transition-transform flex items-center justify-start px-4 sm:px-6 gap-3"
             variant="outline"
           >
-            <Play className="h-10 w-10 fill-destructive text-destructive" />
+            <Play className="h-12 w-12 sm:h-14 sm:w-14 fill-destructive text-destructive flex-shrink-0" />
             <span className="text-destructive font-black text-outline-red">RECORD</span>
           </Button>
 
@@ -915,7 +915,7 @@ export const KaraokeModule: React.FC = () => {
           <Button
             onClick={handleShare}
             disabled={!savedRecording}
-            className="w-full h-16 text-3xl border-4 border-foreground bg-background text-foreground hover:bg-muted font-script"
+            className="w-full h-20 sm:h-24 text-3xl sm:text-4xl border-4 border-foreground bg-background text-foreground hover:bg-muted active:scale-95 transition-transform font-script disabled:opacity-50"
             variant="outline"
           >
             Share
@@ -925,7 +925,7 @@ export const KaraokeModule: React.FC = () => {
           <Button
             onClick={handleDownload}
             disabled={!savedRecording}
-            className="w-full h-16 text-3xl border-4 border-foreground bg-background text-foreground hover:bg-muted font-script"
+            className="w-full h-20 sm:h-24 text-3xl sm:text-4xl border-4 border-foreground bg-background text-foreground hover:bg-muted active:scale-95 transition-transform font-script disabled:opacity-50"
             variant="outline"
           >
             Download
@@ -934,7 +934,7 @@ export const KaraokeModule: React.FC = () => {
           {/* Setup Button */}
           <Button
             onClick={() => setMode('setup')}
-            className="w-full h-16 text-4xl font-black border-4 border-foreground bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="w-full h-20 sm:h-24 text-3xl sm:text-4xl font-black border-4 border-foreground bg-destructive text-destructive-foreground hover:bg-destructive/90 active:scale-95 transition-transform"
           >
             SETUP
           </Button>
@@ -944,38 +944,38 @@ export const KaraokeModule: React.FC = () => {
 
     if (mode === 'record') {
       return (
-        <div className="space-y-6 p-4">
+        <div className="space-y-4 p-2 sm:p-4">
           <Button
             onClick={() => setMode('menu')}
             variant="outline"
-            className="mb-4"
+            className="mb-2 h-12 text-base active:scale-95 transition-transform"
           >
             ← Back to Menu
           </Button>
 
-          <Card className="p-6 border-4 border-foreground">
-            <h2 className="text-2xl font-black text-center mb-6 text-outline">RECORD MODE</h2>
+          <Card className="p-4 sm:p-6 border-4 border-foreground">
+            <h2 className="text-2xl sm:text-3xl font-black text-center mb-4 sm:mb-6 text-outline">RECORD MODE</h2>
             
-            <div className="flex flex-col items-center gap-6">
+            <div className="flex flex-col items-center gap-4 sm:gap-6">
               {/* Recording Duration */}
-              <div className="text-5xl font-mono font-bold">
+              <div className="text-5xl sm:text-6xl font-mono font-bold tabular-nums">
                 {formatDuration(recordingDuration)}
               </div>
 
-              {/* Record/Stop Button */}
+              {/* Record/Stop Button - Extra large touch target */}
               <Button
                 onClick={handleRecord}
                 size="lg"
-                className={`h-20 w-20 rounded-full ${
+                className={`h-28 w-28 sm:h-32 sm:w-32 rounded-full active:scale-90 transition-transform ${
                   isRecording 
                     ? 'bg-destructive hover:bg-destructive/90' 
                     : 'bg-primary hover:bg-primary/90'
                 }`}
               >
                 {isRecording ? (
-                  <div className="h-6 w-6 bg-white rounded-sm" />
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 bg-white rounded-sm" />
                 ) : (
-                  <Mic className="h-10 w-10" />
+                  <Mic className="h-14 w-14 sm:h-16 sm:w-16" />
                 )}
               </Button>
 
@@ -984,7 +984,7 @@ export const KaraokeModule: React.FC = () => {
                 <Button
                   onClick={handleSaveRecording}
                   size="lg"
-                  className="w-full text-lg font-bold"
+                  className="w-full h-14 sm:h-16 text-lg sm:text-xl font-bold active:scale-95 transition-transform"
                 >
                   Save Recording
                 </Button>
@@ -993,7 +993,7 @@ export const KaraokeModule: React.FC = () => {
               {/* Audio Preview */}
               {savedRecording && (
                 <div className="w-full">
-                  <audio controls src={savedRecording.url} className="w-full" />
+                  <audio controls src={savedRecording.url} className="w-full h-12" />
                 </div>
               )}
             </div>
@@ -1004,29 +1004,33 @@ export const KaraokeModule: React.FC = () => {
 
     if (mode === 'setup') {
       return (
-        <div className="space-y-4 p-4">
+        <div className="space-y-3 p-2 sm:p-4">
           <Button
             onClick={() => setMode('menu')}
             variant="outline"
-            className="mb-4"
+            className="mb-2 h-12 text-base active:scale-95 transition-transform"
           >
             ← Back to Menu
           </Button>
-          <Card className="p-6 border-4 border-foreground">
-            <h2 className="text-2xl font-black text-center mb-6 text-outline">SETUP & MIC CHECK</h2>
+          <Card className="p-4 sm:p-6 border-4 border-foreground">
+            <h2 className="text-xl sm:text-2xl font-black text-center mb-4 sm:mb-6 text-outline">SETUP & MIC CHECK</h2>
             
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Microphone Permission */}
               <div className="space-y-2">
-                <h3 className="font-bold text-lg">Microphone Access</h3>
-                <div className="flex items-center justify-between">
+                <h3 className="font-bold text-base sm:text-lg">Microphone Access</h3>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <span className="text-sm text-muted-foreground">
                     Status: <span className={`font-bold ${micPermission === 'granted' ? 'text-green-600' : 'text-amber-600'}`}>
                       {micPermission === 'granted' ? 'Granted' : micPermission === 'denied' ? 'Denied' : 'Not Requested'}
                     </span>
                   </span>
                   {micPermission !== 'granted' && (
-                    <Button size="sm" onClick={requestMicPermission}>
+                    <Button 
+                      size="sm" 
+                      onClick={requestMicPermission}
+                      className="w-full sm:w-auto h-12 active:scale-95 transition-transform"
+                    >
                       Enable Microphone
                     </Button>
                   )}
@@ -1034,30 +1038,30 @@ export const KaraokeModule: React.FC = () => {
               </div>
 
               {/* Mic Volume Control */}
-              <div className="space-y-2">
-                <h3 className="font-bold text-lg">Mic Volume</h3>
-                <div className="flex items-center gap-4">
-                  <Mic2 className="h-5 w-5 text-primary"/>
+              <div className="space-y-3">
+                <h3 className="font-bold text-base sm:text-lg">Mic Volume</h3>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <Mic2 className="h-6 w-6 sm:h-5 sm:w-5 text-primary flex-shrink-0"/>
                   <Slider 
                     value={[Math.round(micVolume*100)]} 
                     onValueChange={(v)=>setMicVolume((v[0]||0)/100)} 
-                    className="flex-1"
+                    className="flex-1 h-8 sm:h-auto"
                   />
-                  <span className="text-sm text-muted-foreground w-12">{Math.round(micVolume*100)}%</span>
+                  <span className="text-base sm:text-sm text-muted-foreground w-14 sm:w-12 tabular-nums">{Math.round(micVolume*100)}%</span>
                 </div>
               </div>
 
               {/* Track Volume Control */}
-              <div className="space-y-2">
-                <h3 className="font-bold text-lg">Music Volume</h3>
-                <div className="flex items-center gap-4">
-                  <Music className="h-5 w-5 text-primary"/>
+              <div className="space-y-3">
+                <h3 className="font-bold text-base sm:text-lg">Music Volume</h3>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <Music className="h-6 w-6 sm:h-5 sm:w-5 text-primary flex-shrink-0"/>
                   <Slider 
                     value={[Math.round(trackVolume*100)]} 
                     onValueChange={(v)=>setTrackVolume((v[0]||0)/100)} 
-                    className="flex-1"
+                    className="flex-1 h-8 sm:h-auto"
                   />
-                  <span className="text-sm text-muted-foreground w-12">{Math.round(trackVolume*100)}%</span>
+                  <span className="text-base sm:text-sm text-muted-foreground w-14 sm:w-12 tabular-nums">{Math.round(trackVolume*100)}%</span>
                 </div>
               </div>
 
@@ -1086,17 +1090,17 @@ export const KaraokeModule: React.FC = () => {
     }
 
     return (
-      <div className="space-y-4 p-4">
+      <div className="space-y-3 p-2 sm:p-4">
         <Button
           onClick={() => setMode('menu')}
           variant="outline"
-          className="mb-4"
+          className="mb-2 h-12 text-base active:scale-95 transition-transform"
         >
           ← Back to Menu
         </Button>
-        <Card className="p-6">
-          <h2 className="text-2xl font-black text-center text-outline">PRACTICE MODE</h2>
-          <p className="text-center mt-4 text-muted-foreground">
+        <Card className="p-4 sm:p-6">
+          <h2 className="text-xl sm:text-2xl font-black text-center text-outline">PRACTICE MODE</h2>
+          <p className="text-center mt-4 text-sm sm:text-base text-muted-foreground">
             Practice mode coming soon...
           </p>
         </Card>
@@ -1107,12 +1111,12 @@ export const KaraokeModule: React.FC = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2 h-12 text-base active:scale-95 transition-transform">
           <Mic2 className="h-5 w-5" />
           Open Karaoke Studio
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-background">
+      <DialogContent className="w-[95vw] max-w-3xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto bg-background p-0">
         <DialogTitle className="sr-only">Karaoke Challenge Studio</DialogTitle>
         <DialogDescription className="sr-only">
           Record your voice over the Choice Band track and save your performance
