@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTrigger, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Music, Mic2, Download, Play, Square, Save, RefreshCw, Pause, Mic, Share2, Settings } from 'lucide-react';
@@ -1004,86 +1005,110 @@ export const KaraokeModule: React.FC = () => {
 
     if (mode === 'setup') {
       return (
-        <div className="space-y-3 p-2 sm:p-4">
+        <div className="space-y-2 p-2 sm:p-4 max-h-[80vh] overflow-y-auto">
           <Button
             onClick={() => setMode('menu')}
             variant="outline"
-            className="mb-2 h-12 text-base active:scale-95 transition-transform"
+            className="mb-2 h-10 text-sm active:scale-95 transition-transform"
           >
             ← Back to Menu
           </Button>
-          <Card className="p-4 sm:p-6 border-4 border-foreground">
-            <h2 className="text-xl sm:text-2xl font-black text-center mb-4 sm:mb-6 text-outline">SETUP & MIC CHECK</h2>
+          <Card className="p-3 sm:p-6 border-4 border-foreground">
+            <h2 className="text-lg sm:text-2xl font-black text-center mb-3 sm:mb-6 text-outline">SETUP</h2>
             
-            <div className="space-y-4 sm:space-y-6">
-              {/* Microphone Permission */}
-              <div className="space-y-2">
-                <h3 className="font-bold text-base sm:text-lg">Microphone Access</h3>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    Status: <span className={`font-bold ${micPermission === 'granted' ? 'text-green-600' : 'text-amber-600'}`}>
-                      {micPermission === 'granted' ? 'Granted' : micPermission === 'denied' ? 'Denied' : 'Not Requested'}
+            <Accordion type="multiple" defaultValue={['permissions', 'volumes']} className="space-y-2">
+              {/* Microphone Permission - Collapsible */}
+              <AccordionItem value="permissions" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm sm:text-base font-bold hover:no-underline py-2">
+                  Microphone Access
+                </AccordionTrigger>
+                <AccordionContent className="pb-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <span className="text-xs sm:text-sm text-muted-foreground">
+                      Status: <span className={`font-bold ${micPermission === 'granted' ? 'text-green-600' : 'text-amber-600'}`}>
+                        {micPermission === 'granted' ? 'Granted' : micPermission === 'denied' ? 'Denied' : 'Not Requested'}
+                      </span>
                     </span>
-                  </span>
-                  {micPermission !== 'granted' && (
-                    <Button 
-                      size="sm" 
-                      onClick={requestMicPermission}
-                      className="w-full sm:w-auto h-12 active:scale-95 transition-transform"
-                    >
-                      Enable Microphone
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Mic Volume Control */}
-              <div className="space-y-3">
-                <h3 className="font-bold text-base sm:text-lg">Mic Volume</h3>
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <Mic2 className="h-6 w-6 sm:h-5 sm:w-5 text-primary flex-shrink-0"/>
-                  <Slider 
-                    value={[Math.round(micVolume*100)]} 
-                    onValueChange={(v)=>setMicVolume((v[0]||0)/100)} 
-                    className="flex-1 h-8 sm:h-auto"
-                  />
-                  <span className="text-base sm:text-sm text-muted-foreground w-14 sm:w-12 tabular-nums">{Math.round(micVolume*100)}%</span>
-                </div>
-              </div>
-
-              {/* Track Volume Control */}
-              <div className="space-y-3">
-                <h3 className="font-bold text-base sm:text-lg">Music Volume</h3>
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <Music className="h-6 w-6 sm:h-5 sm:w-5 text-primary flex-shrink-0"/>
-                  <Slider 
-                    value={[Math.round(trackVolume*100)]} 
-                    onValueChange={(v)=>setTrackVolume((v[0]||0)/100)} 
-                    className="flex-1 h-8 sm:h-auto"
-                  />
-                  <span className="text-base sm:text-sm text-muted-foreground w-14 sm:w-12 tabular-nums">{Math.round(trackVolume*100)}%</span>
-                </div>
-              </div>
-
-              {/* Mic Test Component */}
-              <div className="space-y-2">
-                <h3 className="font-bold text-lg">Microphone Test</h3>
-                <Card className="p-4 bg-muted/50">
-                  <MicTest />
-                </Card>
-              </div>
-
-              {/* Track Info */}
-              {track && (
-                <div className="space-y-2">
-                  <h3 className="font-bold text-lg">Backing Track</h3>
-                  <div className="text-sm">
-                    <div className="font-medium">{track.title}</div>
-                    <div className="text-xs text-muted-foreground truncate">{track.file_url}</div>
+                    {micPermission !== 'granted' && (
+                      <Button 
+                        size="sm" 
+                        onClick={requestMicPermission}
+                        className="w-full sm:w-auto h-10 text-xs active:scale-95 transition-transform"
+                      >
+                        Enable Mic
+                      </Button>
+                    )}
                   </div>
-                </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Volume Controls - Collapsible */}
+              <AccordionItem value="volumes" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm sm:text-base font-bold hover:no-underline py-2">
+                  Volume Controls
+                </AccordionTrigger>
+                <AccordionContent className="space-y-3 pb-3">
+                  {/* Mic Volume */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs sm:text-sm font-medium">Mic</span>
+                      <span className="text-xs tabular-nums text-muted-foreground">{Math.round(micVolume*100)}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Mic2 className="h-4 w-4 text-primary flex-shrink-0"/>
+                      <Slider 
+                        value={[Math.round(micVolume*100)]} 
+                        onValueChange={(v)=>setMicVolume((v[0]||0)/100)} 
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Track Volume */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs sm:text-sm font-medium">Music</span>
+                      <span className="text-xs tabular-nums text-muted-foreground">{Math.round(trackVolume*100)}%</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Music className="h-4 w-4 text-primary flex-shrink-0"/>
+                      <Slider 
+                        value={[Math.round(trackVolume*100)]} 
+                        onValueChange={(v)=>setTrackVolume((v[0]||0)/100)} 
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Mic Test - Collapsible */}
+              <AccordionItem value="mictest" className="border rounded-lg px-3">
+                <AccordionTrigger className="text-sm sm:text-base font-bold hover:no-underline py-2">
+                  Mic Test
+                </AccordionTrigger>
+                <AccordionContent className="pb-3">
+                  <div className="bg-muted/50 rounded p-2">
+                    <MicTest />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Track Info - Collapsible */}
+              {track && (
+                <AccordionItem value="track" className="border rounded-lg px-3">
+                  <AccordionTrigger className="text-sm sm:text-base font-bold hover:no-underline py-2">
+                    Backing Track
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <div className="text-xs sm:text-sm">
+                      <div className="font-medium truncate">{track.title}</div>
+                      <div className="text-[10px] sm:text-xs text-muted-foreground truncate mt-1">{track.file_url}</div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
               )}
-            </div>
+            </Accordion>
           </Card>
         </div>
       );
