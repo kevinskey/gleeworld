@@ -117,13 +117,24 @@ export const KaraokeModule: React.FC = () => {
   }, [micVolume]);
 
   useEffect(() => {
-    // Probe mic permission without keeping the stream
-    navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } })
-      .then(stream => {
-        setMicPermission('granted');
-        stream.getTracks().forEach(t => t.stop());
-      })
-      .catch(() => setMicPermission('denied'));
+    // Check mic permission on load (don't request it automatically)
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const hasMic = devices.some(device => device.kind === 'audioinput');
+          if (hasMic) {
+            console.log('Microphone detected, waiting for user to request permission');
+            // Don't auto-request permission, just set to unknown
+            setMicPermission('unknown');
+          } else {
+            console.log('No microphone detected');
+            setMicPermission('denied');
+          }
+        })
+        .catch(err => {
+          console.error('Error checking devices:', err);
+        });
+    }
   }, []);
 
   // Resolve a playable URL (handles private buckets via signed URLs)
@@ -142,6 +153,7 @@ export const KaraokeModule: React.FC = () => {
 
   const requestMicPermission = async () => {
     try {
+      console.log('Requesting microphone permission...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
@@ -151,12 +163,25 @@ export const KaraokeModule: React.FC = () => {
           sampleRate: 48000
         } as MediaTrackConstraints
       });
+      console.log('Microphone permission granted');
       setMicPermission('granted');
-      stream.getTracks().forEach(t => t.stop());
-      toast("Microphone enabled.");
-    } catch {
+      // Stop the stream immediately after getting permission
+      stream.getTracks().forEach(t => {
+        t.stop();
+        console.log('Stopped track:', t.label);
+      });
+      toast("Microphone access granted!");
+    } catch (err: any) {
+      console.error('Microphone permission error:', err);
       setMicPermission('denied');
-      toast("Microphone access was denied.");
+      const errorName = err?.name || '';
+      if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+        toast("Microphone access denied. Please allow microphone access in your browser settings.");
+      } else if (errorName === 'NotFoundError') {
+        toast("No microphone found. Please connect a microphone.");
+      } else {
+        toast("Failed to access microphone. Error: " + (err?.message || 'Unknown error'));
+      }
     }
   };
 
