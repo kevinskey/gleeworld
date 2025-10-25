@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Play, Mic, Share2, Download } from 'lucide-react';
+import { Play, Mic, Share2, Download, Square } from 'lucide-react';
 import { useAudioRecorder } from '@/components/sight-singing/hooks/useAudioRecorder';
 import { useKaraokeRecordings } from '@/hooks/useKaraokeRecordings';
 import { useToast } from '@/hooks/use-toast';
@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 export const KaraokeChallengeStudio: React.FC = () => {
   const [mode, setMode] = useState<'menu' | 'practice' | 'record'>('menu');
   const [savedRecording, setSavedRecording] = useState<{ blob: Blob; url: string } | null>(null);
+  const [isPlayingPractice, setIsPlayingPractice] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { isRecording, recordingDuration, audioBlob, startRecording, stopRecording, clearRecording } = useAudioRecorder();
   const { uploadRecording } = useKaraokeRecordings();
   const { toast } = useToast();
@@ -88,6 +90,19 @@ export const KaraokeChallengeStudio: React.FC = () => {
         title: "Downloaded!",
         description: "Your recording has been downloaded.",
       });
+    }
+  };
+
+  const handlePlayPractice = () => {
+    if (audioRef.current) {
+      if (isPlayingPractice) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setIsPlayingPractice(false);
+      } else {
+        audioRef.current.play();
+        setIsPlayingPractice(true);
+      }
     }
   };
 
@@ -232,11 +247,34 @@ export const KaraokeChallengeStudio: React.FC = () => {
       >
         ← Back to Menu
       </Button>
-      <Card className="p-8">
-        <h2 className="text-3xl font-black text-center text-outline">PRACTICE MODE</h2>
-        <p className="text-center mt-4 text-muted-foreground">
-          Practice mode coming soon...
-        </p>
+      <Card className="p-8 border-4 border-foreground">
+        <h2 className="text-3xl font-black text-center mb-6 text-outline">PRACTICE MODE</h2>
+        
+        <div className="flex flex-col items-center gap-6">
+          <audio 
+            ref={audioRef}
+            src="/karaoke-tracks/a-choice-to-change-the-world.mp3"
+            onEnded={() => setIsPlayingPractice(false)}
+            className="w-full"
+            controls
+          />
+          
+          <Button
+            onClick={handlePlayPractice}
+            size="lg"
+            className={`h-24 w-24 rounded-full ${
+              isPlayingPractice 
+                ? 'bg-destructive hover:bg-destructive/90' 
+                : 'bg-primary hover:bg-primary/90'
+            }`}
+          >
+            {isPlayingPractice ? (
+              <Square className="h-12 w-12 fill-white" />
+            ) : (
+              <Play className="h-12 w-12 fill-white" />
+            )}
+          </Button>
+        </div>
       </Card>
     </div>
   );
