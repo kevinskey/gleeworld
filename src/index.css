@@ -914,3 +914,35 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
 .sheet-music-container-mobile .note {
   fill: hsl(var(--foreground)) !important;
 }
+
+/* Custom text effects for Karaoke Challenge */
+.text-outline {
+  text-shadow: 
+    -2px -2px 0 hsl(var(--foreground)),
+    2px -2px 0 hsl(var(--foreground)),
+    -2px 2px 0 hsl(var(--foreground)),
+    2px 2px 0 hsl(var(--foreground)),
+    -3px 0 0 hsl(var(--foreground)),
+    3px 0 0 hsl(var(--foreground)),
+    0 -3px 0 hsl(var(--foreground)),
+    0 3px 0 hsl(var(--foreground));
+}
+
+.text-outline-bold {
+  -webkit-text-fill-color: hsl(var(--background));
+  -webkit-text-stroke: 3px hsl(var(--foreground));
+  paint-order: stroke fill;
+}
+
+.text-outline-red {
+  text-shadow: 
+    -2px -2px 0 hsl(var(--foreground)),
+    2px -2px 0 hsl(var(--foreground)),
+    -2px 2px 0 hsl(var(--foreground)),
+    2px 2px 0 hsl(var(--foreground));
+}
+
+.font-script {
+  font-family: 'Brush Script MT', cursive;
+  font-style: italic;
+}

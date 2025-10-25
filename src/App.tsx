@@ -139,6 +139,7 @@ import SightReadingSubmission from "./pages/SightReadingSubmission";
 import SightReadingPreview from "./pages/SightReadingPreview";
 import SightReadingGeneratorPage from "./pages/SightReadingGenerator";
 import AssignmentCreatorPage from "./pages/AssignmentCreator";
+import KaraokeChallenge from "./pages/KaraokeChallenge";
 import PracticeStudioPage from "./pages/PracticeStudioPage";
 import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPage";
 import SchedulingPage from "./pages/SchedulingPage";
@@ -1428,7 +1429,7 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                                      <Route 
+                                       <Route 
                                         path="/sight-reading-generator" 
                                         element={
                                           <ProtectedRoute>
@@ -1437,7 +1438,15 @@ const App = () => {
                                         } 
                                       />
                                       <Route 
-                                        path="/assignment-creator" 
+                                        path="/karaoke-challenge" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <KaraokeChallenge />
+                                          </ProtectedRoute>
+                                        } 
+                                      />
+                                      <Route 
+                                        path="/assignment-creator"
                                         element={
                                           <ProtectedRoute>
                                             <AssignmentCreatorPage />
