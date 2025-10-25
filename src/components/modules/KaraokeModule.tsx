@@ -187,6 +187,28 @@ export const KaraokeModule: React.FC = () => {
         toast("Microphone access granted!");
       } catch (err: any) {
         console.error('Microphone permission error (fallback):', err);
+
+        // One more attempt: try targeting a specific input device
+        try {
+          console.log('Enumerating devices to try a specific microphone...');
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const mics = devices.filter(d => d.kind === 'audioinput');
+          if (mics.length > 0) {
+            const preferred = mics[0];
+            console.log('Trying deviceId:', preferred.deviceId, preferred.label || '(label hidden until granted)');
+            const specificStream = await navigator.mediaDevices.getUserMedia({
+              audio: { deviceId: { exact: preferred.deviceId } }
+            });
+            console.log('Microphone permission granted (device-specific)');
+            setMicPermission('granted');
+            stopAll(specificStream);
+            toast("Microphone access granted!");
+            return;
+          }
+        } catch (specificErr: any) {
+          console.warn('Device-specific request failed:', specificErr?.name, specificErr);
+        }
+
         setMicPermission('denied');
         const errorName = err?.name || primaryErr?.name || '';
         if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
