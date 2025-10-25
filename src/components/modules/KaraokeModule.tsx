@@ -152,8 +152,15 @@ export const KaraokeModule: React.FC = () => {
   };
 
   const requestMicPermission = async () => {
+    const stopAll = (stream: MediaStream) => {
+      stream.getTracks().forEach(t => {
+        t.stop();
+        console.log('Stopped track:', t.label);
+      });
+    };
+
     try {
-      console.log('Requesting microphone permission...');
+      console.log('Requesting microphone permission (preferred constraints)...');
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
@@ -165,24 +172,34 @@ export const KaraokeModule: React.FC = () => {
       });
       console.log('Microphone permission granted');
       setMicPermission('granted');
-      // Stop the stream immediately after getting permission
-      stream.getTracks().forEach(t => {
-        t.stop();
-        console.log('Stopped track:', t.label);
-      });
+      stopAll(stream);
       toast("Microphone access granted!");
-    } catch (err: any) {
-      console.error('Microphone permission error:', err);
-      setMicPermission('denied');
-      const errorName = err?.name || '';
-      if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
-        toast("Microphone access denied. Please allow microphone access in your browser settings.");
-      } else if (errorName === 'NotFoundError') {
-        toast("No microphone found. Please connect a microphone.");
-      } else if (errorName === 'NotReadableError') {
-        toast("Microphone is in use by another app. Close other apps (Zoom, Teams, etc.) and try again.");
-      } else {
-        toast("Failed to access microphone. Error: " + (err?.message || 'Unknown error'));
+    } catch (primaryErr: any) {
+      console.warn('Primary mic request failed:', primaryErr?.name, primaryErr);
+
+      // Retry with minimal constraints – some devices reject advanced constraints
+      try {
+        console.log('Retrying microphone permission with minimal constraints...');
+        const fallbackStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log('Microphone permission granted (fallback)');
+        setMicPermission('granted');
+        stopAll(fallbackStream);
+        toast("Microphone access granted!");
+      } catch (err: any) {
+        console.error('Microphone permission error (fallback):', err);
+        setMicPermission('denied');
+        const errorName = err?.name || primaryErr?.name || '';
+        if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+          toast("Microphone access denied. Allow access in Chrome (lock icon) and macOS Settings > Privacy & Security > Microphone.");
+        } else if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
+          toast("No microphone found. Please connect a microphone or select the correct input in Chrome settings.");
+        } else if (errorName === 'NotReadableError') {
+          toast("Mic couldn't start. Close other tabs, disable extensions using the mic, then retry. If on macOS, enable Chrome under System Settings > Privacy & Security > Microphone and restart Chrome.");
+        } else if (errorName === 'OverconstrainedError' || errorName === 'AbortError') {
+          toast("Mic not available with current settings. Please retry or select another input device in Chrome.");
+        } else {
+          toast("Failed to access microphone. Error: " + (err?.message || primaryErr?.message || 'Unknown error'));
+        }
       }
     }
   };
