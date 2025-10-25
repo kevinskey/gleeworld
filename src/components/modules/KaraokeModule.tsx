@@ -179,6 +179,8 @@ export const KaraokeModule: React.FC = () => {
         toast("Microphone access denied. Please allow microphone access in your browser settings.");
       } else if (errorName === 'NotFoundError') {
         toast("No microphone found. Please connect a microphone.");
+      } else if (errorName === 'NotReadableError') {
+        toast("Microphone is in use by another app. Close other apps (Zoom, Teams, etc.) and try again.");
       } else {
         toast("Failed to access microphone. Error: " + (err?.message || 'Unknown error'));
       }
