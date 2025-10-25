@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Play, Mic, Share2, Download, Settings } from 'lucide-react';
+import { Play, Mic, Share2, Download } from 'lucide-react';
 import { useAudioRecorder } from '@/components/sight-singing/hooks/useAudioRecorder';
-import { useBucketsOfLove } from '@/hooks/useBucketsOfLove';
+import { useKaraokeRecordings } from '@/hooks/useKaraokeRecordings';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const KaraokeChallengeStudio: React.FC = () => {
   const [mode, setMode] = useState<'menu' | 'practice' | 'record'>('menu');
   const [savedRecording, setSavedRecording] = useState<{ blob: Blob; url: string } | null>(null);
   const { isRecording, recordingDuration, audioBlob, startRecording, stopRecording, clearRecording } = useAudioRecorder();
-  const { sendBucketOfLove } = useBucketsOfLove();
+  const { uploadRecording } = useKaraokeRecordings();
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -54,33 +53,16 @@ export const KaraokeChallengeStudio: React.FC = () => {
     }
 
     try {
-      // Upload audio to Supabase Storage
-      const fileName = `karaoke-${Date.now()}.webm`;
-      const filePath = `karaoke-recordings/${user.id}/${fileName}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('sight-singing-recordings')
-        .upload(filePath, savedRecording.blob);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('sight-singing-recordings')
-        .getPublicUrl(filePath);
-
-      // Post to buckets of love with audio
-      const result = await sendBucketOfLove(
-        "🎤 Check out my karaoke recording!",
-        "#FF6B6B",
-        false,
-        undefined
+      const result = await uploadRecording(
+        savedRecording.blob,
+        "My Karaoke Performance",
+        "A Choice to Change the World"
       );
 
       if (result.success) {
         toast({
           title: "Shared!",
-          description: "Your karaoke recording has been posted to Buckets of Love!",
+          description: "Your karaoke recording has been posted!",
         });
         clearRecording();
         setSavedRecording(null);

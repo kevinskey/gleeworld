@@ -4862,10 +4862,13 @@ export type Database = {
       }
       gw_buckets_of_love: {
         Row: {
+          audio_duration: number | null
+          audio_url: string | null
           created_at: string
           decorations: string | null
           id: string
           is_anonymous: boolean
+          is_karaoke_recording: boolean | null
           likes: number | null
           message: string
           note_color: string
@@ -4874,10 +4877,13 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          audio_duration?: number | null
+          audio_url?: string | null
           created_at?: string
           decorations?: string | null
           id?: string
           is_anonymous?: boolean
+          is_karaoke_recording?: boolean | null
           likes?: number | null
           message: string
           note_color?: string
@@ -4886,10 +4892,13 @@ export type Database = {
           user_id: string
         }
         Update: {
+          audio_duration?: number | null
+          audio_url?: string | null
           created_at?: string
           decorations?: string | null
           id?: string
           is_anonymous?: boolean
+          is_karaoke_recording?: boolean | null
           likes?: number | null
           message?: string
           note_color?: string
@@ -13918,6 +13927,48 @@ export type Database = {
           verification_status?: string
           verified_at?: string | null
           verified_by?: string | null
+        }
+        Relationships: []
+      }
+      karaoke_recordings: {
+        Row: {
+          audio_duration: number | null
+          audio_url: string
+          created_at: string
+          file_path: string
+          id: string
+          is_public: boolean | null
+          likes: number | null
+          song_name: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          audio_duration?: number | null
+          audio_url: string
+          created_at?: string
+          file_path: string
+          id?: string
+          is_public?: boolean | null
+          likes?: number | null
+          song_name?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          audio_duration?: number | null
+          audio_url?: string
+          created_at?: string
+          file_path?: string
+          id?: string
+          is_public?: boolean | null
+          likes?: number | null
+          song_name?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
