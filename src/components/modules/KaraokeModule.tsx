@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Music, Mic2, Download, Play, Square, Save, RefreshCw, Pause } from 'lucide-react';
+import { Music, Mic2, Download, Play, Square, Save, RefreshCw, Pause, Mic, Share2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import MicTest from '@/components/media/MicTest';
 import { getFileUrl } from '@/utils/storage';
+import { useAudioRecorder } from '@/components/sight-singing/hooks/useAudioRecorder';
+import { useKaraokeRecordings } from '@/hooks/useKaraokeRecordings';
 
 // @ts-ignore - lamejs has no types
 import lamejs from 'lamejs';
@@ -24,9 +26,13 @@ interface MediaItem {
 
 export const KaraokeModule: React.FC = () => {
   const { user } = useAuth();
+  const [mode, setMode] = useState<'menu' | 'practice' | 'record'>('menu');
+  const [savedRecording, setSavedRecording] = useState<{ blob: Blob; url: string } | null>(null);
+  const { isRecording, recordingDuration, audioBlob, startRecording: startSimpleRecording, stopRecording: stopSimpleRecording, clearRecording: clearSimpleRecording } = useAudioRecorder();
+  const { uploadRecording } = useKaraokeRecordings();
+  
   const [track, setTrack] = useState<MediaItem | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [micPermission, setMicPermission] = useState<'unknown'|'granted'|'denied'>('unknown');
   const [micVolume, setMicVolume] = useState(1);
   const [trackVolume, setTrackVolume] = useState(0.9);
@@ -371,7 +377,7 @@ export const KaraokeModule: React.FC = () => {
         // Small slice to ensure frequent dataavailable events
         mediaRecorderRef.current.start(100);
       }
-      setIsRecording(true);
+      // Note: isRecording state is managed by useAudioRecorder hook
 
       // Play the backing track if available (safe iOS prime)
       if (track) {
@@ -469,7 +475,7 @@ export const KaraokeModule: React.FC = () => {
       micSourceNodeRef.current = null;
     } catch {}
 
-    setIsRecording(false);
+    // Note: isRecording state is managed by useAudioRecorder hook
     setTimeout(() => {
       try {
         if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
@@ -805,166 +811,213 @@ export const KaraokeModule: React.FC = () => {
     }
   };
 
-  return (
-    <div className="min-h-[60vh]">
-      <header className="sticky z-30 bg-background/95 backdrop-blur border-b" style={{ top: 'var(--app-header-offset)' }}>
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="rounded-md bg-primary/10 p-2 text-primary"><Mic2 className="h-5 w-5"/></div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Karaoke Studio</h1>
-              <p className="text-sm text-muted-foreground">Record your voice over "Choice Band" and save a mix</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {!isRecording ? (
-              <Button onClick={startRecording} disabled={loading || micPermission==='denied'}>
-                <Play className="mr-2 h-4 w-4"/> Start Recording
-              </Button>
-            ) : (
-              <Button variant="destructive" onClick={stopRecording}>
-                <Square className="mr-2 h-4 w-4"/> Stop
-              </Button>
-            )}
-          </div>
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleRecord = async () => {
+    if (isRecording) {
+      stopSimpleRecording();
+    } else {
+      clearSimpleRecording();
+      setSavedRecording(null);
+      await startSimpleRecording();
+    }
+  };
+
+  const handleSaveRecording = () => {
+    if (audioBlob) {
+      const url = URL.createObjectURL(audioBlob);
+      setSavedRecording({ blob: audioBlob, url });
+      toast("Recording saved! Ready to share.");
+    }
+  };
+
+  const handleShare = async () => {
+    if (!savedRecording || !user) {
+      toast("Please record something first and make sure you're logged in");
+      return;
+    }
+
+    try {
+      const result = await uploadRecording(
+        savedRecording.blob,
+        "My Karaoke Performance",
+        "A Choice to Change the World"
+      );
+
+      if (result.success) {
+        toast("Your karaoke recording has been posted!");
+        clearSimpleRecording();
+        setSavedRecording(null);
+        setMode('menu');
+      }
+    } catch (error) {
+      console.error('Error sharing recording:', error);
+      toast("Failed to share recording. Please try again.");
+    }
+  };
+
+  const handleDownload = () => {
+    if (savedRecording) {
+      const a = document.createElement('a');
+      a.href = savedRecording.url;
+      a.download = `karaoke-recording-${Date.now()}.webm`;
+      a.click();
+      toast("Recording downloaded!");
+    }
+  };
+
+  if (mode === 'menu') {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="space-y-4">
+          {/* Title */}
+          <Card className="p-8 border-4 border-foreground bg-background">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-center leading-tight tracking-tight">
+              <span className="inline-block text-outline-bold">A CHOICE</span>
+              <br />
+              <span className="inline-block text-outline-bold">TO CHANGE</span>
+              <br />
+              <span className="inline-block text-outline-bold">THE WORLD</span>
+              <br />
+              <span className="text-5xl sm:text-6xl md:text-7xl">KARAOKE</span>
+              <br />
+              <span className="text-5xl sm:text-6xl md:text-7xl">CHALLENGE</span>
+            </h1>
+          </Card>
+
+          {/* Practice Button */}
+          <Button
+            onClick={() => setMode('practice')}
+            className="w-full h-20 text-3xl font-black border-4 border-foreground bg-background text-foreground hover:bg-muted text-outline flex items-center justify-start px-8 gap-4"
+            variant="outline"
+          >
+            <Play className="h-12 w-12 fill-destructive text-destructive" />
+            <span className="text-outline">PRACTICE</span>
+          </Button>
+
+          {/* Record Button */}
+          <Button
+            onClick={() => setMode('record')}
+            className="w-full h-20 text-3xl font-black border-4 border-foreground bg-background hover:bg-muted flex items-center justify-start px-8 gap-4"
+            variant="outline"
+          >
+            <Play className="h-12 w-12 fill-destructive text-destructive" />
+            <span className="text-destructive font-black text-outline-red">RECORD</span>
+          </Button>
+
+          {/* Share Button */}
+          <Button
+            onClick={handleShare}
+            disabled={!savedRecording}
+            className="w-full h-20 text-4xl border-4 border-foreground bg-background text-foreground hover:bg-muted font-script"
+            variant="outline"
+          >
+            Share
+          </Button>
+
+          {/* Download Button */}
+          <Button
+            onClick={handleDownload}
+            disabled={!savedRecording}
+            className="w-full h-20 text-4xl border-4 border-foreground bg-background text-foreground hover:bg-muted font-script"
+            variant="outline"
+          >
+            Download
+          </Button>
+
+          {/* Setup Button */}
+          <Button
+            onClick={() => toast("Setup coming soon...")}
+            className="w-full h-20 text-5xl font-black border-4 border-foreground bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            SETUP
+          </Button>
         </div>
-      </header>
+      </div>
+    );
+  }
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {!audioReady && (
-          <Card className="bg-background/50 border-border">
-            <CardHeader>
-              <CardTitle>Enable Audio</CardTitle>
-              <CardDescription>Browsers require a tap to allow sound.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button onClick={enableAudio}>Enable Audio</Button>
-            </CardContent>
-          </Card>
-        )}
-        <Card className="bg-background/50 border-border">
-          <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle>Backing Track</CardTitle>
-              <CardDescription>Auto-selected from your Media Library</CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={togglePractice} disabled={isRecording || !track}>
-                {isPracticePlaying ? <Pause className="mr-2 h-4 w-4"/> : <Play className="mr-2 h-4 w-4"/>}
-                {isPracticePlaying ? 'Pause' : 'Play'}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-sm space-y-3">
-              {loading ? 'Loading…' : track ? (
-                <>
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="truncate">
-                      <div className="font-medium truncate">{track.title}</div>
-                      <div className="text-xs text-muted-foreground truncate">{track.file_url}</div>
-                    </div>
-                    <div className="flex items-center gap-4 min-w-[200px]">
-                      <div className="flex items-center gap-2 w-full">
-                        <Music className="h-4 w-4 text-primary"/>
-                        <Slider value={[Math.round(trackVolume*100)]} onValueChange={(v)=>setTrackVolume((v[0]||0)/100)} className="w-40"/>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div>No track found named "Choice Band".</div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+  if (mode === 'record') {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <div className="space-y-6">
+          <Button
+            onClick={() => setMode('menu')}
+            variant="outline"
+            className="mb-4"
+          >
+            ← Back to Menu
+          </Button>
 
-        <Card className="bg-background/50 border-border">
-          <CardHeader>
-            <CardTitle>Microphone</CardTitle>
-            <CardDescription>Adjust mic volume for the final mix</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Mic2 className="h-4 w-4 text-primary"/>
-              <Slider value={[Math.round(micVolume*100)]} onValueChange={(v)=>setMicVolume((v[0]||0)/100)} className="w-40"/>
-              <span className="text-xs text-muted-foreground">{Math.round(micVolume*100)}%</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Permission: {micPermission}</span>
-              {micPermission !== 'granted' && (
-                <Button size="sm" variant="secondary" onClick={requestMicPermission}>
-                  Enable Microphone
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-background/50 border-border">
-          <CardHeader>
-            <CardTitle>Microphone Test</CardTitle>
-            <CardDescription>Check input levels before recording</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <MicTest />
-          </CardContent>
-        </Card>
-
-        {recordedBlob && (
-          <Card className="bg-background/50 border-border">
-            <CardHeader>
-              <CardTitle>Recording Preview</CardTitle>
-              <CardDescription>Listen before mixing or save</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <audio controls key={previewUrl || 'no-preview'} src={previewUrl || undefined} preload="metadata" className="w-full" />
-              {!previewUrl && (
-                <div className="text-xs text-muted-foreground">Preparing preview…</div>
-              )}
-              <div className="flex items-center gap-2">
-                <Button variant="outline" onClick={clearRecording}>
-                  Start Over
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    if (!recordedBlob) return;
-                    const url = URL.createObjectURL(recordedBlob);
-                    const a = document.createElement('a');
-                    const ext = (recordedBlob.type || '').includes('wav') ? 'wav' : 'webm';
-                    a.href = url;
-                    a.download = `mic-take.${ext}`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                  }}
-                >
-                  Download Raw
-                </Button>
+          <Card className="p-8 border-4 border-foreground">
+            <h2 className="text-3xl font-black text-center mb-6 text-outline">RECORD MODE</h2>
+            
+            <div className="flex flex-col items-center gap-6">
+              {/* Recording Duration */}
+              <div className="text-6xl font-mono font-bold">
+                {formatDuration(recordingDuration)}
               </div>
-            </CardContent>
-          </Card>
-        )}
 
-        <Card className="bg-background/50 border-border">
-          <CardHeader>
-            <CardTitle>Mix & Export</CardTitle>
-            <CardDescription>Create an MP3 of your performance</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-3">
-            <Button onClick={mixAndEncode} disabled={mixing || !recordedBlob}>
-              {mixing ? <RefreshCw className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
-              {mixing ? 'Mixing…' : 'Render Mix'}
-            </Button>
-            <Button variant="secondary" onClick={downloadMp3} disabled={!mixedMp3}>
-              <Download className="mr-2 h-4 w-4"/> Download MP3
-            </Button>
-            <Button variant="outline" onClick={saveToLibrary} disabled={!mixedMp3 || loading}>
-              Save to Library
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
+              {/* Record/Stop Button */}
+              <Button
+                onClick={handleRecord}
+                size="lg"
+                className={`h-24 w-24 rounded-full ${
+                  isRecording 
+                    ? 'bg-destructive hover:bg-destructive/90' 
+                    : 'bg-primary hover:bg-primary/90'
+                }`}
+              >
+                {isRecording ? (
+                  <div className="h-8 w-8 bg-white rounded-sm" />
+                ) : (
+                  <Mic className="h-12 w-12" />
+                )}
+              </Button>
+
+              {/* Save Recording Button */}
+              {audioBlob && !isRecording && (
+                <Button
+                  onClick={handleSaveRecording}
+                  size="lg"
+                  className="w-full text-xl font-bold"
+                >
+                  Save Recording
+                </Button>
+              )}
+
+              {/* Audio Preview */}
+              {savedRecording && (
+                <div className="w-full">
+                  <audio controls src={savedRecording.url} className="w-full" />
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <Button
+        onClick={() => setMode('menu')}
+        variant="outline"
+        className="mb-4"
+      >
+        ← Back to Menu
+      </Button>
+      <Card className="p-8">
+        <h2 className="text-3xl font-black text-center text-outline">PRACTICE MODE</h2>
+        <p className="text-center mt-4 text-muted-foreground">
+          Practice mode coming soon...
+        </p>
+      </Card>
     </div>
   );
 };
