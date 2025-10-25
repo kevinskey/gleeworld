@@ -97,14 +97,17 @@ export const KaraokeChallengeStudio: React.FC = () => {
         <div className="space-y-4">
           {/* Title */}
           <Card className="p-8 border-4 border-foreground bg-background">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-center leading-tight tracking-tight mb-4">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-center leading-tight tracking-tight">
+              <span className="inline-block text-outline-bold">A CHOICE</span>
+              <br />
+              <span className="inline-block text-outline-bold">TO CHANGE</span>
+              <br />
+              <span className="inline-block text-outline-bold">THE WORLD</span>
+              <br />
               <span className="text-5xl sm:text-6xl md:text-7xl">KARAOKE</span>
               <br />
-              <span className="text-5xl sm:text-6xl md:text-7xl">STUDIO</span>
+              <span className="text-5xl sm:text-6xl md:text-7xl">CHALLENGE</span>
             </h1>
-            <p className="text-center text-lg sm:text-xl text-muted-foreground">
-              Record your voice over "Choice Band" and save a mix
-            </p>
           </Card>
 
           {/* Practice Button */}
