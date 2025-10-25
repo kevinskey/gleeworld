@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { Mic2, Square, Play } from 'lucide-react';
+import { Mic2, Square, Play, RefreshCw } from 'lucide-react';
 
 interface MicTestProps {
   className?: string;
@@ -105,9 +105,14 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
 
   const refreshDevices = async () => {
     try {
+      console.log('Refreshing device list...');
       const all = await navigator.mediaDevices.enumerateDevices();
-      setDevices(all.filter(d => d.kind === 'audioinput'));
-    } catch {}
+      const mics = all.filter(d => d.kind === 'audioinput');
+      console.log('Found microphones:', mics.map(m => ({ id: m.deviceId.slice(0, 8), label: m.label || '(no label)' })));
+      setDevices(mics);
+    } catch (err) {
+      console.error('Error enumerating devices:', err);
+    }
   };
 
   useEffect(() => {
@@ -225,17 +230,26 @@ export const MicTest: React.FC<MicTestProps> = ({ className }) => {
 
       {devices.length > 0 && (
         <div className="mb-2 flex items-center gap-2">
-          <label className="text-xs text-muted-foreground">Input</label>
+          <label className="text-xs text-muted-foreground whitespace-nowrap">Input</label>
           <select
             value={deviceId}
             onChange={(e) => setDeviceId(e.target.value)}
-            className="text-sm border border-border rounded px-2 py-1 bg-background"
+            className="text-sm border border-border rounded px-2 py-1 bg-background flex-1 min-w-0"
           >
             <option value="default">System default</option>
             {devices.map((d) => (
               <option key={d.deviceId} value={d.deviceId}>{d.label || `Mic ${d.deviceId.slice(0,6)}`}</option>
             ))}
           </select>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={refreshDevices}
+            className="h-7 w-7 p-0"
+            title="Refresh microphone list"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+          </Button>
         </div>
       )}
 
