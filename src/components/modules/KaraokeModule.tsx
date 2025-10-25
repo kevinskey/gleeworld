@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Music, Mic2, Download, Play, Square, Save, RefreshCw, Pause, Mic, Share2 } from 'lucide-react';
@@ -26,6 +27,7 @@ interface MediaItem {
 
 export const KaraokeModule: React.FC = () => {
   const { user } = useAuth();
+  const [open, setOpen] = useState(true);
   const [mode, setMode] = useState<'menu' | 'practice' | 'record'>('menu');
   const [savedRecording, setSavedRecording] = useState<{ blob: Blob; url: string } | null>(null);
   const { isRecording, recordingDuration, audioBlob, startRecording: startSimpleRecording, stopRecording: stopSimpleRecording, clearRecording: clearSimpleRecording } = useAudioRecorder();
@@ -870,42 +872,42 @@ export const KaraokeModule: React.FC = () => {
     }
   };
 
-  if (mode === 'menu') {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="space-y-4">
+  const renderContent = () => {
+    if (mode === 'menu') {
+      return (
+        <div className="space-y-4 p-4">
           {/* Title */}
           <Card className="p-8 border-4 border-foreground bg-background">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-center leading-tight tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-center leading-tight tracking-tight">
               <span className="inline-block text-outline-bold">A CHOICE</span>
               <br />
               <span className="inline-block text-outline-bold">TO CHANGE</span>
               <br />
               <span className="inline-block text-outline-bold">THE WORLD</span>
               <br />
-              <span className="text-5xl sm:text-6xl md:text-7xl">KARAOKE</span>
+              <span className="text-4xl sm:text-5xl md:text-6xl">KARAOKE</span>
               <br />
-              <span className="text-5xl sm:text-6xl md:text-7xl">CHALLENGE</span>
+              <span className="text-4xl sm:text-5xl md:text-6xl">CHALLENGE</span>
             </h1>
           </Card>
 
           {/* Practice Button */}
           <Button
             onClick={() => setMode('practice')}
-            className="w-full h-20 text-3xl font-black border-4 border-foreground bg-background text-foreground hover:bg-muted text-outline flex items-center justify-start px-8 gap-4"
+            className="w-full h-16 text-2xl font-black border-4 border-foreground bg-background text-foreground hover:bg-muted text-outline flex items-center justify-start px-6 gap-3"
             variant="outline"
           >
-            <Play className="h-12 w-12 fill-destructive text-destructive" />
+            <Play className="h-10 w-10 fill-destructive text-destructive" />
             <span className="text-outline">PRACTICE</span>
           </Button>
 
           {/* Record Button */}
           <Button
             onClick={() => setMode('record')}
-            className="w-full h-20 text-3xl font-black border-4 border-foreground bg-background hover:bg-muted flex items-center justify-start px-8 gap-4"
+            className="w-full h-16 text-2xl font-black border-4 border-foreground bg-background hover:bg-muted flex items-center justify-start px-6 gap-3"
             variant="outline"
           >
-            <Play className="h-12 w-12 fill-destructive text-destructive" />
+            <Play className="h-10 w-10 fill-destructive text-destructive" />
             <span className="text-destructive font-black text-outline-red">RECORD</span>
           </Button>
 
@@ -913,7 +915,7 @@ export const KaraokeModule: React.FC = () => {
           <Button
             onClick={handleShare}
             disabled={!savedRecording}
-            className="w-full h-20 text-4xl border-4 border-foreground bg-background text-foreground hover:bg-muted font-script"
+            className="w-full h-16 text-3xl border-4 border-foreground bg-background text-foreground hover:bg-muted font-script"
             variant="outline"
           >
             Share
@@ -923,7 +925,7 @@ export const KaraokeModule: React.FC = () => {
           <Button
             onClick={handleDownload}
             disabled={!savedRecording}
-            className="w-full h-20 text-4xl border-4 border-foreground bg-background text-foreground hover:bg-muted font-script"
+            className="w-full h-16 text-3xl border-4 border-foreground bg-background text-foreground hover:bg-muted font-script"
             variant="outline"
           >
             Download
@@ -932,19 +934,17 @@ export const KaraokeModule: React.FC = () => {
           {/* Setup Button */}
           <Button
             onClick={() => toast("Setup coming soon...")}
-            className="w-full h-20 text-5xl font-black border-4 border-foreground bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            className="w-full h-16 text-4xl font-black border-4 border-foreground bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             SETUP
           </Button>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  if (mode === 'record') {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="space-y-6">
+    if (mode === 'record') {
+      return (
+        <div className="space-y-6 p-4">
           <Button
             onClick={() => setMode('menu')}
             variant="outline"
@@ -953,12 +953,12 @@ export const KaraokeModule: React.FC = () => {
             ← Back to Menu
           </Button>
 
-          <Card className="p-8 border-4 border-foreground">
-            <h2 className="text-3xl font-black text-center mb-6 text-outline">RECORD MODE</h2>
+          <Card className="p-6 border-4 border-foreground">
+            <h2 className="text-2xl font-black text-center mb-6 text-outline">RECORD MODE</h2>
             
             <div className="flex flex-col items-center gap-6">
               {/* Recording Duration */}
-              <div className="text-6xl font-mono font-bold">
+              <div className="text-5xl font-mono font-bold">
                 {formatDuration(recordingDuration)}
               </div>
 
@@ -966,16 +966,16 @@ export const KaraokeModule: React.FC = () => {
               <Button
                 onClick={handleRecord}
                 size="lg"
-                className={`h-24 w-24 rounded-full ${
+                className={`h-20 w-20 rounded-full ${
                   isRecording 
                     ? 'bg-destructive hover:bg-destructive/90' 
                     : 'bg-primary hover:bg-primary/90'
                 }`}
               >
                 {isRecording ? (
-                  <div className="h-8 w-8 bg-white rounded-sm" />
+                  <div className="h-6 w-6 bg-white rounded-sm" />
                 ) : (
-                  <Mic className="h-12 w-12" />
+                  <Mic className="h-10 w-10" />
                 )}
               </Button>
 
@@ -984,7 +984,7 @@ export const KaraokeModule: React.FC = () => {
                 <Button
                   onClick={handleSaveRecording}
                   size="lg"
-                  className="w-full text-xl font-bold"
+                  className="w-full text-lg font-bold"
                 >
                   Save Recording
                 </Button>
@@ -999,26 +999,40 @@ export const KaraokeModule: React.FC = () => {
             </div>
           </Card>
         </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4 p-4">
+        <Button
+          onClick={() => setMode('menu')}
+          variant="outline"
+          className="mb-4"
+        >
+          ← Back to Menu
+        </Button>
+        <Card className="p-6">
+          <h2 className="text-2xl font-black text-center text-outline">PRACTICE MODE</h2>
+          <p className="text-center mt-4 text-muted-foreground">
+            Practice mode coming soon...
+          </p>
+        </Card>
       </div>
     );
-  }
+  };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <Button
-        onClick={() => setMode('menu')}
-        variant="outline"
-        className="mb-4"
-      >
-        ← Back to Menu
-      </Button>
-      <Card className="p-8">
-        <h2 className="text-3xl font-black text-center text-outline">PRACTICE MODE</h2>
-        <p className="text-center mt-4 text-muted-foreground">
-          Practice mode coming soon...
-        </p>
-      </Card>
-    </div>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="flex items-center gap-2">
+          <Mic2 className="h-5 w-5" />
+          Open Karaoke Studio
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-background">
+        {renderContent()}
+      </DialogContent>
+    </Dialog>
   );
 };
 
