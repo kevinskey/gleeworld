@@ -92,6 +92,7 @@ import { AssignableAppointmentModule } from '@/components/modules/AssignableAppo
 import { ServiceProviderManagementModule } from '@/components/modules/ServiceProviderManagementModule';
 import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
 import { TestBuilderModule } from '@/components/modules/TestBuilderModule';
+import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -597,7 +598,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "blue",
     category: "finances",
     isActive: true,
-    component: BudgetsModule, // Placeholder for ledger
+    component: GleeLedgerModule,
     dbFunctionName: "glee-ledger"
   },
   {
