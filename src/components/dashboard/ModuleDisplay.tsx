@@ -35,6 +35,7 @@ import { Mus240GroupsModule } from '../modules/Mus240GroupsModule';
 import { TestBuilder } from '../test-builder/TestBuilder';
 import { AlumnaePortalModule } from '../modules/AlumnaePortalModule';
 import { DashboardHeroManagerModule } from '@/components/modules/DashboardHeroManagerModule';
+import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -122,6 +123,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <AlumnaePortalModule />;
       case 'hero-management':
         return <DashboardHeroManagerModule />;
+      case 'glee-ledger':
+        return <GleeLedgerModule />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
