@@ -1,11 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, TrendingUp, TrendingDown, DollarSign, PieChart, Plus } from "lucide-react";
+import { Calculator, TrendingUp, TrendingDown, DollarSign, PieChart, Plus, BookOpen, ExternalLink } from "lucide-react";
 import { ModuleProps } from "@/types/unified-modules";
 import { useBudgets } from "@/hooks/useBudgets";
 import { BudgetCreator } from "@/components/budget/BudgetCreator";
 import { useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const BudgetsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => {
   const { budgets, loading } = useBudgets();
@@ -17,6 +18,25 @@ export const BudgetsModule = ({ user, isFullPage, onNavigate }: ModuleProps) => 
   if (isFullPage) {
     return (
       <div className="space-y-6">
+        {/* Ledger Integration Alert */}
+        <Alert className="bg-blue-50 border-blue-200">
+          <BookOpen className="h-4 w-4 text-blue-600" />
+          <AlertDescription className="flex items-center justify-between">
+            <span className="text-blue-900">
+              Budget transactions are automatically recorded in the <strong>Glee Ledger</strong>
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onNavigate?.('glee-ledger')}
+              className="ml-4"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              View Ledger
+              <ExternalLink className="h-3 w-3 ml-2" />
+            </Button>
+          </AlertDescription>
+        </Alert>
 
         {showBudgetCreator && (
           <BudgetCreator 
