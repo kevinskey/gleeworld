@@ -135,9 +135,9 @@ Return JSON with this exact shape:
     let upsertError: any = null;
     let saved: any = null;
 
-    const fullRes = await supabase
+  const fullRes = await supabase
       .from('mus240_journal_grades')
-      .upsert(gradePayloadFull, { onConflict: 'journal_id' })
+      .upsert(gradePayloadFull, { onConflict: 'student_id,assignment_id' })
       .select()
       .maybeSingle();
 
@@ -154,7 +154,7 @@ Return JSON with this exact shape:
       };
       const minRes = await supabase
         .from('mus240_journal_grades')
-        .upsert(minimalPayload, { onConflict: 'journal_id' })
+        .upsert(minimalPayload, { onConflict: 'student_id,assignment_id' })
         .select()
         .maybeSingle();
       if (minRes.error) {

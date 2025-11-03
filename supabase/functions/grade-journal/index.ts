@@ -113,7 +113,7 @@ serve(async (req) => {
     if (journal_id) {
       const existing = await supabase
         .from('mus240_journal_grades')
-        .select('journal_id,overall_score,letter_grade,feedback,graded_at,ai_model,rubric')
+        .select('journal_id,overall_score,letter_grade,ai_feedback,graded_at,ai_model,rubric')
         .eq('journal_id', journal_id)
         .maybeSingle();
       if (existing.data) {
@@ -125,7 +125,7 @@ serve(async (req) => {
               journal_id,
               overall_score: existing.data.overall_score,
               letter_grade: existing.data.letter_grade,
-              feedback: existing.data.feedback,
+              feedback: existing.data.ai_feedback,
               graded_at: existing.data.graded_at,
               ai_model: existing.data.ai_model,
               rubric: existing.data.rubric,
@@ -271,7 +271,7 @@ Be constructive and specific in your feedback.
           journal_id,
           overall_score: dbScore,
           letter_grade: letter,
-          feedback: feedback,
+          ai_feedback: feedback,
           graded_at: new Date().toISOString(),
           ai_model: "gpt-4o-mini",
           rubric: rubricScores, // Save the detailed rubric breakdown

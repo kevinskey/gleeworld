@@ -265,9 +265,10 @@ export const useJournalGrading = () => {
               }
             }
           },
-          feedback: finalFeedback
+          ai_feedback: finalFeedback
         })
-        .eq('id', aiResult.grade.id);
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', studentId);
 
       if (updateError) {
         console.error('Failed to update grade with peer points:', updateError);
