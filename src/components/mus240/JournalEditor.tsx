@@ -48,21 +48,31 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
       try {
         const entry = await fetchUserEntry(assignment.id);
         if (entry) {
-          setContent(entry.content);
-          setWordCount(entry.word_count);
-          setIsPublished(entry.is_published);
+          setContent(entry.content || '');
+          setWordCount(entry.word_count || 0);
+          setIsPublished(entry.is_published || false);
           setUserEntry(entry);
           
-          // Load grade if exists - fix: use student_id instead of user_id
-          const gradeData = await fetchStudentGrade(assignment.id, entry.student_id);
-          setGrade(gradeData);
+          // Load grade if exists - wrapped in try-catch to prevent white screen
+          try {
+            const gradeData = await fetchStudentGrade(assignment.id, entry.student_id);
+            setGrade(gradeData || null);
+          } catch (gradeError) {
+            console.error('Error loading grade (non-critical):', gradeError);
+            setGrade(null);
+          }
         }
       } catch (error) {
         console.error('Error loading journal entry:', error);
+        toast({
+          title: "Error Loading Journal",
+          description: "Failed to load your journal entry. Please refresh the page.",
+          variant: "destructive"
+        });
       }
     };
     loadExistingEntry();
-  }, [assignment.id, fetchUserEntry, fetchStudentGrade]);
+  }, [assignment.id, fetchUserEntry, fetchStudentGrade, toast]);
 
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(word => word.length > 0);
