@@ -109,7 +109,18 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
   // Merge module data with user grants and frontend config - MEMOIZED to prevent infinite loops
   const modules = useMemo(() => {
     return allModules.map(module => {
-      const grant = moduleGrants.find(g => g.module_key === module.id || g.module_key === module.name);
+      // Normalize keys to handle legacy aliases (e.g., attendance -> attendance-management)
+      const canonical = (v: any) => {
+        const s = String(v ?? '').toLowerCase();
+        if (s === 'attendance') return 'attendance-management';
+        if (s === 'calendar') return 'calendar-management';
+        return s;
+      };
+
+      const grant = moduleGrants.find(g => 
+        canonical(g.module_key) === canonical(module.id) ||
+        canonical(g.module_key) === canonical(module.name)
+      );
       
       // Find the corresponding frontend module definition
       const frontendModule = UNIFIED_MODULES.find(fm => 
