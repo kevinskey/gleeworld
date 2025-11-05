@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -6,26 +6,150 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, Send, MessageSquare, Sparkles, User, Inbox } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
 
 interface AIAssistantDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps) => {
-  const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+interface InternalMessage {
+  id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  gw_profiles?: {
+    full_name: string;
+    avatar_url?: string;
+  };
+}
 
-  const handleSend = () => {
-    if (!message.trim()) return;
+export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps) => {
+  const { user } = useAuth();
+  const [aiMessage, setAiMessage] = useState("");
+  const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+  const [memberMessage, setMemberMessage] = useState("");
+  const [internalMessages, setInternalMessages] = useState<InternalMessage[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(true);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetch internal messages
+  useEffect(() => {
+    if (!open || !user) return;
     
-    setMessages(prev => [...prev, { role: "user", content: message }]);
-    setMessage("");
+    const fetchMessages = async () => {
+      try {
+        // Fetch messages
+        const { data: messagesData, error: messagesError } = await supabase
+          .from('gw_internal_messages')
+          .select('*')
+          .order('created_at', { ascending: true })
+          .limit(100);
+
+        if (messagesError) throw messagesError;
+
+        // Fetch all unique user profiles
+        const userIds = [...new Set(messagesData?.map(m => m.user_id) || [])];
+        const { data: profilesData } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, avatar_url')
+          .in('user_id', userIds);
+
+        // Map profiles to messages
+        const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+        const enrichedMessages = messagesData?.map(msg => ({
+          ...msg,
+          gw_profiles: profilesMap.get(msg.user_id) || { full_name: 'Unknown User' }
+        })) || [];
+
+        setInternalMessages(enrichedMessages as any);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        toast.error('Failed to load messages');
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+
+    fetchMessages();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('internal-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'gw_internal_messages'
+        },
+        async (payload) => {
+          // Fetch the profile for the new message
+          const { data: profileData } = await supabase
+            .from('gw_profiles')
+            .select('user_id, full_name, avatar_url')
+            .eq('user_id', payload.new.user_id)
+            .single();
+
+          const enrichedMessage = {
+            ...payload.new,
+            gw_profiles: profileData || { full_name: 'Unknown User' }
+          };
+
+          setInternalMessages(prev => [...prev, enrichedMessage as any]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [open, user]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [internalMessages]);
+
+  const handleSendMemberMessage = async () => {
+    if (!memberMessage.trim() || !user || sendingMessage) return;
+    
+    setSendingMessage(true);
+    try {
+      const { error } = await supabase
+        .from('gw_internal_messages')
+        .insert({
+          user_id: user.id,
+          content: memberMessage.trim()
+        });
+
+      if (error) throw error;
+      setMemberMessage("");
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  const handleSendAI = () => {
+    if (!aiMessage.trim()) return;
+    
+    setAiMessages(prev => [...prev, { role: "user", content: aiMessage }]);
+    setAiMessage("");
     
     // Mock response for now
     setTimeout(() => {
-      setMessages(prev => [...prev, { 
+      setAiMessages(prev => [...prev, { 
         role: "assistant", 
         content: "AI Assistant is coming soon! I'll help you navigate modules, answer questions, and assist with tasks. This feature will be powered by advanced AI to make your experience seamless."
       }]);
@@ -79,7 +203,7 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
           <TabsContent value="assistant" className="flex-1 flex flex-col gap-4 mt-4 px-6 pb-6 m-0">
             <ScrollArea className="flex-1 pr-4 -mr-4">
               <div className="space-y-4 pr-4">
-                {messages.length === 0 ? (
+                {aiMessages.length === 0 ? (
                   <div className="flex items-center justify-center h-full min-h-[400px]">
                     <Card className="text-center py-16 px-8 max-w-md bg-gradient-to-br from-primary/5 to-transparent border-2 border-dashed">
                       <div className="relative mb-6">
@@ -106,7 +230,7 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
                     </Card>
                   </div>
                 ) : (
-                  messages.map((msg, i) => (
+                  aiMessages.map((msg, i) => (
                     <div
                       key={i}
                       className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
@@ -140,12 +264,12 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
               <div className="flex gap-3">
                 <Input
                   placeholder="Ask me anything..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                  value={aiMessage}
+                  onChange={(e) => setAiMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendAI()}
                   className="flex-1 bg-background"
                 />
-                <Button onClick={handleSend} size="icon" className="h-10 w-10">
+                <Button onClick={handleSendAI} size="icon" className="h-10 w-10">
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
@@ -153,17 +277,83 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
           </TabsContent>
 
           <TabsContent value="messages" className="flex-1 flex flex-col gap-4 mt-4 px-6 pb-6 m-0">
-            <ScrollArea className="flex-1">
-              <div className="flex items-center justify-center h-full min-h-[400px]">
-                <Card className="text-center py-16 px-8 max-w-md bg-gradient-to-br from-muted/50 to-transparent border-2 border-dashed">
-                  <Inbox className="h-20 w-20 mx-auto mb-6 text-muted-foreground/50" />
-                  <h3 className="text-xl font-semibold mb-3">No messages yet</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Your internal messages and notifications will appear here
-                  </p>
-                </Card>
-              </div>
+            <ScrollArea className="flex-1" ref={scrollRef}>
+              {loadingMessages ? (
+                <div className="flex items-center justify-center h-full min-h-[400px]">
+                  <div className="text-center">
+                    <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-sm text-muted-foreground">Loading messages...</p>
+                  </div>
+                </div>
+              ) : internalMessages.length === 0 ? (
+                <div className="flex items-center justify-center h-full min-h-[400px]">
+                  <Card className="text-center py-16 px-8 max-w-md bg-gradient-to-br from-muted/50 to-transparent border-2 border-dashed">
+                    <Inbox className="h-20 w-20 mx-auto mb-6 text-muted-foreground/50" />
+                    <h3 className="text-xl font-semibold mb-3">Start the conversation</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Be the first to send a message to the group
+                    </p>
+                  </Card>
+                </div>
+              ) : (
+                <div className="space-y-4 pb-4">
+                  {internalMessages.map((msg) => {
+                    const isCurrentUser = msg.user_id === user?.id;
+                    const senderName = msg.gw_profiles?.full_name || 'Unknown User';
+                    const initials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
+                    
+                    return (
+                      <div key={msg.id} className={`flex gap-3 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <Avatar className="h-10 w-10 flex-shrink-0">
+                          <AvatarImage src={msg.gw_profiles?.avatar_url} />
+                          <AvatarFallback className="bg-primary/10 text-primary">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className={`flex-1 ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col`}>
+                          <div className={`flex items-center gap-2 mb-1 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                            <span className="text-sm font-medium">{senderName}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                            </span>
+                          </div>
+                          <Card className={`px-4 py-2 max-w-[75%] ${
+                            isCurrentUser 
+                              ? 'bg-primary text-primary-foreground border-primary' 
+                              : 'bg-muted/50'
+                          }`}>
+                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              {msg.content}
+                            </p>
+                          </Card>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </ScrollArea>
+
+            <Card className="p-4 bg-background/50 backdrop-blur-sm border-2">
+              <div className="flex gap-3">
+                <Input
+                  placeholder="Send a message to all members..."
+                  value={memberMessage}
+                  onChange={(e) => setMemberMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMemberMessage()}
+                  className="flex-1 bg-background"
+                  disabled={sendingMessage}
+                />
+                <Button 
+                  onClick={handleSendMemberMessage} 
+                  size="icon" 
+                  className="h-10 w-10"
+                  disabled={sendingMessage || !memberMessage.trim()}
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </Card>
           </TabsContent>
         </Tabs>
       </DialogContent>
