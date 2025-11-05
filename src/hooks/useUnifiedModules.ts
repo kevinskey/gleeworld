@@ -8,6 +8,7 @@ import {
 import { useUserModuleGrants } from './useUserModuleGrants';
 import { ModuleGrant } from '@/lib/authz';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
+import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
 
 export interface UnifiedModule {
   id: string;
@@ -132,9 +133,16 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
       
       // Admin override
       const isAdminOverride = filterOptions?.isAdmin;
+      // Baseline member defaults (every member/executive gets these even without explicit grants)
+      const role = (filterOptions?.userRole || '').toLowerCase();
+      const hasBaselineRole = role === 'member' || role === 'executive';
+      const isBaselineMemberModule = hasBaselineRole && STANDARD_MEMBER_MODULE_IDS.some(id =>
+        canonical(id) === canonical(module.id) ||
+        canonical(id) === canonical(module.name)
+      );
       
-      const canAccess = isAdminOverride || grant?.can_view || false;
-      const canManage = isAdminOverride || grant?.can_manage || false;
+      const canAccess = !!(isAdminOverride || grant?.can_view || isBaselineMemberModule);
+      const canManage = !!(isAdminOverride || grant?.can_manage);
       
       return {
         ...module,
