@@ -170,16 +170,17 @@ export function useUserModuleGrants(userId?: string) {
     fetchGrants();
 
     // Set up real-time subscription for instant updates
+    let cleanup: (() => void) | undefined;
     let targetUserId = userId;
     if (!targetUserId) {
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (user?.id) {
           targetUserId = user.id;
-          setupSubscription(targetUserId);
+          cleanup = setupSubscription(targetUserId);
         }
       });
     } else {
-      setupSubscription(targetUserId);
+      cleanup = setupSubscription(targetUserId);
     }
 
     function setupSubscription(uid: string) {
@@ -201,12 +202,13 @@ export function useUserModuleGrants(userId?: string) {
         .subscribe();
 
       return () => {
-        channel.unsubscribe();
+        supabase.removeChannel(channel);
       };
     }
 
     return () => {
       cancelled = true;
+      try { cleanup?.(); } catch {}
     };
   }, [userId]);
 
