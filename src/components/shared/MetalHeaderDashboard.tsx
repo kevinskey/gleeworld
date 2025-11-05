@@ -855,24 +855,38 @@ export const MetalHeaderDashboard = ({
         <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
             {cardOrder.map((cardId) => {
-              // Show favorites card if in edit mode OR if it meets normal conditions
+              // Favorites card using moduleFavorites
               if (cardId === 'favorites') {
-                const hasFavorites = groupedModules?.favorites && groupedModules.favorites.length > 0;
+                const hasFavorites = moduleFavorites && moduleFavorites.size > 0;
                 
                 // Only show in edit mode, skip if no favorites and not editing
                 if (!isEditingLayout && !hasFavorites) return null;
+                
+                // Convert moduleFavorites Set to array of enriched modules
+                const favoritesArray = hasFavorites ? Array.from(moduleFavorites).map(moduleId => {
+                  const module = allModules.find(m => m.id === moduleId);
+                  if (!module) return null;
+                  const moduleConfig = ModuleRegistry.getModule(moduleId);
+                  return {
+                    ...module,
+                    icon: moduleConfig?.icon || Calendar,
+                    iconColor: moduleConfig?.iconColor || 'blue',
+                    component: moduleConfig?.component,
+                    isNew: moduleConfig?.isNew || false
+                  };
+                }).filter(Boolean) : [];
                 
                 return (
                   <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
                     {hasFavorites ? (
                       <FavoritesCard
-                        favorites={groupedModules.favorites}
+                        favorites={favoritesArray as any}
                         onModuleClick={handleModuleSelect}
                         onToggleFavorite={toggleFavorite}
                       />
                     ) : (
                       <Card className="p-4 bg-muted/50 border-dashed">
-                        <p className="text-sm text-muted-foreground text-center">Favorites card (no favorites yet - add some to see them here)</p>
+                        <p className="text-sm text-muted-foreground text-center">Favorites card (no favorites yet - click the star on modules to add them)</p>
                       </Card>
                     )}
                   </SortableDashboardCard>
