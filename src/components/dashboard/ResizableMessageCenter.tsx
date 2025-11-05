@@ -436,7 +436,10 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
       <>
         {!open && <FloatingTabButton />}
         <Sheet open={open} onOpenChange={onOpenChange}>
-          <SheetContent side="right" className="w-[90vw] h-[60vh] p-0 flex flex-col">
+          <SheetContent 
+            side="right" 
+            className="w-[90vw] h-[60vh] p-0 flex flex-col top-[20vh] bottom-auto"
+          >
             <SheetHeader className="px-3 py-2 border-b">
               <SheetTitle className="flex items-center gap-2 text-sm">
                 <MessageSquare className="h-4 w-4 text-primary" />
