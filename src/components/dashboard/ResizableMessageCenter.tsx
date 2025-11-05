@@ -6,7 +6,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, MessageSquare, Inbox, Tag, X, Minimize2, Maximize2, XIcon, ChevronDown, Filter } from "lucide-react";
+import { Send, MessageSquare, Inbox, Tag, X, Minimize2, Maximize2, XIcon, ChevronDown, Filter, Users, MessageCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DirectMessaging } from "./DirectMessaging";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,6 +52,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [activeTab, setActiveTab] = useState<'group' | 'dm'>('group');
   const scrollRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
 
@@ -226,6 +229,24 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
 
         {!isMinimized && (
           <>
+            {/* Tabs for Group vs DM */}
+            <div className="px-2 pt-2 border-b">
+              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'group' | 'dm')} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 h-8">
+                  <TabsTrigger value="group" className="text-xs">
+                    <Users className="h-3 w-3 mr-1.5" />
+                    All Members
+                  </TabsTrigger>
+                  <TabsTrigger value="dm" className="text-xs">
+                    <MessageCircle className="h-3 w-3 mr-1.5" />
+                    Direct Messages
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
+            {activeTab === 'group' ? (
+              <>
             {/* Tag Filters */}
             <div className="flex items-center gap-2 px-2 py-1.5 border-b">
               <DropdownMenu modal={false} onOpenChange={(o) => console.log('Filter dropdown open:', o)}>
@@ -426,6 +447,12 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                 </Button>
               </div>
             </div>
+              </>
+            ) : (
+              <div className="flex-1 flex flex-col">
+                <DirectMessaging />
+              </div>
+            )}
           </>
         )}
       </div>

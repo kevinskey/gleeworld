@@ -1,0 +1,251 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+
+export interface DMMessage {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  read: boolean;
+  created_at: string;
+  sender_name?: string;
+  sender_avatar?: string;
+}
+
+export interface DMConversation {
+  id: string;
+  participant_1: string;
+  participant_2: string;
+  last_message_at: string;
+  other_user_id: string;
+  other_user_name: string;
+  other_user_avatar?: string;
+  unread_count: number;
+}
+
+export const useDirectMessages = () => {
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState<DMConversation[]>([]);
+  const [messages, setMessages] = useState<Record<string, DMMessage[]>>({});
+  const [loading, setLoading] = useState(true);
+
+  // Fetch all conversations
+  const fetchConversations = async () => {
+    if (!user) return;
+
+    try {
+      const { data: convos, error } = await supabase
+        .from('dm_conversations')
+        .select('*')
+        .or(`participant_1.eq.${user.id},participant_2.eq.${user.id}`)
+        .order('last_message_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch profiles for other participants
+      const otherUserIds = convos?.map(c => 
+        c.participant_1 === user.id ? c.participant_2 : c.participant_1
+      ) || [];
+
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', otherUserIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      // Fetch unread counts
+      const conversationsWithDetails = await Promise.all(
+        (convos || []).map(async (convo) => {
+          const otherUserId = convo.participant_1 === user.id ? convo.participant_2 : convo.participant_1;
+          const profile = profileMap.get(otherUserId);
+
+          // Count unread messages
+          const { count } = await supabase
+            .from('dm_messages')
+            .select('*', { count: 'exact', head: true })
+            .eq('conversation_id', convo.id)
+            .eq('read', false)
+            .neq('sender_id', user.id);
+
+          return {
+            ...convo,
+            other_user_id: otherUserId,
+            other_user_name: profile?.full_name || 'Unknown User',
+            other_user_avatar: profile?.avatar_url,
+            unread_count: count || 0
+          };
+        })
+      );
+
+      setConversations(conversationsWithDetails);
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      toast.error('Failed to load conversations');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch messages for a specific conversation
+  const fetchMessages = async (conversationId: string) => {
+    if (!user) return;
+
+    try {
+      const { data: msgs, error } = await supabase
+        .from('dm_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      // Fetch sender profiles
+      const senderIds = [...new Set(msgs?.map(m => m.sender_id) || [])];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', senderIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      const enrichedMessages = msgs?.map(msg => ({
+        ...msg,
+        sender_name: profileMap.get(msg.sender_id)?.full_name || 'Unknown',
+        sender_avatar: profileMap.get(msg.sender_id)?.avatar_url
+      })) || [];
+
+      setMessages(prev => ({ ...prev, [conversationId]: enrichedMessages }));
+
+      // Mark messages as read
+      await supabase
+        .from('dm_messages')
+        .update({ read: true })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id)
+        .eq('read', false);
+
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast.error('Failed to load messages');
+    }
+  };
+
+  // Send a message
+  const sendMessage = async (conversationId: string, content: string) => {
+    if (!user || !content.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('dm_messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          content: content.trim()
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
+      throw error;
+    }
+  };
+
+  // Create or get conversation with a user
+  const createConversation = async (otherUserId: string) => {
+    if (!user) return null;
+
+    try {
+      // Order participants consistently
+      const [p1, p2] = [user.id, otherUserId].sort();
+
+      // Check if conversation exists
+      const { data: existing, error: fetchError } = await supabase
+        .from('dm_conversations')
+        .select('*')
+        .eq('participant_1', p1)
+        .eq('participant_2', p2)
+        .single();
+
+      if (existing) return existing.id;
+
+      // Create new conversation
+      const { data: newConvo, error: createError } = await supabase
+        .from('dm_conversations')
+        .insert({ participant_1: p1, participant_2: p2 })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      await fetchConversations();
+      return newConvo.id;
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast.error('Failed to create conversation');
+      return null;
+    }
+  };
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!user) return;
+
+    fetchConversations();
+
+    const channel = supabase
+      .channel('dm-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'dm_messages'
+        },
+        async (payload) => {
+          const newMessage = payload.new as any;
+          
+          // Fetch sender profile
+          const { data: profile } = await supabase
+            .from('gw_profiles')
+            .select('full_name, avatar_url')
+            .eq('user_id', newMessage.sender_id)
+            .single();
+
+          const enrichedMessage: DMMessage = {
+            ...newMessage,
+            sender_name: profile?.full_name || 'Unknown',
+            sender_avatar: profile?.avatar_url
+          };
+
+          setMessages(prev => ({
+            ...prev,
+            [newMessage.conversation_id]: [
+              ...(prev[newMessage.conversation_id] || []),
+              enrichedMessage
+            ]
+          }));
+
+          // Refresh conversations to update last message time and unread count
+          fetchConversations();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
+  return {
+    conversations,
+    messages,
+    loading,
+    fetchMessages,
+    sendMessage,
+    createConversation
+  };
+};
