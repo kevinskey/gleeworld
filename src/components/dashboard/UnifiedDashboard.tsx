@@ -55,6 +55,7 @@ export const UnifiedDashboard = () => {
   // Determine view mode based on current route - memoized to prevent infinite renders
   const viewMode = useMemo(() => {
     if (location.pathname === '/dashboard/member') return 'member';
+    if (location.pathname === '/dashboard/student') return 'student';
     if (location.pathname === '/dashboard/fan') return 'fan';
     if (location.pathname === '/dashboard/mus240') return 'mus240';
     if (location.pathname === '/dashboard/public') return 'public';
