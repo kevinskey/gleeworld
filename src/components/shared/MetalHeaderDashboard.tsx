@@ -339,10 +339,7 @@ export const MetalHeaderDashboard = ({
     }
   }, [categories, getAccessibleModules]);
 
-  // Default modules that all members should see
-  const DEFAULT_MEMBER_MODULES: string[] = STANDARD_MEMBER_MODULE_IDS;
-
-  // Group modules for members: Favorites, Communications, Other Assigned, and Default Modules
+  // Group modules for members: Show ALL accessible modules from permissions
   const groupedModules = useMemo(() => {
     if (!isMember) return null;
     const accessibleModules = getAccessibleModules();
@@ -384,53 +381,35 @@ export const MetalHeaderDashboard = ({
       };
     });
 
-    // Default modules - always shown to members
-    // Fetch directly from registry to ensure they show even without explicit grants
-    const defaultModules = DEFAULT_MEMBER_MODULES.map(id => {
-      const moduleConfig = ModuleRegistry.getModule(id);
-      if (!moduleConfig) return null;
-      return {
-        id: moduleConfig.id,
-        name: moduleConfig.title,
-        // Use title as name
-        title: moduleConfig.title,
-        description: moduleConfig.description,
-        category: moduleConfig.category,
-        icon: moduleConfig.icon,
-        iconColor: moduleConfig.iconColor || 'blue',
-        component: moduleConfig.component,
-        isNew: moduleConfig.isNew || false,
-        isActive: true,
-        canAccess: true,
-        canManage: false,
-        hasPermission: true
-      };
-    }).filter(Boolean);
-    console.log('🔍 Default modules filtering:', {
-      defaultModuleIds: DEFAULT_MEMBER_MODULES,
-      accessibleModuleCount: accessibleModules.length,
-      accessibleModuleIds: accessibleModules.map(m => ({
-        id: m.id,
-        name: m.name
-      })),
-      defaultModulesFound: defaultModules.length,
-      defaultModulesData: defaultModules.map(m => ({
-        id: m.id,
-        title: m.title
-      }))
-    });
-
-    // Create a Set of unique module IDs to avoid duplicates
+    // All other accessible modules (not in favorites/communications/other groups)
     const existingIds = new Set([...favoritesGroup.map(m => m.id), ...communicationsGroup.map(m => m.id), ...otherGroup.map(m => m.id)]);
-
-    // Add default modules that aren't already in other groups
-    const uniqueDefaultModules = defaultModules.filter(m => !existingIds.has(m.id));
+    const remainingModules = accessibleModules
+      .filter(m => !existingIds.has(m.id))
+      .map(module => {
+        const moduleConfig = ModuleRegistry.getModule(module.id);
+        return {
+          ...module,
+          icon: moduleConfig?.icon || Calendar,
+          iconColor: moduleConfig?.iconColor || 'blue',
+          component: moduleConfig?.component,
+          isNew: moduleConfig?.isNew || false
+        };
+      });
+    
+    console.log('🔍 Module grouping:', {
+      accessibleModuleCount: accessibleModules.length,
+      favoritesCount: favoritesGroup.length,
+      communicationsCount: communicationsGroup.length,
+      otherCount: otherGroup.length,
+      remainingCount: remainingModules.length,
+      allModuleIds: accessibleModules.map(m => m.id)
+    });
     return {
       favorites: favoritesGroup,
       communications: communicationsGroup,
       other: otherGroup,
-      defaultModules: uniqueDefaultModules,
-      allModules: [...favoritesGroup, ...communicationsGroup, ...otherGroup, ...uniqueDefaultModules]
+      remaining: remainingModules,
+      allModules: [...favoritesGroup, ...communicationsGroup, ...otherGroup, ...remainingModules]
     };
   }, [isMember, getAccessibleModules, getVisibleQuickActions, isFavorite]);
 
