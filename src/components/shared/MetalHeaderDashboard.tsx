@@ -589,12 +589,6 @@ export const MetalHeaderDashboard = ({
           </div>
         )}
 
-        {/* Module Overview Cards */}
-        <div className="relative z-10 grid grid-cols-1 gap-4">
-          <MemberModulesCard userId={user.id} />
-          <ExecBoardModulesCard userId={user.id} />
-        </div>
-
         {/* AI Assistant & Message Center */}
         <Card className="relative z-10 p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => setAiAssistantOpen(true)}>
           <div className="relative">
@@ -692,6 +686,12 @@ export const MetalHeaderDashboard = ({
               </CollapsibleContent>
             </Collapsible>
           </Card>
+        </div>
+
+        {/* Module Overview Cards */}
+        <div className="relative z-10 grid grid-cols-1 gap-4">
+          <MemberModulesCard userId={user.id} />
+          <ExecBoardModulesCard userId={user.id} />
         </div>
       </div>
     );
