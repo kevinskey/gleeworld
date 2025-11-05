@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 
-const MESSAGE_TAGS = ["Rehearsal", "Tour", "Events", "Social", "General", "Announcement"] as const;
+const MESSAGE_TAGS = ["S1", "S2", "A1", "A2", "Musical Leadership", "Exec Board", "First-Years", "Sophomores", "Juniors", "Seniors"] as const;
 type MessageTag = typeof MESSAGE_TAGS[number];
 
 interface AIAssistantDialogProps {
