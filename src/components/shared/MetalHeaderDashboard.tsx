@@ -23,6 +23,7 @@ import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AIAssistantDialog } from "@/components/dashboard/AIAssistantDialog";
+import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles } from "lucide-react";
 
 // Sortable Module Card Component
@@ -751,139 +752,17 @@ export const MetalHeaderDashboard = ({
         </div>
       </Card>
 
-      {/* Search Field */}
-      <Card className="p-4 bg-background/95 backdrop-blur-sm border-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
-        </div>
-      </Card>
+      {/* All Modules Card - Single unified view */}
+      <AllModulesCard
+        modules={allModules}
+        onModuleClick={handleModuleSelect}
+        navigate={navigate}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
+      />
 
-      {/* Member Quick Access Groups */}
-      {isMember && groupedModules && !searchQuery && filterCategory === 'all' ? (
-        <div className="space-y-4">
-
-          {/* Communications Group */}
-          {groupedModules.communications.length > 0 && (
-            <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Communications
-                  <Badge variant="secondary" className="ml-1 text-xs">
-                    {groupedModules.communications.length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupedModules.communications.map(module => (
-                    <SortableModuleCard
-                      key={module.id}
-                      module={module}
-                      onModuleClick={handleModuleSelect}
-                      navigate={navigate}
-                      isPinned={false}
-                      onTogglePin={() => {}}
-                      isFavorite={isFavorite(module.id)}
-                      onToggleFavorite={() => toggleFavorite(module.id)}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Other Assigned Modules Group */}
-          {groupedModules.other.length > 0 && (
-            <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Other Modules
-                  <Badge variant="secondary" className="ml-1 text-xs">
-                    {groupedModules.other.length}
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {groupedModules.other.map(module => (
-                    <SortableModuleCard
-                      key={module.id}
-                      module={module}
-                      onModuleClick={handleModuleSelect}
-                      navigate={navigate}
-                      isPinned={false}
-                      onTogglePin={() => {}}
-                      isFavorite={isFavorite(module.id)}
-                      onToggleFavorite={() => toggleFavorite(module.id)}
-                    />
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Filter Controls - Collapsible */}
-          <Collapsible open={!filterControlsCollapsed} onOpenChange={open => setFilterControlsCollapsed(!open)}>
-            <Card className="bg-background/95 backdrop-blur-sm border-2">
-              <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors">
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4" />
-                  <span className="font-medium">Filter & Sort Options</span>
-                </div>
-                {filterControlsCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="px-4 pb-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Select value={filterCategory} onValueChange={setFilterCategory}>
-                      <SelectTrigger>
-                        <Filter className="h-4 w-4 mr-2" />
-                        <SelectValue placeholder="Filter by category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map(category => <SelectItem key={category} value={category}>
-                            {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                          </SelectItem>)}
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={sortBy} onValueChange={(value: 'name' | 'category' | 'status') => setSortBy(value)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Sort by" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="name">Name</SelectItem>
-                        <SelectItem value="category">Category</SelectItem>
-                        <SelectItem value="status">Status</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Button variant="outline" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="flex items-center gap-2">
-                      {sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />}
-                      {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
-                    </Button>
-                  </div>
-
-                  {/* Filtered Results Count */}
-                  {(searchQuery || filterCategory !== 'all') && <div className="mt-4 text-sm text-muted-foreground">
-                      Found {filteredAndSortedModules.length} modules
-                      {searchQuery && ` matching "${searchQuery}"`}
-                      {filterCategory !== 'all' && ` in ${String(filterCategory).split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}`}
-                    </div>}
-                </div>
-              </CollapsibleContent>
-            </Card>
-          </Collapsible>
-
-        </div>
-      ) : (
-        <>
-          {/* Favorites Section (for non-members or when filtering) */}
-          {moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
+      {/* Favorites Section */}
+      {moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
             <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-1 hover:bg-muted/50 transition-colors cursor-pointer">
@@ -940,8 +819,6 @@ export const MetalHeaderDashboard = ({
               </CollapsibleContent>
             </Card>
           </Collapsible>}
-        </>
-      )}
 
 
       {/* Modules Display */}
