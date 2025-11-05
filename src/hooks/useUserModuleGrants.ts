@@ -88,10 +88,11 @@ export function useUserModuleGrants(userId?: string) {
             }
 
             // Fetch corresponding modules to get stable keys/names/categories
+            // NOTE: module_id in permissions can be either UUID or key string
             const { data: modulesData, error: modulesError } = await supabase
               .from('gw_modules')
               .select('id, key, name, category, is_active')
-              .in('id', moduleIds)
+              .or(`id.in.(${moduleIds.join(',')}),key.in.(${moduleIds.join(',')})`)
               .eq('is_active', true);
 
             if (modulesError) {
@@ -99,10 +100,12 @@ export function useUserModuleGrants(userId?: string) {
             }
 
             const moduleById = new Map((modulesData || []).map((m: any) => [m.id, m]));
+            const moduleByKey = new Map((modulesData || []).map((m: any) => [m.key, m]));
 
             // Map permissions to grants (all assigned modules have view + manage)
             const parsedGrants: ModuleGrant[] = (userPermissions || []).map((item: any) => {
-              const module = moduleById.get(item.module_id);
+              // Try to find module by ID first, then by key
+              const module = moduleById.get(item.module_id) || moduleByKey.get(item.module_id);
               return {
                 module_key: module?.key || module?.id || item.module_id,
                 module_name: module?.name || module?.key || item.module_id,
