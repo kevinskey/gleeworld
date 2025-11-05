@@ -6876,6 +6876,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          tags: string[] | null
           updated_at: string
           user_id: string
         }
@@ -6883,6 +6884,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          tags?: string[] | null
           updated_at?: string
           user_id: string
         }
@@ -6890,6 +6892,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          tags?: string[] | null
           updated_at?: string
           user_id?: string
         }

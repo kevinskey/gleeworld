@@ -7,11 +7,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bot, Send, MessageSquare, Sparkles, User, Inbox } from "lucide-react";
+import { Bot, Send, MessageSquare, Sparkles, User, Inbox, Tag, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+
+const MESSAGE_TAGS = ["Rehearsal", "Tour", "Events", "Social", "General", "Announcement"] as const;
+type MessageTag = typeof MESSAGE_TAGS[number];
 
 interface AIAssistantDialogProps {
   open: boolean;
@@ -23,6 +26,7 @@ interface InternalMessage {
   user_id: string;
   content: string;
   created_at: string;
+  tags?: string[];
   gw_profiles?: {
     full_name: string;
     avatar_url?: string;
@@ -34,6 +38,8 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
   const [aiMessage, setAiMessage] = useState("");
   const [aiMessages, setAiMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [memberMessage, setMemberMessage] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [filterTags, setFilterTags] = useState<string[]>([]);
   const [internalMessages, setInternalMessages] = useState<InternalMessage[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -128,11 +134,13 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
         .from('gw_internal_messages')
         .insert({
           user_id: user.id,
-          content: memberMessage.trim()
+          content: memberMessage.trim(),
+          tags: selectedTags
         });
 
       if (error) throw error;
       setMemberMessage("");
+      setSelectedTags([]);
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');
@@ -140,6 +148,24 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
       setSendingMessage(false);
     }
   };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const toggleFilterTag = (tag: string) => {
+    setFilterTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const filteredMessages = filterTags.length === 0 
+    ? internalMessages 
+    : internalMessages.filter(msg => 
+        msg.tags?.some(tag => filterTags.includes(tag))
+      );
 
   const handleSendAI = () => {
     if (!aiMessage.trim()) return;
@@ -277,6 +303,32 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
           </TabsContent>
 
           <TabsContent value="messages" className="flex-1 flex flex-col gap-4 mt-4 px-6 pb-6 m-0">
+            {/* Tag Filters */}
+            <div className="flex flex-wrap gap-2 items-center">
+              <Tag className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Filter:</span>
+              {MESSAGE_TAGS.map(tag => (
+                <Badge
+                  key={tag}
+                  variant={filterTags.includes(tag) ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => toggleFilterTag(tag)}
+                >
+                  {tag}
+                </Badge>
+              ))}
+              {filterTags.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setFilterTags([])}
+                  className="h-6 px-2 text-xs"
+                >
+                  Clear all
+                </Button>
+              )}
+            </div>
+
             <ScrollArea className="flex-1" ref={scrollRef}>
               {loadingMessages ? (
                 <div className="flex items-center justify-center h-full min-h-[400px]">
@@ -285,19 +337,24 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
                     <p className="text-sm text-muted-foreground">Loading messages...</p>
                   </div>
                 </div>
-              ) : internalMessages.length === 0 ? (
+              ) : filteredMessages.length === 0 ? (
                 <div className="flex items-center justify-center h-full min-h-[400px]">
                   <Card className="text-center py-16 px-8 max-w-md bg-gradient-to-br from-muted/50 to-transparent border-2 border-dashed">
                     <Inbox className="h-20 w-20 mx-auto mb-6 text-muted-foreground/50" />
-                    <h3 className="text-xl font-semibold mb-3">Start the conversation</h3>
+                    <h3 className="text-xl font-semibold mb-3">
+                      {filterTags.length > 0 ? 'No messages with selected tags' : 'Start the conversation'}
+                    </h3>
                     <p className="text-sm text-muted-foreground">
-                      Be the first to send a message to the group
+                      {filterTags.length > 0 
+                        ? 'Try selecting different tags or clear the filters' 
+                        : 'Be the first to send a message to the group'
+                      }
                     </p>
                   </Card>
                 </div>
               ) : (
                 <div className="space-y-4 pb-4">
-                  {internalMessages.map((msg) => {
+                  {filteredMessages.map((msg) => {
                     const isCurrentUser = msg.user_id === user?.id;
                     const senderName = msg.gw_profiles?.full_name || 'Unknown User';
                     const initials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
@@ -317,15 +374,30 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
                               {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                             </span>
                           </div>
-                          <Card className={`px-4 py-2 max-w-[75%] ${
-                            isCurrentUser 
-                              ? 'bg-primary text-primary-foreground border-primary' 
-                              : 'bg-muted/50'
-                          }`}>
-                            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                              {msg.content}
-                            </p>
-                          </Card>
+                          <div className="max-w-[75%] space-y-1">
+                            <Card className={`px-4 py-2 ${
+                              isCurrentUser 
+                                ? 'bg-primary text-primary-foreground border-primary' 
+                                : 'bg-muted/50'
+                            }`}>
+                              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                {msg.content}
+                              </p>
+                            </Card>
+                            {msg.tags && msg.tags.length > 0 && (
+                              <div className={`flex flex-wrap gap-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                                {msg.tags.map(tag => (
+                                  <Badge 
+                                    key={tag} 
+                                    variant="secondary" 
+                                    className="text-xs h-5"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -335,6 +407,42 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
             </ScrollArea>
 
             <Card className="p-4 bg-background/50 backdrop-blur-sm border-2">
+              {/* Tag Selection */}
+              {selectedTags.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b">
+                  {selectedTags.map(tag => (
+                    <Badge 
+                      key={tag} 
+                      variant="default"
+                      className="cursor-pointer"
+                      onClick={() => toggleTag(tag)}
+                    >
+                      {tag}
+                      <X className="h-3 w-3 ml-1" />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              
+              {/* Tag Options */}
+              <div className="flex flex-wrap gap-2 mb-3">
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Tag className="h-3 w-3" />
+                  Tags:
+                </span>
+                {MESSAGE_TAGS.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant={selectedTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer text-xs"
+                    onClick={() => toggleTag(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+
+              {/* Message Input */}
               <div className="flex gap-3">
                 <Input
                   placeholder="Send a message to all members..."
