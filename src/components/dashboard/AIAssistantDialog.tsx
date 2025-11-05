@@ -184,44 +184,25 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[85vh] p-0 gap-0 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        {/* Header with gradient */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-primary/10 via-primary/5 to-background border-b">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-          <DialogHeader className="relative px-6 py-5">
-            <DialogTitle className="flex items-center gap-3 text-2xl">
-              <div className="p-2 rounded-xl bg-primary/10 backdrop-blur-sm">
-                <Bot className="h-6 w-6 text-primary" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  Message Center & AI Assistant
-                  <Badge variant="secondary" className="text-xs">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Powered by AI
-                  </Badge>
-                </div>
-                <DialogDescription className="text-sm">
-                  Get help, ask questions, or check your messages
-                </DialogDescription>
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-        </div>
+      <DialogContent className="max-w-4xl h-[80vh] p-0 gap-0 bg-background">
+        {/* Compact Header */}
+        <DialogHeader className="px-4 py-3 border-b">
+          <DialogTitle className="flex items-center gap-2 text-lg">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            Message Center
+          </DialogTitle>
+        </DialogHeader>
 
-        <Tabs defaultValue="assistant" className="flex-1 flex flex-col h-full">
-          <div className="px-6 pt-4">
-            <TabsList className="grid w-full grid-cols-2 h-12 bg-muted/50">
-              <TabsTrigger value="assistant" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Bot className="h-4 w-4" />
-                <span className="font-medium">AI Assistant</span>
+        <Tabs defaultValue="messages" className="flex-1 flex flex-col h-full">
+          <div className="px-4 pt-2 pb-2 border-b">
+            <TabsList className="grid w-full grid-cols-2 h-9 bg-muted/50">
+              <TabsTrigger value="assistant" className="flex items-center gap-1.5 text-sm data-[state=active]:bg-background">
+                <Bot className="h-3.5 w-3.5" />
+                AI Assistant
               </TabsTrigger>
-              <TabsTrigger value="messages" className="flex items-center gap-2 data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <MessageSquare className="h-4 w-4" />
-                <span className="font-medium">Messages</span>
-                <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
-                  0
-                </Badge>
+              <TabsTrigger value="messages" className="flex items-center gap-1.5 text-sm data-[state=active]:bg-background">
+                <MessageSquare className="h-3.5 w-3.5" />
+                Messages
               </TabsTrigger>
             </TabsList>
           </div>
@@ -302,102 +283,101 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
             </Card>
           </TabsContent>
 
-          <TabsContent value="messages" className="flex-1 flex flex-col gap-4 mt-4 px-6 pb-6 m-0">
-            {/* Tag Filters */}
-            <div className="flex flex-wrap gap-2 items-center">
-              <Tag className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">Filter:</span>
-              {MESSAGE_TAGS.map(tag => (
-                <Badge
-                  key={tag}
-                  variant={filterTags.includes(tag) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => toggleFilterTag(tag)}
-                >
-                  {tag}
-                </Badge>
-              ))}
+          <TabsContent value="messages" className="flex-1 flex flex-col gap-2 m-0">
+            {/* Tag Filters - Compact horizontal scroll */}
+            <div className="flex items-center gap-2 px-4 py-2 border-b overflow-x-auto">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
+                <Tag className="h-3 w-3" />
+                Filter:
+              </div>
+              <div className="flex gap-1.5">
+                {MESSAGE_TAGS.map(tag => (
+                  <Badge
+                    key={tag}
+                    variant={filterTags.includes(tag) ? "default" : "outline"}
+                    className="cursor-pointer text-xs whitespace-nowrap h-6"
+                    onClick={() => toggleFilterTag(tag)}
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
               {filterTags.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setFilterTags([])}
-                  className="h-6 px-2 text-xs"
+                  className="h-6 px-2 text-xs whitespace-nowrap ml-auto"
                 >
-                  Clear all
+                  Clear
                 </Button>
               )}
             </div>
 
-            <ScrollArea className="flex-1" ref={scrollRef}>
+            <ScrollArea className="flex-1 px-4" ref={scrollRef}>
               {loadingMessages ? (
-                <div className="flex items-center justify-center h-full min-h-[400px]">
+                <div className="flex items-center justify-center h-full">
                   <div className="text-center">
-                    <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground">Loading messages...</p>
+                    <div className="h-6 w-6 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                    <p className="text-xs text-muted-foreground">Loading...</p>
                   </div>
                 </div>
               ) : filteredMessages.length === 0 ? (
-                <div className="flex items-center justify-center h-full min-h-[400px]">
-                  <Card className="text-center py-16 px-8 max-w-md bg-gradient-to-br from-muted/50 to-transparent border-2 border-dashed">
-                    <Inbox className="h-20 w-20 mx-auto mb-6 text-muted-foreground/50" />
-                    <h3 className="text-xl font-semibold mb-3">
-                      {filterTags.length > 0 ? 'No messages with selected tags' : 'Start the conversation'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {filterTags.length > 0 
-                        ? 'Try selecting different tags or clear the filters' 
-                        : 'Be the first to send a message to the group'
-                      }
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center py-8">
+                    <Inbox className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+                    <p className="text-sm font-medium mb-1">
+                      {filterTags.length > 0 ? 'No messages' : 'No messages yet'}
                     </p>
-                  </Card>
+                    <p className="text-xs text-muted-foreground">
+                      {filterTags.length > 0 ? 'Try different filters' : 'Be the first to send one'}
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <div className="space-y-4 pb-4">
+                <div className="space-y-3 py-3">
                   {filteredMessages.map((msg) => {
                     const isCurrentUser = msg.user_id === user?.id;
                     const senderName = msg.gw_profiles?.full_name || 'Unknown User';
                     const initials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
                     
                     return (
-                      <div key={msg.id} className={`flex gap-3 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                        <Avatar className="h-10 w-10 flex-shrink-0">
+                      <div key={msg.id} className={`flex gap-2 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <Avatar className="h-8 w-8 flex-shrink-0">
                           <AvatarImage src={msg.gw_profiles?.avatar_url} />
-                          <AvatarFallback className="bg-primary/10 text-primary">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
-                        <div className={`flex-1 ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col`}>
-                          <div className={`flex items-center gap-2 mb-1 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                            <span className="text-sm font-medium">{senderName}</span>
-                            <span className="text-xs text-muted-foreground">
+                        <div className={`flex-1 max-w-[75%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
+                          <div className={`flex items-baseline gap-1.5 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                            <span className="text-xs font-semibold">{senderName}</span>
+                            <span className="text-[10px] text-muted-foreground">
                               {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                             </span>
                           </div>
-                          <div className="max-w-[75%] space-y-1">
-                            <Card className={`px-4 py-2 ${
-                              isCurrentUser 
-                                ? 'bg-primary text-primary-foreground border-primary' 
-                                : 'bg-muted/50'
-                            }`}>
-                              <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                                {msg.content}
-                              </p>
-                            </Card>
-                            {msg.tags && msg.tags.length > 0 && (
-                              <div className={`flex flex-wrap gap-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-                                {msg.tags.map(tag => (
-                                  <Badge 
-                                    key={tag} 
-                                    variant="secondary" 
-                                    className="text-xs h-5"
-                                  >
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                          <Card className={`px-3 py-1.5 ${
+                            isCurrentUser 
+                              ? 'bg-primary text-primary-foreground border-primary' 
+                              : 'bg-muted/50'
+                          }`}>
+                            <p className="text-sm leading-snug whitespace-pre-wrap break-words">
+                              {msg.content}
+                            </p>
+                          </Card>
+                          {msg.tags && msg.tags.length > 0 && (
+                            <div className={`flex flex-wrap gap-1 mt-0.5 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                              {msg.tags.map(tag => (
+                                <Badge 
+                                  key={tag} 
+                                  variant="secondary" 
+                                  className="text-[10px] h-4 px-1.5"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
@@ -406,62 +386,43 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
               )}
             </ScrollArea>
 
-            <Card className="p-4 bg-background/50 backdrop-blur-sm border-2">
-              {/* Tag Selection */}
-              {selectedTags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-3 pb-3 border-b">
-                  {selectedTags.map(tag => (
-                    <Badge 
-                      key={tag} 
-                      variant="default"
-                      className="cursor-pointer"
-                      onClick={() => toggleTag(tag)}
-                    >
-                      {tag}
-                      <X className="h-3 w-3 ml-1" />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              
-              {/* Tag Options */}
-              <div className="flex flex-wrap gap-2 mb-3">
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Tag className="h-3 w-3" />
-                  Tags:
-                </span>
+            <div className="px-4 py-2 border-t bg-background">
+              {/* Tag Selection - Compact inline */}
+              <div className="flex items-center gap-2 mb-2 overflow-x-auto">
+                <Tag className="h-3 w-3 text-muted-foreground flex-shrink-0" />
                 {MESSAGE_TAGS.map(tag => (
                   <Badge
                     key={tag}
                     variant={selectedTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer text-xs"
+                    className="cursor-pointer text-[10px] h-5 whitespace-nowrap"
                     onClick={() => toggleTag(tag)}
                   >
                     {tag}
+                    {selectedTags.includes(tag) && <X className="h-2.5 w-2.5 ml-1" />}
                   </Badge>
                 ))}
               </div>
 
               {/* Message Input */}
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <Input
-                  placeholder="Send a message to all members..."
+                  placeholder="Message all members..."
                   value={memberMessage}
                   onChange={(e) => setMemberMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMemberMessage()}
-                  className="flex-1 bg-background"
+                  className="flex-1 h-9 text-sm"
                   disabled={sendingMessage}
                 />
                 <Button 
                   onClick={handleSendMemberMessage} 
                   size="icon" 
-                  className="h-10 w-10"
+                  className="h-9 w-9 flex-shrink-0"
                   disabled={sendingMessage || !memberMessage.trim()}
                 >
-                  <Send className="h-4 w-4" />
+                  <Send className="h-3.5 w-3.5" />
                 </Button>
               </div>
-            </Card>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
