@@ -295,7 +295,7 @@ export const UnifiedDashboard = () => {
     }
   }
 
-  // Default view: Use unified dashboard for all users
+  // Default view: Use MetalHeaderDashboard for all members
   if (viewMode === 'default') {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
@@ -308,16 +308,6 @@ export const UnifiedDashboard = () => {
             is_exec_board: profile.is_exec_board || false,
             created_at: new Date().toISOString()
           }} />
-        </div>
-      </div>;
-  }
-
-  // Executive board members get their own dashboard
-  if (profile?.is_exec_board && viewMode === 'default') {
-    console.log('🎯 UnifiedDashboard: Showing executive board dashboard for user:', profile.user_id);
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 overflow-auto">
-        <div className="px-6 py-4 pb-8">
-          <ExecBoardModulePanel />
         </div>
       </div>;
   }
