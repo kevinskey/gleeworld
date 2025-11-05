@@ -47,7 +47,14 @@ export const FavoritesCard = ({ favorites, onModuleClick, onToggleFavorite }: Fa
             return (
               <div
                 key={module.id}
-                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => {
+                  if (module.id === 'librarian') {
+                    navigate('/librarian-dashboard');
+                  } else {
+                    onModuleClick(module.id);
+                  }
+                }}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {IconComponent && (
@@ -60,32 +67,17 @@ export const FavoritesCard = ({ favorites, onModuleClick, onToggleFavorite }: Fa
                     <p className="text-xs text-muted-foreground truncate">{module.description}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onToggleFavorite(module.id);
-                    }}
-                    className="p-2 h-auto text-red-500 hover:text-red-600"
-                  >
-                    <Heart className="h-4 w-4 fill-current" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      if (module.id === 'librarian') {
-                        navigate('/librarian-dashboard');
-                      } else {
-                        onModuleClick(module.id);
-                      }
-                    }}
-                  >
-                    Open
-                  </Button>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(module.id);
+                  }}
+                  className="p-2 h-auto text-red-500 hover:text-red-600 flex-shrink-0"
+                >
+                  <Heart className="h-4 w-4 fill-current" />
+                </Button>
               </div>
             );
           })}

@@ -62,11 +62,20 @@ const SortableModuleCard = ({
   };
   const IconComponent = module.icon;
   return <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`}>
+      <Card 
+        className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`}
+        onClick={() => {
+          if (module.id === 'librarian') {
+            navigate('/librarian-dashboard');
+          } else {
+            onModuleClick(module.id);
+          }
+        }}
+      >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3 flex-1">
-              <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded">
+              <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-muted rounded" onClick={e => e.stopPropagation()}>
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
               </div>
               {IconComponent && <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
@@ -100,17 +109,6 @@ const SortableModuleCard = ({
             </div>
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
-          <Button variant="outline" size="sm" className="w-full" onClick={() => {
-          if (module.id === 'librarian') {
-            navigate('/librarian-dashboard');
-          } else {
-            onModuleClick(module.id);
-          }
-        }}>
-            Open Module
-          </Button>
-        </CardContent>
       </Card>
     </div>;
 };
