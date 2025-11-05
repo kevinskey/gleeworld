@@ -144,6 +144,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       Member
                     </DropdownMenuItem>
                     <DropdownMenuItem 
+                      onClick={() => navigate('/dashboard/student')}
+                      className="cursor-pointer"
+                    >
+                      <GraduationCap className="mr-2 h-4 w-4" />
+                      Student
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
                       onClick={() => navigate('/dashboard/fan')}
                       className="cursor-pointer"
                     >
