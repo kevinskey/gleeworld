@@ -207,58 +207,40 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
             </TabsList>
           </div>
 
-          <TabsContent value="assistant" className="flex-1 flex flex-col gap-4 mt-4 px-6 pb-6 m-0">
-            <ScrollArea className="flex-1 pr-4 -mr-4">
-              <div className="space-y-4 pr-4">
+          <TabsContent value="assistant" className="flex-1 flex flex-col m-0 data-[state=inactive]:hidden">
+            <ScrollArea className="flex-1 px-4">
+              <div className="space-y-3 py-3">
                 {aiMessages.length === 0 ? (
-                  <div className="flex items-center justify-center h-full min-h-[400px]">
-                    <Card className="text-center py-16 px-8 max-w-md bg-gradient-to-br from-primary/5 to-transparent border-2 border-dashed">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="h-20 w-20 bg-primary/10 rounded-full animate-pulse" />
-                        </div>
-                        <Bot className="h-20 w-20 mx-auto text-primary relative z-10" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-3">How can I help you today?</h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Ask me anything about modules, events, tasks, or the Glee Club
-                      </p>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        <Badge variant="outline" className="cursor-pointer hover:bg-primary/10">
-                          Show my modules
-                        </Badge>
-                        <Badge variant="outline" className="cursor-pointer hover:bg-primary/10">
-                          What's happening today?
-                        </Badge>
-                        <Badge variant="outline" className="cursor-pointer hover:bg-primary/10">
-                          Help with tasks
-                        </Badge>
-                      </div>
-                    </Card>
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center py-8">
+                      <Bot className="h-12 w-12 mx-auto mb-3 text-primary/50" />
+                      <p className="text-sm font-medium mb-1">AI Assistant</p>
+                      <p className="text-xs text-muted-foreground">Coming soon</p>
+                    </div>
                   </div>
                 ) : (
                   aiMessages.map((msg, i) => (
                     <div
                       key={i}
-                      className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                      className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                     >
                       {msg.role === "assistant" && (
-                        <div className="p-2 rounded-full bg-primary/10 h-fit">
-                          <Bot className="h-4 w-4 text-primary" />
+                        <div className="p-1.5 rounded-full bg-primary/10 h-fit">
+                          <Bot className="h-3 w-3 text-primary" />
                         </div>
                       )}
                       <Card
-                        className={`px-4 py-3 max-w-[75%] ${
+                        className={`px-3 py-2 max-w-[75%] ${
                           msg.role === "user"
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-muted/50"
                         }`}
                       >
-                        <p className="text-sm leading-relaxed">{msg.content}</p>
+                        <p className="text-sm">{msg.content}</p>
                       </Card>
                       {msg.role === "user" && (
-                        <div className="p-2 rounded-full bg-primary/10 h-fit">
-                          <User className="h-4 w-4 text-primary" />
+                        <div className="p-1.5 rounded-full bg-primary/10 h-fit">
+                          <User className="h-3 w-3 text-primary" />
                         </div>
                       )}
                     </div>
@@ -267,23 +249,23 @@ export const AIAssistantDialog = ({ open, onOpenChange }: AIAssistantDialogProps
               </div>
             </ScrollArea>
 
-            <Card className="p-4 bg-background/50 backdrop-blur-sm border-2">
-              <div className="flex gap-3">
+            <div className="px-4 py-2 border-t bg-background">
+              <div className="flex gap-2">
                 <Input
                   placeholder="Ask me anything..."
                   value={aiMessage}
                   onChange={(e) => setAiMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSendAI()}
-                  className="flex-1 bg-background"
+                  className="flex-1 h-9 text-sm"
                 />
-                <Button onClick={handleSendAI} size="icon" className="h-10 w-10">
-                  <Send className="h-4 w-4" />
+                <Button onClick={handleSendAI} size="icon" className="h-9 w-9">
+                  <Send className="h-3.5 w-3.5" />
                 </Button>
               </div>
-            </Card>
+            </div>
           </TabsContent>
 
-          <TabsContent value="messages" className="flex-1 flex flex-col gap-2 m-0">
+          <TabsContent value="messages" className="flex-1 flex flex-col m-0 data-[state=inactive]:hidden">
             {/* Tag Filters - Compact horizontal scroll */}
             <div className="flex items-center gap-2 px-4 py-2 border-b overflow-x-auto">
               <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
