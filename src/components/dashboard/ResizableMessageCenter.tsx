@@ -178,7 +178,9 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
   return (
     <Rnd
       default={{
-        x: window.innerWidth > 768 ? (window.innerWidth - 850) / 2 : 20,
+        x: window.innerWidth > 768 
+          ? (window.innerWidth - 850) / 2 
+          : (window.innerWidth - (window.innerWidth - 40)) / 2,
         y: 80,
         width: window.innerWidth > 768 ? 850 : window.innerWidth - 40,
         height: window.innerHeight > 768 ? 600 : window.innerHeight - 160
