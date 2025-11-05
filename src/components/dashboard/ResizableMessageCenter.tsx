@@ -153,16 +153,14 @@ export const ResizableMessageCenter = ({
   };
   const filteredMessages = filterTags.length === 0 ? internalMessages : internalMessages.filter(msg => msg.tags?.some(tag => filterTags.includes(tag)));
 
-  // Floating tab button for mobile
-  const FloatingTabButton = () => <Button onClick={() => onOpenChange(!open)} className="fixed right-0 top-1/2 -translate-y-1/2 z-[999998] rounded-l-lg rounded-r-none h-20 w-8 p-0 shadow-lg flex items-center justify-center relative" variant="default">
-      <div className="flex flex-col items-center gap-1">
-        <MessageSquare className="h-4 w-4" />
-        {totalUnreadDMs > 0 && (
-          <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[9px]">
-            {totalUnreadDMs > 9 ? '9+' : totalUnreadDMs}
-          </Badge>
-        )}
-      </div>
+  // Floating tab button for top-right
+  const FloatingTabButton = () => <Button onClick={() => onOpenChange(!open)} className="fixed right-4 top-20 z-[999998] rounded-lg h-12 w-12 p-0 shadow-lg flex items-center justify-center relative" variant="default">
+      <MessageSquare className="h-5 w-5" />
+      {totalUnreadDMs > 0 && (
+        <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center text-[10px] font-semibold">
+          {totalUnreadDMs > 99 ? '99+' : totalUnreadDMs}
+        </Badge>
+      )}
     </Button>;
 
   // Message center content (shared between mobile and desktop)

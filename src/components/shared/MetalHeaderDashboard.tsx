@@ -655,20 +655,6 @@ export const MetalHeaderDashboard = ({
           </div>
         )}
 
-        {/* AI Assistant & Message Center */}
-        <Card className="relative z-10 p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => setAiAssistantOpen(true)}>
-          <div className="relative">
-            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-              <Bot className="h-4 w-4 text-primary" />
-              <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-            </div>
-            <Input 
-              placeholder="Ask AI Assistant or check messages..." 
-              className="pl-14 cursor-pointer"
-              readOnly
-            />
-          </div>
-        </Card>
 
         {/* Search and Filter Tools */}
         <div className="relative z-10 space-y-3">
@@ -907,25 +893,6 @@ export const MetalHeaderDashboard = ({
                 );
               }
 
-              if (cardId === 'ai-assistant') {
-                return (
-                  <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    <Card className="p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => !isEditingLayout && setAiAssistantOpen(true)}>
-                      <div className="relative">
-                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                          <Bot className="h-4 w-4 text-primary" />
-                          <Sparkles className="h-3 w-3 text-primary animate-pulse" />
-                        </div>
-                        <Input 
-                          placeholder="Glee Message Center" 
-                          className="pl-14 cursor-pointer"
-                          readOnly
-                        />
-                      </div>
-                    </Card>
-                  </SortableDashboardCard>
-                );
-              }
 
               return null;
             })}
