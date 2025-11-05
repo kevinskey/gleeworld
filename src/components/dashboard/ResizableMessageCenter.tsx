@@ -239,7 +239,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                     <ChevronDown className="h-3 w-3 ml-1.5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 z-[9999999]"  style={{ zIndex: 9999999 }}>
+                <DropdownMenuContent align="start" className="w-56 z-[9999999] pointer-events-auto"  style={{ zIndex: 9999999 }} onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
                   <DropdownMenuLabel>Filter Messages</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {MESSAGE_TAGS.map(tag => (
@@ -371,7 +371,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                       <ChevronDown className="h-2.5 w-2.5 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-52 z-[9999999]" style={{ zIndex: 9999999 }}>
+                  <DropdownMenuContent align="start" className="w-52 z-[9999999] pointer-events-auto" style={{ zIndex: 9999999 }} onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
                     <DropdownMenuLabel>Tag this message</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {MESSAGE_TAGS.map(tag => (
