@@ -24,7 +24,7 @@ import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
-import { AIAssistantDialog } from "@/components/dashboard/AIAssistantDialog";
+import { ResizableMessageCenter } from "@/components/dashboard/ResizableMessageCenter";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save } from "lucide-react";
 
@@ -992,7 +992,7 @@ export const MetalHeaderDashboard = ({
             </Card>
           </Collapsible>}
 
-      {/* AI Assistant Dialog */}
-      <AIAssistantDialog open={aiAssistantOpen} onOpenChange={setAiAssistantOpen} />
+      {/* Resizable Message Center */}
+      <ResizableMessageCenter open={aiAssistantOpen} onOpenChange={setAiAssistantOpen} />
     </div>;
 };
