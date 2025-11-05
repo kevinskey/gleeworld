@@ -6,7 +6,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Send, MessageSquare, Inbox, Tag, X, Minimize2, Maximize2, XIcon } from "lucide-react";
+import { Send, MessageSquare, Inbox, Tag, X, Minimize2, Maximize2, XIcon, ChevronDown, Filter } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -214,32 +222,59 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
         {!isMinimized && (
           <>
             {/* Tag Filters */}
-            <div className="flex items-center gap-2 px-4 py-2 border-b overflow-x-auto">
-              <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
-                <Tag className="h-3.5 w-3.5" />
-                Filter:
-              </div>
-              <div className="flex gap-1.5">
-                {MESSAGE_TAGS.map(tag => (
-                  <Badge
-                    key={tag}
-                    variant={filterTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer text-xs whitespace-nowrap h-6"
-                    onClick={() => toggleFilterTag(tag)}
-                  >
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
+            <div className="flex items-center gap-2 px-4 py-2 border-b">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8">
+                    <Filter className="h-3.5 w-3.5 mr-2" />
+                    Filter by Tags
+                    {filterTags.length > 0 && (
+                      <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px]">
+                        {filterTags.length}
+                      </Badge>
+                    )}
+                    <ChevronDown className="h-3.5 w-3.5 ml-2" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <DropdownMenuLabel>Filter Messages</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {MESSAGE_TAGS.map(tag => (
+                    <DropdownMenuCheckboxItem
+                      key={tag}
+                      checked={filterTags.includes(tag)}
+                      onCheckedChange={() => toggleFilterTag(tag)}
+                    >
+                      {tag}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                  {filterTags.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFilterTags([])}
+                        className="w-full h-8 text-xs"
+                      >
+                        Clear Filters
+                      </Button>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               {filterTags.length > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setFilterTags([])}
-                  className="h-6 px-2 text-xs whitespace-nowrap ml-auto"
-                >
-                  Clear
-                </Button>
+                <div className="flex flex-wrap gap-1">
+                  {filterTags.map(tag => (
+                    <Badge key={tag} variant="default" className="text-[10px] h-5">
+                      {tag}
+                      <X 
+                        className="h-2.5 w-2.5 ml-1 cursor-pointer" 
+                        onClick={() => toggleFilterTag(tag)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
               )}
             </div>
 
@@ -319,19 +354,47 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
             {/* Message Input */}
             <div className="px-4 py-2 border-t bg-background">
               {/* Tag Selection */}
-              <div className="flex items-center gap-2 mb-2 overflow-x-auto">
-                <Tag className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                {MESSAGE_TAGS.map(tag => (
-                  <Badge
-                    key={tag}
-                    variant={selectedTags.includes(tag) ? "default" : "outline"}
-                    className="cursor-pointer text-[10px] h-5 whitespace-nowrap"
-                    onClick={() => toggleTag(tag)}
-                  >
-                    {tag}
-                    {selectedTags.includes(tag) && <X className="h-2.5 w-2.5 ml-1" />}
-                  </Badge>
-                ))}
+              <div className="flex items-center gap-2 mb-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-7">
+                      <Tag className="h-3 w-3 mr-1.5" />
+                      Add Tags
+                      {selectedTags.length > 0 && (
+                        <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+                          {selectedTags.length}
+                        </Badge>
+                      )}
+                      <ChevronDown className="h-3 w-3 ml-1.5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-52">
+                    <DropdownMenuLabel>Tag this message</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {MESSAGE_TAGS.map(tag => (
+                      <DropdownMenuCheckboxItem
+                        key={tag}
+                        checked={selectedTags.includes(tag)}
+                        onCheckedChange={() => toggleTag(tag)}
+                      >
+                        {tag}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {selectedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 flex-1">
+                    {selectedTags.map(tag => (
+                      <Badge key={tag} variant="default" className="text-[10px] h-5">
+                        {tag}
+                        <X 
+                          className="h-2.5 w-2.5 ml-1 cursor-pointer" 
+                          onClick={() => toggleTag(tag)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Input Field */}
