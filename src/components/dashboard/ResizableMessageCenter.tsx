@@ -321,52 +321,21 @@ export const ResizableMessageCenter = ({
         </> : <DirectMessaging />}
     </>;
 
-  // Mobile view with Sheet
-  if (isMobile) {
-    return <>
-        <Sheet open={open} onOpenChange={onOpenChange}>
-          <SheetContent side="right" className="w-[90vw] h-[60vh] p-0 flex flex-col top-[20vh] bottom-auto">
-            <SheetHeader className="px-3 py-2 border-b">
-              <SheetTitle className="flex items-center gap-2 text-sm">
-                <MessageSquare className="h-4 w-4 text-primary" />
-                Glee Message Center
-              </SheetTitle>
-            </SheetHeader>
-            {MessageCenterContent()}
-          </SheetContent>
-        </Sheet>
-      </>;
-  }
-
-  // Desktop view with Rnd
-  if (!open) return null;
-  return <Rnd default={{
-    x: window.innerWidth > 768 ? (window.innerWidth - 500) / 2 : (window.innerWidth - (window.innerWidth - 40)) / 2,
-    y: 100,
-    width: window.innerWidth > 768 ? 500 : window.innerWidth - 40,
-    height: window.innerHeight > 768 ? 650 : window.innerHeight - 140
-  }} minWidth={320} minHeight={isMinimized ? 48 : 500} maxWidth={window.innerWidth - 40} maxHeight={window.innerHeight - 100} bounds="window" dragHandleClassName="message-center-drag-handle" style={{
-    zIndex: 999999,
-    position: 'fixed'
-  }} className="z-[999999]" enableResizing={!isMinimized}>
-      <div ref={portalRef} className="h-full w-full bg-background border-2 border-primary/20 rounded-lg shadow-2xl flex flex-col overflow-visible">
-        {/* Header - Draggable */}
-        <div className="message-center-drag-handle px-3 py-2 border-b bg-card cursor-move flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
+  // Use Sheet for both mobile and desktop - slide from right
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent 
+        side="right" 
+        className={`${isMobile ? 'w-[90vw]' : 'w-[500px]'} p-0 flex flex-col`}
+      >
+        <SheetHeader className="px-3 py-2 border-b">
+          <SheetTitle className="flex items-center gap-2 text-sm">
             <MessageSquare className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-semibold">Glee Message Center</h2>
-          </div>
-          <div className="flex items-center gap-0.5">
-            <Button variant="ghost" size="sm" onClick={() => setIsMinimized(!isMinimized)} className="h-7 w-7 p-0">
-              {isMinimized ? <Maximize2 className="h-3.5 w-3.5" /> : <Minimize2 className="h-3.5 w-3.5" />}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-7 w-7 p-0">
-              <XIcon className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
-
-        {!isMinimized && MessageCenterContent()}
-      </div>
-    </Rnd>;
+            Glee Message Center
+          </SheetTitle>
+        </SheetHeader>
+        {MessageCenterContent()}
+      </SheetContent>
+    </Sheet>
+  );
 };

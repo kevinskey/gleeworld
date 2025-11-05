@@ -807,15 +807,16 @@ export const MetalHeaderDashboard = ({
       {/* Dashboard Hero Carousel */}
       <DashboardHeroCarousel />
 
-      {/* Message Center Button */}
-      <div className="relative z-10 flex justify-center mt-4 mb-6 px-4">
+      {/* Message Center Button - Fixed to Right Edge */}
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
         <Button 
           onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-          className="h-14 px-8 shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-          size="lg"
+          className="h-16 px-3 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
         >
-          <MessageSquare className="h-6 w-6 mr-2" />
-          <span className="text-base">Messages</span>
+          <div className="flex flex-col items-center gap-1">
+            <MessageSquare className="h-6 w-6" />
+            <span className="text-xs writing-mode-vertical-rl rotate-180">Messages</span>
+          </div>
         </Button>
       </div>
 
