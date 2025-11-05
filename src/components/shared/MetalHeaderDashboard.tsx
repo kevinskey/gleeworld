@@ -857,13 +857,14 @@ export const MetalHeaderDashboard = ({
             {cardOrder.map((cardId) => {
               // Show favorites card if in edit mode OR if it meets normal conditions
               if (cardId === 'favorites') {
-                const showFavorites = isMember && groupedModules && groupedModules.favorites.length > 0;
+                const hasFavorites = groupedModules?.favorites && groupedModules.favorites.length > 0;
                 
-                if (!isEditingLayout && !showFavorites) return null;
+                // Only show in edit mode, skip if no favorites and not editing
+                if (!isEditingLayout && !hasFavorites) return null;
                 
                 return (
                   <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    {showFavorites ? (
+                    {hasFavorites ? (
                       <FavoritesCard
                         favorites={groupedModules.favorites}
                         onModuleClick={handleModuleSelect}
@@ -871,7 +872,7 @@ export const MetalHeaderDashboard = ({
                       />
                     ) : (
                       <Card className="p-4 bg-muted/50 border-dashed">
-                        <p className="text-sm text-muted-foreground text-center">Favorites card (empty)</p>
+                        <p className="text-sm text-muted-foreground text-center">Favorites card (no favorites yet - add some to see them here)</p>
                       </Card>
                     )}
                   </SortableDashboardCard>
@@ -918,8 +919,8 @@ export const MetalHeaderDashboard = ({
         </SortableContext>
       </DndContext>
 
-      {/* Favorites Section */}
-      {moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
+      {/* Favorites Section - Hidden, now handled by draggable FavoritesCard */}
+      {false && moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
             <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2 border-primary/20">
               <CollapsibleTrigger className="w-full">
                 <CardHeader className="pb-1 hover:bg-muted/50 transition-colors cursor-pointer">
