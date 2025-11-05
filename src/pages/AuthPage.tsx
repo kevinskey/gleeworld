@@ -241,7 +241,7 @@ export default function AuthPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-white/90 mb-2 block">
+                <label className="text-sm font-medium text-black mb-2 block">
                   Password *
                 </label>
                 <div className="relative">
