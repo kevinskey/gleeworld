@@ -77,60 +77,8 @@ export const RoleBasedModuleAssignment = () => {
   const fetchRoleModules = async () => {
     try {
       setLoading(true);
-
-      // Get all users with the selected role
-      const { data: users, error: usersError } = await supabase
-        .from('gw_profiles')
-        .select('user_id')
-        .eq('role', selectedRole);
-
-      if (usersError) throw usersError;
-
-      if (!users || users.length === 0) {
-        setSelectedModules([]);
-        return;
-      }
-
-      // Build list of valid user IDs (filter out nulls)
-      const userIds = users
-        .map(u => u.user_id)
-        .filter((id): id is string => !!id);
-
-      if (userIds.length === 0) {
-        setSelectedModules([]);
-        setLoading(false);
-        return;
-      }
-
-      // Get modules assigned to ALL users with this role
-      const { data: permissions, error: permissionsError } = await supabase
-        .from('gw_user_module_permissions')
-        .select('module_id, user_id')
-        .in('user_id', userIds)
-        .eq('is_active', true);
-
-      if (permissionsError) throw permissionsError;
-
-      console.log('🔍 Role module permissions:', permissions);
-
-      // Count how many users have each module
-      const moduleCounts = new Map<string, number>();
-      permissions?.forEach(permission => {
-        const count = moduleCounts.get(permission.module_id) || 0;
-        moduleCounts.set(permission.module_id, count + 1);
-      });
-
-      console.log('🔍 Module counts:', Array.from(moduleCounts.entries()));
-      console.log('🔍 Total users with role:', userIds.length);
-
-      // Only select modules that ALL users with this role have
-      const universalModuleIds = Array.from(moduleCounts.entries())
-        .filter(([_, count]) => count === userIds.length)
-        .map(([moduleId]) => moduleId);
-
-      console.log('🔍 Universal module IDs for role:', universalModuleIds);
-
-      setSelectedModules(universalModuleIds);
+      // Start fresh with no modules selected when role changes
+      setSelectedModules([]);
     } catch (error) {
       console.error('Error fetching role modules:', error);
       toast({
