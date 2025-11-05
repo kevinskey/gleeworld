@@ -811,12 +811,12 @@ export const MetalHeaderDashboard = ({
       <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
         <Button 
           onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-          className="h-20 w-6 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex flex-col items-center justify-center py-2 opacity-70 hover:opacity-100 transition-opacity"
+          className="h-auto w-6 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex flex-col items-center justify-center py-1 px-0 opacity-70 hover:opacity-100 transition-opacity"
         >
-          <MessageSquare className="h-3 w-3 mb-1" />
-          <div className="flex flex-col text-[10px] tracking-wide leading-tight">
+          <MessageSquare className="h-3 w-3 mb-0.5" />
+          <div className="flex flex-col text-[8px] tracking-wide leading-none">
             {['M', 'E', 'S', 'S', 'A', 'G', 'E', 'S'].map((letter, i) => (
-              <span key={i}>{letter}</span>
+              <span key={i} className="py-[1px]">{letter}</span>
             ))}
           </div>
         </Button>
