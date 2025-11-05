@@ -31,11 +31,11 @@
     --secondary-foreground: 0 0% 100%; /* White text on blue */
     
     /* High-Contrast Backgrounds */
-    --background: 0 0% 100%; /* Pure white background */
+    --background: 0 0% 98%; /* Very light gray instead of pure white */
     --foreground: 0 0% 8%; /* Near-black text for readability */
 
-    /* Card System - Clean and Bold */
-    --card: 0 0% 100%; /* Pure white cards */
+    /* Card System - Subtle tint for depth */
+    --card: 210 40% 98%; /* Very subtle blue tint */
     --card-foreground: 0 0% 8%; /* Dark text on white */
 
     /* Popover and Dropdown Elements */
