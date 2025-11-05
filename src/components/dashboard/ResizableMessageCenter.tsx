@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, MessageSquare, Inbox, Tag, X, Minimize2, Maximize2, XIcon, ChevronDown, Filter, Users, MessageCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DirectMessaging } from "./DirectMessaging";
+import { useDirectMessages } from "@/hooks/useDirectMessages";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuCheckboxItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuPortal } from "@/components/ui/dropdown-menu";
@@ -41,6 +42,7 @@ export const ResizableMessageCenter = ({
     user
   } = useAuth();
   const isMobile = useIsMobile();
+  const { conversations } = useDirectMessages();
   const [memberMessage, setMemberMessage] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
@@ -51,6 +53,9 @@ export const ResizableMessageCenter = ({
   const [activeTab, setActiveTab] = useState<'group' | 'dm'>('group');
   const scrollRef = useRef<HTMLDivElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
+
+  // Calculate total unread DM count
+  const totalUnreadDMs = conversations.reduce((sum, convo) => sum + convo.unread_count, 0);
 
   // Fetch internal messages
   useEffect(() => {
@@ -149,10 +154,14 @@ export const ResizableMessageCenter = ({
   const filteredMessages = filterTags.length === 0 ? internalMessages : internalMessages.filter(msg => msg.tags?.some(tag => filterTags.includes(tag)));
 
   // Floating tab button for mobile
-  const FloatingTabButton = () => <Button onClick={() => onOpenChange(!open)} className="fixed right-0 top-1/2 -translate-y-1/2 z-[999998] rounded-l-lg rounded-r-none h-20 w-8 p-0 shadow-lg flex items-center justify-center" variant="default">
+  const FloatingTabButton = () => <Button onClick={() => onOpenChange(!open)} className="fixed right-0 top-1/2 -translate-y-1/2 z-[999998] rounded-l-lg rounded-r-none h-20 w-8 p-0 shadow-lg flex items-center justify-center relative" variant="default">
       <div className="flex flex-col items-center gap-1">
         <MessageSquare className="h-4 w-4" />
-        
+        {totalUnreadDMs > 0 && (
+          <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 p-0 flex items-center justify-center text-[9px]">
+            {totalUnreadDMs > 9 ? '9+' : totalUnreadDMs}
+          </Badge>
+        )}
       </div>
     </Button>;
 
@@ -166,9 +175,14 @@ export const ResizableMessageCenter = ({
               <Users className="h-3 w-3 mr-1.5" />
               All Members
             </TabsTrigger>
-            <TabsTrigger value="dm" className="text-xs">
+            <TabsTrigger value="dm" className="text-xs relative">
               <MessageCircle className="h-3 w-3 mr-1.5" />
               Direct Messages
+              {totalUnreadDMs > 0 && (
+                <Badge variant="destructive" className="ml-1.5 h-4 px-1 text-[9px]">
+                  {totalUnreadDMs}
+                </Badge>
+              )}
             </TabsTrigger>
           </TabsList>
         </Tabs>
