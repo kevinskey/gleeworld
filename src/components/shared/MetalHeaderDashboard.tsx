@@ -855,14 +855,25 @@ export const MetalHeaderDashboard = ({
         <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
             {cardOrder.map((cardId) => {
-              if (cardId === 'favorites' && isMember && groupedModules && !searchQuery && filterCategory === 'all') {
+              // Show favorites card if in edit mode OR if it meets normal conditions
+              if (cardId === 'favorites') {
+                const showFavorites = isMember && groupedModules && groupedModules.favorites.length > 0;
+                
+                if (!isEditingLayout && !showFavorites) return null;
+                
                 return (
                   <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    <FavoritesCard
-                      favorites={groupedModules.favorites}
-                      onModuleClick={handleModuleSelect}
-                      onToggleFavorite={toggleFavorite}
-                    />
+                    {showFavorites ? (
+                      <FavoritesCard
+                        favorites={groupedModules.favorites}
+                        onModuleClick={handleModuleSelect}
+                        onToggleFavorite={toggleFavorite}
+                      />
+                    ) : (
+                      <Card className="p-4 bg-muted/50 border-dashed">
+                        <p className="text-sm text-muted-foreground text-center">Favorites card (empty)</p>
+                      </Card>
+                    )}
                   </SortableDashboardCard>
                 );
               }
@@ -884,7 +895,7 @@ export const MetalHeaderDashboard = ({
               if (cardId === 'ai-assistant') {
                 return (
                   <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    <Card className="p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => setAiAssistantOpen(true)}>
+                    <Card className="p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => !isEditingLayout && setAiAssistantOpen(true)}>
                       <div className="relative">
                         <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
                           <Bot className="h-4 w-4 text-primary" />
