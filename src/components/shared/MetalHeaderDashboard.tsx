@@ -2,8 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import gleeSculptureBg from '@/assets/glee-sculpture-bg.png';
 import { useNavigate, useLocation } from "react-router-dom";
 import { DashboardHeroCarousel } from "@/components/dashboard/DashboardHeroCarousel";
-import { useDirectMessages } from "@/hooks/useDirectMessages";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { useModuleFavorites } from "@/hooks/useModuleFavorites";
@@ -178,7 +176,6 @@ export const MetalHeaderDashboard = ({
   const [isEditingLayout, setIsEditingLayout] = useState(false);
   const { isSuperAdmin } = useUserRole();
   const { cardOrder, saveCardOrder, resetCardOrder, isSaving } = useDashboardCardOrder();
-  const { conversations } = useDirectMessages();
 
   // Get the user's first name from full_name
   const getFirstName = (fullName: string) => {
@@ -651,19 +648,11 @@ export const MetalHeaderDashboard = ({
         <div className="relative z-10 flex justify-end">
           <Button 
             onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-            className="h-12 px-4 shadow-lg relative"
+            className="h-12 px-4 shadow-lg"
             variant="default"
           >
             <MessageSquare className="h-5 w-5 mr-2" />
             <span>Messages</span>
-            {(() => {
-              const totalUnreadDMs = conversations.reduce((sum, convo) => sum + convo.unread_count, 0);
-              return totalUnreadDMs > 0 && (
-                <Badge variant="destructive" className="ml-2 h-5 min-w-[20px] px-1 text-[10px] font-semibold">
-                  {totalUnreadDMs > 99 ? '99+' : totalUnreadDMs}
-                </Badge>
-              );
-            })()}
           </Button>
         </div>
 
