@@ -191,8 +191,8 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
       maxHeight={window.innerHeight - 100}
       bounds="window"
       dragHandleClassName="message-center-drag-handle"
-      style={{ zIndex: 99999, position: 'fixed' }}
-      className="z-[99999]"
+      style={{ zIndex: 999999, position: 'fixed' }}
+      className="z-[999999]"
       enableResizing={!isMinimized}
     >
       <div className="h-full w-full bg-background border-2 border-primary/20 rounded-lg shadow-2xl flex flex-col overflow-hidden">
