@@ -478,22 +478,24 @@
     @apply py-0.5 px-1 leading-tight;
   }
 
-  /* Fix auth page input visibility - override system CSS injection */
+  /* Fix auth page input visibility - high contrast on glass card */
   .auth-input {
-    color: white !important;
-    background-color: rgba(255, 255, 255, 0.1) !important;
-    border-color: rgba(255, 255, 255, 0.3) !important;
-    backdrop-filter: blur(4px) !important;
-    transition: all 0.3s ease !important;
+    color: #fff !important;
+    background-color: rgba(0, 0, 0, 0.35) !important;
+    border-color: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(6px) !important;
+    transition: all 0.2s ease !important;
   }
 
   .auth-input:focus {
-    background-color: rgba(255, 255, 255, 0.2) !important;
-    border-color: rgba(255, 255, 255, 0.5) !important;
+    background-color: rgba(0, 0, 0, 0.5) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) !important;
   }
 
   .auth-input::placeholder {
-    color: rgba(255, 255, 255, 0.6) !important;
+    color: rgba(255, 255, 255, 0.8) !important;
   }
 
   /* Enhanced Tooltip Styling */
