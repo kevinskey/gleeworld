@@ -162,10 +162,12 @@ interface MetalHeaderDashboardProps {
     created_at: string;
   };
   simulatedRole?: string; // Optional role to simulate for viewing purposes
+  simulatedUserId?: string; // When simulating, fetch grants for this user id
 }
 export const MetalHeaderDashboard = ({
   user,
-  simulatedRole
+  simulatedRole,
+  simulatedUserId
 }: MetalHeaderDashboardProps) => {
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
@@ -207,7 +209,7 @@ export const MetalHeaderDashboard = ({
     getModuleById
   } = useUnifiedModules({
     userRole: getUserRole(),
-    userId: simulatedRole ? undefined : user.id, // Don't use actual user ID when simulating
+    userId: simulatedRole ? simulatedUserId : user.id, // Use simulated student's grants when simulating
     isAdmin: simulatedRole ? false : isAdmin,
     showInactive: false // Only show active modules user can access
   });

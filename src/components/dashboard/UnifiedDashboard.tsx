@@ -17,7 +17,7 @@ import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 import { ModuleDisplay } from './ModuleDisplay';
 import { DashboardNavigation } from './DashboardNavigation';
 import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
-
+import { supabase } from '@/integrations/supabase/client';
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
   default: m.CommunityHubModule
@@ -46,6 +46,8 @@ export const UnifiedDashboard = () => {
   const [publicViewMode, setPublicViewMode] = useState<'monitor' | 'experience'>('monitor');
   const location = useLocation();
   const navigate = useNavigate();
+  const [simulatedStudentId, setSimulatedStudentId] = useState<string | null>(null);
+  const [simLoading, setSimLoading] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const moduleId = params.get('module');
@@ -61,6 +63,38 @@ export const UnifiedDashboard = () => {
     if (location.pathname === '/dashboard/public') return 'public';
     return 'default'; // /dashboard route
   }, [location.pathname]);
+
+  // When simulating student view, select a sample student (or from ?studentId=)
+  useEffect(() => {
+    if (viewMode !== 'student') return;
+
+    const run = async () => {
+      setSimLoading(true);
+      try {
+        const params = new URLSearchParams(location.search);
+        const sid = params.get('studentId');
+        if (sid) {
+          setSimulatedStudentId(sid);
+          return;
+        }
+        const { data, error } = await supabase
+          .from('gw_profiles')
+          .select('user_id')
+          .eq('role', 'student')
+          .eq('status', 'active')
+          .limit(1)
+          .single();
+        if (error) {
+          console.error('Error fetching sample student:', error);
+        }
+        setSimulatedStudentId(data?.user_id || null);
+      } finally {
+        setSimLoading(false);
+      }
+    };
+
+    run();
+  }, [viewMode, location.search]);
 
   // Debug logging
   console.log('🎯 UnifiedDashboard rendering:', {
@@ -161,18 +195,27 @@ export const UnifiedDashboard = () => {
     // Student view: Simulate student role permissions
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
-          <MetalHeaderDashboard 
-            user={{
-              id: profile.user_id,
-              email: profile.email || '',
-              full_name: profile.full_name || '',
-              role: 'student', // Override to simulate student view
-              exec_board_role: undefined,
-              is_exec_board: false,
-              created_at: new Date().toISOString()
-            }}
-            simulatedRole="student"
-          />
+          {simLoading && (
+            <div className="text-center text-muted-foreground py-10">Loading student view…</div>
+          )}
+          {!simLoading && !simulatedStudentId && (
+            <div className="text-center text-muted-foreground py-10">No student found to simulate. Add a student or pass ?studentId=UUID in the URL.</div>
+          )}
+          {simulatedStudentId && (
+            <MetalHeaderDashboard 
+              user={{
+                id: profile.user_id,
+                email: profile.email || '',
+                full_name: profile.full_name || '',
+                role: 'student', // Override to simulate student view
+                exec_board_role: undefined,
+                is_exec_board: false,
+                created_at: new Date().toISOString()
+              }}
+              simulatedRole="student"
+              simulatedUserId={simulatedStudentId}
+            />
+          )}
         </div>
       </div>;
   }
