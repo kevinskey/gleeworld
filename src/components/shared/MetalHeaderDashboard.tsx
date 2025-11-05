@@ -820,60 +820,6 @@ export const MetalHeaderDashboard = ({
             </Card>
           </Collapsible>}
 
-
-      {/* Modules Display */}
-      <div className="space-y-6">
-        {/* Show search results when there's a search query or filter */}
-        {searchQuery.trim() || filterCategory !== 'all' ? <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Search className="h-5 w-5" />
-                {searchQuery.trim() ? 'Search Results' : 'Filtered Results'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredAndSortedModules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={handleModuleSelect} navigate={navigate} isPinned={isModulePinned(module.category, module.id)} onTogglePin={() => toggleModulePin(module.category, module.id)} isFavorite={isFavorite(module.id)} onToggleFavorite={() => toggleFavorite(module.id)} />)}
-              </div>
-              {filteredAndSortedModules.length === 0 && <div className="text-center py-8 text-muted-foreground">
-                  No modules found matching your criteria.
-                </div>}
-            </CardContent>
-          </Card> : (/* Show modules by category */
-      Object.entries(sortedModulesByCategory).map(([category, modules]) => <Collapsible key={category} open={!collapsedSections[category]} onOpenChange={() => toggleSectionCollapse(category)}>
-              <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
-                <CollapsibleTrigger className="w-full p-6 hover:bg-accent transition-colors">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      {category.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-                      <Badge variant="secondary" className="ml-2">
-                        {modules.length}
-                      </Badge>
-                    </CardTitle>
-                    {collapsedSections[category] ? <ChevronDown className="h-5 w-5" /> : <ChevronUp className="h-5 w-5" />}
-                  </div>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={event => handleDragEnd(event, category)}>
-                      <SortableContext items={modules.map(m => m.id)} strategy={verticalListSortingStrategy}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {modules.map(module => <SortableModuleCard key={module.id} module={module} onModuleClick={handleModuleSelect} navigate={navigate} isPinned={isModulePinned(category, module.id)} onTogglePin={() => toggleModulePin(category, module.id)} isFavorite={isFavorite(module.id)} onToggleFavorite={() => toggleFavorite(module.id)} />)}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  </CardContent>
-                </CollapsibleContent>
-              </Card>
-            </Collapsible>))}
-      </div>
-
-      {/* Module Overview Cards - at bottom of page */}
-      <div className="grid grid-cols-1 gap-4 mt-6">
-        <MemberModulesCard userId={user.id} />
-        <ExecBoardModulesCard userId={user.id} />
-      </div>
-
       {/* AI Assistant Dialog */}
       <AIAssistantDialog open={aiAssistantOpen} onOpenChange={setAiAssistantOpen} />
     </div>;
