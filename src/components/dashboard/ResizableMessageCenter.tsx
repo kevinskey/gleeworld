@@ -9,6 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, MessageSquare, Inbox, Tag, X, Minimize2, Maximize2, XIcon, ChevronDown, Filter, Users, MessageCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DirectMessaging } from "./DirectMessaging";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +47,7 @@ interface InternalMessage {
 
 export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageCenterProps) => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [memberMessage, setMemberMessage] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [filterTags, setFilterTags] = useState<string[]>([]);
@@ -178,6 +181,276 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
         msg.tags?.some(tag => filterTags.includes(tag))
       );
 
+  // Floating tab button for mobile
+  const FloatingTabButton = () => (
+    <Button
+      onClick={() => onOpenChange(!open)}
+      className="fixed right-0 top-1/2 -translate-y-1/2 z-[999998] rounded-l-lg rounded-r-none h-20 w-8 p-0 shadow-lg flex items-center justify-center"
+      variant="default"
+    >
+      <div className="flex flex-col items-center gap-1">
+        <MessageSquare className="h-4 w-4" />
+        <div className="text-[8px] font-semibold writing-mode-vertical-rl transform rotate-180">
+          Messages
+        </div>
+      </div>
+    </Button>
+  );
+
+  // Message center content (shared between mobile and desktop)
+  const MessageCenterContent = () => (
+    <>
+      {/* Tabs for Group vs DM */}
+      <div className="px-2 pt-2 border-b">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'group' | 'dm')} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 h-8">
+            <TabsTrigger value="group" className="text-xs">
+              <Users className="h-3 w-3 mr-1.5" />
+              All Members
+            </TabsTrigger>
+            <TabsTrigger value="dm" className="text-xs">
+              <MessageCircle className="h-3 w-3 mr-1.5" />
+              Direct Messages
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {activeTab === 'group' ? (
+        <>
+          {/* Tag Filters */}
+          <div className="flex items-center gap-2 px-2 py-1.5 border-b">
+            <DropdownMenu modal={false}>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-7 text-xs relative z-[1000001]">
+                  <Filter className="h-3 w-3 mr-1.5" />
+                  Filters
+                  {filterTags.length > 0 && (
+                    <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[9px]">
+                      {filterTags.length}
+                    </Badge>
+                  )}
+                  <ChevronDown className="h-3 w-3 ml-1.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuPortal>
+                <DropdownMenuContent align="start" sideOffset={8} collisionPadding={8} className="w-56 z-[10000000] pointer-events-auto" style={{ zIndex: 10000000 }} onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
+                  <DropdownMenuLabel>Filter Messages</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {MESSAGE_TAGS.map(tag => (
+                    <DropdownMenuCheckboxItem
+                      key={tag}
+                      checked={filterTags.includes(tag)}
+                      onCheckedChange={() => toggleFilterTag(tag)}
+                    >
+                      {tag}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                  {filterTags.length > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setFilterTags([])}
+                        className="w-full h-8 text-xs"
+                      >
+                        Clear Filters
+                      </Button>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenuPortal>
+            </DropdownMenu>
+            {filterTags.length > 0 && (
+              <div className="flex flex-wrap gap-0.5">
+                {filterTags.map(tag => (
+                  <Badge key={tag} variant="default" className="text-[9px] h-4 px-1">
+                    {tag}
+                    <X 
+                      className="h-2 w-2 ml-0.5 cursor-pointer" 
+                      onClick={() => toggleFilterTag(tag)}
+                    />
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Messages Area */}
+          <ScrollArea className="flex-1 px-2 py-1" ref={scrollRef}>
+            {loadingMessages ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <div className="h-6 w-6 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">Loading...</p>
+                </div>
+              </div>
+            ) : filteredMessages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center py-8">
+                  <Inbox className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
+                  <p className="text-sm font-medium mb-1">
+                    {filterTags.length > 0 ? 'No messages' : 'No messages yet'}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {filterTags.length > 0 ? 'Try different filters' : 'Be the first to send one'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 py-2">
+                {filteredMessages.map((msg) => {
+                  const isCurrentUser = msg.user_id === user?.id;
+                  const senderName = msg.gw_profiles?.full_name || 'Unknown User';
+                  const initials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
+                  
+                  return (
+                    <div key={msg.id} className={`flex gap-1.5 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                      <Avatar className="h-7 w-7 flex-shrink-0">
+                        <AvatarImage src={msg.gw_profiles?.avatar_url} />
+                        <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className={`flex-1 max-w-[80%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
+                        <div className={`flex items-baseline gap-1 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                          <span className="text-[11px] font-semibold">{senderName}</span>
+                          <span className="text-[9px] text-muted-foreground">
+                            {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <Card className={`px-2 py-1.5 ${
+                          isCurrentUser 
+                            ? 'bg-primary text-primary-foreground border-primary' 
+                            : 'bg-muted/50'
+                        }`}>
+                          <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">
+                            {msg.content}
+                          </p>
+                        </Card>
+                        {msg.tags && msg.tags.length > 0 && (
+                          <div className={`flex flex-wrap gap-0.5 mt-0.5 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                            {msg.tags.map(tag => (
+                              <Badge 
+                                key={tag} 
+                                variant="secondary" 
+                                className="text-[9px] h-3.5 px-1"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+
+          {/* Message Input */}
+          <div className="px-2 py-1.5 border-t bg-background">
+            {/* Tag Selection */}
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <DropdownMenu modal={false}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-6 text-xs relative z-[1000001]">
+                    <Tag className="h-2.5 w-2.5 mr-1" />
+                    Tags
+                    {selectedTags.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-3.5 px-0.5 text-[9px]">
+                        {selectedTags.length}
+                      </Badge>
+                    )}
+                    <ChevronDown className="h-2.5 w-2.5 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuPortal>
+                  <DropdownMenuContent align="start" sideOffset={8} collisionPadding={8} className="w-52 z-[10000000] pointer-events-auto" style={{ zIndex: 10000000 }} onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
+                    <DropdownMenuLabel>Tag this message</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {MESSAGE_TAGS.map(tag => (
+                      <DropdownMenuCheckboxItem
+                        key={tag}
+                        checked={selectedTags.includes(tag)}
+                        onCheckedChange={() => toggleTag(tag)}
+                      >
+                        {tag}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
+              </DropdownMenu>
+              {selectedTags.length > 0 && (
+                <div className="flex flex-wrap gap-0.5 flex-1">
+                  {selectedTags.map(tag => (
+                    <Badge key={tag} variant="default" className="text-[9px] h-4 px-1">
+                      {tag}
+                      <X 
+                        className="h-2 w-2 ml-0.5 cursor-pointer" 
+                        onClick={() => toggleTag(tag)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Input Field */}
+            <div className="flex gap-1.5">
+              <Input
+                placeholder="Send a message..."
+                value={memberMessage}
+                onChange={(e) => setMemberMessage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMemberMessage();
+                  }
+                }}
+                disabled={sendingMessage}
+                className="h-8 text-xs"
+              />
+              <Button 
+                onClick={handleSendMemberMessage}
+                disabled={!memberMessage.trim() || sendingMessage}
+                size="sm"
+                className="h-8 px-3"
+              >
+                <Send className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </>
+      ) : (
+        <DirectMessaging />
+      )}
+    </>
+  );
+
+  // Mobile view with Sheet
+  if (isMobile) {
+    return (
+      <>
+        {!open && <FloatingTabButton />}
+        <Sheet open={open} onOpenChange={onOpenChange}>
+          <SheetContent side="right" className="w-[90vw] p-0 flex flex-col">
+            <SheetHeader className="px-3 py-2 border-b">
+              <SheetTitle className="flex items-center gap-2 text-sm">
+                <MessageSquare className="h-4 w-4 text-primary" />
+                Glee Message Center
+              </SheetTitle>
+            </SheetHeader>
+            {MessageCenterContent()}
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  // Desktop view with Rnd
   if (!open) return null;
 
   return (
@@ -227,234 +500,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
           </div>
         </div>
 
-        {!isMinimized && (
-          <>
-            {/* Tabs for Group vs DM */}
-            <div className="px-2 pt-2 border-b">
-              <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'group' | 'dm')} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 h-8">
-                  <TabsTrigger value="group" className="text-xs">
-                    <Users className="h-3 w-3 mr-1.5" />
-                    All Members
-                  </TabsTrigger>
-                  <TabsTrigger value="dm" className="text-xs">
-                    <MessageCircle className="h-3 w-3 mr-1.5" />
-                    Direct Messages
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-
-            {activeTab === 'group' ? (
-              <>
-            {/* Tag Filters */}
-            <div className="flex items-center gap-2 px-2 py-1.5 border-b">
-              <DropdownMenu modal={false} onOpenChange={(o) => console.log('Filter dropdown open:', o)}>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-7 text-xs relative z-[1000001]">
-                    <Filter className="h-3 w-3 mr-1.5" />
-                    Filters
-                    {filterTags.length > 0 && (
-                      <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[9px]">
-                        {filterTags.length}
-                      </Badge>
-                    )}
-                    <ChevronDown className="h-3 w-3 ml-1.5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuPortal>
-                  <DropdownMenuContent align="start" sideOffset={8} collisionPadding={8} className="w-56 z-[10000000] pointer-events-auto"  style={{ zIndex: 10000000 }} onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
-                    <DropdownMenuLabel>Filter Messages</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {MESSAGE_TAGS.map(tag => (
-                      <DropdownMenuCheckboxItem
-                        key={tag}
-                        checked={filterTags.includes(tag)}
-                        onCheckedChange={() => toggleFilterTag(tag)}
-                      >
-                        {tag}
-                      </DropdownMenuCheckboxItem>
-                    ))}
-                    {filterTags.length > 0 && (
-                      <>
-                        <DropdownMenuSeparator />
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setFilterTags([])}
-                          className="w-full h-8 text-xs"
-                        >
-                          Clear Filters
-                        </Button>
-                      </>
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenuPortal>
-              </DropdownMenu>
-              {filterTags.length > 0 && (
-                <div className="flex flex-wrap gap-0.5">
-                  {filterTags.map(tag => (
-                    <Badge key={tag} variant="default" className="text-[9px] h-4 px-1">
-                      {tag}
-                      <X 
-                        className="h-2 w-2 ml-0.5 cursor-pointer" 
-                        onClick={() => toggleFilterTag(tag)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Messages Area */}
-            <ScrollArea className="flex-1 px-2 py-1" ref={scrollRef}>
-              {loadingMessages ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="h-6 w-6 border-3 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                    <p className="text-xs text-muted-foreground">Loading...</p>
-                  </div>
-                </div>
-              ) : filteredMessages.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center py-8">
-                    <Inbox className="h-12 w-12 mx-auto mb-3 text-muted-foreground/30" />
-                    <p className="text-sm font-medium mb-1">
-                      {filterTags.length > 0 ? 'No messages' : 'No messages yet'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {filterTags.length > 0 ? 'Try different filters' : 'Be the first to send one'}
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2 py-2">
-                  {filteredMessages.map((msg) => {
-                    const isCurrentUser = msg.user_id === user?.id;
-                    const senderName = msg.gw_profiles?.full_name || 'Unknown User';
-                    const initials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
-                    
-                    return (
-                      <div key={msg.id} className={`flex gap-1.5 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                        <Avatar className="h-7 w-7 flex-shrink-0">
-                          <AvatarImage src={msg.gw_profiles?.avatar_url} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className={`flex-1 max-w-[80%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
-                          <div className={`flex items-baseline gap-1 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                            <span className="text-[11px] font-semibold">{senderName}</span>
-                            <span className="text-[9px] text-muted-foreground">
-                              {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
-                            </span>
-                          </div>
-                          <Card className={`px-2 py-1.5 ${
-                            isCurrentUser 
-                              ? 'bg-primary text-primary-foreground border-primary' 
-                              : 'bg-muted/50'
-                          }`}>
-                            <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">
-                              {msg.content}
-                            </p>
-                          </Card>
-                          {msg.tags && msg.tags.length > 0 && (
-                            <div className={`flex flex-wrap gap-0.5 mt-0.5 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-                              {msg.tags.map(tag => (
-                                <Badge 
-                                  key={tag} 
-                                  variant="secondary" 
-                                  className="text-[9px] h-3.5 px-1"
-                                >
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </ScrollArea>
-
-            {/* Message Input */}
-            <div className="px-2 py-1.5 border-t bg-background">
-              {/* Tag Selection */}
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <DropdownMenu modal={false} onOpenChange={(o) => console.log('Tags dropdown open:', o)}>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-6 text-xs relative z-[1000001]">
-                      <Tag className="h-2.5 w-2.5 mr-1" />
-                      Tags
-                      {selectedTags.length > 0 && (
-                        <Badge variant="secondary" className="ml-1 h-3.5 px-0.5 text-[9px]">
-                          {selectedTags.length}
-                        </Badge>
-                      )}
-                      <ChevronDown className="h-2.5 w-2.5 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuPortal>
-                    <DropdownMenuContent align="start" sideOffset={8} collisionPadding={8} className="w-52 z-[10000000] pointer-events-auto" style={{ zIndex: 10000000 }} onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
-                      <DropdownMenuLabel>Tag this message</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {MESSAGE_TAGS.map(tag => (
-                        <DropdownMenuCheckboxItem
-                          key={tag}
-                          checked={selectedTags.includes(tag)}
-                          onCheckedChange={() => toggleTag(tag)}
-                        >
-                          {tag}
-                        </DropdownMenuCheckboxItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenuPortal>
-                </DropdownMenu>
-                {selectedTags.length > 0 && (
-                  <div className="flex flex-wrap gap-0.5 flex-1">
-                    {selectedTags.map(tag => (
-                      <Badge key={tag} variant="default" className="text-[9px] h-4 px-1">
-                        {tag}
-                        <X 
-                          className="h-2 w-2 ml-0.5 cursor-pointer" 
-                          onClick={() => toggleTag(tag)}
-                        />
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Input Field */}
-              <div className="flex gap-1.5">
-                <Input
-                  placeholder="Message all members..."
-                  value={memberMessage}
-                  onChange={(e) => setMemberMessage(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMemberMessage()}
-                  className="flex-1 h-8 text-xs"
-                  disabled={sendingMessage}
-                />
-                <Button 
-                  onClick={handleSendMemberMessage} 
-                  size="icon" 
-                  className="h-8 w-8 flex-shrink-0"
-                  disabled={sendingMessage || !memberMessage.trim()}
-                >
-                  <Send className="h-3 w-3" />
-                </Button>
-              </div>
-            </div>
-              </>
-            ) : (
-              <div className="flex-1 flex flex-col">
-                <DirectMessaging />
-              </div>
-            )}
-          </>
-        )}
+        {!isMinimized && MessageCenterContent()}
       </div>
     </Rnd>
   );
