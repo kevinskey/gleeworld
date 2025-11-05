@@ -570,6 +570,13 @@ export const UnifiedUserManagement = () => {
                             <DropdownMenuSeparator />
                             
                             <DropdownMenuItem 
+                              onClick={() => handleQuickRoleChange(user.id, 'student')}
+                              disabled={user.role === 'student'}
+                            >
+                              <User className="h-4 w-4 mr-2" />
+                              Make Student
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
                               onClick={() => handleQuickRoleChange(user.id, 'member')}
                               disabled={user.role === 'member'}
                             >
