@@ -74,9 +74,10 @@ export const FavoritesCard = ({ favorites, onModuleClick, onToggleFavorite }: Fa
                     e.stopPropagation();
                     onToggleFavorite(module.id);
                   }}
-                  className="p-2 h-auto text-red-500 hover:text-red-600 flex-shrink-0"
+                  className="p-2 h-auto text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 flex-shrink-0 transition-all"
+                  title="Remove from favorites"
                 >
-                  <Heart className="h-4 w-4 fill-current" />
+                  <Heart className="h-5 w-5 fill-current" />
                 </Button>
               </div>
             );
