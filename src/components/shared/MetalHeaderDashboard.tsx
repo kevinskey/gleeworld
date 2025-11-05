@@ -622,63 +622,7 @@ export const MetalHeaderDashboard = ({
               Reset
             </Button>}
         </div>}
-      {/* Background Image */}
-      <div className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" style={{
-      backgroundImage: `url(${gleeSculptureBg})`,
-      backgroundPosition: 'center 15%'
-    }} />
-      {/* Metal Plate Header */}
-      <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg pt-[15px] px-5 pb-5">
-        {/* Left Rivet */}
-        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
-          <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-        </div>
-        
-        {/* Right Rivet */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
-          <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-        </div>
 
-        {/* Key Ignition - Top Right */}
-        <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="absolute top-3 right-12 w-8 h-8 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group">
-          <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
-        </button>
-        
-        {/* Personalized Title */}
-        <h1 className="text-xl lg:text-2xl font-bold text-center text-slate-800 dark:text-slate-100 tracking-wide font-mono uppercase">
-          {getFirstName(user.full_name)}'s Dashboard
-        </h1>
-
-        {/* Quick Actions Panel - slides out from underneath */}
-        <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={isMember ? {
-        addQuickAction,
-        removeQuickAction,
-        isInQuickActions
-      } : undefined} />
-      </div>
-
-
-      {/* Dashboard Hero Carousel */}
-      <DashboardHeroCarousel />
-
-      {/* Message Center Button - Fixed to Right Edge */}
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
-        <Button onClick={() => setAiAssistantOpen(!aiAssistantOpen)} className="h-auto w-6 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex flex-col items-center justify-center py-1 px-0 opacity-70 hover:opacity-100 transition-opacity">
-          <MessageSquare className="h-3 w-3 mb-0.5" />
-          <div className="flex flex-col text-[8px] tracking-wide leading-none">
-            {['M', 'E', 'S', 'S', 'A', 'G', 'E', 'S'].map((letter, i) => <span key={i} className="py-[1px]">{letter}</span>)}
-          </div>
-        </Button>
-      </div>
-
-      {/* Super Admin Layout Controls */}
-      {isSuperAdmin() && <div className="flex items-center gap-2 justify-end">
-          
-          {isEditingLayout && <Button variant="ghost" size="sm" onClick={() => resetCardOrder()} disabled={isSaving}>
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>}
-        </div>}
 
       {/* Edit Mode Banner */}
       {isEditingLayout && <Card className="bg-primary/10 border-primary">
