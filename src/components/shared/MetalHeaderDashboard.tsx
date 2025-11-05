@@ -811,12 +811,10 @@ export const MetalHeaderDashboard = ({
       <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
         <Button 
           onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-          className="h-16 px-3 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+          className="h-12 w-32 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
         >
-          <div className="flex flex-col items-center gap-1">
-            <MessageSquare className="h-6 w-6" />
-            <span className="text-xs writing-mode-vertical-rl rotate-180">Messages</span>
-          </div>
+          <MessageSquare className="h-5 w-5 mr-2" />
+          <span>Messages</span>
         </Button>
       </div>
 
