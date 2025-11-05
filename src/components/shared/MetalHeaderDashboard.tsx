@@ -52,13 +52,17 @@ const SortableDashboardCard = ({ id, children, disabled }: SortableDashboardCard
   };
 
   if (disabled) {
-    return <div>{children}</div>;
+    return <div className="relative">{children}</div>;
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="relative">
-      <div className="absolute -left-8 top-1/2 -translate-y-1/2 z-20 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
-        <GripVertical className="h-5 w-5 text-primary" />
+    <div ref={setNodeRef} style={style} className="relative group">
+      <div 
+        className="absolute -left-2 top-0 bottom-0 w-10 flex items-center justify-center z-50 cursor-grab active:cursor-grabbing bg-primary/10 hover:bg-primary/20 rounded-l-lg opacity-0 group-hover:opacity-100 transition-opacity"
+        {...attributes} 
+        {...listeners}
+      >
+        <GripVertical className="h-6 w-6 text-primary" />
       </div>
       {children}
     </div>
@@ -830,6 +834,18 @@ export const MetalHeaderDashboard = ({
         </div>
       )}
 
+      {/* Edit Mode Banner */}
+      {isEditingLayout && (
+        <Card className="bg-primary/10 border-primary">
+          <CardContent className="py-3 px-4">
+            <p className="text-sm font-medium text-primary flex items-center gap-2">
+              <GripVertical className="h-4 w-4" />
+              Drag and drop mode active - Hover over cards to see drag handles
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Draggable Dashboard Cards */}
       <DndContext
         sensors={cardSensors}
@@ -837,7 +853,7 @@ export const MetalHeaderDashboard = ({
         onDragEnd={handleCardDragEnd}
       >
         <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
-          <div className={isEditingLayout ? 'ml-8 space-y-4' : 'space-y-4'}>
+          <div className="space-y-4">
             {cardOrder.map((cardId) => {
               if (cardId === 'favorites' && isMember && groupedModules && !searchQuery && filterCategory === 'all') {
                 return (
