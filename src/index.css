@@ -946,3 +946,16 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
   font-family: 'Brush Script MT', cursive;
   font-style: italic;
 }
+
+/* Radix dropdown: force top layer above RND popup and dialogs */
+[data-radix-popper-content-wrapper] {
+  z-index: 10000001 !important;
+  pointer-events: auto;
+}
+
+/* Ensure dropdown menu is visible and interactive */
+.dropdown-content {
+  background-color: hsl(var(--popover)) !important;
+  pointer-events: auto;
+}
+
