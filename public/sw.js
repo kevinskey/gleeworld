@@ -1,61 +1,90 @@
-const CACHE_NAME = 'gleeworld-v' + new Date().getTime();
-const urlsToCache = [
-  '/',
-  '/manifest.json'
-];
+// Service Worker for Push Notifications
+const CACHE_NAME = 'gleeworld-v1';
 
-// Install event - cache resources
-self.addEventListener('install', event => {
-  // Force the waiting service worker to become the active service worker
+// Install event
+self.addEventListener('install', (event) => {
+  console.log('Service Worker installing...');
   self.skipWaiting();
-  
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
 });
 
-// Activate event - clean up old caches
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => {
-      // Take control of all clients immediately
-      return self.clients.claim();
-    })
-  );
+// Activate event
+self.addEventListener('activate', (event) => {
+  console.log('Service Worker activating...');
+  event.waitUntil(clients.claim());
 });
 
-// Fetch event - network first, then cache
-self.addEventListener('fetch', event => {
-  // Bypass caching for Supabase function calls
-  if (event.request.url.includes('.supabase.co/functions/')) {
-    event.respondWith(fetch(event.request));
-    return;
+// Push notification event
+self.addEventListener('push', (event) => {
+  console.log('Push notification received:', event);
+
+  let notificationData = {
+    title: 'New Message',
+    body: 'You have a new direct message',
+    icon: '/logo-192.png',
+    badge: '/logo-96.png',
+    data: {}
+  };
+
+  if (event.data) {
+    try {
+      const payload = event.data.json();
+      notificationData = { ...notificationData, ...payload };
+    } catch (e) {
+      console.error('Error parsing push data:', e);
+    }
   }
 
-  // Network-first strategy for better updates
+  const promiseChain = self.registration.showNotification(
+    notificationData.title,
+    {
+      body: notificationData.body,
+      icon: notificationData.icon,
+      badge: notificationData.badge,
+      data: notificationData.data,
+      tag: 'dm-notification',
+      requireInteraction: false,
+      vibrate: [200, 100, 200],
+    }
+  );
+
+  event.waitUntil(promiseChain);
+});
+
+// Notification click event
+self.addEventListener('notificationclick', (event) => {
+  console.log('Notification clicked:', event);
+  event.notification.close();
+
+  const urlToOpen = new URL('/dashboard', self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((windowClients) => {
+        // Check if there's already a window open
+        for (let client of windowClients) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // Open new window if none exists
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
+  );
+});
+
+// Fetch event (basic caching strategy)
+self.addEventListener('fetch', (event) => {
+  // Let the browser handle navigation requests
+  if (event.request.mode === 'navigate') {
+    return;
+  }
+  
+  // Cache-first strategy for static assets
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Cache the new response
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseClone);
-        });
-        return response;
-      })
-      .catch(() => {
-        // Fallback to cache if network fails
-        return caches.match(event.request);
-      })
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
   );
 });

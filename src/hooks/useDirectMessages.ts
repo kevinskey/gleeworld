@@ -147,6 +147,24 @@ export const useDirectMessages = () => {
         });
 
       if (error) throw error;
+
+      // Get recipient ID
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        // Send push notification via edge function
+        await supabase.functions.invoke('send-push-notification', {
+          body: {
+            recipientId: conversation.other_user_id,
+            title: 'New Direct Message',
+            body: `${user.user_metadata?.full_name || 'Someone'}: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+            data: {
+              type: 'dm',
+              conversationId,
+              senderId: user.id,
+            }
+          }
+        }).catch(err => console.error('Failed to send push notification:', err));
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message');

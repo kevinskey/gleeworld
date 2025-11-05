@@ -11,6 +11,7 @@ import { useDirectMessages } from '@/hooks/useDirectMessages';
 import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { PushNotificationToggle } from './PushNotificationToggle';
 
 interface UserSearchResult {
   user_id: string;
@@ -249,16 +250,19 @@ export const DirectMessaging = () => {
   // Conversation list view
   return (
     <div className="flex flex-col h-full">
-      <div className="p-2 border-b flex items-center justify-between">
-        <h3 className="text-sm font-semibold">Direct Messages</h3>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setShowUserSearch(true)}
-          className="h-7 text-xs"
-        >
-          New Message
-        </Button>
+      <div className="p-2 border-b space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Direct Messages</h3>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowUserSearch(true)}
+            className="h-7 text-xs"
+          >
+            New Message
+          </Button>
+        </div>
+        <PushNotificationToggle />
       </div>
 
       <ScrollArea className="flex-1">
