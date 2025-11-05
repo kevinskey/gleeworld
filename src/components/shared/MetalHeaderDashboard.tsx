@@ -161,9 +161,11 @@ interface MetalHeaderDashboardProps {
     is_exec_board?: boolean;
     created_at: string;
   };
+  simulatedRole?: string; // Optional role to simulate for viewing purposes
 }
 export const MetalHeaderDashboard = ({
-  user
+  user,
+  simulatedRole
 }: MetalHeaderDashboardProps) => {
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
@@ -185,12 +187,15 @@ export const MetalHeaderDashboard = ({
 
   // Get user role for module permissions
   const getUserRole = () => {
+    // If simulating a role, use that instead of actual role
+    if (simulatedRole) return simulatedRole;
+    
     if (user.role === 'super-admin') return 'super-admin';
     if (user.role === 'admin') return 'admin';
     if (user.is_exec_board) return 'executive';
     return user.role || 'user';
   };
-  const isAdmin = user.role === 'super-admin' || user.role === 'admin';
+  const isAdmin = simulatedRole ? false : (user.role === 'super-admin' || user.role === 'admin');
 
   // Get modules available to this user - ONLY modules they have access to
   const {
