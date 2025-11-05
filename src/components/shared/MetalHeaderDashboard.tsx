@@ -917,7 +917,7 @@ export const MetalHeaderDashboard = ({
                           <Sparkles className="h-3 w-3 text-primary animate-pulse" />
                         </div>
                         <Input 
-                          placeholder="Ask AI Assistant or check messages..." 
+                          placeholder="Glee Message Center" 
                           className="pl-14 cursor-pointer"
                           readOnly
                         />
