@@ -122,6 +122,7 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'alumnae-portal':
         return <AlumnaePortalModule />;
       case 'hero-management':
+      case 'hero-manager':
         return <DashboardHeroManagerModule />;
       case 'glee-ledger':
         return <GleeLedgerModule />;
