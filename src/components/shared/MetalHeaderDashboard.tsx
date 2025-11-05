@@ -737,6 +737,15 @@ export const MetalHeaderDashboard = ({
         />
       )}
 
+      {/* All Modules Card - Single unified view */}
+      <AllModulesCard
+        modules={allModules}
+        onModuleClick={handleModuleSelect}
+        navigate={navigate}
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
+      />
+
       {/* AI Assistant & Message Center */}
       <Card className="p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => setAiAssistantOpen(true)}>
         <div className="relative">
@@ -751,15 +760,6 @@ export const MetalHeaderDashboard = ({
           />
         </div>
       </Card>
-
-      {/* All Modules Card - Single unified view */}
-      <AllModulesCard
-        modules={allModules}
-        onModuleClick={handleModuleSelect}
-        navigate={navigate}
-        isFavorite={isFavorite}
-        onToggleFavorite={toggleFavorite}
-      />
 
       {/* Favorites Section */}
       {moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
