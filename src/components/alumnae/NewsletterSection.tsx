@@ -9,7 +9,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Headshot } from "@/components/ui/headshot";
 import { Link } from "react-router-dom";
-import { convertToSecureUrl } from "@/utils/secureFileAccess";
+import * as secureFileAccess from "@/utils/secureFileAccess";
 import { FastPDFViewer } from "@/components/FastPDFViewer";
 interface Newsletter {
   id: string;
@@ -118,7 +118,9 @@ export const NewsletterSection = () => {
           const urlMap = new Map<string, string>();
           for (const slide of slidesData) {
             if (slide.image_url) {
-              const secureUrl = await convertToSecureUrl(slide.image_url);
+              const secureUrl = typeof secureFileAccess.convertToSecureUrl === 'function'
+                ? await secureFileAccess.convertToSecureUrl(slide.image_url)
+                : null;
               if (secureUrl) {
                 urlMap.set(slide.id, secureUrl);
               }
