@@ -207,20 +207,20 @@ export const MetalHeaderDashboard = ({
     getModuleById
   } = useUnifiedModules({
     userRole: getUserRole(),
-    userId: user.id,
-    isAdmin,
+    userId: simulatedRole ? undefined : user.id, // Don't use actual user ID when simulating
+    isAdmin: simulatedRole ? false : isAdmin,
     showInactive: false // Only show active modules user can access
   });
   const {
     saveCategoryOrder,
     toggleModulePin,
     isModulePinned
-  } = useModuleOrdering(user.id);
+  } = useModuleOrdering(simulatedRole ? undefined : user.id); // Don't use personal ordering when simulating
   const {
     favorites: moduleFavorites,
     toggleFavorite,
     isFavorite
-  } = useModuleFavorites(user.id);
+  } = useModuleFavorites(simulatedRole ? undefined : user.id); // Don't use personal favorites when simulating
   const {
     quickActions: memberQuickActions,
     loading: quickActionsLoading,
@@ -229,7 +229,7 @@ export const MetalHeaderDashboard = ({
     removeQuickAction,
     isInQuickActions,
     getVisibleQuickActions
-  } = useMemberQuickActions(user.id, user.role);
+  } = useMemberQuickActions(simulatedRole ? undefined : user.id, simulatedRole || user.role); // Don't use personal quick actions when simulating
 
   // Navigation hooks
   const location = useLocation();
