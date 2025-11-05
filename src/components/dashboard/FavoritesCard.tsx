@@ -47,7 +47,7 @@ export const FavoritesCard = ({ favorites, onModuleClick, onToggleFavorite }: Fa
             return (
               <div
                 key={module.id}
-                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                className="relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
                 onClick={() => {
                   if (module.id === 'librarian') {
                     navigate('/librarian-dashboard');
@@ -74,7 +74,7 @@ export const FavoritesCard = ({ favorites, onModuleClick, onToggleFavorite }: Fa
                     e.stopPropagation();
                     onToggleFavorite(module.id);
                   }}
-                  className="p-2 h-auto text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 flex-shrink-0 transition-all"
+                  className="absolute top-2 right-2 p-2 h-auto rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
                   title="Remove from favorites"
                 >
                   <Heart className="h-5 w-5 fill-current" />
