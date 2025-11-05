@@ -326,7 +326,7 @@ export const ResizableMessageCenter = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="right" 
-        className={`${isMobile ? 'w-[90vw]' : 'w-[500px]'} max-h-[50vh] p-0 flex flex-col`}
+        className={`${isMobile ? 'w-[90vw]' : 'w-[500px]'} max-h-[50vh] p-0 flex flex-col top-1/2 -translate-y-1/2`}
       >
         <SheetHeader className="px-3 py-2 border-b">
           <SheetTitle className="flex items-center gap-2 text-sm">
