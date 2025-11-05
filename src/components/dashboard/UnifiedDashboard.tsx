@@ -141,91 +141,19 @@ export const UnifiedDashboard = () => {
 
   // Show different dashboard content based on view mode
   if (viewMode === 'member') {
-    // Show member perspective regardless of actual user role
+    // Member view: Use the same MetalHeaderDashboard as default/admin view
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-        
-        {/* Member Dashboard Content */}
-        <div className="max-w-full mx-auto px-2 lg:px-6 py-4 space-y-6">
-          {/* Provider Navigation for Service Providers */}
-          <DashboardNavigation />
-          
-          {/* Glee Academy Hero Section */}
-          <div className="relative bg-gradient-to-r from-primary/90 to-primary rounded-xl overflow-hidden cursor-pointer shadow-lg" onClick={() => window.location.href = '/glee-academy'}>
-            <div className="absolute inset-0 bg-black/20"></div>
-            <div className="relative z-10 p-[30px] text-white bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl animate-fade-in hover:bg-white/15 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:rounded-2xl before:pointer-events-none">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2 text-white">Welcome to Glee Academy</h1>
-                  
-                  <Button variant="secondary" size="lg" className="bg-white text-primary hover:bg-white/90">
-                    Start Learning →
-                  </Button>
-                </div>
-                <div className="hidden md:block">
-                  <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
-                    <Music className="w-16 h-16 text-white" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 1: Hero + Features side-by-side */}
-          {/* Features carousel */}
-          <div className="w-full">
-            <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
-              <DashboardFeaturesCarousel />
-            </Suspense>
-          </div>
-
-          {/* Community Hub for Members */}
-          
-
-          {/* Calendar Section */}
-          <div className="bg-card rounded-lg border shadow-sm">
-            <div className="flex items-center justify-between p-4 border-b">
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold">My Calendar</h2>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setCalendarCollapsed(!calendarCollapsed)}>
-                {calendarCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              </Button>
-            </div>
-            <div className={`transition-all duration-300 ${calendarCollapsed ? 'h-0 overflow-hidden' : 'h-auto'}`}>
-              <div className="p-4">
-                <Suspense fallback={<div className="h-64 bg-muted animate-pulse rounded" />}>
-                  <CalendarViewsLazy />
-                </Suspense>
-              </div>
-            </div>
-          </div>
-
-          {/* Member Navigation */}
-          {profile && <div className="w-full overflow-hidden bg-card rounded-lg border shadow-sm card-compact">
-              <h2 className="page-header mb-1 md:mb-4 flex items-center gap-1 md:gap-2">
-                <Users className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                Member Resources
-              </h2>
-              <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded" />}>
-                <MemberNavigation user={{
-              id: profile.user_id,
-              email: profile.email,
-              full_name: profile.full_name,
-              role: profile.role,
-              exec_board_role: profile.exec_board_role,
-              is_exec_board: profile.is_exec_board,
-              is_admin: profile.is_admin,
-              is_super_admin: profile.is_super_admin
-            }} />
-              </Suspense>
-            </div>}
+        <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
+          <MetalHeaderDashboard user={{
+            id: profile.user_id,
+            email: profile.email || '',
+            full_name: profile.full_name || '',
+            role: profile.role || 'user',
+            exec_board_role: profile.exec_board_role,
+            is_exec_board: profile.is_exec_board || false,
+            created_at: new Date().toISOString()
+          }} />
         </div>
-
-        {/* Messages Panel Overlay */}
-        {showMessages && <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50">
-            <MessagesPanel onClose={() => setShowMessages(false)} />
-          </div>}
       </div>;
   }
   if (viewMode === 'fan') {
