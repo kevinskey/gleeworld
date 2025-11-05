@@ -41,7 +41,7 @@ export const FavoritesCard = ({ favorites, onModuleClick, onToggleFavorite }: Fa
         <CardDescription>Quick access to your favorite modules</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {favorites.map((module) => {
             const IconComponent = module.icon;
             return (
