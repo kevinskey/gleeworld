@@ -5490,6 +5490,30 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_dashboard_card_order: {
+        Row: {
+          card_order: string[]
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_order: string[]
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_order?: string[]
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       gw_document_shares: {
         Row: {
           document_id: string | null

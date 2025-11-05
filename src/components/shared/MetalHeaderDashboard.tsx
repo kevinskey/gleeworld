@@ -6,6 +6,8 @@ import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { useModuleFavorites } from "@/hooks/useModuleFavorites";
 import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
+import { useDashboardCardOrder } from "@/hooks/useDashboardCardOrder";
+import { useUserRole } from "@/hooks/useUserRole";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
 import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -24,7 +26,44 @@ import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AIAssistantDialog } from "@/components/dashboard/AIAssistantDialog";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
-import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles } from "lucide-react";
+import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save } from "lucide-react";
+
+// Sortable Dashboard Card Component
+interface SortableDashboardCardProps {
+  id: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}
+
+const SortableDashboardCard = ({ id, children, disabled }: SortableDashboardCardProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  if (disabled) {
+    return <div>{children}</div>;
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative">
+      <div className="absolute -left-8 top-1/2 -translate-y-1/2 z-20 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing" {...attributes} {...listeners}>
+        <GripVertical className="h-5 w-5 text-primary" />
+      </div>
+      {children}
+    </div>
+  );
+};
 
 // Sortable Module Card Component
 interface SortableModuleCardProps {
@@ -130,6 +169,9 @@ export const MetalHeaderDashboard = ({
 }: MetalHeaderDashboardProps) => {
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  const [isEditingLayout, setIsEditingLayout] = useState(false);
+  const { isSuperAdmin } = useUserRole();
+  const { cardOrder, saveCardOrder, resetCardOrder, isSaving } = useDashboardCardOrder();
 
   // Get the user's first name from full_name
   const getFirstName = (fullName: string) => {
@@ -219,6 +261,26 @@ export const MetalHeaderDashboard = ({
   const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);
   const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
+
+  // Card ordering sensors for drag and drop
+  const cardSensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleCardDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = cardOrder.indexOf(active.id as string);
+      const newIndex = cardOrder.indexOf(over.id as string);
+      const newOrder = arrayMove(cardOrder, oldIndex, newIndex);
+      saveCardOrder(newOrder);
+    }
+  };
+
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
     coordinateGetter: sortableKeyboardCoordinates
   }));
@@ -743,38 +805,91 @@ export const MetalHeaderDashboard = ({
       {/* Dashboard Hero Carousel */}
       <DashboardHeroCarousel />
 
-      {/* Favorites Card for Members */}
-      {isMember && groupedModules && !searchQuery && filterCategory === 'all' && (
-        <FavoritesCard
-          favorites={groupedModules.favorites}
-          onModuleClick={handleModuleSelect}
-          onToggleFavorite={toggleFavorite}
-        />
+      {/* Super Admin Layout Controls */}
+      {isSuperAdmin() && (
+        <div className="flex items-center gap-2 justify-end">
+          <Button
+            variant={isEditingLayout ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsEditingLayout(!isEditingLayout)}
+          >
+            <Edit3 className="h-4 w-4 mr-2" />
+            {isEditingLayout ? 'Done Editing' : 'Edit Layout'}
+          </Button>
+          {isEditingLayout && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => resetCardOrder()}
+              disabled={isSaving}
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Reset
+            </Button>
+          )}
+        </div>
       )}
 
-      {/* All Modules Card - Single unified view */}
-      <AllModulesCard
-        modules={allModules}
-        onModuleClick={handleModuleSelect}
-        navigate={navigate}
-        isFavorite={isFavorite}
-        onToggleFavorite={toggleFavorite}
-      />
+      {/* Draggable Dashboard Cards */}
+      <DndContext
+        sensors={cardSensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleCardDragEnd}
+      >
+        <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
+          <div className={isEditingLayout ? 'ml-8 space-y-4' : 'space-y-4'}>
+            {cardOrder.map((cardId) => {
+              if (cardId === 'favorites' && isMember && groupedModules && !searchQuery && filterCategory === 'all') {
+                return (
+                  <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
+                    <FavoritesCard
+                      favorites={groupedModules.favorites}
+                      onModuleClick={handleModuleSelect}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  </SortableDashboardCard>
+                );
+              }
 
-      {/* AI Assistant & Message Center */}
-      <Card className="p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => setAiAssistantOpen(true)}>
-        <div className="relative">
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-            <Bot className="h-4 w-4 text-primary" />
-            <Sparkles className="h-3 w-3 text-primary animate-pulse" />
+              if (cardId === 'modules') {
+                return (
+                  <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
+                    <AllModulesCard
+                      modules={allModules}
+                      onModuleClick={handleModuleSelect}
+                      navigate={navigate}
+                      isFavorite={isFavorite}
+                      onToggleFavorite={toggleFavorite}
+                    />
+                  </SortableDashboardCard>
+                );
+              }
+
+              if (cardId === 'ai-assistant') {
+                return (
+                  <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
+                    <Card className="p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => setAiAssistantOpen(true)}>
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                          <Bot className="h-4 w-4 text-primary" />
+                          <Sparkles className="h-3 w-3 text-primary animate-pulse" />
+                        </div>
+                        <Input 
+                          placeholder="Ask AI Assistant or check messages..." 
+                          className="pl-14 cursor-pointer"
+                          readOnly
+                        />
+                      </div>
+                    </Card>
+                  </SortableDashboardCard>
+                );
+              }
+
+              return null;
+            })}
           </div>
-          <Input 
-            placeholder="Ask AI Assistant or check messages..." 
-            className="pl-14 cursor-pointer"
-            readOnly
-          />
-        </div>
-      </Card>
+        </SortableContext>
+      </DndContext>
 
       {/* Favorites Section */}
       {moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
