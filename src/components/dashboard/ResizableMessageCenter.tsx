@@ -197,7 +197,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
       className="z-[999999]"
       enableResizing={!isMinimized}
     >
-      <div ref={portalRef} className="h-full w-full bg-background border-2 border-primary/20 rounded-lg shadow-2xl flex flex-col overflow-hidden">
+      <div ref={portalRef} className="h-full w-full bg-background border-2 border-primary/20 rounded-lg shadow-2xl flex flex-col overflow-visible">
         {/* Header - Draggable */}
         <div className="message-center-drag-handle px-3 py-2 border-b bg-card cursor-move flex items-center justify-between">
           <div className="flex items-center gap-1.5">
