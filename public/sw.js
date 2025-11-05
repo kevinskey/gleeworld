@@ -1,16 +1,29 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'gleeworld-v1';
+const CACHE_NAME = 'gleeworld-v2-no-cache';
 
 // Install event
 self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
-  self.skipWaiting();
+  self.skipWaiting(); // Force immediate activation
 });
 
 // Activate event
 self.addEventListener('activate', (event) => {
   console.log('Service Worker activating...');
-  event.waitUntil(clients.claim());
+  
+  // Clear all old caches to prevent stale module issues
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          console.log('Deleting old cache:', cacheName);
+          return caches.delete(cacheName);
+        })
+      );
+    }).then(() => {
+      return clients.claim(); // Take control immediately
+    })
+  );
 });
 
 // Push notification event
@@ -74,17 +87,10 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Fetch event (basic caching strategy)
+// Fetch event - NO CACHING to prevent stale module issues
 self.addEventListener('fetch', (event) => {
-  // Let the browser handle navigation requests
-  if (event.request.mode === 'navigate') {
-    return;
-  }
-  
-  // Cache-first strategy for static assets
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
+  // Always fetch fresh for JS/TS modules and API requests
+  // Only this service worker handles push notifications
+  // Let the browser handle all fetch requests normally
+  return;
 });
