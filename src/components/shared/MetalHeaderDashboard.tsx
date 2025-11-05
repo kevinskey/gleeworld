@@ -645,14 +645,14 @@ export const MetalHeaderDashboard = ({
         </div>
 
         {/* Message Center Button */}
-        <div className="relative z-10 flex justify-center mt-4 mb-6">
+        <div className="relative z-10 flex justify-center mt-4 mb-6 px-4">
           <Button 
             onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-            className="h-12 px-6 shadow-lg"
-            variant="default"
+            className="h-14 px-8 shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
+            size="lg"
           >
-            <MessageSquare className="h-5 w-5 mr-2" />
-            <span>Messages</span>
+            <MessageSquare className="h-6 w-6 mr-2" />
+            <span className="text-base">Messages</span>
           </Button>
         </div>
 
