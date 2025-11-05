@@ -230,7 +230,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
             <div className="flex items-center gap-2 px-2 py-1.5 border-b">
               <DropdownMenu modal={false} onOpenChange={(o) => console.log('Filter dropdown open:', o)}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-7 text-xs">
+                  <Button variant="outline" size="sm" className="h-7 text-xs relative z-[1000001]">
                     <Filter className="h-3 w-3 mr-1.5" />
                     Filters
                     {filterTags.length > 0 && (
@@ -241,32 +241,34 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                     <ChevronDown className="h-3 w-3 ml-1.5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" sideOffset={8} collisionPadding={8} className="w-56 z-[1000000] pointer-events-auto"  style={{ zIndex: 1000000 }} onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
-                  <DropdownMenuLabel>Filter Messages</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {MESSAGE_TAGS.map(tag => (
-                    <DropdownMenuCheckboxItem
-                      key={tag}
-                      checked={filterTags.includes(tag)}
-                      onCheckedChange={() => toggleFilterTag(tag)}
-                    >
-                      {tag}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                  {filterTags.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFilterTags([])}
-                        className="w-full h-8 text-xs"
+                <DropdownMenuPortal container={portalRef.current || undefined}>
+                  <DropdownMenuContent align="start" sideOffset={8} collisionPadding={8} className="w-56 z-[1000000] pointer-events-auto"  style={{ zIndex: 1000000 }} onInteractOutside={(e) => e.preventDefault()} onCloseAutoFocus={(e) => e.preventDefault()}>
+                    <DropdownMenuLabel>Filter Messages</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {MESSAGE_TAGS.map(tag => (
+                      <DropdownMenuCheckboxItem
+                        key={tag}
+                        checked={filterTags.includes(tag)}
+                        onCheckedChange={() => toggleFilterTag(tag)}
                       >
-                        Clear Filters
-                      </Button>
-                    </>
-                  )}
-                </DropdownMenuContent>
+                        {tag}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                    {filterTags.length > 0 && (
+                      <>
+                        <DropdownMenuSeparator />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setFilterTags([])}
+                          className="w-full h-8 text-xs"
+                        >
+                          Clear Filters
+                        </Button>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenuPortal>
               </DropdownMenu>
               {filterTags.length > 0 && (
                 <div className="flex flex-wrap gap-0.5">
@@ -362,7 +364,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
               <div className="flex items-center gap-1.5 mb-1.5">
                 <DropdownMenu modal={false} onOpenChange={(o) => console.log('Tags dropdown open:', o)}>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-6 text-xs">
+                    <Button variant="outline" size="sm" className="h-6 text-xs relative z-[1000001]">
                       <Tag className="h-2.5 w-2.5 mr-1" />
                       Tags
                       {selectedTags.length > 0 && (
