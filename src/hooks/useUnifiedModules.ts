@@ -133,15 +133,9 @@ export const useUnifiedModules = (filterOptions?: ModuleFilterOptions): UseUnifi
       
       // Admin override
       const isAdminOverride = filterOptions?.isAdmin;
-      // Baseline member defaults (every member/executive gets these even without explicit grants)
-      const role = (filterOptions?.userRole || '').toLowerCase();
-      const hasBaselineRole = role === 'member' || role === 'executive';
-      const isBaselineMemberModule = hasBaselineRole && STANDARD_MEMBER_MODULE_IDS.some(id =>
-        canonical(id) === canonical(module.id) ||
-        canonical(id) === canonical(module.name)
-      );
       
-      const canAccess = !!(isAdminOverride || grant?.can_view || isBaselineMemberModule);
+      // Permissions are ONLY from grants - no baseline auto-assignment
+      const canAccess = !!(isAdminOverride || grant?.can_view);
       const canManage = !!(isAdminOverride || grant?.can_manage);
       
       return {

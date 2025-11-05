@@ -82,6 +82,7 @@ export function useUserModuleGrants(userId?: string) {
               .filter(Boolean);
 
             if (moduleIds.length === 0) {
+              console.log('🔧 useUserModuleGrants: No permissions found, returning empty grants');
               setGrants([]);
               setLoading(false);
               return;
@@ -167,6 +168,42 @@ export function useUserModuleGrants(userId?: string) {
     }
 
     fetchGrants();
+
+    // Set up real-time subscription for instant updates
+    let targetUserId = userId;
+    if (!targetUserId) {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (user?.id) {
+          targetUserId = user.id;
+          setupSubscription(targetUserId);
+        }
+      });
+    } else {
+      setupSubscription(targetUserId);
+    }
+
+    function setupSubscription(uid: string) {
+      const channel = supabase
+        .channel(`user_module_permissions:${uid}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'gw_user_module_permissions',
+            filter: `user_id=eq.${uid}`
+          },
+          (payload) => {
+            console.log('🔧 useUserModuleGrants: Real-time update received:', payload);
+            fetchGrants();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        channel.unsubscribe();
+      };
+    }
 
     return () => {
       cancelled = true;
