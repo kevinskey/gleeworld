@@ -21,9 +21,10 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
   musicId
 }) => {
   return (
-    <Dialog open={open} onOpenChange={(nextOpen) => { console.log('InAppPDFViewerDialog onOpenChange:', nextOpen); onOpenChange(nextOpen); }}>
+    <Dialog open={open} onOpenChange={(nextOpen) => { console.log('InAppPDFViewerDialog onOpenChange:', nextOpen); onOpenChange(nextOpen); }} modal={false}>
       <DialogContent 
-        className="max-w-7xl h-[90vh] p-0"
+        className="max-w-7xl h-[90vh] p-0 z-[9999]"
+        style={{ zIndex: 9999 }}
       >
         <div className="flex flex-col h-full">
           {title && (

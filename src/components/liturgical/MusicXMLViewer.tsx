@@ -140,8 +140,8 @@ export const MusicXMLViewer: React.FC<MusicXMLViewerProps> = ({
   // If onClose is provided, wrap in Dialog
   if (onClose) {
     return (
-      <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-7xl h-[90vh] p-0 overflow-hidden">
+      <Dialog open={true} onOpenChange={(open) => !open && onClose()} modal={false}>
+        <DialogContent className="max-w-7xl h-[90vh] p-0 overflow-hidden z-[9999]" style={{ zIndex: 9999 }}>
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>{title}</DialogTitle>
             <DialogDescription className="sr-only">
