@@ -252,8 +252,8 @@ export const ResizableMessageCenter = ({
                     })}
                           </span>
                         </div>
-                        <Card className={`px-2 py-1.5 ${isCurrentUser ? 'bg-primary border-primary' : 'bg-muted/50'}`}>
-                          <p className={`text-xs leading-relaxed whitespace-pre-wrap break-words ${isCurrentUser ? 'text-primary-foreground' : 'text-foreground'}`}>
+                        <Card className={`px-2 py-1.5 ${isCurrentUser ? 'bg-primary/15 border-primary' : 'bg-muted/50'}`}>
+                          <p className="text-xs leading-relaxed whitespace-pre-wrap break-words text-foreground">
                             {msg.content}
                           </p>
                         </Card>
