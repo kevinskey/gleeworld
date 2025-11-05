@@ -645,10 +645,10 @@ export const MetalHeaderDashboard = ({
         </div>
 
         {/* Message Center Button */}
-        <div className="relative z-10 flex justify-end">
+        <div className="relative z-10 flex justify-center mt-4 mb-6">
           <Button 
             onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-            className="h-12 px-4 shadow-lg"
+            className="h-12 px-6 shadow-lg"
             variant="default"
           >
             <MessageSquare className="h-5 w-5 mr-2" />
