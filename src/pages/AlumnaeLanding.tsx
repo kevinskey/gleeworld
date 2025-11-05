@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import gleeSculptureBg from '@/assets/glee-sculpture-bg.png';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { supabase } from "@/integrations/supabase/client";
-import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { toast } from "sonner";
 import { NewsletterSection } from "@/components/alumnae/NewsletterSection";
@@ -173,11 +173,9 @@ export default function AlumnaeLanding() {
   };
   if (loading || loadingStats) {
     return (
-      <UniversalLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <LoadingSpinner size="lg" text="Loading alumnae portal..." />
-        </div>
-      </UniversalLayout>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
+        <LoadingSpinner size="lg" text="Loading alumnae portal..." />
+      </div>
     );
   }
   const getClassYearDisplay = () => {
@@ -185,73 +183,103 @@ export default function AlumnaeLanding() {
     return `Class of '${alumnaeStats.classYear.toString().slice(-2)}`;
   };
   return (
-    <UniversalLayout>
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Welcome Section */}
-        <div className="text-center space-y-4 animate-fade-in">
-          <div className="flex items-center justify-center gap-3">
-            <GraduationCap className="h-12 w-12 text-primary" />
-            <h1 className="text-5xl font-serif text-primary">
-              Welcome Back, {userProfile?.first_name || 'Alumna'}!
-            </h1>
-            <Sparkles className="h-12 w-12 text-primary" />
+    <div className="min-h-screen relative">
+      {/* Background Image */}
+      <div 
+        className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" 
+        style={{
+          backgroundImage: `url(${gleeSculptureBg})`,
+          backgroundPosition: 'center 15%'
+        }} 
+      />
+
+      <div className="relative z-10 py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto space-y-6">
+        {/* Metal Plate Header */}
+        <div className="bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg pt-[15px] px-5 pb-5">
+          {/* Corner Rivets */}
+          <div className="absolute top-3 left-3 w-3 h-3 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+            <div className="w-1.5 h-1.5 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
           </div>
-          <p className="text-2xl text-muted-foreground font-medium">{getClassYearDisplay()}</p>
-          <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Once a Glee Club member, always family. Stay connected with your sisterhood and continue the legacy.
-          </p>
-          {canAccessAdmin && (
-            <div className="pt-4">
-              <Button 
-                onClick={() => navigate('/admin/alumnae')}
-                className="gap-2"
-                variant="outline"
-              >
-                <Settings className="h-4 w-4" />
-                Manage Alumnae Content
-              </Button>
+          <div className="absolute top-3 right-3 w-3 h-3 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+            <div className="w-1.5 h-1.5 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+          </div>
+
+          {/* Welcome Section */}
+          <div className="text-center space-y-3 animate-fade-in">
+            <div className="flex items-center justify-center gap-3">
+              <GraduationCap className="h-10 w-10 text-slate-700 dark:text-slate-200" />
+              <h1 className="text-4xl md:text-5xl font-serif text-slate-800 dark:text-slate-100">
+                Welcome Back, {userProfile?.first_name || 'Alumna'}!
+              </h1>
+              <Sparkles className="h-10 w-10 text-slate-700 dark:text-slate-200" />
             </div>
-          )}
+            <p className="text-2xl text-slate-700 dark:text-slate-200 font-medium">{getClassYearDisplay()}</p>
+            <p className="text-base text-slate-600 dark:text-slate-300 max-w-3xl mx-auto leading-relaxed">
+              Once a Glee Club member, always family. Stay connected with your sisterhood and continue the legacy.
+            </p>
+            {canAccessAdmin && (
+              <div className="pt-2">
+                <Button 
+                  onClick={() => navigate('/admin/alumnae')}
+                  className="gap-2 bg-slate-600 hover:bg-slate-700 dark:bg-slate-400 dark:hover:bg-slate-300 text-white dark:text-slate-900"
+                  variant="default"
+                >
+                  <Settings className="h-4 w-4" />
+                  Manage Alumnae Content
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Hero Slideshow */}
-        <HeroSlideshow />
+        <div className="animate-fade-in">
+          <HeroSlideshow />
+        </div>
 
         {/* Announcements */}
-        <AnnouncementSection />
+        <div className="animate-fade-in">
+          <AnnouncementSection />
+        </div>
 
         {/* Spotlights */}
-        <SpotlightSection />
+        <div className="animate-fade-in">
+          <SpotlightSection />
+        </div>
 
         {/* Newsletter Section */}
-        <NewsletterSection />
+        <div className="animate-fade-in">
+          <NewsletterSection />
+        </div>
 
         {/* Interview Segments */}
-        <InterviewSegments />
+        <div className="animate-fade-in">
+          <InterviewSegments />
+        </div>
 
-        {/* Classmate Updates */}
-        <Card className="animate-fade-in">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        {/* Classmate Updates - Steel Card */}
+        <Card className="animate-fade-in bg-gradient-to-b from-slate-100 via-white to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 border-2 border-slate-300 dark:border-slate-600 shadow-lg">
+          <CardHeader className="border-b border-slate-300 dark:border-slate-600">
+            <CardTitle className="flex items-center gap-2 text-slate-800 dark:text-slate-100">
               <Users className="h-5 w-5" />
               Classmate Updates
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {classmateUpdates.length > 0 ? <div className="space-y-4">
-                {classmateUpdates.map(update => <div key={update.id} className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg hover-scale">
-                    <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-semibold">
+                {classmateUpdates.map(update => <div key={update.id} className="flex items-start gap-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 via-pink-400 to-rose-400 rounded-full flex items-center justify-center text-white font-semibold shadow-md">
                       {update.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium">{update.name}</h4>
-                        <Badge variant="outline" className="text-xs">
+                        <h4 className="font-medium text-slate-800 dark:text-slate-100">{update.name}</h4>
+                        <Badge variant="outline" className="text-xs bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600">
                           Class of '{update.classYear.toString().slice(-2)}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">{update.update}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">{update.update}</p>
+                      <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           {update.location}
@@ -262,82 +290,82 @@ export default function AlumnaeLanding() {
                         </span>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" className="border-slate-300 dark:border-slate-600">
                       <MessageCircle className="h-4 w-4" />
                     </Button>
                   </div>)}
-                <div className="text-center">
-                  <Button variant="outline">View All Updates</Button>
+                <div className="text-center pt-2">
+                  <Button variant="outline" className="border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800">View All Updates</Button>
                 </div>
               </div> : <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No recent updates from classmates</p>
+                <Users className="h-12 w-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+                <p className="text-slate-500 dark:text-slate-400">No recent updates from classmates</p>
               </div>}
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <Card className="animate-fade-in">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+        {/* Quick Actions - Steel Card */}
+        <Card className="animate-fade-in bg-gradient-to-b from-slate-100 via-white to-slate-200 dark:from-slate-800 dark:via-slate-900 dark:to-slate-800 border-2 border-slate-300 dark:border-slate-600 shadow-lg">
+          <CardHeader className="border-b border-slate-300 dark:border-slate-600">
+            <CardTitle className="text-slate-800 dark:text-slate-100">Quick Actions</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 hover-scale">
-                <Users className="h-6 w-6" />
-                <span className="text-sm">Alumni Directory</span>
+              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105">
+                <Users className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Alumni Directory</span>
               </Button>
-              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 hover-scale">
-                <Camera className="h-6 w-6" />
-                <span className="text-sm">Memory Wall</span>
+              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105">
+                <Camera className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Memory Wall</span>
               </Button>
-              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 hover-scale">
-                <Calendar className="h-6 w-6" />
-                <span className="text-sm">Plan Reunion</span>
+              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105">
+                <Calendar className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Plan Reunion</span>
               </Button>
-              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 hover-scale">
-                <Heart className="h-6 w-6" />
-                <span className="text-sm">Give Back</span>
+              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105">
+                <Heart className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Give Back</span>
               </Button>
-              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 hover-scale">
-                <Network className="h-6 w-6" />
-                <span className="text-sm">Professional Network</span>
+              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105">
+                <Network className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Professional Network</span>
               </Button>
-              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 hover-scale">
-                <Music className="h-6 w-6" />
-                <span className="text-sm">Share Performance</span>
+              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105">
+                <Music className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Share Performance</span>
               </Button>
-              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 hover-scale">
-                <BookOpen className="h-6 w-6" />
-                <span className="text-sm">Update Profile</span>
+              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105">
+                <BookOpen className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Update Profile</span>
               </Button>
-              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 hover-scale">
-                <Star className="h-6 w-6" />
-                <span className="text-sm">Nominate Alumni</span>
+              <Button variant="outline" className="flex flex-col items-center gap-2 h-auto py-4 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all hover:scale-105">
+                <Star className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+                <span className="text-sm text-slate-700 dark:text-slate-200">Nominate Alumni</span>
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Legacy Section */}
-        <Card className="animate-fade-in bg-gradient-to-r from-purple-50 via-pink-50 to-rose-50 border-purple-200">
+        {/* Legacy Section - Steel Gradient */}
+        <Card className="animate-fade-in bg-gradient-to-br from-purple-100 via-pink-100 to-rose-100 dark:from-purple-900/30 dark:via-pink-900/30 dark:to-rose-900/30 border-2 border-purple-300 dark:border-purple-700 shadow-lg">
           <CardContent className="p-6 text-center">
-            <Award className="h-12 w-12 text-purple-500 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-purple-800 mb-2">Continue the Legacy</h3>
-            <p className="text-purple-600 mb-4">
+            <Award className="h-12 w-12 text-purple-600 dark:text-purple-400 mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-purple-800 dark:text-purple-200 mb-2">Continue the Legacy</h3>
+            <p className="text-purple-700 dark:text-purple-300 mb-4">
               Your voice, your experience, and your success inspire the next generation of Glee Club members.
             </p>
             <div className="flex justify-center gap-4">
-              <Button className="bg-purple-500 hover:bg-purple-600">
+              <Button className="bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white shadow-md">
                 Share Your Story
               </Button>
-              <Button variant="outline" className="border-purple-300 text-purple-700 hover:bg-purple-50">
+              <Button variant="outline" className="border-purple-400 dark:border-purple-600 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20">
                 View Impact Report
               </Button>
             </div>
           </CardContent>
         </Card>
       </div>
-    </UniversalLayout>
+    </div>
   );
 }
