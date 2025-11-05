@@ -221,7 +221,7 @@ export default function AuthPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required={!isLogin}
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300 [&_input]:text-white"
+                    className="auth-input"
                   />
                 </div>
               )}
@@ -236,7 +236,7 @@ export default function AuthPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300 [&_input]:text-white"
+                  className="auth-input"
                 />
               </div>
 
@@ -251,7 +251,7 @@ export default function AuthPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="bg-white/10 border-white/30 text-white placeholder:text-white/60 backdrop-blur-sm focus:bg-white/20 focus:border-white/50 transition-all duration-300 pr-10 [&_input]:text-white"
+                    className="auth-input pr-10"
                   />
                   <Button
                     type="button"

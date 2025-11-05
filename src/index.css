@@ -479,23 +479,20 @@
   }
 
   /* Fix auth page input visibility - override system CSS injection */
-  .auth-page input,
-  .auth-page textarea,
-  .auth-page select {
+  .auth-input {
     color: white !important;
     background-color: rgba(255, 255, 255, 0.1) !important;
     border-color: rgba(255, 255, 255, 0.3) !important;
+    backdrop-filter: blur(4px) !important;
+    transition: all 0.3s ease !important;
   }
 
-  .auth-page input:focus,
-  .auth-page textarea:focus,
-  .auth-page select:focus {
+  .auth-input:focus {
     background-color: rgba(255, 255, 255, 0.2) !important;
     border-color: rgba(255, 255, 255, 0.5) !important;
   }
 
-  .auth-page input::placeholder,
-  .auth-page textarea::placeholder {
+  .auth-input::placeholder {
     color: rgba(255, 255, 255, 0.6) !important;
   }
 
