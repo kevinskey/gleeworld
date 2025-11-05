@@ -179,14 +179,14 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
     <Rnd
       default={{
         x: window.innerWidth > 768 
-          ? (window.innerWidth - 850) / 2 
+          ? (window.innerWidth - 500) / 2 
           : (window.innerWidth - (window.innerWidth - 40)) / 2,
-        y: 80,
-        width: window.innerWidth > 768 ? 850 : window.innerWidth - 40,
-        height: window.innerHeight > 768 ? 600 : window.innerHeight - 160
+        y: 100,
+        width: window.innerWidth > 768 ? 500 : window.innerWidth - 40,
+        height: window.innerHeight > 768 ? 650 : window.innerHeight - 140
       }}
-      minWidth={350}
-      minHeight={isMinimized ? 56 : 400}
+      minWidth={320}
+      minHeight={isMinimized ? 48 : 500}
       maxWidth={window.innerWidth - 40}
       maxHeight={window.innerHeight - 100}
       bounds="window"
@@ -197,27 +197,27 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
     >
       <div className="h-full w-full bg-background border-2 border-primary/20 rounded-lg shadow-2xl flex flex-col overflow-hidden">
         {/* Header - Draggable */}
-        <div className="message-center-drag-handle px-4 py-3 border-b bg-card cursor-move flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-primary" />
-            <h2 className="text-lg font-semibold">Glee Message Center</h2>
+        <div className="message-center-drag-handle px-3 py-2 border-b bg-card cursor-move flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <MessageSquare className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold">Glee Message Center</h2>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsMinimized(!isMinimized)}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0"
             >
-              {isMinimized ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+              {isMinimized ? <Maximize2 className="h-3.5 w-3.5" /> : <Minimize2 className="h-3.5 w-3.5" />}
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onOpenChange(false)}
-              className="h-8 w-8 p-0"
+              className="h-7 w-7 p-0"
             >
-              <XIcon className="h-4 w-4" />
+              <XIcon className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
@@ -225,18 +225,18 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
         {!isMinimized && (
           <>
             {/* Tag Filters */}
-            <div className="flex items-center gap-2 px-4 py-2 border-b">
+            <div className="flex items-center gap-2 px-2 py-1.5 border-b">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8">
-                    <Filter className="h-3.5 w-3.5 mr-2" />
-                    Filter by Tags
+                  <Button variant="outline" size="sm" className="h-7 text-xs">
+                    <Filter className="h-3 w-3 mr-1.5" />
+                    Filters
                     {filterTags.length > 0 && (
-                      <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px]">
+                      <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[9px]">
                         {filterTags.length}
                       </Badge>
                     )}
-                    <ChevronDown className="h-3.5 w-3.5 ml-2" />
+                    <ChevronDown className="h-3 w-3 ml-1.5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
@@ -267,12 +267,12 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                 </DropdownMenuContent>
               </DropdownMenu>
               {filterTags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap gap-0.5">
                   {filterTags.map(tag => (
-                    <Badge key={tag} variant="default" className="text-[10px] h-5">
+                    <Badge key={tag} variant="default" className="text-[9px] h-4 px-1">
                       {tag}
                       <X 
-                        className="h-2.5 w-2.5 ml-1 cursor-pointer" 
+                        className="h-2 w-2 ml-0.5 cursor-pointer" 
                         onClick={() => toggleFilterTag(tag)}
                       />
                     </Badge>
@@ -282,7 +282,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
             </div>
 
             {/* Messages Area */}
-            <ScrollArea className="flex-1 px-4" ref={scrollRef}>
+            <ScrollArea className="flex-1 px-2 py-1" ref={scrollRef}>
               {loadingMessages ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -303,43 +303,43 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3 py-3">
+                <div className="space-y-2 py-2">
                   {filteredMessages.map((msg) => {
                     const isCurrentUser = msg.user_id === user?.id;
                     const senderName = msg.gw_profiles?.full_name || 'Unknown User';
                     const initials = senderName.split(' ').map(n => n[0]).join('').toUpperCase();
                     
                     return (
-                      <div key={msg.id} className={`flex gap-2 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                        <Avatar className="h-8 w-8 flex-shrink-0">
+                      <div key={msg.id} className={`flex gap-1.5 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                        <Avatar className="h-7 w-7 flex-shrink-0">
                           <AvatarImage src={msg.gw_profiles?.avatar_url} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                          <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
                             {initials}
                           </AvatarFallback>
                         </Avatar>
-                        <div className={`flex-1 max-w-[75%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
-                          <div className={`flex items-baseline gap-1.5 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                            <span className="text-xs font-semibold">{senderName}</span>
-                            <span className="text-[10px] text-muted-foreground">
+                        <div className={`flex-1 max-w-[80%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
+                          <div className={`flex items-baseline gap-1 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                            <span className="text-[11px] font-semibold">{senderName}</span>
+                            <span className="text-[9px] text-muted-foreground">
                               {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                             </span>
                           </div>
-                          <Card className={`px-3 py-1.5 ${
+                          <Card className={`px-2 py-1.5 ${
                             isCurrentUser 
                               ? 'bg-primary text-primary-foreground border-primary' 
                               : 'bg-muted/50'
                           }`}>
-                            <p className="text-sm leading-snug whitespace-pre-wrap break-words">
+                            <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">
                               {msg.content}
                             </p>
                           </Card>
                           {msg.tags && msg.tags.length > 0 && (
-                            <div className={`flex flex-wrap gap-1 mt-0.5 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                            <div className={`flex flex-wrap gap-0.5 mt-0.5 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
                               {msg.tags.map(tag => (
                                 <Badge 
                                   key={tag} 
                                   variant="secondary" 
-                                  className="text-[10px] h-4 px-1.5"
+                                  className="text-[9px] h-3.5 px-1"
                                 >
                                   {tag}
                                 </Badge>
@@ -355,20 +355,20 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
             </ScrollArea>
 
             {/* Message Input */}
-            <div className="px-4 py-2 border-t bg-background">
+            <div className="px-2 py-1.5 border-t bg-background">
               {/* Tag Selection */}
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-1.5 mb-1.5">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-7">
-                      <Tag className="h-3 w-3 mr-1.5" />
-                      Add Tags
+                    <Button variant="outline" size="sm" className="h-6 text-xs">
+                      <Tag className="h-2.5 w-2.5 mr-1" />
+                      Tags
                       {selectedTags.length > 0 && (
-                        <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">
+                        <Badge variant="secondary" className="ml-1 h-3.5 px-0.5 text-[9px]">
                           {selectedTags.length}
                         </Badge>
                       )}
-                      <ChevronDown className="h-3 w-3 ml-1.5" />
+                      <ChevronDown className="h-2.5 w-2.5 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="start" className="w-52">
@@ -386,12 +386,12 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {selectedTags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 flex-1">
+                  <div className="flex flex-wrap gap-0.5 flex-1">
                     {selectedTags.map(tag => (
-                      <Badge key={tag} variant="default" className="text-[10px] h-5">
+                      <Badge key={tag} variant="default" className="text-[9px] h-4 px-1">
                         {tag}
                         <X 
-                          className="h-2.5 w-2.5 ml-1 cursor-pointer" 
+                          className="h-2 w-2 ml-0.5 cursor-pointer" 
                           onClick={() => toggleTag(tag)}
                         />
                       </Badge>
@@ -401,22 +401,22 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
               </div>
 
               {/* Input Field */}
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <Input
                   placeholder="Message all members..."
                   value={memberMessage}
                   onChange={(e) => setMemberMessage(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMemberMessage()}
-                  className="flex-1 h-9 text-sm"
+                  className="flex-1 h-8 text-xs"
                   disabled={sendingMessage}
                 />
                 <Button 
                   onClick={handleSendMemberMessage} 
                   size="icon" 
-                  className="h-9 w-9 flex-shrink-0"
+                  className="h-8 w-8 flex-shrink-0"
                   disabled={sendingMessage || !memberMessage.trim()}
                 >
-                  <Send className="h-3.5 w-3.5" />
+                  <Send className="h-3 w-3" />
                 </Button>
               </div>
             </div>
