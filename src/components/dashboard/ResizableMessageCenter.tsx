@@ -153,16 +153,6 @@ export const ResizableMessageCenter = ({
   };
   const filteredMessages = filterTags.length === 0 ? internalMessages : internalMessages.filter(msg => msg.tags?.some(tag => filterTags.includes(tag)));
 
-  // Floating tab button for top-right
-  const FloatingTabButton = () => <Button onClick={() => onOpenChange(!open)} className="fixed right-4 top-20 z-[999998] rounded-lg h-12 w-12 p-0 shadow-lg flex items-center justify-center relative" variant="default">
-      <MessageSquare className="h-5 w-5" />
-      {totalUnreadDMs > 0 && (
-        <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 min-w-[20px] px-1 flex items-center justify-center text-[10px] font-semibold">
-          {totalUnreadDMs > 99 ? '99+' : totalUnreadDMs}
-        </Badge>
-      )}
-    </Button>;
-
   // Message center content (shared between mobile and desktop)
   const MessageCenterContent = () => <>
       {/* Tabs for Group vs DM */}
@@ -334,7 +324,6 @@ export const ResizableMessageCenter = ({
   // Mobile view with Sheet
   if (isMobile) {
     return <>
-        {!open && <FloatingTabButton />}
         <Sheet open={open} onOpenChange={onOpenChange}>
           <SheetContent side="right" className="w-[90vw] h-[60vh] p-0 flex flex-col top-[20vh] bottom-auto">
             <SheetHeader className="px-3 py-2 border-b">
