@@ -34,39 +34,36 @@ interface SortableDashboardCardProps {
   children: React.ReactNode;
   disabled?: boolean;
 }
-
-const SortableDashboardCard = ({ id, children, disabled }: SortableDashboardCardProps) => {
+const SortableDashboardCard = ({
+  id,
+  children,
+  disabled
+}: SortableDashboardCardProps) => {
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging,
-  } = useSortable({ id, disabled });
-
+    isDragging
+  } = useSortable({
+    id,
+    disabled
+  });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.5 : 1
   };
-
   if (disabled) {
     return <div className="relative">{children}</div>;
   }
-
-  return (
-    <div ref={setNodeRef} style={style} className="relative group">
-      <div 
-        className="absolute -left-2 top-0 bottom-0 w-10 flex items-center justify-center z-50 cursor-grab active:cursor-grabbing bg-primary/10 hover:bg-primary/20 rounded-l-lg opacity-0 group-hover:opacity-100 transition-opacity"
-        {...attributes} 
-        {...listeners}
-      >
+  return <div ref={setNodeRef} style={style} className="relative group">
+      <div className="absolute -left-2 top-0 bottom-0 w-10 flex items-center justify-center z-50 cursor-grab active:cursor-grabbing bg-primary/10 hover:bg-primary/20 rounded-l-lg opacity-0 group-hover:opacity-100 transition-opacity" {...attributes} {...listeners}>
         <GripVertical className="h-6 w-6 text-primary" />
       </div>
       {children}
-    </div>
-  );
+    </div>;
 };
 
 // Sortable Module Card Component
@@ -107,16 +104,13 @@ const SortableModuleCard = ({
   };
   const IconComponent = module.icon;
   return <div ref={setNodeRef} style={style} {...attributes}>
-      <Card 
-        className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`}
-        onClick={() => {
-          if (module.id === 'librarian') {
-            navigate('/librarian-dashboard');
-          } else {
-            onModuleClick(module.id);
-          }
-        }}
-      >
+      <Card className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2 ${isSortableDragging ? 'shadow-lg ring-2 ring-primary/20' : ''}`} onClick={() => {
+      if (module.id === 'librarian') {
+        navigate('/librarian-dashboard');
+      } else {
+        onModuleClick(module.id);
+      }
+    }}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3 flex-1">
@@ -174,8 +168,15 @@ export const MetalHeaderDashboard = ({
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [isEditingLayout, setIsEditingLayout] = useState(false);
-  const { isSuperAdmin } = useUserRole();
-  const { cardOrder, saveCardOrder, resetCardOrder, isSaving } = useDashboardCardOrder();
+  const {
+    isSuperAdmin
+  } = useUserRole();
+  const {
+    cardOrder,
+    saveCardOrder,
+    resetCardOrder,
+    isSaving
+  } = useDashboardCardOrder();
 
   // Get the user's first name from full_name
   const getFirstName = (fullName: string) => {
@@ -267,16 +268,14 @@ export const MetalHeaderDashboard = ({
   const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
 
   // Card ordering sensors for drag and drop
-  const cardSensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
+  const cardSensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates
+  }));
   const handleCardDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
+    const {
+      active,
+      over
+    } = event;
     if (over && active.id !== over.id) {
       const oldIndex = cardOrder.indexOf(active.id as string);
       const newIndex = cardOrder.indexOf(over.id as string);
@@ -284,7 +283,6 @@ export const MetalHeaderDashboard = ({
       saveCardOrder(newOrder);
     }
   };
-
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
     coordinateGetter: sortableKeyboardCoordinates
   }));
@@ -294,33 +292,13 @@ export const MetalHeaderDashboard = ({
     try {
       const result: Record<string, any[]> = {};
       const accessibleModules = getAccessibleModules();
-      
       categories.forEach(category => {
         try {
-          const modules = accessibleModules
-            .filter(m => m.category === category)
-            .map(module => {
-              try {
-                const moduleConfig = ModuleRegistry.getModule(module.id);
-                if (!moduleConfig) {
-                  console.warn(`Module config not found for: ${module.id}, using fallback`);
-                  return {
-                    ...module,
-                    icon: (module as any).icon || Calendar,
-                    iconColor: (module as any).iconColor || 'blue',
-                    component: null,
-                    isNew: false
-                  };
-                }
-                return {
-                  ...module,
-                  icon: moduleConfig.icon,
-                  iconColor: moduleConfig.iconColor || 'blue',
-                  component: moduleConfig.component,
-                  isNew: moduleConfig.isNew || false
-                };
-              } catch (error) {
-                console.error(`Error processing module ${module.id}:`, error);
+          const modules = accessibleModules.filter(m => m.category === category).map(module => {
+            try {
+              const moduleConfig = ModuleRegistry.getModule(module.id);
+              if (!moduleConfig) {
+                console.warn(`Module config not found for: ${module.id}, using fallback`);
                 return {
                   ...module,
                   icon: (module as any).icon || Calendar,
@@ -329,7 +307,24 @@ export const MetalHeaderDashboard = ({
                   isNew: false
                 };
               }
-            }).filter(Boolean);
+              return {
+                ...module,
+                icon: moduleConfig.icon,
+                iconColor: moduleConfig.iconColor || 'blue',
+                component: moduleConfig.component,
+                isNew: moduleConfig.isNew || false
+              };
+            } catch (error) {
+              console.error(`Error processing module ${module.id}:`, error);
+              return {
+                ...module,
+                icon: (module as any).icon || Calendar,
+                iconColor: (module as any).iconColor || 'blue',
+                component: null,
+                isNew: false
+              };
+            }
+          }).filter(Boolean);
           if (modules.length > 0) {
             result[category] = modules;
           }
@@ -350,14 +345,11 @@ export const MetalHeaderDashboard = ({
   // Group modules for members: Favorites, Communications, Other Assigned, and Default Modules
   const groupedModules = useMemo(() => {
     if (!isMember) return null;
-    
     const accessibleModules = getAccessibleModules();
     const visibleQuickActionModuleIds = getVisibleQuickActions().map(qa => qa.module_id);
-    
+
     // Favorites group - show ALL favorited modules, not just quick actions
-    const favoritesGroup = accessibleModules.filter(m => 
-      isFavorite(m.id)
-    ).map(module => {
+    const favoritesGroup = accessibleModules.filter(m => isFavorite(m.id)).map(module => {
       const moduleConfig = ModuleRegistry.getModule(module.id);
       return {
         ...module,
@@ -369,9 +361,7 @@ export const MetalHeaderDashboard = ({
     });
 
     // Communications group (modules in 'communications' category)
-    const communicationsGroup = accessibleModules.filter(m => 
-      m.category === 'communications' && visibleQuickActionModuleIds.includes(m.id)
-    ).map(module => {
+    const communicationsGroup = accessibleModules.filter(m => m.category === 'communications' && visibleQuickActionModuleIds.includes(m.id)).map(module => {
       const moduleConfig = ModuleRegistry.getModule(module.id);
       return {
         ...module,
@@ -383,11 +373,7 @@ export const MetalHeaderDashboard = ({
     });
 
     // Other assigned modules (not in favorites or communications)
-    const otherGroup = accessibleModules.filter(m => 
-      visibleQuickActionModuleIds.includes(m.id) &&
-      !isFavorite(m.id) &&
-      m.category !== 'communications'
-    ).map(module => {
+    const otherGroup = accessibleModules.filter(m => visibleQuickActionModuleIds.includes(m.id) && !isFavorite(m.id) && m.category !== 'communications').map(module => {
       const moduleConfig = ModuleRegistry.getModule(module.id);
       return {
         ...module,
@@ -400,47 +386,45 @@ export const MetalHeaderDashboard = ({
 
     // Default modules - always shown to members
     // Fetch directly from registry to ensure they show even without explicit grants
-    const defaultModules = DEFAULT_MEMBER_MODULES
-      .map((id) => {
-        const moduleConfig = ModuleRegistry.getModule(id);
-        if (!moduleConfig) return null;
-        
-        return {
-          id: moduleConfig.id,
-          name: moduleConfig.title, // Use title as name
-          title: moduleConfig.title,
-          description: moduleConfig.description,
-          category: moduleConfig.category,
-          icon: moduleConfig.icon,
-          iconColor: moduleConfig.iconColor || 'blue',
-          component: moduleConfig.component,
-          isNew: moduleConfig.isNew || false,
-          isActive: true,
-          canAccess: true,
-          canManage: false,
-          hasPermission: true
-        };
-      })
-      .filter(Boolean);
-
+    const defaultModules = DEFAULT_MEMBER_MODULES.map(id => {
+      const moduleConfig = ModuleRegistry.getModule(id);
+      if (!moduleConfig) return null;
+      return {
+        id: moduleConfig.id,
+        name: moduleConfig.title,
+        // Use title as name
+        title: moduleConfig.title,
+        description: moduleConfig.description,
+        category: moduleConfig.category,
+        icon: moduleConfig.icon,
+        iconColor: moduleConfig.iconColor || 'blue',
+        component: moduleConfig.component,
+        isNew: moduleConfig.isNew || false,
+        isActive: true,
+        canAccess: true,
+        canManage: false,
+        hasPermission: true
+      };
+    }).filter(Boolean);
     console.log('🔍 Default modules filtering:', {
       defaultModuleIds: DEFAULT_MEMBER_MODULES,
       accessibleModuleCount: accessibleModules.length,
-      accessibleModuleIds: accessibleModules.map(m => ({ id: m.id, name: m.name })),
+      accessibleModuleIds: accessibleModules.map(m => ({
+        id: m.id,
+        name: m.name
+      })),
       defaultModulesFound: defaultModules.length,
-      defaultModulesData: defaultModules.map(m => ({ id: m.id, title: m.title }))
+      defaultModulesData: defaultModules.map(m => ({
+        id: m.id,
+        title: m.title
+      }))
     });
 
     // Create a Set of unique module IDs to avoid duplicates
-    const existingIds = new Set([
-      ...favoritesGroup.map(m => m.id),
-      ...communicationsGroup.map(m => m.id),
-      ...otherGroup.map(m => m.id)
-    ]);
+    const existingIds = new Set([...favoritesGroup.map(m => m.id), ...communicationsGroup.map(m => m.id), ...otherGroup.map(m => m.id)]);
 
     // Add default modules that aren't already in other groups
     const uniqueDefaultModules = defaultModules.filter(m => !existingIds.has(m.id));
-
     return {
       favorites: favoritesGroup,
       communications: communicationsGroup,
@@ -552,13 +536,10 @@ export const MetalHeaderDashboard = ({
       const ModuleComponent = moduleConfig.component;
       return <div className="space-y-6 relative min-h-screen">
           {/* Background Image */}
-          <div
-            className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none"
-            style={{
-              backgroundImage: `url(${gleeSculptureBg})`,
-              backgroundPosition: 'center 15%'
-            }}
-          />
+          <div className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" style={{
+          backgroundImage: `url(${gleeSculptureBg})`,
+          backgroundPosition: 'center 15%'
+        }} />
           
           <div className="relative z-10 space-y-4">
             {/* Module Header with Back Button */}
@@ -566,12 +547,7 @@ export const MetalHeaderDashboard = ({
               <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
                 {moduleConfig.title}
               </h1>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleBackToModules}
-                className="flex items-center gap-1 text-foreground hover:text-foreground/80 shrink-0"
-              >
+              <Button variant="ghost" size="sm" onClick={handleBackToModules} className="flex items-center gap-1 text-foreground hover:text-foreground/80 shrink-0">
                 <span className="hidden sm:inline">← Back to Dashboard</span>
                 <span className="sm:hidden">← Back</span>
               </Button>
@@ -579,26 +555,22 @@ export const MetalHeaderDashboard = ({
             
             {/* Module Content */}
             <ModuleComponent user={{
-              ...user,
-              is_admin: isAdmin,
-              is_super_admin: user.role === 'super-admin'
-            }} isFullPage={true} onNavigate={handleModuleSelect} />
+            ...user,
+            is_admin: isAdmin,
+            is_super_admin: user.role === 'super-admin'
+          }} isFullPage={true} onNavigate={handleModuleSelect} />
           </div>
         </div>;
     }
   }
   // Member simplified view: favorites card on top, search/filters, then module cards
   if (isMember) {
-    return (
-      <div className="space-y-4 relative min-h-screen">
+    return <div className="space-y-4 relative min-h-screen">
         {/* Background Image */}
-        <div
-          className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none"
-          style={{
-            backgroundImage: `url(${gleeSculptureBg})`,
-            backgroundPosition: 'center 15%'
-          }}
-        />
+        <div className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" style={{
+        backgroundImage: `url(${gleeSculptureBg})`,
+        backgroundPosition: 'center 15%'
+      }} />
 
         {/* Metal Plate Header */}
         <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg pt-[15px] px-5 pb-5">
@@ -613,15 +585,8 @@ export const MetalHeaderDashboard = ({
           </div>
 
           {/* Key Ignition - Top Right */}
-          <button
-            onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)}
-            className="absolute top-3 right-12 w-8 h-8 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group"
-          >
-            <Key
-              className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${
-                isQuickActionsOpen ? 'rotate-90' : ''
-              }`}
-            />
+          <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="absolute top-3 right-12 w-8 h-8 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group">
+            <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
           </button>
 
           {/* Personalized Title */}
@@ -630,13 +595,11 @@ export const MetalHeaderDashboard = ({
           </h1>
 
           {/* Quick Actions Panel - slides out from underneath */}
-          <QuickActionsPanel
-            user={user}
-            onModuleSelect={handleModuleSelect}
-            isOpen={isQuickActionsOpen}
-            onClose={() => setIsQuickActionsOpen(false)}
-            quickActions={isMember ? { addQuickAction, removeQuickAction, isInQuickActions } : undefined}
-          />
+          <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={isMember ? {
+          addQuickAction,
+          removeQuickAction,
+          isInQuickActions
+        } : undefined} />
         </div>
 
         {/* Dashboard Hero Carousel */}
@@ -646,26 +609,16 @@ export const MetalHeaderDashboard = ({
 
         {/* Message Center Button */}
         <div className="relative z-10 flex justify-center mt-4 mb-6 px-4">
-          <Button 
-            onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-            className="h-14 px-8 shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-            size="lg"
-          >
+          <Button onClick={() => setAiAssistantOpen(!aiAssistantOpen)} className="h-14 px-8 shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="lg">
             <MessageSquare className="h-6 w-6 mr-2" />
             <span className="text-base">Messages</span>
           </Button>
         </div>
 
         {/* Favorites Card */}
-        {groupedModules && groupedModules.favorites.length > 0 && (
-          <div className="relative z-10">
-            <FavoritesCard
-              favorites={groupedModules.favorites}
-              onModuleClick={handleModuleSelect}
-              onToggleFavorite={toggleFavorite}
-            />
-          </div>
-        )}
+        {groupedModules && groupedModules.favorites.length > 0 && <div className="relative z-10">
+            <FavoritesCard favorites={groupedModules.favorites} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} />
+          </div>}
 
 
         {/* Search and Filter Tools */}
@@ -674,12 +627,7 @@ export const MetalHeaderDashboard = ({
           <Card className="p-4 bg-background/95 backdrop-blur-sm border-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search modules..." 
-                value={searchQuery} 
-                onChange={e => setSearchQuery(e.target.value)} 
-                className="pl-10" 
-              />
+              <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-10" />
             </div>
           </Card>
 
@@ -705,11 +653,9 @@ export const MetalHeaderDashboard = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map(cat => (
-                          <SelectItem key={cat} value={cat}>
+                        {categories.map(cat => <SelectItem key={cat} value={cat}>
                             {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -728,22 +674,14 @@ export const MetalHeaderDashboard = ({
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Order</label>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start" 
-                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                    >
-                      {sortOrder === 'asc' ? (
-                        <>
+                    <Button variant="outline" className="w-full justify-start" onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
+                      {sortOrder === 'asc' ? <>
                           <SortAsc className="h-4 w-4 mr-2" />
                           Ascending
-                        </>
-                      ) : (
-                        <>
+                        </> : <>
                           <SortDesc className="h-4 w-4 mr-2" />
                           Descending
-                        </>
-                      )}
+                        </>}
                     </Button>
                   </div>
                 </div>
@@ -757,10 +695,8 @@ export const MetalHeaderDashboard = ({
           <MemberModulesCard userId={user.id} />
           <ExecBoardModulesCard userId={user.id} />
         </div>
-      </div>
-    );
+      </div>;
   }
-
   return <div className="space-y-4 relative min-h-screen">
       {/* Background Image */}
       <div className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" style={{
@@ -790,17 +726,11 @@ export const MetalHeaderDashboard = ({
         </h1>
 
         {/* Quick Actions Panel - slides out from underneath */}
-        <QuickActionsPanel 
-          user={user} 
-          onModuleSelect={handleModuleSelect} 
-          isOpen={isQuickActionsOpen} 
-          onClose={() => setIsQuickActionsOpen(false)}
-          quickActions={isMember ? {
-            addQuickAction,
-            removeQuickAction,
-            isInQuickActions
-          } : undefined}
-        />
+        <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={isMember ? {
+        addQuickAction,
+        removeQuickAction,
+        isInQuickActions
+      } : undefined} />
       </div>
 
 
@@ -809,120 +739,71 @@ export const MetalHeaderDashboard = ({
 
       {/* Message Center Button - Fixed to Right Edge */}
       <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
-        <Button 
-          onClick={() => setAiAssistantOpen(!aiAssistantOpen)} 
-          className="h-auto w-6 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex flex-col items-center justify-center py-1 px-0 opacity-70 hover:opacity-100 transition-opacity"
-        >
+        <Button onClick={() => setAiAssistantOpen(!aiAssistantOpen)} className="h-auto w-6 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex flex-col items-center justify-center py-1 px-0 opacity-70 hover:opacity-100 transition-opacity">
           <MessageSquare className="h-3 w-3 mb-0.5" />
           <div className="flex flex-col text-[8px] tracking-wide leading-none">
-            {['M', 'E', 'S', 'S', 'A', 'G', 'E', 'S'].map((letter, i) => (
-              <span key={i} className="py-[1px]">{letter}</span>
-            ))}
+            {['M', 'E', 'S', 'S', 'A', 'G', 'E', 'S'].map((letter, i) => <span key={i} className="py-[1px]">{letter}</span>)}
           </div>
         </Button>
       </div>
 
       {/* Super Admin Layout Controls */}
-      {isSuperAdmin() && (
-        <div className="flex items-center gap-2 justify-end">
-          <Button
-            variant={isEditingLayout ? "default" : "outline"}
-            size="sm"
-            onClick={() => setIsEditingLayout(!isEditingLayout)}
-          >
-            <Edit3 className="h-4 w-4 mr-2" />
-            {isEditingLayout ? 'Done Editing' : 'Edit Layout'}
-          </Button>
-          {isEditingLayout && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => resetCardOrder()}
-              disabled={isSaving}
-            >
+      {isSuperAdmin() && <div className="flex items-center gap-2 justify-end">
+          
+          {isEditingLayout && <Button variant="ghost" size="sm" onClick={() => resetCardOrder()} disabled={isSaving}>
               <RotateCcw className="h-4 w-4 mr-2" />
               Reset
-            </Button>
-          )}
-        </div>
-      )}
+            </Button>}
+        </div>}
 
       {/* Edit Mode Banner */}
-      {isEditingLayout && (
-        <Card className="bg-primary/10 border-primary">
+      {isEditingLayout && <Card className="bg-primary/10 border-primary">
           <CardContent className="py-3 px-4">
             <p className="text-sm font-medium text-primary flex items-center gap-2">
               <GripVertical className="h-4 w-4" />
               Drag and drop mode active - Hover over cards to see drag handles
             </p>
           </CardContent>
-        </Card>
-      )}
+        </Card>}
 
       {/* Draggable Dashboard Cards */}
-      <DndContext
-        sensors={cardSensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleCardDragEnd}
-      >
+      <DndContext sensors={cardSensors} collisionDetection={closestCenter} onDragEnd={handleCardDragEnd}>
         <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
-            {cardOrder.map((cardId) => {
-              // Favorites card using moduleFavorites
-              if (cardId === 'favorites') {
-                const hasFavorites = moduleFavorites && moduleFavorites.size > 0;
-                
-                // Only show in edit mode, skip if no favorites and not editing
-                if (!isEditingLayout && !hasFavorites) return null;
-                
-                // Convert moduleFavorites Set to array of enriched modules
-                const favoritesArray = hasFavorites ? Array.from(moduleFavorites).map(moduleId => {
-                  const module = allModules.find(m => m.id === moduleId);
-                  if (!module) return null;
-                  const moduleConfig = ModuleRegistry.getModule(moduleId);
-                  return {
-                    ...module,
-                    icon: moduleConfig?.icon || Calendar,
-                    iconColor: moduleConfig?.iconColor || 'blue',
-                    component: moduleConfig?.component,
-                    isNew: moduleConfig?.isNew || false
-                  };
-                }).filter(Boolean) : [];
-                
-                return (
-                  <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    {hasFavorites ? (
-                      <FavoritesCard
-                        favorites={favoritesArray as any}
-                        onModuleClick={handleModuleSelect}
-                        onToggleFavorite={toggleFavorite}
-                      />
-                    ) : (
-                      <Card className="p-4 bg-muted/50 border-dashed">
+            {cardOrder.map(cardId => {
+            // Favorites card using moduleFavorites
+            if (cardId === 'favorites') {
+              const hasFavorites = moduleFavorites && moduleFavorites.size > 0;
+
+              // Only show in edit mode, skip if no favorites and not editing
+              if (!isEditingLayout && !hasFavorites) return null;
+
+              // Convert moduleFavorites Set to array of enriched modules
+              const favoritesArray = hasFavorites ? Array.from(moduleFavorites).map(moduleId => {
+                const module = allModules.find(m => m.id === moduleId);
+                if (!module) return null;
+                const moduleConfig = ModuleRegistry.getModule(moduleId);
+                return {
+                  ...module,
+                  icon: moduleConfig?.icon || Calendar,
+                  iconColor: moduleConfig?.iconColor || 'blue',
+                  component: moduleConfig?.component,
+                  isNew: moduleConfig?.isNew || false
+                };
+              }).filter(Boolean) : [];
+              return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
+                    {hasFavorites ? <FavoritesCard favorites={favoritesArray as any} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} /> : <Card className="p-4 bg-muted/50 border-dashed">
                         <p className="text-sm text-muted-foreground text-center">Favorites card (no favorites yet - click the star on modules to add them)</p>
-                      </Card>
-                    )}
-                  </SortableDashboardCard>
-                );
-              }
-
-              if (cardId === 'modules') {
-                return (
-                  <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    <AllModulesCard
-                      modules={allModules}
-                      onModuleClick={handleModuleSelect}
-                      navigate={navigate}
-                      isFavorite={isFavorite}
-                      onToggleFavorite={toggleFavorite}
-                    />
-                  </SortableDashboardCard>
-                );
-              }
-
-
-              return null;
-            })}
+                      </Card>}
+                  </SortableDashboardCard>;
+            }
+            if (cardId === 'modules') {
+              return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
+                    <AllModulesCard modules={allModules} onModuleClick={handleModuleSelect} navigate={navigate} isFavorite={isFavorite} onToggleFavorite={toggleFavorite} />
+                  </SortableDashboardCard>;
+            }
+            return null;
+          })}
           </div>
         </SortableContext>
       </DndContext>
@@ -948,17 +829,17 @@ export const MetalHeaderDashboard = ({
                 <CardContent className="pt-1">
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2">
                     {Array.from(moduleFavorites).map(moduleId => {
-                  const module = allModules.find(m => m.id === moduleId);
-                  if (!module) return null;
-                  const moduleConfig = ModuleRegistry.getModule(moduleId);
-                  const enrichedModule = {
-                    ...module,
-                    icon: moduleConfig?.icon || Calendar,
-                    iconColor: moduleConfig?.iconColor || 'blue',
-                    component: moduleConfig?.component,
-                    isNew: moduleConfig?.isNew || false
-                  };
-                  return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border" onClick={() => handleModuleSelect(moduleId)}>
+                const module = allModules.find(m => m.id === moduleId);
+                if (!module) return null;
+                const moduleConfig = ModuleRegistry.getModule(moduleId);
+                const enrichedModule = {
+                  ...module,
+                  icon: moduleConfig?.icon || Calendar,
+                  iconColor: moduleConfig?.iconColor || 'blue',
+                  component: moduleConfig?.component,
+                  isNew: moduleConfig?.isNew || false
+                };
+                return <Card key={moduleId} className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border" onClick={() => handleModuleSelect(moduleId)}>
                           <CardHeader className="pb-1 pt-1.5 px-2">
                             <div className="flex items-start justify-between">
                               <div className="flex items-center gap-1.5 flex-1">
@@ -979,7 +860,7 @@ export const MetalHeaderDashboard = ({
                             
                           </CardContent>
                         </Card>;
-                })}
+              })}
                   </div>
                 </CardContent>
               </CollapsibleContent>
