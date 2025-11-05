@@ -47,6 +47,7 @@ export const UnifiedDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [simulatedStudentId, setSimulatedStudentId] = useState<string | null>(null);
+  const [simulatedMemberId, setSimulatedMemberId] = useState<string | null>(null);
   const [simLoading, setSimLoading] = useState(false);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -63,6 +64,7 @@ export const UnifiedDashboard = () => {
     if (location.pathname === '/dashboard/public') return 'public';
     return 'default'; // /dashboard route
   }, [location.pathname]);
+
 
   // When simulating student view, select a sample student (or from ?studentId=)
   useEffect(() => {
@@ -88,6 +90,38 @@ export const UnifiedDashboard = () => {
           console.error('Error fetching sample student:', error);
         }
         setSimulatedStudentId(data?.user_id || null);
+      } finally {
+        setSimLoading(false);
+      }
+    };
+
+    run();
+  }, [viewMode, location.search]);
+
+  // When simulating member view, select a sample member (or from ?memberId=)
+  useEffect(() => {
+    if (viewMode !== 'member') return;
+
+    const run = async () => {
+      setSimLoading(true);
+      try {
+        const params = new URLSearchParams(location.search);
+        const mid = params.get('memberId');
+        if (mid) {
+          setSimulatedMemberId(mid);
+          return;
+        }
+        const { data, error } = await supabase
+          .from('gw_profiles')
+          .select('user_id')
+          .eq('role', 'member')
+          .eq('status', 'active')
+          .limit(1)
+          .single();
+        if (error) {
+          console.error('Error fetching sample member:', error);
+        }
+        setSimulatedMemberId(data?.user_id || null);
       } finally {
         setSimLoading(false);
       }
@@ -176,18 +210,30 @@ export const UnifiedDashboard = () => {
 
   // Show different dashboard content based on view mode
   if (viewMode === 'member') {
-    // Member view: Use the same MetalHeaderDashboard as default/admin view
+    // Member view: Simulate member role permissions
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
-          <MetalHeaderDashboard user={{
-            id: profile.user_id,
-            email: profile.email || '',
-            full_name: profile.full_name || '',
-            role: profile.role || 'user',
-            exec_board_role: profile.exec_board_role,
-            is_exec_board: profile.is_exec_board || false,
-            created_at: new Date().toISOString()
-          }} />
+          {simLoading && (
+            <div className="text-center text-muted-foreground py-10">Loading member view…</div>
+          )}
+          {!simLoading && !simulatedMemberId && (
+            <div className="text-center text-muted-foreground py-10">No member found to simulate. Add a member or pass ?memberId=UUID in the URL.</div>
+          )}
+          {simulatedMemberId && (
+            <MetalHeaderDashboard 
+              user={{
+                id: profile.user_id,
+                email: profile.email || '',
+                full_name: profile.full_name || '',
+                role: 'member',
+                exec_board_role: undefined,
+                is_exec_board: false,
+                created_at: new Date().toISOString()
+              }}
+              simulatedRole="member"
+              simulatedUserId={simulatedMemberId}
+            />
+          )}
         </div>
       </div>;
   }
