@@ -22,7 +22,8 @@ import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
-import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare } from "lucide-react";
+import { AIAssistantDialog } from "@/components/dashboard/AIAssistantDialog";
+import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles } from "lucide-react";
 
 // Sortable Module Card Component
 interface SortableModuleCardProps {
@@ -216,6 +217,7 @@ export const MetalHeaderDashboard = ({
   }, [categories]);
   const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);
   const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
+  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
     coordinateGetter: sortableKeyboardCoordinates
   }));
@@ -734,6 +736,21 @@ export const MetalHeaderDashboard = ({
         />
       )}
 
+      {/* AI Assistant & Message Center */}
+      <Card className="p-4 bg-background/95 backdrop-blur-sm border-2 cursor-pointer hover:bg-accent/5 transition-colors" onClick={() => setAiAssistantOpen(true)}>
+        <div className="relative">
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+            <Bot className="h-4 w-4 text-primary" />
+            <Sparkles className="h-3 w-3 text-primary animate-pulse" />
+          </div>
+          <Input 
+            placeholder="Ask AI Assistant or check messages..." 
+            className="pl-14 cursor-pointer"
+            readOnly
+          />
+        </div>
+      </Card>
+
       {/* Search Field */}
       <Card className="p-4 bg-background/95 backdrop-blur-sm border-2">
         <div className="relative">
@@ -979,5 +996,8 @@ export const MetalHeaderDashboard = ({
         <MemberModulesCard userId={user.id} />
         <ExecBoardModulesCard userId={user.id} />
       </div>
+
+      {/* AI Assistant Dialog */}
+      <AIAssistantDialog open={aiAssistantOpen} onOpenChange={setAiAssistantOpen} />
     </div>;
 };
