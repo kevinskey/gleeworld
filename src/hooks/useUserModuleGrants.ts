@@ -87,16 +87,50 @@ export function useUserModuleGrants(userId?: string) {
               return;
             }
 
-            // Fetch corresponding modules to get stable keys/names/categories
-            // NOTE: module_id in permissions can be either UUID or key string
-            const { data: modulesData, error: modulesError } = await supabase
-              .from('gw_modules')
-              .select('id, key, name, category, is_active')
-              .or(`id.in.(${moduleIds.join(',')}),key.in.(${moduleIds.join(',')})`)
-              .eq('is_active', true);
+            // Handle legacy aliases and split UUID vs text keys
+            const LEGACY_ALIAS: Record<string, string> = {
+              attendance: 'attendance-management',
+              calendar: 'calendar-management'
+            };
+            const isUuid = (v: string) => /^[0-9a-fA-F-]{36}$/.test(v);
 
-            if (modulesError) {
-              console.error('🔧 useUserModuleGrants: Modules fetch error:', modulesError);
+            const uuidIds = moduleIds.filter((id: string) => isUuid(id));
+            const textIdsSet = new Set<string>();
+            for (const id of moduleIds) {
+              if (!isUuid(id)) {
+                textIdsSet.add(id);
+                if (LEGACY_ALIAS[id]) textIdsSet.add(LEGACY_ALIAS[id]);
+              }
+            }
+
+            // Fetch corresponding modules by UUID and by key (with aliases)
+            let modulesData: any[] = [];
+            // By UUID ids
+            if (uuidIds.length > 0) {
+              const { data, error } = await supabase
+                .from('gw_modules')
+                .select('id, key, name, category, is_active')
+                .in('id', uuidIds)
+                .eq('is_active', true);
+              if (error) {
+                console.error('🔧 useUserModuleGrants: Modules fetch (by id) error:', error);
+              } else {
+                modulesData = data || [];
+              }
+            }
+            // By key ids (including legacy aliases)
+            const keyIds = Array.from(textIdsSet);
+            if (keyIds.length > 0) {
+              const { data, error } = await supabase
+                .from('gw_modules')
+                .select('id, key, name, category, is_active')
+                .in('key', keyIds)
+                .eq('is_active', true);
+              if (error) {
+                console.error('🔧 useUserModuleGrants: Modules fetch (by key) error:', error);
+              } else {
+                modulesData = [...modulesData, ...(data || [])];
+              }
             }
 
             const moduleById = new Map((modulesData || []).map((m: any) => [m.id, m]));
@@ -104,11 +138,13 @@ export function useUserModuleGrants(userId?: string) {
 
             // Map permissions to grants (all assigned modules have view + manage)
             const parsedGrants: ModuleGrant[] = (userPermissions || []).map((item: any) => {
-              // Try to find module by ID first, then by key
-              const module = moduleById.get(item.module_id) || moduleByKey.get(item.module_id);
+              const rawId = item.module_id;
+              // Try to find module by ID first, then by key, then by legacy alias
+              const module = moduleById.get(rawId) || moduleByKey.get(rawId) || moduleByKey.get(LEGACY_ALIAS[rawId]);
+              const resolvedKey = module?.key || module?.id || LEGACY_ALIAS[rawId] || rawId;
               return {
-                module_key: module?.key || module?.id || item.module_id,
-                module_name: module?.name || module?.key || item.module_id,
+                module_key: resolvedKey,
+                module_name: module?.name || resolvedKey,
                 can_view: true,
                 can_manage: true,
                 category: module?.category || 'general'
