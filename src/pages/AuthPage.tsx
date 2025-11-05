@@ -189,8 +189,8 @@ export default function AuthPage() {
         </div>
 
         {/* Auth Card */}
-        <Card className="bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/5 to-transparent pointer-events-none" />
+        <Card className="bg-black/40 backdrop-blur-xl border border-white/20 shadow-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/20 pointer-events-none" />
           
           <CardHeader className="relative">
             <CardTitle className="flex items-center justify-center text-white text-xl">
