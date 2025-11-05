@@ -226,7 +226,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
           <>
             {/* Tag Filters */}
             <div className="flex items-center gap-2 px-2 py-1.5 border-b">
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-7 text-xs">
                     <Filter className="h-3 w-3 mr-1.5" />
@@ -239,7 +239,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                     <ChevronDown className="h-3 w-3 ml-1.5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuContent align="start" className="w-56 z-[9999999]"  style={{ zIndex: 9999999 }}>
                   <DropdownMenuLabel>Filter Messages</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {MESSAGE_TAGS.map(tag => (
@@ -358,7 +358,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
             <div className="px-2 py-1.5 border-t bg-background">
               {/* Tag Selection */}
               <div className="flex items-center gap-1.5 mb-1.5">
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-6 text-xs">
                       <Tag className="h-2.5 w-2.5 mr-1" />
@@ -371,7 +371,7 @@ export const ResizableMessageCenter = ({ open, onOpenChange }: ResizableMessageC
                       <ChevronDown className="h-2.5 w-2.5 ml-1" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-52">
+                  <DropdownMenuContent align="start" className="w-52 z-[9999999]" style={{ zIndex: 9999999 }}>
                     <DropdownMenuLabel>Tag this message</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     {MESSAGE_TAGS.map(tag => (
