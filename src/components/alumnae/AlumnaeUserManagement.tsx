@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Edit, UserCheck, Star, Mail, Phone, MapPin, GraduationCap, Briefcase, Calendar, Globe, Heart, Music, Award, MoreVertical, Eye } from 'lucide-react';
+import { Search, Edit, UserCheck, Star, Mail, Phone, MapPin, GraduationCap, Briefcase, Calendar, Globe, Heart, Music, Award, MoreVertical, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -19,6 +20,8 @@ export const AlumnaeUserManagement = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
   const [editingUser, setEditingUser] = useState<any>(null);
   const [totalCount, setTotalCount] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   useEffect(() => {
     fetchAlumnaeUsers();
@@ -89,9 +92,26 @@ export const AlumnaeUserManagement = () => {
     const employer = (user.current_employer ?? '').toString().toLowerCase();
     return name.includes(normalizedSearch) || email.includes(normalizedSearch) || major.includes(normalizedSearch) || employer.includes(normalizedSearch);
   });
+  
+  // Pagination logic
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+  
+  const handlePageSizeChange = (value: string) => {
+    setItemsPerPage(Number(value));
+    setCurrentPage(1);
+  };
   const visibleUsers = filteredUsers.slice(0, 100);
-  const renderCardView = () => <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {filteredUsers.map(user => <Card key={user.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+  const renderCardView = () => <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {paginatedUsers.map(user => <Card key={user.id} className="overflow-hidden hover:shadow-lg transition-shadow">
           <CardHeader className="pb-4 bg-gradient-to-br from-primary/5 to-purple-50">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -201,7 +221,8 @@ export const AlumnaeUserManagement = () => {
               </div>}
           </CardContent>
         </Card>)}
-    </div>;
+    </div>
+  </div>;
   const renderTableView = () => <div className="rounded-md border">
       <Table>
         <TableHeader>
@@ -215,7 +236,7 @@ export const AlumnaeUserManagement = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredUsers.map(user => <TableRow key={user.id}>
+          {paginatedUsers.map(user => <TableRow key={user.id}>
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar>
@@ -324,8 +345,48 @@ export const AlumnaeUserManagement = () => {
                   Assign the "alumna" role to users in the main User Management to see them here.
                 </p>}
             </div> : <>
-              <div className="mb-4 text-sm text-muted-foreground">
-                Showing {filteredUsers.length} of {totalCount} alumnae
+              <div className="mb-4 flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1}-{Math.min(endIndex, filteredUsers.length)} of {filteredUsers.length} {search ? 'filtered' : ''} alumnae ({totalCount} total)
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Items per page:</span>
+                    <Select value={itemsPerPage.toString()} onValueChange={handlePageSizeChange}>
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="25">25</SelectItem>
+                        <SelectItem value="50">50</SelectItem>
+                        <SelectItem value="100">100</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                      Previous
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
               {viewMode === 'cards' ? renderCardView() : renderTableView()}
             </>}
