@@ -8,6 +8,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
+import { X } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AlumnaeProfileEditorProps {
   user: any;
@@ -16,8 +25,37 @@ interface AlumnaeProfileEditorProps {
   onSuccess: () => void;
 }
 
+const EXEC_BOARD_POSITIONS = [
+  'President',
+  'Vice President',
+  'Secretary',
+  'Treasurer',
+  'Chaplain',
+  'Historian',
+  'Librarian',
+  'Business Manager',
+  'Publicity Manager',
+  'Social Chair',
+  'Sergeant at Arms',
+  'Section Leader - Soprano',
+  'Section Leader - Alto',
+  'Other'
+];
+
+const generateYears = () => {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let year = currentYear; year >= 1900; year--) {
+    years.push(year.toString());
+  }
+  return years;
+};
+
 export const AlumnaeProfileEditor = ({ user, open, onOpenChange, onSuccess }: AlumnaeProfileEditorProps) => {
   const [loading, setLoading] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState('');
+  const [selectedYear, setSelectedYear] = useState('');
+  
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
     email: user?.email || '',
@@ -37,10 +75,34 @@ export const AlumnaeProfileEditor = ({ user, open, onOpenChange, onSuccess }: Al
     is_mentor: user?.is_mentor || false,
     is_featured: user?.is_featured || false,
     section_leader: user?.section_leader || false,
+    exec_board_positions: user?.exec_board_positions || [],
+    exec_board_years: user?.exec_board_years || [],
   });
 
   const handleChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const addExecBoardPosition = () => {
+    if (selectedPosition && !formData.exec_board_positions.includes(selectedPosition)) {
+      handleChange('exec_board_positions', [...formData.exec_board_positions, selectedPosition]);
+      setSelectedPosition('');
+    }
+  };
+
+  const removeExecBoardPosition = (position: string) => {
+    handleChange('exec_board_positions', formData.exec_board_positions.filter((p: string) => p !== position));
+  };
+
+  const addExecBoardYear = () => {
+    if (selectedYear && !formData.exec_board_years.includes(selectedYear)) {
+      handleChange('exec_board_years', [...formData.exec_board_years, selectedYear]);
+      setSelectedYear('');
+    }
+  };
+
+  const removeExecBoardYear = (year: string) => {
+    handleChange('exec_board_years', formData.exec_board_years.filter((y: string) => y !== year));
   };
 
   const handleSave = async () => {
@@ -74,9 +136,10 @@ export const AlumnaeProfileEditor = ({ user, open, onOpenChange, onSuccess }: Al
         </DialogHeader>
 
         <Tabs defaultValue="personal" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="personal">Personal</TabsTrigger>
             <TabsTrigger value="academic">Academic</TabsTrigger>
+            <TabsTrigger value="glee">Glee Club</TabsTrigger>
             <TabsTrigger value="professional">Professional</TabsTrigger>
             <TabsTrigger value="other">Other</TabsTrigger>
           </TabsList>
@@ -184,6 +247,114 @@ export const AlumnaeProfileEditor = ({ user, open, onOpenChange, onSuccess }: Al
             </div>
           </TabsContent>
 
+          <TabsContent value="glee" className="space-y-4 mt-4">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Executive Board Positions</Label>
+                <div className="flex gap-2">
+                  <Select value={selectedPosition} onValueChange={setSelectedPosition}>
+                    <SelectTrigger className="flex-1 bg-background">
+                      <SelectValue placeholder="Select position..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {EXEC_BOARD_POSITIONS.map((position) => (
+                        <SelectItem key={position} value={position}>
+                          {position}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    type="button" 
+                    onClick={addExecBoardPosition} 
+                    disabled={!selectedPosition}
+                  >
+                    Add
+                  </Button>
+                </div>
+                {formData.exec_board_positions.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.exec_board_positions.map((position: string) => (
+                      <Badge key={position} variant="secondary" className="gap-1">
+                        {position}
+                        <button
+                          type="button"
+                          onClick={() => removeExecBoardPosition(position)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Year(s) Served on E-Board</Label>
+                <div className="flex gap-2">
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="flex-1 bg-background">
+                      <SelectValue placeholder="Select year..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50 max-h-[200px]">
+                      {generateYears().map((year) => (
+                        <SelectItem key={year} value={year}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button 
+                    type="button" 
+                    onClick={addExecBoardYear} 
+                    disabled={!selectedYear}
+                  >
+                    Add
+                  </Button>
+                </div>
+                {formData.exec_board_years.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.exec_board_years.map((year: string) => (
+                      <Badge key={year} variant="secondary" className="gap-1">
+                        {year}
+                        <button
+                          type="button"
+                          onClick={() => removeExecBoardYear(year)}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="voice_part_glee">Voice Part</Label>
+                <Input
+                  id="voice_part_glee"
+                  value={formData.voice_part}
+                  onChange={(e) => handleChange('voice_part', e.target.value)}
+                  placeholder="e.g., Soprano, Alto"
+                />
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t">
+                <div className="space-y-0.5">
+                  <Label htmlFor="section_leader_glee">Section Leader</Label>
+                  <p className="text-sm text-muted-foreground">Was a section leader during membership</p>
+                </div>
+                <Switch
+                  id="section_leader_glee"
+                  checked={formData.section_leader}
+                  onCheckedChange={(checked) => handleChange('section_leader', checked)}
+                />
+              </div>
+            </div>
+          </TabsContent>
+
           <TabsContent value="professional" className="space-y-4 mt-4">
             <div className="space-y-2">
               <Label htmlFor="current_employer">Current Employer</Label>
@@ -261,18 +432,6 @@ export const AlumnaeProfileEditor = ({ user, open, onOpenChange, onSuccess }: Al
                   id="is_featured"
                   checked={formData.is_featured}
                   onCheckedChange={(checked) => handleChange('is_featured', checked)}
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="section_leader">Section Leader</Label>
-                  <p className="text-sm text-muted-foreground">Was a section leader during membership</p>
-                </div>
-                <Switch
-                  id="section_leader"
-                  checked={formData.section_leader}
-                  onCheckedChange={(checked) => handleChange('section_leader', checked)}
                 />
               </div>
             </div>
