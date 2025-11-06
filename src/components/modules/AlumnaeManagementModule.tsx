@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Video, Image, Star, Calendar, Layout, FormInput, Users, Eye } from "lucide-react";
+import { BookOpen, Video, Image, Star, Calendar, Layout, FormInput, Users, Eye, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewsletterManager } from "@/components/alumnae/NewsletterManager";
 import { InterviewManager } from "@/components/alumnae/InterviewManager";
@@ -72,24 +72,29 @@ export const AlumnaeManagementModule = ({ user, isFullPage = false }: ModuleProp
   return (
     <div className={isFullPage ? "container mx-auto px-4 py-8 space-y-6" : "space-y-6"}>
       {/* Header */}
-      {isFullPage && (
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-primary">Alumnae Page Management</h1>
-          <p className="text-lg text-muted-foreground">
-            Comprehensive CMS for building and managing the /alumnae page with drag-and-drop page builder, media uploads, forms, and user management
-          </p>
-          <div className="pt-4">
-            <Button 
-              onClick={() => window.open('/alumnae', 'alumnaePreview', 'width=1200,height=800,resizable=yes,scrollbars=yes,status=yes,toolbar=no,menubar=no,location=no')} 
-              variant="outline" 
-              className="gap-2"
-            >
-              <Eye className="h-4 w-4" />
-              Preview Live Page
-            </Button>
+      <div className="flex items-center justify-between">
+        {isFullPage ? (
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold text-primary">Alumnae Page Management</h1>
+            <p className="text-lg text-muted-foreground">
+              Comprehensive CMS for building and managing the /alumnae page with drag-and-drop page builder, media uploads, forms, and user management
+            </p>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold text-primary">Alumnae Page Management</h2>
+            <p className="text-sm text-muted-foreground">Manage alumnae portal content</p>
+          </div>
+        )}
+        <Button 
+          onClick={() => window.open('/alumnae', '_blank')} 
+          variant="outline" 
+          className="gap-2"
+        >
+          <ExternalLink className="h-4 w-4" />
+          View Live Page
+        </Button>
+      </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
