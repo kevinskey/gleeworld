@@ -151,44 +151,73 @@ export const AlumnaeManagementModule = ({
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="page-builder" className="w-full">
-            <TabsList className="grid w-full grid-cols-9">
-              <TabsTrigger value="page-builder" className="flex items-center gap-2">
-                <Layout className="h-4 w-4" />
-                <span className="hidden sm:inline">Page Builder</span>
-              </TabsTrigger>
-              <TabsTrigger value="newsletters" className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                <span className="hidden sm:inline">Newsletters</span>
-              </TabsTrigger>
-              <TabsTrigger value="interviews" className="flex items-center gap-2">
-                <Video className="h-4 w-4" />
-                <span className="hidden sm:inline">Interviews</span>
-              </TabsTrigger>
-              <TabsTrigger value="hero" className="flex items-center gap-2">
-                <Image className="h-4 w-4" />
-                <span className="hidden sm:inline">Hero</span>
-              </TabsTrigger>
-              <TabsTrigger value="spotlights" className="flex items-center gap-2">
-                <Star className="h-4 w-4" />
-                <span className="hidden sm:inline">Spotlights</span>
-              </TabsTrigger>
-              <TabsTrigger value="announcements" className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">Announce</span>
-              </TabsTrigger>
-              <TabsTrigger value="forms" className="flex items-center gap-2">
-                <FormInput className="h-4 w-4" />
-                <span className="hidden sm:inline">Forms</span>
-              </TabsTrigger>
-              <TabsTrigger value="users" className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Users</span>
-              </TabsTrigger>
-              <TabsTrigger value="email" className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <span className="hidden sm:inline">Email</span>
-              </TabsTrigger>
-            </TabsList>
+            <div className="border-b -mx-6 px-6">
+              <TabsList className="w-full h-auto p-0 bg-transparent justify-start gap-0 rounded-none overflow-x-auto">
+                <TabsTrigger 
+                  value="page-builder" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Layout className="h-4 w-4" />
+                  <span className="hidden lg:inline">Page Builder</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="newsletters" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span className="hidden lg:inline">Newsletters</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="interviews" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Video className="h-4 w-4" />
+                  <span className="hidden lg:inline">Interviews</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="hero" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Image className="h-4 w-4" />
+                  <span className="hidden lg:inline">Hero</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="spotlights" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Star className="h-4 w-4" />
+                  <span className="hidden lg:inline">Spotlights</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="announcements" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden lg:inline">Announce</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="forms" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <FormInput className="h-4 w-4" />
+                  <span className="hidden lg:inline">Forms</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="users" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="hidden lg:inline">Users</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="email" 
+                  className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+                >
+                  <Mail className="h-4 w-4" />
+                  <span className="hidden lg:inline">Email</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="newsletters" className="mt-6">
               <NewsletterManager />
