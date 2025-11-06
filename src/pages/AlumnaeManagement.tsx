@@ -21,28 +21,58 @@ export default function AlumnaeManagement() {
   const { canAccessAdminModules, loading } = useExecutiveBoardAccess();
   const navigate = useNavigate();
   const [alumnaeCount, setAlumnaeCount] = useState(0);
+  const [newsletterCount, setNewsletterCount] = useState(0);
+  const [interviewCount, setInterviewCount] = useState(0);
+  const [heroSlideCount, setHeroSlideCount] = useState(0);
+  const [spotlightCount, setSpotlightCount] = useState(0);
 
   useEffect(() => {
-    const fetchAlumnaeCount = async () => {
+    const fetchStats = async () => {
       try {
-        const [{ data: roleData, error: roleError }, { data: profileRoleData, error: profileRoleError }] = await Promise.all([
+        // Fetch alumnae count
+        const [{ data: roleData }, { data: profileRoleData }] = await Promise.all([
           supabase.from('user_roles').select('user_id').eq('role', 'alumna'),
           supabase.from('gw_profiles').select('user_id').eq('role', 'alumna')
         ]);
-
-        if (roleError) throw roleError;
-        if (profileRoleError) throw profileRoleError;
 
         const idsFromRoles = (roleData || []).map(r => r.user_id);
         const idsFromProfiles = (profileRoleData || []).map(r => r.user_id);
         const uniqueIds = new Set([...idsFromRoles, ...idsFromProfiles]);
         setAlumnaeCount(uniqueIds.size);
+
+        // Fetch newsletter count
+        const { count: newsletterCnt } = await supabase
+          .from('alumnae_newsletter_announcements')
+          .select('*', { count: 'exact', head: true });
+        setNewsletterCount(newsletterCnt || 0);
+
+        // Fetch media library counts (using available columns only)
+        const { data: mediaItems } = await supabase
+          .from('gw_media_library')
+          .select('id, tags');
+
+        if (mediaItems) {
+          // Count based on tags - these may need adjustment based on actual tag structure
+          const interviews = mediaItems.filter(item => 
+            item.tags && JSON.stringify(item.tags).toLowerCase().includes('interview')
+          );
+          const heroes = mediaItems.filter(item => 
+            item.tags && JSON.stringify(item.tags).toLowerCase().includes('hero')
+          );
+          const spotlights = mediaItems.filter(item => 
+            item.tags && JSON.stringify(item.tags).toLowerCase().includes('spotlight')
+          );
+
+          setInterviewCount(interviews.length);
+          setHeroSlideCount(heroes.length);
+          setSpotlightCount(spotlights.length);
+        }
       } catch (e) {
-        setAlumnaeCount(0);
+        console.error('Error fetching stats:', e);
       }
     };
 
-    fetchAlumnaeCount();
+    fetchStats();
   }, []);
 
   if (loading) {
@@ -103,7 +133,7 @@ export default function AlumnaeManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Newsletters</p>
-                <p className="text-2xl font-bold">12</p>
+                <p className="text-2xl font-bold">{newsletterCount}</p>
               </div>
               <BookOpen className="h-8 w-8 text-primary opacity-50" />
             </div>
@@ -114,7 +144,7 @@ export default function AlumnaeManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Interviews</p>
-                <p className="text-2xl font-bold">8</p>
+                <p className="text-2xl font-bold">{interviewCount}</p>
               </div>
               <Video className="h-8 w-8 text-primary opacity-50" />
             </div>
@@ -125,7 +155,7 @@ export default function AlumnaeManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Hero Slides</p>
-                <p className="text-2xl font-bold">5</p>
+                <p className="text-2xl font-bold">{heroSlideCount}</p>
               </div>
               <Image className="h-8 w-8 text-primary opacity-50" />
             </div>
@@ -136,7 +166,7 @@ export default function AlumnaeManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Spotlights</p>
-                <p className="text-2xl font-bold">6</p>
+                <p className="text-2xl font-bold">{spotlightCount}</p>
               </div>
               <Star className="h-8 w-8 text-primary opacity-50" />
             </div>
