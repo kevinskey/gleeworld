@@ -1,0 +1,56 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { returnUrl } = await req.json();
+    
+    const clientId = Deno.env.get('CANVA_CLIENT_ID');
+    
+    if (!clientId) {
+      throw new Error('CANVA_CLIENT_ID not configured');
+    }
+
+    const url = new URL(req.url);
+    const redirectUri = `${url.origin}/functions/v1/canva-oauth-callback`;
+    
+    // Build Canva authorization URL
+    const authUrl = new URL('https://www.canva.com/api/oauth/authorize');
+    authUrl.searchParams.set('client_id', clientId);
+    authUrl.searchParams.set('redirect_uri', redirectUri);
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('scope', 'design:content:read design:content:write design:meta:read folder:read');
+    authUrl.searchParams.set('state', returnUrl || url.origin);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        authUrl: authUrl.toString() 
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+
+  } catch (error) {
+    console.error('Error generating OAuth URL:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message 
+      }),
+      { 
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+});

@@ -1,8 +1,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ExternalLink, FileDown } from "lucide-react";
+import { ExternalLink, FileDown, Loader2 } from "lucide-react";
+import { useCanvaIntegration } from "@/hooks/useCanvaIntegration";
 
 interface CanvaEmbedModalProps {
   open: boolean;
@@ -12,22 +13,47 @@ interface CanvaEmbedModalProps {
 }
 
 export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) => {
+  const [canvaWindow, setCanvaWindow] = useState<Window | null>(null);
+  const { initiateOAuth, loading } = useCanvaIntegration();
+
   useEffect(() => {
     if (open) {
-      // Determine the right Canva template URL
-      // For hero slides, use banners; for newsletters, use newsletters
-      const isHeroSlide = window.location.pathname.includes('alumnae');
-      const canvaUrl = isHeroSlide 
-        ? "https://www.canva.com/create/banners/" 
-        : "https://www.canva.com/create/newsletters/";
+      // Check for OAuth callback params
+      const params = new URLSearchParams(window.location.search);
+      const authStatus = params.get('canva_auth');
       
-      window.open(canvaUrl, 'canva-editor', 'width=1200,height=800');
-      
-      toast.info("Canva opened in a new window. Follow the steps below to complete your design.", {
-        duration: 6000
-      });
+      if (authStatus === 'success') {
+        toast.success("Connected to Canva! You can now create designs.");
+        window.history.replaceState({}, '', window.location.pathname);
+      } else if (authStatus === 'error') {
+        toast.error(params.get('error') || "Failed to connect to Canva");
+        window.history.replaceState({}, '', window.location.pathname);
+      }
     }
   }, [open]);
+
+  const handleOpenCanva = async () => {
+    try {
+      const returnUrl = `${window.location.origin}${window.location.pathname}?canva_auth=success`;
+      const authUrl = await initiateOAuth(returnUrl);
+      
+      if (authUrl) {
+        const newWindow = window.open(authUrl, '_blank', 'width=600,height=800');
+        setCanvaWindow(newWindow);
+        toast.info("Complete authentication in the popup to connect to Canva");
+      }
+    } catch (error) {
+      toast.error("Failed to connect to Canva");
+    }
+  };
+
+  const handleReopen = () => {
+    if (canvaWindow && !canvaWindow.closed) {
+      canvaWindow.focus();
+    } else {
+      handleOpenCanva();
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -90,18 +116,16 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
           <div className="flex items-center justify-between pt-2">
             <Button
               variant="outline"
-              onClick={() => {
-                const isHeroSlide = window.location.pathname.includes('alumnae');
-                const canvaUrl = isHeroSlide 
-                  ? "https://www.canva.com/create/banners/" 
-                  : "https://www.canva.com/create/newsletters/";
-                window.open(canvaUrl, 'canva-editor', 'width=1200,height=800');
-                toast.success("Canva reopened in new window");
-              }}
+              onClick={handleReopen}
+              disabled={loading}
               className="gap-2"
             >
-              <ExternalLink className="h-4 w-4" />
-              Reopen Canva
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ExternalLink className="h-4 w-4" />
+              )}
+              {canvaWindow ? 'Reopen Canva' : 'Connect to Canva'}
             </Button>
 
             <Button onClick={onClose}>

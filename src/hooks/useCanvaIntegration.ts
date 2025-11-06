@@ -15,6 +15,26 @@ interface CanvaExportData {
 
 export const useCanvaIntegration = () => {
   const [loading, setLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
+  const initiateOAuth = async (returnUrl: string): Promise<string | null> => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('canva-oauth-init', {
+        body: { returnUrl }
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Failed to initiate OAuth');
+
+      return data.authUrl;
+    } catch (error: any) {
+      console.error('Error initiating Canva OAuth:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const createDesign = async (title: string, templateId?: string): Promise<CanvaDesign | null> => {
     setLoading(true);
@@ -66,8 +86,11 @@ export const useCanvaIntegration = () => {
   };
 
   return {
+    initiateOAuth,
     createDesign,
     exportDesign,
-    loading
+    loading,
+    accessToken,
+    setAccessToken
   };
 };
