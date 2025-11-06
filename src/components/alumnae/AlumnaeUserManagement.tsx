@@ -21,26 +21,29 @@ export const AlumnaeUserManagement = () => {
 
   const fetchAlumnaeUsers = async () => {
     try {
-      // Query from secure user_roles table instead of gw_profiles.role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'alumna');
+      // Prefer user_roles table, but fall back to gw_profiles.role to be backward compatible
+      const [{ data: roleData, error: roleError }, { data: profileRoleData, error: profileRoleError }] = await Promise.all([
+        supabase.from('user_roles').select('user_id').eq('role', 'alumna'),
+        supabase.from('gw_profiles').select('user_id').eq('role', 'alumna')
+      ]);
 
       if (roleError) throw roleError;
+      if (profileRoleError) throw profileRoleError;
 
-      if (!roleData || roleData.length === 0) {
+      const idsFromRoles = (roleData || []).map(r => r.user_id);
+      const idsFromProfiles = (profileRoleData || []).map(r => r.user_id);
+      const uniqueIds = Array.from(new Set([...idsFromRoles, ...idsFromProfiles]));
+
+      if (uniqueIds.length === 0) {
         setUsers([]);
         return;
       }
-
-      const alumnaUserIds = roleData.map(r => r.user_id);
 
       // Fetch full profile data for these users
       const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
         .select('*')
-        .in('user_id', alumnaUserIds)
+        .in('user_id', uniqueIds)
         .order('full_name', { ascending: true });
 
       if (profileError) throw profileError;

@@ -24,12 +24,22 @@ export default function AlumnaeManagement() {
 
   useEffect(() => {
     const fetchAlumnaeCount = async () => {
-      const { count } = await supabase
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'alumna');
-      
-      setAlumnaeCount(count || 0);
+      try {
+        const [{ data: roleData, error: roleError }, { data: profileRoleData, error: profileRoleError }] = await Promise.all([
+          supabase.from('user_roles').select('user_id').eq('role', 'alumna'),
+          supabase.from('gw_profiles').select('user_id').eq('role', 'alumna')
+        ]);
+
+        if (roleError) throw roleError;
+        if (profileRoleError) throw profileRoleError;
+
+        const idsFromRoles = (roleData || []).map(r => r.user_id);
+        const idsFromProfiles = (profileRoleData || []).map(r => r.user_id);
+        const uniqueIds = new Set([...idsFromRoles, ...idsFromProfiles]);
+        setAlumnaeCount(uniqueIds.size);
+      } catch (e) {
+        setAlumnaeCount(0);
+      }
     };
 
     fetchAlumnaeCount();
