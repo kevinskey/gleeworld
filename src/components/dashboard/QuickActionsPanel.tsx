@@ -97,10 +97,11 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
     }
   }, [user.id]);
 
-  // Save custom actions to localStorage
+  // Save custom actions to localStorage (strip runtime functions)
   const saveCustomActions = (actions: any[]) => {
-    localStorage.setItem(`quickActions_${user.id}`, JSON.stringify(actions));
-    setCustomActions(actions);
+    const serialized = actions.map(({ action, ...rest }) => rest);
+    localStorage.setItem(`quickActions_${user.id}`, JSON.stringify(serialized));
+    setCustomActions(serialized);
   };
 
   const defaultActions = [
@@ -124,12 +125,23 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
     }
   ];
 
-  const allActions = [...defaultActions, ...customActions];
+  const computedCustomActions = customActions.map((a) => ({
+    ...a,
+    action: typeof a.action === 'function' ? a.action : () => onModuleSelect(a.moduleId || a.name || a.id),
+  }));
 
-  const handleActionClick = (actionFn: () => void) => {
+  const allActions = [...defaultActions, ...computedCustomActions];
+
+  const handleActionClick = (actionFn?: () => void, fallbackModuleId?: string) => {
     try {
       console.log('Action clicked, executing...');
-      actionFn();
+      if (typeof actionFn === 'function') {
+        actionFn();
+      } else if (fallbackModuleId) {
+        onModuleSelect(fallbackModuleId);
+      } else {
+        throw new TypeError('actionFn is not a function');
+      }
       console.log('Action executed successfully');
       onClose();
     } catch (error) {
@@ -322,7 +334,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                   <Button
                     variant="ghost"
                     className="flex-1 justify-start h-auto p-3 hover:bg-slate-400/20 dark:hover:bg-slate-600/20 group border border-transparent hover:border-slate-500 dark:hover:border-slate-400 rounded-lg transition-all duration-200"
-                    onClick={() => handleActionClick(action.action)}
+                    onClick={() => handleActionClick(action.action, (action as any).moduleId || action.id)}
                   >
                     <div className="flex items-center gap-3 w-full">
                       <div 
