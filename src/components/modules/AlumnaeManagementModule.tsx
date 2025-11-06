@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Video, Image, Star, Calendar, Layout, FormInput, Users, Eye, ExternalLink } from "lucide-react";
+import { BookOpen, Video, Image, Star, Calendar, Layout, FormInput, Users, Eye, ExternalLink, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewsletterManager } from "@/components/alumnae/NewsletterManager";
 import { InterviewManager } from "@/components/alumnae/InterviewManager";
@@ -12,6 +12,7 @@ import { AnnouncementManager } from "@/components/alumnae/AnnouncementManager";
 import { AlumnaePageBuilder } from "@/components/alumnae/AlumnaePageBuilder";
 import { AlumnaeFormBuilder } from "@/components/alumnae/AlumnaeFormBuilder";
 import { AlumnaeUserManagement } from "@/components/alumnae/AlumnaeUserManagement";
+import { AlumnaeEmailManager } from "@/components/alumnae/AlumnaeEmailManager";
 import { ModuleProps } from "@/types/unified-modules";
 export const AlumnaeManagementModule = ({
   user,
@@ -150,7 +151,7 @@ export const AlumnaeManagementModule = ({
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="page-builder" className="w-full">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="page-builder" className="flex items-center gap-2">
                 <Layout className="h-4 w-4" />
                 <span className="hidden sm:inline">Page Builder</span>
@@ -182,6 +183,10 @@ export const AlumnaeManagementModule = ({
               <TabsTrigger value="users" className="flex items-center gap-2">
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Users</span>
+              </TabsTrigger>
+              <TabsTrigger value="email" className="flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                <span className="hidden sm:inline">Email</span>
               </TabsTrigger>
             </TabsList>
 
@@ -215,6 +220,10 @@ export const AlumnaeManagementModule = ({
 
             <TabsContent value="users" className="mt-6">
               <AlumnaeUserManagement />
+            </TabsContent>
+
+            <TabsContent value="email" className="mt-6">
+              <AlumnaeEmailManager />
             </TabsContent>
           </Tabs>
         </CardContent>
