@@ -26,7 +26,9 @@ serve(async (req) => {
       throw new Error('Canva credentials not configured');
     }
 
-    const redirectUri = `${url.origin}/functions/v1/canva-oauth-callback`;
+    // Must match the redirect_uri used in the authorize step (force HTTPS)
+    const redirectUri = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/canva-oauth-callback`;
+
 
     // Exchange code for access token
     const tokenResponse = await fetch('https://api.canva.com/rest/v1/oauth/token', {

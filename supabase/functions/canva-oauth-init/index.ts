@@ -18,9 +18,10 @@ serve(async (req) => {
     if (!clientId) {
       throw new Error('CANVA_CLIENT_ID not configured');
     }
-
     const url = new URL(req.url);
-    const redirectUri = `${url.origin}/functions/v1/canva-oauth-callback`;
+
+    // Always use HTTPS for Supabase Edge redirect URI (avoid http during local edge runtime)
+    const redirectUri = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/canva-oauth-callback`;
     
     // Build Canva authorization URL
     const authUrl = new URL('https://www.canva.com/api/oauth/authorize');
@@ -28,7 +29,7 @@ serve(async (req) => {
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('scope', 'design:content:read design:content:write design:meta:read folder:read');
-    authUrl.searchParams.set('state', returnUrl || url.origin);
+    authUrl.searchParams.set('state', returnUrl || `${url.origin}/dashboard`);
 
     return new Response(
       JSON.stringify({ 
