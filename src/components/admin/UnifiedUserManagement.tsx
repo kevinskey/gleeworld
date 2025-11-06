@@ -570,6 +570,20 @@ export const UnifiedUserManagement = () => {
                             <DropdownMenuSeparator />
                             
                             <DropdownMenuItem 
+                              onClick={() => handleQuickRoleChange(user.id, 'guest')}
+                              disabled={user.role === 'guest'}
+                            >
+                              <User className="h-4 w-4 mr-2" />
+                              Make Guest
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleQuickRoleChange(user.id, 'fan')}
+                              disabled={user.role === 'fan'}
+                            >
+                              <UserX className="h-4 w-4 mr-2" />
+                              Make Fan
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
                               onClick={() => handleQuickRoleChange(user.id, 'student')}
                               disabled={user.role === 'student'}
                             >
@@ -584,6 +598,20 @@ export const UnifiedUserManagement = () => {
                               Make Member
                             </DropdownMenuItem>
                             <DropdownMenuItem 
+                              onClick={() => handleQuickRoleChange(user.id, 'alumna')}
+                              disabled={user.role === 'alumna'}
+                            >
+                              <UserCheck className="h-4 w-4 mr-2" />
+                              Make Alumna
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleQuickRoleChange(user.id, 'executive')}
+                              disabled={user.role === 'executive'}
+                            >
+                              <UserCog className="h-4 w-4 mr-2" />
+                              Make Executive
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
                               onClick={() => handleQuickRoleChange(user.id, 'admin')}
                               disabled={user.role === 'admin'}
                             >
@@ -591,11 +619,18 @@ export const UnifiedUserManagement = () => {
                               Make Admin
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'alumna')}
-                              disabled={user.role === 'alumna'}
+                              onClick={() => handleQuickRoleChange(user.id, 'super-admin')}
+                              disabled={user.role === 'super-admin'}
                             >
-                              <UserCheck className="h-4 w-4 mr-2" />
-                              Make Alumna
+                              <Crown className="h-4 w-4 mr-2" />
+                              Make Super Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => handleQuickRoleChange(user.id, 'auditioner')}
+                              disabled={user.role === 'auditioner'}
+                            >
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Make Auditioner
                             </DropdownMenuItem>
                             
                             <DropdownMenuSeparator />
