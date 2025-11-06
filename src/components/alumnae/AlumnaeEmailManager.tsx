@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Mail, Send, Loader2, Users, CheckCircle2 } from "lucide-react";
+import { Mail, Send, Loader2, Users, CheckCircle2, Search } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -19,6 +19,7 @@ interface AlumnaeUser {
 export const AlumnaeEmailManager = () => {
   const [alumnae, setAlumnae] = useState<AlumnaeUser[]>([]);
   const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -78,12 +79,28 @@ export const AlumnaeEmailManager = () => {
   };
 
   const selectAll = () => {
-    if (selectedRecipients.size === alumnae.length) {
-      setSelectedRecipients(new Set());
+    const filtered = filteredAlumnae;
+    const filteredIds = new Set(filtered.map(a => a.user_id));
+    
+    if (filtered.every(a => selectedRecipients.has(a.user_id))) {
+      // Deselect all filtered
+      const newSelection = new Set(selectedRecipients);
+      filteredIds.forEach(id => newSelection.delete(id));
+      setSelectedRecipients(newSelection);
     } else {
-      setSelectedRecipients(new Set(alumnae.map(a => a.user_id)));
+      // Select all filtered
+      setSelectedRecipients(new Set([...selectedRecipients, ...filteredIds]));
     }
   };
+
+  const filteredAlumnae = alumnae.filter(alumna => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      alumna.full_name?.toLowerCase().includes(query) ||
+      alumna.email.toLowerCase().includes(query)
+    );
+  });
 
   const sendEmail = async () => {
     if (selectedRecipients.size === 0) {
@@ -164,15 +181,26 @@ export const AlumnaeEmailManager = () => {
                 className="gap-2"
               >
                 <Users className="h-4 w-4" />
-                {selectedRecipients.size === alumnae.length ? 'Deselect All' : 'Select All'}
+                {filteredAlumnae.every(a => selectedRecipients.has(a.user_id)) && filteredAlumnae.length > 0 ? 'Deselect All' : 'Select All'}
                 {selectedRecipients.size > 0 && ` (${selectedRecipients.size})`}
               </Button>
+            </div>
+
+            {/* Search Field */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
 
             <Card>
               <ScrollArea className="h-[200px] p-4">
                 <div className="space-y-3">
-                  {alumnae.map((alumna) => (
+                  {filteredAlumnae.map((alumna) => (
                     <div key={alumna.user_id} className="flex items-center space-x-3">
                       <Checkbox
                         checked={selectedRecipients.has(alumna.user_id)}
@@ -192,7 +220,13 @@ export const AlumnaeEmailManager = () => {
                     </div>
                   ))}
                   
-                  {alumnae.length === 0 && (
+                  {filteredAlumnae.length === 0 && searchQuery && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No alumnae found matching "{searchQuery}"
+                    </p>
+                  )}
+
+                  {alumnae.length === 0 && !searchQuery && (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No alumnae found with email addresses
                     </p>
