@@ -13,17 +13,25 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
     minHeight: section.row_height || 'auto',
   };
 
-  const getGridClass = () => {
-    switch (section.layout_type) {
-      case 'two-column':
-        return 'grid grid-cols-1 md:grid-cols-2 gap-6';
-      case 'three-column':
-        return 'grid grid-cols-1 md:grid-cols-3 gap-6';
-      case 'grid':
-        return 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
-      default:
-        return 'flex flex-col gap-6';
-    }
+  const renderItems = () => {
+    // Group items by column_position
+    const itemsByColumn: { [key: number]: any[] } = {};
+    activeItems.forEach((item: any) => {
+      const col = item.column_position || 1;
+      if (!itemsByColumn[col]) itemsByColumn[col] = [];
+      itemsByColumn[col].push(item);
+    });
+
+    // Render items in a flex container respecting width_percentage
+    return (
+      <div className="flex flex-wrap gap-6">
+        {activeItems.map((item: any) => (
+          <div key={item.id} style={{ width: `${item.width_percentage || 100}%`, minWidth: '300px' }}>
+            <DynamicItem item={item} />
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const items = section.alumnae_section_items || [];
@@ -37,11 +45,7 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
             {section.title}
           </h2>
         )}
-        <div className={getGridClass()}>
-          {activeItems.map((item: any) => (
-            <DynamicItem key={item.id} item={item} />
-          ))}
-        </div>
+        {renderItems()}
       </div>
     </section>
   );
