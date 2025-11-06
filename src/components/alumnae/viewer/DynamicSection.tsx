@@ -14,6 +14,29 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
   };
 
   const renderItems = () => {
+    // Check if section has custom column widths
+    const columnWidths = section.column_widths 
+      ? section.column_widths.split(',').map((w: string) => parseFloat(w.trim()))
+      : null;
+
+    if (columnWidths && columnWidths.length > 0) {
+      // Use custom column widths
+      return (
+        <div className="grid grid-cols-12 gap-6">
+          {activeItems.map((item: any, index: number) => {
+            const widthPercent = columnWidths[index % columnWidths.length] || 100;
+            const span = Math.max(1, Math.min(12, Math.round((widthPercent / 100) * 12)));
+            return (
+              <div key={item.id} style={{ gridColumn: `span ${span} / span ${span}` }}>
+                <DynamicItem item={item} />
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Fall back to item-level width_percentage
     return (
       <div className="grid grid-cols-12 gap-6">
         {activeItems.map((item: any) => {
