@@ -22,6 +22,30 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
 
   useEffect(() => {
     fetchGlobalTitleFormatting();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('title-formatting-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'alumnae_global_settings',
+          filter: 'setting_key=eq.title_formatting'
+        },
+        (payload) => {
+          console.log('Title formatting updated:', payload);
+          if (payload.new && (payload.new as any).setting_value) {
+            setTitleFormatting((payload.new as any).setting_value as unknown as TitleFormatting);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchGlobalTitleFormatting = async () => {
