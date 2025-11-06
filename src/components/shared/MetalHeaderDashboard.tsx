@@ -646,9 +646,7 @@ export const MetalHeaderDashboard = ({
                 };
               }).filter(Boolean) : [];
               return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    {hasFavorites ? <FavoritesCard favorites={favoritesArray as any} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} /> : <Card className="p-4 bg-muted/50 border-dashed">
-                        <p className="text-sm text-muted-foreground text-center">Favorites card (no favorites yet - click the star on modules to add them)</p>
-                      </Card>}
+                    <FavoritesCard favorites={favoritesArray as any} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} />
                   </SortableDashboardCard>;
             }
             if (cardId === 'modules') {
