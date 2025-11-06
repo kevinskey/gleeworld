@@ -36,6 +36,7 @@ import { TestBuilder } from '../test-builder/TestBuilder';
 import { AlumnaePortalModule } from '../modules/AlumnaePortalModule';
 import { DashboardHeroManagerModule } from '@/components/modules/DashboardHeroManagerModule';
 import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
+import { AlumnaeManagementModule } from '../modules/AlumnaeManagementModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -121,6 +122,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <TestBuilder courseId="all" courseName="All Courses" />;
       case 'alumnae-portal':
         return <AlumnaePortalModule />;
+      case 'alumnae-management':
+        return <AlumnaeManagementModule />;
       case 'hero-management':
       case 'hero-manager':
         return <DashboardHeroManagerModule />;
