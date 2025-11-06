@@ -17,7 +17,8 @@ import {
   Plus,
   Minus,
   ShoppingBag,
-  CreditCard
+  CreditCard,
+  CheckCircle
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -222,11 +223,79 @@ export const Shop = () => {
 
   return (
     <PublicLayout>
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-br from-primary via-primary-glow to-accent overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLjIxLTEuNzktNC00LTRzLTQgMS43OS00IDQgMS43OSA0IDQgNCA0LTEuNzkgNC00em0wLTEwYzAtMi4yMS0xLjc5LTQtNC00cy00IDEuNzktNCA0IDEuNzkgNCA0IDQgNC0xLjc5IDQtNHptMC0xMGMwLTIuMjEtMS43OS00LTQtNHMtNCAxLjc5LTQgNCAxLjc5IDQgNCA0IDQtMS43OSA0LTR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-20"></div>
+        
+        <div className="container mx-auto px-4 py-16 sm:py-24 lg:py-32 relative">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-block mb-6">
+              <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm text-sm px-4 py-1">
+                Official Merchandise
+              </Badge>
+            </div>
+            
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+              GleeWorld Shop
+            </h1>
+            
+            <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-2xl mx-auto leading-relaxed">
+              Celebrate 100+ years of musical excellence with exclusive Spelman College Glee Club merchandise, 
+              recordings, and collectibles. Every purchase supports our legacy.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+              <Button 
+                size="lg" 
+                className="bg-white text-primary hover:bg-white/90 shadow-xl min-w-[200px]"
+                onClick={() => {
+                  const productsSection = document.getElementById('products-section');
+                  productsSection?.scrollIntoView({ behavior: 'smooth' });
+                }}
+              >
+                <ShoppingBag className="h-5 w-5 mr-2" />
+                Shop Now
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline" 
+                className="bg-white/10 text-white border-white/30 hover:bg-white/20 backdrop-blur-sm min-w-[200px]"
+                onClick={handleCheckout}
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                Cart ({getTotalItems()})
+              </Button>
+            </div>
+            
+            <div className="flex flex-wrap gap-6 justify-center text-white/90 text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-white" />
+                <span>Free Shipping Over $150</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Star className="h-5 w-5 text-white fill-white" />
+                <span>Premium Quality</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Heart className="h-5 w-5 text-white fill-white" />
+                <span>Supporting Our Legacy</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Wave decoration */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="w-full h-12 sm:h-16">
+            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="fill-background"></path>
+          </svg>
+        </div>
+      </div>
+
       <div className="container mx-auto px-2 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
         <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="w-full sm:w-auto">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">GleeWorld Shop</h1>
-            <p className="text-sm sm:text-base text-gray-600">Official Spelman College Glee Club merchandise and recordings</p>
+            <div className="text-sm text-muted-foreground mb-2">Total: <span className="font-bold text-lg text-foreground">${getTotalPrice().toFixed(2)}</span></div>
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
             <div className="relative w-full sm:w-auto">
@@ -252,7 +321,7 @@ export const Shop = () => {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-4 bg-white rounded-lg shadow-sm">
+        <div id="products-section" className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 p-3 sm:p-4 bg-white rounded-lg shadow-sm">
           <div className="flex-1">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
