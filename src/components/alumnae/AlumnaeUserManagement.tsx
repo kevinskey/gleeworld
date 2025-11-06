@@ -39,11 +39,11 @@ export const AlumnaeUserManagement = () => {
   const toggleMentorStatus = async (userId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('alumnae_users')
-        .upsert({
-          user_id: userId,
+        .from('gw_profiles')
+        .update({
           is_mentor: !currentStatus,
-        });
+        })
+        .eq('id', userId);
 
       if (error) throw error;
       toast.success('Mentor status updated');
