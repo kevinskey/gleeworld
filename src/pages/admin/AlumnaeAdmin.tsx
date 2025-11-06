@@ -438,10 +438,16 @@ export default function AlumnaeAdmin() {
                       Manage all alumnae landing page content from the tabs above
                     </p>
                   </div>
-                  <Button onClick={() => navigate('/alumnae')} size="lg" className="gap-2">
-                    View Alumnae Page
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={() => navigate('/alumnae')} variant="outline" className="gap-2">
+                      View Page
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button onClick={() => navigate('/alumnae-management')} className="gap-2">
+                      Page Builder
+                      <Layout className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

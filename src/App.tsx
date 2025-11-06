@@ -88,6 +88,7 @@ import { FeedbackDashboard } from "./modules/rehearsals/feedback-dashboard/Feedb
 import AlumnaeLanding from "./pages/AlumnaeLanding";
 import AlumnaeAdmin from "./pages/admin/AlumnaeAdmin";
 import AlumnaeManagement from "./pages/AlumnaeManagement";
+import AlumnaePageView from "./pages/AlumnaePageView";
 import SendNotificationPage from "./pages/SendNotificationPage";
 import AuditionPage from "./pages/AuditionPage";
 import Handbook from "./pages/Handbook";
@@ -933,22 +934,30 @@ const App = () => {
                              </ProtectedRoute>
                            } 
                          />
-                       <Route 
-                          path="/alumnae" 
-                          element={
-                            <AlumnaeRoute>
-                              <AlumnaeLanding />
-                            </AlumnaeRoute>
-                          } 
-                        />
                         <Route 
-                          path="/admin/alumnae" 
-                          element={
-                            <ProtectedRoute>
-                              <AlumnaeAdmin />
-                            </ProtectedRoute>
-                          } 
-                        />
+                           path="/alumnae" 
+                           element={
+                             <PublicRoute>
+                               <AlumnaePageView />
+                             </PublicRoute>
+                           } 
+                         />
+                         <Route 
+                           path="/admin/alumnae" 
+                           element={
+                             <ProtectedRoute>
+                               <AlumnaeAdmin />
+                             </ProtectedRoute>
+                           } 
+                         />
+                         <Route 
+                           path="/alumnae-management" 
+                           element={
+                             <ProtectedRoute>
+                               <AlumnaeManagement />
+                             </ProtectedRoute>
+                           } 
+                         />
                          <Route 
                            path="/admin/exec-board-monitor" 
                            element={

@@ -14,7 +14,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { AlumnaePageBuilder } from "@/components/alumnae/AlumnaePageBuilder";
 import { AlumnaeFormBuilder } from "@/components/alumnae/AlumnaeFormBuilder";
 import { AlumnaeUserManagement } from "@/components/alumnae/AlumnaeUserManagement";
-import { Layout, FormInput, Users } from "lucide-react";
+import { Layout, FormInput, Users, Eye } from "lucide-react";
 
 export default function AlumnaeManagement() {
   const { canAccessAdminModules, loading } = useExecutiveBoardAccess();
@@ -42,12 +42,18 @@ export default function AlumnaeManagement() {
           className="gap-2 mb-4"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          Back to Admin
         </Button>
-        <h1 className="text-4xl font-bold text-primary">Alumnae Content Management</h1>
+        <h1 className="text-4xl font-bold text-primary">Alumnae Page Management</h1>
         <p className="text-lg text-muted-foreground">
-          Manage newsletters, interviews, hero images, spotlights, and announcements for the alumnae portal
+          Comprehensive CMS for building and managing the /alumnae page with drag-and-drop page builder, media uploads, forms, and user management
         </p>
+        <div className="pt-4">
+          <Button onClick={() => window.open('/alumnae', '_blank')} variant="outline" className="gap-2">
+            <Eye className="h-4 w-4" />
+            Preview Live Page
+          </Button>
+        </div>
       </div>
 
       {/* Quick Stats */}
