@@ -101,9 +101,9 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
       if (error) throw error;
 
       toast.success("Template saved successfully!");
-      setIsOpen(false);
       resetForm();
       onTemplateCreated?.();
+      setIsOpen(false);
     } catch (error: any) {
       toast.error("Failed to save template", { description: error.message });
     } finally {
