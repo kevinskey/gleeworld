@@ -432,24 +432,38 @@ export const MailchimpStyleCampaigns = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="campaigns" className="gap-2">
-            <Inbox className="h-4 w-4" />
-            Campaigns
-          </TabsTrigger>
-          <TabsTrigger value="create" className="gap-2">
-            <Sparkles className="h-4 w-4" />
-            Create
-          </TabsTrigger>
-          <TabsTrigger value="templates" className="gap-2">
-            <FileText className="h-4 w-4" />
-            Templates
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-        </TabsList>
+        <div className="border-b">
+          <TabsList className="w-full h-auto p-0 bg-transparent justify-start gap-0 rounded-none overflow-x-auto">
+            <TabsTrigger 
+              value="campaigns" 
+              className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+            >
+              <Inbox className="h-4 w-4" />
+              <span className="hidden sm:inline">Campaigns</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="create" 
+              className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden sm:inline">Create</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="templates" 
+              className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+            >
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">Templates</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="analytics" 
+              className="flex-shrink-0 gap-2 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3"
+            >
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Campaigns List */}
         <TabsContent value="campaigns" className="space-y-4">
