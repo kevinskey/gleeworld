@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AlumnaeBulkImport } from './AlumnaeBulkImport';
+import { AlumnaeProfileEditor } from './AlumnaeProfileEditor';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ export const AlumnaeUserManagement = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
+  const [editingUser, setEditingUser] = useState<any>(null);
 
   useEffect(() => {
     fetchAlumnaeUsers();
@@ -146,7 +148,7 @@ export const AlumnaeUserManagement = () => {
                     <Star className="h-4 w-4 mr-2" />
                     {user.is_featured ? 'Unfeature' : 'Feature'}
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setEditingUser(user)}>
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Profile
                   </DropdownMenuItem>
@@ -325,15 +327,15 @@ export const AlumnaeUserManagement = () => {
                       {user.is_mentor ? 'Remove Mentor' : 'Make Mentor'}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => toggleFeaturedStatus(user.id, user.is_featured)}>
-                      <Star className="h-4 w-4 mr-2" />
-                      {user.is_featured ? 'Unfeature' : 'Feature'}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    <Star className="h-4 w-4 mr-2" />
+                    {user.is_featured ? 'Unfeature' : 'Feature'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               </TableCell>
             </TableRow>
           ))}
@@ -405,6 +407,15 @@ export const AlumnaeUserManagement = () => {
           )}
         </CardContent>
       </Card>
+
+      {editingUser && (
+        <AlumnaeProfileEditor
+          user={editingUser}
+          open={!!editingUser}
+          onOpenChange={(open) => !open && setEditingUser(null)}
+          onSuccess={fetchAlumnaeUsers}
+        />
+      )}
     </div>
   );
 };
