@@ -101,7 +101,7 @@ export const DynamicItem = ({ item }: DynamicItemProps) => {
   };
 
   return (
-    <div style={{ width: `${item.width_percentage}%` }} className="min-w-0">
+    <div className="w-full h-full">
       {renderContent()}
     </div>
   );
