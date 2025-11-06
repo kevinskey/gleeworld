@@ -35,11 +35,13 @@ export const DynamicItem = ({ item }: DynamicItemProps) => {
           <div>
             {item.title && <h3 className="text-xl font-semibold mb-3">{item.title}</h3>}
             {item.media_url ? (
-              <img
-                src={item.media_url}
-                alt={item.title || 'Image'}
-                className="w-full h-auto rounded-lg shadow-md"
-              />
+              <div className="w-full aspect-video rounded-lg shadow-md overflow-hidden">
+                <img
+                  src={item.media_url}
+                  alt={item.title || 'Image'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             ) : (
               <div className="w-full aspect-video bg-muted rounded-lg shadow-md flex items-center justify-center">
                 <p className="text-muted-foreground">No image uploaded</p>
