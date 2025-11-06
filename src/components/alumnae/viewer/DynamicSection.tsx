@@ -14,22 +14,16 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
   };
 
   const renderItems = () => {
-    // Group items by column_position
-    const itemsByColumn: { [key: number]: any[] } = {};
-    activeItems.forEach((item: any) => {
-      const col = item.column_position || 1;
-      if (!itemsByColumn[col]) itemsByColumn[col] = [];
-      itemsByColumn[col].push(item);
-    });
-
-    // Render items in a flex container respecting width_percentage
     return (
-      <div className="flex flex-wrap gap-6">
-        {activeItems.map((item: any) => (
-          <div key={item.id} style={{ width: `${item.width_percentage || 100}%`, minWidth: '300px' }}>
-            <DynamicItem item={item} />
-          </div>
-        ))}
+      <div className="grid grid-cols-12 gap-6">
+        {activeItems.map((item: any) => {
+          const span = Math.max(1, Math.min(12, Math.round(((item.width_percentage || 100) / 100) * 12)));
+          return (
+            <div key={item.id} style={{ gridColumn: `span ${span} / span ${span}` }}>
+              <DynamicItem item={item} />
+            </div>
+          );
+        })}
       </div>
     );
   };
