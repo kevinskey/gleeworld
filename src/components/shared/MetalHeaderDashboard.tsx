@@ -10,6 +10,7 @@ import { useDashboardCardOrder } from "@/hooks/useDashboardCardOrder";
 import { useUserRole } from "@/hooks/useUserRole";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
 import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
+import { UNIFIED_MODULES } from '@/config/unified-modules';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -517,7 +518,27 @@ export const MetalHeaderDashboard = ({
 
   // If a module is selected, render it with back button
   if (selectedModule) {
-    const moduleConfig = ModuleRegistry.getModule(selectedModule);
+    // Try to get module from registry first, then fall back to unified modules
+    let moduleConfig = ModuleRegistry.getModule(selectedModule);
+    
+    // Fallback: check UNIFIED_MODULES directly if not in registry yet
+    if (!moduleConfig) {
+      const unifiedModule = UNIFIED_MODULES.find(m => m.id === selectedModule || m.name === selectedModule);
+      if (unifiedModule) {
+        moduleConfig = {
+          id: unifiedModule.id,
+          title: unifiedModule.title,
+          description: unifiedModule.description,
+          icon: unifiedModule.icon,
+          iconColor: unifiedModule.iconColor,
+          category: unifiedModule.category,
+          isNew: unifiedModule.isNew,
+          component: unifiedModule.component,
+          fullPageComponent: unifiedModule.fullPageComponent
+        };
+      }
+    }
+    
     if (moduleConfig?.component) {
       const ModuleComponent = moduleConfig.component;
       return <div className="space-y-6 relative min-h-screen">
