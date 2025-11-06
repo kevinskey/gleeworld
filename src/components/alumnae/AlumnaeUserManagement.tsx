@@ -53,10 +53,12 @@ export const AlumnaeUserManagement = () => {
     }
   };
 
-  const filteredUsers = users.filter((user) =>
-    user.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    user.email?.toLowerCase().includes(search.toLowerCase())
-  );
+  const normalizedSearch = search.toLowerCase().trim();
+  const filteredUsers = users.filter((user) => {
+    const name = (user.full_name ?? '').toString().toLowerCase();
+    const email = (user.email ?? '').toString().toLowerCase();
+    return name.includes(normalizedSearch) || email.includes(normalizedSearch);
+  });
 
   return (
     <div className="space-y-6">
