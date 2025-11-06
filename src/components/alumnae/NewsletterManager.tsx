@@ -4,16 +4,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Save, Eye, EyeOff, Send, Upload, X } from "lucide-react";
+import { Plus, Save, Eye, EyeOff, Send, Upload, X, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { NewsletterContentManager } from "./NewsletterContentManager";
 import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
+import { useCanvaIntegration } from "@/hooks/useCanvaIntegration";
 
 export const NewsletterManager = () => {
   const { user } = useAuth();
   const { uploadFile, uploading } = useFileUpload();
+  const { createDesign, exportDesign, loading: canvaLoading } = useCanvaIntegration();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -28,6 +30,7 @@ export const NewsletterManager = () => {
   const [sendingEmails, setSendingEmails] = useState(false);
   const [currentNewsletterId, setCurrentNewsletterId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [canvaDesignId, setCanvaDesignId] = useState<string | null>(null);
 
   // Auto-generate title based on year and volume
   useEffect(() => {
@@ -309,6 +312,48 @@ export const NewsletterManager = () => {
     }
   };
 
+  const handleCreateCanvaDesign = async () => {
+    try {
+      const designTitle = `${title} - ${months[month - 1]} ${year}`;
+      const design = await createDesign(designTitle);
+      
+      if (design?.id && design?.editUrl) {
+        setCanvaDesignId(design.id);
+        toast.success("Canva design created! Opening editor...", { duration: 3000 });
+        window.open(design.editUrl, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Error creating Canva design:', error);
+      toast.error(error.message || "Failed to create Canva design");
+    }
+  };
+
+  const handleExportFromCanva = async () => {
+    if (!canvaDesignId) {
+      toast.error("No Canva design to export");
+      return;
+    }
+
+    try {
+      toast.info("Exporting from Canva... This may take a moment.", { duration: 5000 });
+      
+      const exportData = await exportDesign(canvaDesignId);
+      
+      if (exportData?.downloadUrl) {
+        // Download the PDF
+        const response = await fetch(exportData.downloadUrl);
+        const blob = await response.blob();
+        const file = new File([blob], `${title}.pdf`, { type: 'application/pdf' });
+        
+        setPdfFile(file);
+        toast.success("Newsletter exported from Canva! Ready to save.");
+      }
+    } catch (error: any) {
+      console.error('Error exporting from Canva:', error);
+      toast.error(error.message || "Failed to export from Canva");
+    }
+  };
+
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -400,8 +445,42 @@ export const NewsletterManager = () => {
         )}
       </div>
 
+      <div className="space-y-3">
+        <Label>Newsletter Design</Label>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleCreateCanvaDesign}
+            disabled={canvaLoading}
+            className="gap-2"
+          >
+            <Palette className="h-4 w-4" />
+            {canvaLoading ? "Creating..." : "Design in Canva"}
+          </Button>
+          
+          {canvaDesignId && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExportFromCanva}
+              disabled={canvaLoading}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {canvaLoading ? "Exporting..." : "Import from Canva"}
+            </Button>
+          )}
+        </div>
+        {canvaDesignId && (
+          <p className="text-sm text-muted-foreground">
+            Canva design linked. You can continue editing in Canva and import when ready.
+          </p>
+        )}
+      </div>
+
       <div className="space-y-2">
-        <Label htmlFor="pdfUpload">Newsletter PDF *</Label>
+        <Label htmlFor="pdfUpload">Newsletter PDF * (or import from Canva above)</Label>
         <div className="flex items-center gap-2">
           <Input
             id="pdfUpload"
