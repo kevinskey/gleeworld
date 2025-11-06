@@ -14,6 +14,7 @@ interface CanvaEmbedModalProps {
 
 export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) => {
   const [canvaWindow, setCanvaWindow] = useState<Window | null>(null);
+  const [manualAuthUrl, setManualAuthUrl] = useState<string | null>(null);
   const { initiateOAuth, loading } = useCanvaIntegration();
 
   useEffect(() => {
@@ -35,15 +36,10 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
   const handleOpenCanva = async () => {
     try {
       const returnUrl = `${window.location.origin}${window.location.pathname}?canva_auth=success`;
-      const authUrl = await initiateOAuth(returnUrl, [
-        'app:read',
-        'app:write',
-        // Keep minimal design scopes first; we can expand after connection works
-        'design:content:read',
-        'design:content:write'
-      ]);
+      const authUrl = await initiateOAuth(returnUrl);
       
       if (authUrl) {
+        setManualAuthUrl(authUrl);
         const newWindow = window.open(authUrl, '_blank', 'width=600,height=800');
         setCanvaWindow(newWindow);
         toast.info("Complete authentication in the popup to connect to Canva");
