@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, X, Image, Type, FormInput, Star, BookOpen, Layout } from 'lucide-react';
@@ -123,6 +124,19 @@ export const SectionEditor = ({ section, onSave, onCancel }: SectionEditorProps)
                 <p className="text-xs text-muted-foreground">
                   Define custom column widths. Leave empty to use layout preset. Must total 100%.
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gap">Column Gap: {formData.gap || 24}px</Label>
+                <Slider
+                  id="gap"
+                  value={[formData.gap || 24]}
+                  onValueChange={(value) => setFormData({ ...formData, gap: value[0] })}
+                  min={0}
+                  max={100}
+                  step={4}
+                  className="w-full"
+                />
               </div>
 
               <div className="space-y-2">
