@@ -671,6 +671,7 @@ export const MailchimpStyleCampaigns = () => {
                             size="sm"
                             onClick={() => {
                               setSubject(template.subject);
+                              setContent(template.content || '');
                               setActiveTab('create');
                             }}
                           >
