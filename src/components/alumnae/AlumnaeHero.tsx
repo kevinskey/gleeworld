@@ -1,6 +1,6 @@
 import { GraduationCap } from "lucide-react";
 
-export const MetallicHeader = () => {
+export const AlumnaeHero = () => {
   return (
     <div className="relative w-full overflow-hidden bg-gradient-to-b from-slate-800 via-slate-700 to-slate-900">
       {/* Metallic shine overlay */}

@@ -5,7 +5,7 @@ import { UniversalFooter } from '@/components/layout/UniversalFooter';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { DynamicSection } from '@/components/alumnae/viewer/DynamicSection';
 import { HeroSlideshow } from '@/components/alumnae/HeroSlideshow';
-import { MetallicHeader } from '@/components/alumnae/MetallicHeader';
+import { AlumnaeHero } from '@/components/alumnae/AlumnaeHero';
 import { Card, CardContent } from '@/components/ui/card';
 import { GraduationCap } from 'lucide-react';
 
@@ -94,7 +94,7 @@ export default function AlumnaePageView() {
   return (
     <div className="min-h-screen flex flex-col">
       <UniversalHeader />
-      <MetallicHeader />
+      <AlumnaeHero />
       <HeroSlideshow />
       <div className="flex-1 w-full">
         {sections.map((section) => (
