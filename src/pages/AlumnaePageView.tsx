@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { PublicLayout } from '@/components/layout/PublicLayout';
+import { UniversalHeader } from '@/components/layout/UniversalHeader';
+import { UniversalFooter } from '@/components/layout/UniversalFooter';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { DynamicSection } from '@/components/alumnae/viewer/DynamicSection';
 import { HeroSlideshow } from '@/components/alumnae/HeroSlideshow';
@@ -37,18 +38,20 @@ export default function AlumnaePageView() {
 
   if (loading) {
     return (
-      <PublicLayout>
-        <div className="flex items-center justify-center min-h-screen">
+      <div className="min-h-screen flex flex-col">
+        <UniversalHeader />
+        <div className="flex-1 flex items-center justify-center">
           <LoadingSpinner size="lg" text="Loading Alumnae Portal..." />
         </div>
-      </PublicLayout>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <PublicLayout>
-        <div className="container mx-auto px-4 py-20">
+      <div className="min-h-screen flex flex-col">
+        <UniversalHeader />
+        <div className="flex-1 container mx-auto px-4 py-20">
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-6 text-center">
               <div className="text-destructive mb-4">Error loading page</div>
@@ -56,14 +59,16 @@ export default function AlumnaePageView() {
             </CardContent>
           </Card>
         </div>
-      </PublicLayout>
+        <UniversalFooter />
+      </div>
     );
   }
 
   if (sections.length === 0) {
     return (
-      <PublicLayout>
-        <div className="container mx-auto px-4 py-20">
+      <div className="min-h-screen flex flex-col">
+        <UniversalHeader />
+        <div className="flex-1 container mx-auto px-4 py-20">
           <Card className="max-w-2xl mx-auto">
             <CardContent className="pt-12 pb-12 text-center">
               <GraduationCap className="h-16 w-16 mx-auto mb-4 text-primary" />
@@ -80,18 +85,21 @@ export default function AlumnaePageView() {
             </CardContent>
           </Card>
         </div>
-      </PublicLayout>
+        <UniversalFooter />
+      </div>
     );
   }
 
   return (
-    <PublicLayout>
+    <div className="min-h-screen flex flex-col">
+      <UniversalHeader />
       <HeroSlideshow />
-      <div className="w-full">
+      <div className="flex-1 w-full">
         {sections.map((section) => (
           <DynamicSection key={section.id} section={section} />
         ))}
       </div>
-    </PublicLayout>
+      <UniversalFooter />
+    </div>
   );
 }
