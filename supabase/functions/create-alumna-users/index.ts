@@ -54,14 +54,15 @@ serve(async (req) => {
       );
     }
 
-    // Check if user is admin
-    const { data: profile } = await supabaseClient
+    // Check if user is admin using admin client
+    const { data: profile } = await supabaseAdmin
       .from('gw_profiles')
       .select('is_admin, is_super_admin')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .single();
 
     if (!profile?.is_admin && !profile?.is_super_admin) {
+      console.log('Access denied for user:', user.id, 'Profile:', profile);
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
