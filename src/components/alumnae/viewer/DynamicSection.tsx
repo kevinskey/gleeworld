@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DynamicItem } from './DynamicItem';
 import { supabase } from '@/integrations/supabase/client';
-
+import WebFont from 'webfontloader';
 interface DynamicSectionProps {
   section: any;
 }
@@ -49,7 +49,17 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
     };
   }, []);
 
-  const fetchGlobalTitleFormatting = async () => {
+  // Load Google font when fontFamily changes
+  useEffect(() => {
+    if (titleFormatting?.fontFamily) {
+      const primary = titleFormatting.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+      if (primary) {
+        WebFont.load({ google: { families: [primary] } });
+      }
+    }
+  }, [titleFormatting?.fontFamily]);
+
+   const fetchGlobalTitleFormatting = async () => {
     try {
       const { data, error } = await supabase
         .from('alumnae_global_settings')

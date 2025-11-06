@@ -107,6 +107,7 @@
     "vaul": "^0.9.3",
     "vexflow": "^5.0.0",
     "vite-plugin-pwa": "^1.1.0",
+    "webfontloader": "^1.6.28",
     "zod": "^3.23.8"
   },
   "devDependencies": {
