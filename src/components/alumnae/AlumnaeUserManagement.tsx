@@ -21,14 +21,30 @@ export const AlumnaeUserManagement = () => {
 
   const fetchAlumnaeUsers = async () => {
     try {
-      const { data, error } = await supabase
+      // Query from secure user_roles table instead of gw_profiles.role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'alumna');
+
+      if (roleError) throw roleError;
+
+      if (!roleData || roleData.length === 0) {
+        setUsers([]);
+        return;
+      }
+
+      const alumnaUserIds = roleData.map(r => r.user_id);
+
+      // Fetch full profile data for these users
+      const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
         .select('*')
-        .eq('role', 'alumna')
+        .in('user_id', alumnaUserIds)
         .order('full_name', { ascending: true });
 
-      if (error) throw error;
-      setUsers(data || []);
+      if (profileError) throw profileError;
+      setUsers(profileData || []);
     } catch (error: any) {
       toast.error('Failed to load users: ' + error.message);
     } finally {
