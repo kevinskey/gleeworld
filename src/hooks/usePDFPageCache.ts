@@ -15,8 +15,8 @@ interface PDFPageCacheHook {
   cacheSize: number;
 }
 
-const MAX_CACHE_SIZE = 10; // Cache up to 10 pages
-const PRELOAD_RANGE = 2; // Preload 2 pages ahead and behind
+const MAX_CACHE_SIZE = 15; // Cache up to 15 pages for smoother navigation
+const PRELOAD_RANGE = 3; // Preload 3 pages ahead and behind
 
 export const usePDFPageCache = (
   pdf: any | null,
