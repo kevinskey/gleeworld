@@ -364,6 +364,7 @@ export const UnifiedUserManagement = () => {
     admins: users.filter(u => u.role === 'admin' || u.role === 'super-admin').length,
     members: users.filter(u => u.role === 'member').length,
     executives: users.filter(u => u.role === 'executive' || u.is_exec_board).length,
+    vips: users.filter(u => u.role === 'vip').length,
   };
 
   if (loading) {
@@ -394,7 +395,7 @@ export const UnifiedUserManagement = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -422,6 +423,16 @@ export const UnifiedUserManagement = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{userStats.members}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">VIP Members</CardTitle>
+                <Star className="h-4 w-4 text-yellow-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{userStats.vips}</div>
               </CardContent>
             </Card>
             
