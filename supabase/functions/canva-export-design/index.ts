@@ -10,6 +10,41 @@ interface CanvaExportRequest {
   format?: 'pdf' | 'png' | 'jpg';
 }
 
+async function getCanvaAccessToken(): Promise<string> {
+  const clientId = Deno.env.get('CANVA_CLIENT_ID');
+  const clientSecret = Deno.env.get('CANVA_CLIENT_SECRET');
+  const apiKey = Deno.env.get('CANVA_API_KEY');
+
+  // If API key is provided, use it directly
+  if (apiKey && !clientId && !clientSecret) {
+    return apiKey;
+  }
+
+  // Otherwise use OAuth flow
+  if (!clientId || !clientSecret) {
+    throw new Error('Missing Canva credentials');
+  }
+
+  const tokenResponse = await fetch('https://api.canva.com/rest/v1/oauth/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    throw new Error('Failed to get Canva access token');
+  }
+
+  const tokenData = await tokenResponse.json();
+  return tokenData.access_token;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -17,12 +52,7 @@ serve(async (req) => {
   }
 
   try {
-    const CANVA_API_KEY = Deno.env.get('CANVA_API_KEY');
-    
-    if (!CANVA_API_KEY) {
-      throw new Error('Canva API credentials not configured');
-    }
-
+    const accessToken = await getCanvaAccessToken();
     const { designId, format = 'pdf' }: CanvaExportRequest = await req.json();
 
     console.log('Exporting Canva design:', { designId, format });
@@ -31,7 +61,7 @@ serve(async (req) => {
     const exportResponse = await fetch(`https://api.canva.com/rest/v1/designs/${designId}/export`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${CANVA_API_KEY}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -65,7 +95,7 @@ serve(async (req) => {
       
       const statusResponse = await fetch(`https://api.canva.com/rest/v1/exports/${jobId}`, {
         headers: {
-          'Authorization': `Bearer ${CANVA_API_KEY}`,
+          'Authorization': `Bearer ${accessToken}`,
         }
       });
 

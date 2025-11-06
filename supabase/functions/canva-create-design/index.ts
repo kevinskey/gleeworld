@@ -1,5 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,6 +12,45 @@ interface CanvaDesignRequest {
   templateId?: string;
 }
 
+async function getCanvaAccessToken(): Promise<string> {
+  const clientId = Deno.env.get('CANVA_CLIENT_ID');
+  const clientSecret = Deno.env.get('CANVA_CLIENT_SECRET');
+  const apiKey = Deno.env.get('CANVA_API_KEY');
+
+  // If API key is provided, use it directly (for API key auth)
+  if (apiKey && !clientId && !clientSecret) {
+    return apiKey;
+  }
+
+  // Otherwise use OAuth flow
+  if (!clientId || !clientSecret) {
+    throw new Error('Missing Canva credentials. Please configure either CANVA_API_KEY or both CANVA_CLIENT_ID and CANVA_CLIENT_SECRET');
+  }
+
+  console.log('Getting Canva access token via OAuth...');
+
+  const tokenResponse = await fetch('https://api.canva.com/rest/v1/oauth/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+
+  if (!tokenResponse.ok) {
+    const errorText = await tokenResponse.text();
+    console.error('OAuth token error:', tokenResponse.status, errorText);
+    throw new Error(`Failed to get Canva access token: ${errorText}`);
+  }
+
+  const tokenData = await tokenResponse.json();
+  return tokenData.access_token;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -20,12 +58,8 @@ serve(async (req) => {
   }
 
   try {
-    // Get Canva API credentials
-    const CANVA_API_KEY = Deno.env.get('CANVA_API_KEY');
-    
-    if (!CANVA_API_KEY) {
-      throw new Error('Canva API credentials not configured');
-    }
+    // Get access token
+    const accessToken = await getCanvaAccessToken();
 
     // Parse request body
     const { title, width = 2550, height = 3300, templateId }: CanvaDesignRequest = await req.json();
@@ -36,7 +70,7 @@ serve(async (req) => {
     const canvaResponse = await fetch('https://api.canva.com/rest/v1/designs', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${CANVA_API_KEY}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -53,7 +87,7 @@ serve(async (req) => {
       console.error('Canva API error:', canvaResponse.status, errorText);
       
       if (canvaResponse.status === 401) {
-        throw new Error('Invalid Canva API credentials. Please check your API key.');
+        throw new Error('Invalid Canva API credentials. Please check your API key or OAuth credentials.');
       } else if (canvaResponse.status === 429) {
         throw new Error('Rate limit exceeded. Please try again later.');
       }
