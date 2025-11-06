@@ -127,17 +127,13 @@ export const SectionItemsManager = ({ sectionId }: SectionItemsManagerProps) => 
           <div className="space-y-3">
             {items.map((item) => (
               <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-3 flex-1">
                   {getItemIcon(item.item_type)}
-                  <div>
-                    <p className="font-medium">{item.title || 'Untitled Item'}</p>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">{item.item_type}</Badge>
-                      <span>Column {item.column_position}</span>
-                      <span>•</span>
-                      <span>{item.width_percentage}%</span>
-                    </div>
-                  </div>
+                  <span className="font-medium">{item.title || 'Untitled Item'}</span>
+                  <Badge variant="outline" className="text-xs">{item.item_type}</Badge>
+                  <span className="text-sm text-muted-foreground">Column {item.column_position}</span>
+                  <span className="text-sm text-muted-foreground">•</span>
+                  <span className="text-sm text-muted-foreground">{item.width_percentage}%</span>
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => handleEditItem(item)}>
