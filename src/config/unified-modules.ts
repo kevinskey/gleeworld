@@ -61,6 +61,7 @@ import { CalendarManagementModule } from '@/components/modules/CalendarManagemen
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
 import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
+import { AlumnaeManagementModule } from '@/components/modules/AlumnaeManagementModule';
 import { ContractsModule } from '@/components/modules/ContractsModule';
 import { DuesCollectionModule } from '@/components/modules/DuesCollectionModule';
 import { WellnessModule } from '@/components/modules/WellnessModule';
@@ -904,6 +905,20 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: TestBuilderModule,
     dbFunctionName: "test-builder"
+  },
+  {
+    id: "alumnae-management",
+    name: "alumnae-management",
+    title: "Alumnae Page Management",
+    description: "Comprehensive CMS for managing /alumnae page: hero slides, page builder, newsletters, interviews, forms, and user management",
+    icon: GraduationCap,
+    iconColor: "rose",
+    category: "communications",
+    isActive: true,
+    component: AlumnaeManagementModule,
+    fullPageComponent: AlumnaeManagementModule,
+    dbFunctionName: "alumnae-management",
+    requiredRoles: ["admin", "super-admin"]
   }
 ];
 
