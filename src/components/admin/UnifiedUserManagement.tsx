@@ -47,7 +47,8 @@ import {
   KeyRound,
   Trash2,
   BookOpen,
-  Boxes
+  Boxes,
+  Star
 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -573,6 +574,13 @@ export const UnifiedUserManagement = () => {
                             <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             
+                            <DropdownMenuItem 
+                              onClick={() => handleQuickRoleChange(user.id, 'vip')}
+                              disabled={user.role === 'vip'}
+                            >
+                              <Star className="h-4 w-4 mr-2 text-yellow-500" />
+                              Make VIP
+                            </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleQuickRoleChange(user.id, 'guest')}
                               disabled={user.role === 'guest'}
