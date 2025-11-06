@@ -308,6 +308,34 @@ export const ContactsImportWizard = () => {
         }
       }
 
+      // Create auth users with alumna role for all imported contacts
+      try {
+        const contactsForAuth = validContacts.map(pc => ({
+          Email: pc.data.Email,
+          FirstName: pc.data.FirstName,
+          LastName: pc.data.LastName,
+          FullName: pc.data.display_name,
+          GraduationYear: pc.data.class,
+          VoicePart: null,
+        }));
+
+        const { data: authResults, error: authError } = await supabase.functions.invoke(
+          'create-alumna-users',
+          { body: { contacts: contactsForAuth } }
+        );
+
+        if (authError) {
+          console.error('Error creating auth users:', authError);
+          toast.error('Contacts imported but some auth users failed to create');
+        } else {
+          console.log('Auth user creation results:', authResults);
+          toast.success(`Created ${authResults.created.length} new alumna users, updated ${authResults.updated.length}`);
+        }
+      } catch (error: any) {
+        console.error('Error invoking create-alumna-users:', error);
+        toast.error('Contacts imported but auth user creation failed');
+      }
+
       setImportResults({ successful, skipped, failed, validationLog });
       toast.success(`Import complete: ${successful} successful, ${skipped} skipped, ${failed} failed`);
       setStep('upload');
