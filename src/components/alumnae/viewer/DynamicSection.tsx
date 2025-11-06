@@ -97,11 +97,11 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
         fontSize: `${titleFormatting.fontSize}px`,
         fontWeight: titleFormatting.fontWeight,
         textAlign: titleFormatting.textAlign as any,
-        color: titleFormatting.color || undefined,
+        color: titleFormatting.color || 'inherit',
         marginBottom: `${titleFormatting.marginBottom}px`,
         textTransform: titleFormatting.textTransform as any,
         letterSpacing: `${titleFormatting.letterSpacing}px`,
-        fontFamily: titleFormatting.fontFamily || undefined,
+        fontFamily: titleFormatting.fontFamily || 'inherit',
       }
     : {};
 
@@ -109,10 +109,7 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
     <section style={bgStyle} className="w-full py-12 px-4">
       <div className="container mx-auto">
         {section.title && (
-          <h2
-            style={titleStyle}
-            className={!titleFormatting ? "text-3xl md:text-4xl font-bold mb-8 text-center" : ""}
-          >
+          <h2 style={titleStyle}>
             {section.title}
           </h2>
         )}
