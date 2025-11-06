@@ -145,12 +145,12 @@ export const DashboardHeroCarousel = () => {
               </div>
 
               {(slide.title || slide.description) && (
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
                   {slide.title && (
-                    <h3 className="text-2xl font-serif font-bold mb-2">{slide.title}</h3>
+                    <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 text-white drop-shadow-lg">{slide.title}</h3>
                   )}
                   {slide.description && (
-                    <p className="text-sm opacity-90 line-clamp-2">{slide.description}</p>
+                    <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>
                   )}
                 </div>
               )}
@@ -194,12 +194,12 @@ export const DashboardHeroCarousel = () => {
 
             {/* Content Overlay */}
             {(slide.title || slide.description) && (
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
                 {slide.title && (
-                  <h3 className="text-2xl font-serif font-bold mb-2">{slide.title}</h3>
+                  <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 text-white drop-shadow-lg">{slide.title}</h3>
                 )}
                 {slide.description && (
-                  <p className="text-sm opacity-90 line-clamp-2">{slide.description}</p>
+                  <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>
                 )}
               </div>
             )}
