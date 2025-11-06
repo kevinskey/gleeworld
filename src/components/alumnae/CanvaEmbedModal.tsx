@@ -14,8 +14,13 @@ interface CanvaEmbedModalProps {
 export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) => {
   useEffect(() => {
     if (open) {
-      // Open Canva in a new window
-      const canvaUrl = "https://www.canva.com/create/newsletters/";
+      // Determine the right Canva template URL
+      // For hero slides, use banners; for newsletters, use newsletters
+      const isHeroSlide = window.location.pathname.includes('alumnae');
+      const canvaUrl = isHeroSlide 
+        ? "https://www.canva.com/create/banners/" 
+        : "https://www.canva.com/create/newsletters/";
+      
       window.open(canvaUrl, 'canva-editor', 'width=1200,height=800');
       
       toast.info("Canva opened in a new window. Follow the steps below to complete your design.", {
@@ -30,10 +35,10 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <ExternalLink className="h-5 w-5" />
-            Design Your Newsletter in Canva
+            Design in Canva
           </DialogTitle>
           <DialogDescription>
-            Follow these steps to create and download your newsletter
+            Follow these steps to create and download your design
           </DialogDescription>
         </DialogHeader>
         
@@ -44,8 +49,8 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
                 1
               </div>
               <div>
-                <p className="font-medium">Browse Newsletter Templates</p>
-                <p className="text-sm text-muted-foreground">Select a template that fits your style or start from scratch</p>
+                <p className="font-medium">Browse Templates</p>
+                <p className="text-sm text-muted-foreground">Select a template that fits your needs or start from scratch</p>
               </div>
             </div>
 
@@ -64,9 +69,9 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
                 3
               </div>
               <div>
-                <p className="font-medium">Download as PDF</p>
+                <p className="font-medium">Download Your Design</p>
                 <p className="text-sm text-muted-foreground">
-                  Click <span className="font-medium text-foreground">Share → Download → PDF</span> format
+                  Click <span className="font-medium text-foreground">Share → Download → PNG</span> or <span className="font-medium text-foreground">JPG</span> format
                 </p>
               </div>
             </div>
@@ -77,7 +82,7 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
               </div>
               <div>
                 <p className="font-medium">Upload Here</p>
-                <p className="text-sm text-muted-foreground">Return to this page and upload the PDF using the file picker below</p>
+                <p className="text-sm text-muted-foreground">Return to this page and upload the image using the file picker below</p>
               </div>
             </div>
           </div>
@@ -86,7 +91,11 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
             <Button
               variant="outline"
               onClick={() => {
-                window.open("https://www.canva.com/create/newsletters/", 'canva-editor', 'width=1200,height=800');
+                const isHeroSlide = window.location.pathname.includes('alumnae');
+                const canvaUrl = isHeroSlide 
+                  ? "https://www.canva.com/create/banners/" 
+                  : "https://www.canva.com/create/newsletters/";
+                window.open(canvaUrl, 'canva-editor', 'width=1200,height=800');
                 toast.success("Canva reopened in new window");
               }}
               className="gap-2"
@@ -97,7 +106,7 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
 
             <Button onClick={onClose}>
               <FileDown className="h-4 w-4 mr-2" />
-              Done - Upload PDF
+              Done - Upload Image
             </Button>
           </div>
         </div>

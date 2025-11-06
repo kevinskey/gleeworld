@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, MoveUp, MoveDown, Image as ImageIcon, X, Upload, Edit } from "lucide-react";
+import { Plus, Trash2, MoveUp, MoveDown, Image as ImageIcon, X, Upload, Edit, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
+import { CanvaEmbedModal } from "./CanvaEmbedModal";
 
 interface HeroSlide {
   id: string;
@@ -26,6 +27,7 @@ export const HeroManager = () => {
   const [loading, setLoading] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [canvaModalOpen, setCanvaModalOpen] = useState(false);
   const [editingSlide, setEditingSlide] = useState<Partial<HeroSlide>>({
     title: "",
     description: "",
@@ -224,8 +226,26 @@ export const HeroManager = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <Label>Hero Image *</Label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCanvaModalOpen(true)}
+                className="gap-2"
+              >
+                <Palette className="h-4 w-4" />
+                Design in Canva
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Create a banner/graphic in Canva (recommended: 1920x600px for hero slides), download as PNG/JPG, and upload below.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Upload Hero Image</Label>
             <div className="flex items-center gap-2">
               <Input
                 id="heroImageUpload"
@@ -256,6 +276,12 @@ export const HeroManager = () => {
               </p>
             )}
           </div>
+
+          <CanvaEmbedModal
+            open={canvaModalOpen}
+            onClose={() => setCanvaModalOpen(false)}
+            title={editingSlide.title}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
