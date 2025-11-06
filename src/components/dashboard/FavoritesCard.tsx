@@ -24,7 +24,7 @@ export const FavoritesCard = ({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Click the heart icon on any module to add it to your favorites.
+            Touch a heart to add a fave module.
           </p>
         </CardContent>
       </Card>;
