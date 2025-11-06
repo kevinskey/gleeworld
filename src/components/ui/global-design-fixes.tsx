@@ -35,11 +35,11 @@ export const GlobalDesignFixes = () => {
         border-color: hsl(var(--border)) !important;
       }
       
-      /* Ensure all headings use proper font */
+      /* Default heading styling via CSS variables (allow overrides) */
       h1, h2, h3, h4, h5, h6 {
-        font-family: 'Bebas Neue', cursive !important;
-        font-weight: 400 !important;
-        letter-spacing: 0.025em !important;
+        font-family: var(--heading-font, 'Bebas Neue', cursive);
+        font-weight: var(--heading-weight, 400);
+        letter-spacing: var(--heading-letter-spacing, 0.025em);
       }
       
       /* Fix dropdown visibility issues */
