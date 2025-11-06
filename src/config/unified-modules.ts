@@ -36,7 +36,8 @@ import {
   GraduationCap,
   Radio,
   Mic2,
-  QrCode
+  QrCode,
+  Layout
 } from 'lucide-react';
 
 // Import core module components
@@ -911,7 +912,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     name: "alumnae-management",
     title: "Alumnae Page Management",
     description: "Comprehensive CMS for managing /alumnae page: hero slides, page builder, newsletters, interviews, forms, and user management",
-    icon: GraduationCap,
+    icon: Layout,
     iconColor: "rose",
     category: "communications",
     isActive: true,
