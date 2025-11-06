@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { NewsletterContentManager } from "./NewsletterContentManager";
 import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
+import { CanvaEmbedModal } from "./CanvaEmbedModal";
 
 export const NewsletterManager = () => {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ export const NewsletterManager = () => {
   const [sendingEmails, setSendingEmails] = useState(false);
   const [currentNewsletterId, setCurrentNewsletterId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [canvaModalOpen, setCanvaModalOpen] = useState(false);
 
   // Auto-generate title based on year and volume
   useEffect(() => {
@@ -309,18 +311,13 @@ export const NewsletterManager = () => {
     }
   };
 
-  const handleCreateCanvaDesign = async () => {
-    const designTitle = `${title} - ${months[month - 1]} ${year}`;
-    
-    // Open Canva with a newsletter template
-    // Users will need to create their design in Canva and download it manually
-    const canvaUrl = `https://www.canva.com/create/newsletters/`;
-    
-    toast.info("Opening Canva... After designing, download your PDF and upload it here.", { 
-      duration: 5000 
-    });
-    
-    window.open(canvaUrl, '_blank');
+  const handleCreateCanvaDesign = () => {
+    setCanvaModalOpen(true);
+  };
+
+  const handleCanvaPdfReady = (file: File) => {
+    setPdfFile(file);
+    toast.success("PDF imported from Canva!");
   };
 
   const months = [
@@ -416,21 +413,26 @@ export const NewsletterManager = () => {
 
       <div className="space-y-3">
         <Label>Newsletter Design</Label>
-        <div className="flex flex-wrap gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleCreateCanvaDesign}
-            className="gap-2"
-          >
-            <Palette className="h-4 w-4" />
-            Design in Canva
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleCreateCanvaDesign}
+          className="gap-2"
+        >
+          <Palette className="h-4 w-4" />
+          Design in Canva
+        </Button>
         <p className="text-sm text-muted-foreground">
-          Opens Canva newsletter templates. Design your newsletter, download as PDF, and upload below.
+          Opens Canva editor in-app. Design your newsletter, download as PDF, and it will be ready to upload.
         </p>
       </div>
+
+      <CanvaEmbedModal
+        open={canvaModalOpen}
+        onClose={() => setCanvaModalOpen(false)}
+        onPdfReady={handleCanvaPdfReady}
+        title={title}
+      />
 
       <div className="space-y-2">
         <Label htmlFor="pdfUpload">Newsletter PDF * (design in Canva above or upload existing PDF)</Label>
