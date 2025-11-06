@@ -9585,6 +9585,8 @@ export type Database = {
           instruments_played: string[] | null
           is_admin: boolean | null
           is_exec_board: boolean | null
+          is_featured: boolean | null
+          is_mentor: boolean | null
           is_section_leader: boolean | null
           is_super_admin: boolean | null
           join_date: string | null
@@ -9677,6 +9679,8 @@ export type Database = {
           instruments_played?: string[] | null
           is_admin?: boolean | null
           is_exec_board?: boolean | null
+          is_featured?: boolean | null
+          is_mentor?: boolean | null
           is_section_leader?: boolean | null
           is_super_admin?: boolean | null
           join_date?: string | null
@@ -9769,6 +9773,8 @@ export type Database = {
           instruments_played?: string[] | null
           is_admin?: boolean | null
           is_exec_board?: boolean | null
+          is_featured?: boolean | null
+          is_mentor?: boolean | null
           is_section_leader?: boolean | null
           is_super_admin?: boolean | null
           join_date?: string | null
