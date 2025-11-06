@@ -54,8 +54,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send emails (using BCC for privacy)
     const emailResponse = await resend.emails.send({
-      from: "Spelman Glee Club <onboarding@resend.dev>",
-      to: "alumnae@spelmanglee.org", // Replace with your actual sender email
+      from: "Spelman Glee Club <noreply@gleeworld.org>",
+      to: "noreply@gleeworld.org",
       bcc: recipients.map(r => r.email),
       subject: subject,
       html: `
