@@ -239,6 +239,18 @@ export const useGleeWorldEvents = () => {
     const initializeHook = async () => {
       if (!isMounted) return;
       
+      // Cleanup any existing subscription first
+      if (channelRef.current) {
+        console.log('Cleaning up existing channel before re-initialization');
+        try {
+          await supabase.removeChannel(channelRef.current);
+          channelRef.current = null;
+          isSubscribedRef.current = false;
+        } catch (error) {
+          console.error('Error cleaning up existing channel:', error);
+        }
+      }
+      
       await fetchEvents();
       
       if (!isMounted) return;

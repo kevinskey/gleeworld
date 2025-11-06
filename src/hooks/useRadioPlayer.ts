@@ -201,9 +201,11 @@ export const useRadioPlayer = () => {
     
     let channel: any = null;
     let isSubscribed = false;
+    let isMounted = true;
 
     // Initial fetch of station state
     const fetchInitialState = async () => {
+      if (!isMounted) return;
       try {
         console.log('Fetching initial radio station state...');
         const { data, error } = await supabase
@@ -240,8 +242,12 @@ export const useRadioPlayer = () => {
     };
 
     const setupRealtimeSubscription = async () => {
+      if (!isMounted) return;
+      
       try {
         await fetchInitialState();
+        
+        if (!isMounted) return;
         
         // Create unique channel name to prevent conflicts
         const channelName = `radio-station-updates-${Date.now()}-${Math.random()}`;
@@ -259,6 +265,7 @@ export const useRadioPlayer = () => {
               filter: 'station_id=eq.glee_world_radio'
             },
             (payload) => {
+              if (!isMounted) return;
               console.log('Real-time radio update received:', payload);
               
               if (payload.new) {
@@ -281,6 +288,8 @@ export const useRadioPlayer = () => {
             }
           );
 
+        if (!isMounted) return;
+
         // Subscribe only once
         const subscriptionResult = await channel.subscribe();
         console.log('Radio subscription status:', subscriptionResult);
@@ -298,6 +307,7 @@ export const useRadioPlayer = () => {
 
     return () => {
       console.log('Cleaning up radio subscription...');
+      isMounted = false;
       if (channel && isSubscribed) {
         try {
           supabase.removeChannel(channel);
