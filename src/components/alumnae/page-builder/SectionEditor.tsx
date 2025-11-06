@@ -114,32 +114,6 @@ export const SectionEditor = ({ section, onSave, onCancel }: SectionEditorProps)
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="column_widths">Column Widths (comma-separated percentages)</Label>
-                <Input
-                  id="column_widths"
-                  value={formData.column_widths || ''}
-                  onChange={(e) => setFormData({ ...formData, column_widths: e.target.value })}
-                  placeholder="e.g., 33,33,33 or 50,50 or 25,50,25"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Define custom column widths. Leave empty to use layout preset. Must total 100%.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="gap">Column Gap: {formData.gap || 24}px</Label>
-                <Slider
-                  id="gap"
-                  value={[formData.gap || 24]}
-                  onValueChange={(value) => setFormData({ ...formData, gap: value[0] })}
-                  min={0}
-                  max={100}
-                  step={4}
-                  className="w-full"
-                />
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="background_color">Background Color</Label>
                 <Input
                   id="background_color"

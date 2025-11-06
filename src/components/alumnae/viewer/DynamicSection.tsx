@@ -14,29 +14,8 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
   };
 
   const renderItems = () => {
-    const gap = section.gap || 24;
-    const columnWidths = section.column_widths 
-      ? section.column_widths.split(',').map((w: string) => parseFloat(w.trim()))
-      : null;
-
-    if (columnWidths && columnWidths.length > 0) {
-      return (
-        <div className="grid grid-cols-12" style={{ gap: `${gap}px` }}>
-          {activeItems.map((item: any, index: number) => {
-            const widthPercent = columnWidths[index % columnWidths.length] || 100;
-            const span = Math.max(1, Math.min(12, Math.round((widthPercent / 100) * 12)));
-            return (
-              <div key={item.id} style={{ gridColumn: `span ${span} / span ${span}` }}>
-                <DynamicItem item={item} />
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
     return (
-      <div className="grid grid-cols-12" style={{ gap: `${gap}px` }}>
+      <div className="grid grid-cols-12 gap-6">
         {activeItems.map((item: any) => {
           const span = Math.max(1, Math.min(12, Math.round(((item.width_percentage || 100) / 100) * 12)));
           return (
