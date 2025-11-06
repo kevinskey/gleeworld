@@ -20867,6 +20867,7 @@ export type Database = {
         | "student"
         | "librarian"
         | "alumna"
+        | "vip"
       assignment_status:
         | "assigned"
         | "in_progress"
@@ -21094,6 +21095,7 @@ export const Constants = {
         "student",
         "librarian",
         "alumna",
+        "vip",
       ],
       assignment_status: [
         "assigned",
