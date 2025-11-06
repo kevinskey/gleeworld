@@ -87,7 +87,7 @@ export const AlumnaeManagementModule = ({ user, isFullPage = false }: ModuleProp
           </div>
         )}
         <Button 
-          onClick={() => window.open('/alumnae', '_blank')} 
+          onClick={() => window.open('/alumnae', 'alumnaePreview', 'width=1400,height=900,resizable=yes,scrollbars=yes,status=yes,toolbar=yes,menubar=no,location=yes')} 
           variant="outline" 
           className="gap-2"
         >
