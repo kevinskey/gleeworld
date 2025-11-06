@@ -47,10 +47,12 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
     if (formatting.fontFamily && formatting.fontFamily !== 'inherit') {
       const primary = formatting.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
       if (primary) {
+        const weight = (formatting.fontWeight || '400').toString().replace(/[^0-9]/g, '') || '400';
+        const families = [`${primary}:${weight},400,500,600,700,800,900`];
         WebFont.load({ 
-          google: { families: [primary] },
-          active: () => console.log('✅ Preview font loaded:', primary),
-          inactive: () => console.log('❌ Preview font failed:', primary)
+          google: { families },
+          active: () => console.log('✅ Preview font loaded:', families.join(',')),
+          inactive: () => console.log('❌ Preview font failed:', families.join(','))
         });
       }
     }

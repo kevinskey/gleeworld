@@ -56,10 +56,12 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
       const primary = titleFormatting.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
       console.log('🔤 Loading font:', primary);
       if (primary && primary !== 'inherit') {
+        const weight = (titleFormatting.fontWeight || '400').toString().replace(/[^0-9]/g, '') || '400';
+        const families = [`${primary}:${weight},400,500,600,700,800,900`];
         WebFont.load({ 
-          google: { families: [primary] },
-          active: () => console.log('✅ Font loaded:', primary),
-          inactive: () => console.log('❌ Font failed to load:', primary)
+          google: { families },
+          active: () => console.log('✅ Font loaded:', families.join(',')),
+          inactive: () => console.log('❌ Font failed to load:', families.join(','))
         });
       }
     }
