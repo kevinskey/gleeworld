@@ -74,7 +74,11 @@ export default function AlumnaeManagement() {
           Comprehensive CMS for building and managing the /alumnae page with drag-and-drop page builder, media uploads, forms, and user management
         </p>
         <div className="pt-4">
-          <Button onClick={() => window.open('/alumnae', '_blank')} variant="outline" className="gap-2">
+          <Button 
+            onClick={() => window.open('/alumnae', 'alumnaePreview', 'width=1200,height=800,resizable=yes,scrollbars=yes,status=yes,toolbar=no,menubar=no,location=no')} 
+            variant="outline" 
+            className="gap-2"
+          >
             <Eye className="h-4 w-4" />
             Preview Live Page
           </Button>
