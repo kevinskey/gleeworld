@@ -8,6 +8,7 @@ import { Search, Edit, UserCheck, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AlumnaeBulkImport } from './AlumnaeBulkImport';
 
 export const AlumnaeUserManagement = () => {
   const [users, setUsers] = useState<any[]>([]);
@@ -58,22 +59,25 @@ export const AlumnaeUserManagement = () => {
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Alumnae User Management</CardTitle>
-          <div className="flex items-center gap-2">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search users..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-64"
-            />
+    <div className="space-y-6">
+      <AlumnaeBulkImport />
+      
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Alumnae User Management</CardTitle>
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search users..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-64"
+              />
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
+        </CardHeader>
+        <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
@@ -127,5 +131,6 @@ export const AlumnaeUserManagement = () => {
         </Table>
       </CardContent>
     </Card>
+    </div>
   );
 };
