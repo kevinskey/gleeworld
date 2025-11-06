@@ -144,6 +144,8 @@ export const MailchimpStyleCampaigns = () => {
   const [selectedRecipients, setSelectedRecipients] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(true);
 
   // Campaign builder state
   const [campaignName, setCampaignName] = useState("");
@@ -153,9 +155,28 @@ export const MailchimpStyleCampaigns = () => {
   const [segmentFilter, setSegmentFilter] = useState<string>("all");
   const [scheduledFor, setScheduledFor] = useState<string>("");
 
+  const loadTemplates = async () => {
+    setLoadingTemplates(true);
+    try {
+      const { data, error } = await supabase
+        .from('email_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error('Error loading templates:', error);
+      toast.error("Failed to load templates");
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
   useEffect(() => {
     loadAlumnae();
     loadCampaigns();
+    loadTemplates();
   }, []);
 
   useEffect(() => {
@@ -606,34 +627,47 @@ export const MailchimpStyleCampaigns = () => {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle>Email Templates</CardTitle>
-                <CardDescription>Pre-designed templates for common communications</CardDescription>
+                <CardDescription>Create and manage custom email templates</CardDescription>
               </div>
-              <EmailTemplateBuilder onTemplateCreated={loadCampaigns} />
+              <EmailTemplateBuilder onTemplateCreated={loadTemplates} />
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2">
-                {EMAIL_TEMPLATES.map((template) => (
-                  <Card key={template.id} className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="font-semibold">{template.name}</h3>
-                        <Badge variant="outline" className="mt-1">{template.category}</Badge>
+              {loadingTemplates ? (
+                <p className="text-sm text-muted-foreground">Loading templates...</p>
+              ) : templates.length === 0 ? (
+                <div className="text-center py-8">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-2" />
+                  <p className="text-sm text-muted-foreground">No templates yet. Create your first template!</p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {templates.map((template) => (
+                    <Card key={template.id} className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="font-semibold">{template.name}</h3>
+                          <Badge variant="outline" className="mt-1">{template.category}</Badge>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSubject(template.subject);
+                            setActiveTab('create');
+                          }}
+                        >
+                          <Sparkles className="h-4 w-4 mr-1" />
+                          Use
+                        </Button>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          handleTemplateSelect(template.id);
-                          setActiveTab('create');
-                        }}
-                      >
-                        Use Template
-                      </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-2">{template.subject}</p>
-                  </Card>
-                ))}
-              </div>
+                      <p className="text-sm text-muted-foreground mt-2">{template.subject}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Created {new Date(template.created_at).toLocaleDateString()}
+                      </p>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
