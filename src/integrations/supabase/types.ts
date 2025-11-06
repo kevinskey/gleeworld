@@ -2252,6 +2252,8 @@ export type Database = {
           image_url: string
           ipad_image_url: string | null
           is_active: boolean | null
+          link_target: string | null
+          link_url: string | null
           mobile_image_url: string | null
           title: string | null
           updated_at: string | null
@@ -2264,6 +2266,8 @@ export type Database = {
           image_url: string
           ipad_image_url?: string | null
           is_active?: boolean | null
+          link_target?: string | null
+          link_url?: string | null
           mobile_image_url?: string | null
           title?: string | null
           updated_at?: string | null
@@ -2276,6 +2280,8 @@ export type Database = {
           image_url?: string
           ipad_image_url?: string | null
           is_active?: boolean | null
+          link_target?: string | null
+          link_url?: string | null
           mobile_image_url?: string | null
           title?: string | null
           updated_at?: string | null

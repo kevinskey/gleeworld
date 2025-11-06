@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,13 +13,16 @@ interface HeroSlide {
   mobile_image_url?: string;
   ipad_image_url?: string;
   display_order: number;
+  link_url?: string;
+  link_target?: string;
 }
 
 export const DashboardHeroCarousel = () => {
+  const navigate = useNavigate();
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [scrollSpeed, setScrollSpeed] = useState(5000); // Default 5 seconds
+  const [scrollSpeed, setScrollSpeed] = useState(5000);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -104,9 +108,19 @@ export const DashboardHeroCarousel = () => {
   // Calculate how many slides to show
   const getSlidesToShow = () => {
     const width = window.innerWidth;
-    if (width < 768) return 2; // Mobile: 2 slides
-    if (width >= 768 && width < 1024) return 3; // iPad: 3 slides
-    return 4; // Desktop: 4 slides
+    if (width < 768) return 2;
+    if (width >= 768 && width < 1024) return 3;
+    return 4;
+  };
+
+  const handleSlideClick = (slide: HeroSlide) => {
+    if (!slide.link_url) return;
+    
+    if (slide.link_target === 'external') {
+      window.open(slide.link_url, '_blank', 'noopener,noreferrer');
+    } else {
+      navigate(slide.link_url);
+    }
   };
 
   const slidesToShow = getSlidesToShow();
@@ -202,11 +216,12 @@ export const DashboardHeroCarousel = () => {
         {visibleSlides.map((slide, idx) => (
           <div 
             key={`${slide.id}-${idx}`}
-            className="relative w-full h-40 rounded-lg overflow-hidden"
+            className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`}
+            onClick={() => handleSlideClick(slide)}
           >
             {/* Background Image */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500"
+              className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`}
               style={{ backgroundImage: `url(${getImageUrl(slide)})` }}
             >
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />

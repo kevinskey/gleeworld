@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Save, Trash2, Eye, EyeOff, Edit } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, Save, Trash2, Eye, EyeOff, Edit, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +20,8 @@ interface HeroSlide {
   ipad_image_url: string | null;
   display_order: number;
   is_active: boolean;
+  link_url: string | null;
+  link_target: string | null;
 }
 
 export const DashboardHeroManagerModule = () => {
@@ -41,7 +44,9 @@ export const DashboardHeroManagerModule = () => {
     mobile_image_url: "",
     ipad_image_url: "",
     display_order: 0,
-    is_active: true
+    is_active: true,
+    link_url: "",
+    link_target: "internal"
   });
 
   useEffect(() => {
@@ -185,7 +190,9 @@ export const DashboardHeroManagerModule = () => {
             mobile_image_url: formData.mobile_image_url || null,
             ipad_image_url: formData.ipad_image_url || null,
             display_order: formData.display_order,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            link_url: formData.link_url.trim() || null,
+            link_target: formData.link_target
           })
           .eq('id', editingId);
 
@@ -200,7 +207,9 @@ export const DashboardHeroManagerModule = () => {
             mobile_image_url: formData.mobile_image_url || null,
             ipad_image_url: formData.ipad_image_url || null,
             display_order: formData.display_order,
-            is_active: formData.is_active
+            is_active: formData.is_active,
+            link_url: formData.link_url.trim() || null,
+            link_target: formData.link_target
           });
 
         if (error) throw error;
@@ -233,7 +242,9 @@ export const DashboardHeroManagerModule = () => {
       mobile_image_url: slide.mobile_image_url || "",
       ipad_image_url: slide.ipad_image_url || "",
       display_order: slide.display_order || 0,
-      is_active: slide.is_active ?? true
+      is_active: slide.is_active ?? true,
+      link_url: slide.link_url || "",
+      link_target: slide.link_target || "internal"
     });
     setEditingId(slide.id);
   };
@@ -297,7 +308,9 @@ export const DashboardHeroManagerModule = () => {
       mobile_image_url: "",
       ipad_image_url: "",
       display_order: 0,
-      is_active: true
+      is_active: true,
+      link_url: "",
+      link_target: "internal"
     });
     setEditingId(null);
   };
@@ -421,6 +434,38 @@ export const DashboardHeroManagerModule = () => {
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
               />
               <Label>Active</Label>
+            </div>
+          </div>
+
+          {/* Link Settings */}
+          <div className="border-t pt-4 space-y-4">
+            <h3 className="font-medium flex items-center gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Link Settings (Optional)
+            </h3>
+            <div className="space-y-2">
+              <Label>Link URL</Label>
+              <Input
+                value={formData.link_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, link_url: e.target.value }))}
+                placeholder="/shop or https://example.com"
+              />
+              <p className="text-xs text-muted-foreground">Internal links: /page-name, External: https://...</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Link Type</Label>
+              <Select
+                value={formData.link_target}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, link_target: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internal">Internal (same tab)</SelectItem>
+                  <SelectItem value="external">External (new tab)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
