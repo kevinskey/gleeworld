@@ -32,6 +32,7 @@ export const AlumnaeUserManagement = () => {
   }, []);
 
   const fetchAlumnaeUsers = async () => {
+    setLoading(true);
     try {
       // Prefer user_roles table, but fall back to gw_profiles.role to be backward compatible
       const [{ data: roleData, error: roleError }, { data: profileRoleData, error: profileRoleError }] = await Promise.all([
@@ -39,15 +40,24 @@ export const AlumnaeUserManagement = () => {
         supabase.from('gw_profiles').select('user_id').eq('role', 'alumna')
       ]);
 
-      if (roleError) throw roleError;
-      if (profileRoleError) throw profileRoleError;
+      console.log('AlumnaeUserManagement: roleData', roleData, 'profileRoleData', profileRoleData);
+
+      if (roleError) {
+        console.error('Role error:', roleError);
+      }
+      if (profileRoleError) {
+        console.error('Profile role error:', profileRoleError);
+      }
 
       const idsFromRoles = (roleData || []).map(r => r.user_id);
       const idsFromProfiles = (profileRoleData || []).map(r => r.user_id);
       const uniqueIds = Array.from(new Set([...idsFromRoles, ...idsFromProfiles]));
 
+      console.log('AlumnaeUserManagement: uniqueIds', uniqueIds.length);
+
       if (uniqueIds.length === 0) {
         setUsers([]);
+        setLoading(false);
         return;
       }
 
@@ -58,9 +68,16 @@ export const AlumnaeUserManagement = () => {
         .in('user_id', uniqueIds)
         .order('full_name', { ascending: true });
 
-      if (profileError) throw profileError;
-      setUsers(profileData || []);
+      console.log('AlumnaeUserManagement: profileData', profileData?.length, 'error:', profileError);
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        toast.error('Failed to load users: ' + profileError.message);
+      } else {
+        setUsers(profileData || []);
+      }
     } catch (error: any) {
+      console.error('Fetch error:', error);
       toast.error('Failed to load users: ' + error.message);
     } finally {
       setLoading(false);
