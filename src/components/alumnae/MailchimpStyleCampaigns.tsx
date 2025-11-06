@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { 
   Mail, Send, Loader2, Users, CheckCircle2, Search, Calendar,
   BarChart3, Eye, Clock, TrendingUp, Save, FileText, Sparkles,
-  PieChart, MousePointerClick, Inbox
+  PieChart, MousePointerClick, Inbox, Trash2
 } from "lucide-react";
 
 interface AlumnaeUser {
@@ -170,6 +170,23 @@ export const MailchimpStyleCampaigns = () => {
       toast.error("Failed to load templates");
     } finally {
       setLoadingTemplates(false);
+    }
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    try {
+      const { error } = await supabase
+        .from('email_templates')
+        .delete()
+        .eq('id', templateId);
+
+      if (error) throw error;
+
+      toast.success("Template deleted successfully");
+      loadTemplates();
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      toast.error("Failed to delete template");
     }
   };
 
@@ -648,17 +665,26 @@ export const MailchimpStyleCampaigns = () => {
                           <h3 className="font-semibold">{template.name}</h3>
                           <Badge variant="outline" className="mt-1">{template.category}</Badge>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSubject(template.subject);
-                            setActiveTab('create');
-                          }}
-                        >
-                          <Sparkles className="h-4 w-4 mr-1" />
-                          Use
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSubject(template.subject);
+                              setActiveTab('create');
+                            }}
+                          >
+                            <Sparkles className="h-4 w-4 mr-1" />
+                            Use
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteTemplate(template.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </div>
                       <p className="text-sm text-muted-foreground mt-2">{template.subject}</p>
                       <p className="text-xs text-muted-foreground mt-1">
