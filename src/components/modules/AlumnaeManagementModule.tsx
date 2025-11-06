@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Video, Image, Star, Calendar, Layout, FormInput, Users, Eye, ExternalLink } from "lucide-react";
+import { BookOpen, Video, Image, Star, Calendar, Layout, FormInput, Users, Eye, ExternalLink, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { NewsletterManager } from "@/components/alumnae/NewsletterManager";
 import { InterviewManager } from "@/components/alumnae/InterviewManager";
 import { HeroManager } from "@/components/alumnae/HeroManager";
@@ -86,73 +93,66 @@ export const AlumnaeManagementModule = ({ user, isFullPage = false }: ModuleProp
             <p className="text-sm text-muted-foreground">Manage alumnae portal content</p>
           </div>
         )}
-        <Button 
-          onClick={() => window.open('/alumnae', 'alumnaePreview', 'width=1400,height=900,resizable=yes,scrollbars=yes,status=yes,toolbar=yes,menubar=no,location=yes')} 
-          variant="outline" 
-          className="gap-2"
-        >
-          <ExternalLink className="h-4 w-4" />
-          View Live Page
-        </Button>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Alumnae</p>
-                <p className="text-2xl font-bold">{alumnaeCount}</p>
+        
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64 bg-background z-50">
+              <DropdownMenuLabel>Quick Stats</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="space-y-3 p-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Alumnae</span>
+                  </div>
+                  <span className="text-lg font-bold">{alumnaeCount}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Newsletters</span>
+                  </div>
+                  <span className="text-lg font-bold">{newsletterCount}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Video className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Interviews</span>
+                  </div>
+                  <span className="text-lg font-bold">{interviewCount}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Image className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Hero Slides</span>
+                  </div>
+                  <span className="text-lg font-bold">{heroSlideCount}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Star className="h-4 w-4 text-primary" />
+                    <span className="text-sm">Spotlights</span>
+                  </div>
+                  <span className="text-lg font-bold">{spotlightCount}</span>
+                </div>
               </div>
-              <Users className="h-8 w-8 text-primary opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Newsletters</p>
-                <p className="text-2xl font-bold">{newsletterCount}</p>
-              </div>
-              <BookOpen className="h-8 w-8 text-primary opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Interviews</p>
-                <p className="text-2xl font-bold">{interviewCount}</p>
-              </div>
-              <Video className="h-8 w-8 text-primary opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Hero Slides</p>
-                <p className="text-2xl font-bold">{heroSlideCount}</p>
-              </div>
-              <Image className="h-8 w-8 text-primary opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Spotlights</p>
-                <p className="text-2xl font-bold">{spotlightCount}</p>
-              </div>
-              <Star className="h-8 w-8 text-primary opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <Button 
+            onClick={() => window.open('/alumnae', 'alumnaePreview', 'width=1400,height=900,resizable=yes,scrollbars=yes,status=yes,toolbar=yes,menubar=no,location=yes')} 
+            variant="outline" 
+            className="gap-2"
+          >
+            <ExternalLink className="h-4 w-4" />
+            View Live Page
+          </Button>
+        </div>
       </div>
 
       {/* Main Content Tabs */}
