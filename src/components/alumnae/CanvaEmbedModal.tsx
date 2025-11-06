@@ -1,8 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
-import { X, Download } from "lucide-react";
+import { ExternalLink, FileDown } from "lucide-react";
 
 interface CanvaEmbedModalProps {
   open: boolean;
@@ -11,82 +11,94 @@ interface CanvaEmbedModalProps {
   title?: string;
 }
 
-export const CanvaEmbedModal = ({ open, onClose, onPdfReady, title }: CanvaEmbedModalProps) => {
-  const [embedUrl, setEmbedUrl] = useState("");
-
+export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) => {
   useEffect(() => {
     if (open) {
-      // Canva embed URL for newsletter templates
-      // Users can browse templates and create designs
-      const canvaEmbedUrl = "https://www.canva.com/design/create?category=newsletters&embed";
-      setEmbedUrl(canvaEmbedUrl);
+      // Open Canva in a new window
+      const canvaUrl = "https://www.canva.com/create/newsletters/";
+      window.open(canvaUrl, 'canva-editor', 'width=1200,height=800');
+      
+      toast.info("Canva opened in a new window. Follow the steps below to complete your design.", {
+        duration: 6000
+      });
     }
   }, [open]);
 
-  const handleDownloadInstructions = () => {
-    toast.info(
-      "After designing: 1) Click Share → Download → PDF\n2) Save the file\n3) Close this window\n4) Upload the PDF using the file picker",
-      { duration: 8000 }
-    );
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] w-full h-full p-0">
-        <DialogHeader className="p-4 pb-2 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <DialogTitle>Design Newsletter in Canva</DialogTitle>
-              <DialogDescription>
-                Create your newsletter design, then download as PDF
-              </DialogDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDownloadInstructions}
-                className="gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Download Instructions
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ExternalLink className="h-5 w-5" />
+            Design Your Newsletter in Canva
+          </DialogTitle>
+          <DialogDescription>
+            Follow these steps to create and download your newsletter
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-1 w-full h-[calc(95vh-80px)]">
-          {embedUrl ? (
-            <iframe
-              src={embedUrl}
-              className="w-full h-full border-0"
-              allow="camera; microphone; clipboard-read; clipboard-write"
-              title="Canva Design Editor"
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">Loading Canva editor...</p>
+        <div className="space-y-4">
+          <div className="bg-muted p-4 rounded-lg space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-medium flex-shrink-0">
+                1
+              </div>
+              <div>
+                <p className="font-medium">Browse Newsletter Templates</p>
+                <p className="text-sm text-muted-foreground">Select a template that fits your style or start from scratch</p>
+              </div>
             </div>
-          )}
-        </div>
 
-        <div className="p-4 border-t bg-muted/50">
-          <div className="text-sm text-muted-foreground space-y-1">
-            <p className="font-medium">Quick Guide:</p>
-            <ol className="list-decimal list-inside space-y-1 ml-2">
-              <li>Browse and select a newsletter template</li>
-              <li>Customize your design (text, images, colors)</li>
-              <li>Click <span className="font-medium">Share → Download → PDF</span></li>
-              <li>Save the PDF to your computer</li>
-              <li>Close this window and upload the PDF below</li>
-            </ol>
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-medium flex-shrink-0">
+                2
+              </div>
+              <div>
+                <p className="font-medium">Customize Your Design</p>
+                <p className="text-sm text-muted-foreground">Edit text, add images, adjust colors and fonts to match your brand</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-medium flex-shrink-0">
+                3
+              </div>
+              <div>
+                <p className="font-medium">Download as PDF</p>
+                <p className="text-sm text-muted-foreground">
+                  Click <span className="font-medium text-foreground">Share → Download → PDF</span> format
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-medium flex-shrink-0">
+                4
+              </div>
+              <div>
+                <p className="font-medium">Upload Here</p>
+                <p className="text-sm text-muted-foreground">Return to this page and upload the PDF using the file picker below</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                window.open("https://www.canva.com/create/newsletters/", 'canva-editor', 'width=1200,height=800');
+                toast.success("Canva reopened in new window");
+              }}
+              className="gap-2"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Reopen Canva
+            </Button>
+
+            <Button onClick={onClose}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Done - Upload PDF
+            </Button>
           </div>
         </div>
       </DialogContent>
