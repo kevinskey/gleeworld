@@ -169,8 +169,18 @@ export const UnifiedDashboard = () => {
       </div>;
   }
 
-  // If module specified via query param, render it directly with member navigation
+  // If module specified via query param, render it directly
   if (activeModuleId && activeModuleId !== 'collapsed-toggle' && viewMode === 'default') {
+    // Check if this is a member-specific module that needs the member navigation
+    const memberModules = [
+      'music-library',
+      'member-sight-reading-studio',
+      'attendance',
+      'wardrobe',
+      'karaoke'
+    ];
+    const showMemberNav = memberModules.includes(activeModuleId) && !profile?.is_admin && !profile?.is_super_admin;
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="px-6 py-4">
@@ -186,7 +196,7 @@ export const UnifiedDashboard = () => {
           </Button>
           <ModuleDisplay selectedModule={activeModuleId} />
         </div>
-        {profile && (
+        {showMemberNav && profile && (
           <div className="px-6 pb-8">
             <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded" />}> 
               <MemberNavigation
