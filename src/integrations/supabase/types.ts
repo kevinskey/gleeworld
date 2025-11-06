@@ -20419,7 +20419,9 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_admin_or_librarian: { Args: { _user_id: string }; Returns: boolean }
-      is_admin_user: { Args: never; Returns: boolean }
+      is_admin_user:
+        | { Args: never; Returns: boolean }
+        | { Args: { user_id: string }; Returns: boolean }
       is_alumnae_liaison: { Args: never; Returns: boolean }
       is_coordinator_for_cohort: {
         Args: { cohort_id_param: string }
