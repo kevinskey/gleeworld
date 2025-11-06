@@ -28,7 +28,8 @@ serve(async (req) => {
     authUrl.searchParams.set('client_id', clientId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('scope', 'design:content:read design:content:write design:meta:read folder:read');
+    // Request minimal scopes to reduce authorization errors; expand later if needed
+    authUrl.searchParams.set('scope', 'design:content:read design:content:write');
     authUrl.searchParams.set('state', returnUrl || `${url.origin}/dashboard`);
 
     return new Response(
