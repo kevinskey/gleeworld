@@ -8,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { ArrowLeft, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import WebFont from 'webfontloader';
 
 interface GlobalTitleSettingsProps {
   onBack: () => void;
@@ -40,6 +41,20 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
   useEffect(() => {
     fetchGlobalSettings();
   }, []);
+
+  // Load Google font when fontFamily changes
+  useEffect(() => {
+    if (formatting.fontFamily && formatting.fontFamily !== 'inherit') {
+      const primary = formatting.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+      if (primary) {
+        WebFont.load({ 
+          google: { families: [primary] },
+          active: () => console.log('✅ Preview font loaded:', primary),
+          inactive: () => console.log('❌ Preview font failed:', primary)
+        });
+      }
+    }
+  }, [formatting.fontFamily]);
 
   const fetchGlobalSettings = async () => {
     try {
