@@ -23,9 +23,10 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
   useEffect(() => {
     fetchGlobalTitleFormatting();
 
-    // Subscribe to real-time updates
+    // Subscribe to real-time updates with a unique channel ID per component instance
+    const channelId = `title-formatting-${Math.random().toString(36).substring(7)}`;
     const channel = supabase
-      .channel('title-formatting-changes')
+      .channel(channelId)
       .on(
         'postgres_changes',
         {
