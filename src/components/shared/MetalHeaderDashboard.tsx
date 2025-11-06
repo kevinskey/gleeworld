@@ -629,9 +629,6 @@ export const MetalHeaderDashboard = ({
             if (cardId === 'favorites') {
               const hasFavorites = moduleFavorites && moduleFavorites.size > 0;
 
-              // Only show in edit mode, skip if no favorites and not editing
-              if (!isEditingLayout && !hasFavorites) return null;
-
               // Convert moduleFavorites Set to array of enriched modules
               const favoritesArray = hasFavorites ? Array.from(moduleFavorites).map(moduleId => {
                 const module = allModules.find(m => m.id === moduleId);
