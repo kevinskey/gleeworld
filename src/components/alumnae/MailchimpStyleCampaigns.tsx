@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { EmailTemplateBuilder } from "./EmailTemplateBuilder";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -172,6 +173,12 @@ export const MailchimpStyleCampaigns = () => {
       if (rolesError) throw rolesError;
 
       const alumnaeIds = rolesData.map(r => r.user_id);
+
+      if (alumnaeIds.length === 0) {
+        setAlumnae([]);
+        setLoading(false);
+        return;
+      }
 
       const { data: profilesData, error: profilesError } = await supabase
         .from('gw_profiles')
@@ -596,9 +603,12 @@ export const MailchimpStyleCampaigns = () => {
         {/* Templates */}
         <TabsContent value="templates" className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>Email Templates</CardTitle>
-              <CardDescription>Pre-designed templates for common communications</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Email Templates</CardTitle>
+                <CardDescription>Pre-designed templates for common communications</CardDescription>
+              </div>
+              <EmailTemplateBuilder onTemplateCreated={loadCampaigns} />
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
