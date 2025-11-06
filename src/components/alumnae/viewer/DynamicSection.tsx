@@ -51,15 +51,21 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
 
   // Load Google font when fontFamily changes
   useEffect(() => {
+    console.log('🎨 Title formatting updated:', titleFormatting);
     if (titleFormatting?.fontFamily) {
       const primary = titleFormatting.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
-      if (primary) {
-        WebFont.load({ google: { families: [primary] } });
+      console.log('🔤 Loading font:', primary);
+      if (primary && primary !== 'inherit') {
+        WebFont.load({ 
+          google: { families: [primary] },
+          active: () => console.log('✅ Font loaded:', primary),
+          inactive: () => console.log('❌ Font failed to load:', primary)
+        });
       }
     }
-  }, [titleFormatting?.fontFamily]);
+  }, [titleFormatting]);
 
-   const fetchGlobalTitleFormatting = async () => {
+  const fetchGlobalTitleFormatting = async () => {
     try {
       const { data, error } = await supabase
         .from('alumnae_global_settings')
@@ -70,6 +76,7 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
       if (error) throw error;
 
       if (data?.setting_value) {
+        console.log('📝 Fetched title formatting:', data.setting_value);
         setTitleFormatting(data.setting_value as unknown as TitleFormatting);
       }
     } catch (error) {
@@ -114,6 +121,8 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
         fontFamily: titleFormatting.fontFamily || 'inherit',
       }
     : {};
+
+  console.log('🖌️ Applied title style:', titleStyle, 'for section:', section.title);
 
   return (
     <section style={bgStyle} className="w-full py-12 px-4">
