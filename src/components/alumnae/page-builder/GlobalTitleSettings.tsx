@@ -21,6 +21,7 @@ interface TitleFormatting {
   marginBottom: number;
   textTransform: string;
   letterSpacing: number;
+  fontFamily?: string;
 }
 
 export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
@@ -32,6 +33,7 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
     marginBottom: 32,
     textTransform: 'none',
     letterSpacing: 0,
+    fontFamily: 'inherit',
   });
   const [loading, setLoading] = useState(true);
 
@@ -142,6 +144,34 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
                 step={2}
                 className="w-full"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fontFamily">Font Family</Label>
+              <Select
+                value={formatting.fontFamily || 'inherit'}
+                onValueChange={(value) => setFormatting({ ...formatting, fontFamily: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="inherit">Default (Roboto)</SelectItem>
+                  <SelectItem value="'Dancing Script', cursive">Dancing Script</SelectItem>
+                  <SelectItem value="'Bebas Neue', cursive">Bebas Neue</SelectItem>
+                  <SelectItem value="'Playfair Display', serif">Playfair Display</SelectItem>
+                  <SelectItem value="'Montserrat', sans-serif">Montserrat</SelectItem>
+                  <SelectItem value="'Open Sans', sans-serif">Open Sans</SelectItem>
+                  <SelectItem value="'Lato', sans-serif">Lato</SelectItem>
+                  <SelectItem value="'Merriweather', serif">Merriweather</SelectItem>
+                  <SelectItem value="'Raleway', sans-serif">Raleway</SelectItem>
+                  <SelectItem value="'Oswald', sans-serif">Oswald</SelectItem>
+                  <SelectItem value="'Poppins', sans-serif">Poppins</SelectItem>
+                  <SelectItem value="'Cinzel', serif">Cinzel</SelectItem>
+                  <SelectItem value="'Cormorant Garamond', serif">Cormorant Garamond</SelectItem>
+                  <SelectItem value="'Libre Baskerville', serif">Libre Baskerville</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -257,6 +287,7 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
                   marginBottom: `${formatting.marginBottom}px`,
                   textTransform: formatting.textTransform as any,
                   letterSpacing: `${formatting.letterSpacing}px`,
+                  fontFamily: formatting.fontFamily || 'inherit',
                 }}
               >
                 Sample Section Title

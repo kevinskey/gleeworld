@@ -14,6 +14,7 @@ interface TitleFormatting {
   marginBottom: number;
   textTransform: string;
   letterSpacing: number;
+  fontFamily?: string;
 }
 
 export const DynamicSection = ({ section }: DynamicSectionProps) => {
@@ -75,6 +76,7 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
         marginBottom: `${titleFormatting.marginBottom}px`,
         textTransform: titleFormatting.textTransform as any,
         letterSpacing: `${titleFormatting.letterSpacing}px`,
+        fontFamily: titleFormatting.fontFamily || undefined,
       }
     : {};
 
