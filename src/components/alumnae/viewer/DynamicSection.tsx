@@ -130,7 +130,14 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
     <section style={bgStyle} className="w-full py-12 px-4">
       <div className="container mx-auto">
         {section.title && (
-          <h2 style={titleStyle}>
+          <h2
+            style={{
+              ...titleStyle,
+              ['--heading-font' as any]: titleFormatting?.fontFamily || 'inherit',
+              ['--heading-weight' as any]: titleFormatting?.fontWeight || 400,
+              ['--heading-letter-spacing' as any]: `${titleFormatting?.letterSpacing ?? 0}px`,
+            }}
+          >
             {section.title}
           </h2>
         )}

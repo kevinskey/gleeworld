@@ -294,7 +294,16 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
 
           <div className="pt-6 border-t">
             <h3 className="text-lg font-semibold mb-4">Preview</h3>
-            <div className="bg-muted p-8 rounded-lg">
+            <div
+              className="bg-muted p-8 rounded-lg"
+              style={{
+                // Expose design tokens so global heading styles can use them
+                ['--heading-font' as any]: formatting.fontFamily || 'inherit',
+                ['--heading-weight' as any]: formatting.fontWeight || 400,
+                ['--heading-letter-spacing' as any]: `${formatting.letterSpacing}px`,
+                textAlign: formatting.textAlign as any,
+              }}
+            >
               <h2
                 style={{
                   fontSize: `${formatting.fontSize}px`,
