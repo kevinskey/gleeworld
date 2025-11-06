@@ -17,11 +17,11 @@ export const useCanvaIntegration = () => {
   const [loading, setLoading] = useState(false);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
-  const initiateOAuth = async (returnUrl: string): Promise<string | null> => {
+  const initiateOAuth = async (returnUrl: string, scopes?: string[]): Promise<string | null> => {
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('canva-oauth-init', {
-        body: { returnUrl }
+        body: { returnUrl, scopes }
       });
 
       if (error) throw error;

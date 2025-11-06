@@ -35,7 +35,13 @@ export const CanvaEmbedModal = ({ open, onClose, title }: CanvaEmbedModalProps) 
   const handleOpenCanva = async () => {
     try {
       const returnUrl = `${window.location.origin}${window.location.pathname}?canva_auth=success`;
-      const authUrl = await initiateOAuth(returnUrl);
+      const authUrl = await initiateOAuth(returnUrl, [
+        'app:read',
+        'app:write',
+        // Keep minimal design scopes first; we can expand after connection works
+        'design:content:read',
+        'design:content:write'
+      ]);
       
       if (authUrl) {
         const newWindow = window.open(authUrl, '_blank', 'width=600,height=800');
