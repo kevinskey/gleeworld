@@ -12,7 +12,7 @@ import { AnnouncementManager } from "@/components/alumnae/AnnouncementManager";
 import { AlumnaePageBuilder } from "@/components/alumnae/AlumnaePageBuilder";
 import { AlumnaeFormBuilder } from "@/components/alumnae/AlumnaeFormBuilder";
 import { AlumnaeUserManagement } from "@/components/alumnae/AlumnaeUserManagement";
-import { AlumnaeEmailManager } from "@/components/alumnae/AlumnaeEmailManager";
+import { MailchimpStyleCampaigns } from "@/components/alumnae/MailchimpStyleCampaigns";
 import { ModuleProps } from "@/types/unified-modules";
 export const AlumnaeManagementModule = ({
   user,
@@ -223,7 +223,7 @@ export const AlumnaeManagementModule = ({
             </TabsContent>
 
             <TabsContent value="email" className="mt-6">
-              <AlumnaeEmailManager />
+              <MailchimpStyleCampaigns />
             </TabsContent>
           </Tabs>
         </CardContent>
