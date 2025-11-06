@@ -55,7 +55,7 @@ export const HeroSlideshow = () => {
 
   if (loading) {
     return (
-      <div className="w-full h-96 bg-muted animate-pulse rounded-lg" />
+      <div className="w-full h-[500px] md:h-[600px] bg-muted animate-pulse" />
     );
   }
 
@@ -66,13 +66,13 @@ export const HeroSlideshow = () => {
   const slide = slides[currentSlide];
 
   return (
-    <div className="relative w-full h-96 rounded-lg overflow-hidden group">
+    <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden group">
       {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500"
         style={{ backgroundImage: `url(${slide.image_url})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
       </div>
 
       {/* Content Overlay */}
