@@ -126,10 +126,10 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
 
   const allActions = [...defaultActions, ...customActions];
 
-  const handleActionClick = (action: () => void) => {
+  const handleActionClick = (actionFn: () => void) => {
     try {
       console.log('Action clicked, executing...');
-      action();
+      actionFn();
       console.log('Action executed successfully');
       onClose();
     } catch (error) {
