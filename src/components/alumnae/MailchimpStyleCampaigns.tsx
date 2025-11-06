@@ -190,37 +190,9 @@ export const MailchimpStyleCampaigns = () => {
   };
 
   const loadCampaigns = async () => {
-    // Mock campaigns for now - would be loaded from database
-    const mockCampaigns: Campaign[] = [
-      {
-        id: '1',
-        name: 'Spring 2024 Reunion',
-        subject: 'Join us for Spring Reunion 2024',
-        content: 'Content here...',
-        status: 'sent',
-        recipients_count: 245,
-        sent_at: '2024-01-15T10:00:00Z',
-        stats: { sent: 245, opened: 189, clicked: 67 }
-      },
-      {
-        id: '2',
-        name: 'December Newsletter',
-        subject: 'December 2024 Updates',
-        content: 'Content here...',
-        status: 'scheduled',
-        recipients_count: 298,
-        scheduled_for: '2024-12-01T09:00:00Z'
-      },
-      {
-        id: '3',
-        name: 'Scholarship Fund Drive',
-        subject: 'Support the Next Generation',
-        content: 'Content here...',
-        status: 'draft',
-        recipients_count: 0
-      }
-    ];
-    setCampaigns(mockCampaigns);
+    // TODO: Load campaigns from database when table is created
+    // For now, start with empty campaigns
+    setCampaigns([]);
   };
 
   const applySegmentation = () => {
@@ -378,16 +350,29 @@ export const MailchimpStyleCampaigns = () => {
               <CardDescription>View and manage all email campaigns</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {campaigns.map((campaign) => {
-                  const stats = getCampaignStats(campaign);
-                  return (
-                    <Card key={campaign.id} className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="font-semibold text-lg">{campaign.name}</h3>
-                            <Badge variant={
+              {campaigns.length === 0 ? (
+                <div className="text-center py-12">
+                  <Mail className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No campaigns yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Create your first email campaign to get started
+                  </p>
+                  <Button onClick={() => setActiveTab('create')}>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Create Campaign
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {campaigns.map((campaign) => {
+                    const stats = getCampaignStats(campaign);
+                    return (
+                      <Card key={campaign.id} className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-semibold text-lg">{campaign.name}</h3>
+                              <Badge variant={
                               campaign.status === 'sent' ? 'default' :
                               campaign.status === 'scheduled' ? 'secondary' : 'outline'
                             }>
@@ -430,11 +415,12 @@ export const MailchimpStyleCampaigns = () => {
                           <Eye className="h-4 w-4 mr-2" />
                           View
                         </Button>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -662,11 +648,15 @@ export const MailchimpStyleCampaigns = () => {
                 <Eye className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">77.1%</div>
-                <p className="text-xs text-green-600 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  +5.2% from last month
-                </p>
+                <div className="text-2xl font-bold">
+                  {campaigns.filter(c => c.stats).length > 0
+                    ? (campaigns
+                        .filter(c => c.stats)
+                        .reduce((acc, c) => acc + ((c.stats!.opened / c.stats!.sent) * 100), 0) /
+                      campaigns.filter(c => c.stats).length).toFixed(1) + '%'
+                    : 'N/A'}
+                </div>
+                <p className="text-xs text-muted-foreground">Calculated from sent campaigns</p>
               </CardContent>
             </Card>
 
@@ -688,31 +678,41 @@ export const MailchimpStyleCampaigns = () => {
               <CardDescription>Detailed analytics for sent campaigns</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {campaigns.filter(c => c.status === 'sent').map((campaign) => {
-                  const stats = getCampaignStats(campaign);
-                  if (!stats) return null;
-                  return (
-                    <div key={campaign.id} className="border-b pb-4 last:border-0">
-                      <h4 className="font-medium mb-2">{campaign.name}</h4>
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Sent</p>
-                          <p className="text-lg font-semibold">{campaign.stats?.sent}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Open Rate</p>
-                          <p className="text-lg font-semibold text-blue-600">{stats.openRate}%</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Click Rate</p>
-                          <p className="text-lg font-semibold text-green-600">{stats.clickRate}%</p>
+              {campaigns.filter(c => c.status === 'sent').length === 0 ? (
+                <div className="text-center py-12">
+                  <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground opacity-50 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No campaign data yet</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Analytics will appear here once you send campaigns
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {campaigns.filter(c => c.status === 'sent').map((campaign) => {
+                    const stats = getCampaignStats(campaign);
+                    if (!stats) return null;
+                    return (
+                      <div key={campaign.id} className="border-b pb-4 last:border-0">
+                        <h4 className="font-medium mb-2">{campaign.name}</h4>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Sent</p>
+                            <p className="text-lg font-semibold">{campaign.stats?.sent}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Open Rate</p>
+                            <p className="text-lg font-semibold text-blue-600">{stats.openRate}%</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground">Click Rate</p>
+                            <p className="text-lg font-semibold text-green-600">{stats.clickRate}%</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
