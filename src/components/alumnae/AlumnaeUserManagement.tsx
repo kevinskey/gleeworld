@@ -34,45 +34,18 @@ export const AlumnaeUserManagement = () => {
   const fetchAlumnaeUsers = async () => {
     setLoading(true);
     try {
-      // Prefer user_roles table, but fall back to gw_profiles.role to be backward compatible
-      const [{ data: roleData, error: roleError }, { data: profileRoleData, error: profileRoleError }] = await Promise.all([
-        supabase.from('user_roles').select('user_id').eq('role', 'alumna'),
-        supabase.from('gw_profiles').select('user_id').eq('role', 'alumna')
-      ]);
-
-      console.log('AlumnaeUserManagement: roleData', roleData, 'profileRoleData', profileRoleData);
-
-      if (roleError) {
-        console.error('Role error:', roleError);
-      }
-      if (profileRoleError) {
-        console.error('Profile role error:', profileRoleError);
-      }
-
-      const idsFromRoles = (roleData || []).map(r => r.user_id);
-      const idsFromProfiles = (profileRoleData || []).map(r => r.user_id);
-      const uniqueIds = Array.from(new Set([...idsFromRoles, ...idsFromProfiles]));
-
-      console.log('AlumnaeUserManagement: uniqueIds', uniqueIds.length);
-
-      if (uniqueIds.length === 0) {
-        setUsers([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch full profile data for these users
+      // Fast path: fetch profiles directly marked as alumna (temporary until user_roles RLS opened for admins)
       const { data: profileData, error: profileError } = await supabase
         .from('gw_profiles')
         .select('*')
-        .in('user_id', uniqueIds)
-        .order('full_name', { ascending: true });
-
-      console.log('AlumnaeUserManagement: profileData', profileData?.length, 'error:', profileError);
+        .eq('role', 'alumna')
+        .order('full_name', { ascending: true })
+        .limit(200);
 
       if (profileError) {
         console.error('Profile fetch error:', profileError);
-        toast.error('Failed to load users: ' + profileError.message);
+        toast.error('Failed to load alumnae: ' + profileError.message);
+        setUsers([]);
       } else {
         setUsers(profileData || []);
       }
@@ -126,6 +99,8 @@ export const AlumnaeUserManagement = () => {
     const employer = (user.current_employer ?? '').toString().toLowerCase();
     return name.includes(normalizedSearch) || email.includes(normalizedSearch) || major.includes(normalizedSearch) || employer.includes(normalizedSearch);
   });
+
+  const visibleUsers = filteredUsers.slice(0, 100);
 
   const renderCardView = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
