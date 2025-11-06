@@ -11,26 +11,34 @@ serve(async (req) => {
   }
 
   try {
-    const { returnUrl } = await req.json();
+    const { returnUrl, scopes } = await req.json();
     
     const clientId = Deno.env.get('CANVA_CLIENT_ID');
     
     if (!clientId) {
+      console.error('CANVA_CLIENT_ID missing');
       throw new Error('CANVA_CLIENT_ID not configured');
     }
     const url = new URL(req.url);
 
     // Always use HTTPS for Supabase Edge redirect URI (avoid http during local edge runtime)
     const redirectUri = `https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/canva-oauth-callback`;
-    
+  
     // Build Canva authorization URL
     const authUrl = new URL('https://www.canva.com/api/oauth/authorize');
+    const scopeStr = (scopes && Array.isArray(scopes) && scopes.length)
+      ? scopes.join(' ')
+      : 'app:read app:write design:content:read design:content:write design:meta:read asset:read asset:write';
+
     authUrl.searchParams.set('client_id', clientId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('response_type', 'code');
-    // Request minimal scopes to reduce authorization errors; expand later if needed
-    authUrl.searchParams.set('scope', 'design:content:read design:content:write');
+    authUrl.searchParams.set('scope', scopeStr);
     authUrl.searchParams.set('state', returnUrl || `${url.origin}/dashboard`);
+
+    console.log('[canva-oauth-init] redirectUri=', redirectUri);
+    console.log('[canva-oauth-init] state=', returnUrl || `${url.origin}/dashboard`);
+    console.log('[canva-oauth-init] scope=', scopeStr);
 
     return new Response(
       JSON.stringify({ 
