@@ -149,12 +149,15 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
               alt="Template preview" 
               className="max-w-full h-auto inline-block"
               style={{ maxHeight: '300px' }}
+              onError={(e) => {
+                e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23f3f4f6" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" font-size="14" text-anchor="middle" dy=".3em" fill="%239ca3af"%3EInvalid Image URL%3C/text%3E%3C/svg%3E';
+              }}
             />
           </div>
         ) : (
           <div className={`${alignmentClass} p-8 border-2 border-dashed rounded`}>
             <FileImage className="h-12 w-12 mx-auto text-muted-foreground" />
-            <p className="text-sm text-muted-foreground mt-2">Image URL...</p>
+            <p className="text-sm text-muted-foreground mt-2">Enter direct image URL (ends in .jpg, .png, etc.)</p>
           </div>
         );
       case 'video':
@@ -164,6 +167,9 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
               controls 
               className="max-w-full h-auto inline-block"
               style={{ maxHeight: '400px' }}
+              onError={(e) => {
+                e.currentTarget.parentElement!.innerHTML = `<div class="p-4 bg-muted rounded text-center"><p class="text-sm text-muted-foreground">Invalid video URL. Use direct .mp4, .webm links</p></div>`;
+              }}
             >
               <source src={block.content} />
             </video>
@@ -171,7 +177,7 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
         ) : (
           <div className={`${alignmentClass} p-8 border-2 border-dashed rounded`}>
             <Video className="h-12 w-12 mx-auto text-muted-foreground" />
-            <p className="text-sm text-muted-foreground mt-2">Video URL...</p>
+            <p className="text-sm text-muted-foreground mt-2">Enter direct video URL (.mp4, .webm)</p>
           </div>
         );
       case 'link':
