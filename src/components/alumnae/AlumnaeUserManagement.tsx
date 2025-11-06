@@ -281,9 +281,9 @@ export const AlumnaeUserManagement = () => {
       
       <Card>
         <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-2xl">Alumnae User Management</CardTitle>
+              <CardTitle className="text-lg">Alumnae User Management</CardTitle>
               
             </div>
             <div className="flex items-center gap-2">
