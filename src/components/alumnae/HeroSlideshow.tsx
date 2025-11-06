@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import WebFont from 'webfontloader';
 
 interface HeroSlide {
   id: string;
@@ -11,10 +12,22 @@ interface HeroSlide {
   display_order: number;
 }
 
+interface TitleFormatting {
+  fontSize: number;
+  fontWeight: string;
+  textAlign: string;
+  color: string;
+  marginBottom: number;
+  textTransform: string;
+  letterSpacing: number;
+  fontFamily?: string;
+}
+
 export const HeroSlideshow = () => {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [titleFormatting, setTitleFormatting] = useState<TitleFormatting | null>(null);
 
   useEffect(() => {
     fetchHeroSlides();
@@ -28,6 +41,62 @@ export const HeroSlideshow = () => {
       return () => clearInterval(timer);
     }
   }, [slides.length]);
+
+  // Fetch global title formatting and subscribe to realtime changes
+  useEffect(() => {
+    const fetchFormatting = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('alumnae_global_settings')
+          .select('setting_value')
+          .eq('setting_key', 'title_formatting')
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.setting_value) {
+          setTitleFormatting(data.setting_value as unknown as TitleFormatting);
+        }
+      } catch (err) {
+        console.error('Failed to load hero title formatting:', err);
+      }
+    };
+
+    fetchFormatting();
+
+    const channelId = `title-formatting-${Math.random().toString(36).substring(7)}`;
+    const channel = supabase
+      .channel(channelId)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'alumnae_global_settings', filter: 'setting_key=eq.title_formatting' },
+        (payload) => {
+          console.log('Hero title formatting updated:', payload);
+          if ((payload as any).new?.setting_value) {
+            setTitleFormatting(((payload as any).new.setting_value) as unknown as TitleFormatting);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Load Google font for hero titles
+  useEffect(() => {
+    if (titleFormatting?.fontFamily) {
+      const primary = titleFormatting.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+      const weight = (titleFormatting.fontWeight || '400').toString().replace(/[^0-9]/g, '') || '400';
+      if (primary && primary !== 'inherit') {
+        const families = [`${primary}:${weight},400,500,600,700,800,900`];
+        WebFont.load({
+          google: { families },
+          active: () => console.log('✅ Hero font loaded:', families.join(',')),
+          inactive: () => console.log('❌ Hero font failed:', families.join(','))
+        });
+      }
+    }
+  }, [titleFormatting]);
 
   const fetchHeroSlides = async () => {
     try {
@@ -79,7 +148,21 @@ export const HeroSlideshow = () => {
       {(slide.title || slide.description) && (
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           {slide.title && (
-            <h2 className="text-4xl font-serif mb-2">{slide.title}</h2>
+            <h2
+              className="mb-2"
+              style={titleFormatting ? {
+                fontSize: `${titleFormatting.fontSize}px`,
+                fontWeight: titleFormatting.fontWeight,
+                textAlign: titleFormatting.textAlign as any,
+                color: titleFormatting.color || 'inherit',
+                marginBottom: `${titleFormatting.marginBottom}px`,
+                textTransform: titleFormatting.textTransform as any,
+                letterSpacing: `${titleFormatting.letterSpacing}px`,
+                fontFamily: titleFormatting.fontFamily || 'inherit',
+              } : undefined}
+            >
+              {slide.title}
+            </h2>
           )}
           {slide.description && (
             <p className="text-lg opacity-90">{slide.description}</p>
