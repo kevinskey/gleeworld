@@ -50,7 +50,7 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
       if (error) throw error;
 
       if (data?.setting_value) {
-        setFormatting(data.setting_value as TitleFormatting);
+        setFormatting(data.setting_value as unknown as TitleFormatting);
       }
     } catch (error: any) {
       console.error('Failed to load global settings:', error);
@@ -74,7 +74,7 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
         const { error } = await supabase
           .from('alumnae_global_settings')
           .update({
-            setting_value: formatting,
+            setting_value: formatting as unknown as any,
             updated_at: new Date().toISOString(),
           })
           .eq('id', existing.id);
@@ -86,7 +86,7 @@ export const GlobalTitleSettings = ({ onBack }: GlobalTitleSettingsProps) => {
           .from('alumnae_global_settings')
           .insert({
             setting_key: 'title_formatting',
-            setting_value: formatting,
+            setting_value: formatting as unknown as any,
           });
 
         if (error) throw error;

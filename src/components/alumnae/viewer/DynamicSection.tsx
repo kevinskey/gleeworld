@@ -34,7 +34,7 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
       if (error) throw error;
 
       if (data?.setting_value) {
-        setTitleFormatting(data.setting_value as TitleFormatting);
+        setTitleFormatting(data.setting_value as unknown as TitleFormatting);
       }
     } catch (error) {
       console.error('Failed to load title formatting:', error);
