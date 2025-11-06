@@ -3,11 +3,12 @@ import { DndContext, DragEndEvent, closestCenter, PointerSensor, useSensor, useS
 import { arrayMove, SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Save } from 'lucide-react';
+import { Plus, Save, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { SortableSection } from './page-builder/SortableSection';
 import { SectionEditor } from './page-builder/SectionEditor';
+import { GlobalTitleSettings } from './page-builder/GlobalTitleSettings';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 interface PageSection {
@@ -28,6 +29,7 @@ export const AlumnaePageBuilder = () => {
   const [loading, setLoading] = useState(true);
   const [editingSection, setEditingSection] = useState<PageSection | null>(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [showGlobalSettings, setShowGlobalSettings] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -177,6 +179,14 @@ export const AlumnaePageBuilder = () => {
     return <LoadingSpinner />;
   }
 
+  if (showGlobalSettings) {
+    return (
+      <GlobalTitleSettings
+        onBack={() => setShowGlobalSettings(false)}
+      />
+    );
+  }
+
   if (showEditor && editingSection) {
     return (
       <SectionEditor
@@ -197,10 +207,16 @@ export const AlumnaePageBuilder = () => {
           <h2 className="text-2xl font-bold">Alumnae Page Builder</h2>
           <p className="text-muted-foreground">Drag to reorder sections, click to edit</p>
         </div>
-        <Button onClick={handleAddSection}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Section
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowGlobalSettings(true)}>
+            <Settings className="h-4 w-4 mr-2" />
+            Global Title Format
+          </Button>
+          <Button onClick={handleAddSection}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Section
+          </Button>
+        </div>
       </div>
 
       {sections.length === 0 ? (

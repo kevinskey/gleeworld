@@ -1,10 +1,45 @@
+import { useState, useEffect } from 'react';
 import { DynamicItem } from './DynamicItem';
+import { supabase } from '@/integrations/supabase/client';
 
 interface DynamicSectionProps {
   section: any;
 }
 
+interface TitleFormatting {
+  fontSize: number;
+  fontWeight: string;
+  textAlign: string;
+  color: string;
+  marginBottom: number;
+  textTransform: string;
+  letterSpacing: number;
+}
+
 export const DynamicSection = ({ section }: DynamicSectionProps) => {
+  const [titleFormatting, setTitleFormatting] = useState<TitleFormatting | null>(null);
+
+  useEffect(() => {
+    fetchGlobalTitleFormatting();
+  }, []);
+
+  const fetchGlobalTitleFormatting = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('alumnae_global_settings')
+        .select('setting_value')
+        .eq('setting_key', 'title_formatting')
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data?.setting_value) {
+        setTitleFormatting(data.setting_value as TitleFormatting);
+      }
+    } catch (error) {
+      console.error('Failed to load title formatting:', error);
+    }
+  };
   const bgStyle: React.CSSProperties = {
     backgroundColor: section.background_color || 'transparent',
     backgroundImage: section.background_image ? `url(${section.background_image})` : undefined,
@@ -31,11 +66,26 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
   const items = section.alumnae_section_items || [];
   const activeItems = items.filter((item: any) => item.is_active);
 
+  const titleStyle: React.CSSProperties = titleFormatting
+    ? {
+        fontSize: `${titleFormatting.fontSize}px`,
+        fontWeight: titleFormatting.fontWeight,
+        textAlign: titleFormatting.textAlign as any,
+        color: titleFormatting.color || undefined,
+        marginBottom: `${titleFormatting.marginBottom}px`,
+        textTransform: titleFormatting.textTransform as any,
+        letterSpacing: `${titleFormatting.letterSpacing}px`,
+      }
+    : {};
+
   return (
     <section style={bgStyle} className="w-full py-12 px-4">
       <div className="container mx-auto">
         {section.title && (
-          <h2 className="text-3xl md:text-4xl font-bold mb-8 text-center">
+          <h2
+            style={titleStyle}
+            className={!titleFormatting ? "text-3xl md:text-4xl font-bold mb-8 text-center" : ""}
+          >
             {section.title}
           </h2>
         )}
