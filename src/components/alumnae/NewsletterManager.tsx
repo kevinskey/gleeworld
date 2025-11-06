@@ -10,12 +10,10 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { NewsletterContentManager } from "./NewsletterContentManager";
 import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
-import { useCanvaIntegration } from "@/hooks/useCanvaIntegration";
 
 export const NewsletterManager = () => {
   const { user } = useAuth();
   const { uploadFile, uploading } = useFileUpload();
-  const { createDesign, exportDesign, loading: canvaLoading } = useCanvaIntegration();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
@@ -30,7 +28,6 @@ export const NewsletterManager = () => {
   const [sendingEmails, setSendingEmails] = useState(false);
   const [currentNewsletterId, setCurrentNewsletterId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [canvaDesignId, setCanvaDesignId] = useState<string | null>(null);
 
   // Auto-generate title based on year and volume
   useEffect(() => {
@@ -313,45 +310,17 @@ export const NewsletterManager = () => {
   };
 
   const handleCreateCanvaDesign = async () => {
-    try {
-      const designTitle = `${title} - ${months[month - 1]} ${year}`;
-      const design = await createDesign(designTitle);
-      
-      if (design?.id && design?.editUrl) {
-        setCanvaDesignId(design.id);
-        toast.success("Canva design created! Opening editor...", { duration: 3000 });
-        window.open(design.editUrl, '_blank');
-      }
-    } catch (error: any) {
-      console.error('Error creating Canva design:', error);
-      toast.error(error.message || "Failed to create Canva design");
-    }
-  };
-
-  const handleExportFromCanva = async () => {
-    if (!canvaDesignId) {
-      toast.error("No Canva design to export");
-      return;
-    }
-
-    try {
-      toast.info("Exporting from Canva... This may take a moment.", { duration: 5000 });
-      
-      const exportData = await exportDesign(canvaDesignId);
-      
-      if (exportData?.downloadUrl) {
-        // Download the PDF
-        const response = await fetch(exportData.downloadUrl);
-        const blob = await response.blob();
-        const file = new File([blob], `${title}.pdf`, { type: 'application/pdf' });
-        
-        setPdfFile(file);
-        toast.success("Newsletter exported from Canva! Ready to save.");
-      }
-    } catch (error: any) {
-      console.error('Error exporting from Canva:', error);
-      toast.error(error.message || "Failed to export from Canva");
-    }
+    const designTitle = `${title} - ${months[month - 1]} ${year}`;
+    
+    // Open Canva with a newsletter template
+    // Users will need to create their design in Canva and download it manually
+    const canvaUrl = `https://www.canva.com/create/newsletters/`;
+    
+    toast.info("Opening Canva... After designing, download your PDF and upload it here.", { 
+      duration: 5000 
+    });
+    
+    window.open(canvaUrl, '_blank');
   };
 
   const months = [
@@ -452,35 +421,19 @@ export const NewsletterManager = () => {
             type="button"
             variant="outline"
             onClick={handleCreateCanvaDesign}
-            disabled={canvaLoading}
             className="gap-2"
           >
             <Palette className="h-4 w-4" />
-            {canvaLoading ? "Creating..." : "Design in Canva"}
+            Design in Canva
           </Button>
-          
-          {canvaDesignId && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleExportFromCanva}
-              disabled={canvaLoading}
-              className="gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              {canvaLoading ? "Exporting..." : "Import from Canva"}
-            </Button>
-          )}
         </div>
-        {canvaDesignId && (
-          <p className="text-sm text-muted-foreground">
-            Canva design linked. You can continue editing in Canva and import when ready.
-          </p>
-        )}
+        <p className="text-sm text-muted-foreground">
+          Opens Canva newsletter templates. Design your newsletter, download as PDF, and upload below.
+        </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="pdfUpload">Newsletter PDF * (or import from Canva above)</Label>
+        <Label htmlFor="pdfUpload">Newsletter PDF * (design in Canva above or upload existing PDF)</Label>
         <div className="flex items-center gap-2">
           <Input
             id="pdfUpload"
