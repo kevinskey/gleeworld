@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, Video, Image, Star, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,20 @@ import { Layout, FormInput, Users, Eye } from "lucide-react";
 export default function AlumnaeManagement() {
   const { canAccessAdminModules, loading } = useExecutiveBoardAccess();
   const navigate = useNavigate();
+  const [alumnaeCount, setAlumnaeCount] = useState(0);
+
+  useEffect(() => {
+    const fetchAlumnaeCount = async () => {
+      const { count } = await supabase
+        .from('user_roles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'alumna');
+      
+      setAlumnaeCount(count || 0);
+    };
+
+    fetchAlumnaeCount();
+  }, []);
 
   if (loading) {
     return (
@@ -57,7 +72,18 @@ export default function AlumnaeManagement() {
       </div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Alumnae</p>
+                <p className="text-2xl font-bold">{alumnaeCount}</p>
+              </div>
+              <Users className="h-8 w-8 text-primary opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
