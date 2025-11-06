@@ -490,6 +490,7 @@ export const UnifiedUserManagement = () => {
                     <SelectItem value="student">Student</SelectItem>
                     <SelectItem value="user">User</SelectItem>
                     <SelectItem value="alumna">Alumna</SelectItem>
+                    <SelectItem value="vip">VIP</SelectItem>
                     <SelectItem value="executive">Executive</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="super-admin">Super Admin</SelectItem>
