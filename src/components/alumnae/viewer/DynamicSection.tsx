@@ -133,6 +133,10 @@ export const DynamicSection = ({ section }: DynamicSectionProps) => {
           <h2
             style={{
               ...titleStyle,
+              fontFamily:
+                (typeof section.title === 'string' && section.title.trim().toLowerCase() === 'top hero')
+                  ? 'cursive'
+                  : (titleFormatting?.fontFamily || 'inherit'),
               ['--heading-font' as any]: titleFormatting?.fontFamily || 'inherit',
               ['--heading-weight' as any]: titleFormatting?.fontWeight || 400,
               ['--heading-letter-spacing' as any]: `${titleFormatting?.letterSpacing ?? 0}px`,
