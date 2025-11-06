@@ -10,6 +10,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFileUpload } from "@/integrations/supabase/hooks/useFileUpload";
 import { CanvaEmbedModal } from "./CanvaEmbedModal";
+import WebFont from 'webfontloader';
+
+interface TitleFormatting {
+  fontSize: number;
+  fontWeight: string;
+  textAlign: string;
+  color: string;
+  marginBottom: number;
+  textTransform: string;
+  letterSpacing: number;
+  fontFamily?: string;
+}
+
 
 interface HeroSlide {
   id: string;
@@ -35,11 +48,68 @@ export const HeroManager = () => {
     newsletter_id: null,
     display_order: 0,
   });
+  const [titleFormatting, setTitleFormatting] = useState<TitleFormatting | null>(null);
+
 
   useEffect(() => {
     fetchSlides();
     fetchNewsletters();
   }, []);
+
+  // Fetch and subscribe to global title formatting
+  useEffect(() => {
+    const fetchFormatting = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('alumnae_global_settings')
+          .select('setting_value')
+          .eq('setting_key', 'title_formatting')
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.setting_value) {
+          setTitleFormatting(data.setting_value as unknown as TitleFormatting);
+        }
+      } catch (err) {
+        console.error('Failed to load hero manager title formatting:', err);
+      }
+    };
+
+    fetchFormatting();
+
+    const channelId = `title-formatting-${Math.random().toString(36).substring(7)}`;
+    const channel = supabase
+      .channel(channelId)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'alumnae_global_settings', filter: 'setting_key=eq.title_formatting' },
+        (payload) => {
+          if ((payload as any).new?.setting_value) {
+            setTitleFormatting(((payload as any).new.setting_value) as unknown as TitleFormatting);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Load selected Google font
+  useEffect(() => {
+    if (titleFormatting?.fontFamily) {
+      const primary = titleFormatting.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+      const weight = (titleFormatting.fontWeight || '400').toString().replace(/[^0-9]/g, '') || '400';
+      if (primary && primary !== 'inherit') {
+        const families = [`${primary}:${weight},400,500,600,700,800,900`];
+        WebFont.load({
+          google: { families },
+          active: () => console.log('✅ HeroManager font loaded:', families.join(',')),
+          inactive: () => console.log('❌ HeroManager font failed:', families.join(',')),
+        });
+      }
+    }
+  }, [titleFormatting]);
 
   const fetchSlides = async () => {
     const { data, error } = await supabase
@@ -373,7 +443,20 @@ export const HeroManager = () => {
                     />
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-semibold">{slide.title}</h4>
+                    <h4 className="font-semibold"
+                      style={titleFormatting ? {
+                        fontSize: `${titleFormatting.fontSize}px`,
+                        fontWeight: titleFormatting.fontWeight,
+                        textAlign: titleFormatting.textAlign as any,
+                        color: titleFormatting.color || 'inherit',
+                        marginBottom: `${titleFormatting.marginBottom}px`,
+                        textTransform: titleFormatting.textTransform as any,
+                        letterSpacing: `${titleFormatting.letterSpacing}px`,
+                        fontFamily: titleFormatting.fontFamily || 'inherit',
+                      } : undefined}
+                    >
+                      {slide.title}
+                    </h4>
                     {slide.description && (
                       <p className="text-sm text-muted-foreground">
                         {slide.description}
