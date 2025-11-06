@@ -198,12 +198,16 @@ export const ContactsImportWizard = () => {
             }
           }
 
-          // Parse dates
-          if (header.includes('Date') || header === 'last_update') {
-            if (value) {
+          // Parse date-time fields (including Last* fields)
+          const DATE_HEADERS = ['StatusChangeDate','DateUpdated','DateAdded','ConsentDate','last_update','LastSent','LastFailed','LastOpened','LastClicked'];
+          if (DATE_HEADERS.includes(header)) {
+            if (!value || value.trim() === '') {
+              rowData[header] = null; // send null instead of empty string
+            } else {
               const parsed = parseDate(value);
               if (!parsed) {
-                issues.push({ row: rowNum, field: header, message: 'Unparsed date format', level: 'warning' });
+                issues.push({ row: rowNum, field: header, message: 'Unparsed date', level: 'warning' });
+                rowData[header] = null; // avoid DB error on invalid timestamp
               } else {
                 rowData[header] = parsed.toISOString();
               }
@@ -271,7 +275,7 @@ export const ContactsImportWizard = () => {
             .from('glee_club_contacts')
             .select('DateUpdated')
             .eq('Email', email)
-            .single();
+            .maybeSingle();
 
           // Compare DateUpdated if exists
           const shouldUpdate = !existing || 
@@ -282,7 +286,7 @@ export const ContactsImportWizard = () => {
           if (shouldUpdate) {
             const { error } = await supabase
               .from('glee_club_contacts')
-              .upsert(contact.data as any);
+              .upsert(contact.data as any, { onConflict: 'Email' });
 
             if (error) throw error;
             successful++;
