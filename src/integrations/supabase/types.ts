@@ -217,6 +217,77 @@ export type Database = {
         }
         Relationships: []
       }
+      alumnae_form_submissions: {
+        Row: {
+          form_id: string
+          id: string
+          submission_data: Json
+          submitted_at: string
+          submitted_by: string | null
+        }
+        Insert: {
+          form_id: string
+          id?: string
+          submission_data: Json
+          submitted_at?: string
+          submitted_by?: string | null
+        }
+        Update: {
+          form_id?: string
+          id?: string
+          submission_data?: Json
+          submitted_at?: string
+          submitted_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumnae_form_submissions_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "alumnae_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      alumnae_forms: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          form_description: string | null
+          form_name: string
+          form_schema: Json
+          id: string
+          is_active: boolean
+          submission_email: string | null
+          success_message: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          form_description?: string | null
+          form_name: string
+          form_schema?: Json
+          id?: string
+          is_active?: boolean
+          submission_email?: string | null
+          success_message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          form_description?: string | null
+          form_name?: string
+          form_schema?: Json
+          id?: string
+          is_active?: boolean
+          submission_email?: string | null
+          success_message?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       alumnae_interviews: {
         Row: {
           audio_url: string | null
@@ -493,6 +564,123 @@ export type Database = {
         }
         Relationships: []
       }
+      alumnae_page_sections: {
+        Row: {
+          background_color: string | null
+          background_image: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          layout_type: string
+          row_height: string | null
+          section_type: string
+          settings: Json | null
+          sort_order: number
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          background_color?: string | null
+          background_image?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          layout_type?: string
+          row_height?: string | null
+          section_type: string
+          settings?: Json | null
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          background_color?: string | null
+          background_image?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          layout_type?: string
+          row_height?: string | null
+          section_type?: string
+          settings?: Json | null
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      alumnae_section_items: {
+        Row: {
+          column_position: number | null
+          content: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          item_type: string
+          link_target: string | null
+          link_url: string | null
+          media_id: string | null
+          media_url: string | null
+          section_id: string
+          settings: Json | null
+          sort_order: number
+          title: string | null
+          updated_at: string
+          width_percentage: number | null
+        }
+        Insert: {
+          column_position?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_type: string
+          link_target?: string | null
+          link_url?: string | null
+          media_id?: string | null
+          media_url?: string | null
+          section_id: string
+          settings?: Json | null
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          width_percentage?: number | null
+        }
+        Update: {
+          column_position?: number | null
+          content?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          item_type?: string
+          link_target?: string | null
+          link_url?: string | null
+          media_id?: string | null
+          media_url?: string | null
+          section_id?: string
+          settings?: Json | null
+          sort_order?: number
+          title?: string | null
+          updated_at?: string
+          width_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alumnae_section_items_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "gw_media_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alumnae_section_items_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "alumnae_page_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alumnae_stories: {
         Row: {
           content: string
@@ -529,6 +717,57 @@ export type Database = {
           title?: string
           updated_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      alumnae_users: {
+        Row: {
+          bio: string | null
+          created_at: string
+          current_location: string | null
+          current_occupation: string | null
+          graduation_year: number | null
+          id: string
+          is_featured: boolean | null
+          is_mentor: boolean | null
+          major: string | null
+          mentor_areas: Json | null
+          profile_image_url: string | null
+          social_links: Json | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          current_location?: string | null
+          current_occupation?: string | null
+          graduation_year?: number | null
+          id?: string
+          is_featured?: boolean | null
+          is_mentor?: boolean | null
+          major?: string | null
+          mentor_areas?: Json | null
+          profile_image_url?: string | null
+          social_links?: Json | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          current_location?: string | null
+          current_occupation?: string | null
+          graduation_year?: number | null
+          id?: string
+          is_featured?: boolean | null
+          is_mentor?: boolean | null
+          major?: string | null
+          mentor_areas?: Json | null
+          profile_image_url?: string | null
+          social_links?: Json | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

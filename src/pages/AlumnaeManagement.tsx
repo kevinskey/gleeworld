@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BookOpen, Video, Image, Users, Star, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
+import { BookOpen, Video, Image, Star, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewsletterManager } from "@/components/alumnae/NewsletterManager";
 import { InterviewManager } from "@/components/alumnae/InterviewManager";
@@ -11,6 +11,10 @@ import { AnnouncementManager } from "@/components/alumnae/AnnouncementManager";
 import { useExecutiveBoardAccess } from "@/hooks/useExecutiveBoardAccess";
 import { Navigate, useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
+import { AlumnaePageBuilder } from "@/components/alumnae/AlumnaePageBuilder";
+import { AlumnaeFormBuilder } from "@/components/alumnae/AlumnaeFormBuilder";
+import { AlumnaeUserManagement } from "@/components/alumnae/AlumnaeUserManagement";
+import { Layout, FormInput, Users } from "lucide-react";
 
 export default function AlumnaeManagement() {
   const { canAccessAdminModules, loading } = useExecutiveBoardAccess();
@@ -103,8 +107,12 @@ export default function AlumnaeManagement() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="newsletters" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
+          <Tabs defaultValue="page-builder" className="w-full">
+            <TabsList className="grid w-full grid-cols-8">
+              <TabsTrigger value="page-builder" className="flex items-center gap-2">
+                <Layout className="h-4 w-4" />
+                <span className="hidden sm:inline">Page Builder</span>
+              </TabsTrigger>
               <TabsTrigger value="newsletters" className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">Newsletters</span>
@@ -124,6 +132,14 @@ export default function AlumnaeManagement() {
               <TabsTrigger value="announcements" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span className="hidden sm:inline">Announce</span>
+              </TabsTrigger>
+              <TabsTrigger value="forms" className="flex items-center gap-2">
+                <FormInput className="h-4 w-4" />
+                <span className="hidden sm:inline">Forms</span>
+              </TabsTrigger>
+              <TabsTrigger value="users" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Users</span>
               </TabsTrigger>
             </TabsList>
 
@@ -145,6 +161,18 @@ export default function AlumnaeManagement() {
 
             <TabsContent value="announcements" className="mt-6">
               <AnnouncementManager />
+            </TabsContent>
+
+            <TabsContent value="page-builder" className="mt-6">
+              <AlumnaePageBuilder />
+            </TabsContent>
+
+            <TabsContent value="forms" className="mt-6">
+              <AlumnaeFormBuilder />
+            </TabsContent>
+
+            <TabsContent value="users" className="mt-6">
+              <AlumnaeUserManagement />
             </TabsContent>
           </Tabs>
         </CardContent>
