@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { PublicLayout } from '@/components/layout/PublicLayout';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { DynamicSection } from '@/components/alumnae/viewer/DynamicSection';
+import { HeroSlideshow } from '@/components/alumnae/HeroSlideshow';
 import { Card, CardContent } from '@/components/ui/card';
 import { GraduationCap } from 'lucide-react';
 
@@ -85,6 +86,7 @@ export default function AlumnaePageView() {
 
   return (
     <PublicLayout>
+      <HeroSlideshow />
       <div className="w-full">
         {sections.map((section) => (
           <DynamicSection key={section.id} section={section} />
