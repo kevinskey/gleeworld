@@ -18,25 +18,33 @@ export const AlumnaeUserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
   const [editingUser, setEditingUser] = useState<any>(null);
+  const [totalCount, setTotalCount] = useState(0);
+
   useEffect(() => {
     fetchAlumnaeUsers();
   }, []);
+
   const fetchAlumnaeUsers = async () => {
     setLoading(true);
     try {
-      // Fast path: fetch profiles directly marked as alumna (temporary until user_roles RLS opened for admins)
+      // Fetch ALL alumnae profiles (removed limit)
       const {
         data: profileData,
-        error: profileError
-      } = await supabase.from('gw_profiles').select('*').eq('role', 'alumna').order('full_name', {
-        ascending: true
-      }).limit(200);
+        error: profileError,
+        count
+      } = await supabase
+        .from('gw_profiles')
+        .select('*', { count: 'exact' })
+        .eq('role', 'alumna')
+        .order('full_name', { ascending: true });
       if (profileError) {
         console.error('Profile fetch error:', profileError);
         toast.error('Failed to load alumnae: ' + profileError.message);
         setUsers([]);
+        setTotalCount(0);
       } else {
         setUsers(profileData || []);
+        setTotalCount(count || 0);
       }
     } catch (error: any) {
       console.error('Fetch error:', error);
@@ -317,7 +325,7 @@ export const AlumnaeUserManagement = () => {
                 </p>}
             </div> : <>
               <div className="mb-4 text-sm text-muted-foreground">
-                Showing {filteredUsers.length} of {users.length} alumnae
+                Showing {filteredUsers.length} of {totalCount} alumnae
               </div>
               {viewMode === 'cards' ? renderCardView() : renderTableView()}
             </>}
