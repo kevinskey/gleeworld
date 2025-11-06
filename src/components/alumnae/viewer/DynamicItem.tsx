@@ -34,11 +34,17 @@ export const DynamicItem = ({ item }: DynamicItemProps) => {
         return (
           <div>
             {item.title && <h3 className="text-xl font-semibold mb-3">{item.title}</h3>}
-            <img
-              src={item.media_url}
-              alt={item.title || 'Image'}
-              className="w-full h-auto rounded-lg shadow-md"
-            />
+            {item.media_url ? (
+              <img
+                src={item.media_url}
+                alt={item.title || 'Image'}
+                className="w-full h-auto rounded-lg shadow-md"
+              />
+            ) : (
+              <div className="w-full aspect-video bg-muted rounded-lg shadow-md flex items-center justify-center">
+                <p className="text-muted-foreground">No image uploaded</p>
+              </div>
+            )}
           </div>
         );
 

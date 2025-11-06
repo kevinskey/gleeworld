@@ -9,7 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Save, X, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useUploadImage } from '@/hooks/useMediaLibrary';
+import { useAlumnaeImageUpload } from '@/hooks/useAlumnaeImageUpload';
 
 interface ItemEditorProps {
   item: any;
@@ -19,7 +19,7 @@ interface ItemEditorProps {
 
 export const ItemEditor = ({ item, onSave, onCancel }: ItemEditorProps) => {
   const [formData, setFormData] = useState(item);
-  const uploadImage = useUploadImage();
+  const uploadImage = useAlumnaeImageUpload();
 
   const handleSave = async () => {
     try {
@@ -76,10 +76,10 @@ export const ItemEditor = ({ item, onSave, onCancel }: ItemEditorProps) => {
     if (!file) return;
 
     try {
-      const result = await uploadImage.mutateAsync({ file, description: formData.title || '' });
+      const result = await uploadImage.mutateAsync(file);
       if (result.file_url) {
         setFormData({ ...formData, media_url: result.file_url });
-        toast.success('File uploaded');
+        toast.success('File uploaded successfully');
       }
     } catch (error: any) {
       toast.error('Upload failed: ' + error.message);
