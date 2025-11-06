@@ -48,7 +48,8 @@ import {
   Trash2,
   BookOpen,
   Boxes,
-  Star
+  Star,
+  GraduationCap
 } from "lucide-react";
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -365,6 +366,7 @@ export const UnifiedUserManagement = () => {
     members: users.filter(u => u.role === 'member').length,
     executives: users.filter(u => u.role === 'executive' || u.is_exec_board).length,
     vips: users.filter(u => u.role === 'vip').length,
+    alumnae: users.filter(u => u.role === 'alumna').length,
   };
 
   if (loading) {
@@ -395,7 +397,7 @@ export const UnifiedUserManagement = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Users</CardTitle>
@@ -433,6 +435,16 @@ export const UnifiedUserManagement = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{userStats.vips}</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Alumnae</CardTitle>
+                <GraduationCap className="h-4 w-4 text-purple-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{userStats.alumnae}</div>
               </CardContent>
             </Card>
             
