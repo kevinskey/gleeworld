@@ -118,6 +118,22 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
     }
   };
 
+  const getYouTubeEmbedUrl = (url: string): string => {
+    // Convert various YouTube URL formats to embed format
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/,
+      /youtube\.com\/shorts\/([^&\s]+)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match) {
+        return `https://www.youtube.com/embed/${match[1]}`;
+      }
+    }
+    return url;
+  };
+
   const saveTemplate = async () => {
     if (!templateName || !subject || blocks.length === 0) {
       toast.error("Please fill in all required fields and add at least one content block");
@@ -199,23 +215,25 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
           </div>
         );
       case 'video':
-        return block.content ? (
+        const embedUrl = block.content ? getYouTubeEmbedUrl(block.content) : '';
+        return embedUrl ? (
           <div className={alignmentClass}>
-            <video 
-              controls 
-              className="max-w-full h-auto inline-block"
+            <iframe
+              width="560"
+              height="315"
+              src={embedUrl}
+              title="YouTube video"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="max-w-full h-auto inline-block rounded"
               style={{ maxHeight: '400px' }}
-              onError={(e) => {
-                e.currentTarget.parentElement!.innerHTML = `<div class="p-4 bg-muted rounded text-center"><p class="text-sm text-muted-foreground">Invalid video URL. Use direct .mp4, .webm links</p></div>`;
-              }}
-            >
-              <source src={block.content} />
-            </video>
+            />
           </div>
         ) : (
           <div className={`${alignmentClass} p-8 border-2 border-dashed rounded`}>
             <Video className="h-12 w-12 mx-auto text-muted-foreground" />
-            <p className="text-sm text-muted-foreground mt-2">Enter direct video URL (.mp4, .webm)</p>
+            <p className="text-sm text-muted-foreground mt-2">Enter YouTube URL</p>
           </div>
         );
       case 'link':
@@ -316,7 +334,7 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
               />
             ) : (
               <Input
-                placeholder={`Enter ${block.type} URL...`}
+                placeholder={block.type === 'video' ? 'YouTube URL (e.g., youtube.com/watch?v=...)' : `Enter ${block.type} URL...`}
                 value={block.content}
                 onChange={(e) => updateBlock(block.id, e.target.value)}
               />
