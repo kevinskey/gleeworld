@@ -101,6 +101,7 @@ import ExecutiveBoardMonitor from "./pages/admin/ExecutiveBoardMonitor";
 import { ExecutiveBoardPermissionPanel } from '@/components/admin/ExecutiveBoardPermissionPanel';
 import { SRFManagement } from "./pages/SRFManagement";
 import { MemberViewDashboard } from "@/components/member-view/MemberViewDashboard";
+import GleeClubContactsManagement from "./pages/GleeClubContactsManagement";
 
 // Admin module pages
 import FinancialManagement from "./pages/admin/FinancialManagement";
@@ -1005,6 +1006,16 @@ const App = () => {
                                  <AdminProducts />
                                </ProtectedRoute>
                              } 
+                            />
+                            <Route 
+                              path="/admin/glee-club-contacts" 
+                              element={
+                                <ProtectedRoute>
+                                  <AdminOnlyRoute>
+                                    <GleeClubContactsManagement />
+                                  </AdminOnlyRoute>
+                                </ProtectedRoute>
+                              } 
                             />
                             <Route 
                               path="/admin/children-go-auditions" 

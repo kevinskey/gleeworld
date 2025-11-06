@@ -3693,6 +3693,120 @@ export type Database = {
         }
         Relationships: []
       }
+      glee_club_contacts: {
+        Row: {
+          address: string | null
+          city: string | null
+          class: string | null
+          ConsentDate: string | null
+          ConsentIP: string | null
+          ConsentTracking: boolean | null
+          created_at: string
+          CreatedFromIP: string | null
+          DateAdded: string | null
+          DateUpdated: string | null
+          display_name: string | null
+          Email: string
+          ErrorCode: string | null
+          FirstName: string | null
+          FriendlyErrorMessage: string | null
+          id: string
+          last_update: string | null
+          LastClicked: string | null
+          LastFailed: string | null
+          LastName: string | null
+          LastOpened: string | null
+          LastSent: string | null
+          phone: string | null
+          Source: string | null
+          state: string | null
+          Status: string
+          StatusChangeDate: string | null
+          TotalClicked: number
+          TotalFailed: number
+          TotalOpened: number
+          TotalSent: number
+          UnsubscribeReason: string | null
+          UnsubscribeReasonNotes: string | null
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          class?: string | null
+          ConsentDate?: string | null
+          ConsentIP?: string | null
+          ConsentTracking?: boolean | null
+          created_at?: string
+          CreatedFromIP?: string | null
+          DateAdded?: string | null
+          DateUpdated?: string | null
+          display_name?: string | null
+          Email: string
+          ErrorCode?: string | null
+          FirstName?: string | null
+          FriendlyErrorMessage?: string | null
+          id?: string
+          last_update?: string | null
+          LastClicked?: string | null
+          LastFailed?: string | null
+          LastName?: string | null
+          LastOpened?: string | null
+          LastSent?: string | null
+          phone?: string | null
+          Source?: string | null
+          state?: string | null
+          Status?: string
+          StatusChangeDate?: string | null
+          TotalClicked?: number
+          TotalFailed?: number
+          TotalOpened?: number
+          TotalSent?: number
+          UnsubscribeReason?: string | null
+          UnsubscribeReasonNotes?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          class?: string | null
+          ConsentDate?: string | null
+          ConsentIP?: string | null
+          ConsentTracking?: boolean | null
+          created_at?: string
+          CreatedFromIP?: string | null
+          DateAdded?: string | null
+          DateUpdated?: string | null
+          display_name?: string | null
+          Email?: string
+          ErrorCode?: string | null
+          FirstName?: string | null
+          FriendlyErrorMessage?: string | null
+          id?: string
+          last_update?: string | null
+          LastClicked?: string | null
+          LastFailed?: string | null
+          LastName?: string | null
+          LastOpened?: string | null
+          LastSent?: string | null
+          phone?: string | null
+          Source?: string | null
+          state?: string | null
+          Status?: string
+          StatusChangeDate?: string | null
+          TotalClicked?: number
+          TotalFailed?: number
+          TotalOpened?: number
+          TotalSent?: number
+          UnsubscribeReason?: string | null
+          UnsubscribeReasonNotes?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       glee_history: {
         Row: {
           category: string | null
