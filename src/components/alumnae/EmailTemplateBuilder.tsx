@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
   Plus, Type, Image, Video, Link2, Trash2, MoveUp, MoveDown,
-  Save, Eye, Sparkles, AlignLeft, FileImage
+  Save, Eye, Sparkles, AlignLeft, FileImage, Upload
 } from "lucide-react";
 
 interface ContentBlock {
@@ -35,6 +35,7 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
   const [blocks, setBlocks] = useState<ContentBlock[]>([]);
   const [saving, setSaving] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState<string | null>(null);
 
   const addBlock = (type: ContentBlock['type']) => {
     const newBlock: ContentBlock = {
@@ -78,6 +79,43 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
     const newIndex = direction === 'up' ? index - 1 : index + 1;
     [newBlocks[index], newBlocks[newIndex]] = [newBlocks[newIndex], newBlocks[index]];
     setBlocks(newBlocks);
+  };
+
+  const handleImageUpload = async (blockId: string, file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    setUploadingImage(blockId);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to upload images");
+        return;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('email-template-images')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('email-template-images')
+        .getPublicUrl(fileName);
+
+      updateBlock(blockId, publicUrl);
+      toast.success("Image uploaded successfully");
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error("Failed to upload image");
+    } finally {
+      setUploadingImage(null);
+    }
   };
 
   const saveTemplate = async () => {
@@ -240,7 +278,36 @@ export const EmailTemplateBuilder = ({ onTemplateCreated }: EmailTemplateBuilder
           </div>
 
           <div className="space-y-3">
-            {(block.type === 'text' || block.type === 'heading') ? (
+            {block.type === 'image' ? (
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleImageUpload(block.id, file);
+                  }}
+                  disabled={uploadingImage === block.id}
+                  className="cursor-pointer"
+                />
+                {uploadingImage === block.id && (
+                  <p className="text-sm text-muted-foreground">Uploading image...</p>
+                )}
+                {block.content && (
+                  <div className="relative">
+                    <img src={block.content} alt="Preview" className="max-h-32 rounded" />
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => updateBlock(block.id, '')}
+                      className="absolute top-1 right-1"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ) : (block.type === 'text' || block.type === 'heading') ? (
               <Textarea
                 placeholder={`Enter ${block.type} content...`}
                 value={block.content}
