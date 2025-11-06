@@ -38,6 +38,12 @@ export const HeroManagement = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const [scrollSettings, setScrollSettings] = useState({
+    auto_scroll_enabled: true,
+    scroll_speed_seconds: 5
+  });
+  const [settingsId, setSettingsId] = useState<string | null>(null);
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -50,6 +56,7 @@ export const HeroManagement = () => {
 
   useEffect(() => {
     fetchHeroSlides();
+    fetchScrollSettings();
   }, []);
 
   const fetchHeroSlides = async () => {
@@ -70,6 +77,62 @@ export const HeroManagement = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchScrollSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dashboard_hero_settings')
+        .select('*')
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data) {
+        setScrollSettings({
+          auto_scroll_enabled: data.auto_scroll_enabled,
+          scroll_speed_seconds: data.scroll_speed_seconds
+        });
+        setSettingsId(data.id);
+      }
+    } catch (error) {
+      console.error('Error fetching scroll settings:', error);
+    }
+  };
+
+  const updateScrollSettings = async () => {
+    try {
+      if (settingsId) {
+        const { error } = await supabase
+          .from('dashboard_hero_settings')
+          .update(scrollSettings)
+          .eq('id', settingsId);
+
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('dashboard_hero_settings')
+          .insert([scrollSettings])
+          .select()
+          .single();
+
+        if (error) throw error;
+        setSettingsId(data.id);
+      }
+
+      toast({
+        title: "Success",
+        description: "Scroll settings updated"
+      });
+    } catch (error) {
+      console.error('Error updating scroll settings:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update scroll settings",
+        variant: "destructive"
+      });
     }
   };
 
@@ -268,6 +331,49 @@ export const HeroManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Scroll Settings Card */}
+      <Card className="border-2 border-accent/20">
+        <CardHeader className="bg-gradient-to-r from-accent/5 to-accent/10">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-purple-100 text-purple-700">⚙️</div>
+            Carousel Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4 pt-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="auto-scroll">Auto Scroll</Label>
+              <p className="text-sm text-muted-foreground">Automatically advance slides</p>
+            </div>
+            <Switch
+              id="auto-scroll"
+              checked={scrollSettings.auto_scroll_enabled}
+              onCheckedChange={(checked) => setScrollSettings(prev => ({ ...prev, auto_scroll_enabled: checked }))}
+            />
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Label>Scroll Speed: {scrollSettings.scroll_speed_seconds}s</Label>
+              <span className="text-sm text-muted-foreground">(2-30 seconds)</span>
+            </div>
+            <Slider
+              value={[scrollSettings.scroll_speed_seconds]}
+              onValueChange={(value) => setScrollSettings(prev => ({ ...prev, scroll_speed_seconds: value[0] }))}
+              min={2}
+              max={30}
+              step={1}
+              className="w-full"
+            />
+          </div>
+
+          <Button onClick={updateScrollSettings} className="w-full">
+            <Save className="h-4 w-4 mr-2" />
+            Save Settings
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Header */}
       <Card className="border-2 border-primary/20">
         <CardHeader className="bg-gradient-to-r from-primary/5 to-primary/10">

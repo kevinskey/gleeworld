@@ -2219,6 +2219,30 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_hero_settings: {
+        Row: {
+          auto_scroll_enabled: boolean | null
+          created_at: string | null
+          id: string
+          scroll_speed_seconds: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_scroll_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          scroll_speed_seconds?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_scroll_enabled?: boolean | null
+          created_at?: string | null
+          id?: string
+          scroll_speed_seconds?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       dashboard_hero_slides: {
         Row: {
           created_at: string | null

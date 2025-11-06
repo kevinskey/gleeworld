@@ -18,20 +18,40 @@ export const DashboardHeroCarousel = () => {
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [scrollSpeed, setScrollSpeed] = useState(5000); // Default 5 seconds
   const isMobile = useIsMobile();
 
   useEffect(() => {
     fetchHeroSlides();
+    fetchScrollSettings();
   }, []);
 
   useEffect(() => {
     if (slides.length > 1) {
       const timer = setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % slides.length);
-      }, 5000);
+      }, scrollSpeed);
       return () => clearInterval(timer);
     }
-  }, [slides.length]);
+  }, [slides.length, scrollSpeed]);
+
+  const fetchScrollSettings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dashboard_hero_settings')
+        .select('scroll_speed_seconds, auto_scroll_enabled')
+        .limit(1)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data && data.auto_scroll_enabled) {
+        setScrollSpeed(data.scroll_speed_seconds * 1000); // Convert to milliseconds
+      }
+    } catch (error) {
+      console.error('Error fetching scroll settings:', error);
+    }
+  };
 
   const fetchHeroSlides = async () => {
     try {
