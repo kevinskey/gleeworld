@@ -1,6 +1,91 @@
+import { useEffect, useState } from "react";
 import { GraduationCap } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import WebFont from 'webfontloader';
+
+interface TitleFormatting {
+  fontSize: number;
+  fontWeight: string;
+  textAlign: string;
+  color: string;
+  marginBottom: number;
+  textTransform: string;
+  letterSpacing: number;
+  fontFamily?: string;
+}
+
 
 export const AlumnaeHero = () => {
+  const [titleFormatting, setTitleFormatting] = useState<TitleFormatting | null>(null);
+
+  // Fetch and subscribe to global title formatting
+  useEffect(() => {
+    const fetchFormatting = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('alumnae_global_settings')
+          .select('setting_value')
+          .eq('setting_key', 'title_formatting')
+          .maybeSingle();
+        if (error) throw error;
+        if (data?.setting_value) {
+          setTitleFormatting(data.setting_value as unknown as TitleFormatting);
+        }
+      } catch (err) {
+        console.error('Failed to load alumnae hero title formatting:', err);
+      }
+    };
+
+    fetchFormatting();
+
+    const channelId = `title-formatting-${Math.random().toString(36).substring(7)}`;
+    const channel = supabase
+      .channel(channelId)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'alumnae_global_settings', filter: 'setting_key=eq.title_formatting' },
+        (payload) => {
+          if ((payload as any).new?.setting_value) {
+            setTitleFormatting(((payload as any).new.setting_value) as unknown as TitleFormatting);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // Load selected Google font
+  useEffect(() => {
+    if (titleFormatting?.fontFamily) {
+      const primary = titleFormatting.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+      const weight = (titleFormatting.fontWeight || '400').toString().replace(/[^0-9]/g, '') || '400';
+      if (primary && primary !== 'inherit') {
+        const families = [`${primary}:${weight},400,500,600,700,800,900`];
+        WebFont.load({
+          google: { families },
+          active: () => console.log('✅ AlumnaeHero font loaded:', families.join(',')),
+          inactive: () => console.log('❌ AlumnaeHero font failed:', families.join(',')),
+        });
+      }
+    }
+  }, [titleFormatting]);
+
+  const titleStyle: React.CSSProperties | undefined = titleFormatting
+    ? {
+        fontSize: `${titleFormatting.fontSize}px`,
+        fontWeight: titleFormatting.fontWeight,
+        textAlign: titleFormatting.textAlign as any,
+        color: titleFormatting.color || 'inherit',
+        marginBottom: `${titleFormatting.marginBottom}px`,
+        textTransform: titleFormatting.textTransform as any,
+        letterSpacing: `${titleFormatting.letterSpacing}px`,
+        fontFamily: titleFormatting.fontFamily || 'inherit',
+      }
+    : undefined;
+
   return (
     <div className="relative w-full overflow-hidden bg-gradient-to-b from-slate-800 via-slate-700 to-slate-900">
       {/* Metallic shine overlay */}
@@ -29,8 +114,13 @@ export const AlumnaeHero = () => {
             </div>
           </div>
           
-          {/* Title with metallic gradient */}
-          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent drop-shadow-2xl">
+          {/* Title */}
+          <h1
+            style={titleStyle}
+            className={titleFormatting
+              ? "drop-shadow-2xl"
+              : "text-5xl md:text-7xl font-bold bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 bg-clip-text text-transparent drop-shadow-2xl"}
+          >
             Spelman College Glee Club
           </h1>
           
