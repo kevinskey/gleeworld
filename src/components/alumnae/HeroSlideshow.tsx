@@ -69,7 +69,7 @@ export const HeroSlideshow = () => {
     <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden group">
       {/* Background Image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500"
+        className="absolute inset-0 bg-contain bg-center bg-no-repeat transition-all duration-500"
         style={{ backgroundImage: `url(${slide.image_url})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
