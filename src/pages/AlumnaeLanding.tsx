@@ -56,6 +56,7 @@ export default function AlumnaeLanding() {
   const [reunionEvents, setReunionEvents] = useState<ReunionEvent[]>([]);
   const [classmateUpdates, setClassmateUpdates] = useState<ClassmateUpdate[]>([]);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [alumnaeCount, setAlumnaeCount] = useState<number | null>(null);
 
   // Check if user is alumnae liaison or admin
   const canAccessAdmin = roleProfile?.exec_board_role === 'alumnae_liaison' || roleProfile?.is_admin || roleProfile?.is_super_admin;
@@ -66,6 +67,19 @@ export default function AlumnaeLanding() {
       fetchClassmateUpdates();
     }
   }, [user, userProfile]);
+
+  // Fetch global alumnae count for stats
+  useEffect(() => {
+    const fetchAlumnaeCount = async () => {
+      const { count, error } = await supabase
+        .from('user_roles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'alumna');
+      if (!error) setAlumnaeCount(count ?? 0);
+    };
+    fetchAlumnaeCount();
+  }, []);
+
   const fetchAlumnaeStats = async () => {
     try {
       const classYear = userProfile?.graduation_year || userProfile?.class_year;
@@ -236,6 +250,20 @@ export default function AlumnaeLanding() {
               )}
             </div>
           </div>
+        </div>
+        {/* Alumnae Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Alumnae</p>
+                  <p className="text-2xl font-bold">{alumnaeCount ?? '—'}</p>
+                </div>
+                <Users className="h-8 w-8 text-primary opacity-50" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Hero Slideshow */}
