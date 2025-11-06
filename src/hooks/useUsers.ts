@@ -41,8 +41,7 @@ export const useUsers = () => {
       
       console.log('useUsers: Starting to fetch users...');
       
-      // Use a more robust approach - get all user data from gw_profiles first
-      // since it contains the most comprehensive user information
+      // 1) Load comprehensive profile data
       const { data: gwProfilesData, error: gwProfilesError } = await supabase
         .from('gw_profiles')
         .select(`
@@ -63,24 +62,59 @@ export const useUsers = () => {
         throw gwProfilesError;
       }
 
-      // Transform gw_profiles data into User format and filter out invalid entries
+      // 2) Load roles from secure user_roles table and merge (source of truth for non-admin roles)
+      const userIds = (gwProfilesData || []).map((p: any) => p.user_id).filter(Boolean);
+      let rolesByUser = new Map<string, string[]>();
+
+      if (userIds.length > 0) {
+        const { data: roleRows, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('user_id, role')
+          .in('user_id', userIds);
+
+        if (rolesError) {
+          console.error('Error fetching user_roles:', rolesError);
+          // Do not throw; proceed with gw_profiles roles as fallback
+        } else {
+          rolesByUser = roleRows?.reduce((acc: Map<string, string[]>, row: any) => {
+            const arr = acc.get(row.user_id) ?? [];
+            arr.push(row.role);
+            acc.set(row.user_id, arr);
+            return acc;
+          }, new Map<string, string[]>()) || new Map();
+        }
+
+        console.log('useUsers: fetched user_roles summary:', {
+          usersWithRoles: rolesByUser.size,
+          sample: Array.from(rolesByUser.entries()).slice(0, 3)
+        });
+      }
+
+      // 3) Transform and compute effective role
       const transformedUsers: User[] = (gwProfilesData || [])
-        .filter(profile => profile.user_id) // Only include profiles with valid user_id
-        .map(profile => {
-          // Determine the effective role - prioritize admin flags
+        .filter((profile: any) => profile.user_id)
+        .map((profile: any) => {
+          const assignedRoles = new Set(rolesByUser.get(profile.user_id) || []);
+
+          // Prioritize admin flags from profile
           let effectiveRole = profile.role || 'user';
           if (profile.is_super_admin) {
             effectiveRole = 'super-admin';
           } else if (profile.is_admin) {
             effectiveRole = 'admin';
+          } else {
+            // Then prefer roles from user_roles in priority order
+            if (assignedRoles.has('member')) effectiveRole = 'member';
+            else if (assignedRoles.has('alumna')) effectiveRole = 'alumna';
+            else if (assignedRoles.has('student')) effectiveRole = 'student';
+            else if (assignedRoles.has('fan')) effectiveRole = 'fan';
+            else if (assignedRoles.has('guest')) effectiveRole = 'guest';
           }
 
           return {
-            id: profile.user_id, // Use user_id as the primary key
+            id: profile.user_id,
             email: profile.email || null,
-            full_name: profile.full_name || 
-                      (profile.first_name && profile.last_name ? 
-                       `${profile.first_name} ${profile.last_name}` : null),
+            full_name: profile.full_name || (profile.first_name && profile.last_name ? `${profile.first_name} ${profile.last_name}` : null),
             role: effectiveRole,
             created_at: profile.created_at,
             exec_board_role: profile.exec_board_role || null,
@@ -105,6 +139,7 @@ export const useUsers = () => {
       console.log('useUsers: Transformed users:', { 
         count: transformedUsers.length,
         adminUsers: transformedUsers.filter(u => u.is_admin || u.is_super_admin).length,
+        alumnaeCount: transformedUsers.filter(u => u.role === 'alumna').length,
         sampleUsers: transformedUsers.slice(0, 3).map(u => ({ 
           id: u.id, 
           email: u.email, 
