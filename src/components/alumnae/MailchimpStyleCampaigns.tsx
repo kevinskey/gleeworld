@@ -235,9 +235,29 @@ export const MailchimpStyleCampaigns = () => {
   };
 
   const loadCampaigns = async () => {
-    // TODO: Load campaigns from database when table is created
-    // For now, start with empty campaigns
-    setCampaigns([]);
+    try {
+      const { data, error } = await supabase
+        .from('email_campaigns')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      const formattedCampaigns: Campaign[] = (data || []).map(c => ({
+        id: c.id,
+        name: c.name,
+        subject: c.subject,
+        content: c.content,
+        status: c.status as 'draft' | 'scheduled' | 'sent',
+        recipients_count: c.recipients_count,
+        sent_at: c.sent_at,
+        scheduled_for: c.scheduled_for
+      }));
+      
+      setCampaigns(formattedCampaigns);
+    } catch (error: any) {
+      console.error('Error loading campaigns:', error);
+    }
   };
 
   const applySegmentation = () => {
@@ -308,36 +328,80 @@ export const MailchimpStyleCampaigns = () => {
       return;
     }
 
+    if (!campaignName.trim()) {
+      toast.error("Campaign name is required");
+      return;
+    }
+
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
       const recipients = alumnae
         .filter(a => selectedRecipients.has(a.user_id))
         .map(a => ({ email: a.email, name: a.full_name || a.email }));
 
+      const recipientUserIds = Array.from(selectedRecipients);
+
       if (!isDraft) {
+        // Send the email
         const { data, error } = await supabase.functions.invoke('send-alumnae-email', {
           body: { recipients, subject, message: content }
         });
 
         if (error) throw error;
 
+        // Save campaign as sent
+        const { error: saveError } = await supabase
+          .from('email_campaigns')
+          .insert({
+            name: campaignName,
+            subject,
+            content,
+            status: 'sent',
+            recipients_count: recipients.length,
+            recipient_user_ids: recipientUserIds,
+            sent_at: new Date().toISOString(),
+            created_by: user.id
+          });
+
+        if (saveError) throw saveError;
+
         toast.success("Campaign sent successfully!", {
           description: `Email sent to ${recipients.length} alumnae`
         });
-
-        // Reset form
-        setCampaignName("");
-        setSubject("");
-        setContent("");
-        setSelectedRecipients(new Set());
-        setSelectedTemplate("");
       } else {
+        // Save as draft
+        const { error: saveError } = await supabase
+          .from('email_campaigns')
+          .insert({
+            name: campaignName,
+            subject,
+            content,
+            status: 'draft',
+            recipients_count: recipientUserIds.length,
+            recipient_user_ids: recipientUserIds,
+            created_by: user.id
+          });
+
+        if (saveError) throw saveError;
+
         toast.success("Campaign saved as draft");
       }
 
+      // Reset form
+      setCampaignName("");
+      setSubject("");
+      setContent("");
+      setSelectedRecipients(new Set());
+      setSelectedTemplate("");
+
       loadCampaigns();
     } catch (error: any) {
-      toast.error("Failed to send campaign", { description: error.message });
+      toast.error(isDraft ? "Failed to save campaign" : "Failed to send campaign", { 
+        description: error.message 
+      });
     } finally {
       setLoading(false);
     }

@@ -2640,6 +2640,51 @@ export type Database = {
           },
         ]
       }
+      email_campaigns: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+          recipient_user_ids: string[] | null
+          recipients_count: number | null
+          scheduled_for: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+          recipient_user_ids?: string[] | null
+          recipients_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+          recipient_user_ids?: string[] | null
+          recipients_count?: number | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_templates: {
         Row: {
           category: string
