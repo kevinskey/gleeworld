@@ -130,14 +130,14 @@ export function DocumentViewer({
     console.log('DocumentViewer: Rendering PDF with URL:', fileUrl);
     console.log('DocumentViewer: PDF detection - fileType:', fileType, 'fileName:', fileName, 'isPDF:', isPDF);
     return (
-      <div className="h-full">
+      <div className="h-full w-full overflow-auto">
         <FastPDFViewer 
           pdfUrl={fileUrl}
           onPageChange={(page, total) => {
             setCurrentPage(page);
             setTotalPages(total);
           }}
-          className="h-full"
+          className="w-full"
         />
       </div>
     );
@@ -295,7 +295,7 @@ export function DocumentViewer({
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-auto min-h-0">
           {isPDF && renderPDFViewer()}
           {isPowerPoint && renderPowerPointViewer()}
           {isGoogleSlides && renderGoogleSlidesViewer()}
