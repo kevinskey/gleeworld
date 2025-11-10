@@ -232,46 +232,13 @@ export default function JazzPage() {
     setUploadFiles(prev => prev.map((f, i) => i === index ? { ...f, title } : f));
   };
 
-  const uploadSingleFile = async (uploadFile: UploadFile, index: number) => {
-    try {
-      // Update status to uploading
-      setUploadFiles(prev => prev.map((f, i) => 
-        i === index ? { ...f, status: 'uploading' as const, progress: 50 } : f
-      ));
-
-      // Create unique file path
-      const fileExt = uploadFile.file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `jazz/${fileName}`;
-
-      // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('mus240-audio')
-        .upload(filePath, uploadFile.file);
-
-      if (uploadError) throw uploadError;
-
-      // Return the data for batch insert
-      return {
-        title: uploadFile.title,
-        description: null,
-        file_path: filePath,
-        file_size: uploadFile.file.size,
-        category: 'jazz',
-        duration: null, // Skip duration detection for speed
-        uploaded_by: user?.id,
-      };
-    } catch (error) {
-      console.error('Upload error:', error);
-      setUploadFiles(prev => prev.map((f, i) => 
-        i === index ? { 
-          ...f, 
-          status: 'error' as const, 
-          error: error instanceof Error ? error.message : 'Upload failed' 
-        } : f
-      ));
-      return null;
-    }
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   const handleBulkUpload = async () => {
@@ -280,39 +247,60 @@ export default function JazzPage() {
     setUploading(true);
     
     try {
-      // Upload all files to storage in parallel
-      const uploadResults = await Promise.all(
-        uploadFiles.map((file, index) => uploadSingleFile(file, index))
+      // Mark all as uploading
+      setUploadFiles(prev => prev.map(f => ({ ...f, status: 'uploading' as const, progress: 50 })));
+
+      // Convert files to base64
+      const filesData = await Promise.all(
+        uploadFiles.map(async (uploadFile) => ({
+          name: uploadFile.file.name,
+          data: await convertFileToBase64(uploadFile.file),
+          title: uploadFile.title,
+          size: uploadFile.file.size,
+        }))
       );
 
-      // Filter successful uploads
-      const successfulUploads = uploadResults.filter(r => r !== null);
+      // Call edge function
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await fetch(
+        'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/upload-jazz-tracks',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`,
+          },
+          body: JSON.stringify({ files: filesData }),
+        }
+      );
 
-      if (successfulUploads.length > 0) {
-        // Batch insert all successful uploads into database
-        const { error: batchError } = await supabase
-          .from('mus240_audio_resources')
-          .insert(successfulUploads);
-
-        if (batchError) throw batchError;
-
-        // Mark all as success
-        setUploadFiles(prev => prev.map(f => 
-          f.status === 'uploading' ? { ...f, status: 'success' as const, progress: 100 } : f
-        ));
-
-        toast({
-          title: 'Upload Complete',
-          description: `${successfulUploads.length} track${successfulUploads.length > 1 ? 's' : ''} uploaded successfully`,
-        });
-        
-        refetch();
+      if (!response.ok) {
+        throw new Error('Upload failed');
       }
+
+      // Mark all as success immediately
+      setUploadFiles(prev => prev.map(f => ({ ...f, status: 'success' as const, progress: 100 })));
+
+      toast({
+        title: 'Upload Started',
+        description: `${uploadFiles.length} track${uploadFiles.length > 1 ? 's' : ''} uploading in background. Refresh in a moment to see them.`,
+      });
+
+      // Refresh after a short delay
+      setTimeout(() => {
+        refetch();
+      }, 2000);
     } catch (error) {
-      console.error('Batch upload error:', error);
+      console.error('Upload error:', error);
+      setUploadFiles(prev => prev.map(f => ({ 
+        ...f, 
+        status: 'error' as const, 
+        error: 'Upload failed' 
+      })));
       toast({
         title: 'Upload Failed',
-        description: 'Failed to complete batch upload',
+        description: 'Failed to start upload',
         variant: 'destructive',
       });
     } finally {
