@@ -251,35 +251,16 @@ export default function JazzPage() {
 
       if (uploadError) throw uploadError;
 
-      // Get audio duration
-      const audioDuration = await new Promise<number>((resolve) => {
-        const audio = new Audio();
-        audio.src = URL.createObjectURL(uploadFile.file);
-        audio.addEventListener('loadedmetadata', () => {
-          resolve(Math.floor(audio.duration));
-          URL.revokeObjectURL(audio.src);
-        });
-      });
-
-      // Insert into database
-      const { error: dbError } = await supabase
-        .from('mus240_audio_resources')
-        .insert({
-          title: uploadFile.title,
-          description: null,
-          file_path: filePath,
-          file_size: uploadFile.file.size,
-          category: 'jazz',
-          duration: audioDuration,
-          uploaded_by: user?.id,
-        });
-
-      if (dbError) throw dbError;
-
-      // Update status to success
-      setUploadFiles(prev => prev.map((f, i) => 
-        i === index ? { ...f, status: 'success' as const, progress: 100 } : f
-      ));
+      // Return the data for batch insert
+      return {
+        title: uploadFile.title,
+        description: null,
+        file_path: filePath,
+        file_size: uploadFile.file.size,
+        category: 'jazz',
+        duration: null, // Skip duration detection for speed
+        uploaded_by: user?.id,
+      };
     } catch (error) {
       console.error('Upload error:', error);
       setUploadFiles(prev => prev.map((f, i) => 
@@ -289,6 +270,7 @@ export default function JazzPage() {
           error: error instanceof Error ? error.message : 'Upload failed' 
         } : f
       ));
+      return null;
     }
   };
 
@@ -297,30 +279,44 @@ export default function JazzPage() {
 
     setUploading(true);
     
-    // Upload all files in parallel
-    await Promise.all(
-      uploadFiles.map((file, index) => uploadSingleFile(file, index))
-    );
+    try {
+      // Upload all files to storage in parallel
+      const uploadResults = await Promise.all(
+        uploadFiles.map((file, index) => uploadSingleFile(file, index))
+      );
 
-    setUploading(false);
-    
-    const successCount = uploadFiles.filter(f => f.status === 'success').length;
-    const errorCount = uploadFiles.filter(f => f.status === 'error').length;
+      // Filter successful uploads
+      const successfulUploads = uploadResults.filter(r => r !== null);
 
-    if (successCount > 0) {
-      toast({
-        title: 'Upload Complete',
-        description: `${successCount} track${successCount > 1 ? 's' : ''} uploaded successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
-      });
-      refetch();
-    }
+      if (successfulUploads.length > 0) {
+        // Batch insert all successful uploads into database
+        const { error: batchError } = await supabase
+          .from('mus240_audio_resources')
+          .insert(successfulUploads);
 
-    if (errorCount === uploadFiles.length) {
+        if (batchError) throw batchError;
+
+        // Mark all as success
+        setUploadFiles(prev => prev.map(f => 
+          f.status === 'uploading' ? { ...f, status: 'success' as const, progress: 100 } : f
+        ));
+
+        toast({
+          title: 'Upload Complete',
+          description: `${successfulUploads.length} track${successfulUploads.length > 1 ? 's' : ''} uploaded successfully`,
+        });
+        
+        refetch();
+      }
+    } catch (error) {
+      console.error('Batch upload error:', error);
       toast({
         title: 'Upload Failed',
-        description: 'All uploads failed',
+        description: 'Failed to complete batch upload',
         variant: 'destructive',
       });
+    } finally {
+      setUploading(false);
     }
   };
 
