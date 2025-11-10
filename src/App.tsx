@@ -212,6 +212,7 @@ import GrandStaves from "./pages/GrandStaves";
 import GrandStaffClassroom from "./pages/GrandStaffClassroom";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
 import MySubmissionsPage from "./pages/student/MySubmissionsPage";
+import JazzPage from "./pages/mus240/JazzPage";
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -1821,13 +1822,21 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                  />
-                                <Route 
-                                  path="/classes/mus240/grades"
+                               <Route 
+                                 path="/classes/mus240/grades"
                                 element={
                                   <Mus240EnrollmentRoute>
                                     <Mus240GradesPage />
                                   </Mus240EnrollmentRoute>
                                 }
+                                />
+                                <Route 
+                                  path="/classes/mus240/jazz"
+                                  element={
+                                    <Mus240EnrollmentRoute>
+                                      <JazzPage />
+                                    </Mus240EnrollmentRoute>
+                                  }
                                 />
                                   <Route 
                                     path="/classes/mus240/admin" 
