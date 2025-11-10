@@ -1,16 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from 'lucide-react';
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useAudioResources } from '@/hooks/useAudioResources';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
+import { useUserRole } from '@/hooks/useUserRole';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function JazzPage() {
-  const { resources, loading, getFileUrl } = useAudioResources('jazz');
+  const { resources, loading, getFileUrl, refetch } = useAudioResources('jazz');
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -18,6 +27,13 @@ export default function JazzPage() {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadForm, setUploadForm] = useState({
+    title: '',
+    description: '',
+    file: null as File | null,
+  });
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -144,6 +160,93 @@ export default function JazzPage() {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Check if it's audio
+      if (!file.type.startsWith('audio/')) {
+        toast({
+          title: 'Invalid File',
+          description: 'Please select an audio file (MP3, WAV, etc.)',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setUploadForm({ ...uploadForm, file });
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!uploadForm.file || !uploadForm.title) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please provide a title and select a file',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Create unique file path
+      const fileExt = uploadForm.file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `jazz/${fileName}`;
+
+      // Upload to storage
+      const { error: uploadError } = await supabase.storage
+        .from('mus240-audio')
+        .upload(filePath, uploadForm.file);
+
+      if (uploadError) throw uploadError;
+
+      // Get audio duration
+      const audioDuration = await new Promise<number>((resolve) => {
+        const audio = new Audio();
+        audio.src = URL.createObjectURL(uploadForm.file!);
+        audio.addEventListener('loadedmetadata', () => {
+          resolve(Math.floor(audio.duration));
+        });
+      });
+
+      // Insert into database
+      const { error: dbError } = await supabase
+        .from('mus240_audio_resources')
+        .insert({
+          title: uploadForm.title,
+          description: uploadForm.description || null,
+          file_path: filePath,
+          file_size: uploadForm.file.size,
+          category: 'jazz',
+          duration: audioDuration,
+          uploaded_by: user?.id,
+        });
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: 'Upload Successful',
+        description: 'Jazz track added successfully',
+      });
+
+      // Reset form
+      setUploadForm({ title: '', description: '', file: null });
+      setIsUploadOpen(false);
+      
+      // Refresh list
+      refetch();
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: 'Upload Failed',
+        description: 'Failed to upload jazz track',
+        variant: 'destructive',
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background p-6 flex items-center justify-center">
@@ -156,13 +259,89 @@ export default function JazzPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between gap-4">
           <Link to="/classes/mus240">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to MUS240
             </Button>
           </Link>
+          
+          {isAdmin() && (
+            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Jazz Track
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Upload Jazz Track</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title *</Label>
+                    <Input
+                      id="title"
+                      value={uploadForm.title}
+                      onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
+                      placeholder="e.g., Take Five - Dave Brubeck"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      value={uploadForm.description}
+                      onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
+                      placeholder="Optional details about the track..."
+                      rows={3}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="file">Audio File (MP3, WAV) *</Label>
+                    <Input
+                      id="file"
+                      type="file"
+                      accept="audio/*"
+                      onChange={handleFileChange}
+                    />
+                    {uploadForm.file && (
+                      <p className="text-sm text-muted-foreground">
+                        Selected: {uploadForm.file.name} ({(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsUploadOpen(false)}
+                      disabled={uploading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleUpload}
+                      disabled={uploading || !uploadForm.file || !uploadForm.title}
+                    >
+                      {uploading ? (
+                        <>
+                          <LoadingSpinner size="sm" className="mr-2" />
+                          Uploading...
+                        </>
+                      ) : (
+                        'Upload'
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <div className="space-y-2">
