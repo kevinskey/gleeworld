@@ -1,19 +1,27 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Upload } from 'lucide-react';
+import { ArrowLeft, Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Upload, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
 import { useAudioResources } from '@/hooks/useAudioResources';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { useToast } from '@/hooks/use-toast';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+
+interface UploadFile {
+  file: File;
+  title: string;
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  progress: number;
+  error?: string;
+}
 
 export default function JazzPage() {
   const { resources, loading, getFileUrl, refetch } = useAudioResources('jazz');
@@ -29,13 +37,11 @@ export default function JazzPage() {
   const [isMuted, setIsMuted] = useState(false);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [uploadForm, setUploadForm] = useState({
-    title: '',
-    description: '',
-    file: null as File | null,
-  });
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentTrack = resources[currentTrackIndex];
 
@@ -160,52 +166,98 @@ export default function JazzPage() {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // Check if it's audio
-      if (!file.type.startsWith('audio/')) {
-        toast({
-          title: 'Invalid File',
-          description: 'Please select an audio file (MP3, WAV, etc.)',
-          variant: 'destructive',
-        });
-        return;
-      }
-      setUploadForm({ ...uploadForm, file });
-    }
+  const extractTitleFromFilename = (filename: string): string => {
+    // Remove extension
+    const nameWithoutExt = filename.replace(/\.(mp3|wav|m4a|flac|ogg|aac)$/i, '');
+    
+    // Replace underscores and hyphens with spaces
+    const cleaned = nameWithoutExt.replace(/[_-]/g, ' ');
+    
+    // Capitalize first letter of each word
+    return cleaned
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   };
 
-  const handleUpload = async () => {
-    if (!uploadForm.file || !uploadForm.title) {
+  const handleFiles = (files: FileList | File[]) => {
+    const audioFiles = Array.from(files).filter(file => file.type.startsWith('audio/'));
+    
+    if (audioFiles.length === 0) {
       toast({
-        title: 'Missing Information',
-        description: 'Please provide a title and select a file',
+        title: 'No Audio Files',
+        description: 'Please select audio files (MP3, WAV, etc.)',
         variant: 'destructive',
       });
       return;
     }
 
-    setUploading(true);
+    const newUploadFiles: UploadFile[] = audioFiles.map(file => ({
+      file,
+      title: extractTitleFromFilename(file.name),
+      status: 'pending' as const,
+      progress: 0,
+    }));
+
+    setUploadFiles(newUploadFiles);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFiles(e.dataTransfer.files);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      handleFiles(e.target.files);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateFileTitle = (index: number, title: string) => {
+    setUploadFiles(prev => prev.map((f, i) => i === index ? { ...f, title } : f));
+  };
+
+  const uploadSingleFile = async (uploadFile: UploadFile, index: number) => {
     try {
+      // Update status to uploading
+      setUploadFiles(prev => prev.map((f, i) => 
+        i === index ? { ...f, status: 'uploading' as const, progress: 50 } : f
+      ));
+
       // Create unique file path
-      const fileExt = uploadForm.file.name.split('.').pop();
+      const fileExt = uploadFile.file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `jazz/${fileName}`;
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage
         .from('mus240-audio')
-        .upload(filePath, uploadForm.file);
+        .upload(filePath, uploadFile.file);
 
       if (uploadError) throw uploadError;
 
       // Get audio duration
       const audioDuration = await new Promise<number>((resolve) => {
         const audio = new Audio();
-        audio.src = URL.createObjectURL(uploadForm.file!);
+        audio.src = URL.createObjectURL(uploadFile.file);
         audio.addEventListener('loadedmetadata', () => {
           resolve(Math.floor(audio.duration));
+          URL.revokeObjectURL(audio.src);
         });
       });
 
@@ -213,10 +265,10 @@ export default function JazzPage() {
       const { error: dbError } = await supabase
         .from('mus240_audio_resources')
         .insert({
-          title: uploadForm.title,
-          description: uploadForm.description || null,
+          title: uploadFile.title,
+          description: null,
           file_path: filePath,
-          file_size: uploadForm.file.size,
+          file_size: uploadFile.file.size,
           category: 'jazz',
           duration: audioDuration,
           uploaded_by: user?.id,
@@ -224,26 +276,51 @@ export default function JazzPage() {
 
       if (dbError) throw dbError;
 
-      toast({
-        title: 'Upload Successful',
-        description: 'Jazz track added successfully',
-      });
-
-      // Reset form
-      setUploadForm({ title: '', description: '', file: null });
-      setIsUploadOpen(false);
-      
-      // Refresh list
-      refetch();
+      // Update status to success
+      setUploadFiles(prev => prev.map((f, i) => 
+        i === index ? { ...f, status: 'success' as const, progress: 100 } : f
+      ));
     } catch (error) {
       console.error('Upload error:', error);
+      setUploadFiles(prev => prev.map((f, i) => 
+        i === index ? { 
+          ...f, 
+          status: 'error' as const, 
+          error: error instanceof Error ? error.message : 'Upload failed' 
+        } : f
+      ));
+    }
+  };
+
+  const handleBulkUpload = async () => {
+    if (uploadFiles.length === 0) return;
+
+    setUploading(true);
+    
+    // Upload all files in parallel
+    await Promise.all(
+      uploadFiles.map((file, index) => uploadSingleFile(file, index))
+    );
+
+    setUploading(false);
+    
+    const successCount = uploadFiles.filter(f => f.status === 'success').length;
+    const errorCount = uploadFiles.filter(f => f.status === 'error').length;
+
+    if (successCount > 0) {
+      toast({
+        title: 'Upload Complete',
+        description: `${successCount} track${successCount > 1 ? 's' : ''} uploaded successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}`,
+      });
+      refetch();
+    }
+
+    if (errorCount === uploadFiles.length) {
       toast({
         title: 'Upload Failed',
-        description: 'Failed to upload jazz track',
+        description: 'All uploads failed',
         variant: 'destructive',
       });
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -268,65 +345,139 @@ export default function JazzPage() {
           </Link>
           
           {isAdmin() && (
-            <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+            <Dialog open={isUploadOpen} onOpenChange={(open) => {
+              setIsUploadOpen(open);
+              if (!open) {
+                setUploadFiles([]);
+                setUploading(false);
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button>
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload Jazz Track
+                  Upload Jazz Tracks
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-md">
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Upload Jazz Track</DialogTitle>
+                  <DialogTitle>Bulk Upload Jazz Tracks</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      value={uploadForm.title}
-                      onChange={(e) => setUploadForm({ ...uploadForm, title: e.target.value })}
-                      placeholder="e.g., Take Five - Dave Brubeck"
-                    />
+                  {/* Drop Zone */}
+                  <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
+                      isDragging 
+                        ? 'border-primary bg-primary/5' 
+                        : 'border-border hover:border-primary/50 hover:bg-accent/50'
+                    }`}
+                  >
+                    <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-lg font-medium mb-2">
+                      Drag & drop audio files here
+                    </p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      or click to browse (MP3, WAV, M4A, FLAC, OGG)
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Titles will be auto-generated from filenames
+                    </p>
                   </div>
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={uploadForm.description}
-                      onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
-                      placeholder="Optional details about the track..."
-                      rows={3}
-                    />
-                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="audio/*"
+                    onChange={handleFileInputChange}
+                    className="hidden"
+                  />
+
+                  {/* File List */}
+                  {uploadFiles.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-base font-semibold">
+                          Files to Upload ({uploadFiles.length})
+                        </Label>
+                        {!uploading && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setUploadFiles([])}
+                          >
+                            Clear All
+                          </Button>
+                        )}
+                      </div>
+                      
+                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {uploadFiles.map((uploadFile, index) => (
+                          <Card key={index} className="p-3">
+                            <div className="space-y-2">
+                              <div className="flex items-start gap-2">
+                                <div className="flex-1 space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      value={uploadFile.title}
+                                      onChange={(e) => updateFileTitle(index, e.target.value)}
+                                      disabled={uploading}
+                                      className="flex-1"
+                                      placeholder="Track title"
+                                    />
+                                    {!uploading && uploadFile.status === 'pending' && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeFile(index)}
+                                      >
+                                        <X className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                    {uploadFile.status === 'success' && (
+                                      <Check className="h-5 w-5 text-green-600" />
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    <span>{uploadFile.file.name}</span>
+                                    <span>•</span>
+                                    <span>{(uploadFile.file.size / 1024 / 1024).toFixed(2)} MB</span>
+                                    <span>•</span>
+                                    <span className="uppercase">{uploadFile.file.type.split('/')[1]}</span>
+                                  </div>
+                                  
+                                  {uploadFile.status === 'uploading' && (
+                                    <Progress value={uploadFile.progress} className="h-1" />
+                                  )}
+                                  
+                                  {uploadFile.status === 'error' && (
+                                    <p className="text-xs text-destructive">{uploadFile.error}</p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   
-                  <div className="space-y-2">
-                    <Label htmlFor="file">Audio File (MP3, WAV) *</Label>
-                    <Input
-                      id="file"
-                      type="file"
-                      accept="audio/*"
-                      onChange={handleFileChange}
-                    />
-                    {uploadForm.file && (
-                      <p className="text-sm text-muted-foreground">
-                        Selected: {uploadForm.file.name} ({(uploadForm.file.size / 1024 / 1024).toFixed(2)} MB)
-                      </p>
-                    )}
-                  </div>
-                  
+                  {/* Actions */}
                   <div className="flex justify-end gap-2 pt-4">
                     <Button
                       variant="outline"
                       onClick={() => setIsUploadOpen(false)}
                       disabled={uploading}
                     >
-                      Cancel
+                      {uploadFiles.some(f => f.status === 'success') ? 'Done' : 'Cancel'}
                     </Button>
                     <Button
-                      onClick={handleUpload}
-                      disabled={uploading || !uploadForm.file || !uploadForm.title}
+                      onClick={handleBulkUpload}
+                      disabled={uploading || uploadFiles.length === 0 || uploadFiles.every(f => f.status !== 'pending')}
                     >
                       {uploading ? (
                         <>
@@ -334,7 +485,7 @@ export default function JazzPage() {
                           Uploading...
                         </>
                       ) : (
-                        'Upload'
+                        `Upload ${uploadFiles.filter(f => f.status === 'pending').length} Track${uploadFiles.filter(f => f.status === 'pending').length !== 1 ? 's' : ''}`
                       )}
                     </Button>
                   </div>
