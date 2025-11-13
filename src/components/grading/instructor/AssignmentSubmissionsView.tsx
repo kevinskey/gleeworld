@@ -34,7 +34,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gw_submissions' as any)
-        .select('*, gw_profiles(full_name, email)')
+        .select('*, gw_profiles!left(full_name, email)')
         .eq('assignment_id', assignmentId)
         .order('submitted_at', { ascending: false });
 
