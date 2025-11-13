@@ -57,30 +57,38 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
   const { data: students, isLoading: studentsLoading, error: studentsError } = useQuery({
     queryKey: ['enrolled-students', courseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get all enrollments for this course
+      const { data: enrollments, error: enrollError } = await supabase
         .from('gw_enrollments' as any)
-        .select(`
-          id,
-          student_id,
-          role,
-          gw_profiles!gw_enrollments_student_id_fkey (
-            full_name,
-            email,
-            role
-          )
-        `)
+        .select('id, student_id, role')
         .eq('course_id', courseId);
       
-      if (error) throw error;
+      if (enrollError) throw enrollError;
+      if (!enrollments || enrollments.length === 0) return [];
 
-      return (data || []).map((enrollment: any) => ({
-        enrollment_id: enrollment.id,
-        student_id: enrollment.student_id,
-        full_name: enrollment.gw_profiles?.full_name || 'Unknown',
-        email: enrollment.gw_profiles?.email || 'No email',
-        enrollment_role: enrollment.role || 'student',
-        profile_role: enrollment.gw_profiles?.role || 'visitor'
-      })) as EnrolledStudent[];
+      // Get all student IDs
+      const studentIds = enrollments.map((e: any) => e.student_id);
+
+      // Fetch profiles for all enrolled students
+      const { data: profiles, error: profileError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email, role')
+        .in('user_id', studentIds);
+
+      if (profileError) throw profileError;
+
+      // Map enrollments to student data
+      return enrollments.map((enrollment: any) => {
+        const profile = profiles?.find((p) => p.user_id === enrollment.student_id);
+        return {
+          enrollment_id: enrollment.id,
+          student_id: enrollment.student_id,
+          full_name: profile?.full_name || 'Unknown',
+          email: profile?.email || 'No email',
+          enrollment_role: enrollment.role || 'student',
+          profile_role: profile?.role || 'visitor'
+        };
+      }) as EnrolledStudent[];
     }
   });
 
