@@ -59,6 +59,16 @@ import GroupsPage from "@/pages/mus240/GroupsPage";
 import SMUS100MidtermExamPage from "@/pages/SMUS100MidtermExamPage";
 import MUS100SightSingingPage from "@/pages/MUS100SightSingingPage";
 
+// Grading Pages
+import InstructorDashboard from "@/pages/grading/instructor/InstructorDashboard";
+import CoursePage from "@/pages/grading/instructor/CoursePage";
+import AssignmentSubmissionsPage from "@/pages/grading/instructor/AssignmentSubmissionsPage";
+import SubmissionGradingPage from "@/pages/grading/instructor/SubmissionGradingPage";
+import GradebookPage from "@/pages/grading/instructor/GradebookPage";
+import StudentDashboard from "@/pages/grading/student/StudentDashboard";
+import StudentCoursePage from "@/pages/grading/student/StudentCoursePage";
+import StudentAssignmentPage from "@/pages/grading/student/StudentAssignmentPage";
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -276,6 +286,39 @@ export const router = createBrowserRouter([
   {
     path: "/mus100-sight-singing",
     element: <MUS100SightSingingPage />,
+  },
+  // Grading Routes
+  {
+    path: "/grading/instructor/dashboard",
+    element: <InstructorDashboard />,
+  },
+  {
+    path: "/grading/instructor/course/:course_id",
+    element: <CoursePage />,
+  },
+  {
+    path: "/grading/instructor/assignment/:assignment_id/submissions",
+    element: <AssignmentSubmissionsPage />,
+  },
+  {
+    path: "/grading/instructor/submission/:submission_id",
+    element: <SubmissionGradingPage />,
+  },
+  {
+    path: "/grading/instructor/course/:course_id/gradebook",
+    element: <GradebookPage />,
+  },
+  {
+    path: "/grading/student/dashboard",
+    element: <StudentDashboard />,
+  },
+  {
+    path: "/grading/student/course/:course_id",
+    element: <StudentCoursePage />,
+  },
+  {
+    path: "/grading/student/assignment/:assignment_id",
+    element: <StudentAssignmentPage />,
   },
   {
     path: "*",

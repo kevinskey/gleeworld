@@ -1,0 +1,98 @@
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+import { FileText, ArrowLeft } from 'lucide-react';
+import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+
+interface InstructorCourseViewProps {
+  courseId: string;
+}
+
+export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ courseId }) => {
+  const navigate = useNavigate();
+
+  const { data: course, isLoading: courseLoading } = useQuery({
+    queryKey: ['gw-course', courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_courses' as any)
+        .select('*')
+        .eq('id', courseId)
+        .single();
+
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: assignments, isLoading: assignmentsLoading } = useQuery({
+    queryKey: ['gw-course-assignments', courseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_assignments' as any)
+        .select('*')
+        .eq('course_id', courseId)
+        .order('due_date', { ascending: true });
+
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+  if (courseLoading || assignmentsLoading) {
+    return <LoadingSpinner size="lg" text="Loading course..." />;
+  }
+
+  return (
+    <div className="container mx-auto py-8 space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" onClick={() => navigate('/grading/instructor/dashboard')}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold">{course?.course_code}</h1>
+          <p className="text-muted-foreground">{course?.course_name}</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4">
+        {assignments?.map((assignment) => (
+          <Card key={assignment.id} className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  {assignment.title}
+                </span>
+                <span className="text-sm font-normal text-muted-foreground">
+                  {assignment.points} pts
+                </span>
+              </CardTitle>
+              <CardDescription>
+                Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                onClick={() => navigate(`/grading/instructor/assignment/${assignment.id}/submissions`)}
+              >
+                View Submissions
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {!assignments || assignments.length === 0 ? (
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">No assignments yet.</p>
+          </CardContent>
+        </Card>
+      ) : null}
+    </div>
+  );
+};

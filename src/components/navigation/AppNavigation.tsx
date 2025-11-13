@@ -20,16 +20,21 @@ import {
   ShoppingCart,
   ShoppingBag,
   LayoutDashboard,
-  GraduationCap
+  GraduationCap,
+  BookOpen
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
 import { MobileNavigationFlow } from "./flow/MobileNavigationFlow";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export const AppNavigation = () => {
   const { user } = useAuth();
+  const { profile } = useUserRole();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const isInstructor = profile?.role === 'instructor' || profile?.is_admin || profile?.is_super_admin;
 
   const navigationItems = [
     {
@@ -38,6 +43,12 @@ export const AppNavigation = () => {
       icon: Library,
       permission: null
     },
+    ...(isInstructor ? [{
+      label: "Grading",
+      href: "/grading/instructor/dashboard",
+      icon: BookOpen,
+      permission: null
+    }] : []),
     {
       label: "My Grades",
       href: "/student/my-submissions",
