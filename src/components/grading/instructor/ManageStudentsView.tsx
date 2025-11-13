@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, UserPlus, Trash2 } from 'lucide-react';
+import { ArrowLeft, UserPlus, Trash2, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { BulkEnrollmentTool } from './BulkEnrollmentTool';
@@ -171,6 +171,41 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
     }
   });
 
+  // Sync all enrolled students' profile roles
+  const syncProfileRolesMutation = useMutation({
+    mutationFn: async () => {
+      // Get all enrollments for this course
+      const { data: enrollments } = await supabase
+        .from('gw_enrollments' as any)
+        .select('student_id')
+        .eq('course_id', courseId);
+      
+      if (!enrollments || enrollments.length === 0) {
+        throw new Error('No enrollments found');
+      }
+
+      const studentIds = enrollments.map((e: any) => e.student_id);
+      
+      // Update all profiles to 'student' if they're currently 'visitor' or 'fan'
+      const { error, count } = await supabase
+        .from('gw_profiles')
+        .update({ role: 'student' })
+        .in('user_id', studentIds)
+        .in('role', ['visitor', 'fan']);
+
+      if (error) throw error;
+      
+      return count || 0;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ['enrolled-students', courseId] });
+      toast.success(`Updated ${count} student profile(s)`);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to sync profiles');
+    }
+  });
+
   const handleAddStudent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailInput.trim()) {
@@ -204,8 +239,20 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
           Back to Course
         </Button>
         
-        <h1 className="text-3xl font-bold mb-2">{course?.code}</h1>
-        <p className="text-muted-foreground">{course?.title}</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">{course?.code}</h1>
+            <p className="text-muted-foreground">{course?.title}</p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => syncProfileRolesMutation.mutate()}
+            disabled={syncProfileRolesMutation.isPending}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${syncProfileRolesMutation.isPending ? 'animate-spin' : ''}`} />
+            Sync Profile Roles
+          </Button>
+        </div>
       </div>
 
       {/* Add Student Form */}
