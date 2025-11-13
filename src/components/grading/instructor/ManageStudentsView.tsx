@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ArrowLeft, UserPlus, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { BulkEnrollmentTool } from './BulkEnrollmentTool';
 
 interface ManageStudentsViewProps {
   courseId: string;
@@ -201,32 +202,41 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
       </div>
 
       {/* Add Student Form */}
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Add Student by Email
-          </CardTitle>
-          <CardDescription>
-            Enter the student's email address to enroll them in this course
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAddStudent} className="flex gap-2">
-            <Input
-              type="email"
-              placeholder="student@example.com"
-              value={emailInput}
-              onChange={(e) => setEmailInput(e.target.value)}
-              disabled={addStudentMutation.isPending}
-              className="flex-1"
-            />
-            <Button type="submit" disabled={addStudentMutation.isPending}>
-              {addStudentMutation.isPending ? 'Adding...' : 'Add Student'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Add Student by Email
+            </CardTitle>
+            <CardDescription>
+              Enter one student's email address to enroll them
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAddStudent} className="flex gap-2">
+              <Input
+                type="email"
+                placeholder="student@example.com"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                disabled={addStudentMutation.isPending}
+                className="flex-1"
+              />
+              <Button type="submit" disabled={addStudentMutation.isPending}>
+                {addStudentMutation.isPending ? 'Adding...' : 'Add'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <BulkEnrollmentTool 
+          courseId={courseId} 
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['enrolled-students', courseId] });
+          }}
+        />
+      </div>
 
       {/* Students Table */}
       <Card>
