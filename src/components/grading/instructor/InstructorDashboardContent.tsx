@@ -18,7 +18,7 @@ export const InstructorDashboardContent: React.FC = () => {
       const { data, error } = await supabase
         .from('gw_courses' as any)
         .select('*')
-        .eq('instructor_id', user?.id)
+        .eq('created_by', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
