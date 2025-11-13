@@ -37,6 +37,7 @@ import { AlumnaePortalModule } from '../modules/AlumnaePortalModule';
 import { DashboardHeroManagerModule } from '@/components/modules/DashboardHeroManagerModule';
 import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
 import { AlumnaeManagementModule } from '../modules/AlumnaeManagementModule';
+import { GradingModule } from '../modules/GradingModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -120,6 +121,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <Mus240GroupsModule />;
       case 'test-builder':
         return <TestBuilder courseId="all" courseName="All Courses" />;
+      case 'grading':
+        return <GradingModule />;
       case 'alumnae-portal':
         return <AlumnaePortalModule />;
       case 'alumnae-management':
