@@ -42,8 +42,8 @@ export const InstructorDashboardContent: React.FC = () => {
         {courses?.map((course) => (
           <Card key={course.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
+              <CardTitle className="flex items-center gap-2 text-3xl">
+                <BookOpen className="h-6 w-6" />
                 {course.code}
               </CardTitle>
               <CardDescription>{course.title}</CardDescription>
