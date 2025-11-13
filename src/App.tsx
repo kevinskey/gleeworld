@@ -220,6 +220,7 @@ import CoursePage from "./pages/grading/instructor/CoursePage";
 import AssignmentSubmissionsPage from "./pages/grading/instructor/AssignmentSubmissionsPage";
 import SubmissionGradingPage from "./pages/grading/instructor/SubmissionGradingPage";
 import GradebookPage from "./pages/grading/instructor/GradebookPage";
+import ManageStudents from "./pages/grading/instructor/ManageStudents";
 import GradingStudentDashboard from "./pages/grading/student/StudentDashboard";
 import StudentCoursePage from "./pages/grading/student/StudentCoursePage";
 import StudentAssignmentPage from "./pages/grading/student/StudentAssignmentPage";
@@ -1971,14 +1972,22 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                                   <Route 
-                                     path="/grading/instructor/course/:course_id/gradebook" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <GradebookPage />
-                                       </ProtectedRoute>
-                                     } 
-                                   />
+                                    <Route 
+                                      path="/grading/instructor/course/:course_id/gradebook" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <GradebookPage />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="/grading/instructor/course/:course_id/students" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <ManageStudents />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
                                    <Route 
                                      path="/grading/student/dashboard" 
                                      element={
