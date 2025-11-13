@@ -213,6 +213,17 @@ import GrandStaffClassroom from "./pages/GrandStaffClassroom";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
 import MySubmissionsPage from "./pages/student/MySubmissionsPage";
 import JazzPage from "./pages/mus240/JazzPage";
+
+// Grading System
+import InstructorDashboard from "./pages/grading/instructor/InstructorDashboard";
+import CoursePage from "./pages/grading/instructor/CoursePage";
+import AssignmentSubmissionsPage from "./pages/grading/instructor/AssignmentSubmissionsPage";
+import SubmissionGradingPage from "./pages/grading/instructor/SubmissionGradingPage";
+import GradebookPage from "./pages/grading/instructor/GradebookPage";
+import GradingStudentDashboard from "./pages/grading/student/StudentDashboard";
+import StudentCoursePage from "./pages/grading/student/StudentCoursePage";
+import StudentAssignmentPage from "./pages/grading/student/StudentAssignmentPage";
+
 // Preview triggers disabled to prevent accidental email sends during development
 
 const queryClient = new QueryClient({
@@ -1926,7 +1937,73 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                            </Routes>
+                                   
+                                   {/* Grading System Routes */}
+                                   <Route 
+                                     path="/grading/instructor/dashboard" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <InstructorDashboard />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/grading/instructor/course/:course_id" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <CoursePage />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/grading/instructor/assignment/:assignment_id/submissions" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <AssignmentSubmissionsPage />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/grading/instructor/submission/:submission_id" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <SubmissionGradingPage />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/grading/instructor/course/:course_id/gradebook" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <GradebookPage />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/grading/student/dashboard" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <GradingStudentDashboard />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/grading/student/course/:course_id" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <StudentCoursePage />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                                   <Route 
+                                     path="/grading/student/assignment/:assignment_id" 
+                                     element={
+                                       <ProtectedRoute>
+                                         <StudentAssignmentPage />
+                                       </ProtectedRoute>
+                                     } 
+                                   />
+                             </Routes>
                      </Suspense>
                    <GlobalMusicPlayer />
                 </div>
