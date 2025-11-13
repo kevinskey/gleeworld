@@ -12,9 +12,12 @@ interface JournalEntry {
   id: string;
   content: string;
   is_published: boolean;
-  published_at: string;
+  published_at?: string | null;
   assignment_id: string;
   student_id: string;
+  created_at?: string;
+  updated_at?: string;
+  submitted_at?: string | null;
   student_name?: string;
   assignment_title?: string;
   review_count?: number;
@@ -145,7 +148,11 @@ export const JournalBrowserForReview: React.FC = () => {
                     </span>
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {format(new Date(journal.published_at), 'MMM d, yyyy')}
+                      {(() => {
+                        const dateStr = journal.published_at || journal.submitted_at || journal.updated_at || journal.created_at;
+                        const date = dateStr ? new Date(dateStr) : new Date();
+                        return isNaN(date.getTime()) ? 'Date unknown' : format(date, 'MMM d, yyyy');
+                      })()}
                     </span>
                     <span className="flex items-center gap-1">
                       <MessageSquare className="h-3 w-3" />
