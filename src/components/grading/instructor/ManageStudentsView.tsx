@@ -15,6 +15,15 @@ interface ManageStudentsViewProps {
   courseId: string;
 }
 
+interface Course {
+  id: string;
+  code: string;
+  title: string;
+  description?: string;
+  term?: string;
+}
+
+
 interface EnrolledStudent {
   enrollment_id: string;
   student_id: string;
@@ -34,13 +43,13 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
     queryKey: ['course', courseId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_courses')
+        .from('gw_courses' as any)
         .select('*')
         .eq('id', courseId)
         .single();
       
       if (error) throw error;
-      return data;
+      return data as unknown as Course;
     }
   });
 
@@ -49,7 +58,7 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
     queryKey: ['enrolled-students', courseId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_enrollments')
+        .from('gw_enrollments' as any)
         .select(`
           id,
           student_id,
@@ -94,7 +103,7 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
 
       // 2. Check if already enrolled
       const { data: existingEnrollment } = await supabase
-        .from('gw_enrollments')
+        .from('gw_enrollments' as any)
         .select('id')
         .eq('course_id', courseId)
         .eq('student_id', userId)
@@ -105,13 +114,13 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
       }
 
       // 3. Create enrollment
-      const { error: enrollError } = await supabase
-        .from('gw_enrollments')
+      const { error: enrollError } = await (supabase
+        .from('gw_enrollments' as any)
         .insert({
           course_id: courseId,
           student_id: userId,
           role: 'student'
-        });
+        }) as any);
 
       if (enrollError) throw enrollError;
 
@@ -130,10 +139,10 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
   // Remove student mutation
   const removeStudentMutation = useMutation({
     mutationFn: async (enrollmentId: string) => {
-      const { error } = await supabase
-        .from('gw_enrollments')
+      const { error } = await (supabase
+        .from('gw_enrollments' as any)
         .delete()
-        .eq('id', enrollmentId);
+        .eq('id', enrollmentId) as any);
 
       if (error) throw error;
     },
