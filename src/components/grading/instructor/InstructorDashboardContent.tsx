@@ -44,9 +44,9 @@ export const InstructorDashboardContent: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
-                {course.course_code}
+                {course.code}
               </CardTitle>
-              <CardDescription>{course.course_name}</CardDescription>
+              <CardDescription>{course.title}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               <Button
