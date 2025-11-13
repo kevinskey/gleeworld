@@ -53,13 +53,12 @@ export const CountdownText = ({
 
   return (
     <EnhancedTooltip content={`${eventName} - ${formatDate(targetDate)}`}>
-      <div className={`hidden md:flex items-center gap-2 text-sm font-medium text-foreground/90 bg-background/80 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-sm border border-border/50 ${className}`}>
+      <div className={`hidden md:flex items-center gap-2 text-sm font-medium text-foreground/90 px-3 py-1.5 rounded-lg ${className}`}>
         <Calendar className="h-3.5 w-3.5 text-primary" />
         <div className="flex items-center gap-1.5">
           <span className="font-mono text-xs">
-            {timeLeft.days}d {timeLeft.hours}h {timeLeft.minutes}m
+            {timeLeft.days} {timeLeft.days === 1 ? 'day' : 'days'} to {eventName}
           </span>
-          <span className="text-xs text-muted-foreground">to {eventName}</span>
         </div>
       </div>
     </EnhancedTooltip>
