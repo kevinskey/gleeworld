@@ -95,6 +95,7 @@ import { ServiceProviderManagementModule } from '@/components/modules/ServicePro
 import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
 import { TestBuilderModule } from '@/components/modules/TestBuilderModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
+import { GradingModule } from '@/components/modules/GradingModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -906,6 +907,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: TestBuilderModule,
     dbFunctionName: "test-builder"
+  },
+  {
+    id: "grading",
+    name: "grading",
+    title: "Classroom & Grading",
+    description: "Manage courses, assignments, and student grades. Students view assignments and progress.",
+    icon: GraduationCap,
+    iconColor: "blue",
+    category: "education",
+    isActive: true,
+    component: GradingModule,
+    dbFunctionName: "grading"
   },
   {
     id: "alumnae-management",
