@@ -60,6 +60,13 @@ export const BulkEnrollmentTool: React.FC<BulkEnrollmentToolProps> = ({ courseId
           if (error) {
             failed.push(`${email} - ${error.message}`);
           } else {
+            // Update profile role to 'student' if not already set
+            await supabase
+              .from('gw_profiles')
+              .update({ role: 'student' })
+              .eq('user_id', profileData.user_id)
+              .in('role', ['visitor', 'fan']);
+            
             success.push(email);
           }
         } catch (err) {

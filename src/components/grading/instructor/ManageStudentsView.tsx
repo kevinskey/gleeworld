@@ -133,6 +133,13 @@ export const ManageStudentsView: React.FC<ManageStudentsViewProps> = ({ courseId
 
       if (enrollError) throw enrollError;
 
+      // 4. Update profile role to 'student' if not already set
+      await supabase
+        .from('gw_profiles')
+        .update({ role: 'student' })
+        .eq('user_id', userId)
+        .in('role', ['visitor', 'fan']);
+
       return { success: true };
     },
     onSuccess: () => {
