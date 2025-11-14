@@ -85,6 +85,15 @@ export const PRCoordinatorHub = () => {
     }
   };
 
+  // Keep selected image in sync with latest data (ensures saved tags appear immediately)
+  useEffect(() => {
+    if (!selectedImage) return;
+    const updated = images.find(img => img.id === selectedImage.id);
+    if (updated && updated !== selectedImage) {
+      setSelectedImage(updated);
+    }
+  }, [images, selectedImage?.id]);
+
   // Setup Glee Cam tag on mount
   useEffect(() => {
     const setupGleeCamTag = async () => {
