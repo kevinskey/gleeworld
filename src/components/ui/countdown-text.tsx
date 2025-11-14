@@ -38,7 +38,7 @@ export const CountdownText = ({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [targetDate]);
+  }, [targetDate.getTime()]);
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
