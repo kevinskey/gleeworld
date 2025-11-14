@@ -22,6 +22,7 @@ import { HeroManagement } from '@/components/admin/HeroManagement';
 import { PRAnalytics } from './PRAnalytics';
 import { SocialMediaManager } from './SocialMediaManager';
 import { PressReleaseManager } from './PressReleaseManager';
+import { supabase } from '@/integrations/supabase/client';
 
 export const PRCoordinatorHub = () => {
   const {
@@ -83,6 +84,21 @@ export const PRCoordinatorHub = () => {
       setSelectedImages(filteredImages.map(img => img.id));
     }
   };
+
+  // Setup Glee Cam tag on mount
+  useEffect(() => {
+    const setupGleeCamTag = async () => {
+      try {
+        await supabase.functions.invoke('setup-glee-cam-tag');
+        // Refresh tags to show the newly created tag
+        refreshTags();
+      } catch (error) {
+        console.error('Error setting up Glee Cam tag:', error);
+      }
+    };
+    
+    setupGleeCamTag();
+  }, []);
 
   // Listen for header camera trigger
   useEffect(() => {
