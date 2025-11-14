@@ -62,17 +62,19 @@ export const JournalBrowserForReview: React.FC = () => {
         return acc;
       }, {} as Record<string, string>);
 
-      // Fetch assignment titles separately
-      const assignmentIds = [...new Set(journalData?.map(j => j.assignment_id).filter(Boolean) || [])];
-      const { data: assignments } = await supabase
-        .from('mus240_assignments')
-        .select('id, title')
-        .in('id', assignmentIds);
-
-      const assignmentMap = (assignments || []).reduce((acc, a) => {
-        acc[a.id] = a.title;
-        return acc;
-      }, {} as Record<string, string>);
+      // Map assignment codes to titles (assignment_id stores codes like "lj5", not UUIDs)
+      const assignmentCodeMap: Record<string, string> = {
+        'lj1': 'Listening Journal 1',
+        'lj2': 'Listening Journal 2',
+        'lj3': 'Listening Journal 3',
+        'lj4': 'Listening Journal 4',
+        'lj5': 'Listening Journal 5',
+        'lj6': 'Listening Journal 6',
+        'lj7': 'Listening Journal 7',
+        'lj8': 'Listening Journal 8',
+        'lj9': 'Listening Journal 9',
+        'lj10': 'Listening Journal 10',
+      };
 
       // Fetch peer review counts for each journal
       const { data: reviewCounts, error: countError } = await supabase
@@ -103,7 +105,7 @@ export const JournalBrowserForReview: React.FC = () => {
       const enrichedJournals: JournalEntry[] = (journalData || []).map(journal => ({
         ...journal,
         student_name: profileMap[journal.student_id],
-        assignment_title: journal.assignment_id ? assignmentMap[journal.assignment_id] : undefined,
+        assignment_title: journal.assignment_id ? assignmentCodeMap[journal.assignment_id] || journal.assignment_id : undefined,
         review_count: countByJournal[journal.id] || 0,
         has_reviewed: reviewedJournalIds.has(journal.id)
       }));
