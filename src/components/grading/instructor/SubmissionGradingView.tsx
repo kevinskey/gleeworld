@@ -45,7 +45,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
         <div>
           <h1 className="text-3xl font-bold">Grade Submission</h1>
           <p className="text-muted-foreground">
-            {submission?.gw_profiles?.full_name} - {submission?.gw_assignments?.title}
+            {submission?.gw_profiles?.full_name} - {submission?.gw_assignments?.title || submission?.gw_assignments?.name || 'Untitled Assignment'}
           </p>
         </div>
       </div>
