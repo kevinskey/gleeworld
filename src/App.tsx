@@ -217,6 +217,7 @@ import JazzPage from "./pages/mus240/JazzPage";
 
 // Grading System
 import InstructorDashboard from "./pages/grading/instructor/InstructorDashboard";
+import GradingAdminDashboard from "./pages/grading/admin/GradingAdminDashboard";
 import CoursePage from "./pages/grading/instructor/CoursePage";
 import AssignmentSubmissionsPage from "./pages/grading/instructor/AssignmentSubmissionsPage";
 import SubmissionGradingPage from "./pages/grading/instructor/SubmissionGradingPage";
@@ -1947,16 +1948,24 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                                   
-                                   {/* Grading System Routes */}
-                                   <Route 
-                                     path="/grading/instructor/dashboard" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <InstructorDashboard />
-                                       </ProtectedRoute>
-                                     } 
-                                   />
+                                    
+                                    {/* Grading System Routes */}
+                                    <Route 
+                                      path="/grading/admin/dashboard" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <GradingAdminDashboard />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="/grading/instructor/dashboard" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <InstructorDashboard />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
                                    <Route 
                                      path="/grading/instructor/course/:course_id" 
                                      element={
