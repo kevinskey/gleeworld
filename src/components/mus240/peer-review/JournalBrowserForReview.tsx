@@ -79,7 +79,9 @@ export const JournalBrowserForReview: React.FC = () => {
         .from('mus240_peer_reviews')
         .select('journal_id');
 
-      if (countError) throw countError;
+      if (countError) {
+        console.warn('Peer review count fetch blocked or failed:', countError);
+      }
 
       // Fetch user's reviews
       const { data: myReviews, error: myReviewError } = await supabase
@@ -87,7 +89,9 @@ export const JournalBrowserForReview: React.FC = () => {
         .select('journal_id')
         .eq('reviewer_id', user.id);
 
-      if (myReviewError) throw myReviewError;
+      if (myReviewError) {
+        console.warn('Peer review myReviews fetch blocked or failed:', myReviewError);
+      }
 
       // Process data
       const reviewedJournalIds = new Set(myReviews?.map(r => r.journal_id) || []);
