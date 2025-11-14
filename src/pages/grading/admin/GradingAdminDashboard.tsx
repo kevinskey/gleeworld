@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Plus, Settings } from 'lucide-react';
 import { CreateCourseDialog } from '@/components/grading/admin/CreateCourseDialog';
 import { CourseManagementTable } from '@/components/grading/admin/CourseManagementTable';
+import { MigrationControl } from '@/components/grading/admin/MigrationControl';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const GradingAdminDashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -47,7 +49,20 @@ const GradingAdminDashboard: React.FC = () => {
           </Button>
         </div>
 
-        <CourseManagementTable />
+        <Tabs defaultValue="courses" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="courses">Courses</TabsTrigger>
+            <TabsTrigger value="migration">Data Migration</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="courses" className="space-y-6 mt-6">
+            <CourseManagementTable />
+          </TabsContent>
+          
+          <TabsContent value="migration" className="space-y-6 mt-6">
+            <MigrationControl />
+          </TabsContent>
+        </Tabs>
 
         <CreateCourseDialog
           open={createDialogOpen}
