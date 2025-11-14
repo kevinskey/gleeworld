@@ -9,6 +9,7 @@ import { useCameraImport } from '@/hooks/useCameraImport';
 import { PRImageTag } from '@/hooks/usePRImages';
 import { Camera, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PRQuickCaptureProps {
   tags: PRImageTag[];
@@ -30,6 +31,16 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  // Find or ensure Glee Cam tag exists and auto-select it
+  const gleeCamTag = tags.find(tag => tag.name.toLowerCase() === 'glee cam');
+  
+  // Auto-select Glee Cam tag on mount
+  useState(() => {
+    if (gleeCamTag && !selectedTags.includes(gleeCamTag.id)) {
+      setSelectedTags([gleeCamTag.id]);
+    }
+  });
 
   console.log('PRQuickCapture: Component rendered');
 
@@ -79,15 +90,32 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
 
     setIsUploading(true);
     try {
+      // Ensure Glee Cam tag is included
+      const tagsToUse = gleeCamTag && !selectedTags.includes(gleeCamTag.id)
+        ? [...selectedTags, gleeCamTag.id]
+        : selectedTags;
+
       const uploadedImage = await onCapture(capturedImage, {
         caption: caption.trim() || undefined,
         taken_at: new Date().toISOString(),
-        tags: selectedTags.length > 0 ? selectedTags : undefined,
+        tags: tagsToUse.length > 0 ? tagsToUse : undefined,
       });
+
+      // Trigger sync to hero slides
+      try {
+        const { error: syncError } = await supabase.functions.invoke('sync-glee-cam-to-heroes');
+        if (syncError) {
+          console.error('Error syncing to heroes:', syncError);
+        } else {
+          console.log('Successfully synced Glee Cam photos to hero slides');
+        }
+      } catch (syncErr) {
+        console.error('Sync invocation error:', syncErr);
+      }
 
       toast({
         title: "Success",
-        description: "Image captured and uploaded successfully!",
+        description: "Image captured and added to landing page heroes!",
       });
 
       onClose();
