@@ -7,9 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Save, Trash2, Eye, EyeOff, Edit, ExternalLink } from "lucide-react";
+import { Upload, Save, Trash2, Eye, EyeOff, Edit, ExternalLink, RefreshCw, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface HeroSlide {
   id: string;
@@ -29,6 +30,7 @@ export const DashboardHeroManagerModule = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
 
   const [scrollSettings, setScrollSettings] = useState({
@@ -52,7 +54,42 @@ export const DashboardHeroManagerModule = () => {
   useEffect(() => {
     fetchHeroSlides();
     fetchScrollSettings();
+    setupGleeCamTag();
   }, []);
+
+  const setupGleeCamTag = async () => {
+    try {
+      await supabase.functions.invoke('setup-glee-cam-tag');
+    } catch (error) {
+      console.error('Error setting up Glee Cam tag:', error);
+    }
+  };
+
+  const syncGleeCamPhotos = async () => {
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sync-glee-cam-to-heroes');
+      
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: data.message || "Glee Cam photos synced to heroes",
+      });
+
+      // Refresh hero slides
+      fetchHeroSlides();
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to sync Glee Cam photos",
+        variant: "destructive"
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const fetchHeroSlides = async () => {
     try {
@@ -332,6 +369,32 @@ export const DashboardHeroManagerModule = () => {
 
   return (
     <div className="space-y-6">
+      {/* Glee Cam Sync Alert */}
+      <Alert className="border-blue-200 bg-blue-50">
+        <Camera className="h-4 w-4" />
+        <AlertDescription className="flex items-center justify-between">
+          <span>Photos tagged with "Glee Cam" in PR Hub automatically sync to landing page heroes</span>
+          <Button 
+            onClick={syncGleeCamPhotos} 
+            disabled={syncing}
+            size="sm"
+            variant="outline"
+          >
+            {syncing ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Syncing...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Sync Glee Cam Now
+              </>
+            )}
+          </Button>
+        </AlertDescription>
+      </Alert>
+
       {/* Scroll Settings Card */}
       <Card className="border-2 border-accent/20">
         <CardHeader className="bg-gradient-to-r from-accent/5 to-accent/10">
