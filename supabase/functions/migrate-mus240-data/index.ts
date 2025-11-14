@@ -61,7 +61,7 @@ serve(async (req) => {
       }
     }
 
-    // Step 2: Fetch all MUS240 assignments
+    // Step 2: Fetch all MUS240 assignments with their codes
     const { data: mus240Assignments, error: assignmentsError } = await supabase
       .from('mus240_assignments')
       .select('*')
@@ -69,12 +69,28 @@ serve(async (req) => {
 
     if (assignmentsError) throw assignmentsError;
 
+    // Fetch assignment code mappings (lj1, lj2, etc -> UUID)
+    const { data: assignmentCodes, error: codesError } = await supabase
+      .from('mus240_assignment_codes')
+      .select('code, assignment_id');
+
+    if (codesError) throw codesError;
+
+    // Create a map of UUID -> code
+    const uuidToCode: Record<string, string> = {};
+    assignmentCodes?.forEach(ac => {
+      uuidToCode[ac.assignment_id] = ac.code;
+    });
+
     console.log(`Found ${mus240Assignments.length} MUS240 assignments`);
 
-    const assignmentMap: Record<string, string> = {}; // old_id -> new_id
+    const assignmentMap: Record<string, string> = {}; // old code (lj1) -> new_id
+    const uuidMap: Record<string, string> = {}; // old UUID -> new_id
 
     // Step 3: Migrate assignments to gw_assignments
     for (const assignment of mus240Assignments) {
+      const assignmentCode = uuidToCode[assignment.id];
+      
       const { data: existingAssignment } = await supabase
         .from('gw_assignments')
         .select('id')
@@ -84,8 +100,9 @@ serve(async (req) => {
         .maybeSingle();
 
       if (existingAssignment) {
-        assignmentMap[assignment.id] = existingAssignment.id;
-        console.log(`Assignment already migrated: ${assignment.title}`);
+        if (assignmentCode) assignmentMap[assignmentCode] = existingAssignment.id;
+        uuidMap[assignment.id] = existingAssignment.id;
+        console.log(`Assignment already migrated: ${assignment.title} (${assignmentCode})`);
       } else {
         if (!dry_run) {
           const { data: newAssignment, error: insertError } = await supabase
@@ -93,7 +110,7 @@ serve(async (req) => {
             .insert({
               course_id: courseId,
               legacy_source: 'mus240',
-              legacy_id: assignment.id,
+              legacy_id: assignmentCode || assignment.id, // Use code if available
               title: assignment.title,
               description: assignment.description,
               assignment_type: assignment.assignment_type || 'listening_journal',
@@ -106,11 +123,14 @@ serve(async (req) => {
             .single();
 
           if (insertError) throw insertError;
-          assignmentMap[assignment.id] = newAssignment.id;
-          console.log(`Migrated assignment: ${assignment.title}`);
+          if (assignmentCode) assignmentMap[assignmentCode] = newAssignment.id;
+          uuidMap[assignment.id] = newAssignment.id;
+          console.log(`Migrated assignment: ${assignment.title} (${assignmentCode})`);
         } else {
-          assignmentMap[assignment.id] = `DRY-RUN-${assignment.id}`;
-          console.log(`[DRY RUN] Would migrate assignment: ${assignment.title}`);
+          const dryRunId = `DRY-RUN-${assignment.id}`;
+          if (assignmentCode) assignmentMap[assignmentCode] = dryRunId;
+          uuidMap[assignment.id] = dryRunId;
+          console.log(`[DRY RUN] Would migrate assignment: ${assignment.title} (${assignmentCode})`);
         }
       }
     }
@@ -131,7 +151,8 @@ serve(async (req) => {
 
     // Step 5: Migrate journal entries to assignment_submissions (WITHOUT AI grades)
     for (const entry of journalEntries) {
-      const newAssignmentId = assignmentMap[entry.assignment_id];
+      // Try to map by code first (lj1, lj2), then by UUID
+      let newAssignmentId = assignmentMap[entry.assignment_id] || uuidMap[entry.assignment_id];
       
       if (!newAssignmentId) {
         console.log(`Skipping entry: no assignment mapping for ${entry.assignment_id}`);
