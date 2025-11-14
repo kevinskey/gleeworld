@@ -147,16 +147,14 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
       name: 'Test Builder',
       icon: ClipboardList,
       description: 'Create and manage tests for all Glee Academy courses with multimedia support',
-      notifications: 0,
-      category: 'Education'
+      notifications: 0
     },
     {
       id: 'grading-admin',
       name: 'Grading Admin',
       icon: BookCheck,
       description: 'Manage courses, assign instructors, and oversee the grading system',
-      notifications: 0,
-      category: 'Education'
+      notifications: 0
     }
   ];
 
