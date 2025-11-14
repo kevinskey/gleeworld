@@ -83,7 +83,7 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <FileText className="h-5 w-5" />
-                  {assignment.title}
+                  {assignment.title || assignment.name || 'Untitled Assignment'}
                 </span>
                 <span className="text-sm font-normal text-muted-foreground">
                   {assignment.points} pts
