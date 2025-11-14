@@ -89,9 +89,17 @@ export const PRCoordinatorHub = () => {
   useEffect(() => {
     const setupGleeCamTag = async () => {
       try {
-        await supabase.functions.invoke('setup-glee-cam-tag');
-        // Refresh tags to show the newly created tag
-        refreshTags();
+        console.log('Setting up Glee Cam tag...');
+        const { data, error } = await supabase.functions.invoke('setup-glee-cam-tag');
+        console.log('Glee Cam setup response:', { data, error });
+        
+        if (error) throw error;
+        
+        // Wait a moment then refresh tags to show the newly created tag
+        setTimeout(async () => {
+          await refreshTags();
+          console.log('Tags refreshed after Glee Cam setup');
+        }, 500);
       } catch (error) {
         console.error('Error setting up Glee Cam tag:', error);
       }
