@@ -55,11 +55,11 @@ export const InstructorJournalBrowser: React.FC = () => {
       const studentIds = [...new Set(journalData?.map(j => j.student_id) || [])];
       const { data: profiles } = await supabase
         .from('gw_profiles')
-        .select('id, full_name')
-        .in('id', studentIds);
+        .select('user_id, full_name')
+        .in('user_id', studentIds);
 
       const profileMap = (profiles || []).reduce((acc, p) => {
-        acc[p.id] = p.full_name;
+        acc[p.user_id] = p.full_name;
         return acc;
       }, {} as Record<string, string>);
 
