@@ -76,7 +76,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">{assignment?.title || assignment?.name || 'Untitled Assignment'}</h1>
+          <h1 className="text-3xl font-bold">{assignment?.title || 'Untitled Assignment'}</h1>
           <p className="text-muted-foreground">{assignment?.gw_courses?.course_name}</p>
         </div>
       </div>
