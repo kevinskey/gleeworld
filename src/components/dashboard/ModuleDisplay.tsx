@@ -121,6 +121,9 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <Mus240GroupsModule />;
       case 'test-builder':
         return <TestBuilder courseId="all" courseName="All Courses" />;
+      case 'grading-admin':
+        window.location.href = '/grading/admin/dashboard';
+        return null;
       case 'grading':
         return <GradingModule />;
       case 'alumnae-portal':
