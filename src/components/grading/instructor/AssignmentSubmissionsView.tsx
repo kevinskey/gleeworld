@@ -32,14 +32,32 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
   const { data: submissions, isLoading: submissionsLoading } = useQuery({
     queryKey: ['gw-assignment-submissions', assignmentId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Fetch submissions
+      const { data: submissionsData, error: submissionsError } = await supabase
         .from('gw_submissions' as any)
-        .select('*, gw_profiles!left(full_name, email)')
+        .select('*')
         .eq('assignment_id', assignmentId)
         .order('submitted_at', { ascending: false });
 
-      if (error) throw error;
-      return data as any[];
+      if (submissionsError) throw submissionsError;
+
+      // Fetch student profiles separately
+      const studentIds = [...new Set(submissionsData?.map((s: any) => s.student_id) || [])];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', studentIds);
+
+      // Merge the data
+      const profileMap = (profiles || []).reduce((acc: any, p: any) => {
+        acc[p.user_id] = p;
+        return acc;
+      }, {});
+
+      return (submissionsData || []).map((submission: any) => ({
+        ...submission,
+        gw_profiles: profileMap[submission.student_id]
+      }));
     },
   });
 
