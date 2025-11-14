@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine, Crown, GraduationCap, ChevronDown, ChevronRight, ClipboardList } from 'lucide-react';
+import { Mail, Music, Calendar, Shirt, DollarSign, UserCheck, Settings, BookOpen, Users, Camera, Radio, Briefcase, ScanLine, Crown, GraduationCap, ChevronDown, ChevronRight, ClipboardList, BookCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
@@ -147,6 +147,14 @@ export const ModuleSelector = ({ selectedModule, onSelectModule }: ModuleSelecto
       name: 'Test Builder',
       icon: ClipboardList,
       description: 'Create and manage tests for all Glee Academy courses with multimedia support',
+      notifications: 0,
+      category: 'Education'
+    },
+    {
+      id: 'grading-admin',
+      name: 'Grading Admin',
+      icon: BookCheck,
+      description: 'Manage courses, assign instructors, and oversee the grading system',
       notifications: 0,
       category: 'Education'
     }
