@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Users } from 'lucide-react';
+import { FileText, ArrowLeft, Users, BookOpen } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 interface InstructorCourseViewProps {
@@ -56,14 +56,24 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
           <h1 className="text-3xl font-bold">{course?.code}</h1>
           <p className="text-muted-foreground">{course?.title}</p>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => navigate(`/grading/instructor/course/${courseId}/students`)}
-          className="flex items-center gap-2"
-        >
-          <Users className="h-4 w-4" />
-          Manage Students
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="default"
+            onClick={() => navigate(`/grading/instructor/course/${courseId}/gradebook`)}
+            className="flex items-center gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            Gradebook
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/grading/instructor/course/${courseId}/students`)}
+            className="flex items-center gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Manage Students
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4">
