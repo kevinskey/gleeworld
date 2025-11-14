@@ -44,8 +44,8 @@ export const usePRImages = () => {
     try {
       console.log('usePRImages: Starting fetchImages...');
       setLoading(true);
-      
-      // First, get the basic image data
+
+      // 1) Get basic image data
       const { data: imageData, error: imageError } = await supabase
         .from('pr_images')
         .select('*')
@@ -56,65 +56,91 @@ export const usePRImages = () => {
         throw imageError;
       }
 
-      console.log('usePRImages: Raw image data:', { imageData, imageError });
+      const imagesRaw = imageData || [];
+      console.log('usePRImages: Raw image count:', imagesRaw.length);
 
-      // Then, get photographer and uploader info separately
-      const processedImages = await Promise.all((imageData || []).map(async (image) => {
+      const imageIds = imagesRaw.map((img: any) => img.id);
+
+      // 2) Fetch all tags (for mapping + keep tags list fresh in UI)
+      const { data: allTags, error: tagsError } = await supabase
+        .from('pr_image_tags')
+        .select('*')
+        .order('name');
+      if (tagsError) console.warn('usePRImages: Could not refresh tag list:', tagsError);
+      if (allTags) setTags(allTags);
+
+      const tagById = new Map((allTags || []).map(t => [t.id, t]));
+
+      // 3) Fetch tag associations in batch
+      let associationsByImage: Record<string, string[]> = {};
+      if (imageIds.length > 0) {
+        const { data: associations, error: assocError } = await supabase
+          .from('pr_image_tag_associations')
+          .select('image_id, tag_id')
+          .in('image_id', imageIds);
+        if (assocError) {
+          console.warn('usePRImages: Associations fetch error:', assocError);
+        } else {
+          associationsByImage = (associations || []).reduce((acc: Record<string, string[]>, a: any) => {
+            if (!acc[a.image_id]) acc[a.image_id] = [];
+            acc[a.image_id].push(a.tag_id);
+            return acc;
+          }, {});
+        }
+      }
+
+      // 4) Enrich with photographer/uploader and map tags
+      const processedImages = await Promise.all(imagesRaw.map(async (image: any) => {
         let photographer = null;
         let uploader = null;
 
-        // Get photographer info if photographer_id exists
         if (image.photographer_id) {
           const { data: photographerData } = await supabase
             .from('gw_profiles')
             .select('full_name, first_name, last_name')
             .eq('user_id', image.photographer_id)
             .single();
-          
           if (photographerData) {
             photographer = {
-              full_name: photographerData.full_name || 
-                        `${photographerData.first_name || ''} ${photographerData.last_name || ''}`.trim() ||
-                        'Unknown Photographer'
+              full_name: photographerData.full_name || `${photographerData.first_name || ''} ${photographerData.last_name || ''}`.trim() || 'Unknown Photographer'
             };
           }
         }
 
-        // Get uploader info
         if (image.uploaded_by) {
           const { data: uploaderData } = await supabase
             .from('gw_profiles')
             .select('full_name, first_name, last_name')
             .eq('user_id', image.uploaded_by)
             .single();
-          
           if (uploaderData) {
             uploader = {
-              full_name: uploaderData.full_name || 
-                        `${uploaderData.first_name || ''} ${uploaderData.last_name || ''}`.trim() ||
-                        'Unknown User'
+              full_name: uploaderData.full_name || `${uploaderData.first_name || ''} ${uploaderData.last_name || ''}`.trim() || 'Unknown User'
             };
           }
         }
 
+        const tagIdsForImage = associationsByImage[image.id] || [];
+        const tagsForImage = tagIdsForImage
+          .map((tid: string) => tagById.get(tid))
+          .filter(Boolean);
+
         return {
           ...image,
-          tags: [], // We'll fetch tags separately for now
+          tags: tagsForImage,
           photographer,
-          uploader
-        };
+          uploader,
+        } as PRImage;
       }));
 
-      console.log('usePRImages: Processed images with photographer info:', processedImages);
-      console.log('usePRImages: Total images found:', processedImages.length);
-
+      console.log('usePRImages: Processed images with tags count:', processedImages.map(i => ({ id: i.id, tags: i.tags?.map(t => t?.name) })));
       setImages(processedImages);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching PR images:', error);
       toast({
-        title: "Error",
-        description: "Failed to load PR images",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to load PR images',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
