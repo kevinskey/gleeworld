@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, User, ShieldAlert, Sparkles, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AssignmentSubmissionsViewProps {
   assignmentId: string;
@@ -14,6 +16,7 @@ interface AssignmentSubmissionsViewProps {
 
 export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps> = ({ assignmentId }) => {
   const navigate = useNavigate();
+  const [isGrading, setIsGrading] = useState(false);
 
   const { data: assignment, isLoading: assignmentLoading } = useQuery({
     queryKey: ['gw-assignment', assignmentId],
@@ -31,7 +34,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
   
   const isMus240Journal = assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal';
 
-  const { data: submissions, isLoading: submissionsLoading, error: submissionsError } = useQuery({
+  const { data: submissions, isLoading: submissionsLoading, error: submissionsError, refetch } = useQuery({
     queryKey: ['gw-assignment-submissions', assignmentId, isMus240Journal, assignment?.legacy_id, assignment?.title],
     enabled: !!assignment,
     queryFn: async () => {
@@ -101,6 +104,43 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
     },
   });
 
+  const handleBulkGrade = async () => {
+    if (!submissions || submissions.length === 0) {
+      toast.error('No submissions to grade');
+      return;
+    }
+
+    setIsGrading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('bulk-grade-submissions', {
+        body: { assignmentId }
+      });
+
+      if (error) throw error;
+
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+
+      toast.success(
+        `Grading complete! ${data.gradedCount} submissions graded${data.failedCount > 0 ? `, ${data.failedCount} failed` : ''}`
+      );
+      
+      if (data.errors && data.errors.length > 0) {
+        console.error('Grading errors:', data.errors);
+      }
+
+      // Refresh the submissions list
+      refetch();
+    } catch (error) {
+      console.error('Bulk grading error:', error);
+      toast.error('Failed to start bulk grading');
+    } finally {
+      setIsGrading(false);
+    }
+  };
+
   if (assignmentLoading || submissionsLoading) {
     return <LoadingSpinner size="lg" text="Loading submissions..." />;
   }
@@ -120,6 +160,46 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           <p className="text-muted-foreground">{assignment?.gw_courses?.course_name}</p>
         </div>
       </div>
+
+      {/* Bulk Grading Section */}
+      {submissions && submissions.length > 0 && (
+        <Card>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">AI Bulk Grading</p>
+                <p className="text-sm text-muted-foreground">
+                  Grade all {submissions.length} submissions using AI with the improved grading rubric
+                </p>
+              </div>
+              <Button
+                onClick={handleBulkGrade}
+                disabled={isGrading}
+                className="gap-2"
+              >
+                {isGrading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Grading {submissions.length} submissions...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" />
+                    Grade All with AI
+                  </>
+                )}
+              </Button>
+            </div>
+            {isGrading && (
+              <Alert className="mt-4">
+                <AlertDescription>
+                  This may take a few minutes. Grading {submissions.length} submissions sequentially to ensure quality...
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {submissionsError && (
         <Card>
