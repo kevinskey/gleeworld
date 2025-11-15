@@ -39,7 +39,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
         const { data: journalsData, error: journalsError } = await supabase
           .from('mus240_journal_entries' as any)
           .select('*')
-          .eq('assignment_id', assignment.legacy_id)
+          .eq('assignment_db_id', assignment.legacy_id)
           .order('submitted_at', { ascending: false });
 
         if (journalsError) throw journalsError;
