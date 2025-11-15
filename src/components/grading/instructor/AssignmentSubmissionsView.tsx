@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User } from 'lucide-react';
+import { ArrowLeft, User, ShieldAlert } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 
@@ -138,9 +138,17 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
                   <User className="h-5 w-5" />
                   {submission.gw_profiles?.full_name || submission.gw_profiles?.email}
                 </span>
-                <Badge variant={submission.status === 'graded' ? 'default' : 'secondary'}>
-                  {submission.status}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  {submission.ai_detected && (
+                    <Badge variant="destructive" className="flex items-center gap-1">
+                      <ShieldAlert className="h-3 w-3" />
+                      AI Detected
+                    </Badge>
+                  )}
+                  <Badge variant={submission.status === 'graded' ? 'default' : submission.status === 'flagged' ? 'destructive' : 'secondary'}>
+                    {submission.status}
+                  </Badge>
+                </div>
               </CardTitle>
               <CardDescription>
                 Submitted: {new Date(submission.submitted_at).toLocaleString()}

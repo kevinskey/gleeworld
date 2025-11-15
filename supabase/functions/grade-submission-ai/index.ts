@@ -66,15 +66,16 @@ serve(async (req) => {
 
     const totalMaxPoints = criteria.reduce((sum: number, c: any) => sum + c.maxPoints, 0);
 
-    // Build AI grading prompt
+    // Build AI grading prompt with detection
     const systemPrompt = `You are an expert educator providing fair, transparent, and defensible grading. 
 Your evaluation must be:
 - Evidence-based: cite specific examples from the submission
 - Balanced: acknowledge strengths and areas for improvement
 - Constructive: provide actionable feedback
-- Mathematically sound: scores must add up correctly`;
+- Mathematically sound: scores must add up correctly
+- Vigilant: detect AI-generated content and academic dishonesty`;
 
-    const userPrompt = `Grade this student submission using the rubric below.
+    const userPrompt = `Grade this student submission using the rubric below AND analyze if it was AI-generated.
 
 ASSIGNMENT: ${submission.gw_assignments?.title}
 ${submission.gw_assignments?.description ? `Description: ${submission.gw_assignments.description}` : ''}
@@ -86,12 +87,16 @@ RUBRIC CRITERIA:
 ${criteria.map((c: any, i: number) => `${i + 1}. ${c.name} (${c.maxPoints} points max)
    ${c.description}`).join('\n')}
 
-Grade each criterion and provide:
-1. Points earned for each criterion
-2. Specific evidence from the submission
-3. Strengths identified
-4. Areas for improvement
-5. Overall feedback`;
+TASKS:
+1. Grade each criterion with evidence and feedback
+2. Analyze for AI detection:
+   - Look for generic, overly polished language
+   - Unusually perfect grammar/structure for student level
+   - Lack of personal voice or original examples
+   - Formulaic patterns typical of AI writing
+   - Suspiciously broad knowledge without citations
+   
+Provide confidence level (low/medium/high) if AI was used and explain why.`;
 
     // Call Lovable AI with structured output using tool calling
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -131,9 +136,22 @@ Grade each criterion and provide:
                   },
                   overall_strengths: { type: 'string' },
                   areas_for_improvement: { type: 'string' },
-                  overall_feedback: { type: 'string' }
+                  overall_feedback: { type: 'string' },
+                  ai_detection: {
+                    type: 'object',
+                    properties: {
+                      is_flagged: { type: 'boolean' },
+                      confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
+                      indicators: { 
+                        type: 'array',
+                        items: { type: 'string' }
+                      },
+                      reasoning: { type: 'string' }
+                    },
+                    required: ['is_flagged', 'confidence', 'indicators', 'reasoning']
+                  }
                 },
-                required: ['criteria_scores', 'overall_strengths', 'areas_for_improvement', 'overall_feedback']
+                required: ['criteria_scores', 'overall_strengths', 'areas_for_improvement', 'overall_feedback', 'ai_detection']
               }
             }
           }
@@ -190,7 +208,7 @@ Grade each criterion and provide:
                        percentage >= 63 ? 'D' :
                        percentage >= 60 ? 'D-' : 'F';
 
-    // Save grade to database
+    // Save grade to database with AI detection flag
     const { error: updateError } = await supabase
       .from('assignment_submissions')
       .update({
@@ -198,7 +216,10 @@ Grade each criterion and provide:
         ai_letter_grade: letterGrade,
         ai_feedback: JSON.stringify(gradingResult),
         ai_graded_at: new Date().toISOString(),
-        status: 'ai_graded'
+        status: gradingResult.ai_detection.is_flagged ? 'flagged' : 'ai_graded',
+        ai_detected: gradingResult.ai_detection.is_flagged,
+        ai_detection_confidence: gradingResult.ai_detection.confidence,
+        ai_detection_reasoning: gradingResult.ai_detection.reasoning
       })
       .eq('id', submissionId);
 
@@ -216,6 +237,7 @@ Grade each criterion and provide:
           overallStrengths: gradingResult.overall_strengths,
           areasForImprovement: gradingResult.areas_for_improvement,
           overallFeedback: gradingResult.overall_feedback,
+          aiDetection: gradingResult.ai_detection,
           gradedAt: new Date().toISOString()
         }
       }),
