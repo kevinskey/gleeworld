@@ -65,6 +65,9 @@ serve(async (req) => {
     ];
 
     const totalMaxPoints = criteria.reduce((sum: number, c: any) => sum + c.maxPoints, 0);
+    const contentText = submission?.file_url
+      ? `File URL: ${submission.file_url}`
+      : 'No inline content available';
 
     // Build AI grading prompt with detection
     const systemPrompt = `You are an expert educator providing fair, transparent, and defensible grading. 
@@ -81,7 +84,7 @@ ASSIGNMENT: ${submission.gw_assignments?.title}
 ${submission.gw_assignments?.description ? `Description: ${submission.gw_assignments.description}` : ''}
 
 STUDENT SUBMISSION:
-${submission.content || submission.text || 'No content provided'}
+${contentText}
 
 RUBRIC CRITERIA:
 ${criteria.map((c: any, i: number) => `${i + 1}. ${c.name} (${c.maxPoints} points max)
@@ -212,14 +215,18 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
     const { error: updateError } = await supabase
       .from('assignment_submissions')
       .update({
-        ai_grade: totalScore,
-        ai_letter_grade: letterGrade,
-        ai_feedback: JSON.stringify(gradingResult),
-        ai_graded_at: new Date().toISOString(),
-        status: gradingResult.ai_detection.is_flagged ? 'flagged' : 'ai_graded',
-        ai_detected: gradingResult.ai_detection.is_flagged,
-        ai_detection_confidence: gradingResult.ai_detection.confidence,
-        ai_detection_reasoning: gradingResult.ai_detection.reasoning
+        grade: Math.round(percentage),
+        feedback: JSON.stringify({
+          letterGrade,
+          criteriaScores: gradingResult.criteria_scores,
+          overallStrengths: gradingResult.overall_strengths,
+          areasForImprovement: gradingResult.areas_for_improvement,
+          overallFeedback: gradingResult.overall_feedback,
+          aiDetection: gradingResult.ai_detection
+        }),
+        graded_at: new Date().toISOString(),
+        graded_by: 'ai_system',
+        status: gradingResult.ai_detection.is_flagged ? 'flagged' : 'ai_graded'
       })
       .eq('id', submissionId);
 
