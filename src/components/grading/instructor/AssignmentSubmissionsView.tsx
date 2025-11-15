@@ -142,7 +142,10 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
                   navigate(
                     (assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal')
                       ? `/classes/mus240/journal/${submission.id}/review`
-                      : `/grading/instructor/submission/${submission.id}`
+                      : `/grading/instructor/submission/${submission.id}`,
+                    {
+                      state: { fromGradingSystem: true }
+                    }
                   )
                 }
               >

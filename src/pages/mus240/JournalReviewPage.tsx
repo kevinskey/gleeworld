@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -26,11 +26,16 @@ interface JournalDetails {
 export const JournalReviewPage = () => {
   const { journalId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [journal, setJournal] = useState<JournalDetails | null>(null);
   const [loading, setLoading] = useState(true);
+  const [assignmentId, setAssignmentId] = useState<string | null>(null);
   
   const { reviews, submitReview, updateReview, getMyReviewForJournal } = usePeerReviews(journalId);
+
+  // Check if we came from the grading system
+  const fromGradingSystem = location.state?.fromGradingSystem || false;
 
   useEffect(() => {
     if (journalId) {
@@ -64,7 +69,7 @@ export const JournalReviewPage = () => {
       }
 
       // Fetch student and assignment details separately
-      const [studentRes, assignmentRes] = await Promise.all([
+      const [studentRes, assignmentRes, journalAssignmentRes] = await Promise.all([
         supabase
           .from('gw_profiles')
           .select('full_name')
@@ -84,8 +89,30 @@ export const JournalReviewPage = () => {
                 .single();
             }
             return { data: null, error: null };
+          }),
+        // Also fetch the gw_assignments link if coming from grading system
+        supabase
+          .from('mus240_journal_entries')
+          .select('assignment_id')
+          .eq('id', journalId)
+          .single()
+          .then(async (res) => {
+            if (res.data?.assignment_id) {
+              const { data: gwAssignment } = await supabase
+                .from('gw_assignments')
+                .select('id')
+                .eq('legacy_source', 'mus240_assignments')
+                .eq('legacy_id', res.data.assignment_id)
+                .single();
+              return gwAssignment?.id;
+            }
+            return null;
           })
       ]);
+
+      if (journalAssignmentRes) {
+        setAssignmentId(journalAssignmentRes);
+      }
 
       setJournal({
         ...data,
@@ -130,11 +157,17 @@ export const JournalReviewPage = () => {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <Button 
           variant="ghost" 
-          onClick={() => navigate('/classes/mus240/peer-review')}
+          onClick={() => {
+            if (fromGradingSystem && assignmentId) {
+              navigate(`/grading/instructor/assignment/${assignmentId}/submissions`);
+            } else {
+              navigate('/classes/mus240/peer-review');
+            }
+          }}
           className="mb-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Journals
+          {fromGradingSystem ? 'Back to Submissions' : 'Back to Journals'}
         </Button>
 
         <div className="space-y-6">
