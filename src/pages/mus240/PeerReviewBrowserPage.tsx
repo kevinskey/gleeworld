@@ -1,11 +1,14 @@
 import React from 'react';
 import { JournalBrowserForReview } from '@/components/mus240/peer-review/JournalBrowserForReview';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export const PeerReviewBrowserPage = () => {
   const { profile, loading } = useUserRole();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -23,6 +26,15 @@ export const PeerReviewBrowserPage = () => {
   return (
     <UniversalLayout>
       <div className="max-w-6xl mx-auto px-4 py-8">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/grading/instructor/dashboard')}
+          className="mb-4"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Grading Dashboard
+        </Button>
+        
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Peer Review</h1>
           <p className="text-muted-foreground">
