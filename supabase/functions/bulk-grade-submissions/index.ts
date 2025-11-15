@@ -25,7 +25,7 @@ serve(async (req) => {
     // Fetch all submissions for this assignment
     const { data: submissions, error: fetchError } = await supabase
       .from('assignment_submissions')
-      .select('id, content, text, student_id')
+      .select('id, student_id')
       .eq('assignment_id', assignmentId)
       .in('status', ['submitted', 'ai_graded', 'flagged']);
 
