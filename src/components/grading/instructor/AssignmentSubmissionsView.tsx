@@ -4,11 +4,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, ShieldAlert, Sparkles, Loader2 } from 'lucide-react';
+import { ArrowLeft, User, ShieldAlert, Sparkles, Loader2, ClipboardList } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 
 interface AssignmentSubmissionsViewProps {
   assignmentId: string;
@@ -160,6 +168,99 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           <p className="text-muted-foreground">{assignment?.gw_courses?.course_name}</p>
         </div>
       </div>
+
+      {/* Rubric Display for MUS240 Journals */}
+      {isMus240Journal && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardList className="h-5 w-5" />
+                  Grading Rubric
+                </CardTitle>
+                <CardDescription>
+                  MUS240 Listening Journal Assessment Criteria
+                </CardDescription>
+              </div>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    View Full Rubric
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>MUS240 Listening Journal Rubric</DialogTitle>
+                    <DialogDescription>
+                      Total Points: 100 | This rubric is used for AI-assisted grading
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold text-lg mb-2">Musical Elements Identification (30 points)</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Identifies specific African musical elements (call-and-response, improvisation, polyrhythm, timbre) with accurate examples from recordings
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold text-lg mb-2">Cultural & Historical Understanding (30 points)</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Explains practical, spiritual, and emotional significance of music for enslaved Africans with depth and context
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold text-lg mb-2">Blues Connection (25 points)</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Makes clear, specific connections between early forms and blues development with concrete examples
+                      </p>
+                    </div>
+                    <div className="border rounded-lg p-4">
+                      <h4 className="font-semibold text-lg mb-2">Personal Reflection (15 points)</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Provides thoughtful reflection on one recording with cultural significance analysis
+                      </p>
+                    </div>
+                    <div className="border-t pt-4 mt-4">
+                      <h4 className="font-semibold mb-2">Grading Standards:</h4>
+                      <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                        <li>Entries must demonstrate original thinking and personal engagement with the music</li>
+                        <li>Students should cite specific moments, techniques, or musical choices from recordings</li>
+                        <li>Analysis should show understanding of course concepts applied to listening examples</li>
+                        <li>Reflection should be substantive and go beyond surface-level description</li>
+                      </ul>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <div className="font-semibold">Musical Elements</div>
+                <div className="text-2xl font-bold text-primary">30</div>
+                <div className="text-xs text-muted-foreground">points</div>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <div className="font-semibold">Cultural Context</div>
+                <div className="text-2xl font-bold text-primary">30</div>
+                <div className="text-xs text-muted-foreground">points</div>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <div className="font-semibold">Blues Connection</div>
+                <div className="text-2xl font-bold text-primary">25</div>
+                <div className="text-xs text-muted-foreground">points</div>
+              </div>
+              <div className="text-center p-3 bg-muted/50 rounded-lg">
+                <div className="font-semibold">Reflection</div>
+                <div className="text-2xl font-bold text-primary">15</div>
+                <div className="text-xs text-muted-foreground">points</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Bulk Grading Section */}
       {submissions && submissions.length > 0 && (
