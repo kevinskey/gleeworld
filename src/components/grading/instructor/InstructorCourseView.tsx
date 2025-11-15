@@ -21,14 +21,14 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
         .from('gw_courses' as any)
         .select('*')
         .eq('id', courseId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       return data as any;
     },
   });
 
-  const { data: assignments, isLoading: assignmentsLoading } = useQuery({
+  const { data: assignments, isLoading: assignmentsLoading, error: assignmentsError } = useQuery({
     queryKey: ['gw-course-assignments', courseId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -80,6 +80,16 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">Assignments: {assignments?.length ?? 0}</p>
       </div>
+
+      {assignmentsError && (
+        <Card>
+          <CardContent className="py-4">
+            <p className="text-destructive text-sm">
+              {assignmentsError.message}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4">
         {assignments?.map((assignment) => (
