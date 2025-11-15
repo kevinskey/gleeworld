@@ -311,48 +311,144 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
       )}
 
       <div className="grid gap-4">
-        {submissions?.map((submission) => (
-          <Card key={submission.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <User className="h-5 w-5" />
-                  {submission.gw_profiles?.full_name || submission.gw_profiles?.email}
-                </span>
-                <div className="flex items-center gap-2">
-                  {submission.ai_detected && (
-                    <Badge variant="destructive" className="flex items-center gap-1">
-                      <ShieldAlert className="h-3 w-3" />
-                      AI Detected
+        {submissions?.map((submission) => {
+          // Parse feedback if it's JSON string
+          let parsedFeedback = null;
+          if (submission.feedback) {
+            try {
+              parsedFeedback = typeof submission.feedback === 'string' 
+                ? JSON.parse(submission.feedback) 
+                : submission.feedback;
+            } catch (e) {
+              console.error('Failed to parse feedback:', e);
+            }
+          }
+
+          return (
+            <Card key={submission.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    {submission.gw_profiles?.full_name || submission.gw_profiles?.email}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {(submission.ai_detected || parsedFeedback?.aiDetection?.is_flagged) && (
+                      <Badge variant="destructive" className="flex items-center gap-1">
+                        <ShieldAlert className="h-3 w-3" />
+                        AI Detected
+                      </Badge>
+                    )}
+                    {submission.grade !== null && submission.grade !== undefined && (
+                      <Badge variant="default" className="text-lg px-3 py-1">
+                        {submission.grade}% {parsedFeedback?.letterGrade && `(${parsedFeedback.letterGrade})`}
+                      </Badge>
+                    )}
+                    <Badge variant={
+                      submission.status === 'graded' || submission.graded_at ? 'default' : 
+                      submission.status === 'flagged' ? 'destructive' : 
+                      'secondary'
+                    }>
+                      {submission.graded_at ? 'graded' : submission.status}
                     </Badge>
+                  </div>
+                </CardTitle>
+                <CardDescription>
+                  Submitted: {new Date(submission.submitted_at).toLocaleString()}
+                  {submission.graded_at && (
+                    <> • Graded: {new Date(submission.graded_at).toLocaleString()}</>
                   )}
-                  <Badge variant={submission.status === 'graded' ? 'default' : submission.status === 'flagged' ? 'destructive' : 'secondary'}>
-                    {submission.status}
-                  </Badge>
-                </div>
-              </CardTitle>
-              <CardDescription>
-                Submitted: {new Date(submission.submitted_at).toLocaleString()}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={() =>
-                  navigate(
-                    (assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal')
-                      ? `/classes/mus240/journal/${submission.id}/review`
-                      : `/grading/instructor/submission/${submission.id}`,
-                    {
-                      state: { fromGradingSystem: true }
-                    }
-                  )
-                }
-              >
-                Grade Submission
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Rubric Scores Breakdown */}
+                {parsedFeedback?.criteriaScores && (
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4" />
+                      Rubric Scoring Breakdown
+                    </h4>
+                    <div className="space-y-3">
+                      {parsedFeedback.criteriaScores.map((criterion: any, index: number) => (
+                        <div key={index} className="border-l-4 border-primary pl-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-sm">{criterion.criterion_name}</span>
+                            <span className="font-bold text-primary">
+                              {criterion.score}/{criterion.feedback.match(/\d+/) ? criterion.feedback.match(/\d+/)[0] : '?'} points
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">{criterion.feedback}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {parsedFeedback.totalScore && parsedFeedback.maxPoints && (
+                      <div className="mt-4 pt-3 border-t">
+                        <div className="flex items-center justify-between font-bold">
+                          <span>Total Score:</span>
+                          <span className="text-lg text-primary">
+                            {parsedFeedback.totalScore}/{parsedFeedback.maxPoints} points
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Overall Feedback */}
+                {parsedFeedback?.overallFeedback && (
+                  <div className="border rounded-lg p-4 bg-muted/30">
+                    <h4 className="font-semibold mb-2">Overall Feedback</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap">{parsedFeedback.overallFeedback}</p>
+                  </div>
+                )}
+
+                {/* Strengths and Areas for Improvement */}
+                {(parsedFeedback?.overallStrengths || parsedFeedback?.areasForImprovement) && (
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {parsedFeedback.overallStrengths && (
+                      <div className="border rounded-lg p-3 bg-green-50 dark:bg-green-950/20">
+                        <h4 className="font-semibold text-sm mb-2 text-green-700 dark:text-green-400">Strengths</h4>
+                        <p className="text-sm text-muted-foreground">{parsedFeedback.overallStrengths}</p>
+                      </div>
+                    )}
+                    {parsedFeedback.areasForImprovement && (
+                      <div className="border rounded-lg p-3 bg-blue-50 dark:bg-blue-950/20">
+                        <h4 className="font-semibold text-sm mb-2 text-blue-700 dark:text-blue-400">Areas for Improvement</h4>
+                        <p className="text-sm text-muted-foreground">{parsedFeedback.areasForImprovement}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* AI Detection Warning */}
+                {parsedFeedback?.aiDetection?.is_flagged && (
+                  <Alert variant="destructive">
+                    <ShieldAlert className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>AI Detection ({parsedFeedback.aiDetection.confidence} confidence):</strong>
+                      <p className="mt-1 text-sm">{parsedFeedback.aiDetection.reasoning}</p>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
+                <Button
+                  onClick={() =>
+                    navigate(
+                      (assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal')
+                        ? `/classes/mus240/journal/${submission.id}/review`
+                        : `/grading/instructor/submission/${submission.id}`,
+                      {
+                        state: { fromGradingSystem: true }
+                      }
+                    )
+                  }
+                >
+                  {submission.graded_at ? 'Review Grading' : 'Grade Submission'}
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {!submissions || submissions.length === 0 ? (
