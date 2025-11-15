@@ -32,14 +32,24 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
   const isMus240Journal = assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal';
 
   const { data: submissions, isLoading: submissionsLoading, error: submissionsError } = useQuery({
-    queryKey: ['gw-assignment-submissions', assignmentId, isMus240Journal, assignment?.legacy_id],
+    queryKey: ['gw-assignment-submissions', assignmentId, isMus240Journal, assignment?.legacy_id, assignment?.title],
     enabled: !!assignment,
     queryFn: async () => {
-      if (isMus240Journal && assignment?.legacy_id) {
+      if (isMus240Journal) {
+        // Determine correct legacy assignment id for MUS240 journals
+        let legacyIdToUse = assignment?.legacy_id as string | undefined;
+        if (assignment?.legacy_source !== 'mus240_assignments') {
+          // Derive from title like "Listening Journal 4" -> "lj4"
+          const match = (assignment?.title || '').match(/Listening\s*Journal\s*(\d+)/i);
+          if (match?.[1]) {
+            legacyIdToUse = `lj${match[1]}`;
+          }
+        }
+
         const { data: journalsData, error: journalsError } = await supabase
           .from('mus240_journal_entries' as any)
           .select('*')
-          .eq('assignment_id', assignment.legacy_id)
+          .eq('assignment_id', legacyIdToUse)
           .order('submitted_at', { ascending: false });
 
         if (journalsError) throw journalsError;
