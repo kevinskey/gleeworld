@@ -2,15 +2,19 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Users, FileText } from 'lucide-react';
+import { BookOpen, Users, FileText, Settings } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 
 export const InstructorDashboardContent: React.FC = () => {
   const { user } = useAuth();
+  const { profile } = useUserRole();
   const navigate = useNavigate();
+
+  const isAdmin = profile?.is_admin || profile?.is_super_admin;
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ['gw-instructor-courses', user?.id],
@@ -33,9 +37,17 @@ export const InstructorDashboardContent: React.FC = () => {
 
   return (
     <div className="container mx-auto py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Instructor Dashboard</h1>
-        <p className="text-muted-foreground">Manage your courses, assignments, and student submissions</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Instructor Dashboard</h1>
+          <p className="text-muted-foreground">Manage your courses, assignments, and student submissions</p>
+        </div>
+        {isAdmin && (
+          <Button onClick={() => navigate('/grading/admin/dashboard')} variant="outline">
+            <Settings className="h-4 w-4 mr-2" />
+            Admin Dashboard
+          </Button>
+        )}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
