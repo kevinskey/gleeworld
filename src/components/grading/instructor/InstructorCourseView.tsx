@@ -92,6 +92,11 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
               <CardDescription>
                 Due: {assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}
               </CardDescription>
+              {assignment.description && (
+                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                  {assignment.description}
+                </p>
+              )}
             </CardHeader>
             <CardContent>
               <Button
