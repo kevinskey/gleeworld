@@ -28,11 +28,42 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
       return data as any;
     },
   });
+  
+  const isMus240Journal = assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal';
 
   const { data: submissions, isLoading: submissionsLoading, error: submissionsError } = useQuery({
-    queryKey: ['gw-assignment-submissions', assignmentId],
+    queryKey: ['gw-assignment-submissions', assignmentId, isMus240Journal, assignment?.legacy_id],
+    enabled: !!assignment,
     queryFn: async () => {
-      // Fetch submissions
+      if (isMus240Journal && assignment?.legacy_id) {
+        const { data: journalsData, error: journalsError } = await supabase
+          .from('mus240_journal_entries' as any)
+          .select('*')
+          .eq('assignment_id', assignment.legacy_id)
+          .order('submitted_at', { ascending: false });
+
+        if (journalsError) throw journalsError;
+
+        const studentIds = [...new Set(journalsData?.map((j: any) => j.student_id) || [])];
+        const { data: profiles } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', studentIds);
+
+        const profileMap = (profiles || []).reduce((acc: any, p: any) => {
+          acc[p.user_id] = p;
+          return acc;
+        }, {});
+
+        return (journalsData || []).map((journal: any) => ({
+          ...journal,
+          status: journal.is_published ? 'published' : 'submitted',
+          gw_profiles: profileMap[journal.student_id],
+          _type: 'mus240_journal',
+        }));
+      }
+
+      // Default: standard assignment submissions
       const { data: submissionsData, error: submissionsError } = await supabase
         .from('assignment_submissions' as any)
         .select('*')
@@ -41,14 +72,12 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
 
       if (submissionsError) throw submissionsError;
 
-      // Fetch student profiles separately
       const studentIds = [...new Set(submissionsData?.map((s: any) => s.student_id) || [])];
       const { data: profiles } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email')
         .in('user_id', studentIds);
 
-      // Merge the data
       const profileMap = (profiles || []).reduce((acc: any, p: any) => {
         acc[p.user_id] = p;
         return acc;
@@ -56,7 +85,8 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
 
       return (submissionsData || []).map((submission: any) => ({
         ...submission,
-        gw_profiles: profileMap[submission.student_id]
+        gw_profiles: profileMap[submission.student_id],
+        _type: 'standard',
       }));
     },
   });
@@ -108,7 +138,13 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
             </CardHeader>
             <CardContent>
               <Button
-                onClick={() => navigate(`/grading/instructor/submission/${submission.id}`)}
+                onClick={() =>
+                  navigate(
+                    (assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal')
+                      ? `/classes/mus240/journal/${submission.id}/review`
+                      : `/grading/instructor/submission/${submission.id}`
+                  )
+                }
               >
                 Grade Submission
               </Button>
