@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, User, Calendar } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { RubricGradingInterface } from './RubricGradingInterface';
+import { format } from 'date-fns';
 
 interface SubmissionGradingViewProps {
   submissionId: string;
@@ -14,12 +16,12 @@ interface SubmissionGradingViewProps {
 export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ submissionId }) => {
   const navigate = useNavigate();
 
-  const { data: submission, isLoading } = useQuery({
+  const { data: submission, isLoading, refetch } = useQuery({
     queryKey: ['gw-submission', submissionId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_submissions' as any)
-        .select('*, gw_assignments(*), gw_profiles(full_name, email)')
+        .from('assignment_submissions' as any)
+        .select('*, gw_assignments(title, description, points), gw_profiles(full_name, email)')
         .eq('id', submissionId)
         .single();
 
@@ -50,34 +52,45 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
         </div>
       </div>
 
+      {/* Submission Content */}
       <Card>
         <CardHeader>
-          <CardTitle>Submission Details</CardTitle>
+          <CardTitle>Submission</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <h3 className="font-semibold mb-2">Student:</h3>
-            <p>{submission?.gw_profiles?.full_name || submission?.gw_profiles?.email}</p>
+          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <User className="h-3 w-3" />
+              {submission?.gw_profiles?.full_name || submission?.gw_profiles?.email}
+            </span>
+            {submission?.submitted_at && (
+              <span className="flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                Submitted {format(new Date(submission.submitted_at), 'MMM d, yyyy h:mm a')}
+              </span>
+            )}
           </div>
-          <div>
-            <h3 className="font-semibold mb-2">Submitted:</h3>
-            <p>{submission?.submitted_at ? new Date(submission.submitted_at).toLocaleString() : 'Not submitted'}</p>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-2">Content:</h3>
-            <div className="p-4 bg-muted rounded-lg">
-              {submission?.content ? (
-                <pre className="whitespace-pre-wrap">{submission.content}</pre>
-              ) : (
-                <p className="text-muted-foreground">No content</p>
-              )}
-            </div>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Rubric-based grading interface coming soon...</p>
+          <div className="p-4 bg-muted rounded-lg">
+            {submission?.content || submission?.text ? (
+              <pre className="whitespace-pre-wrap font-sans">
+                {submission.content || submission.text}
+              </pre>
+            ) : (
+              <p className="text-muted-foreground">No content submitted</p>
+            )}
           </div>
         </CardContent>
       </Card>
+
+      {/* AI Grading Interface */}
+      <RubricGradingInterface
+        submissionId={submissionId}
+        assignmentTitle={submission?.gw_assignments?.title || 'Assignment'}
+        studentName={submission?.gw_profiles?.full_name || submission?.gw_profiles?.email || 'Student'}
+        content={submission?.content || submission?.text || ''}
+        existingGrade={submission}
+        onGradeUpdate={() => refetch()}
+      />
     </div>
   );
 };
