@@ -4749,6 +4749,39 @@ export type Database = {
           },
         ]
       }
+      gw_assignment_rubrics: {
+        Row: {
+          assignment_id: string
+          id: string
+          rubric_id: string
+        }
+        Insert: {
+          assignment_id: string
+          id?: string
+          rubric_id: string
+        }
+        Update: {
+          assignment_id?: string
+          id?: string
+          rubric_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_assignment_rubrics_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_assignment_rubrics_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "gw_rubrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_assignment_submissions: {
         Row: {
           assignment_id: string
@@ -4813,6 +4846,65 @@ export type Database = {
             columns: ["assignment_id"]
             isOneToOne: false
             referencedRelation: "gw_sight_reading_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_assignments: {
+        Row: {
+          assignment_type: string | null
+          category: string | null
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          due_at: string | null
+          id: string
+          is_active: boolean | null
+          legacy_id: string | null
+          legacy_source: string | null
+          points: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_type?: string | null
+          category?: string | null
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          legacy_id?: string | null
+          legacy_source?: string | null
+          points?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_type?: string | null
+          category?: string | null
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          legacy_id?: string | null
+          legacy_source?: string | null
+          points?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_assignments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
         ]
@@ -6037,6 +6129,36 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_courses: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          term: string | null
+          title: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          term?: string | null
+          title: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          term?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
       gw_dashboard_card_order: {
         Row: {
           card_order: string[]
@@ -6353,6 +6475,52 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      gw_enrollments: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          id: string
+          role: string | null
+          student_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          student_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "gw_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       gw_error_logs: {
         Row: {
@@ -7092,6 +7260,41 @@ export type Database = {
           },
         ]
       }
+      gw_feedback: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string | null
+          id: string
+          is_ai_generated: boolean | null
+          submission_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string | null
+          id?: string
+          is_ai_generated?: boolean | null
+          submission_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string | null
+          id?: string
+          is_ai_generated?: boolean | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_feedback_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "gw_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_general_transactions: {
         Row: {
           amount: number
@@ -7136,6 +7339,56 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      gw_grades: {
+        Row: {
+          assignment_id: string
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          legacy_id: string | null
+          legacy_source: string | null
+          letter_grade: string | null
+          max_points: number
+          percentage: number | null
+          student_id: string
+          total_score: number
+        }
+        Insert: {
+          assignment_id: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          letter_grade?: string | null
+          max_points: number
+          percentage?: number | null
+          student_id: string
+          total_score: number
+        }
+        Update: {
+          assignment_id?: string
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          letter_grade?: string | null
+          max_points?: number
+          percentage?: number | null
+          student_id?: string
+          total_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_grades_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_group_members: {
         Row: {
@@ -11017,6 +11270,131 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_rubric_items: {
+        Row: {
+          description: string | null
+          id: string
+          label: string
+          max_points: number
+          position: number | null
+          rubric_id: string
+          weight_percentage: number | null
+        }
+        Insert: {
+          description?: string | null
+          id?: string
+          label: string
+          max_points?: number
+          position?: number | null
+          rubric_id: string
+          weight_percentage?: number | null
+        }
+        Update: {
+          description?: string | null
+          id?: string
+          label?: string
+          max_points?: number
+          position?: number | null
+          rubric_id?: string
+          weight_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_rubric_items_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "gw_rubrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_rubric_scores: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          explanation: string | null
+          id: string
+          legacy_id: string | null
+          legacy_source: string | null
+          max_points: number
+          rubric_item_id: string
+          score: number
+          submission_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          explanation?: string | null
+          id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          max_points: number
+          rubric_item_id: string
+          score: number
+          submission_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          explanation?: string | null
+          id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          max_points?: number
+          rubric_item_id?: string
+          score?: number
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_rubric_scores_rubric_item_id_fkey"
+            columns: ["rubric_item_id"]
+            isOneToOne: false
+            referencedRelation: "gw_rubric_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_rubric_scores_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "gw_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_rubrics: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          legacy_id: string | null
+          legacy_source: string | null
+          name: string
+          scope: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          name: string
+          scope?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          name?: string
+          scope?: string | null
+        }
+        Relationships: []
+      }
       gw_running_ledger: {
         Row: {
           amount: number
@@ -12957,6 +13335,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      gw_submissions: {
+        Row: {
+          assignment_id: string
+          content_text: string | null
+          content_url: string | null
+          id: string
+          legacy_id: string | null
+          legacy_source: string | null
+          raw_payload: Json | null
+          status: string | null
+          student_id: string
+          submitted_at: string | null
+        }
+        Insert: {
+          assignment_id: string
+          content_text?: string | null
+          content_url?: string | null
+          id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          raw_payload?: Json | null
+          status?: string | null
+          student_id: string
+          submitted_at?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          content_text?: string | null
+          content_url?: string | null
+          id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          raw_payload?: Json | null
+          status?: string | null
+          student_id?: string
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_time_entries: {
         Row: {
@@ -20395,6 +20820,14 @@ export type Database = {
         }[]
       }
       get_graduation_decade: { Args: { grad_year: number }; Returns: string }
+      get_legacy_assignment_info: {
+        Args: { assignment_uuid: string }
+        Returns: {
+          legacy_id: string
+          legacy_source: string
+          original_table: string
+        }[]
+      }
       get_on_this_day_content: {
         Args: { target_date?: string }
         Returns: {
@@ -20566,6 +20999,7 @@ export type Database = {
       is_fy_staff: { Args: never; Returns: boolean }
       is_gw_admin: { Args: never; Returns: boolean }
       is_gw_admin_safe: { Args: never; Returns: boolean }
+      is_instructor_or_admin: { Args: { _uid: string }; Returns: boolean }
       is_mus240_student: { Args: { user_id_param: string }; Returns: boolean }
       is_super_admin:
         | { Args: never; Returns: boolean }
