@@ -91,7 +91,8 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
         </Card>
       )}
 
-      <div className="grid gap-4">
+      <h2 className="text-xl font-semibold">Assignments</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {assignments?.map((assignment) => (
           <Card key={assignment.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
