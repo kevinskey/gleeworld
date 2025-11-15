@@ -37,19 +37,42 @@ serve(async (req) => {
     const assignmentCaps: Record<string, number> = { lj1: 10, lj2: 10, lj3: 15 };
     const totalMax = (assignment_id && assignmentCaps[assignment_id]) ? assignmentCaps[assignment_id] : rubricMax;
 
-    const userPrompt = `Grade the following MUS240 journal using the provided rubric. Return STRICT JSON only.
-Rubric (max total ${totalMax}): ${JSON.stringify(rubric?.criteria || [])}
-Student Journal Text:\n"""${journal_text}"""
+    const userPrompt = `Grade this MUS240 listening journal RIGOROUSLY using the rubric. Return STRICT JSON only.
+
+This is a COLLEGE-LEVEL music history course. Apply REAL academic standards:
+- Excellence (A range) requires EXCEPTIONAL insight, analysis, and mastery
+- Good work (B range) shows solid understanding with minor gaps
+- Adequate (C range) meets basic requirements but lacks depth
+- Below expectations (D/F) shows significant deficiencies
+
+Rubric (max total ${totalMax}):
+${JSON.stringify(rubric?.criteria || [
+  { criterion: "Musical Analysis", max_score: 6, description: "Identifies musical elements (melody, harmony, rhythm, texture, timbre) with specific examples" },
+  { criterion: "Historical Context", max_score: 6, description: "Demonstrates understanding of historical period, cultural significance, and context" },
+  { criterion: "Writing Quality", max_score: 5, description: "Clear, organized, grammatically correct with proper terminology" }
+])}
+
+Student Journal Text:
+"""${journal_text}"""
+
+GRADING STANDARDS:
+- A (90-100%): Exceptional analysis with sophisticated insights, accurate terminology, thorough historical context
+- B (80-89%): Solid analysis with good understanding, mostly accurate, adequate context  
+- C (70-79%): Basic analysis, some errors or gaps, minimal context
+- D (60-69%): Significant gaps, limited understanding, poor organization
+- F (<60%): Fails to demonstrate understanding or meet requirements
+
+Be CRITICAL and SPECIFIC. Most student work should fall in B-C range. Reserve A grades for truly exceptional submissions.
 
 Return JSON with this exact shape:
 {
   "rubric_scores": [
-    { "criterion": "Musical Analysis", "score": 0-6, "max_score": 6, "feedback": "string" },
-    { "criterion": "Historical Context", "score": 0-6, "max_score": 6, "feedback": "string" },
-    { "criterion": "Writing Quality", "score": 0-5, "max_score": 5, "feedback": "string" }
+    { "criterion": "Musical Analysis", "score": 0-6, "max_score": 6, "feedback": "specific feedback with examples from text" },
+    { "criterion": "Historical Context", "score": 0-6, "max_score": 6, "feedback": "specific feedback" },
+    { "criterion": "Writing Quality", "score": 0-5, "max_score": 5, "feedback": "specific feedback" }
   ],
   "overall_score": 0-${totalMax},
-  "overall_feedback": "one concise paragraph"
+  "overall_feedback": "one paragraph explaining grade with specific strengths and weaknesses"
 }`;
     // Call Lovable AI Gateway (using free Gemini model)
     const aiResp = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -63,7 +86,7 @@ Return JSON with this exact shape:
         messages: [
           {
             role: 'system',
-            content: 'You are a fair, transparent music professor. Always return strict JSON per instructions. Do not include prose outside JSON.'
+            content: 'You are a rigorous college music professor who grades fairly but critically. Most students earn B or C grades. A grades are reserved for exceptional work. Apply real academic standards. Always return strict JSON per instructions.'
           },
           { role: 'user', content: userPrompt }
         ],
