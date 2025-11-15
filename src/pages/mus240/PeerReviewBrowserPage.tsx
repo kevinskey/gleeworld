@@ -2,6 +2,7 @@ import React from 'react';
 import { JournalBrowserForReview } from '@/components/mus240/peer-review/JournalBrowserForReview';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate } from 'react-router-dom';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export const PeerReviewBrowserPage = () => {
   const { profile, loading } = useUserRole();
@@ -20,7 +21,7 @@ export const PeerReviewBrowserPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <UniversalLayout>
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Peer Review</h1>
@@ -31,6 +32,6 @@ export const PeerReviewBrowserPage = () => {
 
         <JournalBrowserForReview />
       </div>
-    </div>
+    </UniversalLayout>
   );
 };
