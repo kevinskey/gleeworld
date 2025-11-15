@@ -1,0 +1,240 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { journalId } = await req.json();
+    
+    if (!journalId) {
+      throw new Error('Journal ID is required');
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch journal entry
+    const { data: journal, error: journalError } = await supabase
+      .from('mus240_journal_entries')
+      .select('*')
+      .eq('id', journalId)
+      .single();
+
+    if (journalError) throw journalError;
+
+    // MUS240 Listening Journal rubric
+    const criteria = [
+      {
+        name: "Musical Elements Identification",
+        description: "Identifies specific African musical elements (call-and-response, improvisation, polyrhythm, timbre) with accurate examples from recordings",
+        maxPoints: 30
+      },
+      {
+        name: "Cultural & Historical Understanding",
+        description: "Explains practical, spiritual, and emotional significance of music for enslaved Africans with depth and context",
+        maxPoints: 30
+      },
+      {
+        name: "Blues Connection",
+        description: "Makes clear, specific connections between early forms and blues development with concrete examples",
+        maxPoints: 25
+      },
+      {
+        name: "Personal Reflection",
+        description: "Provides thoughtful reflection on one recording with cultural significance analysis",
+        maxPoints: 15
+      }
+    ];
+
+    const totalMaxPoints = criteria.reduce((sum: number, c: any) => sum + c.maxPoints, 0);
+
+    const systemPrompt = `You are an expert music educator grading MUS240 listening journal entries. 
+Your evaluation must be:
+- Evidence-based: cite specific examples from the student's writing
+- Balanced: acknowledge strengths and areas for improvement
+- Constructive: provide actionable feedback for improvement
+- Rigorous: Hold students to high academic standards
+- Vigilant: detect AI-generated content and lack of personal engagement`;
+
+    const userPrompt = `Grade this MUS240 listening journal entry using the rubric below AND analyze if it was AI-generated.
+
+ASSIGNMENT: ${journal.assignment_id}
+
+STUDENT SUBMISSION:
+${journal.content || 'No content provided'}
+
+Word Count: ${journal.word_count || 0}
+
+RUBRIC CRITERIA:
+${criteria.map((c: any, i: number) => `${i + 1}. ${c.name} (${c.maxPoints} points max)
+   ${c.description}`).join('\n')}
+
+GRADING STANDARDS:
+- Entries must demonstrate original thinking and personal engagement with the music
+- Students should cite specific moments, techniques, or musical choices from recordings
+- Analysis should show understanding of course concepts applied to listening examples
+- Reflection should be substantive and go beyond surface-level description
+
+AI DETECTION:
+Look for:
+- Generic, overly polished language lacking personal voice
+- Perfect grammar/structure inconsistent with typical student writing
+- Formulaic patterns and clichéd phrasing typical of AI
+- Lack of specific, concrete examples from the actual recordings
+- Broad claims without evidence or personal interpretation
+
+Provide confidence level (low/medium/high) if AI was used and explain why.`;
+
+    // Call Lovable AI with structured output
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        tools: [
+          {
+            type: 'function',
+            function: {
+              name: 'submit_grade',
+              description: 'Submit the final grade and feedback for the journal entry',
+              parameters: {
+                type: 'object',
+                properties: {
+                  criteria_scores: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        criterion_name: { type: 'string' },
+                        score: { type: 'number' },
+                        feedback: { type: 'string' }
+                      },
+                      required: ['criterion_name', 'score', 'feedback']
+                    }
+                  },
+                  overall_strengths: { type: 'string' },
+                  areas_for_improvement: { type: 'string' },
+                  overall_feedback: { type: 'string' },
+                  ai_detection: {
+                    type: 'object',
+                    properties: {
+                      is_flagged: { type: 'boolean' },
+                      confidence: { type: 'string', enum: ['low', 'medium', 'high'] },
+                      reasoning: { type: 'string' }
+                    },
+                    required: ['is_flagged', 'confidence', 'reasoning']
+                  }
+                },
+                required: ['criteria_scores', 'overall_strengths', 'areas_for_improvement', 'overall_feedback', 'ai_detection']
+              }
+            }
+          }
+        ],
+        tool_choice: { type: 'function', function: { name: 'submit_grade' } }
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Lovable AI error:', response.status, errorText);
+      throw new Error(`AI grading failed: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const toolCall = data.choices[0]?.message?.tool_calls?.[0];
+    
+    if (!toolCall) {
+      throw new Error('No grading result returned from AI');
+    }
+
+    const gradingResult = JSON.parse(toolCall.function.arguments);
+
+    // Calculate total score
+    const totalScore = gradingResult.criteria_scores.reduce(
+      (sum: number, c: any) => sum + c.score, 
+      0
+    );
+    const percentage = (totalScore / totalMaxPoints) * 100;
+    
+    // Determine letter grade
+    let letterGrade = 'F';
+    if (percentage >= 93) letterGrade = 'A';
+    else if (percentage >= 90) letterGrade = 'A-';
+    else if (percentage >= 87) letterGrade = 'B+';
+    else if (percentage >= 83) letterGrade = 'B';
+    else if (percentage >= 80) letterGrade = 'B-';
+    else if (percentage >= 77) letterGrade = 'C+';
+    else if (percentage >= 73) letterGrade = 'C';
+    else if (percentage >= 70) letterGrade = 'C-';
+    else if (percentage >= 67) letterGrade = 'D+';
+    else if (percentage >= 63) letterGrade = 'D';
+    else if (percentage >= 60) letterGrade = 'D-';
+
+    // Update journal entry with grade and feedback
+    const { error: updateError } = await supabase
+      .from('mus240_journal_entries')
+      .update({
+        grade: Math.round(percentage),
+        feedback: JSON.stringify({
+          letterGrade,
+          criteriaScores: gradingResult.criteria_scores,
+          overallStrengths: gradingResult.overall_strengths,
+          areasForImprovement: gradingResult.areas_for_improvement,
+          overallFeedback: gradingResult.overall_feedback,
+          aiDetection: gradingResult.ai_detection,
+          totalScore,
+          maxPoints: totalMaxPoints
+        }),
+        graded_at: new Date().toISOString(),
+        graded_by: 'ai_system'
+      })
+      .eq('id', journalId);
+
+    if (updateError) throw updateError;
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        grade: Math.round(percentage),
+        letterGrade,
+        totalScore,
+        maxPoints: totalMaxPoints,
+        feedback: gradingResult,
+        aiDetection: gradingResult.ai_detection
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('MUS240 journal grading error:', error);
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+});
