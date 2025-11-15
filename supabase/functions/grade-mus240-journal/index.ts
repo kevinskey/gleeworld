@@ -185,37 +185,17 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
 
     const gradingResult = JSON.parse(toolCall.function.arguments);
 
-    // Validate that criteria_scores includes max_points
+    // Validate criteria scores
     if (!gradingResult.criteria_scores || gradingResult.criteria_scores.length === 0) {
       throw new Error('No criteria scores returned');
     }
-
-    // Ensure each score has max_points set correctly
-    const criteriaMap: { [key: string]: number } = {
-      'Musical Elements Identification': 30,
-      'Cultural & Historical Understanding': 30,
-      'Blues Connection': 25,
-      'Personal Reflection': 15
-    };
-
-    gradingResult.criteria_scores = gradingResult.criteria_scores.map((score: any) => {
-      // Find matching criterion by partial name match
-      const matchingKey = Object.keys(criteriaMap).find(key => 
-        score.criterion_name.includes(key) || key.includes(score.criterion_name)
-      );
-      
-      return {
-        ...score,
-        max_points: matchingKey ? criteriaMap[matchingKey] : (score.max_points || 0)
-      };
-    });
 
     // Calculate total score
     const totalScore = gradingResult.criteria_scores.reduce(
       (sum: number, c: any) => sum + (c.score || 0), 
       0
     );
-    const percentage = (totalScore / totalMaxPoints) * 100;
+    const percentage = (totalScore / totalPoints) * 100;
     
     // Determine letter grade
     let letterGrade = 'F';
