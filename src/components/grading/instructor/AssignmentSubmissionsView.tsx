@@ -339,10 +339,19 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
                         AI Detected
                       </Badge>
                     )}
-                    {submission.grade !== null && submission.grade !== undefined && (
-                      <Badge variant="default" className="text-lg px-3 py-1">
-                        {submission.grade}% {parsedFeedback?.letterGrade && `(${parsedFeedback.letterGrade})`}
-                      </Badge>
+                    {(submission.grade !== null && submission.grade !== undefined) ? (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="default" className="text-xl px-4 py-2 font-bold">
+                          {submission.grade}%
+                        </Badge>
+                        {parsedFeedback?.letterGrade && (
+                          <Badge variant="outline" className="text-lg px-3 py-1.5">
+                            {parsedFeedback.letterGrade}
+                          </Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <Badge variant="secondary">Not Graded</Badge>
                     )}
                     <Badge variant={
                       submission.status === 'graded' || submission.graded_at ? 'default' : 
