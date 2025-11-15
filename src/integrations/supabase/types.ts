@@ -15985,6 +15985,10 @@ export type Database = {
           assignment_id: string
           content: string
           created_at: string
+          feedback: Json | null
+          grade: number | null
+          graded_at: string | null
+          graded_by: string | null
           id: string
           is_published: boolean
           published_at: string | null
@@ -15998,6 +16002,10 @@ export type Database = {
           assignment_id: string
           content: string
           created_at?: string
+          feedback?: Json | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           is_published?: boolean
           published_at?: string | null
@@ -16011,6 +16019,10 @@ export type Database = {
           assignment_id?: string
           content?: string
           created_at?: string
+          feedback?: Json | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
           id?: string
           is_published?: boolean
           published_at?: string | null
