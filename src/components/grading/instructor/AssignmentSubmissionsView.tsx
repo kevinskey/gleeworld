@@ -29,12 +29,12 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
     },
   });
 
-  const { data: submissions, isLoading: submissionsLoading } = useQuery({
+  const { data: submissions, isLoading: submissionsLoading, error: submissionsError } = useQuery({
     queryKey: ['gw-assignment-submissions', assignmentId],
     queryFn: async () => {
       // Fetch submissions
       const { data: submissionsData, error: submissionsError } = await supabase
-        .from('gw_submissions' as any)
+        .from('assignment_submissions' as any)
         .select('*')
         .eq('assignment_id', assignmentId)
         .order('submitted_at', { ascending: false });
@@ -80,6 +80,14 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           <p className="text-muted-foreground">{assignment?.gw_courses?.course_name}</p>
         </div>
       </div>
+
+      {submissionsError && (
+        <Card>
+          <CardContent className="py-4">
+            <p className="text-destructive text-sm">{submissionsError.message}</p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4">
         {submissions?.map((submission) => (
