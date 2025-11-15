@@ -127,12 +127,26 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
                     items: {
                       type: 'object',
                       properties: {
-                        criterion_name: { type: 'string' },
-                        score: { type: 'number' },
-                        feedback: { type: 'string' }
+                        criterion_name: { 
+                          type: 'string',
+                          description: 'Name of the rubric criterion'
+                        },
+                        score: { 
+                          type: 'number',
+                          description: 'Points earned for this criterion'
+                        },
+                        max_points: {
+                          type: 'number',
+                          description: 'Maximum points possible for this criterion'
+                        },
+                        feedback: { 
+                          type: 'string',
+                          description: 'Specific feedback for this criterion explaining the score'
+                        }
                       },
-                      required: ['criterion_name', 'score', 'feedback']
-                    }
+                      required: ['criterion_name', 'score', 'max_points', 'feedback']
+                    },
+                    description: 'Array of scores for each rubric criterion. Must include: Musical Elements Identification (30 max), Cultural & Historical Understanding (30 max), Blues Connection (25 max), Personal Reflection (15 max)'
                   },
                   overall_strengths: { type: 'string' },
                   areas_for_improvement: { type: 'string' },
@@ -171,9 +185,34 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
 
     const gradingResult = JSON.parse(toolCall.function.arguments);
 
+    // Validate that criteria_scores includes max_points
+    if (!gradingResult.criteria_scores || gradingResult.criteria_scores.length === 0) {
+      throw new Error('No criteria scores returned');
+    }
+
+    // Ensure each score has max_points set correctly
+    const criteriaMap: { [key: string]: number } = {
+      'Musical Elements Identification': 30,
+      'Cultural & Historical Understanding': 30,
+      'Blues Connection': 25,
+      'Personal Reflection': 15
+    };
+
+    gradingResult.criteria_scores = gradingResult.criteria_scores.map((score: any) => {
+      // Find matching criterion by partial name match
+      const matchingKey = Object.keys(criteriaMap).find(key => 
+        score.criterion_name.includes(key) || key.includes(score.criterion_name)
+      );
+      
+      return {
+        ...score,
+        max_points: matchingKey ? criteriaMap[matchingKey] : (score.max_points || 0)
+      };
+    });
+
     // Calculate total score
     const totalScore = gradingResult.criteria_scores.reduce(
-      (sum: number, c: any) => sum + c.score, 
+      (sum: number, c: any) => sum + (c.score || 0), 
       0
     );
     const percentage = (totalScore / totalMaxPoints) * 100;
