@@ -40,7 +40,7 @@ serve(async (req) => {
     // Fetch assignment details from gw_assignments using legacy_id
     const { data: assignment, error: assignmentError } = await supabase
       .from('gw_assignments')
-      .select('title, description, instructions, points')
+      .select('title, description, points')
       .eq('legacy_source', 'mus240_assignments')
       .eq('legacy_id', journal.assignment_id)
       .maybeSingle();
@@ -51,7 +51,7 @@ serve(async (req) => {
 
     const assignmentPoints = assignment?.points || 100;
     const assignmentTitle = assignment?.title || `Assignment ${journal.assignment_id}`;
-    const assignmentInstructions = assignment?.instructions || assignment?.description || '';
+    const assignmentDescription = assignment?.description || '';
 
     console.log('Generating rubric for:', assignmentTitle, 'Points:', assignmentPoints);
 
@@ -59,8 +59,7 @@ serve(async (req) => {
     const rubricPrompt = `Generate a grading rubric for this MUS240 Listening Journal assignment.
 
 ASSIGNMENT: ${assignmentTitle}
-DESCRIPTION: ${assignment?.description || ''}
-INSTRUCTIONS: ${assignmentInstructions}
+DESCRIPTION: ${assignmentDescription}
 TOTAL POINTS: ${assignmentPoints}
 
 Create 4-6 criteria that:
@@ -154,8 +153,7 @@ Your evaluation must be:
     const userPrompt = `Grade this MUS240 listening journal entry using the rubric below AND analyze if it was AI-generated.
 
 ASSIGNMENT: ${assignmentTitle}
-DESCRIPTION: ${assignment?.description || ''}
-INSTRUCTIONS: ${assignmentInstructions}
+DESCRIPTION: ${assignmentDescription}
 
 STUDENT SUBMISSION:
 ${journal.content || 'No content provided'}
