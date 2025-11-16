@@ -40,7 +40,7 @@ serve(async (req) => {
     // Fetch assignment details from gw_assignments using legacy_id
     const { data: assignment, error: assignmentError } = await supabase
       .from('gw_assignments')
-      .select('title, description, points')
+      .select('id, title, description, points')
       .eq('legacy_source', 'mus240_assignments')
       .eq('legacy_id', journal.assignment_id)
       .maybeSingle();
@@ -343,20 +343,62 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
       })
       .eq('id', journalId);
 
-    if (updateError) throw updateError;
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        grade: Math.round(percentage),
-        letterGrade,
-        totalScore,
-        maxPoints: totalMaxPoints,
-        feedback: gradingResult,
-        aiDetection: gradingResult.ai_detection
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    // Sync with new gradebook tables
+    if (assignment?.id && journal?.student_id) {
+      const assignmentId = assignment.id as string;
+      const studentId = journal.student_id as string;
+
+      // Upsert gw_grades
+      const gradePayload = {
+        assignment_id: assignmentId,
+        student_id: studentId,
+        total_score: Math.round(totalScore),
+        max_points: totalMaxPoints,
+        percentage: Math.round(percentage),
+        letter_grade: letterGrade,
+        graded_at: new Date().toISOString(),
+        graded_by: 'ai_system',
+        legacy_source: 'mus240_assignments',
+        legacy_id: journal.assignment_id,
+      } as any;
+
+      const upsertGrades = await supabase
+        .from('gw_grades')
+        .upsert(gradePayload, { onConflict: 'student_id,assignment_id' })
+        .select()
+        .maybeSingle();
+
+      if (upsertGrades.error) {
+        console.error('gw_grades upsert error:', upsertGrades.error);
+      }
+
+      // Ensure gw_submissions reflects graded status
+      const existingSub = await supabase
+        .from('gw_submissions')
+        .select('id, submitted_at')
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', studentId)
+        .maybeSingle();
+
+      if (existingSub.error && existingSub.error.code !== 'PGRST116') {
+        console.warn('gw_submissions select error:', existingSub.error);
+      }
+
+      if (existingSub.data) {
+        const upd = await supabase
+          .from('gw_submissions')
+          .update({ status: 'graded', submitted_at: existingSub.data.submitted_at || journal.published_at || new Date().toISOString(), legacy_source: 'mus240_assignments', legacy_id: journal.assignment_id })
+          .eq('id', existingSub.data.id);
+        if (upd.error) console.warn('gw_submissions update error:', upd.error);
+      } else {
+        const ins = await supabase
+          .from('gw_submissions')
+          .insert({ assignment_id: assignmentId, student_id: studentId, status: 'graded', submitted_at: journal.published_at || new Date().toISOString(), legacy_source: 'mus240_assignments', legacy_id: journal.assignment_id });
+        if (ins.error) console.warn('gw_submissions insert error:', ins.error);
+      }
+    }
+
 
   } catch (error) {
     console.error('MUS240 journal grading error:', error);
