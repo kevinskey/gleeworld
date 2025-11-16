@@ -72,7 +72,7 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
       
       const assignmentIds = assignments.map(a => a.id);
       const { data, error } = await supabase
-        .from('assignment_submissions')
+        .from('gw_submissions' as any)
         .select('*')
         .in('assignment_id', assignmentIds);
 
@@ -91,8 +91,8 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
       const studentName = enrollment.gw_profiles?.full_name || enrollment.gw_profiles?.email || 'Unknown';
       
       const grades = assignments.map(assignment => {
-        const submission = submissions.find(
-          s => s.student_id === studentId && s.assignment_id === assignment.id
+        const submission = (submissions as any[] || []).find(
+          (s: any) => s.student_id === studentId && s.assignment_id === assignment.id
         );
         
         return {
