@@ -44,7 +44,7 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
         .from('gw_assignments' as any)
         .select('*')
         .eq('course_id', courseId)
-        .order('due_at', { ascending: true });
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       return data as any[];
