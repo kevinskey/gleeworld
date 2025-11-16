@@ -94,13 +94,17 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
         const submission = (submissions as any[] || []).find(
           (s: any) => s.student_id === studentId && s.assignment_id === assignment.id
         );
-        
+        const gradeRec = (grades as any[] || []).find(
+          (g: any) => g.student_id === studentId && g.assignment_id === assignment.id
+        );
+        const gradeValue = gradeRec?.total_score ?? null;
+        const status = gradeRec ? 'graded' : (submission ? (submission.status || 'submitted') : 'not_submitted');
         return {
           assignmentId: assignment.id,
           assignmentTitle: assignment.title,
           assignmentPoints: assignment.points || 100,
-          grade: submission?.grade || null,
-          status: submission ? (submission.grade ? 'graded' : 'submitted') : 'not_submitted',
+          grade: gradeValue,
+          status,
           submittedAt: submission?.submitted_at,
         };
       });
@@ -153,7 +157,7 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
     a.click();
   };
 
-  if (courseLoading || assignmentsLoading || enrollmentsLoading || submissionsLoading) {
+  if (courseLoading || assignmentsLoading || enrollmentsLoading || submissionsLoading || gradesLoading) {
     return <LoadingSpinner size="lg" text="Loading gradebook..." />;
   }
 

@@ -45,16 +45,15 @@ export const StudentGradesOverview: React.FC = () => {
           .select('id, points')
           .eq('course_id', course.id);
 
-        // Get all graded submissions for this student in this course
-        const { data: submissions } = await supabase
-          .from('gw_submissions' as any)
-          .select('assignment_id, grade, status')
+        // Get grades for this student in this course
+        const { data: gradesInCourse } = await supabase
+          .from('gw_grades' as any)
+          .select('assignment_id, total_score, max_points')
           .eq('student_id', user.id)
           .in('assignment_id', (assignments || []).map((a: any) => a.id));
 
         const totalPoints = (assignments || []).reduce((sum: number, a: any) => sum + (a.points || 0), 0);
-        const gradedSubmissions = (submissions || []).filter((s: any) => s.status === 'graded');
-        const earnedPoints = gradedSubmissions.reduce((sum: number, s: any) => sum + (s.grade || 0), 0);
+        const earnedPoints = (gradesInCourse || []).reduce((sum: number, g: any) => sum + (g.total_score || 0), 0);
         const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
 
         courseGrades.push({
@@ -64,7 +63,7 @@ export const StudentGradesOverview: React.FC = () => {
           total_points: totalPoints,
           earned_points: earnedPoints,
           percentage,
-          graded_count: gradedSubmissions.length,
+          graded_count: (gradesInCourse || []).length,
           total_count: assignments?.length || 0,
         });
       }
