@@ -195,7 +195,7 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
       (sum: number, c: any) => sum + (c.score || 0), 
       0
     );
-    const percentage = (totalScore / totalPoints) * 100;
+    const percentage = totalMaxPoints > 0 ? (totalScore / totalMaxPoints) * 100 : 0;
     
     // Determine letter grade
     let letterGrade = 'F';
