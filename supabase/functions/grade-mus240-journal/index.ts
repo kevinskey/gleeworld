@@ -37,31 +37,111 @@ serve(async (req) => {
 
     if (journalError) throw journalError;
 
-    // MUS240 Listening Journal rubric
-    const criteria = [
-      {
-        name: "Musical Elements Identification",
-        description: "Identifies specific African musical elements (call-and-response, improvisation, polyrhythm, timbre) with accurate examples from recordings",
-        maxPoints: 30
-      },
-      {
-        name: "Cultural & Historical Understanding",
-        description: "Explains practical, spiritual, and emotional significance of music for enslaved Africans with depth and context",
-        maxPoints: 30
-      },
-      {
-        name: "Blues Connection",
-        description: "Makes clear, specific connections between early forms and blues development with concrete examples",
-        maxPoints: 25
-      },
-      {
-        name: "Personal Reflection",
-        description: "Provides thoughtful reflection on one recording with cultural significance analysis",
-        maxPoints: 15
-      }
-    ];
+    // Fetch assignment details from gw_assignments using legacy_id
+    const { data: assignment, error: assignmentError } = await supabase
+      .from('gw_assignments')
+      .select('title, description, instructions, points')
+      .eq('legacy_source', 'mus240_assignments')
+      .eq('legacy_id', journal.assignment_id)
+      .maybeSingle();
 
+    if (assignmentError) {
+      console.error('Error fetching assignment:', assignmentError);
+    }
+
+    const assignmentPoints = assignment?.points || 100;
+    const assignmentTitle = assignment?.title || `Assignment ${journal.assignment_id}`;
+    const assignmentInstructions = assignment?.instructions || assignment?.description || '';
+
+    console.log('Generating rubric for:', assignmentTitle, 'Points:', assignmentPoints);
+
+    // Generate rubric dynamically using AI
+    const rubricPrompt = `Generate a grading rubric for this MUS240 Listening Journal assignment.
+
+ASSIGNMENT: ${assignmentTitle}
+DESCRIPTION: ${assignment?.description || ''}
+INSTRUCTIONS: ${assignmentInstructions}
+TOTAL POINTS: ${assignmentPoints}
+
+Create 4-6 criteria that:
+1. Always include these base criteria (adjust points proportionally):
+   - Grammar & Writing Quality (10-15% of points)
+   - Word Count & Completeness (10-15% of points)  
+   - Academic Integrity (5-10% of points)
+
+2. Add 2-4 content-specific criteria based on the assignment instructions that evaluate:
+   - Musical analysis skills
+   - Understanding of specific concepts mentioned in instructions
+   - Application of course concepts
+   - Quality of reflection and critical thinking
+
+Distribute the ${assignmentPoints} points across all criteria. Return as JSON.`;
+
+    const rubricResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are an expert at creating fair, detailed grading rubrics for music courses.' 
+          },
+          { role: 'user', content: rubricPrompt }
+        ],
+        tools: [{
+          type: 'function',
+          function: {
+            name: 'create_rubric',
+            description: 'Create a grading rubric',
+            parameters: {
+              type: 'object',
+              properties: {
+                criteria: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: { type: 'string' },
+                      description: { type: 'string' },
+                      maxPoints: { type: 'number' }
+                    },
+                    required: ['name', 'description', 'maxPoints']
+                  }
+                }
+              },
+              required: ['criteria']
+            }
+          }
+        }],
+        tool_choice: { type: 'function', function: { name: 'create_rubric' } }
+      })
+    });
+
+    if (!rubricResponse.ok) {
+      throw new Error(`Rubric generation failed: ${rubricResponse.status}`);
+    }
+
+    const rubricData = await rubricResponse.json();
+    const rubricArgs = JSON.parse(
+      rubricData.choices[0].message.tool_calls[0].function.arguments
+    );
+    const criteria = rubricArgs.criteria;
+
+    // Ensure total points match assignment points
     const totalMaxPoints = criteria.reduce((sum: number, c: any) => sum + c.maxPoints, 0);
+    if (totalMaxPoints !== assignmentPoints) {
+      const ratio = assignmentPoints / totalMaxPoints;
+      criteria.forEach((c: any) => {
+        c.maxPoints = Math.round(c.maxPoints * ratio);
+      });
+    }
+
+    console.log('Generated rubric:', JSON.stringify(criteria, null, 2));
+
 
     const systemPrompt = `You are an expert music educator grading MUS240 listening journal entries. 
 Your evaluation must be:
@@ -73,7 +153,9 @@ Your evaluation must be:
 
     const userPrompt = `Grade this MUS240 listening journal entry using the rubric below AND analyze if it was AI-generated.
 
-ASSIGNMENT: ${journal.assignment_id}
+ASSIGNMENT: ${assignmentTitle}
+DESCRIPTION: ${assignment?.description || ''}
+INSTRUCTIONS: ${assignmentInstructions}
 
 STUDENT SUBMISSION:
 ${journal.content || 'No content provided'}
@@ -89,6 +171,7 @@ GRADING STANDARDS:
 - Students should cite specific moments, techniques, or musical choices from recordings
 - Analysis should show understanding of course concepts applied to listening examples
 - Reflection should be substantive and go beyond surface-level description
+- Students must address the specific requirements outlined in the assignment instructions
 
 AI DETECTION:
 Look for:
@@ -99,6 +182,8 @@ Look for:
 - Broad claims without evidence or personal interpretation
 
 Provide confidence level (low/medium/high) if AI was used and explain why.`;
+
+    // Call Lovable AI with structured output
 
     // Call Lovable AI with structured output
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
