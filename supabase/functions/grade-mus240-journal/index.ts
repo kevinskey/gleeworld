@@ -190,7 +190,36 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
       throw new Error('No criteria scores returned');
     }
 
-    // Calculate total score
+    // Normalize per-criterion max points against our rubric and clamp scores
+    const normalize = (s: string) => (s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    const criteriaMap = new Map(criteria.map((c: any) => [normalize(c.name), c.maxPoints]));
+
+    gradingResult.criteria_scores = gradingResult.criteria_scores.map((c: any) => {
+      const name = c.criterion_name || c.criterion || '';
+      const key = normalize(name);
+      let max = criteriaMap.get(key);
+
+      if (max === undefined) {
+        const found = criteria.find((cr: any) => {
+          const n = normalize(cr.name);
+          return key && (n.includes(key) || key.includes(n));
+        });
+        max = found?.maxPoints;
+      }
+
+      const safeMax = typeof max === 'number' ? max : 0;
+      const rawScore = Number(c.score) || 0;
+      const safeScore = Math.min(Math.max(rawScore, 0), safeMax);
+
+      return {
+        ...c,
+        criterion_name: name || 'Unmatched Criterion',
+        max_points: safeMax,
+        score: safeScore,
+      };
+    });
+
+    // Calculate total score using normalized scores
     const totalScore = gradingResult.criteria_scores.reduce(
       (sum: number, c: any) => sum + (c.score || 0), 
       0
