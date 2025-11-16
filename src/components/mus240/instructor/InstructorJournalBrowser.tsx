@@ -63,19 +63,18 @@ export const InstructorJournalBrowser: React.FC = () => {
         return acc;
       }, {} as Record<string, string>);
 
-      // Map assignment codes to titles (assignment_id stores codes like "lj5", not UUIDs)
-      const assignmentCodeMap: Record<string, string> = {
-        'lj1': 'Listening Journal 1',
-        'lj2': 'Listening Journal 2',
-        'lj3': 'Listening Journal 3',
-        'lj4': 'Listening Journal 4',
-        'lj5': 'Listening Journal 5',
-        'lj6': 'Listening Journal 6',
-        'lj7': 'Listening Journal 7',
-        'lj8': 'Listening Journal 8',
-        'lj9': 'Listening Journal 9',
-        'lj10': 'Listening Journal 10',
-      };
+      // Fetch actual assignment titles from database
+      const { data: assignments } = await supabase
+        .from('gw_assignments')
+        .select('id, title, legacy_id')
+        .eq('legacy_source', 'mus240_assignments');
+
+      const assignmentCodeMap: Record<string, string> = {};
+      (assignments || []).forEach(assignment => {
+        if (assignment.legacy_id) {
+          assignmentCodeMap[assignment.legacy_id] = assignment.title;
+        }
+      });
 
       // Fetch peer review counts
       const { data: reviewCounts } = await supabase
