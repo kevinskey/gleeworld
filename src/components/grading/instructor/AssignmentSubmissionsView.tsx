@@ -51,7 +51,9 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
     },
   });
   
-  const isMus240Journal = assignment?.legacy_source === 'mus240_assignments' || assignment?.assignment_type === 'listening_journal';
+  const isMus240Journal = assignment?.legacy_source === 'mus240_assignments' || 
+                          assignment?.legacy_source === 'mus240' || 
+                          assignment?.assignment_type === 'listening_journal';
 
   const { data: submissions, isLoading: submissionsLoading, error: submissionsError, refetch } = useQuery({
     queryKey: ['gw-assignment-submissions', assignmentId, isMus240Journal, assignment?.legacy_id, assignment?.title],
@@ -60,21 +62,30 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
       if (isMus240Journal) {
         // Determine correct legacy assignment id for MUS240 journals
         let legacyIdToUse = assignment?.legacy_id as string | undefined;
-        if (assignment?.legacy_source !== 'mus240_assignments') {
-          // Derive from title like "Listening Journal 4" -> "lj4"
+        
+        // For assignments from mus240 table (new migration), use legacy_id directly
+        // For older assignments from mus240_assignments, derive from title
+        if (!legacyIdToUse || assignment?.legacy_source === 'mus240_assignments') {
           const match = (assignment?.title || '').match(/Listening\s*Journal\s*(\d+)/i);
           if (match?.[1]) {
             legacyIdToUse = `lj${match[1]}`;
           }
         }
 
+        console.log('Fetching MUS240 journals for legacy_id:', legacyIdToUse, 'assignment:', assignment?.title);
+
         const { data: journalsData, error: journalsError } = await supabase
           .from('mus240_journal_entries' as any)
           .select('*')
           .eq('assignment_id', legacyIdToUse)
-          .order('submitted_at', { ascending: false });
+          .order('created_at', { ascending: false });
 
-        if (journalsError) throw journalsError;
+        if (journalsError) {
+          console.error('Error fetching mus240_journal_entries:', journalsError);
+          throw journalsError;
+        }
+
+        console.log('Found', journalsData?.length || 0, 'MUS240 journal entries');
 
         // If no legacy journal entries found, fall back to current tables
         if (!journalsData || journalsData.length === 0) {
@@ -124,13 +135,24 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
 
         // Fetch grades for these journals
         const journalIds = journalsData?.map((j: any) => j.id) || [];
-        const { data: gradesData } = await supabase
-          .from('mus240_journal_grades' as any)
-          .select('*')
-          .in('journal_id', journalIds);
+        let gradesData: any[] = [];
+        if (journalIds.length > 0) {
+          const { data, error: gradesError } = await supabase
+            .from('mus240_journal_grades' as any)
+            .select('*')
+            .in('journal_entry_id', journalIds);
+          
+          if (gradesError) {
+            console.error('Error fetching grades:', gradesError);
+          } else {
+            gradesData = data || [];
+          }
+        }
+
+        console.log('Found', gradesData.length, 'grades for journals');
 
         const gradesMap = (gradesData || []).reduce((acc: any, grade: any) => {
-          acc[grade.journal_id] = grade;
+          acc[grade.journal_entry_id] = grade;
           return acc;
         }, {});
 
