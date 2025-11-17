@@ -23,7 +23,7 @@ interface AlumnaeProfileEditorProps {
   onSuccess: () => void;
 }
 
-const VOICE_PARTS = ['Soprano I', 'Soprano II', 'Alto I', 'Alto II'];
+const VOICE_PARTS = ['S1', 'S2', 'A1', 'A2', 'T1', 'T2', 'B1', 'B2'];
 
 const generateYears = () => {
   const currentYear = new Date().getFullYear();
