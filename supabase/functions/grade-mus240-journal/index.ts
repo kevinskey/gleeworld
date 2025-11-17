@@ -142,13 +142,13 @@ Distribute the ${assignmentPoints} points across all criteria. Return as JSON.`;
     console.log('Generated rubric:', JSON.stringify(criteria, null, 2));
 
 
-    const systemPrompt = `You are an expert music educator grading MUS240 listening journal entries. 
+    const systemPrompt = `You are an expert music educator grading MUS240 (African American Music) listening journals for undergraduate non-music majors.
 Your evaluation must be:
 - Evidence-based: cite specific examples from the student's writing
 - Balanced: acknowledge strengths and areas for improvement
 - Constructive: provide actionable feedback for improvement
-- Rigorous: Hold students to high academic standards
-- Vigilant: detect AI-generated content and lack of personal engagement`;
+- Supportive: Encourage learning while maintaining reasonable standards for non-music majors
+- Educational: Focus on growth and understanding rather than just catching mistakes`;
 
     const userPrompt = `Grade this MUS240 listening journal entry using the rubric below AND analyze if it was AI-generated.
 
@@ -164,22 +164,22 @@ RUBRIC CRITERIA:
 ${criteria.map((c: any, i: number) => `${i + 1}. ${c.name} (${c.maxPoints} points max)
    ${c.description}`).join('\n')}
 
-GRADING STANDARDS:
-- Entries must demonstrate original thinking and personal engagement with the music
-- Students should cite specific moments, techniques, or musical choices from recordings
-- Analysis should show understanding of course concepts applied to listening examples
-- Reflection should be substantive and go beyond surface-level description
-- Students must address the specific requirements outlined in the assignment instructions
+GRADING STANDARDS (Balanced for non-music majors):
+- Value honest effort and genuine engagement with the music
+- Look for personal voice and authentic reactions, even if not technically sophisticated
+- Credit students who try to apply course concepts, even if imperfectly
+- Appreciate specific examples and details from the recordings
+- Allow for varied writing styles while expecting coherent communication
+- Focus on understanding and growth over perfect execution
 
-AI DETECTION:
-Look for:
-- Generic, overly polished language lacking personal voice
-- Perfect grammar/structure inconsistent with typical student writing
-- Formulaic patterns and clichéd phrasing typical of AI
-- Lack of specific, concrete examples from the actual recordings
-- Broad claims without evidence or personal interpretation
+AI DETECTION (Balanced approach):
+Only flag as AI-generated if multiple red flags appear:
+- Completely generic language with zero personal voice or emotion
+- Suspiciously perfect structure inconsistent with student's other work
+- Zero specific details from the actual recordings being discussed
+- Use of advanced musical terminology far beyond course level without explanation
 
-Provide confidence level (low/medium/high) if AI was used and explain why.`;
+Give students the benefit of the doubt - many write formally but authentically. Flag only obvious AI usage with medium/high confidence.`;
 
     // Call Lovable AI with structured output
 
