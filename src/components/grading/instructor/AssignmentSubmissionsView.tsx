@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, ShieldAlert, Sparkles, Loader2, ClipboardList } from 'lucide-react';
+import { ArrowLeft, User, ShieldAlert, Sparkles, Loader2, ClipboardList, ChevronDown, ChevronUp } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -25,6 +25,17 @@ interface AssignmentSubmissionsViewProps {
 export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps> = ({ assignmentId }) => {
   const navigate = useNavigate();
   const [isGrading, setIsGrading] = useState(false);
+  const [expandedRubrics, setExpandedRubrics] = useState<Set<string>>(new Set());
+
+  const toggleRubric = (submissionId: string) => {
+    const newExpanded = new Set(expandedRubrics);
+    if (newExpanded.has(submissionId)) {
+      newExpanded.delete(submissionId);
+    } else {
+      newExpanded.add(submissionId);
+    }
+    setExpandedRubrics(newExpanded);
+  };
 
   const { data: assignment, isLoading: assignmentLoading } = useQuery({
     queryKey: ['gw-assignment', assignmentId],
@@ -372,13 +383,24 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
               <CardContent className="space-y-4">
                 {/* Rubric Scores Breakdown */}
                 {parsedFeedback?.criteriaScores && (
-                  <div className="border rounded-lg p-4 bg-muted/30">
-                    <h4 className="font-semibold mb-3 flex items-center gap-2">
-                      <ClipboardList className="h-4 w-4" />
-                      Rubric Scoring Breakdown
-                    </h4>
-                    <div className="space-y-3">
-                      {parsedFeedback.criteriaScores.map((criterion: any, index: number) => (
+                  <div className="border rounded-lg bg-muted/30">
+                    <button
+                      onClick={() => toggleRubric(submission.id)}
+                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/50 transition-colors"
+                    >
+                      <h4 className="font-semibold flex items-center gap-2">
+                        <ClipboardList className="h-4 w-4" />
+                        Rubric Scoring Breakdown
+                      </h4>
+                      {expandedRubrics.has(submission.id) ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                    {expandedRubrics.has(submission.id) && (
+                      <div className="px-4 pb-4 space-y-3">
+                        {parsedFeedback.criteriaScores.map((criterion: any, index: number) => (
                         <div key={index} className="border-l-4 border-primary pl-3">
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-medium text-sm">{criterion.criterion_name}</span>
@@ -387,16 +409,19 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground">{criterion.feedback}</p>
-                        </div>
-                      ))}
-                    </div>
-                    {parsedFeedback.totalScore && parsedFeedback.maxPoints && (
-                      <div className="mt-4 pt-3 border-t">
-                        <div className="flex items-center justify-between font-bold">
-                          <span>Total Score:</span>
-                          <span className="text-lg text-primary">
-                            {parsedFeedback.totalScore}/{parsedFeedback.maxPoints} points
-                          </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {expandedRubrics.has(submission.id) && parsedFeedback.totalScore && parsedFeedback.maxPoints && (
+                      <div className="px-4 pb-4">
+                        <div className="mt-4 pt-3 border-t">
+                          <div className="flex items-center justify-between font-bold">
+                            <span>Total Score:</span>
+                            <span className="text-lg text-primary">
+                              {parsedFeedback.totalScore}/{parsedFeedback.maxPoints} points
+                            </span>
+                          </div>
                         </div>
                       </div>
                     )}
