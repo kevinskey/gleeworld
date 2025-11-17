@@ -106,19 +106,32 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           const finalScore = grade?.instructor_score ?? grade?.overall_score;
           const finalGrade = grade?.instructor_letter_grade ?? grade?.letter_grade;
           
+          // Calculate actual earned points and max points from rubric
+          let earnedPoints = 0;
+          let maxPoints = 0;
+          if (grade?.rubric?.scores) {
+            for (const criterion of grade.rubric.scores) {
+              earnedPoints += criterion.score || 0;
+              maxPoints += criterion.max_score || 0;
+            }
+          }
+          
+          // Calculate percentage (0-100)
+          const percentageGrade = maxPoints > 0 ? Math.round((earnedPoints / maxPoints) * 100) : 0;
+          
           return {
             ...journal,
             status: journal.is_published ? 'published' : 'submitted',
             gw_profiles: profileMap[journal.student_id],
             _type: 'mus240_journal',
-            // Add grade data to submission object
-            grade: finalScore,
+            // Add grade data to submission object - use calculated percentage
+            grade: percentageGrade,
             graded_at: grade?.instructor_graded_at ?? grade?.graded_at,
             graded_by: grade?.instructor_graded_by ?? null,
             feedback: grade?.rubric ? JSON.stringify({
               letterGrade: finalGrade,
-              totalScore: finalScore,
-              maxPoints: assignment?.points || 100,
+              totalScore: earnedPoints,
+              maxPoints: maxPoints,
               criteriaScores: grade.rubric?.scores || [],
               overallFeedback: grade?.instructor_feedback ?? grade?.ai_feedback,
               aiDetection: {
