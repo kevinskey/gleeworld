@@ -23,7 +23,7 @@ interface AssignmentFormData {
   assignment_type: string;
   category?: string;
   points: number;
-  due_date?: string;
+  due_at?: string;
   instructions?: string;
   rubric?: string;
   is_active: boolean;
@@ -122,8 +122,8 @@ export const CreateAssignmentDialog: React.FC<CreateAssignmentDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="due_date">Due Date</Label>
-              <Input id="due_date" type="date" {...register('due_date')} />
+              <Label htmlFor="due_at">Due Date</Label>
+              <Input id="due_at" type="date" {...register('due_at')} />
             </div>
           </div>
 
