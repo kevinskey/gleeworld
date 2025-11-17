@@ -1,13 +1,15 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 
 interface StudentAssignmentViewProps {
   assignmentId: string;
@@ -16,6 +18,9 @@ interface StudentAssignmentViewProps {
 export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ assignmentId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
 
   const { data: assignment, isLoading: assignmentLoading } = useQuery({
     queryKey: ['gw-assignment', assignmentId],
@@ -45,6 +50,40 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
       return data as any;
     },
     enabled: !!user,
+  });
+
+  useEffect(() => {
+    if (submission?.content_text) {
+      setEditedContent(submission.content_text);
+    }
+  }, [submission]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (content: string) => {
+      const { error } = await supabase
+        .from('gw_submissions' as any)
+        .upsert({
+          assignment_id: assignmentId,
+          student_id: user?.id,
+          content_text: content,
+          status: 'submitted',
+          submitted_at: new Date().toISOString(),
+        }, {
+          onConflict: 'assignment_id,student_id',
+        });
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gw-student-submission', assignmentId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ['gw-student-assignments'] });
+      toast.success(submission ? 'Submission updated successfully' : 'Submission created successfully');
+      setIsEditing(false);
+    },
+    onError: (error) => {
+      toast.error('Failed to save submission');
+      console.error(error);
+    },
   });
 
   if (assignmentLoading || submissionLoading) {
@@ -91,21 +130,53 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
             <h3 className="font-semibold mb-2">Description:</h3>
             <p className="text-muted-foreground">{assignment?.description || 'No description provided'}</p>
           </div>
-          {submission && (
+          {submission ? (
             <div>
-              <h3 className="font-semibold mb-2">Your Submission:</h3>
-              <div className="p-4 bg-muted rounded-lg">
-                <pre className="whitespace-pre-wrap">{submission.content}</pre>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold">Your Submission:</h3>
+                <Button size="sm" variant="outline" onClick={() => setIsEditing(!isEditing)}>
+                  {isEditing ? 'Cancel' : 'Edit'}
+                </Button>
               </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Submitted: {new Date(submission.submitted_at).toLocaleString()}
-              </p>
+              
+              {isEditing ? (
+                <div className="space-y-2">
+                  <Textarea
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    rows={10}
+                    className="w-full"
+                  />
+                  <Button onClick={() => updateMutation.mutate(editedContent)} disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? 'Saving...' : 'Resubmit'}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="p-4 bg-muted rounded-lg">
+                    <pre className="whitespace-pre-wrap">{submission.content_text}</pre>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Submitted: {new Date(submission.submitted_at).toLocaleString()}
+                  </p>
+                </>
+              )}
             </div>
-          )}
-          {!submission && (
-            <div className="text-center py-4">
-              <p className="text-muted-foreground mb-4">You haven't submitted this assignment yet.</p>
-              <p className="text-sm text-muted-foreground">Submission interface coming soon...</p>
+          ) : (
+            <div className="text-center py-4 space-y-4">
+              <p className="text-muted-foreground">You haven't submitted this assignment yet.</p>
+              <div className="space-y-2">
+                <Textarea
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  rows={10}
+                  placeholder="Start your submission here..."
+                  className="w-full"
+                />
+                <Button onClick={() => updateMutation.mutate(editedContent)} disabled={updateMutation.isPending || !editedContent.trim()}>
+                  {updateMutation.isPending ? 'Submitting...' : 'Submit'}
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

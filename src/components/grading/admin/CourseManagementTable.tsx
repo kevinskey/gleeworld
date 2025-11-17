@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { BookOpen, UserPlus, Eye, Calendar, User, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { useNavigate } from 'react-router-dom';
 import { AssignInstructorDialog } from './AssignInstructorDialog';
+import { CourseCard } from './CourseCard';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -24,8 +23,8 @@ export const CourseManagementTable: React.FC = () => {
   const queryClient = useQueryClient();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [courseToDelete, setCourseToDelete] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [termFilter, setTermFilter] = useState<string>('all');
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ['gw-all-courses'],
@@ -73,32 +72,37 @@ export const CourseManagementTable: React.FC = () => {
     setAssignDialogOpen(true);
   };
 
-  const handleDeleteClick = (course: any) => {
-    setCourseToDelete(course);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!courseToDelete) return;
+  const handleDeleteCourse = async (courseId: string) => {
+    if (!confirm('Are you sure you want to delete this course?')) return;
 
     try {
-      // Delete the course (cascade will handle related records if configured)
       const { error } = await supabase
         .from('gw_courses' as any)
         .delete()
-        .eq('id', courseToDelete.id);
+        .eq('id', courseId);
 
       if (error) throw error;
 
-      toast.success(`Course ${courseToDelete.code} deleted successfully`);
+      toast.success('Course deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['gw-all-courses'] });
-      setDeleteDialogOpen(false);
-      setCourseToDelete(null);
     } catch (error) {
       console.error('Error deleting course:', error);
       toast.error('Failed to delete course');
     }
   };
+
+  const filteredCourses = courses?.filter(course => {
+    const matchesSearch = 
+      course.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.instructor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      course.term?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesTerm = termFilter === 'all' || 
+      course.term?.toLowerCase().includes(termFilter.toLowerCase());
+    
+    return matchesSearch && matchesTerm;
+  }) || [];
 
   if (isLoading) {
     return <div className="text-center p-8">Loading courses...</div>;
@@ -106,78 +110,53 @@ export const CourseManagementTable: React.FC = () => {
 
   return (
     <>
-      <div className="grid gap-4">
-        {courses?.map((course) => (
-          <Card key={course.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    {course.code}
-                  </CardTitle>
-                  <CardDescription>{course.title}</CardDescription>
-                </div>
-                <Badge variant="outline" className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {course.term || 'No term set'}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>Instructor: {course.instructor_name || 'Not assigned'}</span>
-              </div>
-              
-              <div className="text-sm text-muted-foreground">
-                {course.assignment_count} assignment{course.assignment_count !== 1 ? 's' : ''}
-              </div>
+      <div className="space-y-6">
+        <div className="flex gap-4">
+          <Input
+            placeholder="Search courses..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="max-w-md"
+          />
+          <Select value={termFilter} onValueChange={setTermFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Terms</SelectItem>
+              <SelectItem value="fall">Fall</SelectItem>
+              <SelectItem value="spring">Spring</SelectItem>
+              <SelectItem value="summer">Summer</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-              {course.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {course.description}
-                </p>
-              )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredCourses.map(course => (
+            <CourseCard
+              key={course.id}
+              id={course.id}
+              code={course.code}
+              title={course.title}
+              term={course.term}
+              instructorName={course.instructor_name || 'Unassigned'}
+              assignmentCount={course.assignment_count}
+              status={course.status}
+              onViewCourse={() => navigate(`/grading/instructor/course/${course.id}`)}
+              onOpenGradebook={() => navigate(`/grading/instructor/course/${course.id}/gradebook`)}
+              onManageStudents={() => navigate(`/grading/instructor/course/${course.id}/students`)}
+              onDelete={() => handleDeleteCourse(course.id)}
+            />
+          ))}
+        </div>
 
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => navigate(`/grading/instructor/course/${course.id}`)}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Course
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleAssignInstructor(course)}
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Assign Instructor
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={() => handleDeleteClick(course)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {filteredCourses.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">
+            No courses found matching your filters.
+          </div>
+        )}
       </div>
 
-      {!courses || courses.length === 0 ? (
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No courses found. Create your first course to get started.</p>
-          </CardContent>
-        </Card>
-      ) : null}
 
       {selectedCourse && (
         <AssignInstructorDialog
@@ -187,28 +166,6 @@ export const CourseManagementTable: React.FC = () => {
           courseName={selectedCourse.code}
         />
       )}
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Course</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete <strong>{courseToDelete?.code}</strong>?
-              This will also delete all assignments and submissions associated with this course.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 };
