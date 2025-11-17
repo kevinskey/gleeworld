@@ -77,6 +77,8 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
         if (journalsError) throw journalsError;
 
         const studentIds = [...new Set(journalsData?.map((j: any) => j.student_id) || [])];
+        
+        // Fetch profiles
         const { data: profiles } = await supabase
           .from('gw_profiles')
           .select('user_id, full_name, email')
@@ -87,12 +89,45 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           return acc;
         }, {});
 
-        return (journalsData || []).map((journal: any) => ({
-          ...journal,
-          status: journal.is_published ? 'published' : 'submitted',
-          gw_profiles: profileMap[journal.student_id],
-          _type: 'mus240_journal',
-        }));
+        // Fetch grades for these journals
+        const journalIds = journalsData?.map((j: any) => j.id) || [];
+        const { data: gradesData } = await supabase
+          .from('mus240_journal_grades' as any)
+          .select('*')
+          .in('journal_id', journalIds);
+
+        const gradesMap = (gradesData || []).reduce((acc: any, grade: any) => {
+          acc[grade.journal_id] = grade;
+          return acc;
+        }, {});
+
+        return (journalsData || []).map((journal: any) => {
+          const grade = gradesMap[journal.id];
+          const finalScore = grade?.instructor_score ?? grade?.overall_score;
+          const finalGrade = grade?.instructor_letter_grade ?? grade?.letter_grade;
+          
+          return {
+            ...journal,
+            status: journal.is_published ? 'published' : 'submitted',
+            gw_profiles: profileMap[journal.student_id],
+            _type: 'mus240_journal',
+            // Add grade data to submission object
+            grade: finalScore,
+            graded_at: grade?.instructor_graded_at ?? grade?.graded_at,
+            graded_by: grade?.instructor_graded_by ?? null,
+            feedback: grade?.rubric ? JSON.stringify({
+              letterGrade: finalGrade,
+              totalScore: finalScore,
+              maxPoints: assignment?.points || 100,
+              criteriaScores: grade.rubric?.scores || [],
+              overallFeedback: grade?.instructor_feedback ?? grade?.ai_feedback,
+              aiDetection: {
+                is_flagged: journal.ai_detected || false,
+                confidence: journal.ai_detection_score || 0,
+              }
+            }) : null,
+          };
+        });
       }
 
       // Default: standard assignment submissions
