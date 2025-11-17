@@ -20,13 +20,26 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
     queryKey: ['gw-submission', submissionId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('assignment_submissions' as any)
-        .select('*, gw_assignments(title, description, points), gw_profiles(full_name, email)')
+        .from('gw_submissions' as any)
+        .select('*, gw_assignments(title, description, points)')
         .eq('id', submissionId)
         .single();
 
       if (error) throw error;
-      return data as any;
+
+      const base: any = data as any;
+
+      let profile: any = null;
+      if (base?.student_id) {
+        const { data: profileData } = await supabase
+          .from('gw_profiles')
+          .select('full_name, email')
+          .eq('user_id', base.student_id)
+          .maybeSingle();
+        profile = profileData;
+      }
+
+      return { ...base, gw_profiles: profile } as any;
     },
   });
 
@@ -71,9 +84,9 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
             )}
           </div>
           <div className="p-4 bg-muted rounded-lg">
-            {submission?.content || submission?.text ? (
+            {submission?.content_text || (submission as any)?.content || (submission as any)?.text ? (
               <pre className="whitespace-pre-wrap font-sans">
-                {submission.content || submission.text}
+                {submission?.content_text || (submission as any)?.content || (submission as any)?.text}
               </pre>
             ) : (
               <p className="text-muted-foreground">No content submitted</p>

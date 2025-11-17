@@ -106,33 +106,8 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
             }));
           }
 
-          // Then try legacy assignment_submissions
-          const { data: legacySubs, error: legacyErr } = await supabase
-            .from('assignment_submissions' as any)
-            .select('*')
-            .eq('assignment_id', assignmentId)
-            .order('submitted_at', { ascending: false });
+          // Removed legacy assignment_submissions fallback; use gw_submissions only
 
-          if (legacyErr) console.warn('assignment_submissions fallback error', legacyErr);
-
-          if (legacySubs && legacySubs.length > 0) {
-            const studentIds = [...new Set(legacySubs.map((s: any) => s.student_id))];
-            const { data: profiles } = await supabase
-              .from('gw_profiles')
-              .select('user_id, full_name, email')
-              .in('user_id', studentIds);
-
-            const profileMap = (profiles || []).reduce((acc: any, p: any) => {
-              acc[p.user_id] = p;
-              return acc;
-            }, {});
-
-            return legacySubs.map((s: any) => ({
-              ...s,
-              gw_profiles: profileMap[s.student_id],
-              _type: 'legacy_fallback',
-            }));
-          }
         }
 
         const studentIds = [...new Set(journalsData?.map((j: any) => j.student_id) || [])];
