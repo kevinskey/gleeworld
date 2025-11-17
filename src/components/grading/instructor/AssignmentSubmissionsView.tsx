@@ -383,7 +383,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
                           <div className="flex items-center justify-between mb-1">
                             <span className="font-medium text-sm">{criterion.criterion_name}</span>
                             <span className="font-bold text-primary">
-                              {criterion.score}/{criterion.feedback.match(/\d+/) ? criterion.feedback.match(/\d+/)[0] : '?'} points
+                              {criterion.score}/{typeof criterion.max_points === 'number' ? criterion.max_points : '?'} points
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground">{criterion.feedback}</p>

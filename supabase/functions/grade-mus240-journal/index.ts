@@ -400,6 +400,20 @@ Provide confidence level (low/medium/high) if AI was used and explain why.`;
     }
 
 
+    // Success response
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        journalId,
+        assignmentId: assignment?.id ?? null,
+        totalScore: Math.round(totalScore),
+        percentage: Math.round(percentage),
+        letterGrade,
+        maxPoints: totalMaxPoints
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
   } catch (error) {
     console.error('MUS240 journal grading error:', error);
     return new Response(
