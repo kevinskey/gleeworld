@@ -62,18 +62,22 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
       if (isMus240Journal) {
         // Determine correct legacy assignment id for MUS240 journals
         let legacyIdToUse = assignment?.legacy_id as string | undefined;
-        
-        // For assignments from mus240 table (new migration), use legacy_id directly
-        // For older assignments from mus240_assignments, derive from title
-        if (!legacyIdToUse || assignment?.legacy_source === 'mus240_assignments') {
-          const match = (assignment?.title || '').match(/Listening\s*Journal\s*(\d+)/i);
-          if (match?.[1]) {
-            legacyIdToUse = `lj${match[1]}`;
+        const title = assignment?.title || '';
+        const titleMatch = title.match(/Listening\s*Journal\s*(\d+)/i);
+
+        // Normalize: if legacy_id isn't in 'lj#' form, derive from title
+        if (!legacyIdToUse || !/^lj\d+$/i.test(legacyIdToUse)) {
+          if (titleMatch?.[1]) {
+            legacyIdToUse = `lj${titleMatch[1]}`;
           }
         }
 
-        console.log('Fetching MUS240 journals for legacy_id:', legacyIdToUse, 'assignment:', assignment?.title);
+        // As a final fallback, if still missing, try lowercased raw legacy_id
+        if (!legacyIdToUse && assignment?.legacy_id) {
+          legacyIdToUse = String(assignment.legacy_id).toLowerCase();
+        }
 
+        console.log('MUS240 mapping -> legacyIdToUse:', legacyIdToUse, 'from title:', title);
         const { data: journalsData, error: journalsError } = await supabase
           .from('mus240_journal_entries' as any)
           .select('*')
