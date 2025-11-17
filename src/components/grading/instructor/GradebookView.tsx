@@ -127,20 +127,20 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
       });
 
       const totalPoints = assignments.reduce((sum, a) => sum + (a.points || 100), 0);
-      const earnedPoints = grades.reduce((sum, g) => sum + (g.grade || 0), 0);
+      const earnedPoints = assignmentGrades.reduce((sum, g) => sum + (g.grade || 0), 0);
       const percentage = totalPoints > 0 ? (earnedPoints / totalPoints) * 100 : 0;
 
       return {
         studentId,
         studentName,
         studentEmail: enrollment.gw_profiles?.email,
-        grades,
+        grades: assignmentGrades,
         totalPoints,
         earnedPoints,
         percentage,
       };
     });
-  }, [enrollments, assignments, submissions]);
+  }, [enrollments, assignments, submissions, gradeRecords]);
 
   const getGradeColor = (status: string) => {
     switch (status) {
