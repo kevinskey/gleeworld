@@ -52,13 +52,10 @@ export const Mus240PollSystem = () => {
   const fetchPolls = async () => {
     setLoading(true);
     try {
-      let query = supabase.from('mus240_polls').select('*');
-      
-      if (!hasAdminAccess) {
-        query = query.eq('is_active', true);
-      }
-      
-      const { data, error } = await query.order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('mus240_polls')
+        .select('*')
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setPolls(data || []);
