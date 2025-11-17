@@ -82,9 +82,26 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
     enabled: !!assignments && assignments.length > 0,
   });
 
+  const { data: grades, isLoading: gradesLoading } = useQuery({
+    queryKey: ['gw-course-grades', courseId],
+    queryFn: async () => {
+      if (!assignments || assignments.length === 0) return [];
+      
+      const assignmentIds = assignments.map(a => a.id);
+      const { data, error } = await supabase
+        .from('gw_grades' as any)
+        .select('*')
+        .in('assignment_id', assignmentIds);
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!assignments && assignments.length > 0,
+  });
+
   // Calculate gradebook data
   const gradebookData = useMemo(() => {
-    if (!enrollments || !assignments || !submissions) return [];
+    if (!enrollments || !assignments || !submissions || !grades) return [];
 
     return enrollments.map(enrollment => {
       const studentId = enrollment.student_id;
