@@ -227,24 +227,11 @@ Be constructive and specific in your feedback.
     // Calculate total score from rubric_scores
     const rubricScores = gradingResult.rubric_scores || [];
     const totalScore = rubricScores.reduce((sum, item) => sum + item.score, 0);
-    const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 17;
+    const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 100;
     
-    // Determine target max points per assignment
-    const assignmentMax: Record<string, number> = {
-      lj1: 10,
-      lj2: 10,
-      lj3: 15,
-      lj4: 15,
-      lj5: 15,
-      lj6: 15,
-      lj7: 15,
-      lj8: 15,
-    };
-    const targetMax = assignment_id && assignmentMax[assignment_id] ? assignmentMax[assignment_id] : maxPossible;
-    
-    // Convert to target scale (preserve percentage)
-    const percent = maxPossible > 0 ? totalScore / maxPossible : 0;
-    const dbScore = Math.max(0, Math.min(targetMax, Math.round(percent * targetMax)));
+    // Calculate percentage (0-100)
+    const percent = maxPossible > 0 ? (totalScore / maxPossible) * 100 : 0;
+    const dbScore = Math.round(percent); // Store as percentage 0-100
 
     const letter = gradingResult.letter_grade || letterFromScore(totalScore);
     const feedback = gradingResult.overall_feedback || "Thank you for your submission.";
@@ -255,8 +242,8 @@ Be constructive and specific in your feedback.
       assignment_id,
       journal_id,
       total_score: totalScore,
-      mapped_score: dbScore,
-      mapped_max: targetMax,
+      max_possible: maxPossible,
+      percentage: dbScore,
       letter_grade: letter,
       rubric_items: rubricScores.length
     });
