@@ -438,9 +438,9 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
                         {parsedFeedback.criteriaScores.map((criterion: any, index: number) => (
                         <div key={index} className="border-l-4 border-primary pl-3">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-sm">{criterion.criterion_name}</span>
+                            <span className="font-medium text-sm">{criterion.criterion || criterion.criterion_name}</span>
                             <span className="font-bold text-primary">
-                              {criterion.score}/{typeof criterion.max_points === 'number' ? criterion.max_points : '?'} points
+                              {criterion.score}/{criterion.max_score || criterion.max_points} points
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground">{criterion.feedback}</p>
