@@ -38,7 +38,7 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
         .from('gw_assignments' as any)
         .select('*')
         .eq('course_id', courseId)
-        .order('due_at', { ascending: true });
+        .order('due_date', { ascending: true });
 
       if (error) throw error;
       return data as any[];
@@ -118,7 +118,7 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
                 </div>
               </CardTitle>
               <CardDescription>
-                Due: {assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}
+                Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
               </CardDescription>
               {assignment.description && (
                 <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
