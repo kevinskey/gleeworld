@@ -118,9 +118,9 @@ export const RubricGradingInterface: React.FC<RubricGradingInterfaceProps> = ({
     
     try {
       const { error } = await supabase
-        .from('assignment_submissions')
+        .from('gw_assignment_submissions')
         .update({
-          grade: score,
+          score_value: score,
           feedback: instructorFeedback,
           graded_at: new Date().toISOString(),
           graded_by: (await supabase.auth.getUser()).data.user?.id,

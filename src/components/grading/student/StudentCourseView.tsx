@@ -58,9 +58,9 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
       if (assignmentsError) throw assignmentsError;
 
       const { data: submissionsData, error: submissionsError } = await supabase
-        .from('gw_submissions' as any)
+        .from('gw_assignment_submissions' as any)
         .select('assignment_id, status')
-        .eq('student_id', user?.id);
+        .eq('user_id', user?.id);
 
       if (submissionsError) throw submissionsError;
 

@@ -20,7 +20,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
     queryKey: ['gw-submission', submissionId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_submissions' as any)
+        .from('gw_assignment_submissions' as any)
         .select('*, gw_assignments(title, description, points)')
         .eq('id', submissionId)
         .single();
@@ -30,11 +30,11 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
       const base: any = data as any;
 
       let profile: any = null;
-      if (base?.student_id) {
+      if (base?.user_id) {
         const { data: profileData } = await supabase
           .from('gw_profiles')
           .select('full_name, email')
-          .eq('user_id', base.student_id)
+          .eq('user_id', base.user_id)
           .maybeSingle();
         profile = profileData;
       }
@@ -84,10 +84,15 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
             )}
           </div>
           <div className="p-4 bg-muted rounded-lg">
-            {submission?.content_text || (submission as any)?.content || (submission as any)?.text ? (
-              <pre className="whitespace-pre-wrap font-sans">
-                {submission?.content_text || (submission as any)?.content || (submission as any)?.text}
-              </pre>
+            {submission?.notes || submission?.recording_url ? (
+              <div className="space-y-2">
+                {submission.notes && (
+                  <pre className="whitespace-pre-wrap font-sans">{submission.notes}</pre>
+                )}
+                {submission.recording_url && (
+                  <audio controls src={submission.recording_url} className="w-full" />
+                )}
+              </div>
             ) : (
               <p className="text-muted-foreground">No content submitted</p>
             )}
@@ -100,7 +105,7 @@ export const SubmissionGradingView: React.FC<SubmissionGradingViewProps> = ({ su
         submissionId={submissionId}
         assignmentTitle={submission?.gw_assignments?.title || 'Assignment'}
         studentName={submission?.gw_profiles?.full_name || submission?.gw_profiles?.email || 'Student'}
-        content={submission?.content || submission?.text || ''}
+        content={submission?.notes || ''}
         existingGrade={submission}
         onGradeUpdate={() => refetch()}
       />

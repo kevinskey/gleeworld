@@ -78,21 +78,21 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
 
         // If no legacy journal entries found, fall back to current tables
         if (!journalsData || journalsData.length === 0) {
-          // Try gw_submissions first
+          // Try gw_assignment_submissions
           const { data: gwSubs, error: gwErr } = await supabase
-            .from('gw_submissions' as any)
+            .from('gw_assignment_submissions' as any)
             .select('*')
             .eq('assignment_id', assignmentId)
             .order('submitted_at', { ascending: false });
 
-          if (gwErr) console.warn('gw_submissions fallback error', gwErr);
+          if (gwErr) console.warn('gw_assignment_submissions error', gwErr);
 
           if (gwSubs && gwSubs.length > 0) {
-            const studentIds = [...new Set(gwSubs.map((s: any) => s.student_id))];
+            const userIds = [...new Set(gwSubs.map((s: any) => s.user_id))];
             const { data: profiles } = await supabase
               .from('gw_profiles')
               .select('user_id, full_name, email')
-              .in('user_id', studentIds);
+              .in('user_id', userIds);
 
             const profileMap = (profiles || []).reduce((acc: any, p: any) => {
               acc[p.user_id] = p;
@@ -101,12 +101,11 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
 
             return gwSubs.map((s: any) => ({
               ...s,
-              gw_profiles: profileMap[s.student_id],
-              _type: 'gw_fallback',
+              student_id: s.user_id, // Map user_id to student_id for compatibility
+              gw_profiles: profileMap[s.user_id],
+              _type: 'gw_assignment',
             }));
           }
-
-          // Removed legacy assignment_submissions fallback; use gw_submissions only
 
         }
 
@@ -185,20 +184,20 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
         });
       }
 
-      // Default: standard assignment submissions
+      // Default: standard assignment submissions from gw_assignment_submissions
       const { data: submissionsData, error: submissionsError } = await supabase
-        .from('gw_submissions' as any)
+        .from('gw_assignment_submissions' as any)
         .select('*')
         .eq('assignment_id', assignmentId)
         .order('submitted_at', { ascending: false });
 
       if (submissionsError) throw submissionsError;
 
-      const studentIds = [...new Set(submissionsData?.map((s: any) => s.student_id) || [])];
+      const userIds = [...new Set(submissionsData?.map((s: any) => s.user_id) || [])];
       const { data: profiles } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email')
-        .in('user_id', studentIds);
+        .in('user_id', userIds);
 
       const profileMap = (profiles || []).reduce((acc: any, p: any) => {
         acc[p.user_id] = p;
@@ -207,7 +206,8 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
 
       return (submissionsData || []).map((submission: any) => ({
         ...submission,
-        gw_profiles: profileMap[submission.student_id],
+        student_id: submission.user_id, // Map user_id to student_id for compatibility
+        gw_profiles: profileMap[submission.user_id],
         _type: 'standard',
       }));
     },
