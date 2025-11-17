@@ -31,6 +31,21 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     },
   });
 
+  const { data: grades, isLoading: gradesLoading } = useQuery({
+    queryKey: ['student-course-grades', courseId, user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_grades' as any)
+        .select('*, gw_assignments(points)')
+        .eq('student_id', user?.id)
+        .eq('released_to_student', true);
+      
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!user,
+  });
+
   const { data: assignments, isLoading: assignmentsLoading } = useQuery({
     queryKey: ['gw-student-assignments', courseId, user?.id],
     queryFn: async () => {
@@ -59,7 +74,12 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
     enabled: !!user,
   });
 
-  if (courseLoading || assignmentsLoading) {
+  const totalEarned = grades?.reduce((sum, g) => sum + (g.points_awarded || 0), 0) || 0;
+  const totalPossible = grades?.reduce((sum, g) => sum + (g.gw_assignments?.points || 0), 0) || 0;
+  const percentage = totalPossible > 0 ? (totalEarned / totalPossible) * 100 : 0;
+  const letterGrade = percentage >= 90 ? 'A' : percentage >= 80 ? 'B' : percentage >= 70 ? 'C' : percentage >= 60 ? 'D' : 'F';
+
+  if (courseLoading || assignmentsLoading || gradesLoading) {
     return <LoadingSpinner size="lg" text="Loading course..." />;
   }
 
@@ -75,37 +95,68 @@ export const StudentCourseView: React.FC<StudentCourseViewProps> = ({ courseId }
         </div>
       </div>
 
+      {totalPossible > 0 && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Current Grade</h3>
+                <p className="text-3xl font-bold text-primary">{percentage.toFixed(1)}% ({letterGrade})</p>
+              </div>
+              <div className="text-right text-muted-foreground">
+                <p>{totalEarned} / {totalPossible} points</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid gap-4">
-        {assignments?.map((assignment) => (
-          <Card key={assignment.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  {assignment.title}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Badge variant={assignment.submissionStatus === 'graded' ? 'default' : assignment.submissionStatus === 'submitted' ? 'secondary' : 'outline'}>
-                    {assignment.submissionStatus}
-                  </Badge>
-                  <span className="text-sm font-normal text-muted-foreground">
-                    {assignment.points} pts
+        {assignments?.map((assignment) => {
+          const assignmentGrade = grades?.find(g => g.assignment_id === assignment.id);
+          
+          return (
+            <Card key={assignment.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    {assignment.title}
                   </span>
-                </div>
-              </CardTitle>
-              <CardDescription>
-                Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
-              >
-                View Assignment
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+                  <div className="flex items-center gap-2">
+                    <Badge variant={assignment.submissionStatus === 'graded' ? 'default' : assignment.submissionStatus === 'submitted' ? 'secondary' : 'outline'}>
+                      {assignment.submissionStatus}
+                    </Badge>
+                    <span className="text-sm font-normal text-muted-foreground">
+                      {assignment.points} pts
+                    </span>
+                  </div>
+                </CardTitle>
+                <CardDescription>
+                  Due: {assignment.due_date ? new Date(assignment.due_date).toLocaleDateString() : 'No due date'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {assignmentGrade && (
+                  <div className="p-3 bg-muted rounded-lg">
+                    <p className="text-sm font-semibold">
+                      Grade: {assignmentGrade.points_awarded} / {assignment.points} 
+                      ({((assignmentGrade.points_awarded / assignment.points) * 100).toFixed(1)}%)
+                    </p>
+                    {assignmentGrade.feedback && (
+                      <p className="text-sm text-muted-foreground mt-1">{assignmentGrade.feedback}</p>
+                    )}
+                  </div>
+                )}
+                <Button
+                  onClick={() => navigate(`/grading/student/assignment/${assignment.id}`)}
+                >
+                  View Assignment
+                </Button>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {!assignments || assignments.length === 0 ? (

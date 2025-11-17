@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Users, BookOpen } from 'lucide-react';
+import { FileText, ArrowLeft, Users, BookOpen, Plus } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { Badge } from '@/components/ui/badge';
+import { CreateAssignmentDialog } from './CreateAssignmentDialog';
 
 interface InstructorCourseViewProps {
   courseId: string;
@@ -13,6 +15,7 @@ interface InstructorCourseViewProps {
 
 export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ courseId }) => {
   const navigate = useNavigate();
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ['gw-course', courseId],
@@ -57,8 +60,12 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
           <p className="text-muted-foreground">{course?.title}</p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Assignment
+          </Button>
           <Button
-            variant="default"
+            variant="outline"
             onClick={() => navigate(`/grading/instructor/course/${courseId}/gradebook`)}
             className="flex items-center gap-2"
           >
@@ -101,9 +108,14 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
                   <FileText className="h-5 w-5" />
                   {assignment.title || 'Untitled Assignment'}
                 </span>
-                <span className="text-sm font-normal text-muted-foreground">
-                  {assignment.points} pts
-                </span>
+                <div className="flex items-center gap-2">
+                  <Badge variant={assignment.is_active ? 'default' : 'secondary'}>
+                    {assignment.is_active ? 'Active' : 'Archived'}
+                  </Badge>
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {assignment.points} pts
+                  </span>
+                </div>
               </CardTitle>
               <CardDescription>
                 Due: {assignment.due_at ? new Date(assignment.due_at).toLocaleDateString() : 'No due date'}
@@ -132,6 +144,12 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
           </CardContent>
         </Card>
       ) : null}
+
+      <CreateAssignmentDialog
+        courseId={courseId}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </div>
   );
 };
