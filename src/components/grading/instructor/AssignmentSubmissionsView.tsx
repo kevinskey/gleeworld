@@ -76,6 +76,65 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
 
         if (journalsError) throw journalsError;
 
+        // If no legacy journal entries found, fall back to current tables
+        if (!journalsData || journalsData.length === 0) {
+          // Try gw_submissions first
+          const { data: gwSubs, error: gwErr } = await supabase
+            .from('gw_submissions' as any)
+            .select('*')
+            .eq('assignment_id', assignmentId)
+            .order('submitted_at', { ascending: false });
+
+          if (gwErr) console.warn('gw_submissions fallback error', gwErr);
+
+          if (gwSubs && gwSubs.length > 0) {
+            const studentIds = [...new Set(gwSubs.map((s: any) => s.student_id))];
+            const { data: profiles } = await supabase
+              .from('gw_profiles')
+              .select('user_id, full_name, email')
+              .in('user_id', studentIds);
+
+            const profileMap = (profiles || []).reduce((acc: any, p: any) => {
+              acc[p.user_id] = p;
+              return acc;
+            }, {});
+
+            return gwSubs.map((s: any) => ({
+              ...s,
+              gw_profiles: profileMap[s.student_id],
+              _type: 'gw_fallback',
+            }));
+          }
+
+          // Then try legacy assignment_submissions
+          const { data: legacySubs, error: legacyErr } = await supabase
+            .from('assignment_submissions' as any)
+            .select('*')
+            .eq('assignment_id', assignmentId)
+            .order('submitted_at', { ascending: false });
+
+          if (legacyErr) console.warn('assignment_submissions fallback error', legacyErr);
+
+          if (legacySubs && legacySubs.length > 0) {
+            const studentIds = [...new Set(legacySubs.map((s: any) => s.student_id))];
+            const { data: profiles } = await supabase
+              .from('gw_profiles')
+              .select('user_id, full_name, email')
+              .in('user_id', studentIds);
+
+            const profileMap = (profiles || []).reduce((acc: any, p: any) => {
+              acc[p.user_id] = p;
+              return acc;
+            }, {});
+
+            return legacySubs.map((s: any) => ({
+              ...s,
+              gw_profiles: profileMap[s.student_id],
+              _type: 'legacy_fallback',
+            }));
+          }
+        }
+
         const studentIds = [...new Set(journalsData?.map((j: any) => j.student_id) || [])];
         
         // Fetch profiles
