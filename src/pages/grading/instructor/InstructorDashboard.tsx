@@ -2,9 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
-import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { InstructorDashboardContent } from '@/components/grading/instructor/InstructorDashboardContent';
 
 const InstructorDashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -23,11 +21,8 @@ const InstructorDashboard: React.FC = () => {
     return <Navigate to="/grading/student/dashboard" replace />;
   }
 
-  return (
-    <UniversalLayout>
-      <InstructorDashboardContent />
-    </UniversalLayout>
-  );
+  // Redirect to MUS240 instructor console - the new grading dashboard
+  return <Navigate to="/classes/mus240/instructor/console" replace />;
 };
 
 export default InstructorDashboard;

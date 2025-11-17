@@ -1,9 +1,9 @@
 import React from 'react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { ModuleProps } from '@/types/unified-modules';
-import { InstructorDashboardContent } from '@/components/grading/instructor/InstructorDashboardContent';
 import { StudentDashboardContent } from '@/components/grading/student/StudentDashboardContent';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
+import { Navigate } from 'react-router-dom';
 
 export const GradingModule: React.FC<ModuleProps> = () => {
   const { profile, loading } = useUserRole();
@@ -17,7 +17,7 @@ export const GradingModule: React.FC<ModuleProps> = () => {
   return (
     <div className="container mx-auto py-6">
       {isInstructor ? (
-        <InstructorDashboardContent />
+        <Navigate to="/classes/mus240/instructor/console" replace />
       ) : (
         <StudentDashboardContent />
       )}
