@@ -400,11 +400,15 @@ Give students the benefit of the doubt - many write formally but authentically. 
     }
 
     // Store grade in mus240_journal_grades table
+    // overall_score should be the actual points earned (0-10 for lj1, based on rubric)
+    const totalEarned = gradingResult.criteria_scores.reduce((sum, c) => sum + c.score, 0);
+    const totalPossible = gradingResult.criteria_scores.reduce((sum, c) => sum + c.maxScore, 0);
+    
     const gradeData = {
       student_id: journal.student_id,
       assignment_id: journal.assignment_id,
       journal_id: journalId,
-      overall_score: Math.round(percentage), // Store percentage (0-100)
+      overall_score: totalEarned, // Store actual points earned from rubric
       letter_grade: letterGrade,
       ai_feedback: gradingResult.overall_feedback,
       graded_at: new Date().toISOString(),
