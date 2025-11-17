@@ -111,7 +111,7 @@ export const AlumnaeProfileEditor = ({ user, open, onOpenChange, onSuccess }: Al
       const { error } = await supabase
         .from('gw_profiles')
         .update(formData)
-        .eq('id', user.id);
+        .eq('user_id', user.user_id || user.id);
 
       if (error) throw error;
 
