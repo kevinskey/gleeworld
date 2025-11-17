@@ -40,10 +40,10 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
     queryKey: ['gw-student-submission', assignmentId, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('gw_submissions' as any)
+        .from('gw_assignment_submissions' as any)
         .select('*')
         .eq('assignment_id', assignmentId)
-        .eq('student_id', user?.id)
+        .eq('user_id', user?.id)
         .maybeSingle();
 
       if (error) throw error;
@@ -53,23 +53,21 @@ export const StudentAssignmentView: React.FC<StudentAssignmentViewProps> = ({ as
   });
 
   useEffect(() => {
-    if (submission?.content_text) {
-      setEditedContent(submission.content_text);
+    if (submission?.notes) {
+      setEditedContent(submission.notes);
     }
   }, [submission]);
 
   const updateMutation = useMutation({
     mutationFn: async (content: string) => {
       const { error } = await supabase
-        .from('gw_submissions' as any)
+        .from('gw_assignment_submissions' as any)
         .upsert({
           assignment_id: assignmentId,
-          student_id: user?.id,
-          content_text: content,
+          user_id: user?.id,
+          notes: content,
           status: 'submitted',
           submitted_at: new Date().toISOString(),
-        }, {
-          onConflict: 'assignment_id,student_id',
         });
       
       if (error) throw error;
