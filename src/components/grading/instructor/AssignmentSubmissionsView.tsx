@@ -153,7 +153,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
 
       // Default: standard assignment submissions
       const { data: submissionsData, error: submissionsError } = await supabase
-        .from('assignment_submissions' as any)
+        .from('gw_submissions' as any)
         .select('*')
         .eq('assignment_id', assignmentId)
         .order('submitted_at', { ascending: false });
