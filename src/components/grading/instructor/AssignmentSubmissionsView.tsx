@@ -109,7 +109,7 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           // Calculate actual earned points and max points from rubric
           let earnedPoints = 0;
           let maxPoints = 0;
-          if (grade?.rubric?.scores) {
+          if (grade?.rubric?.scores && Array.isArray(grade.rubric.scores)) {
             for (const criterion of grade.rubric.scores) {
               earnedPoints += criterion.score || 0;
               maxPoints += criterion.max_score || 0;
@@ -117,7 +117,14 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
           }
           
           // Calculate percentage (0-100)
-          const percentageGrade = maxPoints > 0 ? Math.round((earnedPoints / maxPoints) * 100) : 0;
+          // If rubric data exists, calculate from rubric; otherwise use stored percentage/score
+          let percentageGrade = 0;
+          if (maxPoints > 0) {
+            percentageGrade = Math.round((earnedPoints / maxPoints) * 100);
+          } else if (finalScore) {
+            // If finalScore looks like a percentage (0-100), use it; otherwise assume it's out of 100
+            percentageGrade = finalScore <= 100 ? Math.round(finalScore) : Math.round((finalScore / 100) * 100);
+          }
           
           return {
             ...journal,
@@ -128,17 +135,18 @@ export const AssignmentSubmissionsView: React.FC<AssignmentSubmissionsViewProps>
             grade: percentageGrade,
             graded_at: grade?.instructor_graded_at ?? grade?.graded_at,
             graded_by: grade?.instructor_graded_by ?? null,
-            feedback: grade?.rubric ? JSON.stringify({
-              letterGrade: finalGrade,
+            // ALWAYS include feedback with letter grade, even if rubric is incomplete
+            feedback: JSON.stringify({
+              letterGrade: finalGrade, // Use DB letter_grade directly (D, B, A+, etc.)
               totalScore: earnedPoints,
               maxPoints: maxPoints,
-              criteriaScores: grade.rubric?.scores || [],
+              criteriaScores: grade?.rubric?.scores || [],
               overallFeedback: grade?.instructor_feedback ?? grade?.ai_feedback,
               aiDetection: {
                 is_flagged: journal.ai_detected || false,
                 confidence: journal.ai_detection_score || 0,
               }
-            }) : null,
+            }),
           };
         });
       }
