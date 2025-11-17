@@ -1,0 +1,10 @@
+-- Update gw_assignments with correct titles from mus240Assignments.ts data
+UPDATE gw_assignments SET title = 'Listening Journal 4: Ragtime', description = 'Examine Scott Joplin and the evolution of ragtime piano music.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440004';
+UPDATE gw_assignments SET title = 'Listening Journal 5: Jazz Origins', description = 'Examine the emergence of jazz from New Orleans to Harlem.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440005';
+UPDATE gw_assignments SET title = 'Listening Journal 6: Jubilee Quartets', description = 'Study jubilee quartets from Fisk to the Golden Gate Quartet.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440006';
+UPDATE gw_assignments SET title = 'Listening Journal 7: Spirituals to Swing to King', description = 'Discuss the evolution of African American Music from 1939 Spirituals to Swing Concert to 1969''s concert in the park in the movie Summer of Soul.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440007';
+UPDATE gw_assignments SET title = 'Listening Journal 8: Gospel Music', description = 'Explore gospel music''s transformation of African American religious music.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440008';
+UPDATE gw_assignments SET title = 'Listening Journal 9: Soul Music', description = 'Analyze the development of soul music and its connection to the civil rights movement.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440009';
+UPDATE gw_assignments SET title = 'Listening Journal 10: Funk and Disco', description = 'Examine funk and disco as responses to social and cultural changes.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440010';
+UPDATE gw_assignments SET title = 'Listening Journal 11: Hip-Hop Foundations', description = 'Study the origins and early development of hip-hop culture and music.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440011';
+UPDATE gw_assignments SET title = 'Listening Journal 12: Contemporary Black Music', description = 'Explore current trends in African American music and their cultural significance.' WHERE legacy_id = '550e8400-e29b-41d4-a716-446655440012';
