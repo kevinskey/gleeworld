@@ -82,7 +82,7 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
     enabled: !!assignments && assignments.length > 0,
   });
 
-  const { data: grades, isLoading: gradesLoading } = useQuery({
+  const { data: gradeRecords, isLoading: gradesLoading } = useQuery({
     queryKey: ['gw-course-grades', courseId],
     queryFn: async () => {
       if (!assignments || assignments.length === 0) return [];
@@ -101,17 +101,17 @@ export const GradebookView: React.FC<GradebookViewProps> = ({ courseId }) => {
 
   // Calculate gradebook data
   const gradebookData = useMemo(() => {
-    if (!enrollments || !assignments || !submissions || !grades) return [];
+    if (!enrollments || !assignments || !submissions || !gradeRecords) return [];
 
     return enrollments.map(enrollment => {
       const studentId = enrollment.student_id;
       const studentName = enrollment.gw_profiles?.full_name || enrollment.gw_profiles?.email || 'Unknown';
       
-      const grades = assignments.map(assignment => {
+      const assignmentGrades = assignments.map(assignment => {
         const submission = (submissions as any[] || []).find(
           (s: any) => s.student_id === studentId && s.assignment_id === assignment.id
         );
-        const gradeRec = (grades as any[] || []).find(
+        const gradeRec = (gradeRecords as any[] || []).find(
           (g: any) => g.student_id === studentId && g.assignment_id === assignment.id
         );
         const gradeValue = gradeRec?.total_score ?? null;
