@@ -399,6 +399,30 @@ Give students the benefit of the doubt - many write formally but authentically. 
       }
     }
 
+    // Store grade in mus240_journal_grades table
+    const gradeData = {
+      student_id: journal.student_id,
+      assignment_id: journal.assignment_id,
+      journal_id: journalId,
+      overall_score: Math.round(percentage), // Store percentage (0-100)
+      letter_grade: letterGrade,
+      ai_feedback: gradingResult.overall_feedback,
+      graded_at: new Date().toISOString(),
+      ai_model: 'gemini-2.5-flash',
+      rubric: {
+        criteria: criteria,
+        scores: gradingResult.criteria_scores
+      }
+    };
+
+    const { error: gradeError } = await supabase
+      .from('mus240_journal_grades')
+      .upsert(gradeData, { onConflict: 'student_id,assignment_id' });
+
+    if (gradeError) {
+      console.error('Error saving to mus240_journal_grades:', gradeError);
+    }
+
 
     // Success response
     return new Response(
