@@ -248,7 +248,7 @@ Be constructive and specific in your feedback.
       rubric_items: rubricScores.length
     });
 
-    // Try to upsert the grade
+    // Try to upsert the grade - store actual points earned, not percentage
     const { error: upsertError } = await supabase
       .from("mus240_journal_grades")
       .upsert(
@@ -256,12 +256,15 @@ Be constructive and specific in your feedback.
           student_id,
           assignment_id,
           journal_id,
-          overall_score: dbScore,
+          overall_score: totalScore, // Store actual points earned from rubric
           letter_grade: letter,
           ai_feedback: feedback,
           graded_at: new Date().toISOString(),
           ai_model: "gpt-4o-mini",
-          rubric: rubricScores, // Save the detailed rubric breakdown
+          rubric: {
+            criteria: rubric,
+            scores: rubricScores
+          },
         },
         { onConflict: "student_id,assignment_id" },
       );
