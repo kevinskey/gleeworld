@@ -20,6 +20,7 @@ export interface ResolvedAssignment {
   due_at: string | null;
   course_id: string;
   is_mus240: boolean;
+  is_active?: boolean;
 }
 
 /**
@@ -134,6 +135,7 @@ function formatAssignment(data: any): ResolvedAssignment {
     due_at: data.due_at,
     course_id: data.course_id,
     is_mus240: data.legacy_source?.includes('mus240') || false,
+    is_active: data.is_active !== undefined ? data.is_active : true
   };
 }
 

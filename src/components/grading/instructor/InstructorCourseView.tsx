@@ -8,6 +8,7 @@ import { FileText, ArrowLeft, Users, BookOpen, Plus } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
 import { CreateAssignmentDialog } from './CreateAssignmentDialog';
+import { useUnifiedAssignments } from '@/hooks/useUnifiedAssignments';
 
 interface InstructorCourseViewProps {
   courseId: string;
@@ -31,19 +32,8 @@ export const InstructorCourseView: React.FC<InstructorCourseViewProps> = ({ cour
     },
   });
 
-  const { data: assignments, isLoading: assignmentsLoading, error: assignmentsError } = useQuery({
-    queryKey: ['gw-course-assignments', courseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('gw_assignments' as any)
-        .select('*')
-        .eq('course_id', courseId)
-        .order('due_at', { ascending: true });
-
-      if (error) throw error;
-      return data as any[];
-    },
-  });
+  // Use unified assignments hook to get assignments from both systems
+  const { data: assignments, isLoading: assignmentsLoading, error: assignmentsError } = useUnifiedAssignments(course?.code || '');
 
   if (courseLoading || assignmentsLoading) {
     return <LoadingSpinner size="lg" text="Loading course..." />;
