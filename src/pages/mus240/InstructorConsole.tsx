@@ -138,7 +138,7 @@ export const InstructorConsole = () => {
     <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
-        <div className="border-b bg-card sticky top-16 z-40">
+        <div className="border-b bg-card">
           <div className="max-w-[1800px] mx-auto px-6 py-4">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide w-full lg:w-auto">
