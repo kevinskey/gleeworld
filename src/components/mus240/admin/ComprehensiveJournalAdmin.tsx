@@ -10,6 +10,7 @@ import { FileText, MessageSquare, User, Calendar, Search, Filter, RefreshCw, Eye
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { AIGradeViewer } from './AIGradeViewer';
+import { mus240Assignments } from '@/data/mus240Assignments';
 
 interface JournalEntry {
   id: string;
