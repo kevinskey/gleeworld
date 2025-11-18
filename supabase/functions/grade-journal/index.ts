@@ -228,21 +228,20 @@ Be constructive and specific in your feedback.
     const rubricScores = gradingResult.rubric_scores || [];
     const totalScore = rubricScores.reduce((sum, item) => sum + item.score, 0);
     const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 100;
-    
-    // Get assignment max_points from database to normalize score
-    const { data: assignmentData } = await supabase
-      .from('mus240_assignments')
-      .select('points')
-      .eq('id', assignment_id)
-      .single();
-    
-    const assignmentMaxPoints = assignmentData?.points || 10; // Default to 10 if not found
-    
-    // Normalize score to assignment's max_points (e.g., 14/17 → 8.24/10)
-    const normalizedScore = maxPossible > 0 
-      ? (totalScore / maxPossible) * assignmentMaxPoints 
+
+    // Determine grading scale based on assignment identifier
+    // Listening journals (e.g., "lj2") are graded on a 0–10 scale per database constraint
+    const assignmentMaxPoints = assignment_id && assignment_id.toLowerCase().startsWith('lj')
+      ? 10
+      : 100; // fallback for any other future assignment types
+
+    // Normalize rubric total to the assignment's grading scale
+    const normalizedScore = maxPossible > 0
+      ? (totalScore / maxPossible) * assignmentMaxPoints
       : 0;
-    const dbScore = Math.round(normalizedScore * 100) / 100; // Round to 2 decimal places
+
+    // Round to 2 decimal places to stay safely within 0–10
+    const dbScore = Math.round(normalizedScore * 100) / 100;
 
     const letter = gradingResult.letter_grade || letterFromScore(totalScore);
     const feedback = gradingResult.overall_feedback || "Thank you for your submission.";
@@ -260,7 +259,7 @@ Be constructive and specific in your feedback.
       rubric_items: rubricScores.length
     });
 
-    // Try to upsert the grade - store normalized score
+    // Try to upsert the grade - store normalized score that respects DB constraints
     const { error: upsertError } = await supabase
       .from("mus240_journal_grades")
       .upsert(
@@ -268,7 +267,7 @@ Be constructive and specific in your feedback.
           student_id,
           assignment_id,
           journal_id,
-          overall_score: dbScore, // Store normalized score matching assignment max_points
+          overall_score: dbScore,
           letter_grade: letter,
           ai_feedback: feedback,
           graded_at: new Date().toISOString(),
