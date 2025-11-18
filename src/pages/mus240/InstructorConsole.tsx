@@ -25,6 +25,7 @@ import { TestList } from '@/components/test-builder/TestList';
 import { useTests } from '@/hooks/useTestBuilder';
 import { useQuery } from '@tanstack/react-query';
 import { RubricEditor } from '@/components/mus240/rubrics/RubricEditor';
+import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -38,29 +39,6 @@ export const InstructorConsole = () => {
   const [assignmentSubTab, setAssignmentSubTab] = useState('manage');
   const [testSubTab, setTestSubTab] = useState('tests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [rubrics, setRubrics] = useState([
-    {
-      id: 'listening-journal',
-      title: 'Listening Journal Rubric',
-      description: 'Standard grading criteria for all journal entries',
-      criteria: [
-        { id: '1', name: 'Musical Analysis', description: 'Depth of musical elements discussed', points: 40 },
-        { id: '2', name: 'Cultural Context', description: 'Understanding of historical/cultural significance', points: 30 },
-        { id: '3', name: 'Writing Quality', description: 'Grammar, organization, and clarity', points: 20 },
-        { id: '4', name: 'Timeliness', description: 'Submitted by deadline', points: 10 },
-      ],
-    },
-    {
-      id: 'midterm',
-      title: 'Midterm Exam Rubric',
-      description: 'Audio excerpt identification criteria',
-      criteria: [
-        { id: '1', name: 'Artist Identification', description: 'Correct artist name', points: 33 },
-        { id: '2', name: 'Song/Piece Title', description: 'Correct title or close approximation', points: 33 },
-        { id: '3', name: 'Musical Details', description: 'Additional context or analysis', points: 34 },
-      ],
-    },
-  ]);
   const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
   const { data: tests, isLoading: testsLoading } = useTests('mus240');
   
@@ -384,83 +362,10 @@ export const InstructorConsole = () => {
                     <ListChecks className="h-5 w-5" />
                     Grading Rubrics
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Create and manage grading rubrics for assignments</p>
+                  <p className="text-sm text-muted-foreground mt-1">Manage grading criteria for consistent evaluation</p>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold">Assignment Rubrics</h3>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Define criteria and point values for consistent grading
-                        </p>
-                      </div>
-                      <Button onClick={() => {
-                        const newRubric = {
-                          id: `rubric-${Date.now()}`,
-                          title: 'New Rubric',
-                          description: 'Description for new rubric',
-                          criteria: [
-                            { id: '1', name: 'Criteria 1', description: 'Description', points: 50 },
-                            { id: '2', name: 'Criteria 2', description: 'Description', points: 50 },
-                          ],
-                        };
-                        setRubrics([...rubrics, newRubric]);
-                      }}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Create Rubric
-                      </Button>
-                    </div>
-
-                    <div className="grid gap-4">
-                      {rubrics.map((rubric) => {
-                        const totalPoints = rubric.criteria.reduce((sum, c) => sum + c.points, 0);
-                        return (
-                          <Card key={rubric.id} className="border-2">
-                            <CardHeader>
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <CardTitle className="text-lg">{rubric.title}</CardTitle>
-                                  <p className="text-sm text-muted-foreground mt-1">{rubric.description}</p>
-                                </div>
-                                <RubricEditor
-                                  rubric={rubric}
-                                  onUpdate={(updatedRubric) => {
-                                    setRubrics(
-                                      rubrics.map((r) =>
-                                        r.id === updatedRubric.id ? updatedRubric : r
-                                      )
-                                    );
-                                  }}
-                                />
-                              </div>
-                            </CardHeader>
-                            <CardContent>
-                              <div className="space-y-3">
-                                <div className="grid grid-cols-3 gap-4 text-sm font-medium border-b pb-2">
-                                  <div>Criteria</div>
-                                  <div>Description</div>
-                                  <div className="text-right">Points</div>
-                                </div>
-                                {rubric.criteria.map((criteria) => (
-                                  <div key={criteria.id} className="grid grid-cols-3 gap-4 text-sm py-2 border-b last:border-0">
-                                    <div className="font-medium">{criteria.name}</div>
-                                    <div className="text-muted-foreground">{criteria.description}</div>
-                                    <div className="text-right">{criteria.points}</div>
-                                  </div>
-                                ))}
-                                <div className="grid grid-cols-3 gap-4 text-sm font-semibold pt-2 border-t">
-                                  <div>Total Points</div>
-                                  <div></div>
-                                  <div className="text-right">{totalPoints}</div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  </div>
+                  <RubricManager />
                 </CardContent>
               </Card>
             )}
