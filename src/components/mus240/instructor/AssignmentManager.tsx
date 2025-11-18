@@ -22,6 +22,7 @@ interface Assignment {
   due_date: string;
   is_active: boolean;
   assignment_type: string;
+  assignment_code?: string;
   created_at: string;
 }
 
@@ -109,12 +110,11 @@ export const AssignmentManager = () => {
         });
       });
 
-      // Group submissions by assignment title and add student info
+      // Group submissions by assignment code and add student info
       const groupedSubmissions: Record<string, JournalSubmission[]> = {};
       
       journalData?.forEach(entry => {
         const profile = profileMap.get(entry.student_id);
-        const assignmentTitle = codeToTitleMap[entry.assignment_id] || entry.assignment_id;
         
         const submission: JournalSubmission = {
           ...entry,
@@ -122,11 +122,11 @@ export const AssignmentManager = () => {
           student_email: profile?.email,
         };
 
-        // Store by title for easy lookup
-        if (!groupedSubmissions[assignmentTitle]) {
-          groupedSubmissions[assignmentTitle] = [];
+        const code = entry.assignment_id; // e.g., "lj7"
+        if (!groupedSubmissions[code]) {
+          groupedSubmissions[code] = [];
         }
-        groupedSubmissions[assignmentTitle].push(submission);
+        groupedSubmissions[code].push(submission);
       });
 
       setSubmissions(groupedSubmissions);
@@ -209,12 +209,14 @@ export const AssignmentManager = () => {
     }
   };
 
-  const getSubmissionCount = (assignmentTitle: string) => {
-    return submissions[assignmentTitle]?.length || 0;
+  const getSubmissionCount = (assignmentCode?: string) => {
+    if (!assignmentCode) return 0;
+    return submissions[assignmentCode]?.length || 0;
   };
 
-  const getGradedCount = (assignmentTitle: string) => {
-    return submissions[assignmentTitle]?.filter(s => s.grade !== null).length || 0;
+  const getGradedCount = (assignmentCode?: string) => {
+    if (!assignmentCode) return 0;
+    return submissions[assignmentCode]?.filter(s => s.grade !== null).length || 0;
   };
 
   const openEditModal = (assignment: Assignment) => {
@@ -406,19 +408,19 @@ export const AssignmentManager = () => {
                     )}
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      {getSubmissionCount(assignment.title)} submissions
-                      {getSubmissionCount(assignment.title) > 0 && (
+                      {getSubmissionCount(assignment.assignment_code)} submissions
+                      {getSubmissionCount(assignment.assignment_code) > 0 && (
                         <span className="text-xs ml-1">
-                          ({getGradedCount(assignment.title)} graded)
+                          ({getGradedCount(assignment.assignment_code)} graded)
                         </span>
                       )}
                     </div>
                   </div>
-                  {getSubmissionCount(assignment.title) > 0 && (
+                  {getSubmissionCount(assignment.assignment_code) > 0 && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/classes/mus240/instructor/journals?assignment=${assignment.title}`)}
+                      onClick={() => navigate(`/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}`)}
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       View Submissions
