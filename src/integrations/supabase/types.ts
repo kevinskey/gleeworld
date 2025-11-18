@@ -15467,6 +15467,7 @@ export type Database = {
       }
       mus240_assignments: {
         Row: {
+          assignment_code: string | null
           assignment_type: string
           created_at: string
           created_by: string | null
@@ -15483,6 +15484,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assignment_code?: string | null
           assignment_type?: string
           created_at?: string
           created_by?: string | null
@@ -15499,6 +15501,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assignment_code?: string | null
           assignment_type?: string
           created_at?: string
           created_by?: string | null
