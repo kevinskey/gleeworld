@@ -138,38 +138,38 @@ export const InstructorConsole = () => {
     <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
-        <div className="border-b bg-card sticky top-16 z-40">
+        <div className="border-b bg-card sticky top-[64px] z-30">
           <div className="max-w-[1800px] mx-auto px-6 py-4">
-            <div className="flex items-center justify-between gap-6">
-              <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide w-full lg:w-auto">
                 <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <BookOpen className="h-4 w-4 text-primary" />
+                  <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
                   <span className="text-muted-foreground">Assignments:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.activeAssignments}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <Eye className="h-4 w-4 text-emerald-600" />
+                  <Eye className="h-4 w-4 text-emerald-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Journals:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalJournals}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <BarChart3 className="h-4 w-4 text-orange-600" />
+                  <BarChart3 className="h-4 w-4 text-orange-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Pending:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.pendingGrades}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <GraduationCap className="h-4 w-4 text-purple-600" />
+                  <GraduationCap className="h-4 w-4 text-purple-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Students:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalStudents}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <Users className="h-4 w-4 text-indigo-600" />
+                  <Users className="h-4 w-4 text-indigo-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Average:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
                 <Badge variant="secondary" className="text-sm whitespace-nowrap">
                   <Brain className="h-3.5 w-3.5 mr-1.5" />
                   AI-Enhanced
@@ -191,7 +191,7 @@ export const InstructorConsole = () => {
         {/* Main Layout */}
         <div className="flex max-w-[1800px] mx-auto">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-32">
+          <aside className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[128px]">
             <div className="p-6">
               <div className="mb-8 pb-6 border-b">
                 <h2 className="text-xl font-bold text-foreground">MUS 240</h2>
