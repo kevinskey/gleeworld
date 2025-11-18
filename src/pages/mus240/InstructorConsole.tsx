@@ -33,7 +33,7 @@ export const InstructorConsole = () => {
   const { isTA, loading: taLoading } = useCourseTA('MUS240');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
-  const [assignmentSubTab, setAssignmentSubTab] = useState('journals');
+  const [assignmentSubTab, setAssignmentSubTab] = useState('manage');
   const [testSubTab, setTestSubTab] = useState('tests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
@@ -235,6 +235,13 @@ export const InstructorConsole = () => {
                 <CardContent>
                   <div className="flex gap-2 border-b mb-4 flex-wrap">
                     <Button
+                      variant={assignmentSubTab === 'manage' ? 'default' : 'ghost'}
+                      size="sm"
+                      onClick={() => setAssignmentSubTab('manage')}
+                    >
+                      Manage
+                    </Button>
+                    <Button
                       variant={assignmentSubTab === 'journals' ? 'default' : 'ghost'}
                       size="sm"
                       onClick={() => setAssignmentSubTab('journals')}
@@ -266,6 +273,7 @@ export const InstructorConsole = () => {
                     </Button>
                   </div>
 
+                  {assignmentSubTab === 'manage' && <AssignmentManager />}
                   {assignmentSubTab === 'journals' && <ComprehensiveJournalAdmin />}
                   {assignmentSubTab === 'papers' && (
                     <div className="text-center py-12">
