@@ -229,9 +229,20 @@ Be constructive and specific in your feedback.
     const totalScore = rubricScores.reduce((sum, item) => sum + item.score, 0);
     const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 100;
     
-    // Calculate percentage (0-100)
-    const percent = maxPossible > 0 ? (totalScore / maxPossible) * 100 : 0;
-    const dbScore = Math.round(percent); // Store as percentage 0-100
+    // Get assignment max_points from database to normalize score
+    const { data: assignmentData } = await supabase
+      .from('mus240_assignments')
+      .select('points')
+      .eq('id', assignment_id)
+      .single();
+    
+    const assignmentMaxPoints = assignmentData?.points || 10; // Default to 10 if not found
+    
+    // Normalize score to assignment's max_points (e.g., 14/17 → 8.24/10)
+    const normalizedScore = maxPossible > 0 
+      ? (totalScore / maxPossible) * assignmentMaxPoints 
+      : 0;
+    const dbScore = Math.round(normalizedScore * 100) / 100; // Round to 2 decimal places
 
     const letter = gradingResult.letter_grade || letterFromScore(totalScore);
     const feedback = gradingResult.overall_feedback || "Thank you for your submission.";
@@ -241,14 +252,15 @@ Be constructive and specific in your feedback.
       student_id,
       assignment_id,
       journal_id,
-      total_score: totalScore,
-      max_possible: maxPossible,
-      percentage: dbScore,
+      rubric_total: totalScore,
+      rubric_max: maxPossible,
+      assignment_max_points: assignmentMaxPoints,
+      normalized_score: dbScore,
       letter_grade: letter,
       rubric_items: rubricScores.length
     });
 
-    // Try to upsert the grade - store actual points earned, not percentage
+    // Try to upsert the grade - store normalized score
     const { error: upsertError } = await supabase
       .from("mus240_journal_grades")
       .upsert(
@@ -256,7 +268,7 @@ Be constructive and specific in your feedback.
           student_id,
           assignment_id,
           journal_id,
-          overall_score: totalScore, // Store actual points earned from rubric
+          overall_score: dbScore, // Store normalized score matching assignment max_points
           letter_grade: letter,
           ai_feedback: feedback,
           graded_at: new Date().toISOString(),
