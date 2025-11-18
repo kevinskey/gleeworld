@@ -54,7 +54,7 @@ interface Grade {
   instructor_graded_at?: string;
 }
 
-export const JournalSubmissionGradingPage = () => {
+const JournalSubmissionGradingPage = () => {
   const { journal_id } = useParams<{ journal_id: string }>();
   const navigate = useNavigate();
   const { profile, loading: authLoading } = useUserRole();
@@ -403,3 +403,5 @@ export const JournalSubmissionGradingPage = () => {
     </UniversalLayout>
   );
 };
+
+export default JournalSubmissionGradingPage;
