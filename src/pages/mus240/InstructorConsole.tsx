@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, ArrowLeft, Home, ChevronRight, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCourseTA } from '@/hooks/useCourseTA';
@@ -27,6 +27,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
 export const InstructorConsole = () => {
   const { isAdmin, loading } = useUserRole();
@@ -134,307 +135,284 @@ export const InstructorConsole = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b">
-        <div className="flex items-center justify-between px-4 py-3 max-w-[2000px] mx-auto">
-          <div className="flex items-center gap-3">
-            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-              <SheetTrigger asChild className="lg:hidden">
-                <Button variant="ghost" size="icon">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-4">
-                <div className="mb-6">
-                  <h2 className="text-lg font-bold">MUS 240 Console</h2>
-                  <p className="text-xs text-muted-foreground mt-1">Dr. Kevin Phillip Johnson</p>
-                </div>
-                <SidebarNav isMobile />
-              </SheetContent>
-            </Sheet>
-
-            <div>
-              <h1 className="text-lg md:text-xl font-bold">MUS 240 Instructor Console</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Survey of African American Music</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-xs hidden md:flex">
-              <Brain className="h-3 w-3 mr-1" />
-              AI-Enhanced
-            </Badge>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/classes/mus240/admin')}
-              className="flex items-center gap-2"
-            >
-              <Home className="h-4 w-4" />
-              <span className="hidden sm:inline">Admin Home</span>
-            </Button>
-          </div>
-        </div>
-
+    <UniversalLayout containerized={false}>
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
         {/* Compact Stats Bar */}
-        <div className="border-t bg-muted/30">
-          <div className="max-w-[2000px] mx-auto px-4 py-2">
-            <div className="flex items-center gap-4 overflow-x-auto">
-              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
-                <BookOpen className="h-3.5 w-3.5 text-blue-600" />
+        <div className="border-b bg-card/50 backdrop-blur-sm sticky top-16 z-40">
+          <div className="max-w-[2000px] mx-auto px-4 lg:px-6 py-3">
+            <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
+              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                <BookOpen className="h-4 w-4 text-primary" />
                 <span className="text-muted-foreground">Assignments:</span>
-                <span className="font-bold">{statsLoading ? '...' : stats.activeAssignments}</span>
+                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.activeAssignments}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
-                <Eye className="h-3.5 w-3.5 text-green-600" />
+              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                <Eye className="h-4 w-4 text-green-600 dark:text-green-500" />
                 <span className="text-muted-foreground">Journals:</span>
-                <span className="font-bold">{statsLoading ? '...' : stats.totalJournals}</span>
+                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalJournals}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
-                <BarChart3 className="h-3.5 w-3.5 text-orange-600" />
+              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                <BarChart3 className="h-4 w-4 text-orange-600 dark:text-orange-500" />
                 <span className="text-muted-foreground">Pending:</span>
-                <span className="font-bold">{statsLoading ? '...' : stats.pendingGrades}</span>
+                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.pendingGrades}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
-                <GraduationCap className="h-3.5 w-3.5 text-purple-600" />
+              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                <GraduationCap className="h-4 w-4 text-purple-600 dark:text-purple-500" />
                 <span className="text-muted-foreground">Students:</span>
-                <span className="font-bold">{statsLoading ? '...' : stats.totalStudents}</span>
+                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalStudents}</span>
               </div>
-              <div className="flex items-center gap-2 text-xs whitespace-nowrap">
-                <Users className="h-3.5 w-3.5 text-indigo-600" />
+              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-500" />
                 <span className="text-muted-foreground">Average:</span>
-                <span className="font-bold">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
+                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
               </div>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* Main Layout */}
-      <div className="flex max-w-[2000px] mx-auto">
-        {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-64 border-r bg-white/50 backdrop-blur min-h-[calc(100vh-120px)] sticky top-[120px]">
-          <div className="p-4">
-            <SidebarNav />
-          </div>
-        </aside>
+        {/* Main Layout */}
+        <div className="flex max-w-[2000px] mx-auto">
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:block w-64 border-r bg-card/30 backdrop-blur-sm min-h-[calc(100vh-8rem)] sticky top-32">
+            <div className="p-4">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-foreground">MUS 240</h2>
+                <p className="text-sm text-muted-foreground mt-1">Survey of African American Music</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Dr. Kevin Phillip Johnson</p>
+              </div>
+              <SidebarNav />
+            </div>
+          </aside>
 
-        {/* Content Area */}
-        <main className="flex-1 p-4 md:p-6">
-          {/* Assignments Tab with Sub-tabs */}
-          {activeTab === 'assignments' && (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader className="pb-3">
+          {/* Mobile Sidebar */}
+          <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+            <SheetTrigger asChild className="lg:hidden fixed bottom-6 right-6 z-50">
+              <Button size="lg" className="rounded-full shadow-lg h-14 w-14">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-bold text-foreground">MUS 240 Console</h2>
+                <p className="text-sm text-muted-foreground mt-1">Dr. Kevin Phillip Johnson</p>
+              </div>
+              <SidebarNav isMobile />
+            </SheetContent>
+          </Sheet>
+
+          {/* Main Content */}
+          <main className="flex-1 p-4 lg:p-6 space-y-6">
+            {/* Page Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">
+                  {navItems.find(item => item.value === activeTab)?.label || 'Console'}
+                </h1>
+                <p className="text-muted-foreground mt-1">
+                  Manage and monitor your MUS 240 course
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary" className="text-sm">
+                  <Brain className="h-3.5 w-3.5 mr-1.5" />
+                  AI-Enhanced
+                </Badge>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/classes/mus240/admin')}
+                  className="flex items-center gap-2"
+                >
+                  <Home className="h-4 w-4" />
+                  <span className="hidden sm:inline">Course Home</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Content based on active tab */}
+            {activeTab === 'assignments' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
                   <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
+                    <BookOpen className="h-5 w-5 text-primary" />
                     Assignments
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2 border-b mb-4 flex-wrap">
-                    <Button
-                      variant={assignmentSubTab === 'manage' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setAssignmentSubTab('manage')}
-                    >
-                      Manage
-                    </Button>
-                    <Button
-                      variant={assignmentSubTab === 'journals' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setAssignmentSubTab('journals')}
-                    >
-                      Journals
-                    </Button>
-                    <Button
-                      variant={assignmentSubTab === 'papers' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setAssignmentSubTab('papers')}
-                    >
-                      Papers
-                    </Button>
-                    <Button
-                      variant={assignmentSubTab === 'group-projects' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setAssignmentSubTab('group-projects')}
-                    >
-                      Group Projects
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate('/classes/mus240/instructor/bulk-grading')}
-                      className="ml-auto flex items-center gap-2"
-                    >
-                      <ClipboardCheck className="h-4 w-4" />
-                      Bulk Grading
-                    </Button>
-                  </div>
-
-                  {assignmentSubTab === 'manage' && <AssignmentManager />}
-                  {assignmentSubTab === 'journals' && <ComprehensiveJournalAdmin />}
-                  {assignmentSubTab === 'papers' && (
-                    <div className="text-center py-12">
-                      <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Papers</h3>
-                      <p className="text-muted-foreground">Paper assignments will be managed here</p>
-                    </div>
-                  )}
-                  {assignmentSubTab === 'group-projects' && (
-                    <div className="text-center py-12">
-                      <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Group Projects</h3>
-                      <p className="text-muted-foreground">Group project assignments will be managed here</p>
-                    </div>
-                  )}
+                <CardContent className="p-6">
+                  <AssignmentManager />
                 </CardContent>
               </Card>
-            </div>
-          )}
+            )}
 
-          {/* Tests Tab with Sub-tabs */}
-          {activeTab === 'tests' && (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader className="pb-3">
+            {activeTab === 'tests' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <ClipboardCheck className="h-5 w-5 text-primary" />
+                      Tests & Assessments
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    <div className="flex gap-2 border-b">
+                      <Button
+                        variant={testSubTab === 'tests' ? 'default' : 'ghost'}
+                        onClick={() => setTestSubTab('tests')}
+                        size="sm"
+                      >
+                        All Tests
+                      </Button>
+                      <Button
+                        variant={testSubTab === 'midterm' ? 'default' : 'ghost'}
+                        onClick={() => setTestSubTab('midterm')}
+                        size="sm"
+                      >
+                        Midterm Grading
+                      </Button>
+                    </div>
+
+                    {testSubTab === 'tests' && (
+                      <TestList 
+                        tests={allTests}
+                        courseId="mus240"
+                      />
+                    )}
+
+                    {testSubTab === 'midterm' && <MidtermGradingManager />}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'polls' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
                   <CardTitle className="flex items-center gap-2">
-                    <ClipboardCheck className="h-5 w-5" />
-                    Tests & Exams
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Polls & Engagement
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2 border-b mb-4">
-                    <Button
-                      variant={testSubTab === 'tests' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setTestSubTab('tests')}
-                    >
-                      Tests
-                    </Button>
-                    <Button
-                      variant={testSubTab === 'midterm' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setTestSubTab('midterm')}
-                    >
-                      Midterm
-                    </Button>
-                    <Button
-                      variant={testSubTab === 'final' ? 'default' : 'ghost'}
-                      size="sm"
-                      onClick={() => setTestSubTab('final')}
-                    >
-                      Final
-                    </Button>
-                  </div>
-
-                  {testSubTab === 'tests' && (
-                    testsLoading ? (
-                      <p className="text-muted-foreground">Loading tests...</p>
-                    ) : allTests && allTests.length > 0 ? (
-                      <TestList tests={allTests} courseId="mus240" />
-                    ) : (
-                      <div className="text-center py-12">
-                        <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <h3 className="text-lg font-medium mb-2">No tests created</h3>
-                        <p className="text-muted-foreground mb-4">
-                          Create tests in the Test Builder and assign them to MUS 240
-                        </p>
-                        <Button onClick={() => navigate('/dashboard?module=test-builder')}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Go to Test Builder
-                        </Button>
-                      </div>
-                    )
-                  )}
-
-                  {testSubTab === 'midterm' && <MidtermGradingManager />}
-
-                  {testSubTab === 'final' && (
-                    <div className="text-center py-12">
-                      <ClipboardCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Final Exam</h3>
-                      <p className="text-muted-foreground">Final exam management will be available here</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Polls Tab */}
-          {activeTab === 'polls' && (
-            <div className="space-y-6">
-              <PollParticipationTracker />
-              <PollResultsViewer />
-              <Card>
-                <CardHeader>
-                  <CardTitle>Poll Management</CardTitle>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="p-6 space-y-6">
                   <Mus240PollSystem />
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <PollResultsViewer />
+                    <PollParticipationTracker />
+                  </div>
                 </CardContent>
               </Card>
-            </div>
-          )}
+            )}
 
-          {/* Grades Tab */}
-          {activeTab === 'grades' && (
-            <div className="space-y-4">
-              <StudentScoresViewer />
-              <GradeCalculationSystem />
-            </div>
-          )}
+            {activeTab === 'grades' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-primary" />
+                    Grade Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  <GradesAdmin />
+                  <StudentScoresViewer />
+                  <GradeCalculationSystem />
+                </CardContent>
+              </Card>
+            )}
 
-          {/* Communications Tab */}
-          {activeTab === 'communications' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Communications
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Student Communications</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Email and text messaging system for communicating with students
-                  </p>
-                  <p className="text-sm text-muted-foreground">Coming soon</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+            {activeTab === 'communications' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    Communications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ComprehensiveJournalAdmin />
+                </CardContent>
+              </Card>
+            )}
 
-          {activeTab === 'students' && <EnrollmentManager />}
-          {activeTab === 'analytics' && <StudentAnalyticsDashboard />}
-          {activeTab === 'resources' && <ResourcesAdmin />}
-          {activeTab === 'ai-assistant' && <AIAssistant />}
-          {activeTab === 'settings' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Settings className="h-5 w-5" />
-                  Course Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p className="text-muted-foreground">
-                    Course settings and configuration options
-                  </p>
-                  <div className="flex gap-2">
-                    <OpenAITestButton />
+            {activeTab === 'students' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5 text-primary" />
+                    Student Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <EnrollmentManager />
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'analytics' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart className="h-5 w-5 text-primary" />
+                    Analytics Dashboard
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <StudentAnalyticsDashboard />
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'resources' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                    Course Resources
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ResourcesAdmin />
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'ai-assistant' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="h-5 w-5 text-primary" />
+                    AI Assistant
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <AIAssistant />
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'settings' && (
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="border-b bg-muted/30">
+                  <CardTitle className="flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-primary" />
+                    Course Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <p className="text-muted-foreground">
+                      Course settings and configuration options
+                    </p>
+                    <div className="flex gap-2">
+                      <OpenAITestButton />
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </main>
+                </CardContent>
+              </Card>
+            )}
+          </main>
+        </div>
       </div>
-    </div>
+    </UniversalLayout>
   );
 };
