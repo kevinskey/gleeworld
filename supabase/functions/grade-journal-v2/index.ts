@@ -79,8 +79,16 @@ serve(async (req) => {
       maxScore: baseScores[i]
     }));
 
-    // Call OpenAI to grade the journal
+    // Call OpenAI to grade the journal AND detect AI writing
     const aiPrompt = `You are an expert music professor grading a listening journal entry. Grade the following submission based on the assignment prompt and rubric criteria.
+
+**IMPORTANT**: You must also analyze whether this submission was likely written by AI (like ChatGPT, Claude, etc.) based on:
+- Overly formal or academic language inappropriate for a student journal
+- Lack of personal voice or authentic student perspective
+- Perfect grammar and structure that seems too polished
+- Generic or templated responses without genuine personal reflection
+- Repetitive sentence structures typical of AI writing
+- Absence of casual language, contractions, or natural student expression
 
 Assignment Prompt:
 ${prompt}
@@ -88,8 +96,7 @@ ${prompt}
 Student Submission:
 ${content}
 
-    // Include total points from database-backed value
-    Rubric Criteria (total ${effectiveMaxPoints} points):
+Rubric Criteria (total ${effectiveMaxPoints} points):
 ${rubricCriteria.map(c => `- ${c.name}: ${c.maxScore} points`).join('\n')}
 
 Please provide:
@@ -97,6 +104,7 @@ Please provide:
 2. Specific feedback for each criterion
 3. An overall letter grade
 4. Overall constructive feedback
+5. AI writing detection analysis
 
 Respond in JSON format:
 {
@@ -111,7 +119,12 @@ Respond in JSON format:
   ],
   "overall_score": <total points>,
   "letter_grade": "<A, A-, B+, B, B-, C+, C, C-, D+, D, D-, F>",
-  "ai_feedback": "<overall constructive feedback>"
+  "ai_feedback": "<overall constructive feedback>",
+  "ai_detection": {
+    "likely_ai_generated": <boolean>,
+    "confidence": <number 0-100>,
+    "reasoning": "<brief explanation of why you think this is or isn't AI-generated>"
+  }
 }`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -125,7 +138,7 @@ Respond in JSON format:
         messages: [
           {
             role: 'system',
-            content: 'You are an expert music professor. Provide detailed, constructive feedback on student work.'
+            content: 'You are an expert music professor. Provide detailed, constructive feedback on student work and detect AI-generated writing.'
           },
           {
             role: 'user',
@@ -150,7 +163,8 @@ Respond in JSON format:
       overall_score: gradingData.overall_score,
       letter_grade: gradingData.letter_grade,
       effectiveMaxPoints,
-      rubricScores: gradingData.rubric?.map((r: any) => r.score)
+      rubricScores: gradingData.rubric?.map((r: any) => r.score),
+      ai_detected: gradingData.ai_detection?.likely_ai_generated
     });
 
     // Normalize score to an integer within valid range using effectiveMaxPoints from DB
@@ -190,7 +204,8 @@ Respond in JSON format:
       student_id: journal.student_id,
       assignment_id: assignmentId,
       overall_score: gradingData.overall_score,
-      effectiveMaxPoints
+      effectiveMaxPoints,
+      ai_detected: gradingData.ai_detection?.likely_ai_generated
     });
 
     // First attempt to insert the grade
@@ -205,7 +220,10 @@ Respond in JSON format:
         rubric: gradingData.rubric,
         ai_feedback: gradingData.ai_feedback,
         ai_model: 'gpt-4o-mini',
-        graded_at: new Date().toISOString()
+        graded_at: new Date().toISOString(),
+        ai_writing_detected: gradingData.ai_detection?.likely_ai_generated || false,
+        ai_detection_confidence: gradingData.ai_detection?.confidence || null,
+        ai_detection_notes: gradingData.ai_detection?.reasoning || null
       });
 
     // If the database complains about an invalid grade range, adapt to its expected max
@@ -234,7 +252,10 @@ Respond in JSON format:
           rubric: gradingData.rubric,
           ai_feedback: gradingData.ai_feedback,
           ai_model: 'gpt-4o-mini',
-          graded_at: new Date().toISOString()
+          graded_at: new Date().toISOString(),
+          ai_writing_detected: gradingData.ai_detection?.likely_ai_generated || false,
+          ai_detection_confidence: gradingData.ai_detection?.confidence || null,
+          ai_detection_notes: gradingData.ai_detection?.reasoning || null
         });
 
       insertError = retryResult.error;
