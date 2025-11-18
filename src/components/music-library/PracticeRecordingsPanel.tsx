@@ -9,8 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { 
   Play, 
   Pause, 
-  Download, 
-  Plus, 
+  Plus,
   Trash2, 
   Users, 
   Calendar,
