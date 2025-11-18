@@ -26,11 +26,13 @@ interface AIGrade {
   ai_feedback: string; // AI generated feedback
   ai_model: string;
   graded_at: string;
+  assignment_id: string;
 }
 
 export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, studentId, assignmentId }) => {
   const [grade, setGrade] = useState<AIGrade | null>(null);
   const [loading, setLoading] = useState(true);
+  const [maxPoints, setMaxPoints] = useState(100);
 
   useEffect(() => {
     loadGrade();
@@ -74,6 +76,17 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, student
 
       if (data && data.length > 0) {
         setGrade(data[0]);
+        
+        // Fetch assignment to get points (max_points)
+        const { data: assignmentData } = await supabase
+          .from('mus240_assignments')
+          .select('points')
+          .eq('id', data[0].assignment_id)
+          .single();
+        
+        if (assignmentData?.points) {
+          setMaxPoints(assignmentData.points);
+        }
       }
     } catch (error) {
       console.error('Error loading grade:', error);
@@ -138,7 +151,7 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, student
               {grade.letter_grade}
             </Badge>
             <Badge variant="outline">
-              {grade.overall_score}/100
+              {grade.overall_score}/{maxPoints}
             </Badge>
           </div>
         </div>
@@ -148,12 +161,12 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, student
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Overall Score</span>
-            <span className={`text-sm font-bold ${getScoreColor(grade.overall_score, 100)}`}>
-              {grade.overall_score}/100
+            <span className={`text-sm font-bold ${getScoreColor(grade.overall_score, maxPoints)}`}>
+              {grade.overall_score}/{maxPoints}
             </span>
           </div>
           <Progress 
-            value={grade.overall_score} 
+            value={(grade.overall_score / maxPoints) * 100} 
             className="h-2"
           />
         </div>
