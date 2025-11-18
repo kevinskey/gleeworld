@@ -6,9 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Eye, Calendar, Users, Brain, BarChart3, BookOpen } from 'lucide-react';
+import { Plus, Edit, Eye, Calendar, Users, Brain, BarChart3, BookOpen, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
+import { format } from 'date-fns';
 
 interface Assignment {
   id: string;
@@ -22,8 +24,24 @@ interface Assignment {
   created_at: string;
 }
 
+interface JournalSubmission {
+  id: string;
+  assignment_id: string;
+  student_id: string;
+  content: string;
+  word_count: number;
+  is_published: boolean;
+  submitted_at: string;
+  grade: number | null;
+  feedback: any;
+  student_name?: string;
+  student_email?: string;
+}
+
 export const AssignmentManager = () => {
+  const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [submissions, setSubmissions] = useState<Record<string, JournalSubmission[]>>({});
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
@@ -38,6 +56,7 @@ export const AssignmentManager = () => {
 
   useEffect(() => {
     fetchAssignments();
+    fetchSubmissions();
   }, []);
 
   const fetchAssignments = async () => {
@@ -54,6 +73,53 @@ export const AssignmentManager = () => {
       toast.error('Failed to load assignments');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSubmissions = async () => {
+    try {
+      // Fetch all journal entries
+      const { data: journalData, error: journalError } = await supabase
+        .from('mus240_journal_entries')
+        .select('*')
+        .order('submitted_at', { ascending: false });
+
+      if (journalError) throw journalError;
+
+      // Get unique student IDs
+      const studentIds = [...new Set(journalData?.map(j => j.student_id) || [])];
+
+      // Fetch student profiles
+      const { data: profiles, error: profileError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', studentIds);
+
+      if (profileError) throw profileError;
+
+      // Map profiles by user_id
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      // Group submissions by assignment_id and add student info
+      const groupedSubmissions: Record<string, JournalSubmission[]> = {};
+      
+      journalData?.forEach(entry => {
+        const profile = profileMap.get(entry.student_id);
+        const submission: JournalSubmission = {
+          ...entry,
+          student_name: profile?.full_name,
+          student_email: profile?.email,
+        };
+
+        if (!groupedSubmissions[entry.assignment_id]) {
+          groupedSubmissions[entry.assignment_id] = [];
+        }
+        groupedSubmissions[entry.assignment_id].push(submission);
+      });
+
+      setSubmissions(groupedSubmissions);
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
     }
   };
 
@@ -103,7 +169,7 @@ export const AssignmentManager = () => {
         due_date: '',
         assignment_type: 'listening_journal'
       });
-      fetchAssignments();
+      await Promise.all([fetchAssignments(), fetchSubmissions()]);
     } catch (error) {
       console.error('Error saving assignment:', error);
       toast.error('Failed to save assignment');
@@ -124,11 +190,19 @@ export const AssignmentManager = () => {
       toast.success(
         assignment.is_active ? 'Assignment deactivated' : 'Assignment activated'
       );
-      fetchAssignments();
+      await fetchAssignments();
     } catch (error) {
       console.error('Error updating assignment status:', error);
       toast.error('Failed to update assignment status');
     }
+  };
+
+  const getSubmissionCount = (assignmentId: string) => {
+    return submissions[assignmentId]?.length || 0;
+  };
+
+  const getGradedCount = (assignmentId: string) => {
+    return submissions[assignmentId]?.filter(s => s.grade !== null).length || 0;
   };
 
   const openEditModal = (assignment: Assignment) => {
@@ -306,21 +380,38 @@ export const AssignmentManager = () => {
                     }
                   </p>
                 </div>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <BarChart3 className="h-4 w-4" />
-                    {assignment.points} points
-                  </div>
-                  {assignment.due_date && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-sm text-gray-600">
                     <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      Due {new Date(assignment.due_date).toLocaleDateString()}
+                      <BarChart3 className="h-4 w-4" />
+                      {assignment.points} points
                     </div>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4" />
-                    0 submissions
+                    {assignment.due_date && (
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        Due {new Date(assignment.due_date).toLocaleDateString()}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      {getSubmissionCount(assignment.id)} submissions
+                      {getSubmissionCount(assignment.id) > 0 && (
+                        <span className="text-xs ml-1">
+                          ({getGradedCount(assignment.id)} graded)
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  {getSubmissionCount(assignment.id) > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/classes/mus240/instructor/journals?assignment=${assignment.id}`)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      View Submissions
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
