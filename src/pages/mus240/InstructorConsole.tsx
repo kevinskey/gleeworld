@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCourseTA } from '@/hooks/useCourseTA';
@@ -100,6 +100,7 @@ export const InstructorConsole = () => {
     { value: 'tests', label: 'Tests', icon: ClipboardCheck },
     { value: 'polls', label: 'Polls', icon: BarChart3 },
     { value: 'grades', label: 'Grades', icon: Trophy },
+    { value: 'rubrics', label: 'Rubrics', icon: ListChecks },
     { value: 'communications', label: 'Communications', icon: Users },
     { value: 'students', label: 'Students', icon: UserPlus },
     { value: 'analytics', label: 'Analytics', icon: BarChart },
@@ -348,6 +349,131 @@ export const InstructorConsole = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <EnrollmentManager />
+                </CardContent>
+              </Card>
+            )}
+
+            {activeTab === 'rubrics' && (
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <ListChecks className="h-5 w-5" />
+                    Grading Rubrics
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Create and manage grading rubrics for assignments</p>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">Assignment Rubrics</h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Define criteria and point values for consistent grading
+                        </p>
+                      </div>
+                      <Button>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Rubric
+                      </Button>
+                    </div>
+
+                    <div className="grid gap-4">
+                      {/* Listening Journal Rubric */}
+                      <Card className="border-2">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-lg">Listening Journal Rubric</CardTitle>
+                              <p className="text-sm text-muted-foreground mt-1">Standard grading criteria for all journal entries</p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-4 text-sm font-medium border-b pb-2">
+                              <div>Criteria</div>
+                              <div>Description</div>
+                              <div className="text-right">Points</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
+                              <div className="font-medium">Musical Analysis</div>
+                              <div className="text-muted-foreground">Depth of musical elements discussed</div>
+                              <div className="text-right">40</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
+                              <div className="font-medium">Cultural Context</div>
+                              <div className="text-muted-foreground">Understanding of historical/cultural significance</div>
+                              <div className="text-right">30</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
+                              <div className="font-medium">Writing Quality</div>
+                              <div className="text-muted-foreground">Grammar, organization, and clarity</div>
+                              <div className="text-right">20</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm py-2">
+                              <div className="font-medium">Timeliness</div>
+                              <div className="text-muted-foreground">Submitted by deadline</div>
+                              <div className="text-right">10</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm font-semibold pt-2 border-t">
+                              <div>Total Points</div>
+                              <div></div>
+                              <div className="text-right">100</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Midterm Rubric */}
+                      <Card className="border-2">
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-lg">Midterm Exam Rubric</CardTitle>
+                              <p className="text-sm text-muted-foreground mt-1">Audio excerpt identification criteria</p>
+                            </div>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit
+                            </Button>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-4 text-sm font-medium border-b pb-2">
+                              <div>Criteria</div>
+                              <div>Description</div>
+                              <div className="text-right">Points</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
+                              <div className="font-medium">Artist Identification</div>
+                              <div className="text-muted-foreground">Correct artist name</div>
+                              <div className="text-right">33</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
+                              <div className="font-medium">Song/Piece Title</div>
+                              <div className="text-muted-foreground">Correct title or close approximation</div>
+                              <div className="text-right">33</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm py-2">
+                              <div className="font-medium">Musical Details</div>
+                              <div className="text-muted-foreground">Additional context or analysis</div>
+                              <div className="text-right">34</div>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm font-semibold pt-2 border-t">
+                              <div>Total Points</div>
+                              <div></div>
+                              <div className="text-right">100</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             )}
