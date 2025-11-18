@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { mus240Assignments } from '@/data/mus240Assignments';
 
 interface Assignment {
   id: string;
@@ -100,21 +101,32 @@ export const AssignmentManager = () => {
       // Map profiles by user_id
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
-      // Group submissions by assignment_id and add student info
+      // Create a mapping from assignment code (like "lj7") to database title
+      const codeToTitleMap: Record<string, string> = {};
+      mus240Assignments.forEach(week => {
+        week.assignments.forEach(assignment => {
+          codeToTitleMap[assignment.id] = assignment.title;
+        });
+      });
+
+      // Group submissions by assignment title and add student info
       const groupedSubmissions: Record<string, JournalSubmission[]> = {};
       
       journalData?.forEach(entry => {
         const profile = profileMap.get(entry.student_id);
+        const assignmentTitle = codeToTitleMap[entry.assignment_id] || entry.assignment_id;
+        
         const submission: JournalSubmission = {
           ...entry,
           student_name: profile?.full_name,
           student_email: profile?.email,
         };
 
-        if (!groupedSubmissions[entry.assignment_id]) {
-          groupedSubmissions[entry.assignment_id] = [];
+        // Store by title for easy lookup
+        if (!groupedSubmissions[assignmentTitle]) {
+          groupedSubmissions[assignmentTitle] = [];
         }
-        groupedSubmissions[entry.assignment_id].push(submission);
+        groupedSubmissions[assignmentTitle].push(submission);
       });
 
       setSubmissions(groupedSubmissions);
@@ -197,12 +209,12 @@ export const AssignmentManager = () => {
     }
   };
 
-  const getSubmissionCount = (assignmentId: string) => {
-    return submissions[assignmentId]?.length || 0;
+  const getSubmissionCount = (assignmentTitle: string) => {
+    return submissions[assignmentTitle]?.length || 0;
   };
 
-  const getGradedCount = (assignmentId: string) => {
-    return submissions[assignmentId]?.filter(s => s.grade !== null).length || 0;
+  const getGradedCount = (assignmentTitle: string) => {
+    return submissions[assignmentTitle]?.filter(s => s.grade !== null).length || 0;
   };
 
   const openEditModal = (assignment: Assignment) => {
@@ -394,19 +406,19 @@ export const AssignmentManager = () => {
                     )}
                     <div className="flex items-center gap-1">
                       <Users className="h-4 w-4" />
-                      {getSubmissionCount(assignment.id)} submissions
-                      {getSubmissionCount(assignment.id) > 0 && (
+                      {getSubmissionCount(assignment.title)} submissions
+                      {getSubmissionCount(assignment.title) > 0 && (
                         <span className="text-xs ml-1">
-                          ({getGradedCount(assignment.id)} graded)
+                          ({getGradedCount(assignment.title)} graded)
                         </span>
                       )}
                     </div>
                   </div>
-                  {getSubmissionCount(assignment.id) > 0 && (
+                  {getSubmissionCount(assignment.title) > 0 && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/classes/mus240/instructor/journals?assignment=${assignment.id}`)}
+                      onClick={() => navigate(`/classes/mus240/instructor/journals?assignment=${assignment.title}`)}
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       View Submissions
