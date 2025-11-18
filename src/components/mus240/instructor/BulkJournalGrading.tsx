@@ -82,10 +82,10 @@ export const BulkJournalGrading = () => {
 
       if (journalError) throw journalError;
 
-      // Get existing grades with rubric scores
+      // Get existing grades with rubric scores and identifiers
       const { data: gradesData, error: gradesError } = await supabase
         .from('mus240_journal_grades')
-        .select('journal_id, overall_score, rubric, ai_feedback');
+        .select('journal_id, student_id, assignment_id, overall_score, rubric, ai_feedback');
 
       if (gradesError) throw gradesError;
 
@@ -98,9 +98,19 @@ export const BulkJournalGrading = () => {
 
       if (profilesError) throw profilesError;
 
-      // Create lookups
+      // Create lookups - need to handle both journal_id and student_id+assignment_id
       const gradesLookup = (gradesData || []).reduce((acc, grade) => {
-        acc[grade.journal_id] = grade;
+        // Primary lookup by journal_id if available
+        if (grade.journal_id) {
+          acc[grade.journal_id] = grade;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+
+      // Also create lookup by student+assignment for grades without journal_id
+      const gradesByStudentAssignment = (gradesData || []).reduce((acc, grade) => {
+        const key = `${grade.student_id}_${grade.assignment_id}`;
+        acc[key] = grade;
         return acc;
       }, {} as Record<string, any>);
 
@@ -112,7 +122,9 @@ export const BulkJournalGrading = () => {
       // Process journals with additional data
       const processedJournals = (journalData || []).map(journal => {
         const profile = profilesLookup[journal.student_id];
-        const grade = gradesLookup[journal.id];
+        // Try to find grade by journal_id first, then by student+assignment
+        const grade = gradesLookup[journal.id] || 
+                     gradesByStudentAssignment[`${journal.student_id}_${journal.assignment_id}`];
         const wordCount = journal.content?.trim().split(/\s+/).filter(Boolean).length || 0;
         
         return {
@@ -180,7 +192,7 @@ export const BulkJournalGrading = () => {
 
   const gradeJournalWithAI = async (journal: JournalEntry): Promise<{ success: boolean; error?: string }> => {
     try {
-      const { data, error } = await supabase.functions.invoke('grade-journal-ai', {
+      const { data, error } = await supabase.functions.invoke('grade-journal', {
         body: {
           student_id: journal.student_id,
           assignment_id: journal.assignment_id,
