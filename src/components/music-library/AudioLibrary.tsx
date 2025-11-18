@@ -6,7 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Music, 
   Play, 
-  Pause, 
+  Pause,
+  Download,
   Edit,
   Trash2, 
   Heart,
@@ -326,6 +327,15 @@ export const AudioLibrary = ({
               <Button size="sm" variant="outline" onClick={() => handleEdit(track)}>
                 <Edit className="h-3 w-3" />
               </Button>
+              {track.audio_url && canDownloadMP3() && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => window.open(track.audio_url!, '_blank')}
+                >
+                  <Download className="h-3 w-3" />
+                </Button>
+              )}
               <Button
                 size="sm" 
                 variant="outline" 
@@ -386,7 +396,16 @@ export const AudioLibrary = ({
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <Button 
+                    {track.audio_url && canDownloadMP3() && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => window.open(track.audio_url!, '_blank')}
+                      >
+                        <Download className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
                       size="sm" 
                       variant="outline" 
                       onClick={() => handlePlay(track)}

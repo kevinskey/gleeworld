@@ -5,10 +5,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { usePracticeRecordings } from '@/hooks/usePracticeRecordings';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Play, 
-  Pause, 
+  Pause,
+  Download,
   Plus,
   Trash2, 
   Users, 
@@ -26,6 +28,7 @@ interface PracticeRecordingsPanelProps {
 export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = ({ className }) => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
+  const { canDownloadMP3 } = useUserRole();
   const { recordings, loading, deletePracticeRecording, canCreateRecordings } = usePracticeRecordings();
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -208,6 +211,16 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
                     </div>
 
                     <div className="flex flex-col gap-0.5 md:gap-1 flex-shrink-0">
+                      {canDownloadMP3() && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDownload(recording.url, recording.title)}
+                          className="touch-target p-1"
+                        >
+                          <Download className="h-3 w-3" />
+                        </Button>
+                      )}
                       
                       {(canCreateRecordings && recording.owner_id === user?.id) && (
                         <Button
