@@ -24,6 +24,7 @@ import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
 import { TestList } from '@/components/test-builder/TestList';
 import { useTests } from '@/hooks/useTestBuilder';
 import { useQuery } from '@tanstack/react-query';
+import { RubricEditor } from '@/components/mus240/rubrics/RubricEditor';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -37,6 +38,29 @@ export const InstructorConsole = () => {
   const [assignmentSubTab, setAssignmentSubTab] = useState('manage');
   const [testSubTab, setTestSubTab] = useState('tests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [rubrics, setRubrics] = useState([
+    {
+      id: 'listening-journal',
+      title: 'Listening Journal Rubric',
+      description: 'Standard grading criteria for all journal entries',
+      criteria: [
+        { id: '1', name: 'Musical Analysis', description: 'Depth of musical elements discussed', points: 40 },
+        { id: '2', name: 'Cultural Context', description: 'Understanding of historical/cultural significance', points: 30 },
+        { id: '3', name: 'Writing Quality', description: 'Grammar, organization, and clarity', points: 20 },
+        { id: '4', name: 'Timeliness', description: 'Submitted by deadline', points: 10 },
+      ],
+    },
+    {
+      id: 'midterm',
+      title: 'Midterm Exam Rubric',
+      description: 'Audio excerpt identification criteria',
+      criteria: [
+        { id: '1', name: 'Artist Identification', description: 'Correct artist name', points: 33 },
+        { id: '2', name: 'Song/Piece Title', description: 'Correct title or close approximation', points: 33 },
+        { id: '3', name: 'Musical Details', description: 'Additional context or analysis', points: 34 },
+      ],
+    },
+  ]);
   const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
   const { data: tests, isLoading: testsLoading } = useTests('mus240');
   
@@ -371,107 +395,70 @@ export const InstructorConsole = () => {
                           Define criteria and point values for consistent grading
                         </p>
                       </div>
-                      <Button>
+                      <Button onClick={() => {
+                        const newRubric = {
+                          id: `rubric-${Date.now()}`,
+                          title: 'New Rubric',
+                          description: 'Description for new rubric',
+                          criteria: [
+                            { id: '1', name: 'Criteria 1', description: 'Description', points: 50 },
+                            { id: '2', name: 'Criteria 2', description: 'Description', points: 50 },
+                          ],
+                        };
+                        setRubrics([...rubrics, newRubric]);
+                      }}>
                         <Plus className="h-4 w-4 mr-2" />
                         Create Rubric
                       </Button>
                     </div>
 
                     <div className="grid gap-4">
-                      {/* Listening Journal Rubric */}
-                      <Card className="border-2">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle className="text-lg">Listening Journal Rubric</CardTitle>
-                              <p className="text-sm text-muted-foreground mt-1">Standard grading criteria for all journal entries</p>
-                            </div>
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-3 gap-4 text-sm font-medium border-b pb-2">
-                              <div>Criteria</div>
-                              <div>Description</div>
-                              <div className="text-right">Points</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
-                              <div className="font-medium">Musical Analysis</div>
-                              <div className="text-muted-foreground">Depth of musical elements discussed</div>
-                              <div className="text-right">40</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
-                              <div className="font-medium">Cultural Context</div>
-                              <div className="text-muted-foreground">Understanding of historical/cultural significance</div>
-                              <div className="text-right">30</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
-                              <div className="font-medium">Writing Quality</div>
-                              <div className="text-muted-foreground">Grammar, organization, and clarity</div>
-                              <div className="text-right">20</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm py-2">
-                              <div className="font-medium">Timeliness</div>
-                              <div className="text-muted-foreground">Submitted by deadline</div>
-                              <div className="text-right">10</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm font-semibold pt-2 border-t">
-                              <div>Total Points</div>
-                              <div></div>
-                              <div className="text-right">100</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Midterm Rubric */}
-                      <Card className="border-2">
-                        <CardHeader>
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle className="text-lg">Midterm Exam Rubric</CardTitle>
-                              <p className="text-sm text-muted-foreground mt-1">Audio excerpt identification criteria</p>
-                            </div>
-                            <Button variant="outline" size="sm">
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <div className="grid grid-cols-3 gap-4 text-sm font-medium border-b pb-2">
-                              <div>Criteria</div>
-                              <div>Description</div>
-                              <div className="text-right">Points</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
-                              <div className="font-medium">Artist Identification</div>
-                              <div className="text-muted-foreground">Correct artist name</div>
-                              <div className="text-right">33</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm py-2 border-b">
-                              <div className="font-medium">Song/Piece Title</div>
-                              <div className="text-muted-foreground">Correct title or close approximation</div>
-                              <div className="text-right">33</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm py-2">
-                              <div className="font-medium">Musical Details</div>
-                              <div className="text-muted-foreground">Additional context or analysis</div>
-                              <div className="text-right">34</div>
-                            </div>
-                            <div className="grid grid-cols-3 gap-4 text-sm font-semibold pt-2 border-t">
-                              <div>Total Points</div>
-                              <div></div>
-                              <div className="text-right">100</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      {rubrics.map((rubric) => {
+                        const totalPoints = rubric.criteria.reduce((sum, c) => sum + c.points, 0);
+                        return (
+                          <Card key={rubric.id} className="border-2">
+                            <CardHeader>
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <CardTitle className="text-lg">{rubric.title}</CardTitle>
+                                  <p className="text-sm text-muted-foreground mt-1">{rubric.description}</p>
+                                </div>
+                                <RubricEditor
+                                  rubric={rubric}
+                                  onUpdate={(updatedRubric) => {
+                                    setRubrics(
+                                      rubrics.map((r) =>
+                                        r.id === updatedRubric.id ? updatedRubric : r
+                                      )
+                                    );
+                                  }}
+                                />
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-3 gap-4 text-sm font-medium border-b pb-2">
+                                  <div>Criteria</div>
+                                  <div>Description</div>
+                                  <div className="text-right">Points</div>
+                                </div>
+                                {rubric.criteria.map((criteria) => (
+                                  <div key={criteria.id} className="grid grid-cols-3 gap-4 text-sm py-2 border-b last:border-0">
+                                    <div className="font-medium">{criteria.name}</div>
+                                    <div className="text-muted-foreground">{criteria.description}</div>
+                                    <div className="text-right">{criteria.points}</div>
+                                  </div>
+                                ))}
+                                <div className="grid grid-cols-3 gap-4 text-sm font-semibold pt-2 border-t">
+                                  <div>Total Points</div>
+                                  <div></div>
+                                  <div className="text-right">{totalPoints}</div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   </div>
                 </CardContent>
