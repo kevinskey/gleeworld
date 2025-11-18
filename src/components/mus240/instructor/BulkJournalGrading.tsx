@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Bot, 
   FileText, 
@@ -16,11 +17,20 @@ import {
   Loader2,
   CheckSquare,
   Zap,
-  BarChart3
+  BarChart3,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+
+interface RubricScore {
+  criterion_name: string;
+  points_earned: number;
+  max_points: number;
+  feedback?: string;
+}
 
 interface JournalEntry {
   id: string;
@@ -35,6 +45,8 @@ interface JournalEntry {
   assignment_title?: string;
   is_graded?: boolean;
   current_grade?: number;
+  rubric_scores?: RubricScore[];
+  ai_feedback?: string;
 }
 
 interface BulkGradingProgress {
@@ -51,6 +63,7 @@ export const BulkJournalGrading = () => {
   const [loading, setLoading] = useState(true);
   const [bulkGrading, setBulkGrading] = useState(false);
   const [progress, setProgress] = useState<BulkGradingProgress>({ total: 0, completed: 0, errors: [] });
+  const [expandedJournals, setExpandedJournals] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchUngradedJournals();
@@ -69,10 +82,10 @@ export const BulkJournalGrading = () => {
 
       if (journalError) throw journalError;
 
-      // Get existing grades
+      // Get existing grades with rubric scores
       const { data: gradesData, error: gradesError } = await supabase
         .from('mus240_journal_grades')
-        .select('journal_id, overall_score');
+        .select('journal_id, overall_score, rubric, ai_feedback');
 
       if (gradesError) throw gradesError;
 
@@ -109,7 +122,9 @@ export const BulkJournalGrading = () => {
           assignment_title: `Assignment ${journal.assignment_id.toUpperCase()}`,
           word_count: wordCount,
           is_graded: !!grade,
-          current_grade: grade?.overall_score
+          current_grade: grade?.overall_score,
+          rubric_scores: grade?.rubric?.scores || [],
+          ai_feedback: grade?.ai_feedback
         };
       });
 
@@ -405,22 +420,74 @@ export const BulkJournalGrading = () => {
             <CardContent>
               <ScrollArea className="h-64">
                 <div className="space-y-3">
-                  {gradedJournals.slice(0, 10).map((journal) => (
-                    <div key={journal.id} className="flex items-center justify-between p-3 border rounded-lg bg-green-50/50">
-                      <div className="flex items-center gap-3">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <div>
-                          <span className="font-medium">{journal.student_name}</span>
-                          <div className="text-sm text-muted-foreground">
-                            {journal.assignment_title} • {journal.word_count} words
-                          </div>
+                {gradedJournals.slice(0, 10).map((journal) => {
+                    const isExpanded = expandedJournals.has(journal.id);
+                    return (
+                      <Collapsible key={journal.id} open={isExpanded} onOpenChange={(open) => {
+                        setExpandedJournals(prev => {
+                          const newSet = new Set(prev);
+                          if (open) newSet.add(journal.id);
+                          else newSet.delete(journal.id);
+                          return newSet;
+                        });
+                      }}>
+                        <div className="border rounded-lg bg-green-50/50">
+                          <CollapsibleTrigger asChild>
+                            <div className="flex items-center justify-between p-3 cursor-pointer hover:bg-green-100/50">
+                              <div className="flex items-center gap-3 flex-1">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <div className="flex-1">
+                                  <span className="font-medium">{journal.student_name}</span>
+                                  <div className="text-sm text-muted-foreground">
+                                    {journal.assignment_title} • {journal.word_count} words
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="default" className="bg-green-600">
+                                  {journal.current_grade}/17
+                                </Badge>
+                                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                              </div>
+                            </div>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="px-3 pb-3 pt-1 space-y-3 border-t bg-background/50">
+                              {/* Rubric Breakdown */}
+                              {journal.rubric_scores && journal.rubric_scores.length > 0 && (
+                                <div className="space-y-2">
+                                  <h4 className="text-sm font-semibold">Rubric Breakdown:</h4>
+                                  {journal.rubric_scores.map((score: RubricScore, idx: number) => (
+                                    <div key={idx} className="flex items-center justify-between text-sm p-2 bg-background rounded">
+                                      <div className="flex-1">
+                                        <div className="font-medium">{score.criterion_name}</div>
+                                        {score.feedback && (
+                                          <div className="text-xs text-muted-foreground mt-1">{score.feedback}</div>
+                                        )}
+                                      </div>
+                                      <div className="text-right ml-4">
+                                        <span className="font-semibold">{score.points_earned}</span>
+                                        <span className="text-muted-foreground">/{score.max_points}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                              {/* AI Feedback */}
+                              {journal.ai_feedback && (
+                                <div className="space-y-1">
+                                  <h4 className="text-sm font-semibold">AI Feedback:</h4>
+                                  <p className="text-sm text-muted-foreground p-2 bg-background rounded">
+                                    {journal.ai_feedback}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </CollapsibleContent>
                         </div>
-                      </div>
-                      <Badge variant="default" className="bg-green-600">
-                        {journal.current_grade}/17
-                      </Badge>
-                    </div>
-                  ))}
+                      </Collapsible>
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </CardContent>
