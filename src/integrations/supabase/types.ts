@@ -21181,6 +21181,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      resolve_assignment_id: { Args: { identifier: string }; Returns: string }
       save_onboarding_signature: {
         Args: {
           p_full_name: string
