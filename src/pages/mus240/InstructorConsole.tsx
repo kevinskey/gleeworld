@@ -26,6 +26,7 @@ import { useTests } from '@/hooks/useTestBuilder';
 import { useQuery } from '@tanstack/react-query';
 import { RubricEditor } from '@/components/mus240/rubrics/RubricEditor';
 import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
+import { StudentCommunications } from '@/components/mus240/instructor/StudentCommunications';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -330,12 +331,12 @@ export const InstructorConsole = () => {
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <Users className="h-5 w-5" />
-                    Communications
+                    Student Communications
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Review and manage student journal submissions</p>
+                  <p className="text-sm text-muted-foreground mt-1">Email and text messaging system for communicating with students</p>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <ComprehensiveJournalAdmin />
+                  <StudentCommunications />
                 </CardContent>
               </Card>
             )}
