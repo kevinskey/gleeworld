@@ -6,7 +6,9 @@ import { Bot, Star, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AIGradeViewerProps {
-  journalId: string;
+  journalId?: string;
+  studentId?: string;
+  assignmentId?: string;
 }
 
 interface RubricScore {
@@ -26,22 +28,47 @@ interface AIGrade {
   graded_at: string;
 }
 
-export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId }) => {
+export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, studentId, assignmentId }) => {
   const [grade, setGrade] = useState<AIGrade | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadGrade();
-  }, [journalId]);
+  }, [journalId, studentId, assignmentId]);
 
   const loadGrade = async () => {
     try {
-      const { data, error } = await supabase
-        .from('mus240_journal_grades')
-        .select('*')
-        .eq('journal_id', journalId)
-        .order('graded_at', { ascending: false })
-        .limit(1);
+      setLoading(true);
+      setGrade(null);
+
+      let data: AIGrade[] | null = null;
+      let error: any = null;
+
+      if (journalId) {
+        const result = await supabase
+          .from('mus240_journal_grades')
+          .select('*')
+          .eq('journal_id', journalId)
+          .order('graded_at', { ascending: false })
+          .limit(1);
+
+        data = result.data as AIGrade[] | null;
+        error = result.error;
+      }
+
+      // Fallback: look up by student + assignment when no journal_id-linked grade
+      if ((!data || data.length === 0) && studentId && assignmentId) {
+        const fallback = await supabase
+          .from('mus240_journal_grades')
+          .select('*')
+          .eq('student_id', studentId)
+          .eq('assignment_id', assignmentId)
+          .order('graded_at', { ascending: false })
+          .limit(1);
+
+        data = fallback.data as AIGrade[] | null;
+        error = fallback.error;
+      }
 
       if (error) throw error;
 
