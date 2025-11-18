@@ -136,7 +136,7 @@ export const InstructorConsole = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="min-h-screen bg-background pt-16">
+      <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
         <div className="border-b bg-card sticky top-16 z-40">
           <div className="max-w-[1800px] mx-auto px-6 py-4">
