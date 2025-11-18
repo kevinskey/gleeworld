@@ -153,13 +153,24 @@ Respond in JSON format:
       rubricScores: gradingData.rubric?.map((r: any) => r.score)
     });
 
-    // Validate the grade is within acceptable range using effectiveMaxPoints from DB
-    if (gradingData.overall_score < 0 || gradingData.overall_score > effectiveMaxPoints) {
-      console.error('AI returned invalid score:', gradingData.overall_score, 'Max:', effectiveMaxPoints);
-      // Clamp the score to valid range
-      gradingData.overall_score = Math.max(0, Math.min(effectiveMaxPoints, gradingData.overall_score));
-      console.log('Clamped score to:', gradingData.overall_score);
+    // Normalize score to an integer within valid range using effectiveMaxPoints from DB
+    let normalizedScore = Number(gradingData.overall_score);
+    if (isNaN(normalizedScore)) {
+      console.error('AI returned non-numeric score, defaulting to 0:', gradingData.overall_score);
+      normalizedScore = 0;
     }
+
+    // Round to nearest integer first
+    normalizedScore = Math.round(normalizedScore);
+
+    // Clamp to [0, effectiveMaxPoints]
+    if (normalizedScore < 0 || normalizedScore > effectiveMaxPoints) {
+      console.error('AI returned out-of-range score:', normalizedScore, 'Max:', effectiveMaxPoints);
+      normalizedScore = Math.max(0, Math.min(effectiveMaxPoints, normalizedScore));
+    }
+
+    gradingData.overall_score = normalizedScore;
+    console.log('Final normalized score used for insert:', gradingData.overall_score);
 
     // Store the grade in the database (Supabase client already created above)
 
