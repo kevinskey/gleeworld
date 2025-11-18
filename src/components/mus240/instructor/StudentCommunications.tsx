@@ -6,7 +6,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, Send, Users, User, Mail, Clock } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { MessageSquare, Send, Users, User, Mail, Clock, MessageCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -37,6 +39,7 @@ export const StudentCommunications: React.FC = () => {
   // Form state
   const [recipientType, setRecipientType] = useState<'individual' | 'all'>('individual');
   const [selectedStudent, setSelectedStudent] = useState('');
+  const [deliveryMethod, setDeliveryMethod] = useState<'email' | 'text' | 'both'>('email');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
 
@@ -196,6 +199,33 @@ export const StudentCommunications: React.FC = () => {
               </Select>
             </div>
           )}
+
+          <div>
+            <label className="text-sm font-medium mb-2 block">Delivery Method</label>
+            <RadioGroup value={deliveryMethod} onValueChange={(value: 'email' | 'text' | 'both') => setDeliveryMethod(value)} className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="email" id="email" />
+                <Label htmlFor="email" className="flex items-center gap-2 cursor-pointer">
+                  <Mail className="h-4 w-4" />
+                  Email Only
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="text" id="text" />
+                <Label htmlFor="text" className="flex items-center gap-2 cursor-pointer">
+                  <MessageCircle className="h-4 w-4" />
+                  Text Only
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="both" id="both" />
+                <Label htmlFor="both" className="flex items-center gap-2 cursor-pointer">
+                  <Users className="h-4 w-4" />
+                  Both
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
 
           <div>
             <label className="text-sm font-medium mb-2 block">Subject</label>
