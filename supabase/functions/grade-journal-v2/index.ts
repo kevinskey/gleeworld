@@ -193,7 +193,8 @@ Respond in JSON format:
       effectiveMaxPoints
     });
 
-    const { error: insertError } = await supabase
+    // First attempt to insert the grade
+    let { error: insertError } = await supabase
       .from('mus240_journal_grades')
       .insert({
         journal_id: journalId,
@@ -206,6 +207,38 @@ Respond in JSON format:
         ai_model: 'gpt-4o-mini',
         graded_at: new Date().toISOString()
       });
+
+    // If the database complains about an invalid grade range, adapt to its expected max
+    if (insertError && insertError.code === 'P0001' &&
+        typeof insertError.message === 'string' &&
+        insertError.message.includes('Overall score must be between 0 and')) {
+      console.error('Grade out of allowed range, adjusting based on DB constraint:', insertError.message);
+
+      const match = insertError.message.match(/between 0 and (\d+) points/);
+      const dbMax = match ? Number(match[1]) : effectiveMaxPoints;
+
+      const adjustedScore = Math.max(0, Math.min(dbMax, gradingData.overall_score));
+      console.log('Adjusted score based on DB max:', { dbMax, adjustedScore });
+
+      gradingData.overall_score = adjustedScore;
+
+      // Retry insert once with the adjusted score
+      const retryResult = await supabase
+        .from('mus240_journal_grades')
+        .insert({
+          journal_id: journalId,
+          student_id: journal.student_id,
+          assignment_id: assignmentId,
+          overall_score: gradingData.overall_score,
+          letter_grade: gradingData.letter_grade,
+          rubric: gradingData.rubric,
+          ai_feedback: gradingData.ai_feedback,
+          ai_model: 'gpt-4o-mini',
+          graded_at: new Date().toISOString()
+        });
+
+      insertError = retryResult.error;
+    }
 
     if (insertError) {
       console.error('Database insert error:', insertError);
