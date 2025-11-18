@@ -15994,7 +15994,10 @@ export type Database = {
           graded_by: string | null
           id: string
           is_published: boolean
+          is_resubmission: boolean | null
+          original_submission_id: string | null
           published_at: string | null
+          resubmission_count: number | null
           student_id: string
           submitted_at: string | null
           updated_at: string
@@ -16011,7 +16014,10 @@ export type Database = {
           graded_by?: string | null
           id?: string
           is_published?: boolean
+          is_resubmission?: boolean | null
+          original_submission_id?: string | null
           published_at?: string | null
+          resubmission_count?: number | null
           student_id: string
           submitted_at?: string | null
           updated_at?: string
@@ -16028,7 +16034,10 @@ export type Database = {
           graded_by?: string | null
           id?: string
           is_published?: boolean
+          is_resubmission?: boolean | null
+          original_submission_id?: string | null
           published_at?: string | null
+          resubmission_count?: number | null
           student_id?: string
           submitted_at?: string | null
           updated_at?: string
@@ -16042,12 +16051,22 @@ export type Database = {
             referencedRelation: "mus240_assignments"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "mus240_journal_entries_original_submission_id_fkey"
+            columns: ["original_submission_id"]
+            isOneToOne: false
+            referencedRelation: "mus240_journal_entries"
+            referencedColumns: ["id"]
+          },
         ]
       }
       mus240_journal_grades: {
         Row: {
+          ai_detection_confidence: number | null
+          ai_detection_notes: string | null
           ai_feedback: string | null
           ai_model: string | null
+          ai_writing_detected: boolean | null
           assignment_db_id: string | null
           assignment_id: string
           created_at: string
@@ -16067,8 +16086,11 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ai_detection_confidence?: number | null
+          ai_detection_notes?: string | null
           ai_feedback?: string | null
           ai_model?: string | null
+          ai_writing_detected?: boolean | null
           assignment_db_id?: string | null
           assignment_id: string
           created_at?: string
@@ -16088,8 +16110,11 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ai_detection_confidence?: number | null
+          ai_detection_notes?: string | null
           ai_feedback?: string | null
           ai_model?: string | null
+          ai_writing_detected?: boolean | null
           assignment_db_id?: string | null
           assignment_id?: string
           created_at?: string
