@@ -30,15 +30,31 @@ serve(async (req) => {
     let effectiveMaxPoints = maxPoints ?? 100;
 
     if (assignmentId) {
+      console.log('Looking up assignment with ID:', assignmentId);
       const { data: assignment, error: assignmentError } = await supabase
         .from('mus240_assignments')
         .select('points')
         .eq('id', assignmentId)
         .maybeSingle();
 
-      if (!assignmentError && assignment?.points) {
-        effectiveMaxPoints = assignment.points;
+      console.log('Assignment lookup result:', { assignment, error: assignmentError });
+
+      if (assignmentError) {
+        console.error('Error fetching assignment:', assignmentError);
+        throw new Error(`Failed to fetch assignment: ${assignmentError.message}`);
       }
+
+      if (!assignment) {
+        console.error('Assignment not found with ID:', assignmentId);
+        throw new Error(`Assignment not found: ${assignmentId}`);
+      }
+
+      if (assignment?.points) {
+        effectiveMaxPoints = assignment.points;
+        console.log('Using assignment points from DB:', effectiveMaxPoints);
+      }
+    } else {
+      console.warn('No assignmentId provided, using default maxPoints:', effectiveMaxPoints);
     }
 
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
@@ -130,11 +146,19 @@ Respond in JSON format:
     const aiResult = await response.json();
     const gradingData = JSON.parse(aiResult.choices[0].message.content);
 
+    console.log('AI grading result:', {
+      overall_score: gradingData.overall_score,
+      letter_grade: gradingData.letter_grade,
+      effectiveMaxPoints,
+      rubricScores: gradingData.rubric?.map((r: any) => r.score)
+    });
+
     // Validate the grade is within acceptable range using effectiveMaxPoints from DB
     if (gradingData.overall_score < 0 || gradingData.overall_score > effectiveMaxPoints) {
       console.error('AI returned invalid score:', gradingData.overall_score, 'Max:', effectiveMaxPoints);
       // Clamp the score to valid range
       gradingData.overall_score = Math.max(0, Math.min(effectiveMaxPoints, gradingData.overall_score));
+      console.log('Clamped score to:', gradingData.overall_score);
     }
 
     // Store the grade in the database (Supabase client already created above)
@@ -149,6 +173,14 @@ Respond in JSON format:
     if (!journal) {
       throw new Error('Journal not found');
     }
+
+    console.log('Inserting grade:', {
+      journal_id: journalId,
+      student_id: journal.student_id,
+      assignment_id: assignmentId,
+      overall_score: gradingData.overall_score,
+      effectiveMaxPoints
+    });
 
     const { error: insertError } = await supabase
       .from('mus240_journal_grades')
