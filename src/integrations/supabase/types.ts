@@ -4860,12 +4860,10 @@ export type Database = {
           description: string | null
           due_at: string | null
           id: string
-          instructions: string | null
           is_active: boolean | null
           legacy_id: string | null
           legacy_source: string | null
           points: number | null
-          rubric: string | null
           title: string
           updated_at: string | null
         }
@@ -4878,12 +4876,10 @@ export type Database = {
           description?: string | null
           due_at?: string | null
           id?: string
-          instructions?: string | null
           is_active?: boolean | null
           legacy_id?: string | null
           legacy_source?: string | null
           points?: number | null
-          rubric?: string | null
           title: string
           updated_at?: string | null
         }
@@ -4896,12 +4892,10 @@ export type Database = {
           description?: string | null
           due_at?: string | null
           id?: string
-          instructions?: string | null
           is_active?: boolean | null
           legacy_id?: string | null
           legacy_source?: string | null
           points?: number | null
-          rubric?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -6142,7 +6136,6 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
-          status: string | null
           term: string | null
           title: string
         }
@@ -6152,7 +6145,6 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
-          status?: string | null
           term?: string | null
           title: string
         }
@@ -6162,7 +6154,6 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
-          status?: string | null
           term?: string | null
           title?: string
         }
@@ -7352,7 +7343,6 @@ export type Database = {
       gw_grades: {
         Row: {
           assignment_id: string
-          feedback: string | null
           graded_at: string | null
           graded_by: string | null
           id: string
@@ -7361,13 +7351,11 @@ export type Database = {
           letter_grade: string | null
           max_points: number
           percentage: number | null
-          released_to_student: boolean | null
           student_id: string
           total_score: number
         }
         Insert: {
           assignment_id: string
-          feedback?: string | null
           graded_at?: string | null
           graded_by?: string | null
           id?: string
@@ -7376,13 +7364,11 @@ export type Database = {
           letter_grade?: string | null
           max_points: number
           percentage?: number | null
-          released_to_student?: boolean | null
           student_id: string
           total_score: number
         }
         Update: {
           assignment_id?: string
-          feedback?: string | null
           graded_at?: string | null
           graded_by?: string | null
           id?: string
@@ -7391,7 +7377,6 @@ export type Database = {
           letter_grade?: string | null
           max_points?: number
           percentage?: number | null
-          released_to_student?: boolean | null
           student_id?: string
           total_score?: number
         }
@@ -15482,7 +15467,6 @@ export type Database = {
       }
       mus240_assignments: {
         Row: {
-          assignment_code: string | null
           assignment_type: string
           created_at: string
           created_by: string | null
@@ -15499,7 +15483,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          assignment_code?: string | null
           assignment_type?: string
           created_at?: string
           created_by?: string | null
@@ -15516,7 +15499,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          assignment_code?: string | null
           assignment_type?: string
           created_at?: string
           created_by?: string | null
