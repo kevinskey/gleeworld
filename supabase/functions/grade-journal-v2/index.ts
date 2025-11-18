@@ -21,19 +21,39 @@ serve(async (req) => {
       );
     }
 
+    // Create Supabase client (used for both reading assignment and writing grade)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Determine effective max points from DB when possible
+    let effectiveMaxPoints = maxPoints ?? 100;
+
+    if (assignmentId) {
+      const { data: assignment, error: assignmentError } = await supabase
+        .from('mus240_assignments')
+        .select('points')
+        .eq('id', assignmentId)
+        .maybeSingle();
+
+      if (!assignmentError && assignment?.points) {
+        effectiveMaxPoints = assignment.points;
+      }
+    }
+
     const openAIKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIKey) {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Create rubric criteria based on max points - ensure they add up to exactly maxPoints
+    // Create rubric criteria based on max points - ensure they add up to exactly effectiveMaxPoints
     const weights = [0.35, 0.30, 0.25, 0.10];
     const criteriaNames = ['Content Quality', 'Critical Analysis', 'Musical Understanding', 'Writing Quality'];
     
     // Calculate base scores and distribute remainder
-    const baseScores = weights.map(w => Math.floor(maxPoints * w));
+    const baseScores = weights.map(w => Math.floor(effectiveMaxPoints * w));
     const total = baseScores.reduce((sum, score) => sum + score, 0);
-    const remainder = maxPoints - total;
+    const remainder = effectiveMaxPoints - total;
     
     // Distribute remainder to first criteria
     baseScores[0] += remainder;
@@ -52,7 +72,8 @@ ${prompt}
 Student Submission:
 ${content}
 
-Rubric Criteria (total ${maxPoints} points):
+    // Include total points from database-backed value
+    Rubric Criteria (total ${effectiveMaxPoints} points):
 ${rubricCriteria.map(c => `- ${c.name}: ${c.maxScore} points`).join('\n')}
 
 Please provide:
@@ -109,17 +130,14 @@ Respond in JSON format:
     const aiResult = await response.json();
     const gradingData = JSON.parse(aiResult.choices[0].message.content);
 
-    // Validate the grade is within acceptable range
-    if (gradingData.overall_score < 0 || gradingData.overall_score > maxPoints) {
-      console.error('AI returned invalid score:', gradingData.overall_score, 'Max:', maxPoints);
+    // Validate the grade is within acceptable range using effectiveMaxPoints from DB
+    if (gradingData.overall_score < 0 || gradingData.overall_score > effectiveMaxPoints) {
+      console.error('AI returned invalid score:', gradingData.overall_score, 'Max:', effectiveMaxPoints);
       // Clamp the score to valid range
-      gradingData.overall_score = Math.max(0, Math.min(maxPoints, gradingData.overall_score));
+      gradingData.overall_score = Math.max(0, Math.min(effectiveMaxPoints, gradingData.overall_score));
     }
 
-    // Store the grade in the database
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Store the grade in the database (Supabase client already created above)
 
     // Get student_id from journal
     const { data: journal } = await supabase
