@@ -553,7 +553,11 @@ export const ComprehensiveJournalAdmin = () => {
                     {/* AI Grade Display */}
                     {selectedEntry === entry.id && (
                       <div className="mt-4 pt-4 border-t">
-                        <AIGradeViewer journalId={entry.id} />
+                        <AIGradeViewer 
+                          journalId={entry.id} 
+                          studentId={entry.student_id} 
+                          assignmentId={entry.assignment_id} 
+                        />
                       </div>
                     )}
                   </div>
