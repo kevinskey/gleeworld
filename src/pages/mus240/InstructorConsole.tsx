@@ -136,9 +136,9 @@ export const InstructorConsole = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pt-16">
         {/* Compact Stats Bar */}
-        <div className="border-b bg-card sticky top-[64px] z-30">
+        <div className="border-b bg-card sticky top-16 z-40">
           <div className="max-w-[1800px] mx-auto px-6 py-4">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
               <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide w-full lg:w-auto">
@@ -191,7 +191,7 @@ export const InstructorConsole = () => {
         {/* Main Layout */}
         <div className="flex max-w-[1800px] mx-auto">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[128px]">
+          <aside className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[132px]">
             <div className="p-6">
               <div className="mb-8 pb-6 border-b">
                 <h2 className="text-xl font-bold text-foreground">MUS 240</h2>
