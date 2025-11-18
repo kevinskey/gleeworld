@@ -327,32 +327,7 @@ export const AudioLibrary = ({
               <Button size="sm" variant="outline" onClick={() => handleEdit(track)}>
                 <Edit className="h-3 w-3" />
               </Button>
-              {track.audio_url && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => {
-                    if (!canDownloadMP3()) {
-                      toast({
-                        title: "Access Denied",
-                        description: "Only super-admins can download MP3 files.",
-                        variant: "destructive",
-                      });
-                      return;
-                    }
-                    window.open(track.audio_url!, '_blank');
-                  }}
-                  disabled={!canDownloadMP3()}
-                  className={!canDownloadMP3() ? "opacity-50" : ""}
-                >
-                  {canDownloadMP3() ? (
-                    <Download className="h-3 w-3" />
-                  ) : (
-                    <Lock className="h-3 w-3" />
-                  )}
-                </Button>
-              )}
-              <Button 
+              <Button
                 size="sm" 
                 variant="outline" 
                 onClick={() => handleDelete(track)}
@@ -427,32 +402,7 @@ export const AudioLibrary = ({
                     <Button size="sm" variant="outline" onClick={() => handleEdit(track)}>
                       <Edit className="h-3 w-3" />
                     </Button>
-                    {track.audio_url && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => {
-                          if (!canDownloadMP3()) {
-                            toast({
-                              title: "Access Denied",
-                              description: "Only super-admins can download MP3 files.",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          window.open(track.audio_url!, '_blank');
-                        }}
-                        disabled={!canDownloadMP3()}
-                        className={!canDownloadMP3() ? "opacity-50" : ""}
-                      >
-                        {canDownloadMP3() ? (
-                          <Download className="h-3 w-3" />
-                        ) : (
-                          <Lock className="h-3 w-3" />
-                        )}
-                      </Button>
-                    )}
-                    <Button 
+                    <Button
                       size="sm" 
                       variant="outline" 
                       onClick={() => handleDelete(track)}

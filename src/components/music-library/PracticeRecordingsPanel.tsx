@@ -209,14 +209,6 @@ export const PracticeRecordingsPanel: React.FC<PracticeRecordingsPanelProps> = (
                     </div>
 
                     <div className="flex flex-col gap-0.5 md:gap-1 flex-shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDownload(recording.url, recording.title)}
-                        className="touch-target p-1"
-                      >
-                        <Download className="h-3 w-3" />
-                      </Button>
                       
                       {(canCreateRecordings && recording.owner_id === user?.id) && (
                         <Button
