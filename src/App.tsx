@@ -199,6 +199,7 @@ import { BulkJournalGradingPage } from "./pages/mus240/BulkJournalGradingPage";
 import { PeerReviewBrowserPage } from "./pages/mus240/PeerReviewBrowserPage";
 import { JournalReviewPage } from "./pages/mus240/JournalReviewPage";
 import { InstructorJournalsPage } from "./pages/mus240/InstructorJournalsPage";
+import { JournalSubmissionGradingPage } from "./pages/mus240/JournalSubmissionGradingPage";
 import MidtermExam from "./pages/mus240/MidtermExam";
 import SMUS100MidtermExamPage from "./pages/SMUS100MidtermExamPage";
 import CourseStatistics from "./pages/admin/CourseStatistics";
@@ -1921,6 +1922,14 @@ const App = () => {
                                     element={
                                       <ProtectedRoute>
                                         <InstructorJournalsPage />
+                                      </ProtectedRoute>
+                                    } 
+                                  />
+                                  <Route 
+                                    path="/classes/mus240/instructor/journal/:journal_id/grade" 
+                                    element={
+                                      <ProtectedRoute>
+                                        <JournalSubmissionGradingPage />
                                       </ProtectedRoute>
                                     } 
                                   />

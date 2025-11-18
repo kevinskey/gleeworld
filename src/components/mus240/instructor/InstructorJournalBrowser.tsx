@@ -183,10 +183,10 @@ export const InstructorJournalBrowser: React.FC = () => {
                   {journal.content.substring(0, 200)}...
                 </p>
                 <Button 
-                  onClick={() => navigate(`/classes/mus240/journal/${journal.id}/review`)}
+                  onClick={() => navigate(`/classes/mus240/instructor/journal/${journal.id}/grade`)}
                   variant="outline"
                 >
-                  View Journal
+                  Grade Submission
                 </Button>
               </CardContent>
             </Card>
