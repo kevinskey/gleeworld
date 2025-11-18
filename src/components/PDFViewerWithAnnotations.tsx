@@ -158,6 +158,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   // Touch navigation functions
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Allow multi-touch gestures (pinch zoom) to pass through
+    if (e.touches.length > 1) return;
+    
     // Don't handle navigation when in annotation mode or on scrollable areas
     if (annotationMode) return;
     
@@ -178,6 +181,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   }, [annotationMode]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // Allow multi-touch gestures (pinch zoom) to pass through
+    if (e.touches.length > 1) return;
+    
     if (!touchStart) return;
     
     const touch = e.touches[0];
@@ -897,10 +903,11 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       {/* PDF Content */}
       <CardContent className="p-0">
         <div 
-          className="relative w-full overflow-y-auto overflow-x-hidden touch-pan-y"
+          className="relative w-full overflow-y-auto overflow-x-hidden"
           style={{ 
             maxHeight: 'calc(100vh - 12rem)',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-y pinch-zoom'
           } as React.CSSProperties}
         >
           {isLoading && (
