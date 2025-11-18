@@ -136,49 +136,67 @@ export const InstructorConsole = () => {
 
   return (
     <UniversalLayout containerized={false}>
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
-        <div className="border-b bg-card/50 backdrop-blur-sm sticky top-16 z-40">
-          <div className="max-w-[2000px] mx-auto px-4 lg:px-6 py-3">
-            <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
-              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                <BookOpen className="h-4 w-4 text-primary" />
-                <span className="text-muted-foreground">Assignments:</span>
-                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.activeAssignments}</span>
+        <div className="border-b bg-card sticky top-16 z-40">
+          <div className="max-w-[1800px] mx-auto px-6 py-4">
+            <div className="flex items-center justify-between gap-6">
+              <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide">
+                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                  <span className="text-muted-foreground">Assignments:</span>
+                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.activeAssignments}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                  <Eye className="h-4 w-4 text-emerald-600" />
+                  <span className="text-muted-foreground">Journals:</span>
+                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalJournals}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                  <BarChart3 className="h-4 w-4 text-orange-600" />
+                  <span className="text-muted-foreground">Pending:</span>
+                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.pendingGrades}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                  <GraduationCap className="h-4 w-4 text-purple-600" />
+                  <span className="text-muted-foreground">Students:</span>
+                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalStudents}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                  <Users className="h-4 w-4 text-indigo-600" />
+                  <span className="text-muted-foreground">Average:</span>
+                  <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                <Eye className="h-4 w-4 text-green-600 dark:text-green-500" />
-                <span className="text-muted-foreground">Journals:</span>
-                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalJournals}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                <BarChart3 className="h-4 w-4 text-orange-600 dark:text-orange-500" />
-                <span className="text-muted-foreground">Pending:</span>
-                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.pendingGrades}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                <GraduationCap className="h-4 w-4 text-purple-600 dark:text-purple-500" />
-                <span className="text-muted-foreground">Students:</span>
-                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalStudents}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                <Users className="h-4 w-4 text-indigo-600 dark:text-indigo-500" />
-                <span className="text-muted-foreground">Average:</span>
-                <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
+              
+              <div className="flex items-center gap-3">
+                <Badge variant="secondary" className="text-sm whitespace-nowrap">
+                  <Brain className="h-3.5 w-3.5 mr-1.5" />
+                  AI-Enhanced
+                </Badge>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/classes/mus240/admin')}
+                  className="flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Course Home</span>
+                </Button>
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Layout */}
-        <div className="flex max-w-[2000px] mx-auto">
+        <div className="flex max-w-[1800px] mx-auto">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-64 border-r bg-card/30 backdrop-blur-sm min-h-[calc(100vh-8rem)] sticky top-32">
-            <div className="p-4">
-              <div className="mb-6">
+          <aside className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-32">
+            <div className="p-6">
+              <div className="mb-8 pb-6 border-b">
                 <h2 className="text-xl font-bold text-foreground">MUS 240</h2>
-                <p className="text-sm text-muted-foreground mt-1">Survey of African American Music</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Dr. Kevin Phillip Johnson</p>
+                <p className="text-sm text-muted-foreground mt-1.5">Survey of African American Music</p>
+                <p className="text-xs text-muted-foreground mt-1">Dr. Kevin Phillip Johnson</p>
               </div>
               <SidebarNav />
             </div>
@@ -192,51 +210,36 @@ export const InstructorConsole = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-6">
-              <div className="mb-6">
-                <h2 className="text-xl font-bold text-foreground">MUS 240 Console</h2>
-                <p className="text-sm text-muted-foreground mt-1">Dr. Kevin Phillip Johnson</p>
+              <div className="mb-8 pb-6 border-b">
+                <h2 className="text-xl font-bold text-foreground">MUS 240</h2>
+                <p className="text-sm text-muted-foreground mt-1.5">Survey of African American Music</p>
+                <p className="text-xs text-muted-foreground mt-1">Dr. Kevin Phillip Johnson</p>
               </div>
               <SidebarNav isMobile />
             </SheetContent>
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-4 lg:p-6 space-y-6">
+          <main className="flex-1 p-6 lg:p-8">
             {/* Page Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                  {navItems.find(item => item.value === activeTab)?.label || 'Console'}
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                  Manage and monitor your MUS 240 course
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-sm">
-                  <Brain className="h-3.5 w-3.5 mr-1.5" />
-                  AI-Enhanced
-                </Badge>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/classes/mus240/admin')}
-                  className="flex items-center gap-2"
-                >
-                  <Home className="h-4 w-4" />
-                  <span className="hidden sm:inline">Course Home</span>
-                </Button>
-              </div>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-foreground mb-2">
+                {navItems.find(item => item.value === activeTab)?.label || 'Console'}
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your course content, track student progress, and analyze performance
+              </p>
             </div>
 
-            {/* Content based on active tab */}
+            {/* Content */}
             {activeTab === 'assignments' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-primary" />
-                    Assignments
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <BookOpen className="h-5 w-5" />
+                    Assignment Manager
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Create and manage listening journal assignments</p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <AssignmentManager />
@@ -245,29 +248,26 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'tests' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <ClipboardCheck className="h-5 w-5 text-primary" />
-                      Tests & Assessments
-                    </CardTitle>
-                  </div>
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <ClipboardCheck className="h-5 w-5" />
+                    Tests & Assessments
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Create and manage tests, quizzes, and midterm grading</p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-6">
-                    <div className="flex gap-2 border-b">
+                    <div className="flex gap-2 border-b pb-3">
                       <Button
                         variant={testSubTab === 'tests' ? 'default' : 'ghost'}
                         onClick={() => setTestSubTab('tests')}
-                        size="sm"
                       >
                         All Tests
                       </Button>
                       <Button
                         variant={testSubTab === 'midterm' ? 'default' : 'ghost'}
                         onClick={() => setTestSubTab('midterm')}
-                        size="sm"
                       >
                         Midterm Grading
                       </Button>
@@ -287,12 +287,13 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'polls' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <BarChart3 className="h-5 w-5" />
                     Polls & Engagement
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Create polls and track student participation</p>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   <Mus240PollSystem />
@@ -305,12 +306,13 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'grades' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Trophy className="h-5 w-5" />
                     Grade Management
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">View grades, calculate scores, and manage student performance</p>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
                   <GradesAdmin />
@@ -321,12 +323,13 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'communications' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Users className="h-5 w-5" />
                     Communications
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Review and manage student journal submissions</p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <ComprehensiveJournalAdmin />
@@ -335,12 +338,13 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'students' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <UserPlus className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <UserPlus className="h-5 w-5" />
                     Student Management
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Manage course enrollments and student records</p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <EnrollmentManager />
@@ -349,12 +353,13 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'analytics' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <BarChart className="h-5 w-5" />
                     Analytics Dashboard
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Track performance metrics and student engagement</p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <StudentAnalyticsDashboard />
@@ -363,12 +368,13 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'resources' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <BookOpen className="h-5 w-5" />
                     Course Resources
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Manage course materials and learning resources</p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <ResourcesAdmin />
@@ -377,12 +383,13 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'ai-assistant' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Brain className="h-5 w-5" />
                     AI Assistant
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Get AI-powered help with course management</p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <AIAssistant />
@@ -391,12 +398,13 @@ export const InstructorConsole = () => {
             )}
 
             {activeTab === 'settings' && (
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="border-b bg-muted/30">
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-primary" />
+              <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Settings className="h-5 w-5" />
                     Course Settings
                   </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Configure course settings and preferences</p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4">
