@@ -26,13 +26,22 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Create rubric criteria based on max points
-    const rubricCriteria = [
-      { name: 'Content Quality', maxScore: Math.floor(maxPoints * 0.35) },
-      { name: 'Critical Analysis', maxScore: Math.floor(maxPoints * 0.30) },
-      { name: 'Musical Understanding', maxScore: Math.floor(maxPoints * 0.25) },
-      { name: 'Writing Quality', maxScore: Math.floor(maxPoints * 0.10) }
-    ];
+    // Create rubric criteria based on max points - ensure they add up to exactly maxPoints
+    const weights = [0.35, 0.30, 0.25, 0.10];
+    const criteriaNames = ['Content Quality', 'Critical Analysis', 'Musical Understanding', 'Writing Quality'];
+    
+    // Calculate base scores and distribute remainder
+    const baseScores = weights.map(w => Math.floor(maxPoints * w));
+    const total = baseScores.reduce((sum, score) => sum + score, 0);
+    const remainder = maxPoints - total;
+    
+    // Distribute remainder to first criteria
+    baseScores[0] += remainder;
+    
+    const rubricCriteria = criteriaNames.map((name, i) => ({
+      name,
+      maxScore: baseScores[i]
+    }));
 
     // Call OpenAI to grade the journal
     const aiPrompt = `You are an expert music professor grading a listening journal entry. Grade the following submission based on the assignment prompt and rubric criteria.
@@ -99,6 +108,13 @@ Respond in JSON format:
 
     const aiResult = await response.json();
     const gradingData = JSON.parse(aiResult.choices[0].message.content);
+
+    // Validate the grade is within acceptable range
+    if (gradingData.overall_score < 0 || gradingData.overall_score > maxPoints) {
+      console.error('AI returned invalid score:', gradingData.overall_score, 'Max:', maxPoints);
+      // Clamp the score to valid range
+      gradingData.overall_score = Math.max(0, Math.min(maxPoints, gradingData.overall_score));
+    }
 
     // Store the grade in the database
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
