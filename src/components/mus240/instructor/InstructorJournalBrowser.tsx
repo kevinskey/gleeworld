@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, User, Calendar, MessageSquare, CheckCircle2, Bot, Loader2 } from 'lucide-react';
+import { BookOpen, User, Calendar, MessageSquare, CheckCircle2, Bot, Loader2, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -152,6 +152,18 @@ export const InstructorJournalBrowser: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center gap-4 mb-4">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/classes/mus240/instructor/console')}
+          className="gap-2"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Console
+        </Button>
+      </div>
+      
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Student Journals</h2>
         <div className="flex items-center gap-2">
