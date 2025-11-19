@@ -13,6 +13,7 @@ import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
+import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -2067,10 +2068,11 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                             </Routes>
-                     </Suspense>
-                   <GlobalMusicPlayer />
-                </div>
+                              </Routes>
+                      </Suspense>
+                    <GlobalMusicPlayer />
+                    <PWAInstallPrompt />
+                 </div>
               </MusicPlayerProvider>
             </CustomTooltipProvider>
           </TooltipProvider>
