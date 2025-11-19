@@ -222,26 +222,32 @@ export const DirectMessaging = () => {
           )}
         </ScrollArea>
 
-        {/* Input - Fixed to bottom */}
-        <div className="px-2 py-2 border-t flex-shrink-0 bg-background">
-          <div className="flex gap-2 items-center">
+        {/* Input - Fixed to bottom with clear visual hierarchy */}
+        <div className="px-3 py-3 border-t flex-shrink-0 bg-background shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
+          <div className="flex gap-2 items-end">
             <Input
               placeholder="Type a message..."
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-              className="flex-1 h-9 text-sm"
+              className="flex-1 h-10 text-sm bg-muted/50 border-input focus:bg-background transition-colors"
               disabled={sending}
             />
             <Button 
               onClick={handleSendMessage} 
               size="icon" 
-              className="h-9 w-9 flex-shrink-0"
+              className="h-10 w-10 flex-shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all"
               disabled={sending || !messageInput.trim()}
+              title="Send message"
             >
               <Send className="h-4 w-4" />
             </Button>
           </div>
+          {messageInput.trim() && (
+            <p className="text-xs text-muted-foreground mt-1.5 px-1">
+              Press Enter to send • Shift+Enter for new line
+            </p>
+          )}
         </div>
       </div>
     );
