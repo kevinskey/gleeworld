@@ -2,9 +2,18 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 
 const SOUNDCLOUD_CLIENT_ID = Deno.env.get("SOUNDCLOUD_CLIENT_ID")!;
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
-  const url = new URL(req.url);
-  const q = url.searchParams.get("q") ?? "choir";
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  const { q = "choir" } = await req.json();
 
   const scUrl =
     `https://api-v2.soundcloud.com/search/tracks` +
@@ -16,7 +25,7 @@ serve(async (req) => {
   if (!scRes.ok) {
     return new Response(
       JSON.stringify({ error: "SoundCloud request failed", status: scRes.status }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 
@@ -32,6 +41,6 @@ serve(async (req) => {
   }));
 
   return new Response(JSON.stringify({ tracks }), {
-    headers: { "Content-Type": "application/json" },
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
