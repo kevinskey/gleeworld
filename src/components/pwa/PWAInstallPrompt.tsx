@@ -5,10 +5,25 @@ import { Button } from '@/components/ui/button';
 export const PWAInstallPrompt = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPrompt, setShowPrompt] = useState(false);
+  const [isIosSafari, setIsIosSafari] = useState(false);
 
   useEffect(() => {
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches) {
+      return;
+    }
+
+    // Detect iOS Safari (no beforeinstallprompt support)
+    const ua = window.navigator.userAgent || '';
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isSafari = /Safari/i.test(ua) && !/Chrome/i.test(ua) && !/CriOS/i.test(ua);
+
+    if (isIOS && isSafari) {
+      setIsIosSafari(true);
+      const dismissed = localStorage.getItem('pwa-install-dismissed');
+      if (!dismissed) {
+        setShowPrompt(true);
+      }
       return;
     }
 
@@ -24,10 +39,10 @@ export const PWAInstallPrompt = () => {
       setShowPrompt(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('beforeinstallprompt', handler as any);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
+      window.removeEventListener('beforeinstallprompt', handler as any);
     };
   }, []);
 
@@ -64,20 +79,25 @@ export const PWAInstallPrompt = () => {
               Install GleeWorld
             </h3>
             <p className="text-sm text-muted-foreground mb-3">
-              Install our app for quick access, offline support, and a better experience!
+              {isIosSafari
+                ? "On iPhone, tap the share icon 606 then choose 'Add to Home Screen' to install GleeWorld."
+                : "Install our app for quick access, offline support, and a better experience!"}
             </p>
             <div className="flex gap-2">
-              <Button 
-                onClick={handleInstall}
-                size="sm"
-                className="flex-1"
-              >
-                Install
-              </Button>
+              {!isIosSafari && (
+                <Button 
+                  onClick={handleInstall}
+                  size="sm"
+                  className="flex-1"
+                >
+                  Install
+                </Button>
+              )}
               <Button 
                 onClick={handleDismiss}
                 size="sm"
                 variant="outline"
+                className="flex-1"
               >
                 Not now
               </Button>
