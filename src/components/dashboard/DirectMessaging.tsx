@@ -223,7 +223,7 @@ export const DirectMessaging = () => {
         </div>
 
         {/* Input - Sticky at bottom */}
-        <div className="px-3 py-3 border-t flex-shrink-0 bg-background">
+        <div className="px-3 py-3 border-t flex-shrink-0 bg-background pb-safe sticky bottom-0">
           <div className="flex gap-2 items-center">
             <Input
               placeholder="Type a message..."

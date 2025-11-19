@@ -423,6 +423,11 @@
   .checkbox-active {
     @apply text-primary;
   }
+  
+  /* Safe area utility for mobile (iOS notch/bottom bar) */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 
   /* Nav & Sidebar */
   .nav-active {
