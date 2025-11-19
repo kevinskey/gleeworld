@@ -23,6 +23,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Calendar, MapPin, ArrowRight, ChevronLeft, ChevronRight, Sparkles, X, Music, Album as AlbumIcon, Youtube, Play, AlertCircle, MessageCircleQuestion } from "lucide-react";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
+import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 interface Event {
   id: string;
   title: string;
@@ -647,5 +648,6 @@ export const GleeWorldLanding = () => {
         </div>
       </section>
       </PublicLayout>
+      <PWAInstallPrompt />
     </div>;
 };
