@@ -98,8 +98,9 @@ export default function SoundCloudSearch() {
 
       if (error) throw error;
 
-      // Redirect to SoundCloud OAuth
-      window.location.href = data.authUrl;
+      // Open SoundCloud OAuth in new tab
+      window.open(data.authUrl, "_blank", "noopener,noreferrer");
+      toast.info("Complete the authorization in the new tab");
     } catch (error: any) {
       console.error('Connect error:', error);
       toast.error("Failed to initiate SoundCloud connection");
