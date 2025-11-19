@@ -155,16 +155,20 @@ export const UnifiedCommunicationsHub = () => {
         for (const recipient of finalRecipients) {
           const phone = recipientType === 'custom' ? customContact : recipient.phone;
           if (phone) {
-            const { error } = await supabase.functions.invoke('send-sms', {
+            // Normalize phone to E.164 format (+1...) for Twilio
+            const cleaned = phone.replace(/\D/g, "");
+            const formatted = cleaned.startsWith("1") ? `+${cleaned}` : `+1${cleaned}`;
+
+            const { error } = await supabase.functions.invoke('gw-send-sms', {
               body: {
-                to: phone,
+                to: formatted,
                 message: message,
                 sender: user?.id,
               }
             });
 
             if (error) {
-              console.error(`Failed to send SMS to ${phone}:`, error);
+              console.error(`Failed to send SMS to ${formatted}:`, error);
             }
           }
         }
