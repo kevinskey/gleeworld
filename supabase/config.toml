@@ -246,3 +246,6 @@ verify_jwt = false
 
 [functions.canva-oauth-init]
 verify_jwt = false
+
+[functions.soundcloud-search]
+verify_jwt = false
