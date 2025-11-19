@@ -132,6 +132,7 @@ import UserManagement from "./pages/UserManagement";
 import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
 import { AuditionsManagement } from "./components/admin/AuditionsManagement";
+import SoundCloudSearch from "./pages/SoundCloudSearch";
 import { ShoutcastManagement } from "./pages/admin/ShoutcastManagement";
 import { ReceiptsPage } from "./pages/ReceiptsPage";
 import ApprovalSystemPage from "./pages/ApprovalSystemPage";
@@ -1349,6 +1350,14 @@ const App = () => {
                                     </ProtectedRoute>
                                   } 
                                  />
+                                 <Route 
+                                   path="/soundcloud" 
+                                   element={
+                                     <ProtectedRoute>
+                                       <SoundCloudSearch />
+                                     </ProtectedRoute>
+                                   } 
+                                  />
                                   <Route 
                                     path="/receipts" 
                                     element={
