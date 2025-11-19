@@ -725,6 +725,14 @@ const App = () => {
                      </ProtectedRoute>
                    } 
                   />
+                 <Route
+                   path="/direct-messages" 
+                   element={
+                     <ProtectedRoute>
+                       <Navigate to="/community?tab=messages" replace />
+                     </ProtectedRoute>
+                   } 
+                  />
                   <Route
                     path="/admin/announcements/new" 
                     element={
