@@ -349,13 +349,12 @@ Give students the benefit of the doubt - many write formally but authentically. 
       const assignmentId = assignment.id as string;
       const studentId = journal.student_id as string;
 
-      // Upsert gw_grades
+      // Upsert gw_grades (percentage is auto-calculated, don't include it)
       const gradePayload = {
         assignment_id: assignmentId,
         student_id: studentId,
         total_score: Math.round(totalScore),
         max_points: totalMaxPoints,
-        percentage: Math.round(percentage),
         letter_grade: letterGrade,
         graded_at: new Date().toISOString(),
         graded_by: 'ai_system',
