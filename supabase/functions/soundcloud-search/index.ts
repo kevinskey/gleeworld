@@ -59,8 +59,8 @@ serve(async (req) => {
 
     console.log('Searching SoundCloud with user token');
 
-    // Use OAuth token instead of client_id
-    const scUrl = `https://api-v2.soundcloud.com/search/tracks?q=${encodeURIComponent(q)}&limit=20`;
+    // Use public API v1 endpoint for search
+    const scUrl = `https://api.soundcloud.com/tracks?q=${encodeURIComponent(q)}&limit=20`;
 
     const scRes = await fetch(scUrl, {
       headers: {
