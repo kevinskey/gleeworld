@@ -158,9 +158,9 @@ export const DirectMessaging = () => {
   // Conversation view
   if (selectedConversationId && selectedConversation) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full max-h-[100dvh] md:max-h-none">
         {/* Header */}
-        <div className="p-2 border-b flex items-center gap-2">
+        <div className="p-2 border-b flex items-center gap-2 flex-shrink-0">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -175,11 +175,11 @@ export const DirectMessaging = () => {
               {selectedConversation.other_user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <h3 className="text-sm font-semibold flex-1">{selectedConversation.other_user_name}</h3>
+          <h3 className="text-sm font-semibold flex-1 min-w-0 truncate">{selectedConversation.other_user_name}</h3>
         </div>
 
         {/* Messages */}
-        <ScrollArea className="flex-1 px-2 py-1" ref={scrollRef}>
+        <ScrollArea className="flex-1 min-h-0 px-2 py-1" ref={scrollRef}>
           {conversationMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center py-8">
@@ -188,7 +188,7 @@ export const DirectMessaging = () => {
               </div>
             </div>
           ) : (
-            <div className="space-y-2 py-2">
+            <div className="space-y-2 py-2 pb-4">
               {conversationMessages.map(msg => {
                 const isCurrentUser = msg.sender_id === user?.id;
                 const initials = msg.sender_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?';
@@ -201,7 +201,7 @@ export const DirectMessaging = () => {
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={`flex-1 max-w-[80%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
+                    <div className={`flex-1 max-w-[75%] md:max-w-[80%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
                       <span className="text-[9px] text-muted-foreground">
                         {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                       </span>
@@ -222,24 +222,24 @@ export const DirectMessaging = () => {
           )}
         </ScrollArea>
 
-        {/* Input */}
-        <div className="px-2 py-1.5 border-t">
-          <div className="flex gap-1.5">
+        {/* Input - Fixed to bottom */}
+        <div className="px-2 py-2 border-t flex-shrink-0 bg-background">
+          <div className="flex gap-2 items-center">
             <Input
               placeholder="Type a message..."
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-              className="flex-1 h-8 text-xs"
+              className="flex-1 h-9 text-sm"
               disabled={sending}
             />
             <Button 
               onClick={handleSendMessage} 
               size="icon" 
-              className="h-8 w-8"
+              className="h-9 w-9 flex-shrink-0"
               disabled={sending || !messageInput.trim()}
             >
-              <Send className="h-3 w-3" />
+              <Send className="h-4 w-4" />
             </Button>
           </div>
         </div>
