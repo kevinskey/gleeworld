@@ -122,7 +122,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
               "relative inline-block max-w-xs lg:max-w-md px-3 py-2 text-sm break-words",
               isOwnMessage 
                 ? cn(
-                    "bg-primary text-primary-foreground",
+                    "bg-primary text-white",
                     isFirstInGroup ? "rounded-2xl" : 
                     isLastInGroup ? "rounded-t-2xl rounded-bl-2xl rounded-br-md" : 
                     "rounded-l-2xl rounded-r-md"
@@ -139,7 +139,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
             
             {/* Timestamp for own messages */}
             {isOwnMessage && isLastInGroup && (
-              <div className="text-xs text-primary-foreground/70 mt-1 text-right">
+              <div className="text-xs text-white/70 mt-1 text-right">
                 {formatMessageTime(message.created_at)}
               </div>
             )}
