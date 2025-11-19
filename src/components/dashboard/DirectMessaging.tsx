@@ -158,18 +158,18 @@ export const DirectMessaging = () => {
   // Conversation view
   if (selectedConversationId && selectedConversation) {
     return (
-      <div className="flex flex-col h-full max-h-[100dvh] md:max-h-none">
+      <div className="flex flex-col h-full w-full">
         {/* Header */}
-        <div className="p-2 border-b flex items-center gap-2 flex-shrink-0">
+        <div className="p-3 border-b flex items-center gap-2 flex-shrink-0 bg-background">
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => setSelectedConversationId(null)} 
-            className="h-7 w-7 p-0"
+            className="h-8 w-8 p-0"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <Avatar className="h-7 w-7">
+          <Avatar className="h-8 w-8">
             <AvatarImage src={selectedConversation.other_user_avatar} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {selectedConversation.other_user_name.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -178,8 +178,8 @@ export const DirectMessaging = () => {
           <h3 className="text-sm font-semibold flex-1 min-w-0 truncate">{selectedConversation.other_user_name}</h3>
         </div>
 
-        {/* Messages */}
-        <ScrollArea className="flex-1 min-h-0 px-2 py-1" ref={scrollRef}>
+        {/* Messages - Scrollable area */}
+        <div className="flex-1 overflow-y-auto px-3 py-2" ref={scrollRef}>
           {conversationMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center py-8">
@@ -188,29 +188,29 @@ export const DirectMessaging = () => {
               </div>
             </div>
           ) : (
-            <div className="space-y-2 py-2 pb-4">
+            <div className="space-y-3 pb-4">
               {conversationMessages.map(msg => {
                 const isCurrentUser = msg.sender_id === user?.id;
                 const initials = msg.sender_name?.split(' ').map(n => n[0]).join('').toUpperCase() || '?';
 
                 return (
-                  <div key={msg.id} className={`flex gap-1.5 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <Avatar className="h-6 w-6 flex-shrink-0">
+                  <div key={msg.id} className={`flex gap-2 ${isCurrentUser ? 'flex-row-reverse' : 'flex-row'}`}>
+                    <Avatar className="h-7 w-7 flex-shrink-0">
                       <AvatarImage src={msg.sender_avatar} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-[9px]">
+                      <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                    <div className={`flex-1 max-w-[75%] md:max-w-[80%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
-                      <span className="text-[9px] text-muted-foreground">
+                    <div className={`flex-1 max-w-[75%] ${isCurrentUser ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
+                      <span className="text-[10px] text-muted-foreground px-1">
                         {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                       </span>
-                      <Card className={`px-2 py-1.5 ${
+                      <Card className={`px-3 py-2 ${
                         isCurrentUser 
                           ? 'bg-primary text-primary-foreground border-primary' 
                           : 'bg-muted/50'
                       }`}>
-                        <p className="text-xs leading-relaxed whitespace-pre-wrap break-words">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                           {msg.content}
                         </p>
                       </Card>
@@ -220,32 +220,32 @@ export const DirectMessaging = () => {
               })}
             </div>
           )}
-        </ScrollArea>
+        </div>
 
-        {/* Input - Fixed to bottom with clear visual hierarchy */}
-        <div className="px-3 py-3 border-t flex-shrink-0 bg-background shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
-          <div className="flex gap-2 items-end">
+        {/* Input - Sticky at bottom */}
+        <div className="px-3 py-3 border-t flex-shrink-0 bg-background">
+          <div className="flex gap-2 items-center">
             <Input
               placeholder="Type a message..."
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-              className="flex-1 h-10 text-sm bg-muted/50 border-input focus:bg-background transition-colors"
+              className="flex-1 h-11 text-sm"
               disabled={sending}
             />
             <Button 
               onClick={handleSendMessage} 
               size="icon" 
-              className="h-10 w-10 flex-shrink-0 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md hover:shadow-lg transition-all"
+              className="h-11 w-11 flex-shrink-0"
               disabled={sending || !messageInput.trim()}
               title="Send message"
             >
-              <Send className="h-4 w-4" />
+              <Send className="h-5 w-5" />
             </Button>
           </div>
           {messageInput.trim() && (
-            <p className="text-xs text-muted-foreground mt-1.5 px-1">
-              Press Enter to send • Shift+Enter for new line
+            <p className="text-xs text-muted-foreground mt-2 px-1">
+              Press Enter to send
             </p>
           )}
         </div>
