@@ -3,9 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, User, Calendar, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { BookOpen, User, Calendar, MessageSquare, CheckCircle2, Bot, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface JournalEntry {
   id: string;
@@ -26,6 +27,8 @@ export const InstructorJournalBrowser: React.FC = () => {
   const [journals, setJournals] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'published' | 'unpublished'>('all');
+  const [bulkGrading, setBulkGrading] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -101,6 +104,48 @@ export const InstructorJournalBrowser: React.FC = () => {
     }
   };
 
+  const handleBulkGradeAll = async () => {
+    if (!confirm('AI will grade all journals. Students will then be able to revise their work once before you apply final grades. Continue?')) {
+      return;
+    }
+
+    setBulkGrading(true);
+    setBulkProgress({ current: 0, total: journals.length });
+    
+    try {
+      let completed = 0;
+      
+      for (const journal of journals) {
+        try {
+          setBulkProgress({ current: completed + 1, total: journals.length });
+          
+          const { error } = await supabase.functions.invoke('grade-mus240-journal', {
+            body: { journalId: journal.id }
+          });
+          
+          if (error) {
+            console.error(`Failed to grade journal ${journal.id}:`, error);
+            toast.error(`Failed to grade ${journal.student_name}'s journal`);
+          }
+          
+          completed++;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (err) {
+          console.error('Error grading journal:', err);
+        }
+      }
+      
+      toast.success(`AI graded ${completed} of ${journals.length} journals. Students can now revise.`);
+      
+      fetchJournals();
+    } catch (error) {
+      console.error('Bulk grading error:', error);
+      toast.error('Failed to complete bulk grading');
+    } finally {
+      setBulkGrading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center p-8">Loading journals...</div>;
   }
@@ -111,27 +156,48 @@ export const InstructorJournalBrowser: React.FC = () => {
         <h2 className="text-2xl font-bold">Student Journals</h2>
         <div className="flex items-center gap-2">
           <Button
-            variant={filter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('all')}
+            onClick={handleBulkGradeAll}
+            disabled={bulkGrading || journals.length === 0}
+            className="gap-2"
+            variant="default"
           >
-            All ({journals.length})
-          </Button>
-          <Button
-            variant={filter === 'published' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('published')}
-          >
-            Published
-          </Button>
-          <Button
-            variant={filter === 'unpublished' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilter('unpublished')}
-          >
-            Unpublished
+            {bulkGrading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Grading {bulkProgress.current} of {bulkProgress.total}...
+              </>
+            ) : (
+              <>
+                <Bot className="h-4 w-4" />
+                Bulk Grade All with AI
+              </>
+            )}
           </Button>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button
+          variant={filter === 'all' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilter('all')}
+        >
+          All ({journals.length})
+        </Button>
+        <Button
+          variant={filter === 'published' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilter('published')}
+        >
+          Published
+        </Button>
+        <Button
+          variant={filter === 'unpublished' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilter('unpublished')}
+        >
+          Unpublished
+        </Button>
       </div>
 
       {journals.length === 0 ? (
