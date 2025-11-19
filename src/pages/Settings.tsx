@@ -281,24 +281,21 @@ export default function Settings() {
                       />
                     </div>
 
-                    {/* SMS Notifications - NEW! */}
+                    {/* SMS Notifications - Automatic if phone number exists */}
                     <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border-2 border-primary/20">
                       <div className="space-y-0.5 flex-1">
                         <Label className="text-base flex items-center gap-2">
                           <Bell className="h-4 w-4" />
                           SMS Notifications
-                          <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">Available via Twilio</span>
+                          <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">Auto-enabled</span>
                         </Label>
                         <p className="text-sm text-muted-foreground">
-                          Receive text message alerts for urgent notifications
+                          Automatically enabled if you have a phone number in your profile
                         </p>
                         <p className="text-xs text-muted-foreground mt-2">
-                          SMS notifications are now available! Update your phone number in your profile to receive text alerts.
+                          Add your phone number in Profile Settings to receive SMS notifications
                         </p>
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => window.location.href = '/profile'}>
-                        Setup SMS
-                      </Button>
                     </div>
                   </div>
 
