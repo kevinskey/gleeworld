@@ -132,7 +132,7 @@ export const DirectMessaging = () => {
   // User search view
   if (showUserSearch) {
     return (
-      <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[100dvh] max-h-[100dvh] w-full overflow-hidden sm:h-full sm:max-h-full">
         <div className="p-3 border-b flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => setShowUserSearch(false)} className="h-8 w-8 p-0">
             <ArrowLeft className="h-4 w-4" />
@@ -289,7 +289,7 @@ export const DirectMessaging = () => {
 
   // Conversation list view
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-[100dvh] max-h-[100dvh] w-full overflow-hidden sm:h-full sm:max-h-full">
       <div className="p-2 border-b space-y-2">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Direct Messages</h3>
