@@ -247,5 +247,11 @@ verify_jwt = false
 [functions.canva-oauth-init]
 verify_jwt = false
 
-[functions.soundcloud-search]
+[functions.soundcloud-auth-init]
 verify_jwt = false
+
+[functions.soundcloud-auth-callback]
+verify_jwt = true
+
+[functions.soundcloud-search]
+verify_jwt = true
