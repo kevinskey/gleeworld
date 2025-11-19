@@ -256,32 +256,32 @@ export const DirectMessaging = () => {
           )}
         </div>
 
-        {/* Input - Sticky at bottom */}
+        {/* Input - Fixed at bottom with proper mobile layout */}
         <div className="px-3 py-3 border-t flex-shrink-0 bg-background pb-safe sticky bottom-0">
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-2 items-end w-full">
             <Input
               placeholder="Type a message..."
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
-              className="flex-1 h-11 text-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
+                }
+              }}
               disabled={sending}
+              className="flex-1 min-w-0 h-10 resize-none"
             />
             <Button 
-              onClick={handleSendMessage} 
-              size="icon" 
-              className="h-11 w-11 flex-shrink-0"
+              onClick={handleSendMessage}
               disabled={sending || !messageInput.trim()}
-              title="Send message"
+              size="icon"
+              className="h-10 w-10 flex-shrink-0"
             >
-              <Send className="h-5 w-5" />
+              <Send className="h-4 w-4" />
             </Button>
           </div>
-          {messageInput.trim() && (
-            <p className="text-xs text-muted-foreground mt-2 px-1">
-              Press Enter to send
-            </p>
-          )}
+          <p className="text-[10px] text-muted-foreground mt-1 text-center">Press Enter to send</p>
         </div>
       </div>
     );

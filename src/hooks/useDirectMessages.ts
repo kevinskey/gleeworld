@@ -326,14 +326,17 @@ export const useDirectMessages = () => {
       channel.unsubscribe();
       supabase.removeChannel(channel);
     };
-  }, [user?.id]); // Only re-run if user id changes
+  }, [user?.id]);
 
   return {
     conversations,
     messages,
     loading,
+    loadingMore,
+    hasMore,
     fetchMessages,
+    loadMoreMessages,
     sendMessage,
-    createConversation
+    createConversation,
   };
 };
