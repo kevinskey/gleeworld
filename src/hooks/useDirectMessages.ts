@@ -127,12 +127,19 @@ export const useDirectMessages = () => {
       setMessages(prev => ({ ...prev, [conversationId]: enrichedMessages.reverse() }));
 
       // Mark messages as read
-      await supabase
+      const { error: markReadError } = await supabase
         .from('dm_messages')
         .update({ read: true })
         .eq('conversation_id', conversationId)
         .neq('sender_id', user.id)
         .eq('read', false);
+
+      if (markReadError) {
+        console.error('Error marking messages as read:', markReadError);
+      }
+
+      // Refresh conversations to update unread count
+      await fetchConversations();
 
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -317,7 +324,19 @@ export const useDirectMessages = () => {
           }));
 
           // Refresh conversations to update last message time and unread count
-          fetchConversations();
+          await fetchConversations();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'dm_messages'
+        },
+        async () => {
+          // When messages are marked as read, refresh conversations
+          await fetchConversations();
         }
       )
       .subscribe();
