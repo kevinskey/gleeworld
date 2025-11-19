@@ -15,13 +15,11 @@ serve(async (req) => {
   try {
     const { redirectUri } = await req.json();
     
-    // Build SoundCloud OAuth URL
-    const authUrl = new URL('https://secure.soundcloud.com/connect');
+    // Build SoundCloud OAuth URL (use /authorize endpoint)
+    const authUrl = new URL('https://api.soundcloud.com/connect');
     authUrl.searchParams.set('client_id', SOUNDCLOUD_CLIENT_ID);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('scope', 'non-expiring');
-    authUrl.searchParams.set('display', 'popup');
 
     console.log('Generated SoundCloud auth URL:', authUrl.toString());
 
