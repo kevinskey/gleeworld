@@ -214,8 +214,10 @@ export const useDirectMessages = () => {
 
     fetchConversations();
 
+    // Use unique channel name to prevent duplicate subscriptions
+    const channelName = `dm-updates-${user.id}-${Date.now()}`;
     const channel = supabase
-      .channel('dm-updates')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
