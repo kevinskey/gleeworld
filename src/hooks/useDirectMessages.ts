@@ -30,6 +30,8 @@ export const useDirectMessages = () => {
   const [conversations, setConversations] = useState<DMConversation[]>([]);
   const [messages, setMessages] = useState<Record<string, DMMessage[]>>({});
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState<Record<string, boolean>>({});
 
   // Fetch all conversations
   const fetchConversations = async () => {
@@ -90,7 +92,7 @@ export const useDirectMessages = () => {
   };
 
   // Fetch messages for a specific conversation
-  const fetchMessages = async (conversationId: string) => {
+  const fetchMessages = async (conversationId: string, limit = 50) => {
     if (!user) return;
 
     try {
@@ -98,9 +100,13 @@ export const useDirectMessages = () => {
         .from('dm_messages')
         .select('*')
         .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false })
+        .limit(limit);
 
       if (error) throw error;
+
+      // Check if there are more messages
+      setHasMore(prev => ({ ...prev, [conversationId]: (msgs?.length || 0) === limit }));
 
       // Fetch sender profiles
       const senderIds = [...new Set(msgs?.map(m => m.sender_id) || [])];
@@ -117,7 +123,8 @@ export const useDirectMessages = () => {
         sender_avatar: profileMap.get(msg.sender_id)?.avatar_url
       })) || [];
 
-      setMessages(prev => ({ ...prev, [conversationId]: enrichedMessages }));
+      // Reverse to show oldest first
+      setMessages(prev => ({ ...prev, [conversationId]: enrichedMessages.reverse() }));
 
       // Mark messages as read
       await supabase
@@ -130,6 +137,62 @@ export const useDirectMessages = () => {
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast.error('Failed to load messages');
+    }
+  };
+
+  // Load more messages (infinite scroll)
+  const loadMoreMessages = async (conversationId: string) => {
+    if (!user || loadingMore || !hasMore[conversationId]) return;
+
+    setLoadingMore(true);
+    try {
+      const currentMessages = messages[conversationId] || [];
+      const oldestMessage = currentMessages[0];
+      
+      if (!oldestMessage) {
+        setLoadingMore(false);
+        return;
+      }
+
+      const { data: msgs, error } = await supabase
+        .from('dm_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .lt('created_at', oldestMessage.created_at)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+
+      // Check if there are more messages
+      setHasMore(prev => ({ ...prev, [conversationId]: (msgs?.length || 0) === 50 }));
+
+      // Fetch sender profiles
+      const senderIds = [...new Set(msgs?.map(m => m.sender_id) || [])];
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, avatar_url')
+        .in('user_id', senderIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+
+      const enrichedMessages = msgs?.map(msg => ({
+        ...msg,
+        sender_name: profileMap.get(msg.sender_id)?.full_name || 'Unknown',
+        sender_avatar: profileMap.get(msg.sender_id)?.avatar_url
+      })) || [];
+
+      // Prepend older messages (reverse to show oldest first)
+      setMessages(prev => ({
+        ...prev,
+        [conversationId]: [...enrichedMessages.reverse(), ...currentMessages]
+      }));
+
+    } catch (error) {
+      console.error('Error loading more messages:', error);
+      toast.error('Failed to load more messages');
+    } finally {
+      setLoadingMore(false);
     }
   };
 

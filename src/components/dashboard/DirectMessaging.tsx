@@ -21,7 +21,7 @@ interface UserSearchResult {
 
 export const DirectMessaging = () => {
   const { user } = useAuth();
-  const { conversations, messages, loading, fetchMessages, sendMessage, createConversation } = useDirectMessages();
+  const { conversations, messages, loading, loadingMore, hasMore, fetchMessages, loadMoreMessages, sendMessage, createConversation } = useDirectMessages();
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -29,20 +29,45 @@ export const DirectMessaging = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserSearchResult[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [shouldScrollToBottom, setShouldScrollToBottom] = useState(true);
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
   const conversationMessages = selectedConversationId ? messages[selectedConversationId] || [] : [];
 
-  // Auto-scroll to bottom on new messages
+  // Auto-scroll to bottom on new messages (only if user is at bottom)
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && shouldScrollToBottom) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [conversationMessages]);
+  }, [conversationMessages, shouldScrollToBottom]);
+
+  // Handle scroll for infinite loading
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    const isAtTop = target.scrollTop === 0;
+    const isAtBottom = target.scrollHeight - target.scrollTop === target.clientHeight;
+    
+    // Update scroll to bottom flag
+    setShouldScrollToBottom(isAtBottom || target.scrollHeight - target.scrollTop - target.clientHeight < 100);
+
+    // Load more messages when scrolled to top
+    if (isAtTop && selectedConversationId && hasMore[selectedConversationId] && !loadingMore) {
+      const previousScrollHeight = target.scrollHeight;
+      loadMoreMessages(selectedConversationId).then(() => {
+        // Maintain scroll position after loading
+        requestAnimationFrame(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight - previousScrollHeight;
+          }
+        });
+      });
+    }
+  };
 
   // Fetch messages when conversation is selected
   useEffect(() => {
     if (selectedConversationId) {
+      setShouldScrollToBottom(true);
       fetchMessages(selectedConversationId);
     }
   }, [selectedConversationId]);
@@ -178,8 +203,17 @@ export const DirectMessaging = () => {
           <h3 className="text-sm font-semibold flex-1 min-w-0 truncate">{selectedConversation.other_user_name}</h3>
         </div>
 
-        {/* Messages - Scrollable area */}
-        <div className="flex-1 overflow-y-auto px-3 py-2" ref={scrollRef}>
+        {/* Messages - Scrollable area with infinite scroll */}
+        <div 
+          className="flex-1 overflow-y-auto px-3 py-2" 
+          ref={scrollRef}
+          onScroll={handleScroll}
+        >
+          {loadingMore && (
+            <div className="flex justify-center py-2">
+              <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
           {conversationMessages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center py-8">
