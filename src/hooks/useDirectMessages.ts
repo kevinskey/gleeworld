@@ -214,8 +214,12 @@ export const useDirectMessages = () => {
 
     fetchConversations();
 
-    // Use unique channel name to prevent duplicate subscriptions
-    const channelName = `dm-updates-${user.id}-${Date.now()}`;
+    // Use consistent channel name - one per user
+    const channelName = `dm-updates-${user.id}`;
+    
+    // Remove any existing channel with this name first
+    supabase.removeAllChannels();
+    
     const channel = supabase
       .channel(channelName)
       .on(
@@ -256,9 +260,10 @@ export const useDirectMessages = () => {
       .subscribe();
 
     return () => {
+      channel.unsubscribe();
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user?.id]); // Only re-run if user id changes
 
   return {
     conversations,
