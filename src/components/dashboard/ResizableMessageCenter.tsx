@@ -321,20 +321,22 @@ export const ResizableMessageCenter = ({
         </> : <DirectMessaging />}
     </>;
 
-  // Use Sheet for both mobile and desktop - slide from right
+  // Use Sheet for both mobile and desktop - slide from right with high z-index
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         side="right" 
-        className={`${isMobile ? 'w-[90vw]' : 'w-[500px]'} max-h-[50vh] p-0 flex flex-col top-1/2 -translate-y-1/2`}
+        className={`${isMobile ? 'w-[90vw]' : 'w-[500px]'} max-h-[50vh] p-0 flex flex-col top-1/2 -translate-y-1/2 z-[9999]`}
       >
-        <SheetHeader className="px-3 py-2 border-b">
+        <SheetHeader className="px-3 py-2 border-b flex-shrink-0">
           <SheetTitle className="flex items-center gap-2 text-sm">
             <MessageSquare className="h-4 w-4 text-primary" />
             Glee Message Center
           </SheetTitle>
         </SheetHeader>
-        {MessageCenterContent()}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {MessageCenterContent()}
+        </div>
       </SheetContent>
     </Sheet>
   );
