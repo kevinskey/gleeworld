@@ -247,9 +247,13 @@ export default function Settings() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                    {/* Email Notifications */}
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Email Notifications</Label>
+                        <Label className="text-base flex items-center gap-2">
+                          <Bell className="h-4 w-4" />
+                          Email Notifications
+                        </Label>
                         <p className="text-sm text-muted-foreground">
                           Receive notifications via email
                         </p>
@@ -260,11 +264,13 @@ export default function Settings() {
                       />
                     </div>
 
-                    <Separator />
-
-                    <div className="flex items-center justify-between">
+                    {/* Push Notifications */}
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                       <div className="space-y-0.5">
-                        <Label className="text-base">Push Notifications</Label>
+                        <Label className="text-base flex items-center gap-2">
+                          <Bell className="h-4 w-4" />
+                          Push Notifications
+                        </Label>
                         <p className="text-sm text-muted-foreground">
                           Receive browser push notifications
                         </p>
@@ -275,8 +281,32 @@ export default function Settings() {
                       />
                     </div>
 
-                    <Separator />
+                    {/* SMS Notifications - NEW! */}
+                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border-2 border-primary/20">
+                      <div className="space-y-0.5 flex-1">
+                        <Label className="text-base flex items-center gap-2">
+                          <Bell className="h-4 w-4" />
+                          SMS Notifications
+                          <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full">Available via Twilio</span>
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Receive text message alerts for urgent notifications
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          SMS notifications are now available! Update your phone number in your profile to receive text alerts.
+                        </p>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => window.location.href = '/profile'}>
+                        Setup SMS
+                      </Button>
+                    </div>
+                  </div>
 
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium">Notification Types</h3>
+                    
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label className="text-base">Event Reminders</Label>
