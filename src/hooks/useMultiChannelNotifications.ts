@@ -25,17 +25,23 @@ export const useMultiChannelNotifications = () => {
     try {
       const targetUsers = userId ? [userId] : userIds || [];
 
-      // Fetch user preferences to determine which channels to use
-      const { data: preferences } = await supabase
-        .from('gw_notification_preferences')
-        .select('user_id, push_enabled, email_enabled, sms_enabled, phone_number')
+      // Fetch user phone numbers and email preferences from profiles
+      const { data: profiles } = await supabase
+        .from('gw_profiles')
+        .select('user_id, phone_number, email')
         .in('user_id', targetUsers);
 
-      if (!preferences || preferences.length === 0) {
-        console.warn('No user preferences found, skipping notifications');
+      // Fetch notification preferences (email/push only, SMS is auto-enabled if phone exists)
+      const { data: preferences } = await supabase
+        .from('gw_notification_preferences')
+        .select('user_id, push_enabled, email_enabled')
+        .in('user_id', targetUsers);
+
+      if (!profiles || profiles.length === 0) {
+        console.warn('No user profiles found, skipping notifications');
         return {
           success: false,
-          results: { push: 0, email: 0, sms: 0, errors: ['No user preferences configured'] },
+          results: { push: 0, email: 0, sms: 0, errors: ['No user profiles found'] },
         };
       }
 
@@ -46,8 +52,15 @@ export const useMultiChannelNotifications = () => {
         errors: [] as string[],
       };
 
+      // Create a map of user preferences
+      const prefMap = new Map(preferences?.map(p => [p.user_id, p]) || []);
+
       // Send push notifications
-      const pushUsers = preferences.filter(p => p.push_enabled);
+      const pushUsers = profiles.filter(p => {
+        const pref = prefMap.get(p.user_id);
+        return pref?.push_enabled !== false; // Default to true if no preference
+      });
+
       if (pushUsers.length > 0) {
         try {
           const { error } = await supabase.functions.invoke('send-push-notification', {
@@ -66,8 +79,9 @@ export const useMultiChannelNotifications = () => {
         }
       }
 
-      // Send SMS notifications
-      const smsUsers = preferences.filter(p => p.sms_enabled && p.phone_number);
+      // Send SMS notifications - auto-enabled if user has phone number
+      const smsUsers = profiles.filter(p => p.phone_number && p.phone_number.trim() !== '');
+      
       if (smsUsers.length > 0) {
         try {
           for (const user of smsUsers) {
@@ -92,12 +106,16 @@ export const useMultiChannelNotifications = () => {
       }
 
       // Send email notifications
-      const emailUsers = preferences.filter(p => p.email_enabled);
+      const emailUsers = profiles.filter(p => {
+        const pref = prefMap.get(p.user_id);
+        return p.email && (pref?.email_enabled !== false); // Default to true if no preference
+      });
+
       if (emailUsers.length > 0) {
         try {
           const { error } = await supabase.functions.invoke('gw-send-email', {
             body: {
-              to: emailUsers.map(p => p.user_id),
+              to: emailUsers.map(p => p.email).filter(Boolean),
               subject: title,
               html: `<p>${message}</p>`,
             },
