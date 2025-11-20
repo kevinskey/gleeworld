@@ -17,6 +17,7 @@ import {
   ChevronUp,
   Lightbulb
 } from 'lucide-react';
+import { AIDetectionAlert } from '../AIDetectionAlert';
 
 interface RubricScore {
   criterion: string;
@@ -42,12 +43,18 @@ interface EnhancedRubricDisplayProps {
   };
   showDetailed?: boolean;
   interactive?: boolean;
+  aiDetection?: {
+    detected: boolean;
+    confidence?: number | null;
+    reasoning?: string | null;
+  };
 }
 
 export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({ 
   grade, 
   showDetailed = true,
-  interactive = true 
+  interactive = true,
+  aiDetection
 }) => {
   const [activeTab, setActiveTab] = useState('overview');
   const [expandedCriteria, setExpandedCriteria] = useState<Set<string>>(new Set());
@@ -100,13 +107,23 @@ export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({
   const { strengths, improvements } = getPerformanceAnalysis();
 
   return (
-    <Card className="mt-4">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5" />
-            Grade Analysis
-          </CardTitle>
+    <div className="space-y-4">
+      {/* AI Detection Warning - Show right above grade card */}
+      {aiDetection?.detected && (
+        <AIDetectionAlert
+          detected={aiDetection.detected}
+          confidence={aiDetection.confidence}
+          reasoning={aiDetection.reasoning}
+        />
+      )}
+      
+      <Card className="mt-4">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <GraduationCap className="h-5 w-5" />
+              AI Grade Assessment
+            </CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="default" className="text-lg px-3 py-1">
               {Math.round(grade.overall_score)}% ({grade.letter_grade})
@@ -339,5 +356,6 @@ export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
