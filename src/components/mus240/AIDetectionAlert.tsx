@@ -69,7 +69,7 @@ export const AIDetectionAlert: React.FC<AIDetectionAlertProps> = ({
   }
 
   return (
-    <Alert className={`${colors.border} ${colors.bg}`}>
+    <Alert className={`${colors.border} ${colors.bg} relative z-50`}>
       <AlertTriangle className={`h-4 w-4 ${colors.icon}`} />
       <AlertTitle className={`${colors.text} flex items-center gap-2`}>
         ⚠️ Potential AI-Generated Content Detected
