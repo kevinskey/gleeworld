@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Bot, Star, CheckCircle2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { AIDetectionAlert } from '../AIDetectionAlert';
 
 interface AIGradeViewerProps {
   journalId?: string;
@@ -27,6 +28,9 @@ interface AIGrade {
   ai_model: string;
   graded_at: string;
   assignment_id: string;
+  ai_writing_detected?: boolean;
+  ai_detection_confidence?: number | null;
+  ai_detection_notes?: string | null;
 }
 
 export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, studentId, assignmentId }) => {
@@ -139,23 +143,33 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, student
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            AI Grade Assessment
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge className={getLetterGradeColor(grade.letter_grade)}>
-              {grade.letter_grade}
-            </Badge>
-            <Badge variant="outline">
-              {grade.overall_score}/{maxPoints}
-            </Badge>
+    <div className="space-y-4 relative z-10">
+      {/* AI Detection Warning */}
+      {grade.ai_writing_detected && (
+        <AIDetectionAlert
+          detected={grade.ai_writing_detected}
+          confidence={grade.ai_detection_confidence}
+          reasoning={grade.ai_detection_notes}
+        />
+      )}
+      
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              AI Grade Assessment
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge className={getLetterGradeColor(grade.letter_grade)}>
+                {grade.letter_grade}
+              </Badge>
+              <Badge variant="outline">
+                {grade.overall_score}/{maxPoints}
+              </Badge>
+            </div>
           </div>
-        </div>
-      </CardHeader>
+        </CardHeader>
       <CardContent className="space-y-6">
         {/* Overall Score */}
         <div className="space-y-2">
@@ -220,5 +234,6 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, student
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
