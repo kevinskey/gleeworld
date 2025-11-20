@@ -275,32 +275,8 @@ Be constructive and specific in your feedback.
       rubric_items: rubricScores.length
     });
 
-    // Check if grade already exists by journal_id (primary unique constraint)
-    let { data: existingGrade } = await supabase
-      .from("mus240_journal_grades")
-      .select("id, journal_id")
-      .eq("journal_id", journal_id)
-      .maybeSingle();
-
-    // If not found by journal_id, check by assignment_id + student_id
-    if (!existingGrade) {
-      const result = await supabase
-        .from("mus240_journal_grades")
-        .select("id, journal_id")
-        .eq("assignment_id", assignment_id)
-        .eq("student_id", student_id)
-        .maybeSingle();
-      existingGrade = result.data;
-    }
-
-    console.log('Existing grade check:', { 
-      foundGrade: !!existingGrade, 
-      gradeId: existingGrade?.id,
-      checkedJournalId: journal_id,
-      checkedAssignment: assignment_id,
-      checkedStudent: student_id
-    });
-
+    // Use upsert to handle both insert and update in a single operation
+    // This avoids race conditions and handles the unique constraints properly
     const gradeData = {
       student_id,
       assignment_id,
@@ -316,34 +292,14 @@ Be constructive and specific in your feedback.
       },
     };
 
-    let saveError;
-    if (existingGrade) {
-      // Update existing grade by its ID - don't include student_id, assignment_id, or journal_id
-      // in the update as they are part of unique constraints and shouldn't change
-      console.log('Updating existing grade:', existingGrade.id, 'for journal:', journal_id);
-      const { error } = await supabase
-        .from("mus240_journal_grades")
-        .update({
-          overall_score: dbScore,
-          letter_grade: letter,
-          ai_feedback: feedback,
-          graded_at: new Date().toISOString(),
-          ai_model: "gpt-4o-mini",
-          rubric: {
-            criteria: rubric,
-            scores: rubricScores
-          },
-        })
-        .eq("id", existingGrade.id);
-      saveError = error;
-    } else {
-      // Insert new grade
-      console.log('Inserting new grade for journal:', journal_id);
-      const { error } = await supabase
-        .from("mus240_journal_grades")
-        .insert(gradeData);
-      saveError = error;
-    }
+    console.log('Upserting grade for journal:', journal_id, 'assignment:', assignment_id, 'student:', student_id);
+    
+    const { error: saveError } = await supabase
+      .from("mus240_journal_grades")
+      .upsert(gradeData, {
+        onConflict: 'journal_id',
+        ignoreDuplicates: false
+      });
 
     if (saveError) {
       console.error('Database save error:', saveError);
