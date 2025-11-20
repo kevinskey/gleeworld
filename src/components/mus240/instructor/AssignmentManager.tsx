@@ -50,6 +50,8 @@ export const AssignmentManager = () => {
   const [sortBy, setSortBy] = useState<'date' | 'due_date' | 'submissions' | 'ungraded' | 'needs_final' | 'journal_number'>('journal_number');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<string>('all');
+  const [students, setStudents] = useState<Array<{ user_id: string; full_name: string; email: string }>>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -65,6 +67,12 @@ export const AssignmentManager = () => {
     fetchGrades();
   }, []);
 
+  useEffect(() => {
+    if (Object.keys(submissions).length > 0) {
+      fetchStudents();
+    }
+  }, [submissions]);
+
   const fetchAssignments = async () => {
     try {
       const { data, error } = await supabase
@@ -79,6 +87,31 @@ export const AssignmentManager = () => {
       toast.error('Failed to load assignments');
     } finally {
       setLoading(false);
+    }
+  };
+
+
+  const fetchStudents = async () => {
+    try {
+      // Get all unique student IDs from submissions
+      const allStudentIds = new Set<string>();
+      Object.values(submissions).forEach(submissionList => {
+        submissionList.forEach(sub => allStudentIds.add(sub.student_id));
+      });
+
+      if (allStudentIds.size === 0) return;
+
+      const { data: profiles, error } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .in('user_id', Array.from(allStudentIds))
+        .order('full_name');
+
+      if (error) throw error;
+
+      setStudents(profiles || []);
+    } catch (error) {
+      console.error('Error fetching students:', error);
     }
   };
 
@@ -363,6 +396,22 @@ export const AssignmentManager = () => {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="All Students" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Students</SelectItem>
+                {students.map(student => (
+                  <SelectItem key={student.user_id} value={student.user_id}>
+                    {student.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
               <SelectTrigger className="w-full sm:w-[160px] md:w-[180px]">
@@ -556,7 +605,12 @@ export const AssignmentManager = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => navigate(`/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}`)}
+                      onClick={() => {
+                        const url = selectedStudent !== 'all' 
+                          ? `/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}&student=${selectedStudent}`
+                          : `/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}`;
+                        navigate(url);
+                      }}
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       View Submissions
