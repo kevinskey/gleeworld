@@ -31,6 +31,7 @@ export const StudentWorkOverview = () => {
   const { data: assignmentSubmissions, isLoading: assignmentsLoading } = useStudentAssignmentSubmissions(studentId || '');
   const [students, setStudents] = useState<Array<{ user_id: string; full_name: string; email: string }>>([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<'midterm' | string | null>(null);
 
   useEffect(() => {
     const fetchEnrolledStudents = async () => {
@@ -93,6 +94,121 @@ export const StudentWorkOverview = () => {
       default:
         return <Badge variant="secondary">Not Started</Badge>;
     }
+  };
+
+  const renderDetailView = () => {
+    if (!selectedItem) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <div className="text-center">
+            <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Select an assignment to view details</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (selectedItem === 'midterm') {
+      return (
+        <Card className="border-0 bg-white/70 backdrop-blur-sm h-full">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ClipboardCheck className="h-5 w-5 text-blue-600" />
+              Midterm Examination
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {midtermSubmission ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Status:</span>
+                  {getStatusBadge(midtermSubmission.is_submitted ? 'submitted' : 'pending')}
+                </div>
+                {midtermSubmission.submitted_at && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Submitted:</span>
+                    <span className="text-sm">
+                      {new Date(midtermSubmission.submitted_at).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Grade:</span>
+                  <span className="text-sm font-medium">
+                    {midtermSubmission.grade ? `${midtermSubmission.grade}/90` : 'Not graded'}
+                  </span>
+                </div>
+                <Button
+                  onClick={() => navigate(`/classes/mus240/instructor/student/${studentId}/midterm`)}
+                  className="w-full"
+                >
+                  <ClipboardCheck className="h-4 w-4 mr-2" />
+                  Grade Midterm
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500 mb-4">No midterm submission found</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      );
+    }
+
+    const assignment = assignmentSubmissions?.find(a => a.id === selectedItem);
+    if (!assignment) return null;
+
+    return (
+      <Card className="border-0 bg-white/70 backdrop-blur-sm h-full">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5 text-green-600" />
+            {assignment.file_name || `Assignment ${assignment.assignment_id}`}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Status:</span>
+              {getStatusBadge(assignment.status)}
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Submitted:</span>
+              <span className="text-sm">
+                {new Date(assignment.submitted_at).toLocaleDateString()}
+              </span>
+            </div>
+            {assignment.grade !== null && assignment.grade !== undefined && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Grade:</span>
+                <span className="text-sm font-medium">
+                  {assignment.grade}/100
+                </span>
+              </div>
+            )}
+            {assignment.feedback && (
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Feedback:</h4>
+                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                  {assignment.feedback}
+                </p>
+              </div>
+            )}
+            {assignment.file_url && (
+              <Button
+                onClick={() => window.open(assignment.file_url, '_blank')}
+                className="w-full"
+                variant="outline"
+              >
+                View Submission
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   return (
@@ -161,116 +277,86 @@ export const StudentWorkOverview = () => {
           </CardContent>
         </Card>
 
-        {/* Work Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Midterm Exam */}
-          <Card className="border-0 bg-white/70 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ClipboardCheck className="h-5 w-5 text-blue-600" />
-                Midterm Examination
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {midtermSubmission ? (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Status:</span>
-                    {getStatusBadge(midtermSubmission.is_submitted ? 'submitted' : 'pending')}
-                  </div>
-                  {midtermSubmission.submitted_at && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Submitted:</span>
-                      <span className="text-sm">
-                        {new Date(midtermSubmission.submitted_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Grade:</span>
-                    <span className="text-sm font-medium">
-                      {midtermSubmission.grade ? `${midtermSubmission.grade}/90` : 'Not graded'}
-                    </span>
-                  </div>
-                  <Button
-                    onClick={() => navigate(`/classes/mus240/instructor/student/${studentId}/midterm`)}
-                    className="w-full"
-                    variant="outline"
-                  >
-                    <ClipboardCheck className="h-4 w-4 mr-2" />
-                    Grade Midterm
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center py-6">
-                  <AlertCircle className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">No midterm submission found</p>
-                  <Button
-                    variant="outline"
-                    onClick={() => navigate(`/classes/mus240/instructor/student/${studentId}/midterm`)}
-                  >
-                    View Midterm Details
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Assignments Summary */}
-          <Card className="border-0 bg-white/70 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-green-600" />
-                Assignment Submissions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {assignmentSubmissions && assignmentSubmissions.length > 0 ? (
-                <div className="space-y-3">
-                  {assignmentSubmissions.slice(0, 3).map((assignment) => (
-                    <div key={assignment.id} className="flex items-center justify-between p-3 rounded-lg border bg-white/50">
-                      <div>
-                        <h4 className="font-medium text-sm">{assignment.file_name || `Assignment ${assignment.assignment_id}`}</h4>
-                        <p className="text-xs text-gray-600">
-                          Submitted: {new Date(assignment.submitted_at).toLocaleDateString()}
-                        </p>
+        {/* Main Content - Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Assignments List */}
+          <div className="lg:col-span-1">
+            <Card className="border-0 bg-white/70 backdrop-blur-sm sticky top-6">
+              <CardHeader>
+                <CardTitle className="text-lg">Assignments</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="max-h-[600px] overflow-y-auto">
+                  {/* Midterm Item */}
+                  <button
+                    onClick={() => setSelectedItem('midterm')}
+                    className={`w-full text-left p-4 border-b hover:bg-gray-50 transition-colors ${
+                      selectedItem === 'midterm' ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <ClipboardCheck className="h-4 w-4 text-blue-600" />
+                        <span className="font-medium">Midterm Examination</span>
                       </div>
-                      {getStatusBadge(assignment.status)}
                     </div>
-                  ))}
-                  {assignmentSubmissions.length > 3 && (
-                    <Button variant="outline" className="w-full mt-4">
-                      View All {assignmentSubmissions.length} Assignments
-                    </Button>
+                    <div className="flex items-center gap-2 mt-2">
+                      {getStatusBadge(midtermSubmission?.is_submitted ? 'submitted' : 'pending')}
+                      {midtermSubmission?.grade && (
+                        <Badge variant="outline">
+                          {midtermSubmission.grade}/90
+                        </Badge>
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Assignment Items */}
+                  {assignmentSubmissions && assignmentSubmissions.length > 0 ? (
+                    assignmentSubmissions.map((assignment) => (
+                      <button
+                        key={assignment.id}
+                        onClick={() => setSelectedItem(assignment.id)}
+                        className={`w-full text-left p-4 border-b hover:bg-gray-50 transition-colors ${
+                          selectedItem === assignment.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-green-600" />
+                            <span className="font-medium text-sm">
+                              {assignment.file_name || `Assignment ${assignment.assignment_id}`}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-600 mb-2">
+                          {new Date(assignment.submitted_at).toLocaleDateString()}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(assignment.status)}
+                          {assignment.grade !== null && assignment.grade !== undefined && (
+                            <Badge variant="outline" className="text-xs">
+                              {assignment.grade}/100
+                            </Badge>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No assignments submitted
+                    </div>
                   )}
                 </div>
-              ) : (
-                <div className="text-center py-6">
-                  <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <p className="text-gray-500">No assignments submitted yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Recent Activity */}
-        <Card className="border-0 bg-white/70 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-purple-600" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="text-center py-8">
-                <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">No recent activity to display</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+          {/* Right Column - Detail View */}
+          <div className="lg:col-span-2">
+            {renderDetailView()}
+          </div>
+        </div>
       </div>
     </div>
   );
