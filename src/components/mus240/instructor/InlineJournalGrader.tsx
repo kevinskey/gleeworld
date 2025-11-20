@@ -117,26 +117,49 @@ export const InlineJournalGrader: React.FC<InlineJournalGraderProps> = ({
   };
 
   const handleGradeWithAI = async () => {
-    if (!journal) return;
+    if (!journal) {
+      toast.error('No journal entry found');
+      return;
+    }
+    
+    if (!journal.content) {
+      toast.error('Journal entry has no content');
+      return;
+    }
     
     // Extract actual text content (skip attachment lines)
     const textContent = journal.content
       .split('\n')
-      .filter(line => !line.startsWith('Attachment:') && !line.startsWith('https://'))
+      .filter(line => {
+        const trimmedLine = line.trim();
+        return trimmedLine && 
+               !trimmedLine.startsWith('Attachment:') && 
+               !trimmedLine.startsWith('https://');
+      })
       .join('\n')
       .trim();
     
     console.log('Journal content processing:', {
-      originalLength: journal.content.length,
+      hasJournal: !!journal,
+      hasContent: !!journal.content,
+      originalLength: journal.content?.length || 0,
       filteredLength: textContent.length,
-      originalContent: journal.content.substring(0, 200),
-      filteredContent: textContent.substring(0, 200)
+      originalContentPreview: journal.content?.substring(0, 200) || 'empty',
+      filteredContentPreview: textContent.substring(0, 200) || 'empty',
+      textContentTruthy: !!textContent
     });
     
-    if (!textContent) {
+    if (!textContent || textContent.length === 0) {
       toast.error('No text content found in journal entry. PDF-only submissions cannot be auto-graded.');
       return;
     }
+    
+    console.log('Sending to API:', {
+      assignment_id: assignmentId,
+      journal_id: journal.id,
+      student_id: studentId,
+      textLength: textContent.length
+    });
     
     setGrading(true);
     try {
