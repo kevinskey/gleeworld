@@ -136,7 +136,7 @@ export const JournalGradingCard: React.FC<JournalGradingCardProps> = ({
                   {getStatusBadge()}
                   
                   {/* Grade Display */}
-                  {isGraded && journal.points_earned !== undefined && (
+                  {isGraded && journal.points_earned !== undefined ? (
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 font-semibold">
                         {journal.points_earned.toFixed(1)}/{journal.points_possible}
@@ -147,6 +147,10 @@ export const JournalGradingCard: React.FC<JournalGradingCardProps> = ({
                         </Badge>
                       )}
                     </div>
+                  ) : (
+                    <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">
+                      Not graded
+                    </Badge>
                   )}
                 </div>
                 
