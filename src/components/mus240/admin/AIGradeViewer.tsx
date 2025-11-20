@@ -83,10 +83,10 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, student
         
         // Fetch assignment to get points (max_points)
         const { data: assignmentData } = await supabase
-          .from('mus240_assignments')
+          .from('gw_assignments')
           .select('points')
           .eq('id', data[0].assignment_id)
-          .single();
+          .maybeSingle();
         
         if (assignmentData?.points) {
           setMaxPoints(assignmentData.points);
