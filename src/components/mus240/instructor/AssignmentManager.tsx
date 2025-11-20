@@ -354,18 +354,18 @@ export const AssignmentManager = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Assignment Manager</h2>
-          <p className="text-gray-600">Create and manage listening journal assignments</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+        <div className="w-full sm:w-auto">
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">Assignment Manager</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Create and manage listening journal assignments</p>
         </div>
-        <div className="flex gap-2 items-center w-full sm:w-auto">
-          <div className="flex items-center gap-2">
-            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-full sm:w-[160px] md:w-[180px]">
                 <SelectValue placeholder="Sort by..." />
               </SelectTrigger>
               <SelectContent>
@@ -378,15 +378,15 @@ export const AssignmentManager = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={getAIAssistance} variant="outline">
+          <Button onClick={getAIAssistance} variant="outline" className="w-full sm:w-auto">
             <Brain className="h-4 w-4 mr-2" />
-            AI Ideas
+            <span className="whitespace-nowrap">AI Ideas</span>
           </Button>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="h-4 w-4 mr-2" />
-                New Assignment
+                <span className="whitespace-nowrap">New Assignment</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -460,25 +460,25 @@ export const AssignmentManager = () => {
       </div>
 
       {/* Assignments Grid */}
-      <div className="grid gap-4">
+      <div className="grid gap-3 sm:gap-4">
         {getSortedAssignments().map((assignment) => (
           <Card key={assignment.id} className={`${!assignment.is_active ? 'opacity-60' : ''}`}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {assignment.title}
+            <CardHeader className="p-3 sm:p-4 md:p-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
+                <div className="w-full sm:flex-1">
+                  <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <span className="break-words">{assignment.title}</span>
                     {assignment.is_active ? (
-                      <Badge variant="default">Active</Badge>
+                      <Badge variant="default" className="whitespace-nowrap">Active</Badge>
                     ) : (
-                      <Badge variant="secondary">Inactive</Badge>
+                      <Badge variant="secondary" className="whitespace-nowrap">Inactive</Badge>
                     )}
                   </CardTitle>
                   {assignment.description && (
-                    <p className="text-sm text-gray-600 mt-1">{assignment.description}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">{assignment.description}</p>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 w-full sm:w-auto justify-end">
                   <Button
                     size="sm"
                     variant="outline"
@@ -490,6 +490,7 @@ export const AssignmentManager = () => {
                     size="sm"
                     variant={assignment.is_active ? "destructive" : "default"}
                     onClick={() => toggleAssignmentStatus(assignment)}
+                    className="whitespace-nowrap"
                   >
                     {assignment.is_active ? 'Deactivate' : 'Activate'}
                   </Button>

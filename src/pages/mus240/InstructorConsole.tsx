@@ -242,27 +242,27 @@ export const InstructorConsole = () => {
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-3 sm:p-6 lg:p-8">
+          <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
             {/* Page Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+            <div className="mb-4 sm:mb-6 md:mb-8">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2">
                 {navItems.find(item => item.value === activeTab)?.label || 'Console'}
               </h1>
-              <p className="text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Manage your course content, track student progress, and analyze performance
               </p>
             </div>
 
             {/* Content */}
             {activeTab === 'assignments' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <BookOpen className="h-5 w-5" />
-                    Assignment Manager
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                    <span className="truncate">Assignment Manager</span>
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Create and manage listening journal assignments</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">Create and manage listening journal assignments</p>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
                   <AssignmentManager />
                 </CardContent>
               </Card>}
