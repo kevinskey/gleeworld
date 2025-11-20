@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import {
   BookOpen,
   FileText,
@@ -12,12 +12,24 @@ import {
   TrendingUp,
   Award,
   Target,
-  GraduationCap
+  GraduationCap,
+  ChevronDown,
+  CheckCircle2,
+  Brain
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface StudentGradeSummaryProps {
   studentId: string;
+}
+
+interface JournalGrade {
+  id: string;
+  assignment_id: string;
+  instructor_score: number | null;
+  overall_score: number | null;
+  created_at: string;
+  assignment_code?: string;
 }
 
 interface GradeBreakdown {
@@ -26,14 +38,24 @@ interface GradeBreakdown {
     possible: number;
     count: number;
     graded: number;
+    items: JournalGrade[];
   };
-  assignments: {
+  researchProject: {
     earned: number;
     possible: number;
-    count: number;
-    graded: number;
+    submitted: boolean;
+  };
+  aiGroupProject: {
+    earned: number;
+    possible: number;
+    submitted: boolean;
   };
   midterm: {
+    earned: number;
+    possible: number;
+    submitted: boolean;
+  };
+  finalEssay: {
     earned: number;
     possible: number;
     submitted: boolean;
@@ -46,7 +68,13 @@ interface GradeBreakdown {
     present: number;
     total: number;
   };
-  overall: {
+  current: {
+    earned: number;
+    possible: number;
+    percentage: number;
+    letterGrade: string;
+  };
+  projected: {
     earned: number;
     possible: number;
     percentage: number;
@@ -57,6 +85,7 @@ interface GradeBreakdown {
 export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studentId }) => {
   const [gradeData, setGradeData] = useState<GradeBreakdown | null>(null);
   const [loading, setLoading] = useState(true);
+  const [journalsOpen, setJournalsOpen] = useState(false);
 
   useEffect(() => {
     fetchGradeBreakdown();
@@ -66,31 +95,32 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
     try {
       setLoading(true);
 
-      // Fetch journal entries count
-      const { data: journalsData, error: journalsError } = await (supabase as any)
-        .from('mus240_journal_entries')
-        .select('id')
-        .eq('user_id', studentId);
-
-      if (journalsError) throw journalsError;
-
-      // Fetch journal grades (using instructor_score which overrides overall_score when available)
-      const { data: gradesData, error: gradesError } = await (supabase as any)
+      // Fetch journal grades with assignment info
+      const { data: gradesData, error: gradesError } = await supabase
         .from('mus240_journal_grades')
-        .select('id, student_id, instructor_score, overall_score, journal_id')
-        .eq('student_id', studentId);
+        .select(`
+          id,
+          assignment_id,
+          student_id,
+          instructor_score,
+          overall_score,
+          created_at,
+          mus240_assignments!inner(assignment_code, is_active)
+        `)
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
 
       if (gradesError) throw gradesError;
 
-      // Fetch assignment submissions
-      const { data: assignments, error: assignmentsError } = await supabase
+      // Fetch all assignments to identify types
+      const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignment_submissions')
         .select('*')
         .eq('student_id', studentId);
 
       if (assignmentsError) throw assignmentsError;
 
-      // Fetch midterm submission
+      // Fetch midterm
       const { data: midterm, error: midtermError } = await supabase
         .from('mus240_midterm_submissions')
         .select('*')
@@ -99,7 +129,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
 
       if (midtermError) throw midtermError;
 
-      // Fetch participation grade
+      // Fetch participation
       const { data: participation, error: participationError } = await supabase
         .from('mus240_participation_grades')
         .select('*')
@@ -117,51 +147,157 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
 
       if (attendanceError) throw attendanceError;
 
-      // Calculate breakdown
-      // For journals, use instructor_score if available, otherwise overall_score
-      const gradedJournals = gradesData || [];
-      const journalPoints = gradedJournals.reduce((sum, g) => {
+      // Calculate journal grades (total 100 points possible for all journals combined)
+      const journalItems: JournalGrade[] = gradesData?.map(g => ({
+        id: g.id,
+        assignment_id: g.assignment_id,
+        instructor_score: g.instructor_score,
+        overall_score: g.overall_score,
+        created_at: g.created_at,
+        assignment_code: (g as any).mus240_assignments?.assignment_code
+      })) || [];
+
+      const journalPointsTotal = journalItems.reduce((sum, g) => {
         const score = g.instructor_score !== null ? g.instructor_score : g.overall_score;
         return sum + (score || 0);
       }, 0);
-      const journalPossible = gradedJournals.length * 100; // Assuming 100 points per journal
+      
+      // Normalize journals to 100 points total (18% of 550)
+      const journalCount = journalItems.length;
+      const journalGraded = journalItems.filter(g => 
+        g.instructor_score !== null || g.overall_score !== null
+      ).length;
+      const journalPossible = 100;
+      const avgJournalScore = journalGraded > 0 ? journalPointsTotal / journalGraded : 0;
+      const journalPoints = avgJournalScore; // Use average as the earned points out of 100
 
-      const assignmentPoints = assignments?.reduce((sum, a) => sum + (a.grade || 0), 0) || 0;
-      const gradedAssignments = assignments?.filter(a => a.grade !== null && a.grade !== undefined) || [];
-      const assignmentPossible = gradedAssignments.length * 100;
+      // Identify specific assignments by type
+      const researchProject = assignmentsData?.find(a => 
+        a.assignment_id?.toLowerCase().includes('research') || 
+        a.file_name?.toLowerCase().includes('research')
+      );
+      const aiProject = assignmentsData?.find(a => 
+        a.assignment_id?.toLowerCase().includes('ai') || 
+        a.file_name?.toLowerCase().includes('ai')
+      );
+      const finalEssay = assignmentsData?.find(a => 
+        a.assignment_id?.toLowerCase().includes('final') || 
+        a.assignment_id?.toLowerCase().includes('reflection') ||
+        a.file_name?.toLowerCase().includes('final') ||
+        a.file_name?.toLowerCase().includes('reflection')
+      );
 
-      const midtermPoints = midterm?.grade || 0;
-      const midtermPossible = 90; // From syllabus
+      // Calculate individual assignment grades (normalized to grading policy scale)
+      const researchPossible = 150;
+      const researchPoints = researchProject?.grade 
+        ? (researchProject.grade / 100) * researchPossible 
+        : 0;
+      
+      const aiPossible = 100;
+      const aiPoints = aiProject?.grade 
+        ? (aiProject.grade / 100) * aiPossible 
+        : 0;
+      
+      const finalEssayPossible = 50;
+      const finalEssayPoints = finalEssay?.grade 
+        ? (finalEssay.grade / 100) * finalEssayPossible 
+        : 0;
 
-      const participationPoints = participation?.points_earned || 0;
-      const participationPossible = participation?.points_possible || 75;
+      // Midterm (100 points per policy)
+      const midtermPossible = 100;
+      const midtermPoints = midterm?.grade 
+        ? (midterm.grade / 90) * midtermPossible 
+        : 0;
+
+      // Participation (50 points per policy)
+      const participationPossible = 50;
+      const participationPoints = participation?.points_earned 
+        ? (participation.points_earned / (participation.points_possible || 75)) * participationPossible 
+        : 0;
+
+      // Calculate current grade (only completed work)
+      let currentEarned = 0;
+      let currentPossible = 0;
+
+      // Add journals if any are graded
+      if (journalGraded > 0) {
+        currentEarned += journalPoints;
+        currentPossible += journalPossible;
+      }
+
+      // Add research project if graded
+      if (researchProject?.grade !== null && researchProject?.grade !== undefined) {
+        currentEarned += researchPoints;
+        currentPossible += researchPossible;
+      }
+
+      // Add AI project if graded
+      if (aiProject?.grade !== null && aiProject?.grade !== undefined) {
+        currentEarned += aiPoints;
+        currentPossible += aiPossible;
+      }
+
+      // Add midterm if graded
+      if (midterm?.grade) {
+        currentEarned += midtermPoints;
+        currentPossible += midtermPossible;
+      }
+
+      // Add final essay if graded
+      if (finalEssay?.grade !== null && finalEssay?.grade !== undefined) {
+        currentEarned += finalEssayPoints;
+        currentPossible += finalEssayPossible;
+      }
+
+      // Always add participation
+      currentEarned += participationPoints;
+      currentPossible += participationPossible;
+
+      const currentPercentage = currentPossible > 0 ? (currentEarned / currentPossible) * 100 : 0;
+      const currentLetterGrade = getLetterGrade(currentPercentage);
+
+      // Calculate projected final grade (assume 100% on remaining work)
+      const projectedEarned = currentEarned + 
+        (journalGraded === 0 ? journalPossible : 0) +
+        (!researchProject?.grade ? researchPossible : 0) +
+        (!aiProject?.grade ? aiPossible : 0) +
+        (!midterm?.grade ? midtermPossible : 0) +
+        (!finalEssay?.grade ? finalEssayPossible : 0);
+      
+      const projectedPossible = 550; // Total points in course
+      const projectedPercentage = (projectedEarned / projectedPossible) * 100;
+      const projectedLetterGrade = getLetterGrade(projectedPercentage);
 
       const presentCount = attendance?.filter(a => a.status === 'present').length || 0;
       const totalAttendance = attendance?.length || 0;
-
-      const totalEarned = journalPoints + assignmentPoints + midtermPoints + participationPoints;
-      const totalPossible = journalPossible + assignmentPossible + midtermPossible + participationPossible;
-      const percentage = totalPossible > 0 ? (totalEarned / totalPossible) * 100 : 0;
-
-      const letterGrade = getLetterGrade(percentage);
 
       setGradeData({
         journals: {
           earned: journalPoints,
           possible: journalPossible,
-          count: journalsData?.length || 0,
-          graded: gradedJournals.length
+          count: journalCount,
+          graded: journalGraded,
+          items: journalItems
         },
-        assignments: {
-          earned: assignmentPoints,
-          possible: assignmentPossible,
-          count: assignments?.length || 0,
-          graded: gradedAssignments.length
+        researchProject: {
+          earned: researchPoints,
+          possible: researchPossible,
+          submitted: !!researchProject
+        },
+        aiGroupProject: {
+          earned: aiPoints,
+          possible: aiPossible,
+          submitted: !!aiProject
         },
         midterm: {
           earned: midtermPoints,
           possible: midtermPossible,
           submitted: !!midterm?.is_submitted
+        },
+        finalEssay: {
+          earned: finalEssayPoints,
+          possible: finalEssayPossible,
+          submitted: !!finalEssay
         },
         participation: {
           earned: participationPoints,
@@ -171,11 +307,17 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
           present: presentCount,
           total: totalAttendance
         },
-        overall: {
-          earned: totalEarned,
-          possible: totalPossible,
-          percentage,
-          letterGrade
+        current: {
+          earned: currentEarned,
+          possible: currentPossible,
+          percentage: currentPercentage,
+          letterGrade: currentLetterGrade
+        },
+        projected: {
+          earned: projectedEarned,
+          possible: projectedPossible,
+          percentage: projectedPercentage,
+          letterGrade: projectedLetterGrade
         }
       });
     } catch (error) {
@@ -186,7 +328,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
   };
 
   const getLetterGrade = (percentage: number): string => {
-    if (percentage >= 93) return 'A';
+    if (percentage >= 95) return 'A';
     if (percentage >= 90) return 'A-';
     if (percentage >= 87) return 'B+';
     if (percentage >= 83) return 'B';
@@ -194,9 +336,9 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
     if (percentage >= 77) return 'C+';
     if (percentage >= 73) return 'C';
     if (percentage >= 70) return 'C-';
-    if (percentage >= 67) return 'D+';
-    if (percentage >= 63) return 'D';
-    if (percentage >= 60) return 'D-';
+    if (percentage >= 65) return 'D+';
+    if (percentage >= 60) return 'D';
+    if (percentage < 59) return 'F';
     return 'F';
   };
 
@@ -233,21 +375,33 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
   const categoryItems = [
     {
       icon: BookOpen,
-      title: 'Journal Entries',
+      title: 'Listening Journals',
       earned: gradeData.journals.earned,
       possible: gradeData.journals.possible,
       meta: `${gradeData.journals.graded} of ${gradeData.journals.count} graded`,
       color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
+      bgColor: 'bg-purple-50',
+      hasDetail: true
     },
     {
       icon: FileText,
-      title: 'Assignments',
-      earned: gradeData.assignments.earned,
-      possible: gradeData.assignments.possible,
-      meta: `${gradeData.assignments.graded} of ${gradeData.assignments.count} graded`,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
+      title: 'Research Project',
+      earned: gradeData.researchProject.earned,
+      possible: gradeData.researchProject.possible,
+      meta: gradeData.researchProject.submitted ? 'Submitted' : 'Not submitted',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      hasDetail: false
+    },
+    {
+      icon: Brain,
+      title: 'AI Group Project',
+      earned: gradeData.aiGroupProject.earned,
+      possible: gradeData.aiGroupProject.possible,
+      meta: gradeData.aiGroupProject.submitted ? 'Submitted' : 'Not submitted',
+      color: 'text-cyan-600',
+      bgColor: 'bg-cyan-50',
+      hasDetail: false
     },
     {
       icon: ClipboardCheck,
@@ -255,57 +409,108 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
       earned: gradeData.midterm.earned,
       possible: gradeData.midterm.possible,
       meta: gradeData.midterm.submitted ? 'Submitted' : 'Not submitted',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+      hasDetail: false
+    },
+    {
+      icon: Award,
+      title: 'Final Reflection Essay',
+      earned: gradeData.finalEssay.earned,
+      possible: gradeData.finalEssay.possible,
+      meta: gradeData.finalEssay.submitted ? 'Submitted' : 'Not submitted',
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-50',
+      hasDetail: false
     },
     {
       icon: Users,
-      title: 'Participation',
+      title: 'Participation & Discussion',
       earned: gradeData.participation.earned,
       possible: gradeData.participation.possible,
       meta: 'Class engagement',
       color: 'text-orange-600',
-      bgColor: 'bg-orange-50'
+      bgColor: 'bg-orange-50',
+      hasDetail: false
     }
   ];
 
   return (
     <div className="space-y-4">
-      {/* Overall Grade Card */}
-      <Card className={`border-2 ${getGradeBgColor(gradeData.overall.percentage)} shadow-lg`}>
+      {/* Current Grade Card */}
+      <Card className={`border-2 ${getGradeBgColor(gradeData.current.percentage)} shadow-lg`}>
         <CardContent className="p-6">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-background rounded-full">
                 <Award className="h-8 w-8 text-primary" />
               </div>
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  Overall Grade
+                  Current Grade
                 </h3>
                 <div className="flex items-baseline gap-3 mt-1">
-                  <span className={`text-5xl font-bold ${getGradeColor(gradeData.overall.percentage)}`}>
-                    {gradeData.overall.letterGrade}
+                  <span className={`text-5xl font-bold ${getGradeColor(gradeData.current.percentage)}`}>
+                    {gradeData.current.letterGrade}
                   </span>
                   <span className="text-2xl font-semibold text-foreground">
-                    {gradeData.overall.percentage.toFixed(1)}%
+                    {gradeData.current.percentage.toFixed(1)}%
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {gradeData.overall.earned.toFixed(0)} / {gradeData.overall.possible} points
+                  {gradeData.current.earned.toFixed(1)} / {gradeData.current.possible} points earned
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <Badge variant="outline" className="text-lg px-4 py-2">
+              <Badge variant="outline" className="text-lg px-4 py-2 mb-2">
                 <Target className="h-4 w-4 mr-2" />
                 Current Standing
               </Badge>
             </div>
           </div>
           <Progress 
-            value={gradeData.overall.percentage} 
-            className="h-3 mt-4"
+            value={gradeData.current.percentage} 
+            className="h-3"
+          />
+        </CardContent>
+      </Card>
+
+      {/* Projected Final Grade Card */}
+      <Card className={`border-2 ${getGradeBgColor(gradeData.projected.percentage)} shadow-lg`}>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-background rounded-full">
+                <TrendingUp className="h-8 w-8 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                  Projected Final Grade
+                </h3>
+                <div className="flex items-baseline gap-3 mt-1">
+                  <span className={`text-5xl font-bold ${getGradeColor(gradeData.projected.percentage)}`}>
+                    {gradeData.projected.letterGrade}
+                  </span>
+                  <span className="text-2xl font-semibold text-foreground">
+                    {gradeData.projected.percentage.toFixed(1)}%
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {gradeData.projected.earned.toFixed(1)} / {gradeData.projected.possible} total points (if 100% on remaining)
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <Badge variant="outline" className="text-lg px-4 py-2 bg-primary/5">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Projection
+              </Badge>
+            </div>
+          </div>
+          <Progress 
+            value={gradeData.projected.percentage} 
+            className="h-3"
           />
         </CardContent>
       </Card>
@@ -330,7 +535,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
                   </div>
                   <div className="text-right">
                     <div className={`text-2xl font-bold ${getGradeColor(percentage)}`}>
-                      {item.earned.toFixed(0)}
+                      {item.earned.toFixed(1)}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       / {item.possible}
@@ -343,6 +548,34 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
                     {percentage.toFixed(1)}%
                   </span>
                 </div>
+
+                {/* Journal Detail Breakdown */}
+                {item.hasDetail && gradeData.journals.items.length > 0 && (
+                  <Collapsible open={journalsOpen} onOpenChange={setJournalsOpen} className="mt-3">
+                    <CollapsibleTrigger className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors">
+                      <ChevronDown className={`h-4 w-4 transition-transform ${journalsOpen ? 'rotate-180' : ''}`} />
+                      View all {gradeData.journals.count} journals
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3 space-y-2">
+                      {gradeData.journals.items.map((journal, idx) => {
+                        const score = journal.instructor_score !== null ? journal.instructor_score : journal.overall_score;
+                        return (
+                          <div key={journal.id} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
+                            <div className="flex items-center gap-2">
+                              {score !== null && <CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+                              <span className="text-muted-foreground">
+                                {journal.assignment_code || `Journal ${idx + 1}`}
+                              </span>
+                            </div>
+                            <span className="font-medium">
+                              {score !== null ? score.toFixed(0) : 'Not graded'}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
               </CardContent>
             </Card>
           );
