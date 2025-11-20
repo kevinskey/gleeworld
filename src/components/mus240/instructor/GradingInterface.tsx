@@ -173,7 +173,7 @@ export const GradingInterface: React.FC = () => {
         return {
           ...j,
           student_name: profileLookup[j.student_id]?.full_name || 'Unknown',
-          points_possible: j.mus240_assignments?.points || 10,
+          points_possible: j.mus240_assignments?.points || 20, // Default to 20 for journals
           assignment_title: assignmentTitle,
           points_earned: grade?.overall_score,
           letter_grade: grade?.letter_grade,
