@@ -14,6 +14,7 @@ import { ArrowLeft, Bot, Save, User, Calendar, FileText, Sparkles } from 'lucide
 import { format } from 'date-fns';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate } from 'react-router-dom';
+import { calculateLetterGrade } from '@/utils/grading';
 
 interface JournalEntry {
   id: string;
@@ -201,21 +202,6 @@ const JournalSubmissionGradingPage = () => {
     }
   };
 
-  const calculateLetterGrade = (score: number, maxPoints: number): string => {
-    const percentage = (score / maxPoints) * 100;
-    if (percentage >= 93) return 'A';
-    if (percentage >= 90) return 'A-';
-    if (percentage >= 87) return 'B+';
-    if (percentage >= 83) return 'B';
-    if (percentage >= 80) return 'B-';
-    if (percentage >= 77) return 'C+';
-    if (percentage >= 73) return 'C';
-    if (percentage >= 70) return 'C-';
-    if (percentage >= 67) return 'D+';
-    if (percentage >= 63) return 'D';
-    if (percentage >= 60) return 'D-';
-    return 'F';
-  };
 
   if (authLoading || loading) {
     return (
