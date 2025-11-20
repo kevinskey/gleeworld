@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +35,7 @@ interface UserProfile {
 }
 
 export const EnrollmentManager = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { isTA } = useCourseTA('MUS240');
   const { isAdmin } = useUserRole();
@@ -434,7 +436,11 @@ export const EnrollmentManager = () => {
           </Card>
         ) : (
           filteredAndSortedEnrollments.map((enrollment) => (
-            <Card key={enrollment.id}>
+            <Card 
+              key={enrollment.id}
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => navigate(`/classes/mus240/instructor/students/${enrollment.student_id}`)}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -459,7 +465,7 @@ export const EnrollmentManager = () => {
                     </p>
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Select
                       value={enrollment.enrollment_status}
                       onValueChange={(value) => updateEnrollmentStatus(enrollment.id, value)}
