@@ -85,22 +85,54 @@ serve(async (req) => {
       journal_id?: string;
     };
 
+    // If journal_id is provided, fetch the journal content
+    let finalJournalText = journal_text;
+    let finalStudentId = student_id;
+    
+    if (journal_id && !journal_text) {
+      console.log('Fetching journal content for journal_id:', journal_id);
+      const { data: journalData, error: journalError } = await supabase
+        .from('mus240_journals')
+        .select('entry_text, student_id')
+        .eq('id', journal_id)
+        .single();
+      
+      if (journalError) {
+        console.error('Error fetching journal:', journalError);
+        return new Response(JSON.stringify({ error: "Failed to fetch journal content.", details: journalError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
+      if (!journalData) {
+        return new Response(JSON.stringify({ error: "Journal not found." }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      
+      finalJournalText = journalData.entry_text;
+      finalStudentId = journalData.student_id;
+      console.log('Fetched journal text length:', finalJournalText?.length || 0);
+    }
+
     // Basic validation
-    if (!journal_text || typeof journal_text !== "string" || !journal_text.trim()) {
+    if (!finalJournalText || typeof finalJournalText !== "string" || !finalJournalText.trim()) {
       console.error('Missing or invalid journal_text:', { 
-        received: journal_text,
-        type: typeof journal_text,
-        isEmpty: !journal_text,
-        isWhitespace: journal_text ? !journal_text.trim() : 'n/a'
+        received: finalJournalText,
+        type: typeof finalJournalText,
+        isEmpty: !finalJournalText,
+        isWhitespace: finalJournalText ? !finalJournalText.trim() : 'n/a'
       });
-      return new Response(JSON.stringify({ error: "No journal_text provided." }), {
+      return new Response(JSON.stringify({ error: "No journal_text found." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // Consistent word-count policy
-    const wordCount = journal_text.trim().split(/\s+/).filter(Boolean).length;
+    const wordCount = finalJournalText.trim().split(/\s+/).filter(Boolean).length;
     console.log('Word count:', wordCount);
     
     if (wordCount < 100) {
@@ -170,7 +202,7 @@ Be constructive and specific in your feedback.
       gradingPrompt += `- Writing Quality (max 2 pts): Clear, organized writing with proper grammar and 250-300 words\n`;
     }
 
-    gradingPrompt += `\nJOURNAL ENTRY:\n${journal_text}`;
+    gradingPrompt += `\nJOURNAL ENTRY:\n${finalJournalText}`;
 
 
     console.log('Making OpenAI API call...');
@@ -264,7 +296,7 @@ Be constructive and specific in your feedback.
 
     // Save to DB
     console.log('Saving grade to database:', {
-      student_id,
+      student_id: finalStudentId,
       assignment_id,
       journal_id,
       rubric_total: totalScore,
@@ -278,7 +310,7 @@ Be constructive and specific in your feedback.
     // Use upsert to handle both insert and update in a single operation
     // This avoids race conditions and handles the unique constraints properly
     const gradeData = {
-      student_id,
+      student_id: finalStudentId,
       assignment_id,
       journal_id,
       overall_score: dbScore,
@@ -292,7 +324,7 @@ Be constructive and specific in your feedback.
       },
     };
 
-    console.log('Upserting grade for journal:', journal_id, 'assignment:', assignment_id, 'student:', student_id);
+    console.log('Upserting grade for journal:', journal_id, 'assignment:', assignment_id, 'student:', finalStudentId);
     
     const { error: saveError } = await supabase
       .from("mus240_journal_grades")
