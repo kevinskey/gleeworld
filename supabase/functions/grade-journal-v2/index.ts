@@ -208,10 +208,10 @@ Respond in JSON format:
       ai_detected: gradingData.ai_detection?.likely_ai_generated
     });
 
-    // First attempt to insert the grade
+    // Upsert the grade (handles both new and re-grading cases)
     let { error: insertError } = await supabase
       .from('mus240_journal_grades')
-      .insert({
+      .upsert({
         journal_id: journalId,
         student_id: journal.student_id,
         assignment_id: assignmentId,
@@ -224,6 +224,8 @@ Respond in JSON format:
         ai_writing_detected: gradingData.ai_detection?.likely_ai_generated || false,
         ai_detection_confidence: gradingData.ai_detection?.confidence || null,
         ai_detection_notes: gradingData.ai_detection?.reasoning || null
+      }, {
+        onConflict: 'journal_id'
       });
 
     // If the database complains about an invalid grade range, adapt to its expected max
@@ -240,10 +242,10 @@ Respond in JSON format:
 
       gradingData.overall_score = adjustedScore;
 
-      // Retry insert once with the adjusted score
+      // Retry upsert once with the adjusted score
       const retryResult = await supabase
         .from('mus240_journal_grades')
-        .insert({
+        .upsert({
           journal_id: journalId,
           student_id: journal.student_id,
           assignment_id: assignmentId,
@@ -256,6 +258,8 @@ Respond in JSON format:
           ai_writing_detected: gradingData.ai_detection?.likely_ai_generated || false,
           ai_detection_confidence: gradingData.ai_detection?.confidence || null,
           ai_detection_notes: gradingData.ai_detection?.reasoning || null
+        }, {
+          onConflict: 'journal_id'
         });
 
       insertError = retryResult.error;
