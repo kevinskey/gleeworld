@@ -15,8 +15,11 @@ import {
   Star,
   Clock,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  TrendingUp,
+  Award
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { useUserById } from '@/hooks/useUserById';
 import { useStudentMidtermSubmission } from '@/hooks/useStudentMidtermSubmission';
 import { useStudentAssignmentSubmissions } from '@/hooks/useStudentAssignmentSubmissions';
@@ -86,14 +89,30 @@ export const StudentWorkOverview = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'submitted':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Submitted</Badge>;
+        return <Badge variant="default" className="bg-emerald-50 text-emerald-700 border-emerald-200">Submitted</Badge>;
       case 'graded':
-        return <Badge variant="default" className="bg-blue-100 text-blue-800">Graded</Badge>;
+        return <Badge variant="default" className="bg-primary/10 text-primary border-primary/20">Graded</Badge>;
       case 'pending':
-        return <Badge variant="outline" className="border-yellow-500 text-yellow-700">Pending</Badge>;
+        return <Badge variant="outline" className="border-warning/50 text-warning bg-warning/5">Pending</Badge>;
       default:
-        return <Badge variant="secondary">Not Started</Badge>;
+        return <Badge variant="secondary" className="bg-muted text-muted-foreground">Not Started</Badge>;
     }
+  };
+
+  const getGradeColor = (percentage: number) => {
+    if (percentage >= 90) return 'text-emerald-600';
+    if (percentage >= 80) return 'text-blue-600';
+    if (percentage >= 70) return 'text-yellow-600';
+    if (percentage >= 60) return 'text-orange-600';
+    return 'text-red-600';
+  };
+
+  const getGradeBgColor = (percentage: number) => {
+    if (percentage >= 90) return 'bg-emerald-50 border-emerald-200';
+    if (percentage >= 80) return 'bg-blue-50 border-blue-200';
+    if (percentage >= 70) return 'bg-yellow-50 border-yellow-200';
+    if (percentage >= 60) return 'bg-orange-50 border-orange-200';
+    return 'bg-red-50 border-red-200';
   };
 
   const renderDetailView = () => {
@@ -282,69 +301,129 @@ export const StudentWorkOverview = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Assignments List */}
           <div className="lg:col-span-1">
-            <Card className="border-0 bg-white/70 backdrop-blur-sm sticky top-6">
-              <CardHeader>
-                <CardTitle className="text-lg">Assignments</CardTitle>
+            <Card className="border-0 bg-card/70 backdrop-blur-sm sticky top-6 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <Award className="h-5 w-5 text-primary" />
+                  Assignments & Grades
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="max-h-[600px] overflow-y-auto">
                   {/* Midterm Item */}
                   <button
                     onClick={() => setSelectedItem('midterm')}
-                    className={`w-full text-left p-4 border-b hover:bg-gray-50 transition-colors ${
-                      selectedItem === 'midterm' ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                    className={`w-full text-left p-4 border-b border-border hover:bg-accent/50 transition-all duration-200 ${
+                      selectedItem === 'midterm' ? 'bg-accent border-l-4 border-l-primary shadow-sm' : 'border-l-4 border-l-transparent'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <ClipboardCheck className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium">Midterm Examination</span>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-start gap-3 flex-1">
+                        <div className="mt-0.5">
+                          <ClipboardCheck className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-sm text-foreground block mb-1">
+                            Midterm Examination
+                          </span>
+                          {midtermSubmission?.submitted_at && (
+                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                              <Clock className="h-3 w-3" />
+                              {new Date(midtermSubmission.submitted_at).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(midtermSubmission?.is_submitted ? 'graded' : 'pending')}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      {getStatusBadge(midtermSubmission?.is_submitted ? 'submitted' : 'pending')}
                       {midtermSubmission?.grade && (
-                        <Badge variant="outline">
-                          {midtermSubmission.grade}/90
-                        </Badge>
+                        <div className={`text-right ml-2 px-3 py-1.5 rounded-lg border ${getGradeBgColor((midtermSubmission.grade / 90) * 100)}`}>
+                          <div className={`text-xl font-bold ${getGradeColor((midtermSubmission.grade / 90) * 100)}`}>
+                            {midtermSubmission.grade}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            / 90
+                          </div>
+                        </div>
                       )}
                     </div>
+                    {midtermSubmission?.grade && (
+                      <Progress 
+                        value={(midtermSubmission.grade / 90) * 100} 
+                        className="h-1.5"
+                      />
+                    )}
                   </button>
 
                   {/* Assignment Items */}
                   {assignmentSubmissions && assignmentSubmissions.length > 0 ? (
-                    assignmentSubmissions.map((assignment) => (
-                      <button
-                        key={assignment.id}
-                        onClick={() => setSelectedItem(assignment.id)}
-                        className={`w-full text-left p-4 border-b hover:bg-gray-50 transition-colors ${
-                          selectedItem === assignment.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-green-600" />
-                            <span className="font-medium text-sm">
-                              {assignment.file_name || `Assignment ${assignment.assignment_id}`}
-                            </span>
+                    assignmentSubmissions.map((assignment) => {
+                      const percentage = assignment.grade !== null && assignment.grade !== undefined 
+                        ? assignment.grade 
+                        : 0;
+                      const hasGrade = assignment.grade !== null && assignment.grade !== undefined;
+                      
+                      return (
+                        <button
+                          key={assignment.id}
+                          onClick={() => setSelectedItem(assignment.id)}
+                          className={`w-full text-left p-4 border-b border-border hover:bg-accent/50 transition-all duration-200 ${
+                            selectedItem === assignment.id ? 'bg-accent border-l-4 border-l-primary shadow-sm' : 'border-l-4 border-l-transparent'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className="mt-0.5">
+                                {hasGrade ? (
+                                  <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                ) : (
+                                  <FileText className="h-5 w-5 text-muted-foreground" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <span className="font-medium text-sm text-foreground block mb-1 line-clamp-2">
+                                  {assignment.file_name || `Assignment ${assignment.assignment_id}`}
+                                </span>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                                  <Clock className="h-3 w-3" />
+                                  {new Date(assignment.submitted_at).toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric' 
+                                  })}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {getStatusBadge(assignment.status)}
+                                </div>
+                              </div>
+                            </div>
+                            {hasGrade && (
+                              <div className={`text-right ml-2 px-3 py-1.5 rounded-lg border ${getGradeBgColor(percentage)}`}>
+                                <div className={`text-xl font-bold ${getGradeColor(percentage)}`}>
+                                  {assignment.grade}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  / 100
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        <p className="text-xs text-gray-600 mb-2">
-                          {new Date(assignment.submitted_at).toLocaleDateString()}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {getStatusBadge(assignment.status)}
-                          {assignment.grade !== null && assignment.grade !== undefined && (
-                            <Badge variant="outline" className="text-xs">
-                              {assignment.grade}/100
-                            </Badge>
+                          {hasGrade && (
+                            <Progress 
+                              value={percentage} 
+                              className="h-1.5"
+                            />
                           )}
-                        </div>
-                      </button>
-                    ))
+                        </button>
+                      );
+                    })
                   ) : (
-                    <div className="p-4 text-center text-gray-500 text-sm">
-                      No assignments submitted
+                    <div className="p-8 text-center">
+                      <FileText className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-muted-foreground text-sm">No assignments submitted</p>
                     </div>
                   )}
                 </div>
