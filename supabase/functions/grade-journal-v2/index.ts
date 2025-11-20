@@ -228,6 +228,43 @@ Respond in JSON format:
         onConflict: 'journal_id'
       });
 
+    // If we hit a duplicate key on journal_id, it means there are
+    // already multiple rows for this journal. Clean them up and
+    // replace with a single fresh grade.
+    if (insertError && insertError.code === '23505') {
+      console.error('Duplicate grade detected for journal; cleaning up and replacing existing grades.', insertError);
+
+      // Remove all existing grades for this journal_id
+      const { error: deleteError } = await supabase
+        .from('mus240_journal_grades')
+        .delete()
+        .eq('journal_id', journalId);
+
+      if (deleteError) {
+        console.error('Error deleting duplicate journal grades:', deleteError);
+      } else {
+        // Insert a single fresh row
+        const retryResult = await supabase
+          .from('mus240_journal_grades')
+          .insert({
+            journal_id: journalId,
+            student_id: journal.student_id,
+            assignment_id: assignmentId,
+            overall_score: gradingData.overall_score,
+            letter_grade: gradingData.letter_grade,
+            rubric: gradingData.rubric,
+            ai_feedback: gradingData.ai_feedback,
+            ai_model: 'gpt-4o-mini',
+            graded_at: new Date().toISOString(),
+            ai_writing_detected: gradingData.ai_detection?.likely_ai_generated || false,
+            ai_detection_confidence: gradingData.ai_detection?.confidence || null,
+            ai_detection_notes: gradingData.ai_detection?.reasoning || null
+          });
+
+        insertError = retryResult.error;
+      }
+    }
+
     // If the database complains about an invalid grade range, adapt to its expected max
     if (insertError && insertError.code === 'P0001' &&
         typeof insertError.message === 'string' &&
