@@ -339,7 +339,7 @@ Give students the benefit of the doubt - many write formally but authentically. 
           maxPoints: totalMaxPoints
         }),
         graded_at: new Date().toISOString(),
-        graded_by: 'ai_system'
+        graded_by: null // AI grading - no specific user
       })
       .eq('id', journalId);
 
@@ -357,7 +357,7 @@ Give students the benefit of the doubt - many write formally but authentically. 
         max_points: totalMaxPoints,
         letter_grade: letterGrade,
         graded_at: new Date().toISOString(),
-        graded_by: 'ai_system',
+        graded_by: null, // AI grading - no specific user
         legacy_source: 'mus240_assignments',
         legacy_id: journal.assignment_id,
       } as any;
