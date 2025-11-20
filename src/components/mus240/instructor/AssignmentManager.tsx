@@ -13,7 +13,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { mus240Assignments } from '@/data/mus240Assignments';
-
 interface Assignment {
   id: string;
   title: string;
@@ -26,7 +25,6 @@ interface Assignment {
   assignment_code?: string;
   created_at: string;
 }
-
 interface JournalSubmission {
   id: string;
   assignment_id: string;
@@ -40,7 +38,6 @@ interface JournalSubmission {
   student_name?: string;
   student_email?: string;
 }
-
 export const AssignmentManager = () => {
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -51,7 +48,11 @@ export const AssignmentManager = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<string>('all');
-  const [students, setStudents] = useState<Array<{ user_id: string; full_name: string; email: string }>>([]);
+  const [students, setStudents] = useState<Array<{
+    user_id: string;
+    full_name: string;
+    email: string;
+  }>>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -60,26 +61,24 @@ export const AssignmentManager = () => {
     due_date: '',
     assignment_type: 'listening_journal'
   });
-
   useEffect(() => {
     fetchAssignments();
     fetchSubmissions();
     fetchGrades();
   }, []);
-
   useEffect(() => {
     if (Object.keys(submissions).length > 0) {
       fetchStudents();
     }
   }, [submissions]);
-
   const fetchAssignments = async () => {
     try {
-      const { data, error } = await supabase
-        .from('mus240_assignments')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('mus240_assignments').select('*').order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       setAssignments(data || []);
     } catch (error) {
@@ -89,8 +88,6 @@ export const AssignmentManager = () => {
       setLoading(false);
     }
   };
-
-
   const fetchStudents = async () => {
     try {
       // Get all unique student IDs from submissions
@@ -98,42 +95,36 @@ export const AssignmentManager = () => {
       Object.values(submissions).forEach(submissionList => {
         submissionList.forEach(sub => allStudentIds.add(sub.student_id));
       });
-
       if (allStudentIds.size === 0) return;
-
-      const { data: profiles, error } = await supabase
-        .from('gw_profiles')
-        .select('user_id, full_name, email')
-        .in('user_id', Array.from(allStudentIds))
-        .order('full_name');
-
+      const {
+        data: profiles,
+        error
+      } = await supabase.from('gw_profiles').select('user_id, full_name, email').in('user_id', Array.from(allStudentIds)).order('full_name');
       if (error) throw error;
-
       setStudents(profiles || []);
     } catch (error) {
       console.error('Error fetching students:', error);
     }
   };
-
   const fetchSubmissions = async () => {
     try {
       // Fetch all journal entries
-      const { data: journalData, error: journalError } = await supabase
-        .from('mus240_journal_entries')
-        .select('*')
-        .order('submitted_at', { ascending: false });
-
+      const {
+        data: journalData,
+        error: journalError
+      } = await supabase.from('mus240_journal_entries').select('*').order('submitted_at', {
+        ascending: false
+      });
       if (journalError) throw journalError;
 
       // Get unique student IDs
       const studentIds = [...new Set(journalData?.map(j => j.student_id) || [])];
 
       // Fetch student profiles
-      const { data: profiles, error: profileError } = await supabase
-        .from('gw_profiles')
-        .select('user_id, full_name, email')
-        .in('user_id', studentIds);
-
+      const {
+        data: profiles,
+        error: profileError
+      } = await supabase.from('gw_profiles').select('user_id, full_name, email').in('user_id', studentIds);
       if (profileError) throw profileError;
 
       // Map profiles by user_id
@@ -149,35 +140,30 @@ export const AssignmentManager = () => {
 
       // Group submissions by assignment code and add student info
       const groupedSubmissions: Record<string, JournalSubmission[]> = {};
-      
       journalData?.forEach(entry => {
         const profile = profileMap.get(entry.student_id);
-        
         const submission: JournalSubmission = {
           ...entry,
           student_name: profile?.full_name,
-          student_email: profile?.email,
+          student_email: profile?.email
         };
-
         const code = entry.assignment_id; // e.g., "lj7"
         if (!groupedSubmissions[code]) {
           groupedSubmissions[code] = [];
         }
         groupedSubmissions[code].push(submission);
       });
-
       setSubmissions(groupedSubmissions);
     } catch (error) {
       console.error('Error fetching submissions:', error);
     }
   };
-
   const fetchGrades = async () => {
     try {
-      const { data: gradeData, error } = await supabase
-        .from('mus240_journal_grades')
-        .select('*');
-
+      const {
+        data: gradeData,
+        error
+      } = await supabase.from('mus240_journal_grades').select('*');
       if (error) throw error;
 
       // Group grades by journal_id for easy lookup
@@ -188,49 +174,42 @@ export const AssignmentManager = () => {
         }
         groupedGrades[grade.journal_id].push(grade);
       });
-
       setGrades(groupedGrades);
     } catch (error) {
       console.error('Error fetching grades:', error);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
       if (editingAssignment) {
-        const { error } = await supabase
-          .from('mus240_assignments')
-          .update({
-            title: formData.title,
-            description: formData.description,
-            prompt: formData.prompt,
-            points: formData.points,
-            due_date: formData.due_date || null,
-            assignment_type: formData.assignment_type
-          })
-          .eq('id', editingAssignment.id);
-
+        const {
+          error
+        } = await supabase.from('mus240_assignments').update({
+          title: formData.title,
+          description: formData.description,
+          prompt: formData.prompt,
+          points: formData.points,
+          due_date: formData.due_date || null,
+          assignment_type: formData.assignment_type
+        }).eq('id', editingAssignment.id);
         if (error) throw error;
         toast.success('Assignment updated successfully');
       } else {
-        const { error } = await supabase
-          .from('mus240_assignments')
-          .insert({
-            title: formData.title,
-            description: formData.description,
-            prompt: formData.prompt,
-            points: formData.points,
-            due_date: formData.due_date || null,
-            assignment_type: formData.assignment_type
-          });
-
+        const {
+          error
+        } = await supabase.from('mus240_assignments').insert({
+          title: formData.title,
+          description: formData.description,
+          prompt: formData.prompt,
+          points: formData.points,
+          due_date: formData.due_date || null,
+          assignment_type: formData.assignment_type
+        });
         if (error) throw error;
         toast.success('Assignment created successfully');
       }
-
       setIsCreateModalOpen(false);
       setEditingAssignment(null);
       setFormData({
@@ -249,36 +228,29 @@ export const AssignmentManager = () => {
       setLoading(false);
     }
   };
-
   const toggleAssignmentStatus = async (assignment: Assignment) => {
     try {
-      const { error } = await supabase
-        .from('mus240_assignments')
-        .update({ is_active: !assignment.is_active })
-        .eq('id', assignment.id);
-
+      const {
+        error
+      } = await supabase.from('mus240_assignments').update({
+        is_active: !assignment.is_active
+      }).eq('id', assignment.id);
       if (error) throw error;
-      
-      toast.success(
-        assignment.is_active ? 'Assignment deactivated' : 'Assignment activated'
-      );
+      toast.success(assignment.is_active ? 'Assignment deactivated' : 'Assignment activated');
       await fetchAssignments();
     } catch (error) {
       console.error('Error updating assignment status:', error);
       toast.error('Failed to update assignment status');
     }
   };
-
   const getSubmissionCount = (assignmentCode?: string) => {
     if (!assignmentCode) return 0;
     return submissions[assignmentCode]?.length || 0;
   };
-
   const getGradedCount = (assignmentCode?: string) => {
     if (!assignmentCode) return 0;
     return submissions[assignmentCode]?.filter(s => s.grade !== null).length || 0;
   };
-
   const getUngradedCount = (assignmentCode?: string) => {
     if (!assignmentCode) return 0;
     const subs = submissions[assignmentCode] || [];
@@ -287,7 +259,6 @@ export const AssignmentManager = () => {
       return gradeRecords.length === 0 || gradeRecords.every(g => g.overall_score === null);
     }).length;
   };
-
   const getNeedsFinalGradeCount = (assignmentCode?: string) => {
     if (!assignmentCode) return 0;
     const subs = submissions[assignmentCode] || [];
@@ -297,19 +268,13 @@ export const AssignmentManager = () => {
       return gradeRecords.some(g => g.ai_overall_score !== null && g.overall_score === null);
     }).length;
   };
-
   const getLastEditTime = (assignmentCode?: string) => {
     if (!assignmentCode) return null;
     const subs = submissions[assignmentCode] || [];
     if (subs.length === 0) return null;
-    
-    const sortedByDate = [...subs].sort((a, b) => 
-      new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
-    );
-    
+    const sortedByDate = [...subs].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
     return sortedByDate[0]?.submitted_at;
   };
-
   const openEditModal = (assignment: Assignment) => {
     setEditingAssignment(assignment);
     setFormData({
@@ -322,18 +287,19 @@ export const AssignmentManager = () => {
     });
     setIsCreateModalOpen(true);
   };
-
   const getAIAssistance = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('mus240-instructor-assistant', {
+      const {
+        data,
+        error
+      } = await supabase.functions.invoke('mus240-instructor-assistant', {
         body: {
           task: 'assignment_ideas',
           prompt: 'Generate 3 creative listening journal assignment ideas for my Survey of African American Music course. Include specific music examples and learning objectives.'
         }
       });
-
       if (error) throw error;
-      
+
       // For now, just show the response in a toast - could be enhanced with a modal
       toast.success('AI suggestions generated! Check the console for ideas.');
       console.log('AI Assignment Ideas:', data.response);
@@ -342,20 +308,15 @@ export const AssignmentManager = () => {
       toast.error('Failed to get AI assistance');
     }
   };
-
   const extractJournalNumber = (title: string): number => {
     const match = title.match(/(?:LISTENING JOURNAL|JOURNAL|LJ)\s*(\d+)/i);
     return match ? parseInt(match[1], 10) : 999; // Put unnumbered at end
   };
-
   const getSortedAssignments = () => {
     const sorted = [...assignments];
-    
     switch (sortBy) {
       case 'journal_number':
-        return sorted.sort((a, b) => 
-          extractJournalNumber(a.title) - extractJournalNumber(b.title)
-        );
+        return sorted.sort((a, b) => extractJournalNumber(a.title) - extractJournalNumber(b.title));
       case 'due_date':
         return sorted.sort((a, b) => {
           if (!a.due_date) return 1;
@@ -363,31 +324,20 @@ export const AssignmentManager = () => {
           return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
         });
       case 'submissions':
-        return sorted.sort((a, b) => 
-          getSubmissionCount(b.assignment_code) - getSubmissionCount(a.assignment_code)
-        );
+        return sorted.sort((a, b) => getSubmissionCount(b.assignment_code) - getSubmissionCount(a.assignment_code));
       case 'ungraded':
-        return sorted.sort((a, b) => 
-          getUngradedCount(b.assignment_code) - getUngradedCount(a.assignment_code)
-        );
+        return sorted.sort((a, b) => getUngradedCount(b.assignment_code) - getUngradedCount(a.assignment_code));
       case 'needs_final':
-        return sorted.sort((a, b) => 
-          getNeedsFinalGradeCount(b.assignment_code) - getNeedsFinalGradeCount(a.assignment_code)
-        );
+        return sorted.sort((a, b) => getNeedsFinalGradeCount(b.assignment_code) - getNeedsFinalGradeCount(a.assignment_code));
       case 'date':
       default:
-        return sorted.sort((a, b) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        return sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
   };
-
   if (loading && assignments.length === 0) {
     return <div>Loading assignments...</div>;
   }
-
-  return (
-    <div className="space-y-3 sm:space-y-4 md:space-y-6">
+  return <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
         <div className="w-full sm:w-auto">
@@ -403,11 +353,9 @@ export const AssignmentManager = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Students</SelectItem>
-                {students.map(student => (
-                  <SelectItem key={student.user_id} value={student.user_id}>
+                {students.map(student => <SelectItem key={student.user_id} value={student.user_id}>
                     {student.full_name}
-                  </SelectItem>
-                ))}
+                  </SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -427,10 +375,7 @@ export const AssignmentManager = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={getAIAssistance} variant="outline" className="w-full sm:w-auto">
-            <Brain className="h-4 w-4 mr-2" />
-            <span className="whitespace-nowrap">AI Ideas</span>
-          </Button>
+          
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
               <Button className="w-full sm:w-auto">
@@ -447,51 +392,39 @@ export const AssignmentManager = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    required
-                  />
+                  <Input id="title" value={formData.title} onChange={e => setFormData({
+                  ...formData,
+                  title: e.target.value
+                })} required />
                 </div>
                 <div>
                   <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    rows={3}
-                  />
+                  <Textarea id="description" value={formData.description} onChange={e => setFormData({
+                  ...formData,
+                  description: e.target.value
+                })} rows={3} />
                 </div>
                 <div>
                   <Label htmlFor="prompt">Assignment Prompt</Label>
-                  <Textarea
-                    id="prompt"
-                    value={formData.prompt}
-                    onChange={(e) => setFormData({...formData, prompt: e.target.value})}
-                    rows={6}
-                    required
-                  />
+                  <Textarea id="prompt" value={formData.prompt} onChange={e => setFormData({
+                  ...formData,
+                  prompt: e.target.value
+                })} rows={6} required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="points">Points</Label>
-                    <Input
-                      id="points"
-                      type="number"
-                      value={formData.points}
-                      onChange={(e) => setFormData({...formData, points: parseInt(e.target.value)})}
-                      required
-                    />
+                    <Input id="points" type="number" value={formData.points} onChange={e => setFormData({
+                    ...formData,
+                    points: parseInt(e.target.value)
+                  })} required />
                   </div>
                   <div>
                     <Label htmlFor="due_date">Due Date</Label>
-                    <Input
-                      id="due_date"
-                      type="date"
-                      value={formData.due_date}
-                      onChange={(e) => setFormData({...formData, due_date: e.target.value})}
-                    />
+                    <Input id="due_date" type="date" value={formData.due_date} onChange={e => setFormData({
+                    ...formData,
+                    due_date: e.target.value
+                  })} />
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
@@ -510,37 +443,21 @@ export const AssignmentManager = () => {
 
       {/* Assignments Grid */}
       <div className="grid gap-3 sm:gap-4">
-        {getSortedAssignments().map((assignment) => (
-          <Card key={assignment.id} className={`${!assignment.is_active ? 'opacity-60' : ''}`}>
+        {getSortedAssignments().map(assignment => <Card key={assignment.id} className={`${!assignment.is_active ? 'opacity-60' : ''}`}>
             <CardHeader className="p-3 sm:p-4 md:p-6">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                 <div className="w-full sm:flex-1">
                   <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-base sm:text-lg md:text-xl">
                     <span className="break-words">{assignment.title}</span>
-                    {assignment.is_active ? (
-                      <Badge variant="default" className="whitespace-nowrap">Active</Badge>
-                    ) : (
-                      <Badge variant="secondary" className="whitespace-nowrap">Inactive</Badge>
-                    )}
+                    {assignment.is_active ? <Badge variant="default" className="whitespace-nowrap">Active</Badge> : <Badge variant="secondary" className="whitespace-nowrap">Inactive</Badge>}
                   </CardTitle>
-                  {assignment.description && (
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">{assignment.description}</p>
-                  )}
+                  {assignment.description && <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">{assignment.description}</p>}
                 </div>
                 <div className="flex gap-2 w-full sm:w-auto justify-end">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openEditModal(assignment)}
-                  >
+                  <Button size="sm" variant="outline" onClick={() => openEditModal(assignment)}>
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="sm"
-                    variant={assignment.is_active ? "destructive" : "default"}
-                    onClick={() => toggleAssignmentStatus(assignment)}
-                    className="whitespace-nowrap"
-                  >
+                  <Button size="sm" variant={assignment.is_active ? "destructive" : "default"} onClick={() => toggleAssignmentStatus(assignment)} className="whitespace-nowrap">
                     {assignment.is_active ? 'Deactivate' : 'Activate'}
                   </Button>
                 </div>
@@ -551,10 +468,7 @@ export const AssignmentManager = () => {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Prompt:</p>
                   <p className="text-sm bg-gray-50 p-2 rounded">
-                    {assignment.prompt.length > 200 
-                      ? `${assignment.prompt.substring(0, 200)}...` 
-                      : assignment.prompt
-                    }
+                    {assignment.prompt.length > 200 ? `${assignment.prompt.substring(0, 200)}...` : assignment.prompt}
                   </p>
                 </div>
                 {/* Stats Row */}
@@ -579,10 +493,7 @@ export const AssignmentManager = () => {
                   </div>
                   <div className="text-center">
                     <div className="text-sm font-semibold text-foreground">
-                      {getLastEditTime(assignment.assignment_code) 
-                        ? format(new Date(getLastEditTime(assignment.assignment_code)!), 'MMM d, h:mm a')
-                        : 'No edits'
-                      }
+                      {getLastEditTime(assignment.assignment_code) ? format(new Date(getLastEditTime(assignment.assignment_code)!), 'MMM d, h:mm a') : 'No edits'}
                     </div>
                     <div className="text-xs text-muted-foreground">Last Student Edit</div>
                   </div>
@@ -594,37 +505,25 @@ export const AssignmentManager = () => {
                       <BarChart3 className="h-4 w-4" />
                       {assignment.points} points
                     </div>
-                    {assignment.due_date && (
-                      <div className="flex items-center gap-1">
+                    {assignment.due_date && <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         Due {new Date(assignment.due_date).toLocaleDateString()}
-                      </div>
-                    )}
+                      </div>}
                   </div>
-                  {getSubmissionCount(assignment.assignment_code) > 0 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        const url = selectedStudent !== 'all' 
-                          ? `/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}&student=${selectedStudent}`
-                          : `/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}`;
-                        navigate(url);
-                      }}
-                    >
+                  {getSubmissionCount(assignment.assignment_code) > 0 && <Button variant="outline" size="sm" onClick={() => {
+                const url = selectedStudent !== 'all' ? `/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}&student=${selectedStudent}` : `/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}`;
+                navigate(url);
+              }}>
                       <FileText className="h-4 w-4 mr-2" />
                       View Submissions
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
               </div>
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
 
-      {assignments.length === 0 && (
-        <Card>
+      {assignments.length === 0 && <Card>
           <CardContent className="py-12 text-center">
             <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments yet</h3>
@@ -634,8 +533,6 @@ export const AssignmentManager = () => {
               Create Assignment
             </Button>
           </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+        </Card>}
+    </div>;
 };
