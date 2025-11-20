@@ -44,6 +44,7 @@ export const AssignmentManager = () => {
   const navigate = useNavigate();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Record<string, JournalSubmission[]>>({});
+  const [grades, setGrades] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
@@ -59,6 +60,7 @@ export const AssignmentManager = () => {
   useEffect(() => {
     fetchAssignments();
     fetchSubmissions();
+    fetchGrades();
   }, []);
 
   const fetchAssignments = async () => {
@@ -135,6 +137,29 @@ export const AssignmentManager = () => {
     }
   };
 
+  const fetchGrades = async () => {
+    try {
+      const { data: gradeData, error } = await supabase
+        .from('mus240_journal_grades')
+        .select('*');
+
+      if (error) throw error;
+
+      // Group grades by journal_id for easy lookup
+      const groupedGrades: Record<string, any[]> = {};
+      gradeData?.forEach(grade => {
+        if (!groupedGrades[grade.journal_id]) {
+          groupedGrades[grade.journal_id] = [];
+        }
+        groupedGrades[grade.journal_id].push(grade);
+      });
+
+      setGrades(groupedGrades);
+    } catch (error) {
+      console.error('Error fetching grades:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -181,7 +206,7 @@ export const AssignmentManager = () => {
         due_date: '',
         assignment_type: 'listening_journal'
       });
-      await Promise.all([fetchAssignments(), fetchSubmissions()]);
+      await Promise.all([fetchAssignments(), fetchSubmissions(), fetchGrades()]);
     } catch (error) {
       console.error('Error saving assignment:', error);
       toast.error('Failed to save assignment');
@@ -217,6 +242,37 @@ export const AssignmentManager = () => {
   const getGradedCount = (assignmentCode?: string) => {
     if (!assignmentCode) return 0;
     return submissions[assignmentCode]?.filter(s => s.grade !== null).length || 0;
+  };
+
+  const getUngradedCount = (assignmentCode?: string) => {
+    if (!assignmentCode) return 0;
+    const subs = submissions[assignmentCode] || [];
+    return subs.filter(s => {
+      const gradeRecords = grades[s.id] || [];
+      return gradeRecords.length === 0 || gradeRecords.every(g => g.overall_score === null);
+    }).length;
+  };
+
+  const getNeedsFinalGradeCount = (assignmentCode?: string) => {
+    if (!assignmentCode) return 0;
+    const subs = submissions[assignmentCode] || [];
+    return subs.filter(s => {
+      const gradeRecords = grades[s.id] || [];
+      // Has AI grade but no instructor final grade
+      return gradeRecords.some(g => g.ai_overall_score !== null && g.overall_score === null);
+    }).length;
+  };
+
+  const getLastEditTime = (assignmentCode?: string) => {
+    if (!assignmentCode) return null;
+    const subs = submissions[assignmentCode] || [];
+    if (subs.length === 0) return null;
+    
+    const sortedByDate = [...subs].sort((a, b) => 
+      new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime()
+    );
+    
+    return sortedByDate[0]?.submitted_at;
   };
 
   const openEditModal = (assignment: Assignment) => {
@@ -394,8 +450,39 @@ export const AssignmentManager = () => {
                     }
                   </p>
                 </div>
+                {/* Stats Row */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-foreground">
+                      {getSubmissionCount(assignment.assignment_code)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Submissions</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">
+                      {getUngradedCount(assignment.assignment_code)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Ungraded</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">
+                      {getNeedsFinalGradeCount(assignment.assignment_code)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Need Final Grade</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-sm font-semibold text-foreground">
+                      {getLastEditTime(assignment.assignment_code) 
+                        ? format(new Date(getLastEditTime(assignment.assignment_code)!), 'MMM d, h:mm a')
+                        : 'No edits'
+                      }
+                    </div>
+                    <div className="text-xs text-muted-foreground">Last Student Edit</div>
+                  </div>
+                </div>
+
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1">
                       <BarChart3 className="h-4 w-4" />
                       {assignment.points} points
@@ -406,15 +493,6 @@ export const AssignmentManager = () => {
                         Due {new Date(assignment.due_date).toLocaleDateString()}
                       </div>
                     )}
-                    <div className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
-                      {getSubmissionCount(assignment.assignment_code)} submissions
-                      {getSubmissionCount(assignment.assignment_code) > 0 && (
-                        <span className="text-xs ml-1">
-                          ({getGradedCount(assignment.assignment_code)} graded)
-                        </span>
-                      )}
-                    </div>
                   </div>
                   {getSubmissionCount(assignment.assignment_code) > 0 && (
                     <Button
