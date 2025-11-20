@@ -33,6 +33,7 @@ interface Journal {
   assignment_id: string; // from mus240_journal_entries
   content: string;
   points_earned?: number;
+  letter_grade?: string;
   points_possible: number;
   feedback?: string;
   created_at: string;
@@ -111,7 +112,7 @@ export const GradingInterface: React.FC = () => {
       // Load grades separately and link them
       const { data: gradesData, error: gradesError } = await supabase
         .from('mus240_journal_grades')
-        .select('journal_id, overall_score, ai_feedback, instructor_feedback, graded_at, graded_by');
+        .select('journal_id, overall_score, letter_grade, ai_feedback, instructor_feedback, graded_at, graded_by');
 
       if (gradesError) {
         console.error('❌ Grades data error:', gradesError);
@@ -175,6 +176,7 @@ export const GradingInterface: React.FC = () => {
           points_possible: j.mus240_assignments?.points || 10,
           assignment_title: assignmentTitle,
           points_earned: grade?.overall_score,
+          letter_grade: grade?.letter_grade,
           feedback: grade?.feedback,
           graded_at: grade?.graded_at
         };

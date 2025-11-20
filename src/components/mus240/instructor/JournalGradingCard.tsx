@@ -24,6 +24,7 @@ interface JournalEntry {
   assignment_title: string;
   content: string;
   points_earned?: number;
+  letter_grade?: string;
   points_possible: number;
   feedback?: string;
   created_at: string;
@@ -133,6 +134,20 @@ export const JournalGradingCard: React.FC<JournalGradingCardProps> = ({
                     </h3>
                   </div>
                   {getStatusBadge()}
+                  
+                  {/* Grade Display */}
+                  {isGraded && journal.points_earned !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200 font-semibold">
+                        {journal.points_earned.toFixed(1)}/{journal.points_possible}
+                      </Badge>
+                      {journal.letter_grade && (
+                        <Badge variant="secondary" className="bg-purple-100 text-purple-800 border-purple-200 font-semibold">
+                          {journal.letter_grade}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-4 text-sm text-gray-600">
