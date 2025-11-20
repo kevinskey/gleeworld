@@ -30,8 +30,10 @@ export const AIDetectionAlert: React.FC<AIDetectionAlertProps> = ({
     );
   }
 
+  // Handle both decimal (0.85) and percentage (85) formats
   const confidenceLevel = confidence || 0;
-  const severity = confidenceLevel >= 0.8 ? 'high' : confidenceLevel >= 0.5 ? 'medium' : 'low';
+  const confidencePercent = confidenceLevel > 1 ? confidenceLevel : confidenceLevel * 100;
+  const severity = confidencePercent >= 80 ? 'high' : confidencePercent >= 50 ? 'medium' : 'low';
   
   const severityColors = {
     high: {
@@ -63,7 +65,7 @@ export const AIDetectionAlert: React.FC<AIDetectionAlertProps> = ({
     return (
       <Badge variant="outline" className={`${colors.badge} flex items-center gap-1`}>
         <Bot className="h-3 w-3" />
-        AI Detected ({Math.round(confidenceLevel * 100)}%)
+        AI Detected ({Math.round(confidencePercent)}%)
       </Badge>
     );
   }
@@ -75,7 +77,7 @@ export const AIDetectionAlert: React.FC<AIDetectionAlertProps> = ({
         ⚠️ Potential AI-Generated Content Detected
         {confidence !== null && confidence !== undefined && (
           <Badge variant="outline" className={colors.badge}>
-            {Math.round(confidenceLevel * 100)}% confidence
+            {Math.round(confidencePercent)}% confidence
           </Badge>
         )}
       </AlertTitle>
