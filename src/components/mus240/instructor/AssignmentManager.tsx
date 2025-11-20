@@ -53,6 +53,7 @@ export const AssignmentManager = () => {
     full_name: string;
     email: string;
   }>>([]);
+  const [isGradingAll, setIsGradingAll] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -313,6 +314,84 @@ export const AssignmentManager = () => {
       toast.error('Failed to get AI assistance');
     }
   };
+
+  const handleGradeAllWithAI = async () => {
+    if (selectedStudent === 'all') {
+      toast.error('Please select a specific student to grade all their work');
+      return;
+    }
+
+    setIsGradingAll(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      // Get all ungraded submissions for the selected student
+      const ungradedSubmissions: Array<{journalId: string; assignmentId: string}> = [];
+      
+      for (const assignment of assignments) {
+        if (!assignment.assignment_code) continue;
+        const subs = getFilteredSubmissions(assignment.assignment_code);
+        
+        for (const sub of subs) {
+          const gradeRecords = grades[sub.id] || [];
+          const needsGrading = gradeRecords.length === 0 || gradeRecords.every(g => g.overall_score === null);
+          
+          if (needsGrading) {
+            ungradedSubmissions.push({
+              journalId: sub.id,
+              assignmentId: assignment.id
+            });
+          }
+        }
+      }
+
+      if (ungradedSubmissions.length === 0) {
+        toast.info('No ungraded submissions found for this student');
+        setIsGradingAll(false);
+        return;
+      }
+
+      toast.info(`Grading ${ungradedSubmissions.length} submissions...`);
+
+      // Grade each submission
+      for (const { journalId, assignmentId } of ungradedSubmissions) {
+        try {
+          const { data, error } = await supabase.functions.invoke('grade-journal', {
+            body: {
+              assignment_id: assignmentId,
+              journal_id: journalId
+            }
+          });
+
+          if (error) throw error;
+          if (data?.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          console.error(`Error grading journal ${journalId}:`, error);
+          errorCount++;
+        }
+      }
+
+      // Refresh data
+      await Promise.all([fetchSubmissions(), fetchGrades()]);
+
+      if (successCount > 0) {
+        toast.success(`Successfully graded ${successCount} submission${successCount !== 1 ? 's' : ''}${errorCount > 0 ? ` (${errorCount} failed)` : ''}`);
+      } else {
+        toast.error('Failed to grade submissions');
+      }
+    } catch (error) {
+      console.error('Error in batch grading:', error);
+      toast.error('Failed to grade all submissions');
+    } finally {
+      setIsGradingAll(false);
+    }
+  };
+  
   const extractJournalNumber = (title: string): number => {
     const match = title.match(/(?:LISTENING JOURNAL|JOURNAL|LJ)\s*(\d+)/i);
     return match ? parseInt(match[1], 10) : 999; // Put unnumbered at end
@@ -363,6 +442,18 @@ export const AssignmentManager = () => {
                   </SelectItem>)}
               </SelectContent>
             </Select>
+            {selectedStudent !== 'all' && (
+              <Button 
+                onClick={handleGradeAllWithAI}
+                disabled={isGradingAll}
+                variant="outline"
+                size="sm"
+                className="whitespace-nowrap"
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                {isGradingAll ? 'Grading...' : 'Grade All with AI'}
+              </Button>
+            )}
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
