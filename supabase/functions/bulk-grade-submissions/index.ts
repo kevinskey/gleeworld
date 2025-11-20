@@ -82,52 +82,82 @@ serve(async (req) => {
       errors: [] as string[]
     };
 
-    // Grade submissions sequentially to avoid rate limits
-    for (const submission of submissions) {
-      try {
-        let gradeData: any;
-        let gradeError: any;
+    // Process submissions in parallel batches to speed up grading
+    const BATCH_SIZE = 5; // Process 5 submissions at a time
+    
+    for (let i = 0; i < submissions.length; i += BATCH_SIZE) {
+      const batch = submissions.slice(i, i + BATCH_SIZE);
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(submissions.length / BATCH_SIZE);
+      
+      console.log(`Processing batch ${batchNumber}/${totalBatches} (${batch.length} submissions)`);
+      
+      // Process all submissions in this batch in parallel
+      const batchResults = await Promise.allSettled(
+        batch.map(async (submission) => {
+          try {
+            let gradeData: any;
+            let gradeError: any;
 
-        if (isMus240Journal) {
-          // Call the MUS240 journal grading function
-          const result = await supabase.functions.invoke(
-            'grade-mus240-journal',
-            { body: { journalId: submission.id } }
-          );
-          gradeData = result.data;
-          gradeError = result.error;
-        } else {
-          // Call the standard assignment grading function
-          const result = await supabase.functions.invoke(
-            'grade-submission-ai',
-            { body: { submissionId: submission.id } }
-          );
-          gradeData = result.data;
-          gradeError = result.error;
-        }
+            if (isMus240Journal) {
+              // Call the MUS240 journal grading function
+              const result = await supabase.functions.invoke(
+                'grade-mus240-journal',
+                { body: { journalId: submission.id } }
+              );
+              gradeData = result.data;
+              gradeError = result.error;
+            } else {
+              // Call the standard assignment grading function
+              const result = await supabase.functions.invoke(
+                'grade-submission-ai',
+                { body: { submissionId: submission.id } }
+              );
+              gradeData = result.data;
+              gradeError = result.error;
+            }
 
-        if (gradeError) {
-          console.error(`Failed to grade ${isMus240Journal ? 'journal' : 'submission'} ${submission.id}:`, gradeError);
-          results.failed++;
-          results.errors.push(`${isMus240Journal ? 'Journal' : 'Submission'} ${submission.id}: ${gradeError.message}`);
-        } else if (gradeData?.error) {
-          console.error(`AI grading error for ${submission.id}:`, gradeData.error);
-          results.failed++;
-          results.errors.push(`${isMus240Journal ? 'Journal' : 'Submission'} ${submission.id}: ${gradeData.error}`);
-        } else {
+            if (gradeError) {
+              throw new Error(gradeError.message || 'Grading function error');
+            } else if (gradeData?.error) {
+              throw new Error(gradeData.error);
+            }
+            
+            return { success: true, id: submission.id };
+          } catch (error) {
+            return { 
+              success: false, 
+              id: submission.id, 
+              error: error.message 
+            };
+          }
+        })
+      );
+
+      // Process results from this batch
+      batchResults.forEach((result, index) => {
+        const submission = batch[index];
+        
+        if (result.status === 'fulfilled' && result.value.success) {
           results.success++;
-          console.log(`Successfully graded ${isMus240Journal ? 'journal' : 'submission'} ${submission.id}`);
+          console.log(`✓ Successfully graded ${isMus240Journal ? 'journal' : 'submission'} ${submission.id}`);
+        } else {
+          results.failed++;
+          const errorMsg = result.status === 'fulfilled' 
+            ? result.value.error 
+            : result.reason?.message || 'Unknown error';
+          results.errors.push(`${isMus240Journal ? 'Journal' : 'Submission'} ${submission.id}: ${errorMsg}`);
+          console.error(`✗ Failed to grade ${submission.id}:`, errorMsg);
         }
+      });
 
-        // Add a small delay to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-      } catch (error) {
-        console.error(`Error grading ${isMus240Journal ? 'journal' : 'submission'} ${submission.id}:`, error);
-        results.failed++;
-        results.errors.push(`${isMus240Journal ? 'Journal' : 'Submission'} ${submission.id}: ${error.message}`);
+      // Small delay between batches to avoid overwhelming the system
+      if (i + BATCH_SIZE < submissions.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
+
+    console.log(`Grading complete: ${results.success} succeeded, ${results.failed} failed`);
 
     return new Response(
       JSON.stringify({
