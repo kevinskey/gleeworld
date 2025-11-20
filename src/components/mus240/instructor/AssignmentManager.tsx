@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Eye, Calendar, Users, Brain, BarChart3, BookOpen, FileText } from 'lucide-react';
+import { Plus, Edit, Eye, Calendar, Users, Brain, BarChart3, BookOpen, FileText, ArrowUpDown } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -46,6 +47,7 @@ export const AssignmentManager = () => {
   const [submissions, setSubmissions] = useState<Record<string, JournalSubmission[]>>({});
   const [grades, setGrades] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState<'date' | 'due_date' | 'submissions' | 'ungraded' | 'needs_final'>('date');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [formData, setFormData] = useState({
@@ -308,6 +310,36 @@ export const AssignmentManager = () => {
     }
   };
 
+  const getSortedAssignments = () => {
+    const sorted = [...assignments];
+    
+    switch (sortBy) {
+      case 'due_date':
+        return sorted.sort((a, b) => {
+          if (!a.due_date) return 1;
+          if (!b.due_date) return -1;
+          return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        });
+      case 'submissions':
+        return sorted.sort((a, b) => 
+          getSubmissionCount(b.assignment_code) - getSubmissionCount(a.assignment_code)
+        );
+      case 'ungraded':
+        return sorted.sort((a, b) => 
+          getUngradedCount(b.assignment_code) - getUngradedCount(a.assignment_code)
+        );
+      case 'needs_final':
+        return sorted.sort((a, b) => 
+          getNeedsFinalGradeCount(b.assignment_code) - getNeedsFinalGradeCount(a.assignment_code)
+        );
+      case 'date':
+      default:
+        return sorted.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+    }
+  };
+
   if (loading && assignments.length === 0) {
     return <div>Loading assignments...</div>;
   }
@@ -315,12 +347,27 @@ export const AssignmentManager = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Assignment Manager</h2>
           <p className="text-gray-600">Create and manage listening journal assignments</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center w-full sm:w-auto">
+          <div className="flex items-center gap-2">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Sort by..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Created Date</SelectItem>
+                <SelectItem value="due_date">Due Date</SelectItem>
+                <SelectItem value="submissions">Submissions</SelectItem>
+                <SelectItem value="ungraded">Ungraded</SelectItem>
+                <SelectItem value="needs_final">Needs Final</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button onClick={getAIAssistance} variant="outline">
             <Brain className="h-4 w-4 mr-2" />
             AI Ideas
@@ -404,7 +451,7 @@ export const AssignmentManager = () => {
 
       {/* Assignments Grid */}
       <div className="grid gap-4">
-        {assignments.map((assignment) => (
+        {getSortedAssignments().map((assignment) => (
           <Card key={assignment.id} className={`${!assignment.is_active ? 'opacity-60' : ''}`}>
             <CardHeader>
               <div className="flex justify-between items-start">
