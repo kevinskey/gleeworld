@@ -31,37 +31,48 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-
 export const InstructorConsole = () => {
-  const { isAdmin, loading } = useUserRole();
-  const { isTA, loading: taLoading } = useCourseTA('MUS240');
+  const {
+    isAdmin,
+    loading
+  } = useUserRole();
+  const {
+    isTA,
+    loading: taLoading
+  } = useCourseTA('MUS240');
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('assignments');
   const [assignmentSubTab, setAssignmentSubTab] = useState('manage');
   const [testSubTab, setTestSubTab] = useState('tests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { stats, loading: statsLoading, error: statsError } = useMus240InstructorStats();
-  const { data: tests, isLoading: testsLoading } = useTests('mus240');
-  
+  const {
+    stats,
+    loading: statsLoading,
+    error: statsError
+  } = useMus240InstructorStats();
+  const {
+    data: tests,
+    isLoading: testsLoading
+  } = useTests('mus240');
+
   // Fetch original midterm config
-  const { data: midtermConfig } = useQuery({
+  const {
+    data: midtermConfig
+  } = useQuery({
     queryKey: ['mus240-original-midterm'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('mus240_midterm_config')
-        .select('*')
-        .eq('is_active', true)
-        .single();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('mus240_midterm_config').select('*').eq('is_active', true).single();
       if (error) throw error;
       return data;
-    },
+    }
   });
-  
+
   // Combine Test Builder tests with original midterm
   const allTests = React.useMemo(() => {
     const combinedTests = [...(tests || [])];
-    
     if (midtermConfig) {
       combinedTests.unshift({
         id: 'original-midterm',
@@ -78,68 +89,81 @@ export const InstructorConsole = () => {
         randomize_questions: false,
         created_by: null,
         created_at: midtermConfig.created_at,
-        updated_at: midtermConfig.updated_at,
+        updated_at: midtermConfig.updated_at
       });
     }
-    
     return combinedTests;
   }, [tests, midtermConfig]);
-
   if (loading || taLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg">Loading...</div>
-      </div>
-    );
+      </div>;
   }
 
   // Allow both admins and TAs to access
   if (!isAdmin() && !isTA) {
     return <Navigate to="/classes/mus240" replace />;
   }
-
-  const navItems = [
-    { value: 'assignments', label: 'Assignments', icon: BookOpen },
-    { value: 'tests', label: 'Tests', icon: ClipboardCheck },
-    { value: 'polls', label: 'Polls', icon: BarChart3 },
-    { value: 'grades', label: 'Grades', icon: Trophy },
-    { value: 'rubrics', label: 'Rubrics', icon: ListChecks },
-    { value: 'communications', label: 'Communications', icon: Users },
-    { value: 'students', label: 'Students', icon: UserPlus },
-    { value: 'analytics', label: 'Analytics', icon: BarChart },
-    { value: 'resources', label: 'Resources', icon: BookOpen },
-    { value: 'ai-assistant', label: 'AI Assistant', icon: Brain },
-    { value: 'settings', label: 'Settings', icon: Settings },
-  ];
-
-  const SidebarNav = ({ isMobile = false }) => (
-    <nav className="space-y-1">
-      {navItems.map((item) => {
-        const Icon = item.icon;
-        return (
-          <button
-            key={item.value}
-            onClick={() => {
-              setActiveTab(item.value);
-              if (isMobile) setSidebarOpen(false);
-            }}
-            className={cn(
-              "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-              activeTab === item.value
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            )}
-          >
+  const navItems = [{
+    value: 'assignments',
+    label: 'Assignments',
+    icon: BookOpen
+  }, {
+    value: 'tests',
+    label: 'Tests',
+    icon: ClipboardCheck
+  }, {
+    value: 'polls',
+    label: 'Polls',
+    icon: BarChart3
+  }, {
+    value: 'grades',
+    label: 'Grades',
+    icon: Trophy
+  }, {
+    value: 'rubrics',
+    label: 'Rubrics',
+    icon: ListChecks
+  }, {
+    value: 'communications',
+    label: 'Communications',
+    icon: Users
+  }, {
+    value: 'students',
+    label: 'Students',
+    icon: UserPlus
+  }, {
+    value: 'analytics',
+    label: 'Analytics',
+    icon: BarChart
+  }, {
+    value: 'resources',
+    label: 'Resources',
+    icon: BookOpen
+  }, {
+    value: 'ai-assistant',
+    label: 'AI Assistant',
+    icon: Brain
+  }, {
+    value: 'settings',
+    label: 'Settings',
+    icon: Settings
+  }];
+  const SidebarNav = ({
+    isMobile = false
+  }) => <nav className="space-y-1">
+      {navItems.map(item => {
+      const Icon = item.icon;
+      return <button key={item.value} onClick={() => {
+        setActiveTab(item.value);
+        if (isMobile) setSidebarOpen(false);
+      }} className={cn("w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors", activeTab === item.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")}>
             <Icon className="h-4 w-4 flex-shrink-0" />
             <span>{item.label}</span>
-          </button>
-        );
-      })}
-    </nav>
-  );
-
-  return (
-    <UniversalLayout containerized={false}>
+          </button>;
+    })}
+    </nav>;
+  return <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
         <div className="border-b bg-card">
@@ -174,25 +198,15 @@ export const InstructorConsole = () => {
               </div>
               
               <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end">
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden flex items-center gap-2"
-                >
+                <Button variant="outline" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-2">
                   <Menu className="h-4 w-4" />
                   <span>Menu</span>
                 </Button>
                 <Badge variant="secondary" className="text-xs sm:text-sm whitespace-nowrap">
-                  <Brain className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
+                  
                   AI
                 </Badge>
-                <Button 
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate('/classes/mus240/admin')}
-                  className="hidden sm:flex items-center gap-2 whitespace-nowrap"
-                >
+                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/admin')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
                   <Home className="h-4 w-4" />
                   <span>Home</span>
                 </Button>
@@ -240,8 +254,7 @@ export const InstructorConsole = () => {
             </div>
 
             {/* Content */}
-            {activeTab === 'assignments' && (
-              <Card>
+            {activeTab === 'assignments' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <BookOpen className="h-5 w-5" />
@@ -252,11 +265,9 @@ export const InstructorConsole = () => {
                 <CardContent className="p-6">
                   <AssignmentManager />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'tests' && (
-              <Card>
+            {activeTab === 'tests' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <ClipboardCheck className="h-5 w-5" />
@@ -267,35 +278,22 @@ export const InstructorConsole = () => {
                 <CardContent className="p-6">
                   <div className="space-y-6">
                     <div className="flex gap-2 border-b pb-3">
-                      <Button
-                        variant={testSubTab === 'tests' ? 'default' : 'ghost'}
-                        onClick={() => setTestSubTab('tests')}
-                      >
+                      <Button variant={testSubTab === 'tests' ? 'default' : 'ghost'} onClick={() => setTestSubTab('tests')}>
                         All Tests
                       </Button>
-                      <Button
-                        variant={testSubTab === 'midterm' ? 'default' : 'ghost'}
-                        onClick={() => setTestSubTab('midterm')}
-                      >
+                      <Button variant={testSubTab === 'midterm' ? 'default' : 'ghost'} onClick={() => setTestSubTab('midterm')}>
                         Midterm Grading
                       </Button>
                     </div>
 
-                    {testSubTab === 'tests' && (
-                      <TestList 
-                        tests={allTests}
-                        courseId="mus240"
-                      />
-                    )}
+                    {testSubTab === 'tests' && <TestList tests={allTests} courseId="mus240" />}
 
                     {testSubTab === 'midterm' && <MidtermGradingManager />}
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'polls' && (
-              <Card>
+            {activeTab === 'polls' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <BarChart3 className="h-5 w-5" />
@@ -310,11 +308,9 @@ export const InstructorConsole = () => {
                     <PollParticipationTracker />
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'grades' && (
-              <Card>
+            {activeTab === 'grades' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <Trophy className="h-5 w-5" />
@@ -327,11 +323,9 @@ export const InstructorConsole = () => {
                   <StudentScoresViewer />
                   <GradeCalculationSystem />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'communications' && (
-              <Card>
+            {activeTab === 'communications' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <Users className="h-5 w-5" />
@@ -342,11 +336,9 @@ export const InstructorConsole = () => {
                 <CardContent className="p-6">
                   <StudentCommunications />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'students' && (
-              <Card>
+            {activeTab === 'students' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <UserPlus className="h-5 w-5" />
@@ -357,11 +349,9 @@ export const InstructorConsole = () => {
                 <CardContent className="p-6">
                   <EnrollmentManager />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'rubrics' && (
-              <Card>
+            {activeTab === 'rubrics' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <ListChecks className="h-5 w-5" />
@@ -372,11 +362,9 @@ export const InstructorConsole = () => {
                 <CardContent className="p-6">
                   <RubricManager />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'analytics' && (
-              <Card>
+            {activeTab === 'analytics' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <BarChart className="h-5 w-5" />
@@ -387,11 +375,9 @@ export const InstructorConsole = () => {
                 <CardContent className="p-6">
                   <StudentAnalyticsDashboard />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'resources' && (
-              <Card>
+            {activeTab === 'resources' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <BookOpen className="h-5 w-5" />
@@ -402,11 +388,9 @@ export const InstructorConsole = () => {
                 <CardContent className="p-6">
                   <ResourcesAdmin />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'ai-assistant' && (
-              <Card>
+            {activeTab === 'ai-assistant' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <Brain className="h-5 w-5" />
@@ -417,11 +401,9 @@ export const InstructorConsole = () => {
                 <CardContent className="p-6">
                   <AIAssistant />
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
-            {activeTab === 'settings' && (
-              <Card>
+            {activeTab === 'settings' && <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <Settings className="h-5 w-5" />
@@ -439,11 +421,9 @@ export const InstructorConsole = () => {
                     </div>
                   </div>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
           </main>
         </div>
       </div>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 };
