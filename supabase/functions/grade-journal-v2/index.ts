@@ -32,7 +32,7 @@ serve(async (req) => {
     if (assignmentId) {
       console.log('Looking up assignment with ID:', assignmentId);
       const { data: assignment, error: assignmentError } = await supabase
-        .from('mus240_assignments')
+        .from('gw_assignments')
         .select('points')
         .eq('id', assignmentId)
         .maybeSingle();
