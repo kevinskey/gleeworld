@@ -566,23 +566,9 @@ export const AssignmentManager = () => {
             <CardHeader className="p-3 sm:p-4 md:p-6">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                 <div className="w-full sm:flex-1">
-                  <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-base sm:text-lg md:text-xl flex-wrap">
+                  <CardTitle className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-base sm:text-lg md:text-xl">
                     <span className="break-words">{assignment.title}</span>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {assignment.is_active ? <Badge variant="default" className="whitespace-nowrap">Active</Badge> : <Badge variant="secondary" className="whitespace-nowrap">Inactive</Badge>}
-                      {(() => {
-                        const totalSubmissions = getSubmissionCount(assignment.assignment_code);
-                        const graded = totalSubmissions - getUngradedCount(assignment.assignment_code);
-                        if (totalSubmissions > 0) {
-                          return (
-                            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                              {graded}/{totalSubmissions} graded
-                            </Badge>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
+                    {assignment.is_active ? <Badge variant="default" className="whitespace-nowrap">Active</Badge> : <Badge variant="secondary" className="whitespace-nowrap">Inactive</Badge>}
                   </CardTitle>
                   {assignment.description && <p className="text-xs sm:text-sm text-muted-foreground mt-1 break-words">{assignment.description}</p>}
                 </div>
