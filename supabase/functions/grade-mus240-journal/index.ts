@@ -396,6 +396,34 @@ Give students the benefit of the doubt - many write formally but authentically. 
           .insert({ assignment_id: assignmentId, student_id: studentId, status: 'graded', submitted_at: journal.published_at || new Date().toISOString(), legacy_source: 'mus240_assignments', legacy_id: journal.assignment_id });
         if (ins.error) console.warn('gw_submissions insert error:', ins.error);
       }
+
+      // Save rubric scores to gw_grades_rubric_scores
+      if (upsertGrades.data?.id) {
+        const gradeId = upsertGrades.data.id;
+        
+        // Delete existing rubric scores for this grade
+        await supabase
+          .from('gw_grades_rubric_scores')
+          .delete()
+          .eq('grade_id', gradeId);
+
+        // Insert new rubric scores
+        const rubricScores = gradingResult.criteria_scores.map((criteriaScore: any) => ({
+          grade_id: gradeId,
+          criterion_name: criteriaScore.criterion_name,
+          points_earned: criteriaScore.score,
+          points_possible: criteriaScore.max_points,
+          feedback: criteriaScore.feedback
+        }));
+
+        const { error: rubricError } = await supabase
+          .from('gw_grades_rubric_scores')
+          .insert(rubricScores);
+
+        if (rubricError) {
+          console.error('Error saving rubric scores:', rubricError);
+        }
+      }
     }
 
     // Store grade in mus240_journal_grades table
