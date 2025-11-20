@@ -32,10 +32,8 @@ serve(async (req) => {
       });
     }
 
-    // Build grading prompt (respect assignment-specific caps if known)
-    const rubricMax = (rubric?.criteria || []).reduce((sum: number, c: any) => sum + (c?.max_points || 0), 0) || 17;
-    const assignmentCaps: Record<string, number> = { lj1: 10, lj2: 10, lj3: 15 };
-    const totalMax = (assignment_id && assignmentCaps[assignment_id]) ? assignmentCaps[assignment_id] : rubricMax;
+    // Build grading prompt - all journals are worth 20 points
+    const totalMax = 20;
 
     const userPrompt = `Grade this MUS240 listening journal RIGOROUSLY using the rubric. Return STRICT JSON only.
 
