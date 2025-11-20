@@ -32,9 +32,9 @@ interface JournalEntry {
 interface Assignment {
   id: string;
   title: string;
-  prompt: string;
+  description: string;
   points: number;
-  assignment_code: string;
+  legacy_id: string;
 }
 
 interface StudentProfile {
@@ -93,10 +93,11 @@ const JournalSubmissionGradingPage = () => {
 
       // Fetch assignment
       const { data: assignmentData, error: assignmentError } = await supabase
-        .from('mus240_assignments')
+        .from('gw_assignments')
         .select('*')
-        .eq('assignment_code', journalData.assignment_id)
-        .single();
+        .eq('legacy_id', journalData.assignment_id)
+        .eq('legacy_source', 'mus240_assignments')
+        .maybeSingle();
 
       if (assignmentError) throw assignmentError;
       setAssignment(assignmentData);
@@ -145,7 +146,7 @@ const JournalSubmissionGradingPage = () => {
         body: {
           journalId: journal.id,
           content: journal.content,
-          prompt: assignment.prompt,
+          prompt: assignment.description || '',
           maxPoints: assignment.points,
           assignmentId: assignment.id
         }
@@ -272,7 +273,7 @@ const JournalSubmissionGradingPage = () => {
             </div>
             <div className="p-4 bg-muted rounded-lg">
               <p className="text-sm font-medium mb-2">Assignment Prompt:</p>
-              <p className="text-sm text-muted-foreground">{assignment.prompt}</p>
+              <p className="text-sm text-muted-foreground">{assignment.description}</p>
             </div>
           </CardContent>
         </Card>
