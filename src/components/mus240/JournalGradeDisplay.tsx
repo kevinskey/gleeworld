@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { EnhancedRubricDisplay } from './rubrics/EnhancedRubricDisplay';
+import { AIDetectionAlert } from './AIDetectionAlert';
 
 interface RubricScore {
   criterion: string;
@@ -24,6 +25,9 @@ interface JournalGradeDisplayProps {
     ai_model?: string;
     graded_at: string;
     instructor_graded_at?: string;
+    ai_writing_detected?: boolean;
+    ai_detection_confidence?: number | null;
+    ai_detection_notes?: string | null;
   };
 }
 
@@ -45,10 +49,21 @@ export const JournalGradeDisplay: React.FC<JournalGradeDisplayProps> = ({ grade 
   };
 
   return (
-    <EnhancedRubricDisplay 
-      grade={enhancedGrade}
-      showDetailed={true}
-      interactive={true}
-    />
+    <div className="space-y-4">
+      {/* AI Detection Warning - Show prominently at the top */}
+      {grade.ai_writing_detected && (
+        <AIDetectionAlert
+          detected={grade.ai_writing_detected}
+          confidence={grade.ai_detection_confidence}
+          reasoning={grade.ai_detection_notes}
+        />
+      )}
+      
+      <EnhancedRubricDisplay 
+        grade={enhancedGrade}
+        showDetailed={true}
+        interactive={true}
+      />
+    </div>
   );
 };

@@ -7,6 +7,7 @@ import { BookOpen, User, Calendar, MessageSquare, CheckCircle2, Bot, Loader2, Ar
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { AIDetectionAlert } from '../AIDetectionAlert';
 
 interface JournalEntry {
   id: string;
@@ -21,6 +22,8 @@ interface JournalEntry {
   student_name?: string;
   assignment_title?: string;
   review_count?: number;
+  ai_writing_detected?: boolean;
+  ai_detection_confidence?: number | null;
 }
 
 export const InstructorJournalBrowser: React.FC = () => {
@@ -89,11 +92,28 @@ export const InstructorJournalBrowser: React.FC = () => {
         return acc;
       }, {} as Record<string, number>);
 
+      // Fetch AI detection data from grades
+      const journalIds = journalData?.map(j => j.id) || [];
+      const { data: gradesData } = await supabase
+        .from('mus240_journal_grades')
+        .select('journal_id, ai_writing_detected, ai_detection_confidence')
+        .in('journal_id', journalIds);
+
+      const aiDetectionMap = (gradesData || []).reduce((acc, g) => {
+        acc[g.journal_id] = {
+          detected: g.ai_writing_detected || false,
+          confidence: g.ai_detection_confidence
+        };
+        return acc;
+      }, {} as Record<string, { detected: boolean; confidence: number | null }>);
+
       const enrichedJournals: JournalEntry[] = (journalData || []).map(journal => ({
         ...journal,
         student_name: profileMap[journal.student_id],
         assignment_title: journal.assignment_id ? assignmentCodeMap[journal.assignment_id] || journal.assignment_id : undefined,
-        review_count: countByJournal[journal.id] || 0
+        review_count: countByJournal[journal.id] || 0,
+        ai_writing_detected: aiDetectionMap[journal.id]?.detected || false,
+        ai_detection_confidence: aiDetectionMap[journal.id]?.confidence || null
       }));
 
       setJournals(enrichedJournals);
@@ -246,14 +266,23 @@ export const InstructorJournalBrowser: React.FC = () => {
                       </span>
                     </div>
                   </div>
-                  {journal.is_published ? (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Published
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">Draft</Badge>
-                  )}
+                  <div className="flex flex-col items-end gap-2">
+                    {journal.is_published ? (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Published
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline">Draft</Badge>
+                    )}
+                    {journal.ai_writing_detected && (
+                      <AIDetectionAlert
+                        detected={journal.ai_writing_detected}
+                        confidence={journal.ai_detection_confidence}
+                        compact={true}
+                      />
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
