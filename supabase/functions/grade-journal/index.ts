@@ -296,12 +296,13 @@ Be constructive and specific in your feedback.
 
     let saveError;
     if (existingGrade) {
-      // Update existing grade
-      console.log('Updating existing grade for journal:', journal_id);
+      // Update existing grade using assignment_id and student_id to match the unique constraint
+      console.log('Updating existing grade for assignment:', assignment_id, 'student:', student_id);
       const { error } = await supabase
         .from("mus240_journal_grades")
         .update(gradeData)
-        .eq("journal_id", journal_id);
+        .eq("assignment_id", assignment_id)
+        .eq("student_id", student_id);
       saveError = error;
     } else {
       // Insert new grade
