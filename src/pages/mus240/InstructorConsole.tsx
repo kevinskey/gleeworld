@@ -143,49 +143,58 @@ export const InstructorConsole = () => {
       <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
         <div className="border-b bg-card">
-          <div className="max-w-[1800px] mx-auto px-6 py-4">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex items-center gap-6 overflow-x-auto scrollbar-hide w-full lg:w-auto">
-                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
+          <div className="max-w-[1800px] mx-auto px-3 sm:px-6 py-3 sm:py-4">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto scrollbar-hide w-full lg:w-auto pb-2 lg:pb-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
                   <span className="text-muted-foreground">Assignments:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.activeAssignments}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <Eye className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Journals:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalJournals}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <BarChart3 className="h-4 w-4 text-orange-600 flex-shrink-0" />
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Pending:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.pendingGrades}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <GraduationCap className="h-4 w-4 text-purple-600 flex-shrink-0" />
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Students:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalStudents}</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
-                  <Users className="h-4 w-4 text-indigo-600 flex-shrink-0" />
-                  <span className="text-muted-foreground">Average:</span>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
+                  <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600 flex-shrink-0" />
+                  <span className="text-muted-foreground">Avg:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 w-full lg:w-auto justify-end">
-                <Badge variant="secondary" className="text-sm whitespace-nowrap">
-                  <Brain className="h-3.5 w-3.5 mr-1.5" />
-                  AI-Enhanced
+              <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end">
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden flex items-center gap-2"
+                >
+                  <Menu className="h-4 w-4" />
+                  <span>Menu</span>
+                </Button>
+                <Badge variant="secondary" className="text-xs sm:text-sm whitespace-nowrap">
+                  <Brain className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 sm:mr-1.5" />
+                  AI
                 </Badge>
                 <Button 
                   variant="outline"
                   size="sm"
                   onClick={() => navigate('/classes/mus240/admin')}
-                  className="flex items-center gap-2 whitespace-nowrap"
+                  className="hidden sm:flex items-center gap-2 whitespace-nowrap"
                 >
                   <Home className="h-4 w-4" />
-                  <span>Course Home</span>
+                  <span>Home</span>
                 </Button>
               </div>
             </div>
@@ -208,11 +217,6 @@ export const InstructorConsole = () => {
 
           {/* Mobile Sidebar */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetTrigger asChild className="lg:hidden fixed bottom-6 right-6 z-50">
-              <Button size="lg" className="rounded-full shadow-lg h-14 w-14">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
             <SheetContent side="left" className="w-72 p-6">
               <div className="mb-8 pb-6 border-b">
                 <h2 className="text-xl font-bold text-foreground">MUS 240</h2>
@@ -224,7 +228,7 @@ export const InstructorConsole = () => {
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-6 lg:p-8">
+          <main className="flex-1 p-3 sm:p-6 lg:p-8">
             {/* Page Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground mb-2">
