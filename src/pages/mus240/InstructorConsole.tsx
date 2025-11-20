@@ -12,7 +12,6 @@ import { AIAssistant } from '@/components/mus240/instructor/AIAssistant';
 import { GradeCalculationSystem } from '@/components/mus240/admin/GradeCalculationSystem';
 import { EnrollmentManager } from '@/components/mus240/admin/EnrollmentManager';
 import { ComprehensiveJournalAdmin } from '@/components/mus240/admin/ComprehensiveJournalAdmin';
-import { BulkJournalGrading } from '@/components/mus240/instructor/BulkJournalGrading';
 import { StudentScoresViewer } from '@/components/mus240/admin/StudentScoresViewer';
 import { MidtermGradingManager } from '@/components/mus240/admin/MidtermGradingManager';
 import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
@@ -101,7 +100,6 @@ export const InstructorConsole = () => {
 
   const navItems = [
     { value: 'assignments', label: 'Assignments', icon: BookOpen },
-    { value: 'bulk-grading', label: 'Bulk Grading', icon: ClipboardCheck },
     { value: 'tests', label: 'Tests', icon: ClipboardCheck },
     { value: 'polls', label: 'Polls', icon: BarChart3 },
     { value: 'grades', label: 'Grades', icon: Trophy },
@@ -249,21 +247,6 @@ export const InstructorConsole = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <AssignmentManager />
-                </CardContent>
-              </Card>
-            )}
-
-            {activeTab === 'bulk-grading' && (
-              <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <ClipboardCheck className="h-5 w-5" />
-                    Bulk Journal Grading
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">AI-powered bulk grading for journal entries</p>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <BulkJournalGrading />
                 </CardContent>
               </Card>
             )}
