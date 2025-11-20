@@ -109,14 +109,17 @@ serve(async (req) => {
       });
     }
 
-    // If already graded and journal_id provided, return existing grade instead of re-grading
+    // Check if already graded - only return existing grade if it's valid (has non-zero score)
     if (journal_id) {
       const existing = await supabase
         .from('mus240_journal_grades')
         .select('journal_id,overall_score,letter_grade,ai_feedback,graded_at,ai_model,rubric')
         .eq('journal_id', journal_id)
         .maybeSingle();
-      if (existing.data) {
+      
+      // Only return existing grade if it has a valid score (not corrupted with 0 points)
+      if (existing.data && existing.data.overall_score > 0) {
+        console.log('Valid existing grade found, returning it');
         return new Response(
           JSON.stringify({
             success: true,
@@ -133,6 +136,8 @@ serve(async (req) => {
           }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      } else if (existing.data) {
+        console.log('Found corrupted grade with 0 score, will regrade');
       }
     }
 
@@ -236,12 +241,12 @@ Be constructive and specific in your feedback.
     // Calculate total score from rubric_scores
     const rubricScores = gradingResult.rubric_scores || [];
     const totalScore = rubricScores.reduce((sum, item) => sum + item.score, 0);
-    const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 17;
+    const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 20;
 
-    // All journal assignments use a 17-point scale
-    const assignmentMaxPoints = 17;
+    // All journal assignments use a 20-point scale
+    const assignmentMaxPoints = 20;
 
-    // Normalize rubric total to the 17-point grading scale
+    // Normalize rubric total to the 20-point grading scale
     const normalizedScore = maxPossible > 0
       ? (totalScore / maxPossible) * assignmentMaxPoints
       : 0;
