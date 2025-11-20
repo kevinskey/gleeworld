@@ -315,9 +315,9 @@ export const AssignmentManager = () => {
     }
   };
 
-  const handleGradeAllWithAI = async () => {
+  const handleGradeAllWithAI = async (regradeAll = false) => {
     if (selectedStudent === 'all') {
-      toast.error('Please select a specific student to grade all their work');
+      toast.error('Please select a specific student to grade their work');
       return;
     }
 
@@ -326,36 +326,45 @@ export const AssignmentManager = () => {
     let errorCount = 0;
 
     try {
-      // Get all ungraded submissions for the selected student
-      const ungradedSubmissions: Array<{journalId: string; assignmentId: string}> = [];
+      // Get submissions for the selected student
+      const submissionsToGrade: Array<{journalId: string; assignmentId: string}> = [];
       
       for (const assignment of assignments) {
         if (!assignment.assignment_code) continue;
         const subs = getFilteredSubmissions(assignment.assignment_code);
         
         for (const sub of subs) {
-          const gradeRecords = grades[sub.id] || [];
-          const needsGrading = gradeRecords.length === 0 || gradeRecords.every(g => g.overall_score === null);
-          
-          if (needsGrading) {
-            ungradedSubmissions.push({
+          if (regradeAll) {
+            // Regrade all submissions
+            submissionsToGrade.push({
               journalId: sub.id,
               assignmentId: assignment.id
             });
+          } else {
+            // Only grade ungraded submissions
+            const gradeRecords = grades[sub.id] || [];
+            const needsGrading = gradeRecords.length === 0 || gradeRecords.every(g => g.overall_score === null);
+            
+            if (needsGrading) {
+              submissionsToGrade.push({
+                journalId: sub.id,
+                assignmentId: assignment.id
+              });
+            }
           }
         }
       }
 
-      if (ungradedSubmissions.length === 0) {
-        toast.info('No ungraded submissions found for this student');
+      if (submissionsToGrade.length === 0) {
+        toast.info(regradeAll ? 'No submissions found for this student' : 'No ungraded submissions found for this student');
         setIsGradingAll(false);
         return;
       }
 
-      toast.info(`Grading ${ungradedSubmissions.length} submissions...`);
+      toast.info(`${regradeAll ? 'Regrading' : 'Grading'} ${submissionsToGrade.length} submission${submissionsToGrade.length !== 1 ? 's' : ''}...`);
 
       // Grade each submission
-      for (const { journalId, assignmentId } of ungradedSubmissions) {
+      for (const { journalId, assignmentId } of submissionsToGrade) {
         try {
           const { data, error } = await supabase.functions.invoke('grade-journal', {
             body: {
@@ -443,16 +452,28 @@ export const AssignmentManager = () => {
               </SelectContent>
             </Select>
             {selectedStudent !== 'all' && (
-              <Button 
-                onClick={handleGradeAllWithAI}
-                disabled={isGradingAll}
-                variant="outline"
-                size="sm"
-                className="whitespace-nowrap"
-              >
-                <Brain className="h-4 w-4 mr-2" />
-                {isGradingAll ? 'Grading...' : 'Grade All with AI'}
-              </Button>
+              <>
+                <Button 
+                  onClick={() => handleGradeAllWithAI(false)}
+                  disabled={isGradingAll}
+                  variant="outline"
+                  size="sm"
+                  className="whitespace-nowrap"
+                >
+                  <Brain className="h-4 w-4 mr-2" />
+                  {isGradingAll ? 'Grading...' : 'Grade All with AI'}
+                </Button>
+                <Button 
+                  onClick={() => handleGradeAllWithAI(true)}
+                  disabled={isGradingAll}
+                  variant="default"
+                  size="sm"
+                  className="whitespace-nowrap"
+                >
+                  <Brain className="h-4 w-4 mr-2" />
+                  {isGradingAll ? 'Regrading...' : 'Regrade All with AI'}
+                </Button>
+              </>
             )}
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
