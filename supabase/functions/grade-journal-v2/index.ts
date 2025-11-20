@@ -225,7 +225,7 @@ Respond in JSON format:
         ai_detection_confidence: gradingData.ai_detection?.confidence || null,
         ai_detection_notes: gradingData.ai_detection?.reasoning || null
       }, {
-        onConflict: 'journal_id'
+        onConflict: 'assignment_id,student_id'
       });
 
     // If we hit a duplicate key on journal_id, it means there are
@@ -296,7 +296,7 @@ Respond in JSON format:
           ai_detection_confidence: gradingData.ai_detection?.confidence || null,
           ai_detection_notes: gradingData.ai_detection?.reasoning || null
         }, {
-          onConflict: 'journal_id'
+          onConflict: 'assignment_id,student_id'
         });
 
       insertError = retryResult.error;
