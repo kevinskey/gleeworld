@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   ArrowLeft,
   ClipboardCheck,
@@ -25,6 +26,7 @@ import { useStudentMidtermSubmission } from '@/hooks/useStudentMidtermSubmission
 import { useStudentAssignmentSubmissions } from '@/hooks/useStudentAssignmentSubmissions';
 import { getInitials } from '@/utils/avatarUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { StudentGradeSummary } from '@/components/mus240/instructor/StudentGradeSummary';
 
 export const StudentWorkOverview = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -297,145 +299,166 @@ export const StudentWorkOverview = () => {
         </Card>
 
 
-        {/* Main Content - Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Assignments List */}
-          <div className="lg:col-span-1">
-            <Card className="border-0 bg-card/70 backdrop-blur-sm sticky top-6 shadow-sm">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold flex items-center gap-2">
-                  <Award className="h-5 w-5 text-primary" />
-                  Assignments & Grades
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="max-h-[600px] overflow-y-auto">
-                  {/* Midterm Item */}
-                  <button
-                    onClick={() => setSelectedItem('midterm')}
-                    className={`w-full text-left p-4 border-b border-border hover:bg-accent/50 transition-all duration-200 ${
-                      selectedItem === 'midterm' ? 'bg-accent border-l-4 border-l-primary shadow-sm' : 'border-l-4 border-l-transparent'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-start gap-3 flex-1">
-                        <div className="mt-0.5">
-                          <ClipboardCheck className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <span className="font-semibold text-sm text-foreground block mb-1">
-                            Midterm Examination
-                          </span>
-                          {midtermSubmission?.submitted_at && (
-                            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-                              <Clock className="h-3 w-3" />
-                              {new Date(midtermSubmission.submitted_at).toLocaleDateString('en-US', { 
-                                month: 'short', 
-                                day: 'numeric' 
-                              })}
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            {getStatusBadge(midtermSubmission?.is_submitted ? 'graded' : 'pending')}
-                          </div>
-                        </div>
-                      </div>
-                      {midtermSubmission?.grade && (
-                        <div className={`text-right ml-2 px-3 py-1.5 rounded-lg border ${getGradeBgColor((midtermSubmission.grade / 90) * 100)}`}>
-                          <div className={`text-xl font-bold ${getGradeColor((midtermSubmission.grade / 90) * 100)}`}>
-                            {midtermSubmission.grade}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            / 90
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                    {midtermSubmission?.grade && (
-                      <Progress 
-                        value={(midtermSubmission.grade / 90) * 100} 
-                        className="h-1.5"
-                      />
-                    )}
-                  </button>
+        {/* Main Content - Tabbed Layout */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="bg-card/70 backdrop-blur-sm">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Grade Summary
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Assignments
+            </TabsTrigger>
+          </TabsList>
 
-                  {/* Assignment Items */}
-                  {assignmentSubmissions && assignmentSubmissions.length > 0 ? (
-                    assignmentSubmissions.map((assignment) => {
-                      const percentage = assignment.grade !== null && assignment.grade !== undefined 
-                        ? assignment.grade 
-                        : 0;
-                      const hasGrade = assignment.grade !== null && assignment.grade !== undefined;
-                      
-                      return (
-                        <button
-                          key={assignment.id}
-                          onClick={() => setSelectedItem(assignment.id)}
-                          className={`w-full text-left p-4 border-b border-border hover:bg-accent/50 transition-all duration-200 ${
-                            selectedItem === assignment.id ? 'bg-accent border-l-4 border-l-primary shadow-sm' : 'border-l-4 border-l-transparent'
-                          }`}
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-start gap-3 flex-1">
-                              <div className="mt-0.5">
-                                {hasGrade ? (
-                                  <CheckCircle className="h-5 w-5 text-emerald-600" />
-                                ) : (
-                                  <FileText className="h-5 w-5 text-muted-foreground" />
-                                )}
-                              </div>
-                              <div className="flex-1">
-                                <span className="font-medium text-sm text-foreground block mb-1 line-clamp-2">
-                                  {assignment.file_name || `Assignment ${assignment.assignment_id}`}
-                                </span>
+          {/* Grade Summary Tab */}
+          <TabsContent value="overview">
+            <StudentGradeSummary studentId={studentId || ''} />
+          </TabsContent>
+
+          {/* Assignments Tab */}
+          <TabsContent value="assignments">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Assignments List */}
+              <div className="lg:col-span-1">
+                <Card className="border-0 bg-card/70 backdrop-blur-sm sticky top-6 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <Award className="h-5 w-5 text-primary" />
+                      Assignments & Grades
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="max-h-[600px] overflow-y-auto">
+                      {/* Midterm Item */}
+                      <button
+                        onClick={() => setSelectedItem('midterm')}
+                        className={`w-full text-left p-4 border-b border-border hover:bg-accent/50 transition-all duration-200 ${
+                          selectedItem === 'midterm' ? 'bg-accent border-l-4 border-l-primary shadow-sm' : 'border-l-4 border-l-transparent'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-start gap-3 flex-1">
+                            <div className="mt-0.5">
+                              <ClipboardCheck className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <span className="font-semibold text-sm text-foreground block mb-1">
+                                Midterm Examination
+                              </span>
+                              {midtermSubmission?.submitted_at && (
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
                                   <Clock className="h-3 w-3" />
-                                  {new Date(assignment.submitted_at).toLocaleDateString('en-US', { 
+                                  {new Date(midtermSubmission.submitted_at).toLocaleDateString('en-US', { 
                                     month: 'short', 
                                     day: 'numeric' 
                                   })}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  {getStatusBadge(assignment.status)}
-                                </div>
+                              )}
+                              <div className="flex items-center gap-2">
+                                {getStatusBadge(midtermSubmission?.is_submitted ? 'graded' : 'pending')}
                               </div>
                             </div>
-                            {hasGrade && (
-                              <div className={`text-right ml-2 px-3 py-1.5 rounded-lg border ${getGradeBgColor(percentage)}`}>
-                                <div className={`text-xl font-bold ${getGradeColor(percentage)}`}>
-                                  {assignment.grade}
-                                </div>
-                                <div className="text-xs text-muted-foreground">
-                                  / 100
-                                </div>
-                              </div>
-                            )}
                           </div>
-                          {hasGrade && (
-                            <Progress 
-                              value={percentage} 
-                              className="h-1.5"
-                            />
+                          {midtermSubmission?.grade && (
+                            <div className={`text-right ml-2 px-3 py-1.5 rounded-lg border ${getGradeBgColor((midtermSubmission.grade / 90) * 100)}`}>
+                              <div className={`text-xl font-bold ${getGradeColor((midtermSubmission.grade / 90) * 100)}`}>
+                                {midtermSubmission.grade}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                / 90
+                              </div>
+                            </div>
                           )}
-                        </button>
-                      );
-                    })
-                  ) : (
-                    <div className="p-8 text-center">
-                      <FileText className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
-                      <p className="text-muted-foreground text-sm">No assignments submitted</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                        </div>
+                        {midtermSubmission?.grade && (
+                          <Progress 
+                            value={(midtermSubmission.grade / 90) * 100} 
+                            className="h-1.5"
+                          />
+                        )}
+                      </button>
 
-          {/* Right Column - Detail View */}
-          <div className="lg:col-span-2">
-            {renderDetailView()}
-          </div>
-        </div>
+                      {/* Assignment Items */}
+                      {assignmentSubmissions && assignmentSubmissions.length > 0 ? (
+                        assignmentSubmissions.map((assignment) => {
+                          const percentage = assignment.grade !== null && assignment.grade !== undefined 
+                            ? assignment.grade 
+                            : 0;
+                          const hasGrade = assignment.grade !== null && assignment.grade !== undefined;
+                          
+                          return (
+                            <button
+                              key={assignment.id}
+                              onClick={() => setSelectedItem(assignment.id)}
+                              className={`w-full text-left p-4 border-b border-border hover:bg-accent/50 transition-all duration-200 ${
+                                selectedItem === assignment.id ? 'bg-accent border-l-4 border-l-primary shadow-sm' : 'border-l-4 border-l-transparent'
+                              }`}
+                            >
+                              <div className="flex items-start justify-between mb-2">
+                                <div className="flex items-start gap-3 flex-1">
+                                  <div className="mt-0.5">
+                                    {hasGrade ? (
+                                      <CheckCircle className="h-5 w-5 text-emerald-600" />
+                                    ) : (
+                                      <FileText className="h-5 w-5 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1">
+                                    <span className="font-medium text-sm text-foreground block mb-1 line-clamp-2">
+                                      {assignment.file_name || `Assignment ${assignment.assignment_id}`}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
+                                      <Clock className="h-3 w-3" />
+                                      {new Date(assignment.submitted_at).toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric' 
+                                      })}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {getStatusBadge(assignment.status)}
+                                    </div>
+                                  </div>
+                                </div>
+                                {hasGrade && (
+                                  <div className={`text-right ml-2 px-3 py-1.5 rounded-lg border ${getGradeBgColor(percentage)}`}>
+                                    <div className={`text-xl font-bold ${getGradeColor(percentage)}`}>
+                                      {assignment.grade}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                      / 100
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              {hasGrade && (
+                                <Progress 
+                                  value={percentage} 
+                                  className="h-1.5"
+                                />
+                              )}
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="p-8 text-center">
+                          <FileText className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                          <p className="text-muted-foreground text-sm">No assignments submitted</p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Column - Detail View */}
+              <div className="lg:col-span-2">
+                {renderDetailView()}
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
