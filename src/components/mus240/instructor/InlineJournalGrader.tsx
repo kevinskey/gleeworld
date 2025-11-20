@@ -126,6 +126,13 @@ export const InlineJournalGrader: React.FC<InlineJournalGraderProps> = ({
       .join('\n')
       .trim();
     
+    console.log('Journal content processing:', {
+      originalLength: journal.content.length,
+      filteredLength: textContent.length,
+      originalContent: journal.content.substring(0, 200),
+      filteredContent: textContent.substring(0, 200)
+    });
+    
     if (!textContent) {
       toast.error('No text content found in journal entry. PDF-only submissions cannot be auto-graded.');
       return;

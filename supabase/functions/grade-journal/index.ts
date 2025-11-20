@@ -86,8 +86,13 @@ serve(async (req) => {
     };
 
     // Basic validation
-    if (!journal_text || typeof journal_text !== "string") {
-      console.error('Missing or invalid journal_text');
+    if (!journal_text || typeof journal_text !== "string" || !journal_text.trim()) {
+      console.error('Missing or invalid journal_text:', { 
+        received: journal_text,
+        type: typeof journal_text,
+        isEmpty: !journal_text,
+        isWhitespace: journal_text ? !journal_text.trim() : 'n/a'
+      });
       return new Response(JSON.stringify({ error: "No journal_text provided." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
