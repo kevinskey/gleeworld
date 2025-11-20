@@ -4,9 +4,9 @@ import { EnhancedRubricDisplay } from './rubrics/EnhancedRubricDisplay';
 import { AIDetectionAlert } from './AIDetectionAlert';
 
 interface RubricScore {
-  criterion: string;
+  criterion_name: string;
   score: number;
-  max_score: number;
+  max_points: number;
   feedback: string;
 }
 
@@ -41,7 +41,12 @@ export const JournalGradeDisplay: React.FC<JournalGradeDisplayProps> = ({ grade 
   const enhancedGrade = {
     overall_score: finalScore,
     letter_grade: finalGrade,
-    rubric_scores: grade.rubric?.scores || [],
+    rubric_scores: grade.rubric?.scores?.map((score: RubricScore) => ({
+      criterion: score.criterion_name,
+      score: score.score,
+      max_score: score.max_points,
+      feedback: score.feedback
+    })) || [],
     overall_feedback: finalFeedback,
     ai_model: grade.ai_model,
     graded_at: grade.instructor_graded_at ?? grade.graded_at,

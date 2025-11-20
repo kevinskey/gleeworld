@@ -10,20 +10,20 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-function letterFromScore(score: number): string {
-  // 17-point scale → letter grade bands (tune to taste)
-  if (score >= 16.5) return "A+";
-  if (score >= 15.5) return "A";
-  if (score >= 14.5) return "A-";
-  if (score >= 13.5) return "B+";
-  if (score >= 12.5) return "B";
-  if (score >= 11.5) return "B-";
-  if (score >= 10.5) return "C+";
-  if (score >= 9.5)  return "C";
-  if (score >= 8.5)  return "C-";
-  if (score >= 7.5)  return "D+";
-  if (score >= 6.5)  return "D";
-  if (score >= 5.5)  return "D-";
+function letterFromScore(percentage: number): string {
+  // Convert percentage to letter grade
+  if (percentage >= 97) return "A+";
+  if (percentage >= 93) return "A";
+  if (percentage >= 90) return "A-";
+  if (percentage >= 87) return "B+";
+  if (percentage >= 83) return "B";
+  if (percentage >= 80) return "B-";
+  if (percentage >= 77) return "C+";
+  if (percentage >= 73) return "C";
+  if (percentage >= 70) return "C-";
+  if (percentage >= 67) return "D+";
+  if (percentage >= 63) return "D";
+  if (percentage >= 60) return "D-";
   return "F";
 }
 
@@ -260,8 +260,7 @@ Be constructive and specific in your feedback.
       });
     } catch (parseError) {
       console.error('JSON parse error:', parseError, 'Raw content:', raw);
-      // Fallback with default rubric
-      const fallbackScore = Math.min(Math.max(Math.floor(wordCount / 20), 8), 17);
+      // Fallback with default rubric (totals to 17 points, then normalized to 20)
       gradingResult = {
         rubric_scores: [
           { criterion: "Musical Analysis", score: 4, maxScore: 7, feedback: "Shows basic understanding of musical elements." },
@@ -270,7 +269,6 @@ Be constructive and specific in your feedback.
           { criterion: "Writing Quality", score: 1, maxScore: 2, feedback: "Writing is generally clear." }
         ],
         overall_feedback: "Fallback grading applied. Expand musical terminology, strengthen historical context, and clarify structure.",
-        letter_grade: letterFromScore(fallbackScore),
       };
       console.log('Using fallback grading');
     }
@@ -291,8 +289,18 @@ Be constructive and specific in your feedback.
     // Round to 2 decimal places
     const dbScore = Math.round(normalizedScore * 100) / 100;
 
-    const letter = gradingResult.letter_grade || letterFromScore(totalScore);
+    // Calculate percentage for letter grade
+    const percentage = (dbScore / assignmentMaxPoints) * 100;
+    const letter = gradingResult.letter_grade || letterFromScore(percentage);
     const feedback = gradingResult.overall_feedback || "Thank you for your submission.";
+    
+    // Map rubric scores to database format with correct field names
+    const mappedRubricScores = rubricScores.map(item => ({
+      criterion_name: item.criterion,
+      score: item.score,
+      max_points: item.maxScore,
+      feedback: item.feedback
+    }));
 
     // Save to DB
     console.log('Saving grade to database:', {
@@ -320,7 +328,7 @@ Be constructive and specific in your feedback.
       ai_model: "gpt-4o-mini",
       rubric: {
         criteria: rubric,
-        scores: rubricScores
+        scores: mappedRubricScores
       },
     };
 
@@ -347,7 +355,7 @@ Be constructive and specific in your feedback.
         overall_score: dbScore,
         letter_grade: letter,
         feedback,
-        rubric_scores: rubricScores,
+        rubric_scores: mappedRubricScores,
         message: "Journal graded successfully",
         wordCount,
       }),
