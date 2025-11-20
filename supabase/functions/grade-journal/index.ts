@@ -271,6 +271,7 @@ Be constructive and specific in your feedback.
     });
 
     // Try to upsert the grade - store normalized score that respects DB constraints
+    // Use journal_id as the conflict target since that's the unique constraint
     const { error: upsertError } = await supabase
       .from("mus240_journal_grades")
       .upsert(
@@ -288,7 +289,7 @@ Be constructive and specific in your feedback.
             scores: rubricScores
           },
         },
-        { onConflict: "student_id,assignment_id" },
+        { onConflict: "journal_id" },
       );
 
     if (upsertError) {
