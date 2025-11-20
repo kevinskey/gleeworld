@@ -88,9 +88,9 @@ export const AIGradeViewer: React.FC<AIGradeViewerProps> = ({ journalId, student
           .eq('id', data[0].assignment_id)
           .maybeSingle();
         
-        if (assignmentData?.points) {
-          setMaxPoints(assignmentData.points);
-        }
+        // All listening journals use 20 points
+        const points = assignmentData?.points || 20;
+        setMaxPoints(points);
       }
     } catch (error) {
       console.error('Error loading grade:', error);
