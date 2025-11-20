@@ -128,14 +128,12 @@ export const EnhancedRubricDisplay: React.FC<EnhancedRubricDisplayProps> = ({
             <Badge variant="default" className="text-lg px-3 py-1">
               {grade.letter_grade}
             </Badge>
-            {grade.rubric_scores && (
-              <Badge variant="secondary">
-                {totalEarned.toFixed(1)}/{totalPossible} points
-              </Badge>
-            )}
-            {!grade.rubric_scores && (
-              <Badge variant="secondary">
-                {grade.overall_score.toFixed(1)}/20 points
+            <Badge variant="secondary">
+              {grade.overall_score.toFixed(1)}/20 points
+            </Badge>
+            {grade.rubric_scores && totalPossible > 0 && (
+              <Badge variant="outline" className="text-xs">
+                Raw: {totalEarned.toFixed(1)}/{totalPossible}
               </Badge>
             )}
             {grade.ai_model && (
