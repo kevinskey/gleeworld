@@ -31,6 +31,7 @@ export const InstructorJournalBrowser: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'published' | 'unpublished' | 'graded' | 'not-graded'>('all');
   const [bulkGrading, setBulkGrading] = useState(false);
+  const [bulkRegrading, setBulkRegrading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const navigate = useNavigate();
 
@@ -194,6 +195,86 @@ export const InstructorJournalBrowser: React.FC = () => {
     }
   };
 
+  const handleBulkRegradeAll = async () => {
+    if (!confirm('This will regrade ALL journals with fresh AI analysis and updated rubric scoring. This will overwrite existing grades. Continue?')) {
+      return;
+    }
+
+    try {
+      const journalsToRegrade = journals.filter(j => j.is_published);
+
+      if (journalsToRegrade.length === 0) {
+        toast.error('No published journals to regrade.');
+        return;
+      }
+
+      setBulkRegrading(true);
+      setBulkProgress({ current: 0, total: journalsToRegrade.length });
+
+      let completed = 0;
+      let failed = 0;
+
+      // Fetch assignment data for each journal
+      const { data: assignments } = await supabase
+        .from('gw_assignments')
+        .select('id, title, legacy_id, points, description')
+        .eq('legacy_source', 'mus240_assignments');
+
+      const assignmentMap = new Map();
+      (assignments || []).forEach(a => {
+        if (a.legacy_id) {
+          assignmentMap.set(a.legacy_id, a);
+        }
+      });
+
+      for (const journal of journalsToRegrade) {
+        try {
+          setBulkProgress({ current: completed + 1, total: journalsToRegrade.length });
+
+          const assignment = assignmentMap.get(journal.assignment_id);
+          if (!assignment) {
+            console.error(`No assignment found for journal ${journal.id} with assignment_id ${journal.assignment_id}`);
+            failed++;
+            continue;
+          }
+
+          const { error } = await supabase.functions.invoke('grade-journal-v2', {
+            body: {
+              journalId: journal.id,
+              content: journal.content,
+              prompt: assignment.description || assignment.title,
+              maxPoints: assignment.points || 20,
+              assignmentId: assignment.id
+            },
+          });
+
+          if (error) {
+            console.error(`Failed to regrade journal ${journal.id}:`, error);
+            failed++;
+          } else {
+            completed++;
+          }
+        } catch (err) {
+          console.error('Error regrading journal:', err);
+          failed++;
+        }
+      }
+
+      if (failed > 0) {
+        toast.warning(`Regraded ${completed} journals. ${failed} failed.`);
+      } else {
+        toast.success(`Successfully regraded all ${completed} journals with updated rubric scoring!`);
+      }
+
+      fetchJournals();
+    } catch (error) {
+      console.error('Bulk regrading error:', error);
+      toast.error('Failed to complete bulk regrading');
+    } finally {
+      setBulkRegrading(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center p-8">Loading journals...</div>;
   }
@@ -217,9 +298,9 @@ export const InstructorJournalBrowser: React.FC = () => {
         <div className="flex items-center gap-2">
           <Button
             onClick={handleBulkGradeAll}
-            disabled={bulkGrading || journals.length === 0}
+            disabled={bulkGrading || bulkRegrading || journals.length === 0}
             className="gap-2"
-            variant="default"
+            variant="outline"
           >
             {bulkGrading ? (
               <>
@@ -229,7 +310,25 @@ export const InstructorJournalBrowser: React.FC = () => {
             ) : (
               <>
                 <Bot className="h-4 w-4" />
-                Bulk Grade All with AI
+                Bulk Grade New
+              </>
+            )}
+          </Button>
+          <Button
+            onClick={handleBulkRegradeAll}
+            disabled={bulkGrading || bulkRegrading || journals.length === 0}
+            className="gap-2"
+            variant="default"
+          >
+            {bulkRegrading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Regrading {bulkProgress.current} of {bulkProgress.total}...
+              </>
+            ) : (
+              <>
+                <Bot className="h-4 w-4" />
+                Bulk Regrade All
               </>
             )}
           </Button>
