@@ -119,13 +119,25 @@ export const InlineJournalGrader: React.FC<InlineJournalGraderProps> = ({
   const handleGradeWithAI = async () => {
     if (!journal) return;
     
+    // Extract actual text content (skip attachment lines)
+    const textContent = journal.content
+      .split('\n')
+      .filter(line => !line.startsWith('Attachment:') && !line.startsWith('https://'))
+      .join('\n')
+      .trim();
+    
+    if (!textContent) {
+      toast.error('No text content found in journal entry. PDF-only submissions cannot be auto-graded.');
+      return;
+    }
+    
     setGrading(true);
     try {
       const { data, error } = await supabase.functions.invoke('grade-journal', {
         body: {
           assignment_id: assignmentId,
           journal_id: journal.id,
-          journal_text: journal.content,
+          journal_text: textContent,
           student_id: studentId
         }
       });
