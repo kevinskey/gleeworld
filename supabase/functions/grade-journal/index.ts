@@ -270,32 +270,50 @@ Be constructive and specific in your feedback.
       rubric_items: rubricScores.length
     });
 
-    // Try to upsert the grade - store normalized score that respects DB constraints
-    // Use journal_id as the conflict target since that's the unique constraint
-    const { error: upsertError } = await supabase
+    // Check if grade already exists for this journal
+    const { data: existingGrade } = await supabase
       .from("mus240_journal_grades")
-      .upsert(
-        {
-          student_id,
-          assignment_id,
-          journal_id,
-          overall_score: dbScore,
-          letter_grade: letter,
-          ai_feedback: feedback,
-          graded_at: new Date().toISOString(),
-          ai_model: "gpt-4o-mini",
-          rubric: {
-            criteria: rubric,
-            scores: rubricScores
-          },
-        },
-        { onConflict: "journal_id" },
-      );
+      .select("id")
+      .eq("journal_id", journal_id)
+      .maybeSingle();
 
-    if (upsertError) {
-      console.error('Database upsert error:', upsertError);
+    const gradeData = {
+      student_id,
+      assignment_id,
+      journal_id,
+      overall_score: dbScore,
+      letter_grade: letter,
+      ai_feedback: feedback,
+      graded_at: new Date().toISOString(),
+      ai_model: "gpt-4o-mini",
+      rubric: {
+        criteria: rubric,
+        scores: rubricScores
+      },
+    };
+
+    let saveError;
+    if (existingGrade) {
+      // Update existing grade
+      console.log('Updating existing grade for journal:', journal_id);
+      const { error } = await supabase
+        .from("mus240_journal_grades")
+        .update(gradeData)
+        .eq("journal_id", journal_id);
+      saveError = error;
+    } else {
+      // Insert new grade
+      console.log('Inserting new grade for journal:', journal_id);
+      const { error } = await supabase
+        .from("mus240_journal_grades")
+        .insert(gradeData);
+      saveError = error;
+    }
+
+    if (saveError) {
+      console.error('Database save error:', saveError);
       return new Response(
-        JSON.stringify({ error: "Failed to save grade", details: upsertError.message }),
+        JSON.stringify({ error: "Failed to save grade", details: saveError.message }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
