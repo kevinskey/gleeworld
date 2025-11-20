@@ -318,11 +318,22 @@ Be constructive and specific in your feedback.
 
     let saveError;
     if (existingGrade) {
-      // Update existing grade by its ID (most reliable)
+      // Update existing grade by its ID - don't include student_id, assignment_id, or journal_id
+      // in the update as they are part of unique constraints and shouldn't change
       console.log('Updating existing grade:', existingGrade.id, 'for journal:', journal_id);
       const { error } = await supabase
         .from("mus240_journal_grades")
-        .update(gradeData)
+        .update({
+          overall_score: dbScore,
+          letter_grade: letter,
+          ai_feedback: feedback,
+          graded_at: new Date().toISOString(),
+          ai_model: "gpt-4o-mini",
+          rubric: {
+            criteria: rubric,
+            scores: rubricScores
+          },
+        })
         .eq("id", existingGrade.id);
       saveError = error;
     } else {
