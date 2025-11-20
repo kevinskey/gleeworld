@@ -93,7 +93,7 @@ serve(async (req) => {
       console.log('Fetching journal content for journal_id:', journal_id);
       const { data: journalData, error: journalError } = await supabase
         .from('mus240_journal_entries')
-        .select('entry_text, student_id')
+        .select('content, student_id')
         .eq('id', journal_id)
         .single();
       
@@ -112,7 +112,7 @@ serve(async (req) => {
         });
       }
       
-      finalJournalText = journalData.entry_text;
+      finalJournalText = journalData.content;
       finalStudentId = journalData.student_id;
       console.log('Fetched journal text length:', finalJournalText?.length || 0);
     }
