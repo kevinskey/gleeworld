@@ -199,6 +199,8 @@ Be constructive and specific in your feedback.
 
     const aiJson = await openaiResp.json();
     const raw = aiJson?.choices?.[0]?.message?.content ?? "{}";
+    
+    console.log('OpenAI response received, parsing...');
 
     // Parse JSON safely
     let gradingResult: { 
@@ -209,7 +211,13 @@ Be constructive and specific in your feedback.
     
     try {
       gradingResult = JSON.parse(raw);
-    } catch {
+      console.log('Successfully parsed AI grading:', {
+        rubric_scores_count: gradingResult.rubric_scores?.length,
+        has_feedback: !!gradingResult.overall_feedback,
+        letter_grade: gradingResult.letter_grade
+      });
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'Raw content:', raw);
       // Fallback with default rubric
       const fallbackScore = Math.min(Math.max(Math.floor(wordCount / 20), 8), 17);
       gradingResult = {
@@ -222,25 +230,23 @@ Be constructive and specific in your feedback.
         overall_feedback: "Fallback grading applied. Expand musical terminology, strengthen historical context, and clarify structure.",
         letter_grade: letterFromScore(fallbackScore),
       };
+      console.log('Using fallback grading');
     }
 
     // Calculate total score from rubric_scores
     const rubricScores = gradingResult.rubric_scores || [];
     const totalScore = rubricScores.reduce((sum, item) => sum + item.score, 0);
-    const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 100;
+    const maxPossible = rubricScores.reduce((sum, item) => sum + item.maxScore, 0) || 17;
 
-    // Determine grading scale based on assignment identifier
-    // Listening journals (e.g., "lj2") are graded on a 0–10 scale per database constraint
-    const assignmentMaxPoints = assignment_id && assignment_id.toLowerCase().startsWith('lj')
-      ? 10
-      : 100; // fallback for any other future assignment types
+    // All journal assignments use a 17-point scale
+    const assignmentMaxPoints = 17;
 
-    // Normalize rubric total to the assignment's grading scale
+    // Normalize rubric total to the 17-point grading scale
     const normalizedScore = maxPossible > 0
       ? (totalScore / maxPossible) * assignmentMaxPoints
       : 0;
 
-    // Round to 2 decimal places to stay safely within 0–10
+    // Round to 2 decimal places
     const dbScore = Math.round(normalizedScore * 100) / 100;
 
     const letter = gradingResult.letter_grade || letterFromScore(totalScore);
