@@ -92,7 +92,7 @@ serve(async (req) => {
     if (journal_id && !journal_text) {
       console.log('Fetching journal content for journal_id:', journal_id);
       const { data: journalData, error: journalError } = await supabase
-        .from('mus240_journals')
+        .from('mus240_journal_entries')
         .select('entry_text, student_id')
         .eq('id', journal_id)
         .single();
