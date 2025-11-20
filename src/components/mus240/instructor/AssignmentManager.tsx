@@ -47,7 +47,7 @@ export const AssignmentManager = () => {
   const [submissions, setSubmissions] = useState<Record<string, JournalSubmission[]>>({});
   const [grades, setGrades] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<'date' | 'due_date' | 'submissions' | 'ungraded' | 'needs_final'>('date');
+  const [sortBy, setSortBy] = useState<'date' | 'due_date' | 'submissions' | 'ungraded' | 'needs_final' | 'journal_number'>('journal_number');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [formData, setFormData] = useState({
@@ -310,10 +310,19 @@ export const AssignmentManager = () => {
     }
   };
 
+  const extractJournalNumber = (title: string): number => {
+    const match = title.match(/(?:LISTENING JOURNAL|JOURNAL|LJ)\s*(\d+)/i);
+    return match ? parseInt(match[1], 10) : 999; // Put unnumbered at end
+  };
+
   const getSortedAssignments = () => {
     const sorted = [...assignments];
     
     switch (sortBy) {
+      case 'journal_number':
+        return sorted.sort((a, b) => 
+          extractJournalNumber(a.title) - extractJournalNumber(b.title)
+        );
       case 'due_date':
         return sorted.sort((a, b) => {
           if (!a.due_date) return 1;
@@ -360,6 +369,7 @@ export const AssignmentManager = () => {
                 <SelectValue placeholder="Sort by..." />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="journal_number">Journal #</SelectItem>
                 <SelectItem value="date">Created Date</SelectItem>
                 <SelectItem value="due_date">Due Date</SelectItem>
                 <SelectItem value="submissions">Submissions</SelectItem>
