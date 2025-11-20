@@ -275,15 +275,31 @@ Be constructive and specific in your feedback.
       rubric_items: rubricScores.length
     });
 
-    // Check if grade already exists - need to check BOTH unique constraints:
-    // 1. assignment_id + student_id combination
-    // 2. journal_id (since journal_id has its own unique constraint)
-    const { data: existingGrades } = await supabase
+    // Check if grade already exists by journal_id (primary unique constraint)
+    let { data: existingGrade } = await supabase
       .from("mus240_journal_grades")
       .select("id, journal_id")
-      .or(`and(assignment_id.eq.${assignment_id},student_id.eq.${student_id}),journal_id.eq.${journal_id}`);
+      .eq("journal_id", journal_id)
+      .maybeSingle();
 
-    const existingGrade = existingGrades && existingGrades.length > 0 ? existingGrades[0] : null;
+    // If not found by journal_id, check by assignment_id + student_id
+    if (!existingGrade) {
+      const result = await supabase
+        .from("mus240_journal_grades")
+        .select("id, journal_id")
+        .eq("assignment_id", assignment_id)
+        .eq("student_id", student_id)
+        .maybeSingle();
+      existingGrade = result.data;
+    }
+
+    console.log('Existing grade check:', { 
+      foundGrade: !!existingGrade, 
+      gradeId: existingGrade?.id,
+      checkedJournalId: journal_id,
+      checkedAssignment: assignment_id,
+      checkedStudent: student_id
+    });
 
     const gradeData = {
       student_id,
