@@ -23,6 +23,15 @@ export const useStudentAssignmentSubmissions = (studentId: string) => {
   return useQuery({
     queryKey: ['student-assignment-submissions', studentId],
     queryFn: async (): Promise<StudentAssignmentSubmission[]> => {
+      // First, get all journal assignment IDs to exclude them
+      const { data: journalGrades } = await supabase
+        .from('mus240_journal_grades')
+        .select('assignment_id')
+        .eq('student_id', studentId);
+
+      const journalAssignmentIds = journalGrades?.map(jg => jg.assignment_id) || [];
+
+      // Then fetch assignment submissions, excluding journals
       const { data, error } = await supabase
         .from('assignment_submissions')
         .select('*')
@@ -34,7 +43,12 @@ export const useStudentAssignmentSubmissions = (studentId: string) => {
         throw error;
       }
 
-      return data || [];
+      // Filter out any submissions that are actually journals
+      const nonJournalAssignments = data?.filter(
+        submission => !journalAssignmentIds.includes(submission.assignment_id)
+      ) || [];
+
+      return nonJournalAssignments;
     },
     enabled: !!studentId,
   });
