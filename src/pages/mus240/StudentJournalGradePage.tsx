@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, AlertTriangle, RefreshCcw, CheckCircle2, XCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { useUserRole } from '@/hooks/useUserRole';
+import { JournalGradeDisplay } from '@/components/mus240/JournalGradeDisplay';
 
 interface JournalEntry {
   id: string;
@@ -280,55 +281,27 @@ export const StudentJournalGradePage = () => {
           </CardContent>
         </Card>
 
-        {/* Grade Display */}
+        {/* Grade Display with AI Detection */}
         {grade && !showResubmit && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Your Grade</CardTitle>
-                <Badge className={getLetterGradeColor(grade.letter_grade)}>
-                  {grade.letter_grade}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Overall Score */}
-              <div className="text-center p-6 bg-muted rounded-lg">
-                <div className={`text-4xl font-bold ${getScoreColor(grade.overall_score, assignment.points)}`}>
-                  {grade.overall_score}/{assignment.points}
-                </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {((grade.overall_score / assignment.points) * 100).toFixed(1)}%
-                </div>
-              </div>
-
-              {/* Rubric Breakdown */}
-              <div>
-                <h3 className="font-medium mb-4">Rubric Breakdown</h3>
-                <div className="space-y-4">
-                  {grade.rubric?.map((item: any, index: number) => (
-                    <div key={index} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">{item.criterion}</span>
-                        <Badge variant="outline">
-                          {item.score}/{item.maxScore}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{item.feedback}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Overall Feedback */}
-              <div className="border-t pt-4">
-                <h3 className="font-medium mb-2">Instructor Feedback</h3>
-                <p className="text-sm text-muted-foreground">{grade.ai_feedback}</p>
-              </div>
-
-              {/* Resubmit Option */}
-              {canResubmit && (
-                <div className="border-t pt-4">
+          <>
+            <JournalGradeDisplay 
+              grade={{
+                overall_score: grade.overall_score,
+                letter_grade: grade.letter_grade,
+                rubric: { criteria: [], scores: grade.rubric || [] },
+                ai_feedback: grade.ai_feedback,
+                ai_model: 'gpt-4o-mini',
+                graded_at: grade.graded_at,
+                ai_writing_detected: grade.ai_writing_detected,
+                ai_detection_confidence: grade.ai_detection_confidence,
+                ai_detection_notes: grade.ai_detection_notes
+              }}
+            />
+            
+            {/* Resubmit Option */}
+            {canResubmit && (
+              <Card className="mt-4">
+                <CardContent className="pt-6">
                   <Alert>
                     <RefreshCcw className="h-4 w-4" />
                     <AlertDescription>
@@ -343,10 +316,10 @@ export const StudentJournalGradePage = () => {
                       </Button>
                     </AlertDescription>
                   </Alert>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
 
         {/* Resubmission Form */}
