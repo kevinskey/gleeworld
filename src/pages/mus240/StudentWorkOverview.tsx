@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   ArrowLeft,
   ClipboardCheck,
@@ -20,6 +21,7 @@ import { useUserById } from '@/hooks/useUserById';
 import { useStudentMidtermSubmission } from '@/hooks/useStudentMidtermSubmission';
 import { useStudentAssignmentSubmissions } from '@/hooks/useStudentAssignmentSubmissions';
 import { getInitials } from '@/utils/avatarUtils';
+import { supabase } from '@/integrations/supabase/client';
 
 export const StudentWorkOverview = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -27,6 +29,40 @@ export const StudentWorkOverview = () => {
   const { user, loading: userLoading } = useUserById(studentId);
   const { data: midtermSubmission, isLoading: midtermLoading } = useStudentMidtermSubmission(studentId || '');
   const { data: assignmentSubmissions, isLoading: assignmentsLoading } = useStudentAssignmentSubmissions(studentId || '');
+  const [students, setStudents] = useState<Array<{ user_id: string; full_name: string; email: string }>>([]);
+  const [studentsLoading, setStudentsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEnrolledStudents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('mus240_enrollments')
+          .select(`
+            student_id,
+            gw_profiles!inner(user_id, full_name, email)
+          `)
+          .eq('semester', 'Fall 2025')
+          .eq('enrollment_status', 'enrolled')
+          .order('gw_profiles(full_name)');
+
+        if (error) throw error;
+
+        const formattedStudents = data?.map(enrollment => ({
+          user_id: enrollment.student_id,
+          full_name: enrollment.gw_profiles.full_name,
+          email: enrollment.gw_profiles.email
+        })) || [];
+
+        setStudents(formattedStudents);
+      } catch (error) {
+        console.error('Error fetching enrolled students:', error);
+      } finally {
+        setStudentsLoading(false);
+      }
+    };
+
+    fetchEnrolledStudents();
+  }, []);
 
   const isLoading = userLoading || midtermLoading || assignmentsLoading;
 
@@ -63,7 +99,7 @@ export const StudentWorkOverview = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6">
           <Button
             variant="outline"
             size="sm"
@@ -73,6 +109,26 @@ export const StudentWorkOverview = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Instructor Console
           </Button>
+
+          {/* Student Selector */}
+          <div className="flex-1 max-w-md">
+            <Select
+              value={studentId}
+              onValueChange={(newStudentId) => navigate(`/classes/mus240/instructor/student/${newStudentId}`)}
+              disabled={studentsLoading}
+            >
+              <SelectTrigger className="bg-white border-gray-200 shadow-sm z-50">
+                <SelectValue placeholder="Select a student..." />
+              </SelectTrigger>
+              <SelectContent className="bg-white z-[100]">
+                {students.map((student) => (
+                  <SelectItem key={student.user_id} value={student.user_id}>
+                    {student.full_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Student Info Card */}
