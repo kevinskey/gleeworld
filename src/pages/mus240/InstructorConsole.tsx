@@ -260,7 +260,7 @@ export const InstructorConsole = () => {
                     <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                     <span className="truncate">Assignment Manager</span>
                   </CardTitle>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-2">Create and manage listening journal assignments</p>
+                  
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
                   <AssignmentManager />
