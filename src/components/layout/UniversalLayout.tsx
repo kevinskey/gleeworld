@@ -51,7 +51,7 @@ export const UniversalLayout = ({
           )}
         </>
       )}
-      <main className={`flex-1 w-full overflow-x-hidden ${className}`}>
+      <main className={`flex-1 w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth}>
             {children}

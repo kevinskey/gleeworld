@@ -60,7 +60,30 @@ export const GlobalDesignFixes = () => {
       }
       
       /* Mobile-first responsive improvements */
-      @media (max-width: 768px) {
+      @media (max-width: 640px) {
+        .card {
+          margin: 0.25rem !important;
+          padding: 0.75rem !important;
+        }
+        
+        .text-4xl {
+          font-size: 1.5rem !important;
+        }
+        
+        .text-3xl {
+          font-size: 1.375rem !important;
+        }
+        
+        .text-2xl {
+          font-size: 1.25rem !important;
+        }
+        
+        .text-xl {
+          font-size: 1.125rem !important;
+        }
+      }
+      
+      @media (min-width: 641px) and (max-width: 768px) {
         .card {
           margin: 0.5rem !important;
           padding: 1rem !important;
@@ -76,6 +99,25 @@ export const GlobalDesignFixes = () => {
         
         .text-2xl {
           font-size: 1.5rem !important;
+        }
+      }
+      
+      /* Ensure all containers are responsive */
+      * {
+        max-width: 100%;
+      }
+      
+      /* Fix horizontal overflow */
+      body, html {
+        overflow-x: hidden !important;
+      }
+      
+      /* Make tables responsive */
+      @media (max-width: 768px) {
+        table {
+          display: block;
+          overflow-x: auto;
+          white-space: nowrap;
         }
       }
     `;

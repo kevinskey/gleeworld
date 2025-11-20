@@ -9,47 +9,46 @@
 }
 
 /* Update page container spacing globally */
-/* Update page container spacing globally */
 .page-container {
-  @apply py-0.5 md:py-1 space-y-0.5 md:space-y-1;
+  @apply py-1 sm:py-2 md:py-3 space-y-1 sm:space-y-2 md:space-y-3;
 }
 
 .page-header {
-  @apply text-base md:text-lg font-bebas mb-0.5 md:mb-1 tracking-wide;
+  @apply text-sm sm:text-base md:text-lg font-bebas mb-1 sm:mb-2 tracking-wide;
 }
 
 .page-title-large {
-  @apply text-lg md:text-xl font-bebas mb-0.5 md:mb-1 tracking-wide;
+  @apply text-base sm:text-lg md:text-xl lg:text-2xl font-bebas mb-1 sm:mb-2 tracking-wide;
 }
 
 .section-spacing {
-  @apply space-y-0.5 md:space-y-1;
+  @apply space-y-1 sm:space-y-2 md:space-y-3;
 }
 
 .card-spacing {
-  @apply gap-0.5 md:gap-1;
+  @apply gap-1 sm:gap-2 md:gap-3;
 }
 
 /* Responsive grid utilities */
 .responsive-grid-2 {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-2;
+  @apply grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4;
 }
 
 .responsive-grid-3 {
-  @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1 md:gap-2;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4;
 }
 
 .responsive-grid-4 {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-1 md:gap-2;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4;
 }
 
 /* Compact card utilities */
 .card-compact {
-  @apply p-1.5 md:p-2 space-y-1;
+  @apply p-2 sm:p-3 md:p-4 space-y-2 sm:space-y-3;
 }
 
 .card-header-compact {
-  @apply pb-0.5 pt-1;
+  @apply pb-1 sm:pb-2 pt-2 sm:pt-3;
 }
 
 /* Dropdown and popover compact utilities */
