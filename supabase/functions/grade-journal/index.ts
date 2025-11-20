@@ -142,7 +142,7 @@ serve(async (req) => {
     } = {};
     
     if (wordCount < 50) {
-      console.log('Journal too short, assigning 0 grade');
+      console.log('✅ NEW CODE: Journal too short, assigning 0 grade (not returning error)');
       gradingResult = {
         rubric_scores: [
           { criterion: "Musical Analysis", score: 0, maxScore: 7, feedback: "Entry too short to evaluate musical analysis." },
