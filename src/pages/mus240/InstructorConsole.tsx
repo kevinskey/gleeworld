@@ -202,10 +202,6 @@ export const InstructorConsole = () => {
                   <Menu className="h-4 w-4" />
                   <span>Menu</span>
                 </Button>
-                <Badge variant="secondary" className="text-xs sm:text-sm whitespace-nowrap">
-                  
-                  AI
-                </Badge>
                 <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/admin')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
                   <Home className="h-4 w-4" />
                   <span>Home</span>
