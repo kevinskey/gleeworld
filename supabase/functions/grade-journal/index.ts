@@ -135,10 +135,10 @@ serve(async (req) => {
     const wordCount = finalJournalText.trim().split(/\s+/).filter(Boolean).length;
     console.log('Word count:', wordCount);
     
-    if (wordCount < 100) {
+    if (wordCount < 50) {
       return new Response(JSON.stringify({
         error: "Journal entry too short.",
-        details: "Minimum 100 words required.",
+        details: "Minimum 50 words required.",
         wordCount,
       }), {
         status: 400,
