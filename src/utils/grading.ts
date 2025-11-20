@@ -9,12 +9,11 @@ export interface GradeScale {
 }
 
 /**
- * Standard grading scale used across MUS240
- * This matches the scale used in the AI grading functions
+ * MUS240 Syllabus Grading Scale
+ * Matches the official grading policy from the course syllabus
  */
 const STANDARD_GRADE_SCALE: GradeScale[] = [
-  { threshold: 97, grade: 'A+' },
-  { threshold: 93, grade: 'A' },
+  { threshold: 95, grade: 'A' },
   { threshold: 90, grade: 'A-' },
   { threshold: 87, grade: 'B+' },
   { threshold: 83, grade: 'B' },
@@ -22,17 +21,16 @@ const STANDARD_GRADE_SCALE: GradeScale[] = [
   { threshold: 77, grade: 'C+' },
   { threshold: 73, grade: 'C' },
   { threshold: 70, grade: 'C-' },
-  { threshold: 67, grade: 'D+' },
-  { threshold: 63, grade: 'D' },
-  { threshold: 60, grade: 'D-' },
+  { threshold: 65, grade: 'D+' },
+  { threshold: 60, grade: 'D' },
   { threshold: 0, grade: 'F' }
 ];
 
 /**
- * Calculate letter grade from score and max points
+ * Calculate letter grade from score and max points using MUS240 syllabus scale
  * @param score - Points earned
  * @param maxPoints - Maximum possible points
- * @returns Letter grade (A+ through F)
+ * @returns Letter grade (A through F, no A+ or D-)
  */
 export function calculateLetterGrade(score: number, maxPoints: number): string {
   if (maxPoints === 0) return 'F';
@@ -50,7 +48,7 @@ export function calculateLetterGrade(score: number, maxPoints: number): string {
 
 /**
  * Get color styling for a letter grade
- * @param letterGrade - Letter grade (A+ through F)
+ * @param letterGrade - Letter grade (A through F)
  * @returns Tailwind CSS classes for styling
  */
 export function getLetterGradeColor(letterGrade: string): string {
