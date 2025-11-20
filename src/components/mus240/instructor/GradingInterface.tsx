@@ -93,13 +93,10 @@ export const GradingInterface: React.FC = () => {
         console.log('👥 Profiles data loaded:', profilesData?.length || 0, 'records');
       }
 
-      // Load journals - get actual journal entries with their assignments and grades
+      // Load journals - get actual journal entries
       const { data: journalData, error: journalError } = await supabase
         .from('mus240_journal_entries')
-        .select(`
-          *,
-          mus240_assignments!mus240_journal_entries_assignment_db_id_fkey(title, points)
-        `)
+        .select('*')
         .eq('is_published', true)
         .order('created_at', { ascending: false });
 
@@ -156,24 +153,29 @@ export const GradingInterface: React.FC = () => {
         const grade = gradesLookup[j.id];
         // Create a more descriptive assignment title from assignment_id
         let assignmentTitle = 'Unknown Assignment';
-        if (j.mus240_assignments?.title) {
-          assignmentTitle = j.mus240_assignments.title;
-        } else if (j.assignment_id) {
+        if (j.assignment_id) {
           // Map assignment IDs to meaningful titles
           const assignmentMap: Record<string, string> = {
             'lj1': 'Listening Journal 1',
             'lj2': 'Listening Journal 2', 
             'lj3': 'Listening Journal 3',
             'lj4': 'Listening Journal 4',
-            'lj5': 'Listening Journal 5'
+            'lj5': 'Listening Journal 5',
+            'lj6': 'Listening Journal 6',
+            'lj7': 'Listening Journal 7',
+            'lj8': 'Listening Journal 8',
+            'lj9': 'Listening Journal 9',
+            'lj10': 'Listening Journal 10',
+            'lj11': 'Listening Journal 11',
+            'lj12': 'Listening Journal 12'
           };
-          assignmentTitle = assignmentMap[j.assignment_id] || `Assignment ${j.assignment_id.toUpperCase()}`;
+          assignmentTitle = assignmentMap[j.assignment_id] || `Listening Journal ${j.assignment_id.toUpperCase()}`;
         }
         
         return {
           ...j,
           student_name: profileLookup[j.student_id]?.full_name || 'Unknown',
-          points_possible: j.mus240_assignments?.points || 20, // Default to 20 for journals
+          points_possible: 20, // All listening journals are 20 points
           assignment_title: assignmentTitle,
           points_earned: grade?.overall_score,
           letter_grade: grade?.letter_grade,
