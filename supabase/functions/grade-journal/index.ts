@@ -131,55 +131,65 @@ serve(async (req) => {
       });
     }
 
-    // Consistent word-count policy
+    // Check word count - if too short, give 0 grade instead of error
     const wordCount = finalJournalText.trim().split(/\s+/).filter(Boolean).length;
     console.log('Word count:', wordCount);
     
+    let gradingResult: { 
+      rubric_scores?: Array<{criterion: string; score: number; maxScore: number; feedback: string}>; 
+      overall_feedback?: string; 
+      letter_grade?: string;
+    } = {};
+    
     if (wordCount < 50) {
-      return new Response(JSON.stringify({
-        error: "Journal entry too short.",
-        details: "Minimum 50 words required.",
-        wordCount,
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Check if already graded - only return existing grade if it's valid (has non-zero score)
-    if (journal_id) {
-      const existing = await supabase
-        .from('mus240_journal_grades')
-        .select('journal_id,overall_score,letter_grade,ai_feedback,graded_at,ai_model,rubric')
-        .eq('journal_id', journal_id)
-        .maybeSingle();
+      console.log('Journal too short, assigning 0 grade');
+      gradingResult = {
+        rubric_scores: [
+          { criterion: "Musical Analysis", score: 0, maxScore: 7, feedback: "Entry too short to evaluate musical analysis." },
+          { criterion: "Historical Context", score: 0, maxScore: 5, feedback: "Entry too short to evaluate historical context." },
+          { criterion: "Terminology Usage", score: 0, maxScore: 3, feedback: "Entry too short to evaluate terminology usage." },
+          { criterion: "Writing Quality", score: 0, maxScore: 2, feedback: "Entry does not meet minimum word count requirement." }
+        ],
+        overall_feedback: `This journal entry is too short (${wordCount} words). The assignment requires a minimum of 50 words to demonstrate understanding of the musical concepts. Please revise and expand your analysis to include specific musical elements, historical context, and personal reflection.`,
+      };
       
-      // Only return existing grade if it has a valid score (not corrupted with 0 points)
-      if (existing.data && existing.data.overall_score > 0) {
-        console.log('Valid existing grade found, returning it');
-        return new Response(
-          JSON.stringify({
-            success: true,
-            alreadyGraded: true,
-            grade: {
-              journal_id,
-              overall_score: existing.data.overall_score,
-              letter_grade: existing.data.letter_grade,
-              feedback: existing.data.ai_feedback,
-              graded_at: existing.data.graded_at,
-              ai_model: existing.data.ai_model,
-              rubric: existing.data.rubric,
-            },
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } else if (existing.data) {
-        console.log('Found corrupted grade with 0 score, will regrade');
-      }
-    }
+      // Skip AI grading and jump to saving the 0 grade
+    } else {
 
-    // Build prompt (compact + deterministic structure)
-    let gradingPrompt = `You are an expert music professor grading a student listening journal for MUS 240: African American Music.
+      // Check if already graded - only return existing grade if it's valid (has non-zero score)
+      if (journal_id) {
+        const existing = await supabase
+          .from('mus240_journal_grades')
+          .select('journal_id,overall_score,letter_grade,ai_feedback,graded_at,ai_model,rubric')
+          .eq('journal_id', journal_id)
+          .maybeSingle();
+        
+        // Only return existing grade if it has a valid score (not corrupted with 0 points)
+        if (existing.data && existing.data.overall_score > 0) {
+          console.log('Valid existing grade found, returning it');
+          return new Response(
+            JSON.stringify({
+              success: true,
+              alreadyGraded: true,
+              grade: {
+                journal_id,
+                overall_score: existing.data.overall_score,
+                letter_grade: existing.data.letter_grade,
+                feedback: existing.data.ai_feedback,
+                graded_at: existing.data.graded_at,
+                ai_model: existing.data.ai_model,
+                rubric: existing.data.rubric,
+              },
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } else if (existing.data) {
+          console.log('Found corrupted grade with 0 score, will regrade');
+        }
+      }
+
+      // Build prompt (compact + deterministic structure)
+      let gradingPrompt = `You are an expert music professor grading a student listening journal for MUS 240: African American Music.
 
 RETURN A JSON OBJECT with these keys:
 - "rubric_scores": array of objects, each with { "criterion": string, "score": number, "maxScore": number, "feedback": string }
@@ -189,89 +199,84 @@ RETURN A JSON OBJECT with these keys:
 Be constructive and specific in your feedback.
 `;
 
-    if (rubric && Array.isArray(rubric.criteria) && rubric.criteria.length) {
-      gradingPrompt += `\nGRADE ACCORDING TO THIS RUBRIC:\n`;
-      (rubric.criteria as RubricCriterion[]).forEach((c) => {
-        gradingPrompt += `- ${c.name} (max ${c.max_points} pts)${c.description ? `: ${c.description}` : ""}\n`;
+      if (rubric && Array.isArray(rubric.criteria) && rubric.criteria.length) {
+        gradingPrompt += `\nGRADE ACCORDING TO THIS RUBRIC:\n`;
+        (rubric.criteria as RubricCriterion[]).forEach((c) => {
+          gradingPrompt += `- ${c.name} (max ${c.max_points} pts)${c.description ? `: ${c.description}` : ""}\n`;
+        });
+      } else {
+        gradingPrompt += `\nGRADE USING THESE DEFAULT CRITERIA:\n`;
+        gradingPrompt += `- Musical Analysis (max 7 pts): Identifies genre, style traits, and musical features\n`;
+        gradingPrompt += `- Historical Context (max 5 pts): Connects musical features to historical and cultural significance\n`;
+        gradingPrompt += `- Terminology Usage (max 3 pts): Uses correct musical terminology appropriately\n`;
+        gradingPrompt += `- Writing Quality (max 2 pts): Clear, organized writing with proper grammar and 250-300 words\n`;
+      }
+
+      gradingPrompt += `\nJOURNAL ENTRY:\n${finalJournalText}`;
+
+
+      console.log('Making OpenAI API call...');
+      
+      // OpenAI call
+      const openaiResp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${openaiApiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are an expert music professor. Always return valid JSON only, with no extra text.",
+            },
+            { role: "user", content: gradingPrompt },
+          ],
+          max_tokens: 800,
+          temperature: 0.2,
+        }),
       });
-    } else {
-      gradingPrompt += `\nGRADE USING THESE DEFAULT CRITERIA:\n`;
-      gradingPrompt += `- Musical Analysis (max 7 pts): Identifies genre, style traits, and musical features\n`;
-      gradingPrompt += `- Historical Context (max 5 pts): Connects musical features to historical and cultural significance\n`;
-      gradingPrompt += `- Terminology Usage (max 3 pts): Uses correct musical terminology appropriately\n`;
-      gradingPrompt += `- Writing Quality (max 2 pts): Clear, organized writing with proper grammar and 250-300 words\n`;
-    }
 
-    gradingPrompt += `\nJOURNAL ENTRY:\n${finalJournalText}`;
+      if (!openaiResp.ok) {
+        const details = await openaiResp.text().catch(() => "Unknown error");
+        console.error('OpenAI API error:', openaiResp.status, details);
+        return new Response(JSON.stringify({ error: "OpenAI API error", details }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
+      const aiJson = await openaiResp.json();
+      const raw = aiJson?.choices?.[0]?.message?.content ?? "{}";
+      
+      console.log('OpenAI response received, parsing...');
 
-    console.log('Making OpenAI API call...');
-    
-    // OpenAI call
-    const openaiResp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${openaiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are an expert music professor. Always return valid JSON only, with no extra text.",
-          },
-          { role: "user", content: gradingPrompt },
-        ],
-        max_tokens: 800,
-        temperature: 0.2,
-      }),
-    });
-
-    if (!openaiResp.ok) {
-      const details = await openaiResp.text().catch(() => "Unknown error");
-      console.error('OpenAI API error:', openaiResp.status, details);
-      return new Response(JSON.stringify({ error: "OpenAI API error", details }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const aiJson = await openaiResp.json();
-    const raw = aiJson?.choices?.[0]?.message?.content ?? "{}";
-    
-    console.log('OpenAI response received, parsing...');
-
-    // Parse JSON safely
-    let gradingResult: { 
-      rubric_scores?: Array<{criterion: string; score: number; maxScore: number; feedback: string}>; 
-      overall_feedback?: string; 
-      letter_grade?: string;
-    } = {};
-    
-    try {
-      gradingResult = JSON.parse(raw);
-      console.log('Successfully parsed AI grading:', {
-        rubric_scores_count: gradingResult.rubric_scores?.length,
-        has_feedback: !!gradingResult.overall_feedback,
-        letter_grade: gradingResult.letter_grade
-      });
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError, 'Raw content:', raw);
-      // Fallback with default rubric (totals to 17 points, then normalized to 20)
-      gradingResult = {
-        rubric_scores: [
-          { criterion: "Musical Analysis", score: 4, maxScore: 7, feedback: "Shows basic understanding of musical elements." },
-          { criterion: "Historical Context", score: 3, maxScore: 5, feedback: "Provides some historical context." },
-          { criterion: "Terminology Usage", score: 2, maxScore: 3, feedback: "Uses some musical terminology." },
-          { criterion: "Writing Quality", score: 1, maxScore: 2, feedback: "Writing is generally clear." }
-        ],
-        overall_feedback: "Fallback grading applied. Expand musical terminology, strengthen historical context, and clarify structure.",
-      };
-      console.log('Using fallback grading');
-    }
+      // Parse JSON safely
+      try {
+        gradingResult = JSON.parse(raw);
+        console.log('Successfully parsed AI grading:', {
+          rubric_scores_count: gradingResult.rubric_scores?.length,
+          has_feedback: !!gradingResult.overall_feedback,
+          letter_grade: gradingResult.letter_grade
+        });
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError, 'Raw content:', raw);
+        // Fallback with default rubric (totals to 17 points, then normalized to 20)
+        gradingResult = {
+          rubric_scores: [
+            { criterion: "Musical Analysis", score: 4, maxScore: 7, feedback: "Shows basic understanding of musical elements." },
+            { criterion: "Historical Context", score: 3, maxScore: 5, feedback: "Provides some historical context." },
+            { criterion: "Terminology Usage", score: 2, maxScore: 3, feedback: "Uses some musical terminology." },
+            { criterion: "Writing Quality", score: 1, maxScore: 2, feedback: "Writing is generally clear." }
+          ],
+          overall_feedback: "Fallback grading applied. Expand musical terminology, strengthen historical context, and clarify structure.",
+        };
+        console.log('Using fallback grading');
+      }
+    } // End of word count else block
 
     // Calculate total score from rubric_scores
     const rubricScores = gradingResult.rubric_scores || [];
