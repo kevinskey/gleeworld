@@ -270,11 +270,13 @@ Be constructive and specific in your feedback.
       rubric_items: rubricScores.length
     });
 
-    // Check if grade already exists for this journal
+    // Check if grade already exists - check both by journal_id and by assignment/student combo
+    // to handle both unique constraints
     const { data: existingGrade } = await supabase
       .from("mus240_journal_grades")
-      .select("id")
-      .eq("journal_id", journal_id)
+      .select("id, journal_id")
+      .eq("assignment_id", assignment_id)
+      .eq("student_id", student_id)
       .maybeSingle();
 
     const gradeData = {
