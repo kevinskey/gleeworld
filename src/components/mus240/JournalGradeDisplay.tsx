@@ -49,21 +49,15 @@ export const JournalGradeDisplay: React.FC<JournalGradeDisplayProps> = ({ grade 
   };
 
   return (
-    <div className="space-y-4">
-      {/* AI Detection Warning - Show prominently at the top */}
-      {grade.ai_writing_detected && (
-        <AIDetectionAlert
-          detected={grade.ai_writing_detected}
-          confidence={grade.ai_detection_confidence}
-          reasoning={grade.ai_detection_notes}
-        />
-      )}
-      
-      <EnhancedRubricDisplay 
-        grade={enhancedGrade}
-        showDetailed={true}
-        interactive={true}
-      />
-    </div>
+    <EnhancedRubricDisplay 
+      grade={enhancedGrade}
+      showDetailed={true}
+      interactive={true}
+      aiDetection={grade.ai_writing_detected ? {
+        detected: grade.ai_writing_detected,
+        confidence: grade.ai_detection_confidence,
+        reasoning: grade.ai_detection_notes
+      } : undefined}
+    />
   );
 };
