@@ -29,7 +29,7 @@ interface JournalEntry {
 export const InstructorJournalBrowser: React.FC = () => {
   const [journals, setJournals] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'published' | 'unpublished'>('all');
+  const [filter, setFilter] = useState<'all' | 'published' | 'unpublished' | 'graded' | 'not-graded'>('all');
   const [bulkGrading, setBulkGrading] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const navigate = useNavigate();
@@ -92,7 +92,7 @@ export const InstructorJournalBrowser: React.FC = () => {
         return acc;
       }, {} as Record<string, number>);
 
-      // Fetch AI detection data from grades
+      // Fetch AI detection data and grades from mus240_journal_grades
       const journalIds = journalData?.map(j => j.id) || [];
       const { data: gradesData } = await supabase
         .from('mus240_journal_grades')
@@ -107,7 +107,10 @@ export const InstructorJournalBrowser: React.FC = () => {
         return acc;
       }, {} as Record<string, { detected: boolean; confidence: number | null }>);
 
-      const enrichedJournals: JournalEntry[] = (journalData || []).map(journal => ({
+      // Create set of graded journal IDs
+      const gradedJournalIds = new Set((gradesData || []).map(g => g.journal_id));
+
+      let enrichedJournals: JournalEntry[] = (journalData || []).map(journal => ({
         ...journal,
         student_name: profileMap[journal.student_id],
         assignment_title: journal.assignment_id ? assignmentCodeMap[journal.assignment_id] || journal.assignment_id : undefined,
@@ -115,6 +118,13 @@ export const InstructorJournalBrowser: React.FC = () => {
         ai_writing_detected: aiDetectionMap[journal.id]?.detected || false,
         ai_detection_confidence: aiDetectionMap[journal.id]?.confidence || null
       }));
+
+      // Apply graded/not-graded filter
+      if (filter === 'graded') {
+        enrichedJournals = enrichedJournals.filter(j => gradedJournalIds.has(j.id));
+      } else if (filter === 'not-graded') {
+        enrichedJournals = enrichedJournals.filter(j => !gradedJournalIds.has(j.id));
+      }
 
       setJournals(enrichedJournals);
     } catch (error) {
@@ -226,7 +236,7 @@ export const InstructorJournalBrowser: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Button
           variant={filter === 'all' ? 'default' : 'outline'}
           size="sm"
@@ -247,6 +257,20 @@ export const InstructorJournalBrowser: React.FC = () => {
           onClick={() => setFilter('unpublished')}
         >
           Unpublished
+        </Button>
+        <Button
+          variant={filter === 'graded' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilter('graded')}
+        >
+          Graded
+        </Button>
+        <Button
+          variant={filter === 'not-graded' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setFilter('not-graded')}
+        >
+          Not Graded
         </Button>
       </div>
 
