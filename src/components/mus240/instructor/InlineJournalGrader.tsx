@@ -111,7 +111,9 @@ export const InlineJournalGrader: React.FC<InlineJournalGraderProps> = ({
       const { data, error } = await supabase.functions.invoke('grade-journal', {
         body: {
           assignment_id: assignmentId,
-          journal_id: journal.id
+          journal_id: journal.id,
+          journal_text: journal.content,
+          student_id: studentId
         }
       });
 
