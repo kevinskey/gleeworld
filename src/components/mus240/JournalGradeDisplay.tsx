@@ -41,10 +41,10 @@ export const JournalGradeDisplay: React.FC<JournalGradeDisplayProps> = ({ grade 
   const enhancedGrade = {
     overall_score: finalScore,
     letter_grade: finalGrade,
-    rubric_scores: grade.rubric?.scores?.map((score: RubricScore) => ({
-      criterion: score.criterion_name,
+    rubric_scores: grade.rubric?.scores?.map((score: any) => ({
+      criterion: score.criterion_name || score.criterion,
       score: score.score,
-      max_score: score.max_points,
+      max_score: score.max_points || score.maxScore || 0,
       feedback: score.feedback
     })) || [],
     overall_feedback: finalFeedback,
