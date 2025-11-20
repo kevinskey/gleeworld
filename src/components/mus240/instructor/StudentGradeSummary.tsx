@@ -11,7 +11,8 @@ import {
   Calendar,
   TrendingUp,
   Award,
-  Target
+  Target,
+  GraduationCap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -380,6 +381,120 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
                 ? ((gradeData.attendance.present / gradeData.attendance.total) * 100).toFixed(1) 
                 : 0}% attendance
             </span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Grading Policies Reference */}
+      <Card className="border-0 bg-card/70 backdrop-blur-sm shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <GraduationCap className="h-5 w-5" />
+            Grading Policies
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-primary text-primary-foreground">
+                  <th className="text-left p-4 font-semibold">Category</th>
+                  <th className="text-left p-4 font-semibold">Points</th>
+                  <th className="text-left p-4 font-semibold">Percentage</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                <tr className="hover:bg-muted/30">
+                  <td className="p-4">Listening Journals</td>
+                  <td className="p-4">100</td>
+                  <td className="p-4">18%</td>
+                </tr>
+                <tr className="hover:bg-muted/30">
+                  <td className="p-4">Research Project</td>
+                  <td className="p-4">150</td>
+                  <td className="p-4">27%</td>
+                </tr>
+                <tr className="hover:bg-muted/30">
+                  <td className="p-4">AI Group Project</td>
+                  <td className="p-4">100</td>
+                  <td className="p-4">18%</td>
+                </tr>
+                <tr className="hover:bg-muted/30">
+                  <td className="p-4">Midterm Exam</td>
+                  <td className="p-4">100</td>
+                  <td className="p-4">18%</td>
+                </tr>
+                <tr className="hover:bg-muted/30">
+                  <td className="p-4">Final Reflection Essay</td>
+                  <td className="p-4">50</td>
+                  <td className="p-4">9%</td>
+                </tr>
+                <tr className="hover:bg-muted/30">
+                  <td className="p-4">Participation, Discussion & Attendance</td>
+                  <td className="p-4">50</td>
+                  <td className="p-4">9%</td>
+                </tr>
+                <tr className="bg-primary text-primary-foreground font-bold">
+                  <td className="p-4">Total</td>
+                  <td className="p-4">550</td>
+                  <td className="p-4">100%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Grading Scale Reference */}
+      <Card className="border-0 bg-card/70 backdrop-blur-sm shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold uppercase tracking-wide">
+            Grading Scale
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-semibold">A</span> = 95–100%
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">B-</span> = 80–82%
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">D+</span> = 65–69%
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-semibold">A-</span> = 90–94%
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">C+</span> = 77–79%
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">D</span> = 60–64%
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-semibold">B+</span> = 87–89%
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">C</span> = 73–76%
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">F</span> = &lt;59%
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-semibold">B</span> = 83–86%
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">C-</span> = 70–72%
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
