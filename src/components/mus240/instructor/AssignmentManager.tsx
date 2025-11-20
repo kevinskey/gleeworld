@@ -6,13 +6,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Edit, Eye, Calendar, Users, Brain, BarChart3, BookOpen, FileText, ArrowUpDown } from 'lucide-react';
+import { Plus, Edit, Eye, Calendar, Users, Brain, BarChart3, BookOpen, FileText, ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { mus240Assignments } from '@/data/mus240Assignments';
+import { InlineJournalGrader } from './InlineJournalGrader';
 interface Assignment {
   id: string;
   title: string;
@@ -54,6 +55,7 @@ export const AssignmentManager = () => {
     email: string;
   }>>([]);
   const [isGradingAll, setIsGradingAll] = useState(false);
+  const [expandedAssignment, setExpandedAssignment] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -627,16 +629,48 @@ export const AssignmentManager = () => {
                         Due {new Date(assignment.due_date).toLocaleDateString()}
                       </div>}
                   </div>
-                  {getSubmissionCount(assignment.assignment_code) > 0 && <Button variant="outline" size="sm" onClick={() => {
-                const url = selectedStudent !== 'all' ? `/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}&student=${selectedStudent}` : `/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}`;
-                navigate(url);
-              }}>
-                      <FileText className="h-4 w-4 mr-2" />
-                      View Submissions
-                    </Button>}
+                  {getSubmissionCount(assignment.assignment_code) > 0 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => {
+                        if (selectedStudent !== 'all') {
+                          // Toggle expansion for inline viewing when student is selected
+                          setExpandedAssignment(
+                            expandedAssignment === assignment.id ? null : assignment.id
+                          );
+                        } else {
+                          // Navigate to journals page when viewing all students
+                          navigate(`/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}`);
+                        }
+                      }}
+                    >
+                      {selectedStudent !== 'all' && expandedAssignment === assignment.id ? (
+                        <>
+                          <ChevronUp className="h-4 w-4 mr-2" />
+                          Hide Submission
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="h-4 w-4 mr-2" />
+                          View Submission{selectedStudent === 'all' ? 's' : ''}
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
+
+            {/* Inline Journal Grader - shown when assignment is expanded and student is selected */}
+            {expandedAssignment === assignment.id && selectedStudent !== 'all' && (
+              <InlineJournalGrader
+                assignmentId={assignment.id}
+                assignmentCode={assignment.assignment_code || ''}
+                studentId={selectedStudent}
+                onClose={() => setExpandedAssignment(null)}
+              />
+            )}
           </Card>)}
       </div>
 
