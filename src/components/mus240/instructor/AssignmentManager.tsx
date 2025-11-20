@@ -243,25 +243,31 @@ export const AssignmentManager = () => {
       toast.error('Failed to update assignment status');
     }
   };
-  const getSubmissionCount = (assignmentCode?: string) => {
-    if (!assignmentCode) return 0;
-    return submissions[assignmentCode]?.length || 0;
-  };
-  const getGradedCount = (assignmentCode?: string) => {
-    if (!assignmentCode) return 0;
-    return submissions[assignmentCode]?.filter(s => s.grade !== null).length || 0;
-  };
-  const getUngradedCount = (assignmentCode?: string) => {
-    if (!assignmentCode) return 0;
+  const getFilteredSubmissions = (assignmentCode?: string) => {
+    if (!assignmentCode) return [];
     const subs = submissions[assignmentCode] || [];
+    if (selectedStudent === 'all') return subs;
+    return subs.filter(s => s.student_id === selectedStudent);
+  };
+
+  const getSubmissionCount = (assignmentCode?: string) => {
+    return getFilteredSubmissions(assignmentCode).length;
+  };
+  
+  const getGradedCount = (assignmentCode?: string) => {
+    return getFilteredSubmissions(assignmentCode).filter(s => s.grade !== null).length;
+  };
+  
+  const getUngradedCount = (assignmentCode?: string) => {
+    const subs = getFilteredSubmissions(assignmentCode);
     return subs.filter(s => {
       const gradeRecords = grades[s.id] || [];
       return gradeRecords.length === 0 || gradeRecords.every(g => g.overall_score === null);
     }).length;
   };
+  
   const getNeedsFinalGradeCount = (assignmentCode?: string) => {
-    if (!assignmentCode) return 0;
-    const subs = submissions[assignmentCode] || [];
+    const subs = getFilteredSubmissions(assignmentCode);
     return subs.filter(s => {
       const gradeRecords = grades[s.id] || [];
       // Has AI grade but no instructor final grade
@@ -269,8 +275,7 @@ export const AssignmentManager = () => {
     }).length;
   };
   const getLastEditTime = (assignmentCode?: string) => {
-    if (!assignmentCode) return null;
-    const subs = submissions[assignmentCode] || [];
+    const subs = getFilteredSubmissions(assignmentCode);
     if (subs.length === 0) return null;
     const sortedByDate = [...subs].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
     return sortedByDate[0]?.submitted_at;
