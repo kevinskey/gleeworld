@@ -129,34 +129,52 @@ export const InstructorJournalBrowser: React.FC = () => {
       return;
     }
 
-    setBulkGrading(true);
-    setBulkProgress({ current: 0, total: journals.length });
-    
     try {
+      // Only grade journals that do NOT yet have an AI grade
+      const journalIds = journals.map(j => j.id);
+      const { data: existingGrades, error: gradesError } = await supabase
+        .from('mus240_journal_grades')
+        .select('journal_id')
+        .in('journal_id', journalIds);
+
+      if (gradesError) {
+        console.error('Error checking existing grades:', gradesError);
+      }
+
+      const gradedIds = new Set((existingGrades || []).map(g => g.journal_id));
+      const journalsToGrade = journals.filter(j => !gradedIds.has(j.id));
+
+      if (journalsToGrade.length === 0) {
+        toast.success('All journals on this page have already been graded.');
+        return;
+      }
+
+      setBulkGrading(true);
+      setBulkProgress({ current: 0, total: journalsToGrade.length });
+
       let completed = 0;
-      
-      for (const journal of journals) {
+
+      for (const journal of journalsToGrade) {
         try {
-          setBulkProgress({ current: completed + 1, total: journals.length });
-          
+          setBulkProgress({ current: completed + 1, total: journalsToGrade.length });
+
           const { error } = await supabase.functions.invoke('grade-mus240-journal', {
-            body: { journalId: journal.id }
+            body: { journalId: journal.id },
           });
-          
+
           if (error) {
             console.error(`Failed to grade journal ${journal.id}:`, error);
-            toast.error(`Failed to grade ${journal.student_name}'s journal`);
+            toast.error(`Failed to grade ${journal.student_name || 'student'}'s journal`);
           }
-          
+
           completed++;
-          await new Promise(resolve => setTimeout(resolve, 1000));
         } catch (err) {
           console.error('Error grading journal:', err);
         }
       }
-      
-      toast.success(`AI graded ${completed} of ${journals.length} journals. Students can now revise.`);
-      
+
+      toast.success(`AI graded ${completed} of ${journalsToGrade.length} journals. Students can now revise.`);
+
       fetchJournals();
     } catch (error) {
       console.error('Bulk grading error:', error);
