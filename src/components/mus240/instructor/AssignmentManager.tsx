@@ -283,6 +283,24 @@ export const AssignmentManager = () => {
     const sortedByDate = [...subs].sort((a, b) => new Date(b.submitted_at).getTime() - new Date(a.submitted_at).getTime());
     return sortedByDate[0]?.submitted_at;
   };
+
+  const getStudentGrade = (assignmentCode?: string) => {
+    if (selectedStudent === 'all' || !assignmentCode) return null;
+    const subs = getFilteredSubmissions(assignmentCode);
+    if (subs.length === 0) return null;
+    
+    const submission = subs[0];
+    const gradeRecords = grades[submission.id] || [];
+    if (gradeRecords.length === 0) return null;
+    
+    const grade = gradeRecords[0];
+    return {
+      score: grade.overall_score,
+      points_possible: 20, // All journals are out of 20
+      letter_grade: grade.letter_grade
+    };
+  };
+
   const openEditModal = (assignment: Assignment) => {
     setEditingAssignment(assignment);
     setFormData({
@@ -592,30 +610,74 @@ export const AssignmentManager = () => {
                 </div>
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/30 rounded-lg">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-foreground">
-                      {getSubmissionCount(assignment.assignment_code)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Submissions</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
-                      {getUngradedCount(assignment.assignment_code)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Ungraded</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
-                      {getNeedsFinalGradeCount(assignment.assignment_code)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Need Final Grade</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-sm font-semibold text-foreground">
-                      {getLastEditTime(assignment.assignment_code) ? format(new Date(getLastEditTime(assignment.assignment_code)!), 'MMM d, h:mm a') : 'No edits'}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Last Student Edit</div>
-                  </div>
+                  {selectedStudent !== 'all' ? (
+                    <>
+                      {/* Student-specific grade view */}
+                      <div className="col-span-2 md:col-span-1 text-center">
+                        {(() => {
+                          const grade = getStudentGrade(assignment.assignment_code);
+                          if (grade?.score !== null && grade?.score !== undefined) {
+                            return (
+                              <>
+                                <div className="text-2xl font-bold text-green-600">
+                                  {grade.score.toFixed(1)}/{grade.points_possible}
+                                </div>
+                                <div className="text-xs text-muted-foreground">Grade</div>
+                              </>
+                            );
+                          }
+                          return (
+                            <>
+                              <div className="text-lg font-semibold text-gray-500">
+                                Not graded
+                              </div>
+                              <div className="text-xs text-muted-foreground">Grade</div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <div className="col-span-2 md:col-span-1 text-center">
+                        <div className="text-2xl font-bold text-foreground">
+                          {getSubmissionCount(assignment.assignment_code)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Submissions</div>
+                      </div>
+                      <div className="col-span-2 md:col-span-2 text-center">
+                        <div className="text-sm font-semibold text-foreground">
+                          {getLastEditTime(assignment.assignment_code) ? format(new Date(getLastEditTime(assignment.assignment_code)!), 'MMM d, h:mm a') : 'No edits'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Last Student Edit</div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Original all-students view */}
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-foreground">
+                          {getSubmissionCount(assignment.assignment_code)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Submissions</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-orange-600">
+                          {getUngradedCount(assignment.assignment_code)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Ungraded</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {getNeedsFinalGradeCount(assignment.assignment_code)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Need Final Grade</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-sm font-semibold text-foreground">
+                          {getLastEditTime(assignment.assignment_code) ? format(new Date(getLastEditTime(assignment.assignment_code)!), 'MMM d, h:mm a') : 'No edits'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Last Student Edit</div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between">
