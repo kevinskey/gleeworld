@@ -126,6 +126,21 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
 
       if (participationError) throw participationError;
 
+      // Fetch poll responses to calculate poll participation
+      const { data: pollResponses, error: pollError } = await supabase
+        .from('mus240_poll_responses')
+        .select('poll_id')
+        .eq('student_id', studentId);
+
+      if (pollError) throw pollError;
+
+      // Get total number of polls to calculate participation percentage
+      const { data: allPolls, error: pollsError } = await supabase
+        .from('mus240_polls')
+        .select('id');
+
+      if (pollsError) throw pollsError;
+
       // Fetch attendance
       const { data: attendance, error: attendanceError } = await supabase
         .from('attendance')
@@ -210,11 +225,25 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         ? (midterm.grade / 90) * midtermPossible 
         : 0;
 
-      // Participation (50 points per policy)
+      // Participation & Discussion: Combine participation + poll participation (50 points total)
       const participationPossible = 50;
-      const participationPoints = participation?.points_earned 
-        ? (participation.points_earned / (participation.points_possible || 75)) * participationPossible 
-        : 0;
+      const baseParticipationPoints = participation?.points_earned || 0;
+      const basePossible = participation?.points_possible || 75;
+      
+      // Calculate poll participation: count unique polls responded to
+      const uniquePollsResponded = new Set(pollResponses?.map(r => r.poll_id) || []).size;
+      const totalPolls = allPolls?.length || 0;
+      const pollParticipationRate = totalPolls > 0 ? uniquePollsResponded / totalPolls : 0;
+      
+      // Weight: 70% base participation, 30% poll participation
+      const participationWeight = 0.7;
+      const pollWeight = 0.3;
+      
+      const normalizedBaseParticipation = basePossible > 0 ? (baseParticipationPoints / basePossible) : 0;
+      const participationPoints = (
+        (normalizedBaseParticipation * participationWeight) + 
+        (pollParticipationRate * pollWeight)
+      ) * participationPossible;
 
       // Calculate current grade (only completed work)
       let currentEarned = 0;
@@ -407,7 +436,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
       title: 'Participation & Discussion',
       earned: gradeData.participation.earned,
       possible: gradeData.participation.possible,
-      meta: 'Class engagement',
+      meta: 'Class engagement + poll participation',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       hasDetail: false
