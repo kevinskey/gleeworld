@@ -55,6 +55,11 @@ interface GradeBreakdown {
     possible: number;
     submitted: boolean;
   };
+  finalExam: {
+    earned: number;
+    possible: number;
+    submitted: boolean;
+  };
   participation: {
     earned: number;
     possible: number;
@@ -115,6 +120,29 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         .maybeSingle();
 
       if (midtermError) throw midtermError;
+
+      // Fetch final exam from gw_grades table
+      const { data: finalExamAssignment, error: finalExamAssignmentError } = await supabase
+        .from('gw_assignments')
+        .select('id')
+        .eq('title', 'Final Exam')
+        .eq('course_id', '23c4ee3c-7bbb-4534-8c0a-eecd88298d37')
+        .maybeSingle();
+
+      if (finalExamAssignmentError) throw finalExamAssignmentError;
+
+      let finalExamData = null;
+      if (finalExamAssignment) {
+        const { data: finalExamGrade, error: finalExamGradeError } = await supabase
+          .from('gw_grades')
+          .select('*')
+          .eq('student_id', studentId)
+          .eq('assignment_id', finalExamAssignment.id)
+          .maybeSingle();
+
+        if (finalExamGradeError) throw finalExamGradeError;
+        finalExamData = finalExamGrade;
+      }
 
       // Fetch participation
       const { data: participation, error: participationError } = await supabase
@@ -219,6 +247,10 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         ? (finalEssay.grade / 100) * finalEssayPossible 
         : 0;
 
+      // Final Exam (100 points)
+      const finalExamPossible = 100;
+      const finalExamPoints = finalExamData?.points_earned || 0;
+
       // Midterm (100 points per policy)
       const midtermPossible = 100;
       const midtermPoints = midterm?.grade 
@@ -273,6 +305,12 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         currentPossible += finalEssayPossible;
       }
 
+      // Add final exam if graded
+      if (finalExamData?.points_earned) {
+        currentEarned += finalExamPoints;
+        currentPossible += finalExamPossible;
+      }
+
       // Always add participation
       currentEarned += participationPoints;
       currentPossible += participationPossible;
@@ -285,9 +323,10 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         (journalGraded === 0 ? journalPossible : 0) +
         (!aiGroupSubmitted ? aiGroupPossible : 0) +
         (!midterm?.grade ? midtermPossible : 0) +
-        (!finalEssay?.grade ? finalEssayPossible : 0);
+        (!finalEssay?.grade ? finalEssayPossible : 0) +
+        (!finalExamData?.points_earned ? finalExamPossible : 0);
       
-      const projectedPossible = 600; // Total points: 200 journals + 250 AI + 100 midterm + 50 essay
+      const projectedPossible = 700; // Total points: 200 journals + 250 AI + 100 midterm + 50 essay + 100 final exam
       const projectedPercentage = (projectedEarned / projectedPossible) * 100;
       const projectedLetterGrade = getLetterGrade(projectedPercentage);
 
@@ -316,6 +355,11 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
           earned: finalEssayPoints,
           possible: finalEssayPossible,
           submitted: !!finalEssay
+        },
+        finalExam: {
+          earned: finalExamPoints,
+          possible: finalExamPossible,
+          submitted: !!finalExamData
         },
         participation: {
           earned: participationPoints,
@@ -429,6 +473,16 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
       meta: gradeData.finalEssay.submitted ? 'Submitted' : 'Not submitted',
       color: 'text-pink-600',
       bgColor: 'bg-pink-50',
+      hasDetail: false
+    },
+    {
+      icon: GraduationCap,
+      title: 'Final Exam',
+      earned: gradeData.finalExam.earned,
+      possible: gradeData.finalExam.possible,
+      meta: gradeData.finalExam.submitted ? 'Submitted' : 'Not submitted',
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
       hasDetail: false
     },
     {
@@ -663,11 +717,16 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
                 <tr className="hover:bg-muted/30">
                   <td className="p-4">Final Reflection Essay</td>
                   <td className="p-4">50</td>
-                  <td className="p-4">8%</td>
+                  <td className="p-4">7%</td>
+                </tr>
+                <tr className="hover:bg-muted/30">
+                  <td className="p-4">Final Exam</td>
+                  <td className="p-4">100</td>
+                  <td className="p-4">14%</td>
                 </tr>
                 <tr className="bg-primary text-primary-foreground font-bold">
                   <td className="p-4">Total</td>
-                  <td className="p-4">600</td>
+                  <td className="p-4">700</td>
                   <td className="p-4">100%</td>
                 </tr>
               </tbody>
