@@ -24,7 +24,7 @@ export const AIGroupRoleSubmission = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
-  const [details, setDetails] = useState('');
+  const [areaDetails, setAreaDetails] = useState<Record<string, string>>({});
 
   // Fetch group membership
   const { data: groupMembership } = useQuery<{ id: string; name: string } | null>({
@@ -86,7 +86,7 @@ export const AIGroupRoleSubmission = () => {
         try {
           const submissionData = JSON.parse(data.file_url);
           setSelectedAreas(submissionData.areas || []);
-          setDetails(submissionData.details || '');
+          setAreaDetails(submissionData.areaDetails || {});
         } catch (e) {
           console.error('Failed to parse submission data:', e);
         }
@@ -109,7 +109,7 @@ export const AIGroupRoleSubmission = () => {
 
       const submissionData = {
         areas: selectedAreas,
-        details: details.trim(),
+        areaDetails,
         groupId: groupMembership?.id,
       };
 
@@ -155,6 +155,30 @@ export const AIGroupRoleSubmission = () => {
         ? prev.filter(id => id !== areaId)
         : [...prev, areaId]
     );
+  };
+
+  const handleAreaDetailsChange = (areaId: string, value: string) => {
+    setAreaDetails(prev => ({
+      ...prev,
+      [areaId]: value,
+    }));
+  };
+
+  const getPlaceholder = (areaId: string) => {
+    switch (areaId) {
+      case 'creativity':
+        return "Example: I brainstormed innovative approaches, designed creative solutions, and proposed new ideas for the project...";
+      case 'technology':
+        return "Example: I led the AI integration, developed the model training pipeline, implemented the backend systems...";
+      case 'writing':
+        return "Example: I wrote the project documentation, conducted analysis, and created written content for the report...";
+      case 'presentation':
+        return "Example: I designed the visual elements, created the user interface mockups, and developed the presentation slides...";
+      case 'research':
+        return "Example: I conducted literature reviews, gathered data, and synthesized research findings...";
+      default:
+        return "Describe your specific contributions...";
+    }
   };
 
   if (isLoading) {
@@ -211,58 +235,42 @@ export const AIGroupRoleSubmission = () => {
             </p>
             <div className="space-y-3">
               {GRADED_AREAS.map((area) => (
-                <div key={area.id} className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors">
-                  <Checkbox
-                    id={area.id}
-                    checked={selectedAreas.includes(area.id)}
-                    onCheckedChange={() => handleAreaToggle(area.id)}
-                    disabled={submitMutation.isPending}
-                  />
-                  <div className="flex-1">
-                    <Label
-                      htmlFor={area.id}
-                      className="font-medium cursor-pointer"
-                    >
-                      {area.label}
-                    </Label>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {area.description}
-                    </p>
+                <div key={area.id} className="border rounded-lg overflow-hidden">
+                  <div className="flex items-start space-x-3 p-3 hover:bg-accent/50 transition-colors">
+                    <Checkbox
+                      id={area.id}
+                      checked={selectedAreas.includes(area.id)}
+                      onCheckedChange={() => handleAreaToggle(area.id)}
+                      disabled={submitMutation.isPending}
+                    />
+                    <div className="flex-1">
+                      <Label
+                        htmlFor={area.id}
+                        className="font-medium cursor-pointer"
+                      >
+                        {area.label}
+                      </Label>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {area.description}
+                      </p>
+                    </div>
                   </div>
+                  
+                  {selectedAreas.includes(area.id) && (
+                    <div className="px-3 pb-3 pt-0">
+                      <Textarea
+                        value={areaDetails[area.id] || ''}
+                        onChange={(e) => handleAreaDetailsChange(area.id, e.target.value)}
+                        placeholder={getPlaceholder(area.id)}
+                        rows={4}
+                        disabled={submitMutation.isPending}
+                        className="mt-2"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="details" className="text-base font-semibold">
-              Describe your specific contributions (optional)
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              Provide details about your work in each selected area.
-            </p>
-            <Textarea
-              id="details"
-              value={details}
-              onChange={(e) => setDetails(e.target.value)}
-              placeholder={
-                selectedAreas.length === 0
-                  ? "Example: I led the AI integration, developed the model training pipeline, and created the user interface mockups..."
-                  : selectedAreas.includes('creativity')
-                  ? "Example: I brainstormed innovative approaches, designed creative solutions, and proposed new ideas for the project..."
-                  : selectedAreas.includes('technology')
-                  ? "Example: I led the AI integration, developed the model training pipeline, implemented the backend systems..."
-                  : selectedAreas.includes('writing')
-                  ? "Example: I wrote the project documentation, conducted analysis, and created written content for the report..."
-                  : selectedAreas.includes('presentation')
-                  ? "Example: I designed the visual elements, created the user interface mockups, and developed the presentation slides..."
-                  : selectedAreas.includes('research')
-                  ? "Example: I conducted literature reviews, gathered data, and synthesized research findings..."
-                  : "Describe your specific contributions to the selected areas..."
-              }
-              rows={6}
-              disabled={submitMutation.isPending}
-            />
           </div>
 
           {selectedAreas.length === 0 && (
