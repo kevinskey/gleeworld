@@ -51,9 +51,14 @@ const AssignmentJournal: React.FC = () => {
           if (entry?.is_published) {
             setActiveTab('read');
           }
+          
+          // Clear any previous errors on successful load
+          setError(null);
         } catch (err) {
           console.error('Error loading user entry:', err);
-          setError('Failed to load journal entry');
+          // Don't set error state - let the component render with empty entry
+          // User can still write a new journal
+          console.log('Will allow user to create new journal entry');
         }
       };
       loadUserEntry();
