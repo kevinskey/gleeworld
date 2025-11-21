@@ -113,24 +113,43 @@ export const AIGroupRoleSubmission = () => {
         groupId: groupMembership?.id,
       };
 
-      const { data, error } = await supabase
-        .from('assignment_submissions')
-        .upsert({
-          student_id: user?.id,
-          assignment_id: assignment.id,
-          file_url: JSON.stringify(submissionData),
-          file_name: 'role-submission.json',
-          status: 'submitted',
-          submitted_at: new Date().toISOString(),
-          submission_date: new Date().toISOString().split('T')[0],
-        }, {
-          onConflict: 'student_id,assignment_id',
-        })
-        .select()
-        .single();
+      // Check if submission exists
+      if (existingSubmission?.id) {
+        // Update existing submission
+        const { data, error } = await supabase
+          .from('assignment_submissions')
+          .update({
+            file_url: JSON.stringify(submissionData),
+            file_name: 'role-submission.json',
+            status: 'submitted',
+            submitted_at: new Date().toISOString(),
+            submission_date: new Date().toISOString().split('T')[0],
+          })
+          .eq('id', existingSubmission.id)
+          .select()
+          .single();
 
-      if (error) throw error;
-      return data;
+        if (error) throw error;
+        return data;
+      } else {
+        // Create new submission
+        const { data, error } = await supabase
+          .from('assignment_submissions')
+          .insert({
+            student_id: user?.id,
+            assignment_id: assignment.id,
+            file_url: JSON.stringify(submissionData),
+            file_name: 'role-submission.json',
+            status: 'submitted',
+            submitted_at: new Date().toISOString(),
+            submission_date: new Date().toISOString().split('T')[0],
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ai-group-role-submission'] });
