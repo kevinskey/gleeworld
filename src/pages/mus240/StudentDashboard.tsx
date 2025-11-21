@@ -94,13 +94,24 @@ export const StudentDashboard = () => {
     }
 
     try {
+      // Get student's name from profile
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('full_name, first_name, last_name')
+        .eq('user_id', user?.id)
+        .single();
+
+      const studentName = profile?.full_name || 
+                         `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 
+                         user?.email || 'Student';
+
       const { data, error } = await supabase.functions.invoke('gw-send-email', {
         body: {
           to: 'kpj64110@gmail.com',
-          subject: `Message from ${user?.email} - MUS 240`,
+          subject: `Email from ${studentName} from MUS 240`,
           html: `
-            <h2>New message from MUS 240 student</h2>
-            <p><strong>From:</strong> ${user?.email}</p>
+            <h2>Email from MUS 240 student</h2>
+            <p><strong>From:</strong> ${studentName} (${user?.email})</p>
             <p><strong>Message:</strong></p>
             <p>${emailMessage.replace(/\n/g, '<br>')}</p>
           `,
