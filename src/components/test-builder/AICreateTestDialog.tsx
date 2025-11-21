@@ -120,7 +120,7 @@ export const AICreateTestDialog = ({ open, onOpenChange, courseId }: AICreateTes
       onOpenChange(false);
       
       // Navigate to the test editor
-      navigate(`/test-builder/${newTest.id}/edit`);
+      navigate(`/test-builder/${newTest.id}`);
       
       // Reset form
       setUrl('');
