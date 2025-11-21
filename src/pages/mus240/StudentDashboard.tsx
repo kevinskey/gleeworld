@@ -31,6 +31,7 @@ import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export const StudentDashboard = () => {
   const { user } = useAuth();
@@ -82,14 +83,47 @@ export const StudentDashboard = () => {
     }
   }, [submissions, toast]);
 
-  const handleEmailInstructor = () => {
-    // This would integrate with your communications system
-    toast({
-      title: "Message Sent",
-      description: "Your message has been sent to Dr. Johnson",
-    });
-    setEmailDialogOpen(false);
-    setEmailMessage('');
+  const handleEmailInstructor = async () => {
+    if (!emailMessage.trim()) {
+      toast({
+        title: "Message Required",
+        description: "Please enter a message before sending.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('gw-send-email', {
+        body: {
+          to: 'kpj64110@gmail.com',
+          subject: `Message from ${user?.email} - MUS 240`,
+          html: `
+            <h2>New message from MUS 240 student</h2>
+            <p><strong>From:</strong> ${user?.email}</p>
+            <p><strong>Message:</strong></p>
+            <p>${emailMessage.replace(/\n/g, '<br>')}</p>
+          `,
+          replyTo: user?.email,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Message Sent",
+        description: "Your message has been sent to Dr. Johnson",
+      });
+      setEmailDialogOpen(false);
+      setEmailMessage('');
+    } catch (error: any) {
+      console.error('Error sending email:', error);
+      toast({
+        title: "Failed to Send",
+        description: error.message || "Failed to send email. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const getLetterGradeColor = (grade: string) => {
