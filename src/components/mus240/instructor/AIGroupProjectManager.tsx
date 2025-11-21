@@ -40,10 +40,27 @@ export const AIGroupProjectManager = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const { groups, loading: groupsLoading } = useMus240Groups('Fall 2024');
 
+  // Fetch the AI Group Role assignment
+  const { data: assignment } = useQuery({
+    queryKey: ['ai-group-assignment'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_assignments')
+        .select('id')
+        .eq('title', 'AI Group Project - Role Identification')
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Fetch role submissions
   const { data: roleSubmissions, isLoading: submissionsLoading, refetch } = useQuery({
-    queryKey: ['ai-group-role-submissions'],
+    queryKey: ['ai-group-role-submissions', assignment?.id],
     queryFn: async () => {
+      if (!assignment?.id) return [];
+
       const { data, error } = await supabase
         .from('assignment_submissions')
         .select(`
@@ -56,7 +73,7 @@ export const AIGroupProjectManager = () => {
             full_name
           )
         `)
-        .eq('assignment_id', 'ai-group-roles');
+        .eq('assignment_id', assignment.id);
 
       if (error) throw error;
 
@@ -66,17 +83,18 @@ export const AIGroupProjectManager = () => {
           id: sub.id,
           student_id: sub.student_id,
           student_name: (sub.gw_profiles as any)?.full_name || 'Unknown',
-          group_id: roleData.group_id || null,
-          creativity: roleData.creativity || null,
-          technology: roleData.technology || null,
-          writing: roleData.writing || null,
-          presentation: roleData.presentation || null,
-          research: roleData.research || null,
+          group_id: roleData.groupId || null,
+          creativity: roleData.areas?.includes('creativity') ? roleData.details : null,
+          technology: roleData.areas?.includes('technology') ? roleData.details : null,
+          writing: roleData.areas?.includes('writing') ? roleData.details : null,
+          presentation: roleData.areas?.includes('presentation') ? roleData.details : null,
+          research: roleData.areas?.includes('research') ? roleData.details : null,
           submitted_at: sub.submitted_at,
           status: sub.submitted_at ? 'submitted' : 'pending'
         } as RoleSubmission;
       }) || [];
-    }
+    },
+    enabled: !!assignment?.id,
   });
 
   const gradeAreas = [
