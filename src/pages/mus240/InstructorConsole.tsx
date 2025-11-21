@@ -89,6 +89,7 @@ export const InstructorConsole = () => {
         total_points: 100,
         passing_score: 70,
         is_published: midtermConfig.is_active,
+        is_practice: false,
         allow_retakes: false,
         show_correct_answers: false,
         randomize_questions: false,

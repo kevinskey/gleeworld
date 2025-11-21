@@ -3754,6 +3754,7 @@ export type Database = {
           duration_minutes: number | null
           id: string
           instructions: string | null
+          is_practice: boolean | null
           is_published: boolean | null
           passing_score: number | null
           randomize_questions: boolean | null
@@ -3771,6 +3772,7 @@ export type Database = {
           duration_minutes?: number | null
           id?: string
           instructions?: string | null
+          is_practice?: boolean | null
           is_published?: boolean | null
           passing_score?: number | null
           randomize_questions?: boolean | null
@@ -3788,6 +3790,7 @@ export type Database = {
           duration_minutes?: number | null
           id?: string
           instructions?: string | null
+          is_practice?: boolean | null
           is_published?: boolean | null
           passing_score?: number | null
           randomize_questions?: boolean | null
