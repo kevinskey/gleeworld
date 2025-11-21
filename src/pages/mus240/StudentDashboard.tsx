@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BookOpen,
   FileText,
@@ -20,7 +21,8 @@ import {
   Calendar,
   Trophy,
   MessageSquare,
-  Brain
+  Brain,
+  ArrowUpDown
 } from 'lucide-react';
 import { AIGroupRoleSubmission } from '@/components/mus240/student/AIGroupRoleSubmission';
 import { useStudentSubmissions } from '@/hooks/useStudentSubmissions';
@@ -41,9 +43,21 @@ export const StudentDashboard = () => {
   const { gradeSummary, participationGrade, loading: progressLoading } = useMus240Progress();
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState('');
+  const [sortBy, setSortBy] = useState<'dueDate' | 'title' | 'points'>('dueDate');
 
   // Get all incomplete assignments
   const incompleteAssignments = submissions.filter(s => !s.is_published);
+
+  // Sort incomplete assignments
+  const sortedIncompleteAssignments = [...incompleteAssignments].sort((a, b) => {
+    if (sortBy === 'dueDate') {
+      return new Date(a.assignment_due_date).getTime() - new Date(b.assignment_due_date).getTime();
+    } else if (sortBy === 'title') {
+      return a.assignment_title.localeCompare(b.assignment_title);
+    } else {
+      return (b.assignment_points || 0) - (a.assignment_points || 0);
+    }
+  });
 
   // Get upcoming assignments (due within 7 days)
   const upcomingAssignments = incompleteAssignments.filter(s => {
@@ -280,16 +294,31 @@ export const StudentDashboard = () => {
           <TabsContent value="assignments" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  Incomplete Assignments
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5" />
+                    Incomplete Assignments
+                  </CardTitle>
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                    <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="dueDate">Due Date</SelectItem>
+                        <SelectItem value="title">Title</SelectItem>
+                        <SelectItem value="points">Points</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                {incompleteAssignments.map((assignment) => (
+                {sortedIncompleteAssignments.map((assignment) => (
                   <div
                     key={assignment.assignment_id}
-                    className="p-4 border rounded-lg hover:shadow-lg transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] border-red-200 bg-red-50/30"
+                    className="p-4 border rounded-lg hover:shadow-md transition-all shadow-[0_0_8px_rgba(234,179,8,0.3)] border-yellow-200/50 bg-gradient-to-r from-yellow-50/40 to-amber-50/40"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
