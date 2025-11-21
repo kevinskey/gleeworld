@@ -95,6 +95,15 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
     try {
       setLoading(true);
 
+      // Fetch journal grades
+      const { data: journalGrades, error: journalError } = await supabase
+        .from('mus240_journal_grades')
+        .select('id, assignment_id, instructor_score, overall_score, created_at')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+
+      if (journalError) throw journalError;
+
       // Fetch all assignment submissions to identify types and grades
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignment_submissions')
@@ -130,29 +139,28 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
 
       if (attendanceError) throw attendanceError;
 
-      // Filter journal submissions (assignment_ids starting with 'lj' or containing 'journal')
-      const journalSubmissions = assignmentsData?.filter(a => 
-        a.assignment_id?.toLowerCase().startsWith('lj') || 
-        a.assignment_id?.toLowerCase().includes('journal')
-      ) || [];
-
-      const journalItems: JournalGrade[] = journalSubmissions.map(j => ({
-        id: j.id,
-        assignment_id: j.assignment_id,
-        instructor_score: j.grade,
-        overall_score: j.grade,
-        created_at: j.created_at,
-        assignment_code: j.assignment_id
-      }));
+      // Calculate journal grades (total 100 points possible for all journals combined)
+      const journalItems: JournalGrade[] = journalGrades?.map(g => ({
+        id: g.id,
+        assignment_id: g.assignment_id,
+        instructor_score: g.instructor_score,
+        overall_score: g.overall_score,
+        created_at: g.created_at,
+        assignment_code: undefined
+      })) || [];
 
       const journalPointsTotal = journalItems.reduce((sum, g) => {
-        return sum + (g.instructor_score || 0);
+        const score = g.instructor_score !== null && g.instructor_score !== undefined
+          ? g.instructor_score
+          : g.overall_score;
+        return sum + (score || 0);
       }, 0);
       
       // Normalize journals to 100 points total (18% of 550)
       const journalCount = journalItems.length;
       const journalGraded = journalItems.filter(g => 
-        g.instructor_score !== null && g.instructor_score !== undefined
+        (g.instructor_score !== null && g.instructor_score !== undefined) ||
+        (g.overall_score !== null && g.overall_score !== undefined)
       ).length;
       const journalPossible = 100;
       const avgJournalScore = journalGraded > 0 ? journalPointsTotal / journalGraded : 0;
