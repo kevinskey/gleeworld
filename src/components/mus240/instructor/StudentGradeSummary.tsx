@@ -139,7 +139,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
 
       if (attendanceError) throw attendanceError;
 
-      // Calculate journal grades (total 100 points possible for all journals combined)
+      // Calculate journal grades: each journal is worth 20 points
       const journalItems: JournalGrade[] = journalGrades?.map(g => ({
         id: g.id,
         assignment_id: g.assignment_id,
@@ -149,7 +149,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         assignment_code: undefined
       })) || [];
 
-      // Sum the rubric scores (typically out of 14 points each)
+      // Sum the recorded scores (stored as 0–20 per journal)
       const journalPointsTotalRaw = journalItems.reduce((sum, g) => {
         const score = g.instructor_score !== null && g.instructor_score !== undefined
           ? g.instructor_score
@@ -157,18 +157,18 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         return sum + (score || 0);
       }, 0);
       
-      // Normalize journals to 100 points total (18% of 550 in syllabus)
+      // Normalize journals to 100 points total (5 journals × 20 points each)
       const journalCount = journalItems.length;
+      const journalMaxPerEntry = 20; // each journal is scored out of 20 points
+      const journalTotalPossibleRaw = journalCount * journalMaxPerEntry;
+      const journalPossible = 100;
+      const journalPoints = journalTotalPossibleRaw > 0
+        ? (journalPointsTotalRaw / journalTotalPossibleRaw) * journalPossible
+        : 0;
       const journalGraded = journalItems.filter(g => 
         (g.instructor_score !== null && g.instructor_score !== undefined) ||
         (g.overall_score !== null && g.overall_score !== undefined)
       ).length;
-      const journalPossible = 100;
-      const journalMaxPerEntry = 14; // each journal is scored out of 14 points
-      const journalTotalPossibleRaw = journalGraded * journalMaxPerEntry;
-      const journalPoints = journalTotalPossibleRaw > 0
-        ? (journalPointsTotalRaw / journalTotalPossibleRaw) * journalPossible
-        : 0;
 
       // Identify specific assignments by type (excluding journals)
       const nonJournalAssignments = assignmentsData?.filter(a => 
