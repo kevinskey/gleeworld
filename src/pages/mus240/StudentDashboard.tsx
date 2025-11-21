@@ -233,12 +233,10 @@ export const StudentDashboard = () => {
             <p className="text-muted-foreground">Survey of African American Music</p>
           </div>
           <div className="flex gap-2">
-            {isAdmin && (
-              <Button variant="outline" onClick={() => navigate('/classes/mus240/admin')}>
-                <Home className="h-4 w-4 mr-2" />
-                Back to Admin
-              </Button>
-            )}
+            <Button variant="outline" onClick={() => navigate('/classes/mus240')}>
+              <Home className="h-4 w-4 mr-2" />
+              Back to MUS 240
+            </Button>
             <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline">
