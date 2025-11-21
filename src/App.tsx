@@ -1716,20 +1716,24 @@ const App = () => {
                                 path="/mus240" 
                                 element={<ClassLanding />}
                                />
-                                <Route 
-                                 path="/classes/mus240" 
-                                 element={<ClassLanding />}
-                                />
-                                <Route 
-                                 path="/classes/mus240/student/dashboard" 
-                                 element={
-                                   <ProtectedRoute>
-                                     <Mus240EnrollmentRoute>
-                                       <StudentDashboard />
-                                     </Mus240EnrollmentRoute>
-                                   </ProtectedRoute>
-                                  }
+                                 <Route 
+                                  path="/classes/mus240" 
+                                  element={<ClassLanding />}
                                  />
+                                 <Route 
+                                  path="/classes/mus240/student/dashboard" 
+                                  element={
+                                    <ProtectedRoute>
+                                      <Mus240EnrollmentRoute>
+                                        <StudentDashboard />
+                                      </Mus240EnrollmentRoute>
+                                    </ProtectedRoute>
+                                   }
+                                  />
+                                  <Route 
+                                   path="/classes/mus240/student-dashboard" 
+                                   element={<Navigate to="/classes/mus240/student/dashboard" replace />}
+                                  />
                                  <Route 
                                   path="/classes/mus240/student/journal/:journal_id/grade" 
                                   element={
