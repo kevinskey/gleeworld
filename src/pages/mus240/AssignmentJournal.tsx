@@ -118,7 +118,10 @@ const AssignmentJournal: React.FC = () => {
   }
 
   const handleJournalPublished = async () => {
-    if (!currentAssignment) return;
+    if (!currentAssignment) {
+      console.log('No current assignment, cannot handle publish callback');
+      return;
+    }
     
     try {
       // Refresh user entry and wait for it to complete
@@ -134,11 +137,13 @@ const AssignmentJournal: React.FC = () => {
       } else {
         // If entry fetch fails, just switch to read tab anyway
         // The user published successfully, we just couldn't refresh the data
+        console.log('Entry fetch returned null after publish, switching to read tab anyway');
         setActiveTab('read');
       }
     } catch (error) {
-      console.error('Error loading user entry after publish:', error);
+      console.error('Error in handleJournalPublished (non-critical):', error);
       // Still switch to read tab even if refresh failed
+      // Don't show error to user - publish already succeeded
       setActiveTab('read');
     }
   };
