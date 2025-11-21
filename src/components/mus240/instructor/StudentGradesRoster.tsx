@@ -42,7 +42,7 @@ export const StudentGradesRoster: React.FC = () => {
       const result = await supabase
         .from('mus240_enrollments' as any)
         .select('student_id, gw_profiles(user_id, full_name, email)')
-        .eq('status', 'enrolled');
+        .eq('enrollment_status', 'enrolled');
       
       const enrollments: any[] = result.data || [];
       const enrollError = result.error;
