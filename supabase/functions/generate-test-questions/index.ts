@@ -120,37 +120,51 @@ Also provide a suggested test title.`;
             type: 'function',
             function: {
               name: 'generate_test_questions',
-              description: 'Generate 20 test questions with answers',
+              description: 'Generate test questions with answers',
               parameters: {
                 type: 'object',
                 properties: {
-                  testTitle: { type: 'string' },
+                  testTitle: { 
+                    type: 'string',
+                    description: 'Title for the test'
+                  },
                   questions: {
                     type: 'array',
-                    minItems: 20,
-                    maxItems: 20,
+                    description: 'Array of 20 test questions',
                     items: {
                       type: 'object',
                       properties: {
-                        question: { type: 'string' },
-                        type: { 
-                          type: 'string', 
-                          enum: ['multiple-choice', 'true-false', 'short-answer', 'essay'] 
+                        question: { 
+                          type: 'string',
+                          description: 'The question text'
                         },
-                        points: { type: 'number' },
+                        type: { 
+                          type: 'string',
+                          description: 'Question type: multiple-choice, true-false, short-answer, or essay'
+                        },
+                        points: { 
+                          type: 'number',
+                          description: 'Points for this question'
+                        },
                         options: { 
                           type: 'array',
+                          description: 'Answer options for multiple choice or true/false',
                           items: { type: 'string' }
                         },
-                        correctAnswer: { type: 'string' },
-                        explanation: { type: 'string' }
+                        correctAnswer: { 
+                          type: 'string',
+                          description: 'The correct answer'
+                        },
+                        explanation: { 
+                          type: 'string',
+                          description: 'Explanation of the answer'
+                        }
                       },
                       required: ['question', 'type', 'points']
                     }
                   }
                 },
-                required: ['testTitle', 'questions'],
-                additionalProperties: false
+                required: ['testTitle', 'questions']
               }
             }
           }
