@@ -76,7 +76,14 @@ export const StudentDashboard = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Filter out real exams (midterms, finals) - only show practice tests
+      const filtered = (data || []).filter(test => {
+        const title = test.title.toLowerCase();
+        return !title.includes('midterm') && !title.includes('final');
+      });
+      
+      return filtered;
     },
   });
 
