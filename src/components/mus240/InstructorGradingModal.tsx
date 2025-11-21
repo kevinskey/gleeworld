@@ -137,7 +137,7 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Grade Journal: {assignment.title}
-            <Badge variant="outline">{journal.author_name}</Badge>
+            {journal?.author_name && <Badge variant="outline">{journal.author_name}</Badge>}
           </DialogTitle>
           <DialogDescription id="grading-desc">
             Runs rubric grading and saves a grade for this journal submission.
