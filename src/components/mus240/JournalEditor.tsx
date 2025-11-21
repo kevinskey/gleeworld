@@ -194,22 +194,52 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
     try {
       // Save first if there are changes
       if (hasChanges) {
-        const saved = await saveJournal(assignment.id, content);
-        if (!saved) {
-          console.error('Failed to save journal before publishing');
+        try {
+          const saved = await saveJournal(assignment.id, content);
+          if (!saved) {
+            toast({
+              title: "Save Failed",
+              description: "Could not save your journal. Please try again.",
+              variant: "destructive"
+            });
+            return;
+          }
+        } catch (saveError) {
+          console.error('Error saving before publish:', saveError);
+          toast({
+            title: "Save Failed",
+            description: "Could not save your journal. Please check your connection and try again.",
+            variant: "destructive"
+          });
           return;
         }
       }
 
-      const published = await publishJournal(assignment.id);
+      let published = false;
+      try {
+        published = await publishJournal(assignment.id);
+      } catch (publishError) {
+        console.error('Error publishing journal:', publishError);
+        toast({
+          title: "Publish Failed",
+          description: "Could not publish your journal. Please try again or contact your instructor.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       if (published) {
         setIsPublished(true);
         setHasChanges(false);
         
-        // Refresh the entry data to ensure we have the latest
-        const refreshedEntry = await fetchUserEntry(assignment.id);
-        if (refreshedEntry) {
-          setUserEntry(refreshedEntry);
+        // Try to refresh entry data, but don't fail if it doesn't work
+        try {
+          const refreshedEntry = await fetchUserEntry(assignment.id);
+          if (refreshedEntry) {
+            setUserEntry(refreshedEntry);
+          }
+        } catch (refreshError) {
+          console.error('Could not refresh entry after publish (non-critical):', refreshError);
         }
         
         // Show success message
@@ -218,21 +248,22 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
           description: "Your journal is now available for peer review.",
         });
         
-        // Call the onPublished callback immediately
+        // Call the onPublished callback in the background
         if (onPublished) {
-          try {
-            await onPublished();
-          } catch (callbackError) {
-            console.error('Error in onPublished callback:', callbackError);
-            // If callback fails, just log it but don't break the UI
-          }
+          setTimeout(async () => {
+            try {
+              await onPublished();
+            } catch (callbackError) {
+              console.error('Error in onPublished callback:', callbackError);
+            }
+          }, 100);
         }
       }
     } catch (error) {
-      console.error('Error during publish:', error);
+      console.error('Unexpected error during publish:', error);
       toast({
-        title: "Publish Error",
-        description: "An error occurred while publishing. Please try again or contact your instructor.",
+        title: "Unexpected Error",
+        description: "An unexpected error occurred. Please refresh the page and try again.",
         variant: "destructive"
       });
     }
