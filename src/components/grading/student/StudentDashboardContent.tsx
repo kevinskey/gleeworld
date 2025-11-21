@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,7 +15,7 @@ export const StudentDashboardContent: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'courses' | 'grades'>('courses');
 
-  const { data: enrollments, isLoading } = useQuery({
+  const { data: enrollments, isLoading, refetch } = useQuery({
     queryKey: ['gw-student-enrollments', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,6 +29,31 @@ export const StudentDashboardContent: React.FC = () => {
     },
     enabled: !!user,
   });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('student-dashboard-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gw_enrollments',
+          filter: `student_id=eq.${user.id}`
+        },
+        () => {
+          console.log('Enrollment changed, refetching');
+          refetch();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refetch]);
 
   if (isLoading) {
     return <LoadingSpinner size="lg" text="Loading courses..." />;
