@@ -26,6 +26,7 @@ import { useStudentMidtermSubmission } from '@/hooks/useStudentMidtermSubmission
 import { useStudentAssignmentSubmissions } from '@/hooks/useStudentAssignmentSubmissions';
 import { getInitials } from '@/utils/avatarUtils';
 import { supabase } from '@/integrations/supabase/client';
+import { convertToSecureUrl } from '@/utils/secureFileAccess';
 import { StudentGradeSummary } from '@/components/mus240/instructor/StudentGradeSummary';
 
 export const StudentWorkOverview = () => {
@@ -219,7 +220,12 @@ export const StudentWorkOverview = () => {
             )}
             {assignment.file_url && (
               <Button
-                onClick={() => window.open(assignment.file_url, '_blank')}
+                onClick={async () => {
+                  const secureUrl = await convertToSecureUrl(assignment.file_url!);
+                  if (secureUrl) {
+                    window.open(secureUrl, '_blank');
+                  }
+                }}
                 className="w-full"
                 variant="outline"
               >
