@@ -278,13 +278,36 @@ export const InstructorConsole = () => {
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-6">
-                    <div className="flex gap-2 border-b pb-3">
-                      <Button variant={testSubTab === 'tests' ? 'default' : 'ghost'} onClick={() => setTestSubTab('tests')}>
-                        All Tests
-                      </Button>
-                      <Button variant={testSubTab === 'midterm' ? 'default' : 'ghost'} onClick={() => setTestSubTab('midterm')}>
-                        Midterm Grading
-                      </Button>
+                    <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between border-b pb-3">
+                      <div className="flex gap-2">
+                        <Button variant={testSubTab === 'tests' ? 'default' : 'ghost'} onClick={() => setTestSubTab('tests')}>
+                          All Tests
+                        </Button>
+                        <Button variant={testSubTab === 'midterm' ? 'default' : 'ghost'} onClick={() => setTestSubTab('midterm')}>
+                          Midterm Grading
+                        </Button>
+                      </div>
+                      
+                      {testSubTab === 'tests' && (
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate('/test-builder/create?ai=true')}
+                            className="border-primary/30 hover:border-primary/50 hover:bg-primary/5"
+                          >
+                            <Brain className="h-4 w-4 mr-2 text-primary" />
+                            AI Create Test
+                          </Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => navigate('/test-builder/create')}
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Test
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
                     {testSubTab === 'tests' && <TestList tests={allTests} courseId="mus240" />}
