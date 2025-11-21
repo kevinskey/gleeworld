@@ -94,9 +94,6 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
     setHasChanges(true);
   };
 
-  const handlePaste = (e: React.ClipboardEvent) => {
-    // Allow paste (no restrictions)
-  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -370,7 +367,6 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
-                onPaste={handlePaste}
                 disabled={loading || uploading}
                 placeholder="Begin typing your journal entry here, paste text, or upload a file. Remember to focus on the assignment instructions and provide thoughtful analysis..."
                 className="min-h-[300px] resize-none"
