@@ -42,9 +42,11 @@ export const StudentDashboard = () => {
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState('');
 
+  // Get all incomplete assignments
+  const incompleteAssignments = submissions.filter(s => !s.is_published);
+
   // Get upcoming assignments (due within 7 days)
-  const upcomingAssignments = submissions.filter(s => {
-    if (s.is_published) return false;
+  const upcomingAssignments = incompleteAssignments.filter(s => {
     const dueDate = new Date(s.assignment_due_date + 'T12:00:00');
     const now = new Date();
     const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -188,7 +190,7 @@ export const StudentDashboard = () => {
           <Alert>
             <Bell className="h-4 w-4" />
             <AlertDescription>
-              You have {upcomingAssignments.length} assignment(s) due within the next 7 days.
+              You have {incompleteAssignments.length} incomplete assignment(s). {upcomingAssignments.length} due within the next 7 days.
             </AlertDescription>
           </Alert>
         )}
@@ -280,14 +282,14 @@ export const StudentDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
-                  Upcoming & Overdue Assignments
+                  Incomplete Assignments
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {upcomingAssignments.map((assignment) => (
+                {incompleteAssignments.map((assignment) => (
                   <div
                     key={assignment.assignment_id}
-                    className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                    className="p-4 border rounded-lg hover:shadow-lg transition-all shadow-[0_0_20px_rgba(239,68,68,0.4)] border-red-200 bg-red-50/30"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -324,10 +326,10 @@ export const StudentDashboard = () => {
                   </div>
                 ))}
 
-                {upcomingAssignments.length === 0 && (
+                {incompleteAssignments.length === 0 && (
                   <div className="text-center py-8">
                     <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
-                    <p className="text-muted-foreground">You're all caught up! No upcoming assignments.</p>
+                    <p className="text-muted-foreground">You're all caught up! No incomplete assignments.</p>
                   </div>
                 )}
               </CardContent>
