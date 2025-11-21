@@ -144,14 +144,19 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Journal Content */}
-          <div>
-            <h3 className="font-medium mb-2">Student Journal Entry</h3>
-            <div className="bg-muted/50 p-4 rounded-lg max-h-60 overflow-y-auto">
-              <p className="text-sm whitespace-pre-wrap">{journal.content}</p>
-            </div>
+        {!journal ? (
+          <div className="p-4 text-center text-muted-foreground">
+            No journal data available
           </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Journal Content */}
+            <div>
+              <h3 className="font-medium mb-2">Student Journal Entry</h3>
+              <div className="bg-muted/50 p-4 rounded-lg max-h-60 overflow-y-auto">
+                <p className="text-sm whitespace-pre-wrap">{journal.content}</p>
+              </div>
+            </div>
 
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
@@ -255,8 +260,9 @@ export const InstructorGradingModal: React.FC<InstructorGradingModalProps> = ({
                 Close
               </Button>
             </div>
+            </div>
           </div>
-        </div>
+        )}
       </DialogContent>
     </Dialog>
   );
