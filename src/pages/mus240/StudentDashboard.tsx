@@ -51,12 +51,6 @@ export const StudentDashboard = () => {
     return diffDays >= 0 && diffDays <= 7;
   });
 
-  // Get overdue assignments
-  const overdueAssignments = submissions.filter(s => {
-    if (s.is_published) return false;
-    const dueDate = new Date(s.assignment_due_date + 'T12:00:00');
-    return dueDate < new Date();
-  });
 
   // Show popup for assignments due soon
   useEffect(() => {
@@ -189,15 +183,6 @@ export const StudentDashboard = () => {
           </Dialog>
         </div>
 
-        {/* Urgent Alerts */}
-        {overdueAssignments.length > 0 && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              You have {overdueAssignments.length} overdue assignment(s). Please complete them as soon as possible.
-            </AlertDescription>
-          </Alert>
-        )}
 
         {upcomingAssignments.length > 0 && (
           <Alert>
@@ -299,33 +284,6 @@ export const StudentDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {overdueAssignments.map((assignment) => (
-                  <div
-                    key={assignment.assignment_id}
-                    className="p-4 border border-red-200 bg-red-50 rounded-lg"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{assignment.assignment_title}</h3>
-                          <Badge variant="destructive">Overdue</Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          Due: {new Date(assignment.assignment_due_date + 'T12:00:00').toLocaleDateString()}
-                        </p>
-                        <p className="text-sm mt-1">{assignment.assignment_points} points</p>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => navigate(`/classes/mus240/assignments/${assignment.assignment_id}`)}
-                      >
-                        <Edit className="h-3 w-3 mr-1" />
-                        Start Now
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-
                 {upcomingAssignments.map((assignment) => (
                   <div
                     key={assignment.assignment_id}
@@ -366,10 +324,10 @@ export const StudentDashboard = () => {
                   </div>
                 ))}
 
-                {overdueAssignments.length === 0 && upcomingAssignments.length === 0 && (
+                {upcomingAssignments.length === 0 && (
                   <div className="text-center py-8">
                     <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
-                    <p className="text-muted-foreground">You're all caught up! No upcoming or overdue assignments.</p>
+                    <p className="text-muted-foreground">You're all caught up! No upcoming assignments.</p>
                   </div>
                 )}
               </CardContent>
