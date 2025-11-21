@@ -211,7 +211,7 @@ export const InstructorConsole = () => {
                   <Menu className="h-4 w-4" />
                   <span>Menu</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/dashboard')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
+                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/student/dashboard')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
                   <Eye className="h-4 w-4" />
                   <span>Student View</span>
                 </Button>
