@@ -14,6 +14,7 @@ export interface GleeAcademyTest {
   total_points: number;
   passing_score: number;
   is_published: boolean;
+  is_practice: boolean;
   allow_retakes: boolean;
   show_correct_answers: boolean;
   randomize_questions: boolean;

@@ -43,7 +43,9 @@ export const TestList = ({ tests, courseId }: TestListProps) => {
             <div className="flex-1 space-y-2 mb-4 sm:mb-0">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <h3 className="font-semibold text-base sm:text-lg">{test.title}</h3>
-                {test.is_published ? (
+                {test.is_practice ? (
+                  <Badge variant="outline" className="border-blue-500/50 text-blue-600 bg-blue-50 dark:bg-blue-950 dark:text-blue-400">Practice Test</Badge>
+                ) : test.is_published ? (
                   <Badge variant="default" className="shadow-sm">Published</Badge>
                 ) : (
                   <Badge variant="secondary" className="border">Draft</Badge>

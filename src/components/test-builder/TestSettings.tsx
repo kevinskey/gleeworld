@@ -20,6 +20,7 @@ interface TestFormData {
   duration_minutes: number | null;
   total_points: number;
   passing_score: number;
+  is_practice: boolean;
   allow_retakes: boolean;
   show_correct_answers: boolean;
   randomize_questions: boolean;
@@ -36,6 +37,7 @@ export const TestSettings = ({ test }: TestSettingsProps) => {
       duration_minutes: test.duration_minutes,
       total_points: test.total_points,
       passing_score: test.passing_score,
+      is_practice: test.is_practice,
       allow_retakes: test.allow_retakes,
       show_correct_answers: test.show_correct_answers,
       randomize_questions: test.randomize_questions,
@@ -122,6 +124,14 @@ export const TestSettings = ({ test }: TestSettingsProps) => {
             </div>
 
             <div className="space-y-3 pt-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="is_practice">Practice Test</Label>
+                  <p className="text-xs text-muted-foreground">Non-graded test for student practice</p>
+                </div>
+                <Switch id="is_practice" {...register('is_practice')} />
+              </div>
+
               <div className="flex items-center justify-between">
                 <Label htmlFor="allow_retakes">Allow Retakes</Label>
                 <Switch id="allow_retakes" {...register('allow_retakes')} />
