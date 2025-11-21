@@ -52,15 +52,32 @@ export const AIGroupRoleSubmission = () => {
     enabled: !!user?.id,
   });
 
+  // Fetch the AI Group Role assignment
+  const { data: assignment } = useQuery({
+    queryKey: ['ai-group-assignment'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_assignments')
+        .select('id')
+        .eq('title', 'AI Group Project - Role Identification')
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Fetch existing submission
   const { data: existingSubmission, isLoading } = useQuery({
-    queryKey: ['ai-group-role-submission', user?.id],
+    queryKey: ['ai-group-role-submission', user?.id, assignment?.id],
     queryFn: async () => {
+      if (!assignment?.id) return null;
+
       const { data, error } = await supabase
         .from('assignment_submissions')
         .select('*')
         .eq('student_id', user?.id)
-        .eq('assignment_id', 'ai-group-roles')
+        .eq('assignment_id', assignment.id)
         .maybeSingle();
 
       if (error) throw error;
@@ -77,13 +94,17 @@ export const AIGroupRoleSubmission = () => {
       
       return data;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!assignment?.id,
   });
 
   const submitMutation = useMutation({
     mutationFn: async () => {
       if (selectedAreas.length === 0) {
         throw new Error('Please select at least one area');
+      }
+
+      if (!assignment?.id) {
+        throw new Error('Assignment not found');
       }
 
       const submissionData = {
@@ -96,7 +117,7 @@ export const AIGroupRoleSubmission = () => {
         .from('assignment_submissions')
         .upsert({
           student_id: user?.id,
-          assignment_id: 'ai-group-roles',
+          assignment_id: assignment.id,
           file_url: JSON.stringify(submissionData),
           file_name: 'role-submission.json',
           status: 'submitted',
