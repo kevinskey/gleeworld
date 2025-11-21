@@ -108,7 +108,7 @@ export const StudentDashboard = () => {
       const { data, error } = await supabase.functions.invoke('gw-send-email', {
         body: {
           to: 'kpj64110@gmail.com',
-          subject: `Email from ${studentName} from MUS 240`,
+          subject: `${studentName} from MUS240`,
           html: `
             <h2>Email from MUS 240 student</h2>
             <p><strong>From:</strong> ${studentName} (${user?.email})</p>
