@@ -57,11 +57,18 @@ serve(async (req) => {
     let webpageContent = '';
     let extractedTitle = '';
     if (url) {
-      console.log('Scraping webpage:', url);
-      const scraped = await scrapeWebpage(url);
-      extractedTitle = scraped.title;
-      webpageContent = scraped.content;
-      console.log('Scraped title:', extractedTitle);
+      // Validate URL format
+      try {
+        new URL(url);
+        console.log('Scraping webpage:', url);
+        const scraped = await scrapeWebpage(url);
+        extractedTitle = scraped.title;
+        webpageContent = scraped.content;
+        console.log('Scraped title:', extractedTitle);
+      } catch (urlError) {
+        console.log('Invalid URL provided, treating as topic:', url);
+        // If URL is invalid, ignore it and use topic instead
+      }
     }
 
     const systemPrompt = `You are an expert test creator for music education courses. Generate exactly 20 high-quality test questions based on the provided content. Each question should be educationally sound and assess different aspects of understanding.`;
