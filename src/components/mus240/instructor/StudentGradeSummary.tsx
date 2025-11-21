@@ -149,22 +149,26 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         assignment_code: undefined
       })) || [];
 
-      const journalPointsTotal = journalItems.reduce((sum, g) => {
+      // Sum the rubric scores (typically out of 14 points each)
+      const journalPointsTotalRaw = journalItems.reduce((sum, g) => {
         const score = g.instructor_score !== null && g.instructor_score !== undefined
           ? g.instructor_score
           : g.overall_score;
         return sum + (score || 0);
       }, 0);
       
-      // Normalize journals to 100 points total (18% of 550)
+      // Normalize journals to 100 points total (18% of 550 in syllabus)
       const journalCount = journalItems.length;
       const journalGraded = journalItems.filter(g => 
         (g.instructor_score !== null && g.instructor_score !== undefined) ||
         (g.overall_score !== null && g.overall_score !== undefined)
       ).length;
       const journalPossible = 100;
-      const avgJournalScore = journalGraded > 0 ? journalPointsTotal / journalGraded : 0;
-      const journalPoints = avgJournalScore; // Use average as the earned points out of 100
+      const journalMaxPerEntry = 14; // each journal is scored out of 14 points
+      const journalTotalPossibleRaw = journalGraded * journalMaxPerEntry;
+      const journalPoints = journalTotalPossibleRaw > 0
+        ? (journalPointsTotalRaw / journalTotalPossibleRaw) * journalPossible
+        : 0;
 
       // Identify specific assignments by type (excluding journals)
       const nonJournalAssignments = assignmentsData?.filter(a => 
