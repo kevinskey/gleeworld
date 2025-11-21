@@ -212,8 +212,12 @@ Also provide a suggested test title.`;
 
     const toolCall = data.choices[0].message.tool_calls?.[0];
     if (!toolCall || !toolCall.function || !toolCall.function.arguments) {
-      console.error('No tool call in response:', data.choices[0].message);
-      throw new Error('No tool call in response');
+      const fallbackMessage = data.choices[0].message.content || 'AI could not generate test questions for the provided input.';
+      console.error('No tool call in response, fallback message:', fallbackMessage);
+      return new Response(
+        JSON.stringify({ error: fallbackMessage }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const result = JSON.parse(toolCall.function.arguments);
