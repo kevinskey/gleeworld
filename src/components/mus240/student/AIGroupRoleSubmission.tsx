@@ -27,22 +27,22 @@ export const AIGroupRoleSubmission = () => {
   const [details, setDetails] = useState('');
 
   // Fetch group membership
-  const { data: groupMembership } = useQuery<{ id: string; group_name: string } | null>({
+  const { data: groupMembership } = useQuery<{ id: string; name: string } | null>({
     queryKey: ['student-group', user?.id],
     queryFn: async () => {
       // First get the group_id from members table
-      const { data: memberData }: any = await supabase
-        .from('mus240_group_members')
+      const { data: memberData } = await supabase
+        .from('mus240_group_memberships')
         .select('group_id')
-        .eq('user_id', user?.id)
+        .eq('member_id', user?.id)
         .maybeSingle();
 
       if (!memberData?.group_id) return null;
 
       // Then fetch group details
-      const { data: groupData }: any = await supabase
-        .from('mus240_groups')
-        .select('id, group_name')
+      const { data: groupData } = await supabase
+        .from('mus240_project_groups')
+        .select('id, name')
         .eq('id', memberData.group_id)
         .eq('semester', 'Fall 2024')
         .maybeSingle();
@@ -166,7 +166,7 @@ export const AIGroupRoleSubmission = () => {
           <Alert>
             <Users className="h-4 w-4" />
             <AlertDescription>
-              <strong>Your Group:</strong> {groupMembership.group_name}
+              <strong>Your Group:</strong> {groupMembership.name}
             </AlertDescription>
           </Alert>
         )}
