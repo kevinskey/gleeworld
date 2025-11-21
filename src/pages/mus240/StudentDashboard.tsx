@@ -19,8 +19,10 @@ import {
   TrendingUp,
   Calendar,
   Trophy,
-  MessageSquare
+  MessageSquare,
+  Brain
 } from 'lucide-react';
+import { AIGroupRoleSubmission } from '@/components/mus240/student/AIGroupRoleSubmission';
 import { useStudentSubmissions } from '@/hooks/useStudentSubmissions';
 import { useMus240Progress } from '@/hooks/useMus240Progress';
 import { useNavigate } from 'react-router-dom';
@@ -236,8 +238,9 @@ export const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="assignments" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="ai-group">AI Group</TabsTrigger>
             <TabsTrigger value="grades">Grades</TabsTrigger>
             <TabsTrigger value="announcements">Announcements</TabsTrigger>
           </TabsList>
@@ -326,6 +329,10 @@ export const StudentDashboard = () => {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="ai-group" className="space-y-4">
+            <AIGroupRoleSubmission />
           </TabsContent>
 
           <TabsContent value="grades" className="space-y-4">
