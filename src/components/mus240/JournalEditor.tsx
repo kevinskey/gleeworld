@@ -367,7 +367,7 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
-                disabled={loading || uploading}
+                disabled={uploading}
                 placeholder="Begin typing your journal entry here, paste text, or upload a file. Remember to focus on the assignment instructions and provide thoughtful analysis..."
                 className="min-h-[300px] resize-none"
               />
