@@ -22,6 +22,8 @@ import { Mus240PollSystem } from '@/components/mus240/Mus240PollSystem';
 import { OpenAITestButton } from '@/components/mus240/admin/OpenAITestButton';
 import { useMus240InstructorStats } from '@/hooks/useMus240InstructorStats';
 import { TestList } from '@/components/test-builder/TestList';
+import { CreateTestDialog } from '@/components/test-builder/CreateTestDialog';
+import { AICreateTestDialog } from '@/components/test-builder/AICreateTestDialog';
 import { useTests } from '@/hooks/useTestBuilder';
 import { useQuery } from '@tanstack/react-query';
 import { RubricEditor } from '@/components/mus240/rubrics/RubricEditor';
@@ -45,6 +47,8 @@ export const InstructorConsole = () => {
   const [activeTab, setActiveTab] = useState('assignments');
   const [assignmentSubTab, setAssignmentSubTab] = useState('manage');
   const [testSubTab, setTestSubTab] = useState('tests');
+  const [showCreateTestDialog, setShowCreateTestDialog] = useState(false);
+  const [showAICreateTestDialog, setShowAICreateTestDialog] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const {
     stats,
@@ -268,7 +272,8 @@ export const InstructorConsole = () => {
                 </CardContent>
               </Card>}
 
-            {activeTab === 'tests' && <Card>
+            {activeTab === 'tests' && <>
+              <Card>
                 <CardHeader className="border-b">
                   <CardTitle className="flex items-center gap-2 text-xl">
                     <ClipboardCheck className="h-5 w-5" />
@@ -293,7 +298,7 @@ export const InstructorConsole = () => {
                           <Button 
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate('/test-builder/create?ai=true')}
+                            onClick={() => setShowAICreateTestDialog(true)}
                             className="border-primary/30 hover:border-primary/50 hover:bg-primary/5"
                           >
                             <Brain className="h-4 w-4 mr-2 text-primary" />
@@ -301,7 +306,7 @@ export const InstructorConsole = () => {
                           </Button>
                           <Button 
                             size="sm"
-                            onClick={() => navigate('/test-builder/create')}
+                            onClick={() => setShowCreateTestDialog(true)}
                           >
                             <Plus className="h-4 w-4 mr-2" />
                             Create Test
@@ -315,7 +320,20 @@ export const InstructorConsole = () => {
                     {testSubTab === 'midterm' && <MidtermGradingManager />}
                   </div>
                 </CardContent>
-              </Card>}
+              </Card>
+              
+              <CreateTestDialog 
+                open={showCreateTestDialog}
+                onOpenChange={setShowCreateTestDialog}
+                courseId="mus240"
+              />
+              
+              <AICreateTestDialog
+                open={showAICreateTestDialog}
+                onOpenChange={setShowAICreateTestDialog}
+                courseId="mus240"
+              />
+            </>}
 
             {activeTab === 'polls' && <Card>
                 <CardHeader className="border-b">
