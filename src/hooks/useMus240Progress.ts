@@ -121,6 +121,54 @@ export const useMus240Progress = () => {
 
   useEffect(() => {
     fetchGradeData();
+
+    // Set up real-time subscriptions
+    const channel = supabase
+      .channel('grade-data-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_grade_summaries',
+          filter: `student_id=eq.${user?.id}`
+        },
+        () => {
+          console.log('Grade summary changed, refetching');
+          fetchGradeData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_participation_grades',
+          filter: `student_id=eq.${user?.id}`
+        },
+        () => {
+          console.log('Participation grade changed, refetching');
+          fetchGradeData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'assignment_submissions',
+          filter: `student_id=eq.${user?.id}`
+        },
+        () => {
+          console.log('Assignment submission changed, refetching');
+          fetchGradeData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   const getLetterGradeColor = (grade: string) => {

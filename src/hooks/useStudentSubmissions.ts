@@ -123,6 +123,53 @@ export const useStudentSubmissions = () => {
 
   useEffect(() => {
     fetchSubmissions();
+
+    // Set up real-time subscriptions
+    const channel = supabase
+      .channel('student-submissions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_journal_entries',
+          filter: `student_id=eq.${user?.id}`
+        },
+        () => {
+          console.log('Journal entry changed, refetching submissions');
+          fetchSubmissions();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_journal_grades',
+          filter: `student_id=eq.${user?.id}`
+        },
+        () => {
+          console.log('Journal grade changed, refetching submissions');
+          fetchSubmissions();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mus240_journal_comments'
+        },
+        () => {
+          console.log('Journal comment changed, refetching submissions');
+          fetchSubmissions();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   return {
