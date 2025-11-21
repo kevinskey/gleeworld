@@ -82,7 +82,8 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
       }
     };
     loadExistingEntry();
-  }, [assignment.id, fetchUserEntry, fetchStudentGrade]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignment.id]);
 
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(word => word.length > 0);
