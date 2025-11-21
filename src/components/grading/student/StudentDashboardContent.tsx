@@ -60,16 +60,16 @@ export const StudentDashboardContent: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6 px-4 sm:px-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">Student Dashboard</h1>
-        <p className="text-muted-foreground">View your courses, assignments, and grades</p>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">Student Dashboard</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">View your courses, assignments, and grades</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'courses' | 'grades')}>
         <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="courses">My Courses</TabsTrigger>
-          <TabsTrigger value="grades">Grades & Progress</TabsTrigger>
+          <TabsTrigger value="courses" className="text-sm sm:text-base">My Courses</TabsTrigger>
+          <TabsTrigger value="grades" className="text-sm sm:text-base">Grades & Progress</TabsTrigger>
         </TabsList>
 
         <TabsContent value="courses" className="mt-6">
@@ -80,19 +80,19 @@ export const StudentDashboardContent: React.FC = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
               {enrollments?.map((enrollment) => (
                 <Card key={enrollment.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5" />
-                      {enrollment.gw_courses?.course_code}
+                  <CardHeader className="pb-3 sm:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                      <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                      <span className="truncate">{enrollment.gw_courses?.course_code}</span>
                     </CardTitle>
-                    <CardDescription>{enrollment.gw_courses?.course_name}</CardDescription>
+                    <CardDescription className="text-sm line-clamp-2">{enrollment.gw_courses?.course_name}</CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-0">
                     <Button
-                      className="w-full"
+                      className="w-full text-sm sm:text-base"
                       onClick={() => navigate(`/grading/student/course/${enrollment.course_id}`)}
                     >
                       View Course
