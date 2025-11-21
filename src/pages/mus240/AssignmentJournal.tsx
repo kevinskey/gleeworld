@@ -21,6 +21,7 @@ const AssignmentJournal: React.FC = () => {
   const [activeTab, setActiveTab] = useState('write');
   const [userEntry, setUserEntry] = useState<any>(null);
   const [currentAssignment, setCurrentAssignment] = useState<Assignment | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const { fetchUserEntry } = useMus240Journals();
   const { updateAssignment, getUpdatedAssignment } = useAssignmentEditor();
@@ -42,17 +43,41 @@ const AssignmentJournal: React.FC = () => {
   useEffect(() => {
     if (currentAssignment) {
       const loadUserEntry = async () => {
-        const entry = await fetchUserEntry(currentAssignment.id);
-        setUserEntry(entry);
-        
-        // If user has published their journal, switch to read tab
-        if (entry?.is_published) {
-          setActiveTab('read');
+        try {
+          const entry = await fetchUserEntry(currentAssignment.id);
+          setUserEntry(entry);
+          
+          // If user has published their journal, switch to read tab
+          if (entry?.is_published) {
+            setActiveTab('read');
+          }
+        } catch (err) {
+          console.error('Error loading user entry:', err);
+          setError('Failed to load journal entry');
         }
       };
       loadUserEntry();
     }
   }, [currentAssignment, fetchUserEntry]);
+
+  if (error) {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto py-8">
+          <Card>
+            <CardContent className="text-center py-12">
+              <h2 className="text-2xl font-bold mb-4 text-destructive">Error</h2>
+              <p className="text-muted-foreground mb-6">{error}</p>
+              <Button onClick={() => navigate('/classes/mus240/student/dashboard')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </UniversalLayout>
+    );
+  }
 
   if (!baseAssignment) {
     return (
