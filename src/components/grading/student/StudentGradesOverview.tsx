@@ -95,25 +95,25 @@ export const StudentGradesOverview: React.FC = () => {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Overall Progress</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Overall Progress</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-lg font-semibold">Average Grade</span>
-            <span className="text-3xl font-bold">{overallPercentage.toFixed(1)}%</span>
+            <span className="text-base sm:text-lg font-semibold">Average Grade</span>
+            <span className="text-2xl sm:text-3xl font-bold">{overallPercentage.toFixed(1)}%</span>
           </div>
-          <Progress value={overallPercentage} className="h-3" />
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <Progress value={overallPercentage} className="h-2 sm:h-3" />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 text-sm">
             <div>
-              <p className="text-muted-foreground">Courses</p>
-              <p className="text-xl font-semibold">{grades.length}</p>
+              <p className="text-muted-foreground text-xs sm:text-sm">Courses</p>
+              <p className="text-lg sm:text-xl font-semibold">{grades.length}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Assignments Graded</p>
-              <p className="text-xl font-semibold">
+              <p className="text-muted-foreground text-xs sm:text-sm">Assignments Graded</p>
+              <p className="text-lg sm:text-xl font-semibold">
                 {grades.reduce((sum, g) => sum + g.graded_count, 0)} / {grades.reduce((sum, g) => sum + g.total_count, 0)}
               </p>
             </div>
@@ -121,23 +121,26 @@ export const StudentGradesOverview: React.FC = () => {
         </CardContent>
       </Card>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3 sm:gap-4">
         {grades.map((grade) => (
           <Card key={grade.course_id}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">{grade.course_code}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{grade.course_title}</p>
+            <CardHeader className="pb-2 sm:pb-3">
+              <div className="flex items-start sm:items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-base sm:text-lg truncate">{grade.course_code}</CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{grade.course_title}</p>
                 </div>
-                <Badge variant={grade.percentage >= 90 ? 'default' : grade.percentage >= 70 ? 'secondary' : 'destructive'}>
+                <Badge 
+                  variant={grade.percentage >= 90 ? 'default' : grade.percentage >= 70 ? 'secondary' : 'destructive'}
+                  className="text-xs sm:text-sm flex-shrink-0"
+                >
                   {grade.percentage.toFixed(1)}%
                 </Badge>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2 sm:space-y-3">
               <Progress value={grade.percentage} className="h-2" />
-              <div className="flex justify-between text-sm">
+              <div className="flex flex-col sm:flex-row justify-between gap-1 sm:gap-0 text-xs sm:text-sm">
                 <span className="text-muted-foreground">
                   {grade.earned_points} / {grade.total_points} points
                 </span>
