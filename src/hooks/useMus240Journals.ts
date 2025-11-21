@@ -97,23 +97,34 @@ export const useMus240Journals = () => {
   }, []);
 
   const fetchUserEntry = useCallback(async (assignmentId: string): Promise<JournalEntry | null> => {
-    if (!user) return null;
+    if (!user) {
+      console.log('No user found, cannot fetch journal entry');
+      return null;
+    }
     
     try {
       const response = await apiCall(`mus240_journal_entries?assignment_id=eq.${assignmentId}&student_id=eq.${user.id}`);
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Failed to fetch user entry:', response.status, errorText);
-        throw new Error(`Failed to fetch user entry: ${response.statusText}`);
+        
+        // Don't throw error, just return null to prevent white screen
+        toast({
+          title: "Could not load journal",
+          description: "Failed to load your journal entry. You can still write a new one.",
+          variant: "destructive"
+        });
+        return null;
       }
       
       const data = await response.json();
       return data[0] || null;
     } catch (error) {
       console.error('Error fetching user entry:', error);
+      // Return null instead of throwing to prevent white screen
       return null;
     }
-  }, [user]);
+  }, [user, toast]);
 
   const fetchPublishedJournals = useCallback(async (assignmentId: string): Promise<JournalEntry[]> => {
     try {

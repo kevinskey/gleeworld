@@ -61,18 +61,28 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
             console.error('Error loading grade (non-critical):', gradeError);
             setGrade(null);
           }
+        } else {
+          // No existing entry, reset to blank state for new entry
+          console.log('No existing journal found, starting fresh');
+          setContent('');
+          setWordCount(0);
+          setIsPublished(false);
+          setUserEntry(null);
+          setGrade(null);
         }
       } catch (error) {
         console.error('Error loading journal entry:', error);
-        toast({
-          title: "Error Loading Journal",
-          description: "Failed to load your journal entry. Please refresh the page.",
-          variant: "destructive"
-        });
+        // Don't show error toast here - useMus240Journals already handles it
+        // Just reset to allow user to create new entry
+        setContent('');
+        setWordCount(0);
+        setIsPublished(false);
+        setUserEntry(null);
+        setGrade(null);
       }
     };
     loadExistingEntry();
-  }, [assignment.id, fetchUserEntry, fetchStudentGrade, toast]);
+  }, [assignment.id, fetchUserEntry, fetchStudentGrade]);
 
   useEffect(() => {
     const words = content.trim().split(/\s+/).filter(word => word.length > 0);
