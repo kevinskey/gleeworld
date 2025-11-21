@@ -95,24 +95,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
     try {
       setLoading(true);
 
-      // Fetch journal grades with assignment info
-      const { data: gradesData, error: gradesError } = await supabase
-        .from('mus240_journal_grades')
-        .select(`
-          id,
-          assignment_id,
-          student_id,
-          instructor_score,
-          overall_score,
-          created_at,
-          mus240_assignments!inner(assignment_code, is_active)
-        `)
-        .eq('student_id', studentId)
-        .order('created_at', { ascending: false });
-
-      if (gradesError) throw gradesError;
-
-      // Fetch all assignments to identify types
+      // Fetch all assignment submissions to identify types and grades
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('assignment_submissions')
         .select('*')
@@ -147,40 +130,49 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
 
       if (attendanceError) throw attendanceError;
 
-      // Calculate journal grades (total 100 points possible for all journals combined)
-      const journalItems: JournalGrade[] = gradesData?.map(g => ({
-        id: g.id,
-        assignment_id: g.assignment_id,
-        instructor_score: g.instructor_score,
-        overall_score: g.overall_score,
-        created_at: g.created_at,
-        assignment_code: (g as any).mus240_assignments?.assignment_code
-      })) || [];
+      // Filter journal submissions (assignment_ids starting with 'lj' or containing 'journal')
+      const journalSubmissions = assignmentsData?.filter(a => 
+        a.assignment_id?.toLowerCase().startsWith('lj') || 
+        a.assignment_id?.toLowerCase().includes('journal')
+      ) || [];
+
+      const journalItems: JournalGrade[] = journalSubmissions.map(j => ({
+        id: j.id,
+        assignment_id: j.assignment_id,
+        instructor_score: j.grade,
+        overall_score: j.grade,
+        created_at: j.created_at,
+        assignment_code: j.assignment_id
+      }));
 
       const journalPointsTotal = journalItems.reduce((sum, g) => {
-        const score = g.instructor_score !== null ? g.instructor_score : g.overall_score;
-        return sum + (score || 0);
+        return sum + (g.instructor_score || 0);
       }, 0);
       
       // Normalize journals to 100 points total (18% of 550)
       const journalCount = journalItems.length;
       const journalGraded = journalItems.filter(g => 
-        g.instructor_score !== null || g.overall_score !== null
+        g.instructor_score !== null && g.instructor_score !== undefined
       ).length;
       const journalPossible = 100;
       const avgJournalScore = journalGraded > 0 ? journalPointsTotal / journalGraded : 0;
       const journalPoints = avgJournalScore; // Use average as the earned points out of 100
 
-      // Identify specific assignments by type
-      const researchProject = assignmentsData?.find(a => 
+      // Identify specific assignments by type (excluding journals)
+      const nonJournalAssignments = assignmentsData?.filter(a => 
+        !a.assignment_id?.toLowerCase().startsWith('lj') && 
+        !a.assignment_id?.toLowerCase().includes('journal')
+      ) || [];
+      
+      const researchProject = nonJournalAssignments.find(a => 
         a.assignment_id?.toLowerCase().includes('research') || 
         a.file_name?.toLowerCase().includes('research')
       );
-      const aiProject = assignmentsData?.find(a => 
+      const aiProject = nonJournalAssignments.find(a => 
         a.assignment_id?.toLowerCase().includes('ai') || 
         a.file_name?.toLowerCase().includes('ai')
       );
-      const finalEssay = assignmentsData?.find(a => 
+      const finalEssay = nonJournalAssignments.find(a => 
         a.assignment_id?.toLowerCase().includes('final') || 
         a.assignment_id?.toLowerCase().includes('reflection') ||
         a.file_name?.toLowerCase().includes('final') ||
