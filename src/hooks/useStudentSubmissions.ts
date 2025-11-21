@@ -91,15 +91,15 @@ export const useStudentSubmissions = () => {
         const journal = journals?.find(j => j.assignment_id === assignment.id);
         const grade = gradeMap[assignment.id];
         
-        return {
+        const submission = {
           id: journal?.id || `no-submission-${assignment.id}`,
           assignment_id: assignment.id,
           assignment_title: assignment.title,
           assignment_due_date: assignment.dueDate,
-          assignment_points: assignment.points,
+          assignment_points: assignment.points || 20,
           content: journal?.content || '',
           word_count: journal?.word_count || 0,
-          is_published: journal?.is_published || false,
+          is_published: journal?.is_published ?? false,
           status: journal ? 'submitted' : 'not-started',
           submitted_at: journal?.submitted_at || journal?.created_at || '',
           grade: grade ? {
@@ -110,6 +110,14 @@ export const useStudentSubmissions = () => {
           } : undefined,
           comment_count: journal ? (commentCountMap[journal.id] || 0) : 0
         };
+
+        console.log(`Assignment ${assignment.id}:`, {
+          hasJournal: !!journal,
+          isPublished: journal?.is_published,
+          submissionIsPublished: submission.is_published
+        });
+
+        return submission;
       });
 
       setSubmissions(submissionsWithDetails);
