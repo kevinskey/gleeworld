@@ -38,7 +38,7 @@ interface RoleSubmission {
 
 export const AIGroupProjectManager = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const { groups, loading: groupsLoading } = useMus240Groups('Fall 2024');
+  const { groups, loading: groupsLoading } = useMus240Groups('Fall 2025');
 
   // Fetch the AI Group Role assignment
   const { data: assignment } = useQuery({
@@ -52,6 +52,21 @@ export const AIGroupProjectManager = () => {
 
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Fetch ALL enrolled students to calculate accurate counts
+  const { data: enrolledStudents } = useQuery({
+    queryKey: ['enrolled-students-mus240'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('mus240_enrollments')
+        .select('student_id')
+        .eq('semester', 'Fall 2025')
+        .eq('enrollment_status', 'enrolled');
+
+      if (error) throw error;
+      return data || [];
     },
   });
 
@@ -70,20 +85,33 @@ export const AIGroupProjectManager = () => {
           submitted_at,
           status,
           gw_profiles!fk_assignment_submissions_student_id (
-            full_name
+            full_name,
+            user_id
           )
         `)
         .eq('assignment_id', assignment.id);
 
       if (error) throw error;
 
+      // Also fetch group memberships to connect students to groups
+      const { data: membershipsData } = await supabase
+        .from('mus240_group_memberships')
+        .select('member_id, group_id');
+
+      const membershipsMap = new Map(
+        membershipsData?.map(m => [m.member_id, m.group_id]) || []
+      );
+
       return data?.map(sub => {
         const roleData = sub.file_url ? JSON.parse(sub.file_url) : {};
+        const studentUserId = (sub.gw_profiles as any)?.user_id;
+        const groupId = membershipsMap.get(studentUserId) || null;
+
         return {
           id: sub.id,
           student_id: sub.student_id,
           student_name: (sub.gw_profiles as any)?.full_name || 'Unknown',
-          group_id: roleData.groupId || null,
+          group_id: groupId,
           creativity: roleData.areas?.includes('creativity') ? roleData.details : null,
           technology: roleData.areas?.includes('technology') ? roleData.details : null,
           writing: roleData.areas?.includes('writing') ? roleData.details : null,
@@ -110,7 +138,7 @@ export const AIGroupProjectManager = () => {
   }
 
   const submittedCount = roleSubmissions?.filter(s => s.status === 'submitted').length || 0;
-  const totalStudents = roleSubmissions?.length || 0;
+  const totalStudents = enrolledStudents?.length || 0;
   const submissionRate = totalStudents > 0 ? (submittedCount / totalStudents) * 100 : 0;
 
   return (
@@ -241,52 +269,68 @@ export const AIGroupProjectManager = () => {
         </TabsContent>
 
         <TabsContent value="groups" className="space-y-4">
-          {groups.map(group => {
-            const groupSubmissions = roleSubmissions?.filter(s => s.group_id === group.id) || [];
-            const submittedInGroup = groupSubmissions.filter(s => s.status === 'submitted').length;
-            const totalInGroup = group.member_count + 1; // +1 for leader
+          {groups.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No groups have been created yet.</p>
+                <p className="text-sm mt-2">Students can create groups at <a href="/classes/mus240/groups" className="text-primary hover:underline">/classes/mus240/groups</a></p>
+              </CardContent>
+            </Card>
+          ) : (
+            groups.map(group => {
+              const groupSubmissions = roleSubmissions?.filter(s => s.group_id === group.id) || [];
+              const submittedInGroup = groupSubmissions.filter(s => s.status === 'submitted').length;
+              const totalInGroup = group.member_count;
 
-            return (
-              <Card key={group.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
-                      {group.name}
-                    </CardTitle>
-                    <Badge variant={submittedInGroup === totalInGroup ? 'default' : 'secondary'}>
-                      {submittedInGroup}/{totalInGroup} Submitted
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {groupSubmissions.map(submission => (
-                      <div key={submission.id} className="flex items-center justify-between p-2 border rounded">
-                        <div className="flex items-center gap-2">
-                          {submission.status === 'submitted' ? (
-                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <AlertCircle className="h-4 w-4 text-orange-500" />
-                          )}
-                          <span className="text-sm">{submission.student_name}</span>
-                        </div>
-                        <div className="flex gap-1">
-                          {gradeAreas.map(area => {
-                            const hasRole = submission[area.id as keyof RoleSubmission];
-                            const Icon = area.icon;
-                            return hasRole ? (
-                              <Icon key={area.id} className={`h-4 w-4 ${area.color}`} />
-                            ) : null;
-                          })}
-                        </div>
+              return (
+                <Card key={group.id}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="flex items-center gap-2">
+                        <Users className="h-5 w-5" />
+                        {group.name}
+                      </CardTitle>
+                      <Badge variant={submittedInGroup === totalInGroup ? 'default' : 'secondary'}>
+                        {submittedInGroup}/{totalInGroup} Submitted
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {groupSubmissions.length === 0 ? (
+                      <div className="text-center py-4 text-muted-foreground text-sm">
+                        No role submissions yet from this group
                       </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                    ) : (
+                      <div className="space-y-2">
+                        {groupSubmissions.map(submission => (
+                          <div key={submission.id} className="flex items-center justify-between p-2 border rounded">
+                            <div className="flex items-center gap-2">
+                              {submission.status === 'submitted' ? (
+                                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <AlertCircle className="h-4 w-4 text-orange-500" />
+                              )}
+                              <span className="text-sm">{submission.student_name}</span>
+                            </div>
+                            <div className="flex gap-1">
+                              {gradeAreas.map(area => {
+                                const hasRole = submission[area.id as keyof RoleSubmission];
+                                const Icon = area.icon;
+                                return hasRole ? (
+                                  <Icon key={area.id} className={`h-4 w-4 ${area.color}`} />
+                                ) : null;
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
         </TabsContent>
 
         <TabsContent value="areas" className="space-y-4">
