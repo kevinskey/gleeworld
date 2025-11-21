@@ -42,6 +42,8 @@ import { UnifiedDashboard } from "./components/dashboard/UnifiedDashboard";
 import TestBuilderPage from "./pages/mus240/TestBuilderPage";
 import TestBuilderEdit from "./pages/TestBuilderEdit";
 import TestPreview from "./pages/TestPreview";
+import StudentTestPage from "./pages/StudentTestPage";
+import TestScoresPage from "./pages/TestScoresPage";
 
 import AuditionerDashboardPage from "./pages/AuditionerDashboardPage";
 import Mus240Auth from "./pages/Mus240Auth";
@@ -1978,14 +1980,30 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                                   <Route 
-                                     path="/test/:testId/preview" 
-                                     element={
-                                       <ProtectedRoute>
-                                         <TestPreview />
-                                       </ProtectedRoute>
-                                     } 
-                                   />
+                                    <Route 
+                                      path="/test/:testId/preview" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <TestPreview />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="/test/:testId/take" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <StudentTestPage />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="/test/:testId/scores" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <TestScoresPage />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
                                     
                                     {/* Grading System Routes */}
                                     <Route 

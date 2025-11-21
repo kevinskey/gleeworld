@@ -1,4 +1,4 @@
-import { Edit, Trash2, Eye, Copy } from 'lucide-react';
+import { Edit, Trash2, Eye, Copy, BarChart3, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
@@ -112,6 +112,28 @@ export const TestList = ({ tests, courseId }: TestListProps) => {
                     <Eye className="h-4 w-4 mr-2 relative z-10" />
                     <span className="relative z-10">Preview</span>
                   </Button>
+                  {test.is_published && (
+                    <>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => navigate(`/test/${test.id}/take`)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <PlayCircle className="h-4 w-4 mr-2" />
+                        Take Test
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/test/${test.id}/scores`)}
+                        className="hover:bg-accent hover:border-primary/30"
+                      >
+                        <BarChart3 className="h-4 w-4 mr-2" />
+                        View Scores
+                      </Button>
+                    </>
+                  )}
                   <Button
                     variant="outline"
                     size="sm"
