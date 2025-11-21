@@ -99,7 +99,8 @@ export const useStudentSubmissions = () => {
           assignment_points: assignment.points || 20,
           content: journal?.content || '',
           word_count: journal?.word_count || 0,
-          is_published: journal?.is_published ?? false,
+          // Treat any existing journal as a completed assignment for the student dashboard
+          is_published: !!journal,
           status: journal ? 'submitted' : 'not-started',
           submitted_at: journal?.submitted_at || journal?.created_at || '',
           grade: grade ? {
