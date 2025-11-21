@@ -173,7 +173,7 @@ export const StudentDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {gradeSummary ? (
+              {gradeSummary && gradeSummary.overall_percentage !== null ? (
                 <div>
                   <div className={`text-4xl font-bold ${getLetterGradeColor(gradeSummary.letter_grade)}`}>
                     {gradeSummary.letter_grade}
