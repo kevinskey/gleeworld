@@ -169,9 +169,15 @@ export const JournalEditor: React.FC<JournalEditorProps> = ({ assignment, onPubl
   };
 
   const handleSave = async () => {
-    const result = await saveJournal(assignment.id, content);
-    if (result) {
-      setHasChanges(false);
+    try {
+      const result = await saveJournal(assignment.id, content);
+      if (result) {
+        setHasChanges(false);
+      }
+    } catch (error) {
+      console.error('Error in handleSave:', error);
+      // Error already handled and toasted by saveJournal
+      // Just prevent component crash
     }
   };
 
