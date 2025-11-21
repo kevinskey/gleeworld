@@ -13,15 +13,12 @@ interface StudentGrade {
   student_id: string;
   student_name: string;
   student_email: string;
-  journals_earned: number;
-  journals_possible: number;
-  ai_group_project: number;
-  midterm: number;
-  participation: number;
-  final_essay: number;
-  current_grade: number;
-  projected_grade: number;
+  assignment_points: number;
+  participation_points: number;
+  overall_score: number;
+  overall_possible: number;
   letter_grade: string;
+  submissions_count: number;
 }
 
 export const StudentGradesRoster: React.FC = () => {
@@ -54,43 +51,38 @@ export const StudentGradesRoster: React.FC = () => {
         const profile = enrollment.gw_profiles;
         
         // Fetch all grade data for this student
-        const [journalGrades, groupProject, midterm, participation, finalEssay] = await Promise.all([
-          fetchJournalGrades(studentId),
-          fetchGroupProjectGrade(studentId),
-          fetchMidtermGrade(studentId),
-          fetchParticipationGrade(studentId),
-          fetchFinalEssayGrade(studentId)
+        const [assignmentPoints, participationPoints, submissionsCount] = await Promise.all([
+          fetchAssignmentPoints(studentId),
+          fetchParticipationPoints(studentId),
+          fetchSubmissionsCount(studentId)
         ]);
 
-        // Calculate current and projected grades
-        const currentEarned = journalGrades.earned + groupProject + midterm + participation + finalEssay;
-        const currentPossible = journalGrades.possible + (groupProject > 0 ? 250 : 0) + (midterm > 0 ? 100 : 0) + (participation > 0 ? 50 : 0) + (finalEssay > 0 ? 50 : 0);
-        const currentGrade = currentPossible > 0 ? (currentEarned / currentPossible) * 100 : 0;
-        
-        // Projected grade assumes perfect scores on remaining work
-        const totalPossible = 600; // 200 journals + 250 group + 100 midterm + 50 participation + 50 final
-        const projectedGrade = ((currentEarned + (totalPossible - currentPossible)) / totalPossible) * 100;
+        // Calculate overall score
+        const totalEarned = assignmentPoints.earned + participationPoints;
+        const totalPossible = 725; // 650 assignments + 75 participation
+        const overallPercentage = totalPossible > 0 ? (totalEarned / totalPossible) * 100 : 0;
 
         return {
           student_id: studentId,
           student_name: profile?.full_name || 'Unknown',
           student_email: profile?.email || '',
-          journals_earned: journalGrades.earned,
-          journals_possible: journalGrades.possible,
-          ai_group_project: groupProject,
-          midterm: midterm,
-          participation: participation,
-          final_essay: finalEssay,
-          current_grade: currentGrade,
-          projected_grade: projectedGrade,
-          letter_grade: getLetterGrade(currentGrade)
+          assignment_points: assignmentPoints.earned,
+          participation_points: participationPoints,
+          overall_score: totalEarned,
+          overall_possible: totalPossible,
+          letter_grade: getLetterGrade(overallPercentage),
+          submissions_count: submissionsCount
         };
       });
 
       const studentGrades = await Promise.all(studentGradesPromises);
 
-      // Sort by current grade descending
-      studentGrades.sort((a, b) => b.current_grade - a.current_grade);
+      // Sort by overall percentage descending
+      studentGrades.sort((a, b) => {
+        const aPercent = (a.overall_score / a.overall_possible) * 100;
+        const bPercent = (b.overall_score / b.overall_possible) * 100;
+        return bPercent - aPercent;
+      });
       setStudents(studentGrades);
     } catch (error) {
       console.error('Error fetching student grades:', error);
@@ -100,53 +92,36 @@ export const StudentGradesRoster: React.FC = () => {
     }
   };
 
-  const fetchJournalGrades = async (studentId: string) => {
-    const { data: grades } = await supabase
+  const fetchAssignmentPoints = async (studentId: string) => {
+    // Fetch journal grades (max 200 points: 10 journals × 20 points)
+    const { data: journals } = await supabase
       .from('mus240_journal_grades')
       .select('overall_score')
       .eq('student_id', studentId);
 
-    const earned = (grades || []).reduce((sum, g) => sum + (g.overall_score || 0), 0);
-    const possible = (grades || []).length * 20;
+    const journalPoints = (journals || []).reduce((sum, j) => sum + (j.overall_score || 0), 0);
     
-    return { earned, possible };
-  };
-
-  const fetchGroupProjectGrade = async (studentId: string) => {
+    // Fetch all assignment submissions (excluding journals)
     const { data: submissions } = await supabase
       .from('assignment_submissions')
       .select('grade')
-      .eq('student_id', studentId)
-      .or('file_name.ilike.%research%,file_name.ilike.%group%,file_name.ilike.%AI%');
+      .eq('student_id', studentId);
 
-    if (!submissions || submissions.length === 0) return 0;
+    const assignmentPoints = (submissions || []).reduce((sum, s) => sum + (s.grade || 0), 0);
     
-    // Sum all AI/group/research project grades (now combined as one 250-point category)
-    const total = submissions.reduce((sum, s) => sum + (s.grade || 0), 0);
-    return Math.min(total, 250); // Cap at 250 points
+    // Total assignment points = journals + other assignments (out of 650 total)
+    return { earned: journalPoints + assignmentPoints, possible: 650 };
   };
 
-  const fetchMidtermGrade = async (studentId: string) => {
-    const { data: midterm } = await supabase
-      .from('mus240_midterm_submissions')
-      .select('grade')
-      .eq('user_id', studentId)
-      .eq('is_submitted', true)
-      .single();
-
-    if (!midterm?.grade) return 0;
-    
-    // Convert 90-point midterm to 100-point scale
-    return (midterm.grade / 90) * 100;
-  };
-
-  const fetchParticipationGrade = async (studentId: string) => {
+  const fetchParticipationPoints = async (studentId: string) => {
+    // Fetch participation grades
     const { data: participation } = await supabase
       .from('mus240_participation_grades')
-      .select('points_earned, points_possible')
+      .select('points_earned')
       .eq('student_id', studentId)
       .single();
 
+    // Fetch poll responses
     const { data: pollResponses } = await supabase
       .from('mus240_poll_responses')
       .select('poll_id')
@@ -157,24 +132,22 @@ export const StudentGradesRoster: React.FC = () => {
       .select('id');
 
     const basePoints = participation?.points_earned || 0;
-    const basePossible = participation?.points_possible || 75;
     const uniquePolls = new Set(pollResponses?.map(r => r.poll_id) || []).size;
     const totalPolls = allPolls?.length || 0;
     const pollRate = totalPolls > 0 ? uniquePolls / totalPolls : 0;
     
-    const normalizedBase = basePossible > 0 ? (basePoints / basePossible) : 0;
-    return ((normalizedBase * 0.7) + (pollRate * 0.3)) * 50;
+    // Combined participation: 70% base + 30% polls, out of 75 points
+    const normalizedBase = (basePoints / 75);
+    return ((normalizedBase * 0.7) + (pollRate * 0.3)) * 75;
   };
 
-  const fetchFinalEssayGrade = async (studentId: string) => {
-    const { data: submission } = await supabase
+  const fetchSubmissionsCount = async (studentId: string) => {
+    const { data: submissions } = await supabase
       .from('assignment_submissions')
-      .select('grade')
-      .eq('student_id', studentId)
-      .ilike('file_name', '%final%reflection%')
-      .single();
+      .select('id')
+      .eq('student_id', studentId);
 
-    return submission?.grade || 0;
+    return submissions?.length || 0;
   };
 
   const getLetterGrade = (percentage: number): string => {
@@ -203,17 +176,16 @@ export const StudentGradesRoster: React.FC = () => {
 
   const exportGrades = () => {
     const csv = [
-      ['Student Name', 'Email', 'Journals', 'AI Group Project', 'Midterm', 'Participation', 'Final Essay', 'Current %', 'Letter Grade'].join(','),
+      ['Student Name', 'Email', 'Assignment Points', 'Participation', 'Overall Score', 'Overall %', 'Letter Grade', 'Submissions'].join(','),
       ...students.map(s => [
         s.student_name,
         s.student_email,
-        `${s.journals_earned}/${s.journals_possible}`,
-        s.ai_group_project,
-        s.midterm,
-        s.participation,
-        s.final_essay,
-        s.current_grade.toFixed(1),
-        s.letter_grade
+        `${s.assignment_points}/650`,
+        `${s.participation_points.toFixed(0)}/75`,
+        `${s.overall_score.toFixed(0)}/725`,
+        ((s.overall_score / s.overall_possible) * 100).toFixed(1),
+        s.letter_grade,
+        s.submissions_count
       ].join(','))
     ].join('\n');
 
@@ -270,65 +242,79 @@ export const StudentGradesRoster: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
-                <TableHead className="text-right">Journals</TableHead>
-                <TableHead className="text-right">AI Group</TableHead>
-                <TableHead className="text-right">Midterm</TableHead>
+                <TableHead className="text-right">Assignment Points</TableHead>
                 <TableHead className="text-right">Participation</TableHead>
-                <TableHead className="text-right">Final</TableHead>
-                <TableHead className="text-right">Current %</TableHead>
+                <TableHead className="text-right">Overall Score</TableHead>
                 <TableHead className="text-center">Grade</TableHead>
+                <TableHead className="text-right">Submissions</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredStudents.map((student) => (
-                <TableRow 
-                  key={student.student_id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => navigate(`/classes/mus240/instructor/student/${student.student_id}`)}
-                >
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{student.student_name}</p>
-                      <p className="text-sm text-muted-foreground">{student.student_email}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className="text-sm">
-                      {student.journals_earned.toFixed(0)}/{student.journals_possible}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className="text-sm">{student.ai_group_project.toFixed(0)}/250</span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className="text-sm">{student.midterm.toFixed(0)}/100</span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className="text-sm">{student.participation.toFixed(0)}/50</span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <span className="text-sm">{student.final_essay.toFixed(0)}/50</span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <span className="font-semibold">{student.current_grade.toFixed(1)}%</span>
-                      {student.projected_grade > student.current_grade ? (
-                        <TrendingUp className="h-3 w-3 text-green-600" />
-                      ) : (
-                        <TrendingDown className="h-3 w-3 text-orange-600" />
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge className={getLetterGradeColor(student.letter_grade)}>
-                      {student.letter_grade}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredStudents.map((student) => {
+                const overallPercentage = (student.overall_score / student.overall_possible) * 100;
+                return (
+                  <TableRow 
+                    key={student.student_id}
+                    className="hover:bg-muted/50"
+                  >
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{student.student_name}</p>
+                        <p className="text-sm text-muted-foreground">{student.student_email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{student.assignment_points.toFixed(0)}/650</p>
+                        <div className="w-24 bg-muted rounded-full h-1.5 ml-auto">
+                          <div 
+                            className="bg-primary h-1.5 rounded-full" 
+                            style={{ width: `${Math.min((student.assignment_points / 650) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium">{student.participation_points.toFixed(0)}/75</p>
+                        <div className="w-24 bg-muted rounded-full h-1.5 ml-auto">
+                          <div 
+                            className="bg-primary h-1.5 rounded-full" 
+                            style={{ width: `${Math.min((student.participation_points / 75) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold">{overallPercentage.toFixed(1)}%</p>
+                        <p className="text-xs text-muted-foreground">{student.overall_score.toFixed(0)}/725</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge className={getLetterGradeColor(student.letter_grade)}>
+                        {student.letter_grade}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <span className="text-sm">{student.submissions_count}</span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigate(`/classes/mus240/instructor/student/${student.student_id}`)}
+                      >
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {filteredStudents.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No students found
                   </TableCell>
                 </TableRow>
