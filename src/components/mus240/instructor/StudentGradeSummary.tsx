@@ -40,11 +40,6 @@ interface GradeBreakdown {
     graded: number;
     items: JournalGrade[];
   };
-  researchProject: {
-    earned: number;
-    possible: number;
-    submitted: boolean;
-  };
   aiGroupProject: {
     earned: number;
     possible: number;
@@ -170,6 +165,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         !a.assignment_id?.toLowerCase().includes('journal')
       ) || [];
       
+      // Combine research project and AI project into one "AI Group Project" (250 points total)
       const researchProject = nonJournalAssignments.find(a => 
         a.assignment_id?.toLowerCase().includes('research') || 
         a.file_name?.toLowerCase().includes('research')
@@ -178,6 +174,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         a.assignment_id?.toLowerCase().includes('ai') || 
         a.file_name?.toLowerCase().includes('ai')
       );
+      
       const finalEssay = nonJournalAssignments.find(a => 
         a.assignment_id?.toLowerCase().includes('final') || 
         a.assignment_id?.toLowerCase().includes('reflection') ||
@@ -185,17 +182,23 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         a.file_name?.toLowerCase().includes('reflection')
       );
 
-      // Calculate individual assignment grades (normalized to grading policy scale)
-      const researchPossible = 150;
-      const researchPoints = researchProject?.grade 
-        ? (researchProject.grade / 100) * researchPossible 
-        : 0;
+      // Calculate AI Group Project grade (combined research + AI = 250 points)
+      const aiGroupPossible = 250;
+      let aiGroupPoints = 0;
+      let aiGroupSubmitted = false;
       
-      const aiPossible = 100;
-      const aiPoints = aiProject?.grade 
-        ? (aiProject.grade / 100) * aiPossible 
-        : 0;
+      // Add research project portion (150 points)
+      if (researchProject?.grade !== null && researchProject?.grade !== undefined) {
+        aiGroupPoints += (researchProject.grade / 100) * 150;
+        aiGroupSubmitted = true;
+      }
       
+      // Add AI project portion (100 points)
+      if (aiProject?.grade !== null && aiProject?.grade !== undefined) {
+        aiGroupPoints += (aiProject.grade / 100) * 100;
+        aiGroupSubmitted = true;
+      }
+
       const finalEssayPossible = 50;
       const finalEssayPoints = finalEssay?.grade 
         ? (finalEssay.grade / 100) * finalEssayPossible 
@@ -223,16 +226,10 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         currentPossible += journalPossible;
       }
 
-      // Add research project if graded
-      if (researchProject?.grade !== null && researchProject?.grade !== undefined) {
-        currentEarned += researchPoints;
-        currentPossible += researchPossible;
-      }
-
-      // Add AI project if graded
-      if (aiProject?.grade !== null && aiProject?.grade !== undefined) {
-        currentEarned += aiPoints;
-        currentPossible += aiPossible;
+      // Add AI Group Project if graded
+      if (aiGroupSubmitted) {
+        currentEarned += aiGroupPoints;
+        currentPossible += aiGroupPossible;
       }
 
       // Add midterm if graded
@@ -257,12 +254,11 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
       // Calculate projected final grade (assume 100% on remaining work)
       const projectedEarned = currentEarned + 
         (journalGraded === 0 ? journalPossible : 0) +
-        (!researchProject?.grade ? researchPossible : 0) +
-        (!aiProject?.grade ? aiPossible : 0) +
+        (!aiGroupSubmitted ? aiGroupPossible : 0) +
         (!midterm?.grade ? midtermPossible : 0) +
         (!finalEssay?.grade ? finalEssayPossible : 0);
       
-      const projectedPossible = 550; // Total points in course
+      const projectedPossible = 600; // Total points: 200 journals + 250 AI + 100 midterm + 50 essay
       const projectedPercentage = (projectedEarned / projectedPossible) * 100;
       const projectedLetterGrade = getLetterGrade(projectedPercentage);
 
@@ -277,15 +273,10 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
           graded: journalGraded,
           items: journalItems
         },
-        researchProject: {
-          earned: researchPoints,
-          possible: researchPossible,
-          submitted: !!researchProject
-        },
         aiGroupProject: {
-          earned: aiPoints,
-          possible: aiPossible,
-          submitted: !!aiProject
+          earned: aiGroupPoints,
+          possible: aiGroupPossible,
+          submitted: aiGroupSubmitted
         },
         midterm: {
           earned: midtermPoints,
@@ -380,16 +371,6 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
       hasDetail: true
-    },
-    {
-      icon: FileText,
-      title: 'Research Project',
-      earned: gradeData.researchProject.earned,
-      possible: gradeData.researchProject.possible,
-      meta: gradeData.researchProject.submitted ? 'Submitted' : 'Not submitted',
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      hasDetail: false
     },
     {
       icon: Brain,
@@ -636,38 +617,28 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
               </thead>
               <tbody className="divide-y divide-border">
                 <tr className="hover:bg-muted/30">
-                  <td className="p-4">Listening Journals</td>
-                  <td className="p-4">100</td>
-                  <td className="p-4">18%</td>
-                </tr>
-                <tr className="hover:bg-muted/30">
-                  <td className="p-4">Research Project</td>
-                  <td className="p-4">150</td>
-                  <td className="p-4">27%</td>
+                  <td className="p-4">Listening Journals (10 × 20 pts)</td>
+                  <td className="p-4">200</td>
+                  <td className="p-4">33%</td>
                 </tr>
                 <tr className="hover:bg-muted/30">
                   <td className="p-4">AI Group Project</td>
-                  <td className="p-4">100</td>
-                  <td className="p-4">18%</td>
+                  <td className="p-4">250</td>
+                  <td className="p-4">42%</td>
                 </tr>
                 <tr className="hover:bg-muted/30">
                   <td className="p-4">Midterm Exam</td>
                   <td className="p-4">100</td>
-                  <td className="p-4">18%</td>
+                  <td className="p-4">17%</td>
                 </tr>
                 <tr className="hover:bg-muted/30">
                   <td className="p-4">Final Reflection Essay</td>
                   <td className="p-4">50</td>
-                  <td className="p-4">9%</td>
-                </tr>
-                <tr className="hover:bg-muted/30">
-                  <td className="p-4">Participation, Discussion & Attendance</td>
-                  <td className="p-4">50</td>
-                  <td className="p-4">9%</td>
+                  <td className="p-4">8%</td>
                 </tr>
                 <tr className="bg-primary text-primary-foreground font-bold">
                   <td className="p-4">Total</td>
-                  <td className="p-4">550</td>
+                  <td className="p-4">600</td>
                   <td className="p-4">100%</td>
                 </tr>
               </tbody>
