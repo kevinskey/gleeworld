@@ -18,7 +18,8 @@ import {
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  Award
+  Award,
+  ExternalLink
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useUserById } from '@/hooks/useUserById';
@@ -272,6 +273,16 @@ export const StudentWorkOverview = () => {
               </SelectContent>
             </Select>
           </div>
+
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => window.open(`/classes/mus240/student-dashboard`, '_blank')}
+            className="bg-primary"
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            View Student Dashboard
+          </Button>
         </div>
 
         {/* Student Info Card */}

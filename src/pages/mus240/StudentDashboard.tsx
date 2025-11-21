@@ -43,20 +43,21 @@ export const StudentDashboard = () => {
   const { gradeSummary, participationGrade, loading: progressLoading } = useMus240Progress();
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState('');
-  const [sortBy, setSortBy] = useState<'dueDate' | 'title' | 'points'>('dueDate');
+  const [sortBy, setSortBy] = useState<'dueDate' | 'title'>('dueDate');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Get all incomplete assignments
   const incompleteAssignments = submissions.filter(s => !s.is_published);
 
   // Sort incomplete assignments
   const sortedIncompleteAssignments = [...incompleteAssignments].sort((a, b) => {
+    let comparison = 0;
     if (sortBy === 'dueDate') {
-      return new Date(a.assignment_due_date).getTime() - new Date(b.assignment_due_date).getTime();
+      comparison = new Date(a.assignment_due_date).getTime() - new Date(b.assignment_due_date).getTime();
     } else if (sortBy === 'title') {
-      return a.assignment_title.localeCompare(b.assignment_title);
-    } else {
-      return (b.assignment_points || 0) - (a.assignment_points || 0);
+      comparison = a.assignment_title.localeCompare(b.assignment_title);
     }
+    return sortOrder === 'asc' ? comparison : -comparison;
   });
 
   // Get upcoming assignments (due within 7 days)
@@ -300,17 +301,22 @@ export const StudentDashboard = () => {
                     Incomplete Assignments
                   </CardTitle>
                   <div className="flex items-center gap-2">
-                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                     <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                      <SelectTrigger className="w-[140px]">
+                      <SelectTrigger className="w-[120px]">
                         <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="dueDate">Due Date</SelectItem>
                         <SelectItem value="title">Title</SelectItem>
-                        <SelectItem value="points">Points</SelectItem>
                       </SelectContent>
                     </Select>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    >
+                      <ArrowUpDown className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
