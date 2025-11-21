@@ -139,7 +139,7 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
 
       if (attendanceError) throw attendanceError;
 
-      // Calculate journal grades: each journal is worth 20 points
+      // Calculate journal grades: 10 journals required at 20 points each = 200 points total
       const journalItems: JournalGrade[] = journalGrades?.map(g => ({
         id: g.id,
         assignment_id: g.assignment_id,
@@ -149,22 +149,16 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
         assignment_code: undefined
       })) || [];
 
-      // Sum the recorded scores (stored as 0–20 per journal)
-      const journalPointsTotalRaw = journalItems.reduce((sum, g) => {
+      // Sum the actual scores earned (each journal is 0-20 points)
+      const journalPoints = journalItems.reduce((sum, g) => {
         const score = g.instructor_score !== null && g.instructor_score !== undefined
           ? g.instructor_score
           : g.overall_score;
         return sum + (score || 0);
       }, 0);
       
-      // Normalize journals to 100 points total (5 journals × 20 points each)
       const journalCount = journalItems.length;
-      const journalMaxPerEntry = 20; // each journal is scored out of 20 points
-      const journalTotalPossibleRaw = journalCount * journalMaxPerEntry;
-      const journalPossible = 100;
-      const journalPoints = journalTotalPossibleRaw > 0
-        ? (journalPointsTotalRaw / journalTotalPossibleRaw) * journalPossible
-        : 0;
+      const journalPossible = 200; // 10 journals × 20 points each
       const journalGraded = journalItems.filter(g => 
         (g.instructor_score !== null && g.instructor_score !== undefined) ||
         (g.overall_score !== null && g.overall_score !== undefined)
