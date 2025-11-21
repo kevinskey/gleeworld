@@ -34,6 +34,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 export const StudentDashboard = () => {
   const { user } = useAuth();
@@ -45,6 +46,39 @@ export const StudentDashboard = () => {
   const [emailMessage, setEmailMessage] = useState('');
   const [sortBy, setSortBy] = useState<'dueDate' | 'title'>('dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+
+  // Fetch published tests for practice
+  const { data: practiceTests = [], isLoading: testsLoading } = useQuery({
+    queryKey: ['practice-tests', 'mus240'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('glee_academy_tests')
+        .select('*')
+        .eq('course_id', 'mus240')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Fetch student's test submissions
+  const { data: testSubmissions = [] } = useQuery({
+    queryKey: ['test-submissions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('test_submissions')
+        .select('*')
+        .eq('student_id', user.id);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
 
   // Get all incomplete assignments
   const incompleteAssignments = submissions.filter(s => !s.is_published);
@@ -285,8 +319,9 @@ export const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="assignments" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="practice-tests">Practice Tests</TabsTrigger>
             <TabsTrigger value="ai-group">AI Group</TabsTrigger>
             <TabsTrigger value="grades">Grades</TabsTrigger>
             <TabsTrigger value="announcements">Announcements</TabsTrigger>
@@ -366,6 +401,104 @@ export const StudentDashboard = () => {
                     <CheckCircle className="h-12 w-12 mx-auto text-green-500 mb-4" />
                     <p className="text-muted-foreground">You're all caught up! No incomplete assignments.</p>
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="practice-tests" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Practice Tests
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {testsLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading tests...</div>
+                ) : practiceTests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No practice tests available yet.</p>
+                  </div>
+                ) : (
+                  practiceTests.map((test) => {
+                    const submission = testSubmissions.find(s => s.test_id === test.id);
+                    const hasCompleted = submission?.submitted_at;
+                    
+                    return (
+                      <div
+                        key={test.id}
+                        className="p-4 border rounded-lg hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold">{test.title}</h3>
+                              {hasCompleted && (
+                                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  Completed
+                                </Badge>
+                              )}
+                            </div>
+                            {test.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{test.description}</p>
+                            )}
+                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                <span>{test.duration_minutes} minutes</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Trophy className="h-3 w-3" />
+                                <span>{test.total_points} points</span>
+                              </div>
+                              {submission?.percentage !== null && submission?.percentage !== undefined && (
+                                <div className="flex items-center gap-1 font-semibold text-blue-600">
+                                  Score: {submission.percentage}%
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {hasCompleted && test.show_correct_answers && submission && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/test/${test.id}/results/${submission.id}`)}
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                View Results
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              onClick={() => navigate(`/test/${test.id}/take`)}
+                              disabled={hasCompleted && !test.allow_retakes}
+                            >
+                              {hasCompleted ? (
+                                test.allow_retakes ? (
+                                  <>
+                                    <Edit className="h-3 w-3 mr-1" />
+                                    Retake
+                                  </>
+                                ) : (
+                                  'No Retakes'
+                                )
+                              ) : (
+                                <>
+                                  <Edit className="h-3 w-3 mr-1" />
+                                  Start Test
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
                 )}
               </CardContent>
             </Card>
