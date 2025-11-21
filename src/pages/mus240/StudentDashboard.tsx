@@ -22,7 +22,8 @@ import {
   Trophy,
   MessageSquare,
   Brain,
-  ArrowUpDown
+  ArrowUpDown,
+  Home
 } from 'lucide-react';
 import { AIGroupRoleSubmission } from '@/components/mus240/student/AIGroupRoleSubmission';
 import { useStudentSubmissions } from '@/hooks/useStudentSubmissions';
@@ -42,6 +43,22 @@ export const StudentDashboard = () => {
   const { toast } = useToast();
   const { submissions, loading: submissionsLoading } = useStudentSubmissions();
   const { gradeSummary, participationGrade, loading: progressLoading } = useMus240Progress();
+  
+  // Check if user is admin
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', user.id)
+        .single();
+      setIsAdmin(data?.is_admin || data?.is_super_admin || false);
+    };
+    checkAdmin();
+  }, [user]);
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [emailMessage, setEmailMessage] = useState('');
   const [sortBy, setSortBy] = useState<'dueDate' | 'title'>('dueDate');
@@ -208,30 +225,38 @@ export const StudentDashboard = () => {
             <h1 className="text-3xl font-bold">MUS 240 Dashboard</h1>
             <p className="text-muted-foreground">Survey of African American Music</p>
           </div>
-          <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Mail className="h-4 w-4 mr-2" />
-                Email Instructor
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button variant="outline" onClick={() => navigate('/classes/mus240/admin')}>
+                <Home className="h-4 w-4 mr-2" />
+                Back to Admin
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Email Dr. Kevin Phillip Johnson</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Textarea
-                  placeholder="Type your message here..."
-                  value={emailMessage}
-                  onChange={(e) => setEmailMessage(e.target.value)}
-                  rows={6}
-                />
-                <Button onClick={handleEmailInstructor} className="w-full">
-                  Send Message
+            )}
+            <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Email Instructor
                 </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Email Dr. Kevin Phillip Johnson</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <Textarea
+                    placeholder="Type your message here..."
+                    value={emailMessage}
+                    onChange={(e) => setEmailMessage(e.target.value)}
+                    rows={6}
+                  />
+                  <Button onClick={handleEmailInstructor} className="w-full">
+                    Send Message
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
 
