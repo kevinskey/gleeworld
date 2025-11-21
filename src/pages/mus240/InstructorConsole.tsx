@@ -27,6 +27,7 @@ import { useQuery } from '@tanstack/react-query';
 import { RubricEditor } from '@/components/mus240/rubrics/RubricEditor';
 import { RubricManager } from '@/components/mus240/rubrics/RubricManager';
 import { StudentCommunications } from '@/components/mus240/instructor/StudentCommunications';
+import { AIGroupProjectManager } from '@/components/mus240/instructor/AIGroupProjectManager';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -116,6 +117,10 @@ export const InstructorConsole = () => {
     value: 'polls',
     label: 'Polls',
     icon: BarChart3
+  }, {
+    value: 'ai-groups',
+    label: 'AI Group Project',
+    icon: Brain
   }, {
     value: 'grades',
     label: 'Grades',
@@ -303,6 +308,19 @@ export const InstructorConsole = () => {
                     <PollResultsViewer />
                     <PollParticipationTracker />
                   </div>
+                </CardContent>
+              </Card>}
+
+            {activeTab === 'ai-groups' && <Card>
+                <CardHeader className="border-b">
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Brain className="h-5 w-5" />
+                    AI Group Project
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">Monitor group projects and role assignments</p>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <AIGroupProjectManager />
                 </CardContent>
               </Card>}
 
