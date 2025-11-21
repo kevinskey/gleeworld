@@ -245,7 +245,21 @@ export const AIGroupRoleSubmission = () => {
               id="details"
               value={details}
               onChange={(e) => setDetails(e.target.value)}
-              placeholder="Example: I led the AI integration, developed the model training pipeline, and created the user interface mockups..."
+              placeholder={
+                selectedAreas.length === 0
+                  ? "Example: I led the AI integration, developed the model training pipeline, and created the user interface mockups..."
+                  : selectedAreas.includes('creativity')
+                  ? "Example: I brainstormed innovative approaches, designed creative solutions, and proposed new ideas for the project..."
+                  : selectedAreas.includes('technology')
+                  ? "Example: I led the AI integration, developed the model training pipeline, implemented the backend systems..."
+                  : selectedAreas.includes('writing')
+                  ? "Example: I wrote the project documentation, conducted analysis, and created written content for the report..."
+                  : selectedAreas.includes('presentation')
+                  ? "Example: I designed the visual elements, created the user interface mockups, and developed the presentation slides..."
+                  : selectedAreas.includes('research')
+                  ? "Example: I conducted literature reviews, gathered data, and synthesized research findings..."
+                  : "Describe your specific contributions to the selected areas..."
+              }
               rows={6}
               disabled={submitMutation.isPending}
             />
