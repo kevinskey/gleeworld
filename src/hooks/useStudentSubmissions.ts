@@ -53,6 +53,29 @@ export const useStudentSubmissions = () => {
 
       if (journalsError) throw journalsError;
 
+      // Get all listening journal assignments from gw_assignments to get UUID mapping
+      const { data: gwAssignments, error: gwAssignError } = await supabase
+        .from('gw_assignments')
+        .select('id, legacy_id, title')
+        .eq('assignment_type', 'listening_journal');
+
+      if (gwAssignError) {
+        console.error('Error fetching gw_assignments:', gwAssignError);
+      }
+
+      // Create mapping from UUID to legacy ID (e.g., "550e8400..." -> "lj1")
+      const uuidToLegacyMap: Record<string, string> = {};
+      
+      gwAssignments?.forEach(assignment => {
+        if (assignment.legacy_id) {
+          // Map both the gw_assignment.id and the legacy_id to the actual legacy code
+          uuidToLegacyMap[assignment.id] = assignment.legacy_id;
+          uuidToLegacyMap[assignment.legacy_id] = assignment.legacy_id;
+        }
+      });
+
+      console.log('UUID to Legacy mapping:', uuidToLegacyMap);
+
       // Fetch grades for user's submissions
       const { data: grades, error: gradesError } = await supabase
         .from('mus240_journal_grades')
@@ -78,30 +101,20 @@ export const useStudentSubmissions = () => {
         return acc;
       }, {}) || {};
 
-      // Get all assignments FIRST (before creating grade map)
+      // Get all assignments from the constant
       const allAssignments = mus240Assignments
         .flatMap(week => week.assignments)
         .filter(a => a.type === 'listening-journal');
 
-      // Create grade map - match both UUID and legacy IDs
+      // Create grade map - normalize all assignment_ids to legacy format
       const gradeMap = grades?.reduce((acc: Record<string, any>, grade) => {
-        // Store by the grade's assignment_id
-        acc[grade.assignment_id] = grade;
-        
-        // Also try to match by finding the assignment with matching UUID
-        const assignmentWithUuid = allAssignments.find(a => {
-          // Check if this assignment's data has a UUID that matches
-          return a.id === grade.assignment_id || (a as any).uuid === grade.assignment_id;
-        });
-        
-        if (assignmentWithUuid) {
-          acc[assignmentWithUuid.id] = grade;
-        }
-        
+        // Convert grade's assignment_id to legacy format if it's a UUID
+        const legacyId = uuidToLegacyMap[grade.assignment_id] || grade.assignment_id;
+        acc[legacyId] = grade;
         return acc;
       }, {}) || {};
 
-      console.log('Grade map:', gradeMap);
+      console.log('Grade map (by legacy ID):', gradeMap);
       console.log('All assignment IDs:', allAssignments.map(a => a.id));
 
       const submissionsWithDetails: StudentSubmission[] = allAssignments.map(assignment => {
