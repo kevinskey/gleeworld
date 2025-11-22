@@ -61,6 +61,8 @@ export const useStudentSubmissions = () => {
 
       if (gradesError) throw gradesError;
 
+      console.log('Fetched grades:', grades);
+
       // Fetch comment counts for each journal
       const journalIds = journals?.map(j => j.id) || [];
       const { data: commentCounts, error: commentsError } = await supabase
@@ -76,16 +78,31 @@ export const useStudentSubmissions = () => {
         return acc;
       }, {}) || {};
 
-      // Create grade map
-      const gradeMap = grades?.reduce((acc: Record<string, any>, grade) => {
-        acc[grade.assignment_id] = grade;
-        return acc;
-      }, {}) || {};
-
-      // Get all assignments and merge with submissions
+      // Get all assignments FIRST (before creating grade map)
       const allAssignments = mus240Assignments
         .flatMap(week => week.assignments)
         .filter(a => a.type === 'listening-journal');
+
+      // Create grade map - match both UUID and legacy IDs
+      const gradeMap = grades?.reduce((acc: Record<string, any>, grade) => {
+        // Store by the grade's assignment_id
+        acc[grade.assignment_id] = grade;
+        
+        // Also try to match by finding the assignment with matching UUID
+        const assignmentWithUuid = allAssignments.find(a => {
+          // Check if this assignment's data has a UUID that matches
+          return a.id === grade.assignment_id || (a as any).uuid === grade.assignment_id;
+        });
+        
+        if (assignmentWithUuid) {
+          acc[assignmentWithUuid.id] = grade;
+        }
+        
+        return acc;
+      }, {}) || {};
+
+      console.log('Grade map:', gradeMap);
+      console.log('All assignment IDs:', allAssignments.map(a => a.id));
 
       const submissionsWithDetails: StudentSubmission[] = allAssignments.map(assignment => {
         const journal = journals?.find(j => j.assignment_id === assignment.id);
