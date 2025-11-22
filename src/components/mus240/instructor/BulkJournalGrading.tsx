@@ -235,7 +235,35 @@ export const BulkJournalGrading = () => {
     }
 
     setBulkGrading(true);
-    const selectedJournalList = journals.filter(j => selectedJournals.has(j.id));
+    const selectedJournalList = journals.filter(j => 
+      selectedJournals.has(j.id) && 
+      j.content && 
+      j.content.trim().length > 0
+    );
+    
+    const emptyContentCount = journals.filter(j => 
+      selectedJournals.has(j.id) && 
+      (!j.content || j.content.trim().length === 0)
+    ).length;
+    
+    if (emptyContentCount > 0) {
+      toast({
+        title: "Skipped Empty Journals",
+        description: `${emptyContentCount} journal(s) with no content were skipped`,
+        variant: "default"
+      });
+    }
+    
+    if (selectedJournalList.length === 0) {
+      toast({
+        title: "No Valid Journals",
+        description: "All selected journals are empty",
+        variant: "destructive"
+      });
+      setBulkGrading(false);
+      return;
+    }
+    
     setProgress({ total: selectedJournalList.length, completed: 0, errors: [] });
 
     let completed = 0;
