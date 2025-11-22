@@ -181,6 +181,7 @@ import { Mus240EnrollmentRoute } from "./components/auth/Mus240EnrollmentRoute";
 import { Mus240StaffRoute } from "./components/auth/Mus240StaffRoute";
 import TimesheetPage from "./pages/TimesheetPage";
 import BownaScholarLanding from "./pages/BownaScholarLanding";
+import SMSTest from "./pages/SMSTest";
 
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
@@ -1681,22 +1682,30 @@ const App = () => {
                                 </ProtectedRoute>
                               } 
                             />
-                            <Route 
-                              path="/member/notifications" 
-                              element={
-                                <ProtectedRoute>
-                                  <UniversalLayout>
-                                    <Notifications />
-                                  </UniversalLayout>
-                                </ProtectedRoute>
-                              } 
-                            />
-                            <Route 
-                              path="/member/settings" 
-                              element={
-                                <ProtectedRoute>
-                                  <UniversalLayout>
-                                    <SystemSettings />
+                             <Route 
+                               path="/member/notifications" 
+                               element={
+                                 <ProtectedRoute>
+                                   <UniversalLayout>
+                                     <Notifications />
+                                   </UniversalLayout>
+                                 </ProtectedRoute>
+                               } 
+                             />
+                             <Route 
+                               path="/sms-test" 
+                               element={
+                                 <ProtectedRoute>
+                                   <SMSTest />
+                                 </ProtectedRoute>
+                               } 
+                             />
+                             <Route 
+                               path="/member/settings" 
+                               element={
+                                 <ProtectedRoute>
+                                   <UniversalLayout>
+                                     <SystemSettings />
                                   </UniversalLayout>
                                 </ProtectedRoute>
                               } 
