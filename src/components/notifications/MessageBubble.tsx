@@ -2,6 +2,7 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Check, CheckCheck } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface Message {
   id: string;
@@ -19,16 +20,47 @@ interface MessageBubbleProps {
   message: Message;
 }
 
+const highlightMentions = (text: string) => {
+  // Highlight @mentions with GroupMe-style formatting
+  const parts = text.split(/(@\w+)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('@')) {
+      return (
+        <span key={index} className="font-semibold text-[hsl(var(--message-header))] bg-[hsl(var(--message-header))]/10 px-1 rounded">
+          {part}
+        </span>
+      );
+    }
+    return part;
+  });
+};
+
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isOutbound = message.direction === 'outbound';
   const isDelivered = message.status === 'delivered';
   const isFailed = message.status === 'failed';
 
+  const senderInitials = message.sender_name
+    ?.split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2) || '?';
+
   return (
     <div className={cn(
-      'flex mb-3',
+      'flex gap-2 mb-3',
       isOutbound ? 'justify-end' : 'justify-start'
     )}>
+      {/* Avatar for received messages */}
+      {!isOutbound && (
+        <Avatar className="h-9 w-9 flex-shrink-0 mt-0.5">
+          <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] text-xs font-medium">
+            {senderInitials}
+          </AvatarFallback>
+        </Avatar>
+      )}
+
       <div className={cn(
         'max-w-[75%] rounded-2xl px-4 py-2.5',
         isOutbound 
@@ -42,9 +74,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           </div>
         )}
 
-        {/* Message content */}
+        {/* Message content with @mention highlighting */}
         <div className="text-sm leading-relaxed break-words">
-          {message.message_body}
+          {highlightMentions(message.message_body)}
         </div>
 
         {/* Message footer */}
