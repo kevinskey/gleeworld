@@ -115,20 +115,46 @@ export const GroupMessageInterface: React.FC = () => {
   return (
     <div className="h-full flex flex-col md:flex-row gap-0 bg-muted/30">
       {/* Conversation List - Full width on mobile (top section), sidebar on desktop */}
-      <div className="flex w-full md:w-[320px] lg:w-[360px] xl:w-[400px] md:border-r border-border flex-col bg-muted/50 h-[35%] md:h-full">
+      <div className="flex w-full md:w-[320px] lg:w-[360px] xl:w-[400px] md:border-r border-border flex-col bg-muted/50 h-[45%] md:h-full">
         <div className="h-full flex flex-col">
-          {/* List Header with New Message Button */}
-          <div className="bg-[hsl(var(--message-header))] text-white px-1.5 md:px-3 py-2 md:py-2.5 shadow-md flex-shrink-0">
-            <div className="flex items-center justify-between gap-1">
-              <h2 className="text-xs md:text-base font-semibold flex items-center gap-1">
-                <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="md:inline">Messages</span>
+          {/* Compact Header - Only on Mobile */}
+          <div className="bg-[hsl(var(--message-header))] text-white px-2 py-1.5 shadow-md flex-shrink-0 md:hidden">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs font-semibold">Conversations</h2>
+              <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-6 px-2 text-[10px]">
+                    <Plus className="h-3 w-3 mr-1" />
+                    New
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>New Direct Message</DialogTitle>
+                  </DialogHeader>
+                  <div className="mt-4">
+                    <UserSearch 
+                      onSelectUser={handleUserSelect}
+                      onClose={() => setNewMessageOpen(false)}
+                    />
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden md:block bg-[hsl(var(--message-header))] text-white px-3 py-2.5 shadow-md flex-shrink-0">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-semibold flex items-center gap-1.5">
+                <MessageSquare className="h-4 w-4" />
+                Messages
               </h2>
               <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-7 md:h-8 px-1.5 md:px-2 text-[10px] md:text-xs">
-                    <Plus className="h-3 w-3 md:mr-1" />
-                    <span className="md:inline">New</span>
+                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-8 px-2 text-xs">
+                    <Plus className="h-3 w-3 mr-1" />
+                    New
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
@@ -151,8 +177,8 @@ export const GroupMessageInterface: React.FC = () => {
             <div className="min-w-0">
               {/* Group Conversations */}
               {conversations.length > 0 && (
-                <div className="py-0.5 md:py-1">
-                  <div className="px-1.5 md:px-3 py-0.5 text-[9px] md:text-[10px] font-semibold text-muted-foreground uppercase">Groups</div>
+                <div className="md:py-1">
+                  <div className="hidden md:block px-3 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">Groups</div>
                   {conversations.map((conversation) => (
                     <ConversationListItem
                       key={conversation.id}
@@ -169,8 +195,8 @@ export const GroupMessageInterface: React.FC = () => {
               
               {/* Direct Messages */}
               {dmConversations.length > 0 && (
-                <div className="py-0.5 md:py-1">
-                  <div className="px-1.5 md:px-3 py-0.5 text-[9px] md:text-[10px] font-semibold text-muted-foreground uppercase">Direct Messages</div>
+                <div className="md:py-1">
+                  <div className="hidden md:block px-3 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">Direct Messages</div>
                   {dmConversations.map((conversation) => (
                     <ConversationListItem
                       key={conversation.id}
@@ -190,7 +216,7 @@ export const GroupMessageInterface: React.FC = () => {
       </div>
 
       {/* Messages View - Full width on mobile (bottom section), flexible on desktop */}
-      <div className="flex w-full md:flex-1 min-w-0 flex-col bg-background h-[65%] md:h-full border-t md:border-t-0 border-border">
+      <div className="flex w-full md:flex-1 min-w-0 flex-col bg-background h-[55%] md:h-full border-t md:border-t-0 border-border">
         {selectedConversation ? (
           <div className="h-full flex flex-col">
             {/* Group Header */}

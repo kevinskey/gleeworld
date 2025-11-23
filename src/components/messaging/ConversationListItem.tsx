@@ -45,10 +45,10 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
       className={cn(
         'flex items-center gap-1.5 md:gap-3 p-1.5 md:p-3 cursor-pointer transition-colors border-b border-border/50',
         'hover:bg-accent/5',
-        isSelected && 'bg-accent/10 border-l-2 md:border-l-4 border-l-[hsl(var(--message-header))]'
+        isSelected && 'bg-[hsl(var(--message-header))]/15 border-l-[3px] md:border-l-4 border-l-[hsl(var(--message-header))]'
       )}
     >
-      <Avatar className="h-7 w-7 md:h-11 md:w-11 flex-shrink-0">
+      <Avatar className="h-8 w-8 md:h-11 md:w-11 flex-shrink-0">
         <AvatarImage src={avatar} />
         <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] font-medium text-[10px] md:text-sm">
           {initials}
