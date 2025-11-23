@@ -63,6 +63,7 @@ import { AppointmentAdminDashboard } from "./components/admin/AppointmentAdminDa
 import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
+import Messages from "./pages/Messages";
 import OnboardingInfo from "./pages/OnboardingInfo";
 import MemberRegistration from "./pages/MemberRegistration";
 import ResetPassword from "./pages/ResetPassword";
@@ -689,6 +690,14 @@ const App = () => {
                     </ProtectedRoute>
                   } 
                   />
+                 <Route
+                   path="/messages" 
+                   element={
+                     <ProtectedRoute>
+                       <Messages />
+                     </ProtectedRoute>
+                   } 
+                   />
                  <Route
                    path="/notifications/send" 
                    element={
