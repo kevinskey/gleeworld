@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GroupMessageInterface } from '@/components/notifications/GroupMessageInterface';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
+import { Rnd } from 'react-rnd';
 
 interface MessagesPanelProps {
   onClose: () => void;
 }
 
 export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
-  const [panelSize, setPanelSize] = useState(40); // Default 40% of screen width
-
   return (
     <>
       {/* Backdrop */}
@@ -19,46 +17,60 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
         onClick={onClose}
       />
       
-      {/* Resizable Side Panel - offset from header and right margin */}
-      <div className="fixed top-16 right-5 bottom-[40vh] z-50 pointer-events-none" style={{ width: 'calc(100% - 1.25rem)' }}>
-        <ResizablePanelGroup direction="horizontal" className="h-full pointer-events-auto">
-          {/* Empty left panel - backdrop click area */}
-          <ResizablePanel 
-            defaultSize={100 - panelSize} 
-            minSize={20}
-            onResize={(size) => setPanelSize(100 - size)}
-            className="pointer-events-none"
-          />
-          
-          {/* Resize Handle */}
-          <ResizableHandle className="w-1 bg-border hover:bg-primary transition-colors pointer-events-auto" />
-          
-          {/* Messages Panel */}
-          <ResizablePanel 
-            defaultSize={panelSize}
-            minSize={30}
-            maxSize={80}
-            className="bg-background shadow-2xl pointer-events-auto flex flex-col rounded-l-xl overflow-hidden"
-          >
-            {/* Close button */}
-            <div className="absolute top-4 right-4 z-10">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={onClose}
-                className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background"
-              >
-                <X className="h-5 w-5" />
-              </Button>
+      {/* Draggable & Resizable Messages Panel */}
+      <Rnd
+        default={{
+          x: window.innerWidth - 650,
+          y: 80,
+          width: 600,
+          height: window.innerHeight * 0.6,
+        }}
+        minWidth={350}
+        minHeight={400}
+        maxWidth={window.innerWidth - 100}
+        maxHeight={window.innerHeight - 100}
+        bounds="window"
+        className="z-50"
+        enableResizing={{
+          top: true,
+          right: true,
+          bottom: true,
+          left: true,
+          topRight: true,
+          bottomRight: true,
+          bottomLeft: true,
+          topLeft: true,
+        }}
+        dragHandleClassName="drag-handle"
+      >
+        <div className="h-full bg-background shadow-2xl rounded-xl overflow-hidden flex flex-col border border-border">
+          {/* Draggable Header */}
+          <div className="drag-handle cursor-move bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" onClick={onClose} />
+                <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+                <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+              </div>
+              <span className="text-sm font-medium ml-2">Messages</span>
             </div>
+            
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={onClose}
+              className="h-8 w-8 rounded-full text-white hover:bg-white/20"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
 
-            {/* GroupMe-style messages interface */}
-            <div className="flex-1 overflow-hidden">
-              <GroupMessageInterface />
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
+          {/* Messages Content */}
+          <div className="flex-1 overflow-hidden">
+            <GroupMessageInterface />
+          </div>
+        </div>
+      </Rnd>
     </>
   );
 };
