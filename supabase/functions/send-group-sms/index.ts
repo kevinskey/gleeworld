@@ -63,15 +63,37 @@ const handler = async (req: Request): Promise<Response> => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Get conversation details including group info and Twilio number
-    const { data: conversation, error: convError } = await supabase
-      .from('gw_sms_conversations')
-      .select(`
-        *,
-        gw_message_groups!inner(id, name)
-      `)
-      .eq('id', conversationId)
-      .single();
+    const isUuid = (value: string) =>
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 
+    let conversation: any = null;
+    let convError: any = null;
+
+    if (isUuid(conversationId)) {
+      const { data, error } = await supabase
+        .from('gw_sms_conversations')
+        .select(`
+          *,
+          gw_message_groups!inner(id, name)
+        `)
+        .eq('id', conversationId)
+        .single();
+      conversation = data;
+      convError = error;
+    } else {
+      // Fallback: treat conversationId as group_id (e.g. "all-members")
+      const { data, error } = await supabase
+        .from('gw_sms_conversations')
+        .select(`
+          *,
+          gw_message_groups!inner(id, name)
+        `)
+        .eq('group_id', conversationId)
+        .eq('is_active', true)
+        .single();
+      conversation = data;
+      convError = error;
+    }
     if (convError || !conversation) {
       console.error('Conversation query error:', convError);
       throw new Error(`Conversation not found for ID: ${conversationId}`);
@@ -124,7 +146,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: storedMessage, error: storeError } = await supabase
       .from('gw_sms_messages')
       .insert({
-        conversation_id: conversationId,
+        conversation_id: conversation.id,
         sender_phone: senderProfile.phone_number,
         sender_user_id: senderUserId,
         message_body: message,
