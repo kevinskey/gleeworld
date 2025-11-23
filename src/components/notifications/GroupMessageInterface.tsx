@@ -118,19 +118,19 @@ export const GroupMessageInterface: React.FC = () => {
   return (
     <div className="h-full flex flex-col md:flex-row gap-0 bg-muted/30">
       {/* Conversation List - wider on desktop */}
-      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-[400px] lg:w-[480px] xl:w-[520px] border-r border-border flex-col bg-muted/50`}>
+      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-[320px] lg:w-[360px] xl:w-[400px] border-r border-border flex-col bg-muted/50`}>
         <div className="h-full flex flex-col">
           {/* List Header with New Message Button */}
-          <div className="bg-[hsl(var(--message-header))] text-white px-3 sm:px-4 py-2.5 sm:py-3 shadow-md flex-shrink-0">
+          <div className="bg-[hsl(var(--message-header))] text-white px-2 sm:px-3 py-1.5 sm:py-2 shadow-md flex-shrink-0">
             <div className="flex items-center justify-between">
-              <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
+              <h2 className="text-sm sm:text-base font-semibold flex items-center gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5" />
                 Messages
               </h2>
               <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-8 px-2">
-                    <Plus className="h-4 w-4 mr-1" />
+                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-6 px-2 text-xs">
+                    <Plus className="h-3 w-3 mr-1" />
                     New
                   </Button>
                 </DialogTrigger>
@@ -154,8 +154,8 @@ export const GroupMessageInterface: React.FC = () => {
             <div className="min-w-0">
               {/* Group Conversations */}
               {conversations.length > 0 && (
-                <div className="py-2">
-                  <div className="px-4 py-1 text-xs font-semibold text-muted-foreground uppercase">Groups</div>
+                <div className="py-1">
+                  <div className="px-3 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">Groups</div>
                   {conversations.map((conversation) => (
                     <ConversationListItem
                       key={conversation.id}
@@ -172,8 +172,8 @@ export const GroupMessageInterface: React.FC = () => {
               
               {/* Direct Messages */}
               {dmConversations.length > 0 && (
-                <div className="py-2">
-                  <div className="px-4 py-1 text-xs font-semibold text-muted-foreground uppercase">Direct Messages</div>
+                <div className="py-1">
+                  <div className="px-3 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">Direct Messages</div>
                   {dmConversations.map((conversation) => (
                     <ConversationListItem
                       key={conversation.id}
@@ -207,14 +207,14 @@ export const GroupMessageInterface: React.FC = () => {
             </div>
 
             {/* Messages Area - scrollable */}
-            <ScrollArea className="flex-1 px-2 sm:px-4 bg-muted/20">
+            <ScrollArea className="flex-1 px-2 sm:px-3 bg-muted/20">
               {conversationMessages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center py-8 sm:py-12 px-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-3 sm:mb-4">
-                    <MessageSquare className="h-8 w-8 sm:h-10 sm:w-10 text-[hsl(var(--message-header))]" />
+                <div className="flex flex-col items-center justify-center h-full text-center py-4 sm:py-6 px-3">
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-2 sm:mb-3">
+                    <MessageSquare className="h-6 w-6 sm:h-7 sm:w-7 text-[hsl(var(--message-header))]" />
                   </div>
-                  <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">No messages yet</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
+                  <h3 className="text-sm sm:text-base font-medium text-foreground mb-1.5">No messages yet</h3>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground max-w-xs">
                     {conversationType === 'group' 
                       ? `Click below to start messaging ${(selectedConversation as any).name}`
                       : `Click below to start messaging ${(selectedConversation as any).other_user_name}`
@@ -222,7 +222,7 @@ export const GroupMessageInterface: React.FC = () => {
                   </p>
                 </div>
               ) : (
-                <div className="py-4">
+                <div className="py-2">
                   {conversationMessages.map((message) => (
                     <MessageBubble key={message.id} message={message} />
                   ))}
@@ -232,7 +232,7 @@ export const GroupMessageInterface: React.FC = () => {
             </ScrollArea>
 
             {/* Message Input - fixed at bottom */}
-            <div className="border-t border-border p-2 sm:p-4 bg-background flex-shrink-0">
+            <div className="border-t border-border p-1.5 sm:p-2 bg-background flex-shrink-0">
               <MessageInput onSendMessage={handleSendMessage} />
             </div>
           </div>
