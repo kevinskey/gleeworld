@@ -25,16 +25,16 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
         setDimensions({
           x: 10,
           y: 80,
-          width: window.innerWidth - 20,
-          height: window.innerHeight * 0.4,
+          width: (window.innerWidth - 20) * 0.75,
+          height: window.innerHeight * 0.52,
         });
       } else {
         // Desktop: positioned on the right
         setDimensions({
-          x: window.innerWidth - 650,
+          x: window.innerWidth - 490,
           y: 80,
-          width: 600,
-          height: window.innerHeight * 0.35,
+          width: 450,
+          height: window.innerHeight * 0.455,
         });
       }
     };
