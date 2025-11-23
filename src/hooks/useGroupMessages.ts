@@ -172,9 +172,34 @@ export const useGroupMessages = () => {
 
   const fetchMessagesForConversation = async (conversationId: string) => {
     try {
-      // This would fetch actual messages from gw_sms_messages table
-      // For now, return empty array as placeholder
-      const conversationMessages: Message[] = [];
+      // Fetch in-app messages from gw_group_messages table
+      const { data: groupMessages, error: messagesError } = await supabase
+        .from('gw_group_messages')
+        .select(`
+          *,
+          user_profile:user_id (
+            full_name,
+            first_name,
+            phone_number
+          )
+        `)
+        .eq('group_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) throw messagesError;
+
+      // Transform to Message format
+      const conversationMessages: Message[] = (groupMessages || []).map(msg => ({
+        id: msg.id,
+        conversation_id: conversationId,
+        sender_phone: msg.user_profile?.phone_number,
+        sender_user_id: msg.user_id,
+        sender_name: msg.user_profile?.full_name,
+        message_body: msg.content,
+        direction: 'outbound' as const,
+        status: 'delivered',
+        created_at: msg.created_at
+      }));
       
       setMessages(prev => ({
         ...prev,
@@ -193,28 +218,42 @@ export const useGroupMessages = () => {
     if (!user) throw new Error('User not authenticated');
     
     try {
-      const response = await supabase.functions.invoke('send-group-sms', {
-        body: {
-          conversationId,
-          message,
-          senderUserId: user.id,
-          senderName: user.user_metadata?.full_name || 'Unknown User'
-        }
-      });
+      // First, send as in-app message to gw_group_messages
+      const { error: inAppError } = await supabase
+        .from('gw_group_messages')
+        .insert({
+          group_id: conversationId,
+          user_id: user.id,
+          content: message,
+          message_type: 'text'
+        });
 
-      if (response.error) {
-        // Check if it's a 404 (SMS not enabled)
-        if (response.error.message?.includes('SMS not enabled') || 
-            response.error.message?.includes('No active SMS conversation')) {
-          throw new Error('SMS messaging is not enabled for this group. Please use the SMS interface to enable it first.');
+      if (inAppError) throw inAppError;
+
+      // Try to send via SMS if conversation exists
+      try {
+        const response = await supabase.functions.invoke('send-group-sms', {
+          body: {
+            conversationId,
+            message,
+            senderUserId: user.id,
+            senderName: user.user_metadata?.full_name || 'Unknown User'
+          }
+        });
+
+        if (response.error) {
+          console.log('SMS not available for this group:', response.error);
+          // Don't throw - in-app message already sent successfully
         }
-        throw response.error;
+      } catch (smsErr) {
+        console.log('SMS send failed, but in-app message delivered:', smsErr);
+        // Don't throw - in-app message already sent successfully
       }
 
       // Refresh messages for this conversation
       await fetchMessagesForConversation(conversationId);
       
-      return response.data;
+      return { success: true };
     } catch (err: any) {
       console.error('Error sending message:', err);
       throw err;

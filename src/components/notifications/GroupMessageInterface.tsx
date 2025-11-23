@@ -78,7 +78,7 @@ export const GroupMessageInterface: React.FC = () => {
         await sendMessage(selectedConversationId, message);
         toast({
           title: 'Message Sent',
-          description: 'Your message has been sent to the group.',
+          description: 'Your message has been delivered.',
         });
       } else {
         await sendDirectMessage(selectedConversationId, message);
@@ -89,22 +89,11 @@ export const GroupMessageInterface: React.FC = () => {
       }
     } catch (error: any) {
       console.error('Send message error:', error);
-      
-      // Check if it's an SMS not enabled error
-      if (error.message?.includes('SMS messaging is not enabled') || 
-          error.message?.includes('SMS not enabled')) {
-        toast({
-          title: 'SMS Not Enabled',
-          description: error.message || 'Please enable SMS for this group in the Communication Hub.',
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: 'Send Failed',
-          description: 'Failed to send message. Please try again.',
-          variant: 'destructive'
-        });
-      }
+      toast({
+        title: 'Send Failed',
+        description: 'Failed to send message. Please try again.',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -190,7 +179,10 @@ export const GroupMessageInterface: React.FC = () => {
               {/* Group Conversations */}
               {conversations.length > 0 && (
                 <div className="md:py-1">
-                  <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase bg-muted/30">Groups</div>
+                  <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase bg-muted/30 flex items-center justify-between">
+                    <span>Groups</span>
+                    <span className="text-[10px] opacity-60">In-App Only</span>
+                  </div>
                   {conversations.map((conversation) => (
                     <ConversationListItem
                       key={conversation.id}
