@@ -209,9 +209,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
       {/* Message Input */}
       <div className="p-4 bg-background border-t border-border">
         <MessageInput
-          onSendMessage={handleSendMessage}
-          onTyping={handleTyping}
-          onStopTyping={handleStopTyping}
+          onSendMessage={(content) => handleSendMessage(content)}
           disabled={sendMessage.isPending}
           placeholder={replyingToMessage ? 'Reply to message...' : 'Type a message...'}
         />

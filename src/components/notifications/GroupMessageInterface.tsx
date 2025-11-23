@@ -72,8 +72,8 @@ export const GroupMessageInterface: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col md:flex-row gap-0 bg-background">
-      {/* Conversation List - responsive width */}
-      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-80 lg:w-96 xl:w-[420px] border-r border-border flex-col bg-background`}>
+      {/* Conversation List - wider on desktop */}
+      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-[400px] lg:w-[480px] xl:w-[520px] border-r border-border flex-col bg-background`}>
         <div className="h-full flex flex-col">
           {/* List Header */}
           <div className="bg-[hsl(var(--message-header))] text-white px-3 sm:px-4 py-3 sm:py-4 shadow-md flex-shrink-0">
