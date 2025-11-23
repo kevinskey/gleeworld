@@ -15,12 +15,12 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 z-40 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
         onClick={onClose}
       />
       
-      {/* Resizable Side Panel */}
-      <div className="fixed inset-0 z-50 pointer-events-none">
+      {/* Resizable Side Panel - offset from header and right margin */}
+      <div className="fixed top-16 right-5 bottom-[40vh] z-50 pointer-events-none" style={{ width: 'calc(100% - 1.25rem)' }}>
         <ResizablePanelGroup direction="horizontal" className="h-full pointer-events-auto">
           {/* Empty left panel - backdrop click area */}
           <ResizablePanel 
@@ -38,7 +38,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
             defaultSize={panelSize}
             minSize={30}
             maxSize={80}
-            className="bg-background shadow-2xl pointer-events-auto flex flex-col"
+            className="bg-background shadow-2xl pointer-events-auto flex flex-col rounded-l-xl overflow-hidden"
           >
             {/* Close button */}
             <div className="absolute top-4 right-4 z-10">
