@@ -34,8 +34,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <div className={cn(
-      'flex items-end gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border transition-colors',
-      isFocused ? 'border-primary/50 bg-primary/5' : 'border-border bg-background'
+      'flex items-end gap-2 p-2 rounded-full border transition-all',
+      isFocused ? 'border-[hsl(var(--message-header))]/50 bg-background shadow-sm' : 'border-border bg-muted/30'
     )}>
       <div className="flex-1 relative">
         <Textarea
@@ -47,7 +47,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           placeholder="Type a message..."
           disabled={disabled}
           rows={1}
-          className="min-h-0 resize-none border-0 shadow-none focus-visible:ring-0 bg-transparent"
+          className="min-h-0 resize-none border-0 shadow-none focus-visible:ring-0 bg-transparent px-4 py-2 text-sm"
           style={{ 
             minHeight: '20px',
             maxHeight: '100px',
@@ -60,21 +60,16 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           }}
           maxLength={160} // SMS limit
         />
-        
-        {/* Character count for SMS */}
-        <div className="absolute bottom-1 right-1 sm:right-2 text-xs text-muted-foreground">
-          {message.length}/160
-        </div>
       </div>
 
       {/* Emoji button (placeholder for future enhancement) */}
       <Button
         variant="ghost"
         size="sm"
-        className="h-8 w-8 p-0 flex-shrink-0 hidden sm:flex"
+        className="h-8 w-8 p-0 flex-shrink-0 hidden sm:flex hover:bg-muted"
         disabled={disabled}
       >
-        <Smile className="h-4 w-4" />
+        <Smile className="h-4 w-4 text-muted-foreground" />
       </Button>
 
       {/* Send button */}
@@ -82,9 +77,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         onClick={handleSend}
         disabled={!canSend}
         size="sm"
-        className="h-8 px-2 sm:px-3 flex-shrink-0"
+        className="h-9 w-9 p-0 flex-shrink-0 rounded-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90"
       >
-        <Send className="h-3 w-3 sm:h-4 sm:w-4" />
+        <Send className="h-4 w-4" />
       </Button>
     </div>
   );

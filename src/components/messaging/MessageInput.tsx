@@ -88,7 +88,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="flex items-end gap-2 bg-background rounded-lg border border-border p-1">
+      <div className="flex items-end gap-2 bg-muted/30 rounded-full border border-border p-1.5">
         <div className="flex-1">
           <Textarea
             ref={textareaRef}
@@ -98,7 +98,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             onBlur={handleStopTyping}
             placeholder={sendViaSMS ? `${placeholder} (SMS)` : placeholder}
             disabled={disabled}
-            className="min-h-[40px] max-h-32 resize-none text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 rounded-lg px-4 py-2 placeholder:text-muted-foreground"
+            className="min-h-[40px] max-h-32 resize-none text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 rounded-full px-4 py-2.5 placeholder:text-muted-foreground"
             rows={1}
           />
         </div>
@@ -112,7 +112,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
                     pressed={sendViaSMS}
                     onPressedChange={setSendViaSMS}
                     size="sm"
-                    className="h-8 w-8 rounded-full data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                    className="h-9 w-9 rounded-full data-[state=on]:bg-[hsl(var(--message-header))] data-[state=on]:text-white"
                     disabled={disabled}
                   >
                     <MessageSquare className="h-4 w-4" />
@@ -129,7 +129,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             type="button"
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+            className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
             disabled={disabled}
           >
             <Paperclip className="h-4 w-4" />
@@ -139,10 +139,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             type="submit" 
             disabled={disabled || !message.trim()}
             size="icon"
-            className="h-8 w-8 rounded-full"
+            className="h-9 w-9 rounded-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90"
           >
             {disabled ? (
-              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-primary-foreground"></div>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
             ) : (
               <Send className="h-4 w-4" />
             )}
@@ -150,7 +150,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         </div>
       </div>
       {sendViaSMS && message.length > 0 && (
-        <div className="text-xs text-muted-foreground mt-1 px-1">
+        <div className="text-xs text-muted-foreground mt-1.5 px-2">
           SMS: {message.length}/160 characters
         </div>
       )}
