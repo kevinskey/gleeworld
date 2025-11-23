@@ -113,22 +113,22 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-row gap-0 bg-muted/30">
-      {/* Conversation List - 40% on mobile, wider on desktop */}
-      <div className="flex w-[40%] md:w-[320px] lg:w-[360px] xl:w-[400px] border-r border-border flex-col bg-muted/50">
+    <div className="h-full flex flex-col md:flex-row gap-0 bg-muted/30">
+      {/* Conversation List - Full width on mobile (top section), sidebar on desktop */}
+      <div className="flex w-full md:w-[320px] lg:w-[360px] xl:w-[400px] md:border-r border-border flex-col bg-muted/50 h-[35%] md:h-full">
         <div className="h-full flex flex-col">
           {/* List Header with New Message Button */}
           <div className="bg-[hsl(var(--message-header))] text-white px-1.5 md:px-3 py-2 md:py-2.5 shadow-md flex-shrink-0">
             <div className="flex items-center justify-between gap-1">
               <h2 className="text-xs md:text-base font-semibold flex items-center gap-1">
                 <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
-                <span className="hidden md:inline">Messages</span>
+                <span className="md:inline">Messages</span>
               </h2>
               <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-7 md:h-8 px-1.5 md:px-2 text-[10px] md:text-xs">
                     <Plus className="h-3 w-3 md:mr-1" />
-                    <span className="hidden md:inline">New</span>
+                    <span className="md:inline">New</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
@@ -189,9 +189,8 @@ export const GroupMessageInterface: React.FC = () => {
         </div>
       </div>
 
-
-      {/* Messages View - 60% on mobile, flexible on desktop */}
-      <div className="flex w-[60%] md:flex-1 min-w-0 flex-col bg-background">
+      {/* Messages View - Full width on mobile (bottom section), flexible on desktop */}
+      <div className="flex w-full md:flex-1 min-w-0 flex-col bg-background h-[65%] md:h-full border-t md:border-t-0 border-border">
         {selectedConversation ? (
           <div className="h-full flex flex-col">
             {/* Group Header */}
