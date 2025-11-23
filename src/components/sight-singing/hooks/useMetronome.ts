@@ -1,9 +1,12 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 
+export type MetronomeSoundType = 'pitch' | 'click';
+
 export const useMetronome = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [tempo, setTempo] = useState(120);
+  const [soundType, setSoundType] = useState<MetronomeSoundType>('pitch');
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -46,22 +49,57 @@ export const useMetronome = () => {
       }
     }
     
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
+    if (soundType === 'click') {
+      // Non-pitched block/click sound using noise and filtering
+      const bufferSize = audioContext.sampleRate * 0.05; // 50ms of noise
+      const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      // Generate white noise
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      
+      const noiseSource = audioContext.createBufferSource();
+      noiseSource.buffer = buffer;
+      
+      // High-pass filter for sharper click sound
+      const filter = audioContext.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(2000, audioContext.currentTime);
+      
+      const gainNode = audioContext.createGain();
+      
+      noiseSource.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Louder click for downbeat
+      const clickVolume = isDownbeat ? volume * 1.3 : volume;
+      gainNode.gain.setValueAtTime(clickVolume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
+      
+      noiseSource.start(audioContext.currentTime);
+      noiseSource.stop(audioContext.currentTime + 0.03);
+    } else {
+      // Original pitched sound
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
 
-    // Higher pitch for downbeat, lower for other beats
-    oscillator.frequency.setValueAtTime(isDownbeat ? 1000 : 800, audioContext.currentTime);
-    oscillator.type = 'square';
+      // Higher pitch for downbeat, lower for other beats
+      oscillator.frequency.setValueAtTime(isDownbeat ? 1000 : 800, audioContext.currentTime);
+      oscillator.type = 'square';
 
-    gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
 
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-  }, [volume, initAudioContext]);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    }
+  }, [volume, soundType, initAudioContext]);
 
   const stopMetronome = useCallback(() => {
     console.log('🛑 stopMetronome called');
@@ -138,6 +176,8 @@ export const useMetronome = () => {
     setVolume,
     tempo,
     setTempo,
-    updateTempo // New function for live tempo updates
+    updateTempo, // New function for live tempo updates
+    soundType,
+    setSoundType,
   };
 };

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Play, Square, Volume2 } from 'lucide-react';
 import { useMetronome } from './hooks/useMetronome';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 export const Metronome: React.FC = () => {
   const {
@@ -16,7 +17,9 @@ export const Metronome: React.FC = () => {
     setVolume,
     tempo,
     setTempo,
-    updateTempo
+    updateTempo,
+    soundType,
+    setSoundType,
   } = useMetronome();
 
   const handleTempoChange = (value: string) => {
@@ -78,8 +81,26 @@ export const Metronome: React.FC = () => {
               <span>40</span>
               <span>120</span>
               <span>200</span>
-            </div>
           </div>
+        </div>
+
+        {/* Sound Type Toggle */}
+        <div className="space-y-2">
+          <Label className="text-sm font-medium">Sound Type</Label>
+          <ToggleGroup 
+            type="single" 
+            value={soundType} 
+            onValueChange={(value) => value && setSoundType(value as 'pitch' | 'click')}
+            className="justify-start"
+          >
+            <ToggleGroupItem value="pitch" aria-label="Pitched sound" className="flex-1">
+              Pitch
+            </ToggleGroupItem>
+            <ToggleGroupItem value="click" aria-label="Click sound" className="flex-1">
+              Click
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </div>
         </div>
 
         {/* Volume Control */}
