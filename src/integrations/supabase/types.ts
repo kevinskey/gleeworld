@@ -2581,6 +2581,39 @@ export type Database = {
         }
         Relationships: []
       }
+      direct_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message_body: string
+          read_at: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message_body: string
+          read_at?: string | null
+          recipient_id: string
+          sender_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message_body?: string
+          read_at?: string | null
+          recipient_id?: string
+          sender_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       dm_conversations: {
         Row: {
           created_at: string
@@ -20506,6 +20539,17 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      direct_message_conversations: {
+        Row: {
+          conversation_id: string | null
+          last_message: string | null
+          last_message_at: string | null
+          last_sender_id: string | null
+          user1_id: string | null
+          user2_id: string | null
+        }
+        Relationships: []
       }
       user_dashboard_data: {
         Row: {
