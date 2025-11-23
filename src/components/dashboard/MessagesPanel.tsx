@@ -69,16 +69,18 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
         }}
         disableDragging={false}
         dragHandleClassName="drag-handle"
+        enableUserSelectHack={false}
+        cancel=".no-drag"
       >
         <div className="h-full bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
           {/* Draggable Header */}
-          <div className="drag-handle cursor-move bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between">
+          <div className="drag-handle cursor-move bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between touch-none select-none">
             <div className="flex items-center gap-2">
               {!isMobile && (
                 <div className="flex gap-1">
-                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors cursor-pointer" onClick={onClose} />
-                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
-                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors cursor-pointer no-drag" onClick={onClose} />
+                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors no-drag" />
+                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors no-drag" />
                 </div>
               )}
               <span className="text-sm font-medium ml-2">Messages</span>
@@ -88,7 +90,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
               variant="ghost" 
               size="icon"
               onClick={onClose}
-              className="h-8 w-8 rounded-full text-white hover:bg-white/20"
+              className="h-8 w-8 rounded-full text-white hover:bg-white/20 no-drag"
             >
               <X className="h-4 w-4" />
             </Button>
