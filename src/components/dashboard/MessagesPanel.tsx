@@ -69,7 +69,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
         disableDragging={false}
         dragHandleClassName="drag-handle"
       >
-        <div className="h-full bg-background shadow-2xl rounded-xl overflow-hidden flex flex-col border border-border">
+        <div className="h-full bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
           {/* Draggable Header */}
           <div className="drag-handle cursor-move bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
