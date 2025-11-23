@@ -72,7 +72,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           bottomLeft: true,
           topLeft: true,
         }}
-        disableDragging={isMobile}
+        disableDragging={false}
         dragHandleClassName="drag-handle"
       >
         <div className="h-full bg-background shadow-2xl rounded-xl overflow-hidden flex flex-col border border-border">
