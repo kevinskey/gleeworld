@@ -236,7 +236,7 @@ export const useDirectMessages = () => {
           const smsResult = await supabase.functions.invoke('gw-send-sms', {
             body: {
               to: senderProfile.phone_number,
-              message: `You sent: "${content.substring(0, 100)}${content.length > 100 ? '...' : ''}"`
+              message: `[GleeWorld] You sent: "${content.substring(0, 90)}${content.length > 90 ? '...' : ''}"`
             }
           });
           console.log('✅ SMS sent to sender:', smsResult);
@@ -281,7 +281,7 @@ export const useDirectMessages = () => {
             const recipientSmsResult = await supabase.functions.invoke('gw-send-sms', {
               body: {
                 to: recipientProfile.phone_number,
-                message: `New DM from ${user.user_metadata?.full_name || 'Someone'}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`
+                message: `[GleeWorld] ${user.user_metadata?.full_name || 'Someone'}: ${content.substring(0, 90)}${content.length > 90 ? '...' : ''}`
               }
             });
             console.log('✅ SMS sent to recipient:', recipientSmsResult);
