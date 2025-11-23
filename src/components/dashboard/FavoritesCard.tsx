@@ -39,7 +39,7 @@ export const FavoritesCard = ({
         
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-48">
+        <ScrollArea className="h-44">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
             {favorites.map(module => {
           const IconComponent = module.icon;
