@@ -218,9 +218,40 @@ export const useDirectMessages = () => {
 
       if (error) throw error;
 
+      console.log('📨 DM sent, checking for SMS notifications...');
+
+      // Get sender's phone number for confirmation SMS
+      const { data: senderProfile } = await supabase
+        .from('gw_profiles')
+        .select('phone_number')
+        .eq('user_id', user.id)
+        .single();
+
+      console.log('👤 Sender profile:', senderProfile);
+
+      // Send SMS confirmation to sender (you)
+      if (senderProfile?.phone_number) {
+        console.log('📱 Sending SMS to sender:', senderProfile.phone_number);
+        try {
+          const smsResult = await supabase.functions.invoke('gw-send-sms', {
+            body: {
+              to: senderProfile.phone_number,
+              message: `You sent: "${content.substring(0, 100)}${content.length > 100 ? '...' : ''}"`
+            }
+          });
+          console.log('✅ SMS sent to sender:', smsResult);
+        } catch (smsError) {
+          console.error('❌ Failed to send SMS to sender:', smsError);
+        }
+      } else {
+        console.log('⚠️ No phone number for sender');
+      }
+
       // Get recipient ID
       const conversation = conversations.find(c => c.id === conversationId);
       if (conversation) {
+        console.log('👥 Conversation found:', conversation);
+        
         // Send push notification via edge function
         await supabase.functions.invoke('send-push-notification', {
           body: {
@@ -235,7 +266,7 @@ export const useDirectMessages = () => {
           }
         }).catch(err => console.error('Failed to send push notification:', err));
 
-        // Send SMS notification if recipient has a phone number
+        // Send SMS notification to recipient
         try {
           const { data: recipientProfile } = await supabase
             .from('gw_profiles')
@@ -243,17 +274,22 @@ export const useDirectMessages = () => {
             .eq('user_id', conversation.other_user_id)
             .single();
 
+          console.log('📞 Recipient profile:', recipientProfile);
+
           if (recipientProfile?.phone_number) {
-            await supabase.functions.invoke('gw-send-sms', {
+            console.log('📱 Sending SMS to recipient:', recipientProfile.phone_number);
+            const recipientSmsResult = await supabase.functions.invoke('gw-send-sms', {
               body: {
                 to: recipientProfile.phone_number,
                 message: `New DM from ${user.user_metadata?.full_name || 'Someone'}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`
               }
             });
+            console.log('✅ SMS sent to recipient:', recipientSmsResult);
+          } else {
+            console.log('⚠️ No phone number for recipient');
           }
         } catch (smsError) {
-          console.error('Failed to send SMS notification:', smsError);
-          // Don't throw - message was sent successfully, SMS is just a bonus
+          console.error('❌ Failed to send SMS to recipient:', smsError);
         }
       }
     } catch (error) {
