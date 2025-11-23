@@ -89,7 +89,10 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
             <Button 
               variant="ghost" 
               size="icon"
-              onClick={onClose}
+              onClick={(e) => {
+                e.stopPropagation();
+                onClose();
+              }}
               className="h-8 w-8 rounded-full text-white hover:bg-white/20 no-drag"
             >
               <X className="h-4 w-4" />
