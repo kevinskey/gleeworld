@@ -32,36 +32,36 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
     .slice(0, 2);
 
   return (
-    <div className="bg-[hsl(var(--message-header))] text-white px-4 py-3 flex items-center justify-between shadow-md">
-      <div className="flex items-center gap-3 flex-1 min-w-0">
+    <div className="bg-[hsl(var(--message-header))] text-white px-2.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shadow-md">
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
         {showBackButton && (
           <Button
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="h-9 w-9 text-white hover:bg-white/20 flex-shrink-0"
+            className="h-8 w-8 sm:h-9 sm:w-9 text-white hover:bg-white/20 flex-shrink-0"
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
         )}
         
-        <Avatar className="h-10 w-10 flex-shrink-0 border-2 border-white/30">
+        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 border-2 border-white/30">
           <AvatarImage src={groupAvatar} />
-          <AvatarFallback className="bg-white/20 text-white font-medium">
+          <AvatarFallback className="bg-white/20 text-white font-medium text-xs sm:text-sm">
             {groupInitials}
           </AvatarFallback>
         </Avatar>
         
-        <h1 className="font-semibold text-lg truncate">{groupName}</h1>
+        <h1 className="font-semibold text-sm sm:text-base lg:text-lg truncate">{groupName}</h1>
       </div>
 
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 text-white hover:bg-white/20"
+          className="h-8 w-8 sm:h-9 sm:w-9 text-white hover:bg-white/20"
         >
-          <Search className="h-5 w-5" />
+          <Search className="h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
 
         <DropdownMenu>
@@ -69,40 +69,40 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-white hover:bg-white/20"
+              className="h-8 w-8 sm:h-9 sm:w-9 text-white hover:bg-white/20"
             >
-              <MoreVertical className="h-5 w-5" />
+              <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuItem>
-              <Calendar className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
+          <DropdownMenuContent align="end" className="w-48 sm:w-56">
+            <DropdownMenuItem className="text-sm">
+              <Calendar className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
               <span className="flex-1">Events</span>
-              <Badge variant="secondary" className="ml-2 bg-[hsl(var(--message-header))] text-white h-5 min-w-5 px-1.5 text-xs">
+              <Badge variant="secondary" className="ml-1 sm:ml-2 bg-[hsl(var(--message-header))] text-white h-4 sm:h-5 min-w-4 sm:min-w-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                 18
               </Badge>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <BarChart3 className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
+            <DropdownMenuItem className="text-sm">
+              <BarChart3 className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
               <span className="flex-1">Polls</span>
-              <Badge variant="secondary" className="ml-2 bg-[hsl(var(--message-header))] text-white h-5 min-w-5 px-1.5 text-xs">
+              <Badge variant="secondary" className="ml-1 sm:ml-2 bg-[hsl(var(--message-header))] text-white h-4 sm:h-5 min-w-4 sm:min-w-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
                 1
               </Badge>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Image className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
+            <DropdownMenuItem className="text-sm">
+              <Image className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
               <span>Gallery</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Users className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
+            <DropdownMenuItem className="text-sm">
+              <Users className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
               <span>Members</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Wrench className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
+            <DropdownMenuItem className="text-sm">
+              <Wrench className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
               <span>Services</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
+            <DropdownMenuItem className="text-sm">
+              <Settings className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
               <span>Settings</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

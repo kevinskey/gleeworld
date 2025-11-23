@@ -76,9 +76,9 @@ export const GroupMessageInterface: React.FC = () => {
       <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-[400px] lg:w-[480px] xl:w-[520px] border-r border-border flex-col bg-background`}>
         <div className="h-full flex flex-col">
           {/* List Header */}
-          <div className="bg-[hsl(var(--message-header))] text-white px-3 sm:px-4 py-3 sm:py-4 shadow-md flex-shrink-0">
-            <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+          <div className="bg-[hsl(var(--message-header))] text-white px-3 sm:px-4 py-2.5 sm:py-3 shadow-md flex-shrink-0">
+            <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
               Messages
             </h2>
           </div>
