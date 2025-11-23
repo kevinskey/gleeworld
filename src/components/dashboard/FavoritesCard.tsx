@@ -20,6 +20,7 @@ export const FavoritesCard = ({
           <CardTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-red-500" />
             Favorites
+            <span className="text-sm font-normal text-muted-foreground ml-2">scroll to choose your fav!</span>
           </CardTitle>
           <CardDescription>Your favorite modules will appear here</CardDescription>
         </CardHeader>
@@ -35,6 +36,7 @@ export const FavoritesCard = ({
         <CardTitle className="flex items-center gap-2">
           <Heart className="h-5 w-5 text-red-500 fill-current" />
           Favorites
+          <span className="text-sm font-normal text-muted-foreground ml-2">scroll to choose your fav!</span>
         </CardTitle>
         
       </CardHeader>
