@@ -56,6 +56,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
         maxHeight={window.innerHeight - 100}
         bounds="window"
         className="z-50"
+        style={{ position: 'fixed' }}
         enableResizing={!isMobile && {
           top: true,
           right: true,
