@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowLeft, MoreVertical, Search, Calendar, BarChart3, Image, Users, Settings, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -76,11 +77,17 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem>
               <Calendar className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
-              <span>Events</span>
+              <span className="flex-1">Events</span>
+              <Badge variant="secondary" className="ml-2 bg-[hsl(var(--message-header))] text-white h-5 min-w-5 px-1.5 text-xs">
+                18
+              </Badge>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <BarChart3 className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
-              <span>Polls</span>
+              <span className="flex-1">Polls</span>
+              <Badge variant="secondary" className="ml-2 bg-[hsl(var(--message-header))] text-white h-5 min-w-5 px-1.5 text-xs">
+                1
+              </Badge>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Image className="h-4 w-4 mr-3 text-[hsl(var(--message-header))]" />
