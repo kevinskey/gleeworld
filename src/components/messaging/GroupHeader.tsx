@@ -32,36 +32,36 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
     .slice(0, 2);
 
   return (
-    <div className="bg-[hsl(var(--message-header))] text-white px-2.5 sm:px-4 py-2.5 sm:py-3 flex items-center justify-between shadow-md">
-      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+    <div className="bg-[hsl(var(--message-header))] text-white px-1.5 md:px-4 py-2 md:py-3 flex items-center justify-between shadow-md">
+      <div className="flex items-center gap-1.5 md:gap-3 flex-1 min-w-0">
         {showBackButton && (
           <Button
             variant="ghost"
             size="icon"
             onClick={onBack}
-            className="h-8 w-8 sm:h-9 sm:w-9 text-white hover:bg-white/20 flex-shrink-0"
+            className="h-7 w-7 md:h-9 md:w-9 text-white hover:bg-white/20 flex-shrink-0"
           >
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
+            <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         )}
         
-        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 border-2 border-white/30">
+        <Avatar className="h-7 w-7 md:h-10 md:w-10 flex-shrink-0 border-2 border-white/30">
           <AvatarImage src={groupAvatar} />
-          <AvatarFallback className="bg-white/20 text-white font-medium text-xs sm:text-sm">
+          <AvatarFallback className="bg-white/20 text-white font-medium text-[10px] md:text-sm">
             {groupInitials}
           </AvatarFallback>
         </Avatar>
         
-        <h1 className="font-semibold text-sm sm:text-base lg:text-lg truncate">{groupName}</h1>
+        <h1 className="font-semibold text-xs md:text-base lg:text-lg truncate">{groupName}</h1>
       </div>
 
-      <div className="flex items-center gap-1 sm:gap-1 flex-shrink-0">
+      <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 sm:h-9 sm:w-9 text-white hover:bg-white/20"
+          className="h-8 w-8 md:h-9 md:w-9 text-white hover:bg-white/20"
         >
-          <Search className="h-5 w-5 sm:h-5 sm:w-5" />
+          <Search className="h-4 w-4 md:h-5 md:w-5" />
         </Button>
 
         <DropdownMenu>
@@ -69,9 +69,9 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
             <Button
               variant="ghost"
               size="icon"
-              className="h-10 w-10 sm:h-9 sm:w-9 text-white hover:bg-white/20"
+              className="h-8 w-8 md:h-9 md:w-9 text-white hover:bg-white/20"
             >
-              <MoreVertical className="h-5 w-5 sm:h-5 sm:w-5" />
+              <MoreVertical className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 sm:w-56">

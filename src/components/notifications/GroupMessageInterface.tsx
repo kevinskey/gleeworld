@@ -118,17 +118,17 @@ export const GroupMessageInterface: React.FC = () => {
       <div className="flex w-[40%] md:w-[320px] lg:w-[360px] xl:w-[400px] border-r border-border flex-col bg-muted/50">
         <div className="h-full flex flex-col">
           {/* List Header with New Message Button */}
-          <div className="bg-[hsl(var(--message-header))] text-white px-2 sm:px-3 py-1.5 sm:py-2 shadow-md flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm sm:text-base font-semibold flex items-center gap-1.5">
-                <MessageSquare className="h-3.5 w-3.5" />
-                Messages
+          <div className="bg-[hsl(var(--message-header))] text-white px-1.5 md:px-3 py-2 md:py-2.5 shadow-md flex-shrink-0">
+            <div className="flex items-center justify-between gap-1">
+              <h2 className="text-xs md:text-base font-semibold flex items-center gap-1">
+                <MessageSquare className="h-3 w-3 md:h-4 md:w-4" />
+                <span className="hidden md:inline">Messages</span>
               </h2>
               <Dialog open={newMessageOpen} onOpenChange={setNewMessageOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-6 px-2 text-xs">
-                    <Plus className="h-3 w-3 mr-1" />
-                    New
+                  <Button size="sm" variant="ghost" className="text-white hover:bg-white/20 h-7 md:h-8 px-1.5 md:px-2 text-[10px] md:text-xs">
+                    <Plus className="h-3 w-3 md:mr-1" />
+                    <span className="hidden md:inline">New</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
@@ -151,8 +151,8 @@ export const GroupMessageInterface: React.FC = () => {
             <div className="min-w-0">
               {/* Group Conversations */}
               {conversations.length > 0 && (
-                <div className="py-1">
-                  <div className="px-3 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">Groups</div>
+                <div className="py-0.5 md:py-1">
+                  <div className="px-1.5 md:px-3 py-0.5 text-[9px] md:text-[10px] font-semibold text-muted-foreground uppercase">Groups</div>
                   {conversations.map((conversation) => (
                     <ConversationListItem
                       key={conversation.id}
@@ -169,8 +169,8 @@ export const GroupMessageInterface: React.FC = () => {
               
               {/* Direct Messages */}
               {dmConversations.length > 0 && (
-                <div className="py-1">
-                  <div className="px-3 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase">Direct Messages</div>
+                <div className="py-0.5 md:py-1">
+                  <div className="px-1.5 md:px-3 py-0.5 text-[9px] md:text-[10px] font-semibold text-muted-foreground uppercase">Direct Messages</div>
                   {dmConversations.map((conversation) => (
                     <ConversationListItem
                       key={conversation.id}
@@ -204,7 +204,7 @@ export const GroupMessageInterface: React.FC = () => {
             </div>
 
             {/* Messages Area - scrollable */}
-            <ScrollArea className="flex-1 px-2 sm:px-3 bg-muted/20 overflow-y-auto">
+            <ScrollArea className="flex-1 px-1.5 md:px-3 bg-muted/20 overflow-y-auto">
               {conversationMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-4 sm:py-6 px-3">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-2 sm:mb-3">
@@ -229,7 +229,7 @@ export const GroupMessageInterface: React.FC = () => {
             </ScrollArea>
 
             {/* Message Input - fixed at bottom */}
-            <div className="border-t border-border p-1.5 sm:p-2 bg-background flex-shrink-0">
+            <div className="border-t border-border p-1 md:p-2 bg-background flex-shrink-0">
               <MessageInput onSendMessage={handleSendMessage} />
             </div>
           </div>
