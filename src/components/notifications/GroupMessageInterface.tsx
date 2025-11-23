@@ -116,9 +116,9 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col md:flex-row gap-0 bg-muted/30">
-      {/* Conversation List - wider on desktop */}
-      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-[320px] lg:w-[360px] xl:w-[400px] border-r border-border flex-col bg-muted/50`}>
+    <div className="h-full flex flex-col sm:flex-row gap-0 bg-muted/30">
+      {/* Conversation List - 40% on mobile, wider on desktop */}
+      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-[40%] sm:w-full md:w-[320px] lg:w-[360px] xl:w-[400px] border-r border-border flex-col bg-muted/50`}>
         <div className="h-full flex flex-col">
           {/* List Header with New Message Button */}
           <div className="bg-[hsl(var(--message-header))] text-white px-2 sm:px-3 py-1.5 sm:py-2 shadow-md flex-shrink-0">
@@ -193,8 +193,8 @@ export const GroupMessageInterface: React.FC = () => {
       </div>
 
 
-      {/* Messages View - responsive and flexible */}
-      <div className={`${isMobile && !showMessages ? 'hidden' : 'flex'} flex-1 min-w-0 flex-col bg-background`}>
+      {/* Messages View - 60% on mobile, flexible on desktop */}
+      <div className={`${isMobile && !showMessages ? 'hidden' : 'flex'} w-[60%] sm:flex-1 min-w-0 flex-col bg-background`}>
         {selectedConversation ? (
           <div className="h-full flex flex-col">
             {/* Group Header */}
