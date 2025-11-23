@@ -46,12 +46,6 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
 
   return (
     <>
-      {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-black/30 z-40 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
       {/* Draggable & Resizable Messages Panel */}
       <Rnd
         position={{ x: dimensions.x, y: dimensions.y }}
