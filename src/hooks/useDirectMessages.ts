@@ -234,6 +234,27 @@ export const useDirectMessages = () => {
             }
           }
         }).catch(err => console.error('Failed to send push notification:', err));
+
+        // Send SMS notification if recipient has a phone number
+        try {
+          const { data: recipientProfile } = await supabase
+            .from('gw_profiles')
+            .select('phone_number')
+            .eq('user_id', conversation.other_user_id)
+            .single();
+
+          if (recipientProfile?.phone_number) {
+            await supabase.functions.invoke('gw-send-sms', {
+              body: {
+                to: recipientProfile.phone_number,
+                message: `New DM from ${user.user_metadata?.full_name || 'Someone'}: ${content.substring(0, 100)}${content.length > 100 ? '...' : ''}`
+              }
+            });
+          }
+        } catch (smsError) {
+          console.error('Failed to send SMS notification:', smsError);
+          // Don't throw - message was sent successfully, SMS is just a bonus
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);
