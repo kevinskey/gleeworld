@@ -63,6 +63,7 @@ export interface GroupMember {
     full_name?: string;
     avatar_url?: string;
     email?: string;
+    phone_number?: string;
   };
 }
 

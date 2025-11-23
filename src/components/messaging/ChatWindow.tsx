@@ -1,18 +1,23 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useGroupMessages, useRealtimeMessaging, useSendMessage, useTypingIndicator } from '@/hooks/useMessaging';
+import { useGroupMessages, useRealtimeMessaging, useSendMessage, useTypingIndicator, useGroupMembers } from '@/hooks/useMessaging';
+import { useSendSMSNotification } from '@/hooks/useSMSIntegration';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TypingIndicator } from './TypingIndicator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatWindowProps {
   groupId: string | null;
 }
 
 export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
+  const { user } = useAuth();
   const { data: messages, isLoading, error } = useGroupMessages(groupId || undefined);
+  const { data: members } = useGroupMembers(groupId || undefined);
   const { typingUsers } = useRealtimeMessaging(groupId || undefined);
   const sendMessage = useSendMessage();
+  const { mutateAsync: sendSMSNotification } = useSendSMSNotification();
   const { startTyping, stopTyping } = useTypingIndicator(groupId || undefined);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -32,7 +37,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
     }
   }, [error]);
 
-  const handleSendMessage = async (content: string, file?: File) => {
+  const handleSendMessage = async (content: string, file?: File, sendViaSMS?: boolean) => {
     if (!groupId) return;
 
     try {
@@ -44,11 +49,29 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
         return;
       }
 
+      // Send the message to the app database
       await sendMessage.mutateAsync({
         groupId,
         content,
         replyToId: replyingTo || undefined
       });
+
+      // If SMS is enabled, also send via SMS to group members
+      if (sendViaSMS && members && user) {
+        const phoneNumbers = members
+          .filter(m => m.user_id !== user.id && m.user_profile?.phone_number)
+          .map(m => m.user_profile!.phone_number!)
+          .filter(Boolean);
+
+        if (phoneNumbers.length > 0) {
+          await sendSMSNotification({
+            groupId,
+            message: content,
+            senderName: user.email || 'Someone',
+            phoneNumbers
+          });
+        }
+      }
 
       setReplyingTo(null);
       stopTyping();
