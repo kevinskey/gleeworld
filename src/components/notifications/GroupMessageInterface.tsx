@@ -71,9 +71,9 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col md:flex-row gap-0 bg-background">
+    <div className="h-full flex flex-col md:flex-row gap-0 bg-muted/30">
       {/* Conversation List - wider on desktop */}
-      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-[400px] lg:w-[480px] xl:w-[520px] border-r border-border flex-col bg-background`}>
+      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-[400px] lg:w-[480px] xl:w-[520px] border-r border-border flex-col bg-muted/50`}>
         <div className="h-full flex flex-col">
           {/* List Header */}
           <div className="bg-[hsl(var(--message-header))] text-white px-3 sm:px-4 py-2.5 sm:py-3 shadow-md flex-shrink-0">
@@ -84,7 +84,7 @@ export const GroupMessageInterface: React.FC = () => {
           </div>
           
           {/* Conversations */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 bg-background">
             <div className="min-w-0">
               {conversations.map((conversation) => (
                 <ConversationListItem
@@ -117,7 +117,7 @@ export const GroupMessageInterface: React.FC = () => {
             </div>
 
             {/* Messages Area - scrollable */}
-            <ScrollArea className="flex-1 px-2 sm:px-4 bg-background">
+            <ScrollArea className="flex-1 px-2 sm:px-4 bg-muted/20">
               {conversationMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-8 sm:py-12 px-4">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-3 sm:mb-4">
@@ -125,7 +125,7 @@ export const GroupMessageInterface: React.FC = () => {
                   </div>
                   <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">No messages yet</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
-                    Start a conversation with {selectedConversation.name}
+                    Click below to start messaging {selectedConversation.name}
                   </p>
                 </div>
               ) : (
