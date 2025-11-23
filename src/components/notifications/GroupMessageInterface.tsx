@@ -64,9 +64,6 @@ export const GroupMessageInterface: React.FC = () => {
   const handleSelectConversation = (conversation: any, type: 'group' | 'direct') => {
     setConversationType(type);
     setSelectedConversationId(conversation.id);
-    if (isMobile) {
-      setShowMessages(true);
-    }
   };
 
   const handleBackToList = () => {
@@ -116,9 +113,9 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col sm:flex-row gap-0 bg-muted/30">
+    <div className="h-full flex flex-row gap-0 bg-muted/30">
       {/* Conversation List - 40% on mobile, wider on desktop */}
-      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-[40%] sm:w-full md:w-[320px] lg:w-[360px] xl:w-[400px] border-r border-border flex-col bg-muted/50`}>
+      <div className="flex w-[40%] md:w-[320px] lg:w-[360px] xl:w-[400px] border-r border-border flex-col bg-muted/50">
         <div className="h-full flex flex-col">
           {/* List Header with New Message Button */}
           <div className="bg-[hsl(var(--message-header))] text-white px-2 sm:px-3 py-1.5 sm:py-2 shadow-md flex-shrink-0">
@@ -194,7 +191,7 @@ export const GroupMessageInterface: React.FC = () => {
 
 
       {/* Messages View - 60% on mobile, flexible on desktop */}
-      <div className={`${isMobile && !showMessages ? 'hidden' : 'flex'} w-[60%] sm:flex-1 min-w-0 flex-col bg-background`}>
+      <div className="flex w-[60%] md:flex-1 min-w-0 flex-col bg-background">
         {selectedConversation ? (
           <div className="h-full flex flex-col">
             {/* Group Header */}
@@ -202,7 +199,7 @@ export const GroupMessageInterface: React.FC = () => {
               <GroupHeader
                 groupName={conversationType === 'group' ? (selectedConversation as any).name : (selectedConversation as any).other_user_name}
                 onBack={handleBackToList}
-                showBackButton={isMobile}
+                showBackButton={false}
               />
             </div>
 
