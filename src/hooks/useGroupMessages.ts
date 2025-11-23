@@ -203,6 +203,11 @@ export const useGroupMessages = () => {
       });
 
       if (response.error) {
+        // Check if it's a 404 (SMS not enabled)
+        if (response.error.message?.includes('SMS not enabled') || 
+            response.error.message?.includes('No active SMS conversation')) {
+          throw new Error('SMS messaging is not enabled for this group. Please use the SMS interface to enable it first.');
+        }
         throw response.error;
       }
 
@@ -215,7 +220,6 @@ export const useGroupMessages = () => {
       throw err;
     }
   };
-
   const markConversationAsRead = async (conversationId: string) => {
     setConversations(prev => 
       prev.map(conv => 

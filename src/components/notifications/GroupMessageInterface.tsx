@@ -88,11 +88,23 @@ export const GroupMessageInterface: React.FC = () => {
         });
       }
     } catch (error: any) {
-      toast({
-        title: 'Send Failed',
-        description: 'Failed to send message. Please try again.',
-        variant: 'destructive'
-      });
+      console.error('Send message error:', error);
+      
+      // Check if it's an SMS not enabled error
+      if (error.message?.includes('SMS messaging is not enabled') || 
+          error.message?.includes('SMS not enabled')) {
+        toast({
+          title: 'SMS Not Enabled',
+          description: error.message || 'Please enable SMS for this group in the Communication Hub.',
+          variant: 'destructive'
+        });
+      } else {
+        toast({
+          title: 'Send Failed',
+          description: 'Failed to send message. Please try again.',
+          variant: 'destructive'
+        });
+      }
     }
   };
 

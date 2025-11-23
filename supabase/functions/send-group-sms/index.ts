@@ -94,9 +94,20 @@ const handler = async (req: Request): Promise<Response> => {
       conversation = data;
       convError = error;
     }
+
     if (convError || !conversation) {
       console.error('Conversation query error:', convError);
-      throw new Error(`Conversation not found for ID: ${conversationId}`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'SMS not enabled',
+          message: `No active SMS conversation found. Please enable SMS for this group first using the SMS interface.`,
+          conversationId
+        }),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders }
+        }
+      );
     }
 
     // Get sender's phone number
