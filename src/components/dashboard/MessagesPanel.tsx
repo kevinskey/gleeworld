@@ -26,7 +26,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           x: 10,
           y: 80,
           width: window.innerWidth - 20,
-          height: window.innerHeight * 0.75,
+          height: window.innerHeight * 0.4,
         });
       } else {
         // Desktop: positioned on the right
@@ -34,7 +34,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           x: window.innerWidth - 650,
           y: 80,
           width: 600,
-          height: window.innerHeight * 0.6,
+          height: window.innerHeight * 0.35,
         });
       }
     };
