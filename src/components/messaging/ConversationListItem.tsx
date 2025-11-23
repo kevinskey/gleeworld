@@ -43,34 +43,34 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
     <div
       onClick={onClick}
       className={cn(
-        'flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3 cursor-pointer transition-colors border-b border-border/50',
+        'flex items-center gap-1.5 md:gap-3 p-1.5 md:p-3 cursor-pointer transition-colors border-b border-border/50',
         'hover:bg-accent/5',
-        isSelected && 'bg-accent/10'
+        isSelected && 'bg-accent/10 border-l-2 md:border-l-4 border-l-[hsl(var(--message-header))]'
       )}
     >
-      <Avatar className="h-10 w-10 sm:h-11 sm:w-11 flex-shrink-0">
+      <Avatar className="h-7 w-7 md:h-11 md:w-11 flex-shrink-0">
         <AvatarImage src={avatar} />
-        <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] font-medium text-xs sm:text-sm">
+        <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] font-medium text-[10px] md:text-sm">
           {initials}
         </AvatarFallback>
       </Avatar>
 
       <div className="flex-1 min-w-0">
-        <div className="flex items-baseline justify-between gap-2 mb-0.5">
-          <h3 className="font-semibold text-foreground truncate text-sm sm:text-base">{name}</h3>
+        <div className="flex items-baseline justify-between gap-1 md:gap-2 mb-0.5">
+          <h3 className="font-semibold text-foreground truncate text-[11px] md:text-base">{name}</h3>
           {timestamp && (
-            <span className="text-[10px] sm:text-xs text-muted-foreground flex-shrink-0">
+            <span className="text-[9px] md:text-xs text-muted-foreground flex-shrink-0">
               {formatTime(timestamp)}
             </span>
           )}
         </div>
         {lastMessage && (
-          <p className="text-xs sm:text-sm text-muted-foreground truncate">{lastMessage}</p>
+          <p className="text-[10px] md:text-sm text-muted-foreground truncate">{lastMessage}</p>
         )}
       </div>
 
       {unreadCount > 0 && (
-        <div className="flex-shrink-0 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-[hsl(var(--message-header))] text-white text-[10px] sm:text-xs font-medium flex items-center justify-center">
+        <div className="flex-shrink-0 w-4 h-4 md:w-5 md:h-5 rounded-full bg-[hsl(var(--message-header))] text-white text-[9px] md:text-xs font-medium flex items-center justify-center">
           {unreadCount}
         </div>
       )}

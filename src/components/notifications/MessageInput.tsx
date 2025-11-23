@@ -33,19 +33,19 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   const canSend = message.trim().length > 0 && !disabled;
 
   return (
-    <div className="flex items-end gap-2">
+    <div className="flex items-end gap-1 md:gap-2">
       {/* Plus/Attachment button */}
       <Button
         variant="ghost"
         size="icon"
-        className="h-10 w-10 flex-shrink-0 rounded-full text-muted-foreground hover:bg-muted"
+        className="h-8 w-8 md:h-10 md:w-10 flex-shrink-0 rounded-full text-muted-foreground hover:bg-muted"
         disabled={disabled}
       >
-        <Plus className="h-5 w-5" />
+        <Plus className="h-4 w-4 md:h-5 md:w-5" />
       </Button>
 
       <div className={cn(
-        'flex-1 flex items-end gap-2 p-2 rounded-full border transition-all',
+        'flex-1 flex items-end gap-1 md:gap-2 p-1.5 md:p-2 rounded-full border transition-all',
         isFocused ? 'border-[hsl(var(--message-header))]/50 bg-background shadow-sm' : 'border-border bg-muted/30'
       )}>
         <div className="flex-1 relative">
@@ -58,7 +58,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             placeholder="Type something..."
             disabled={disabled}
             rows={1}
-            className="min-h-0 resize-none border-0 shadow-none focus-visible:ring-0 bg-transparent px-4 py-2 text-sm"
+            className="min-h-0 resize-none border-0 shadow-none focus-visible:ring-0 bg-transparent px-2 md:px-4 py-1.5 md:py-2 text-xs md:text-sm"
             style={{ 
               minHeight: '20px',
               maxHeight: '100px',
@@ -77,10 +77,10 @@ export const MessageInput: React.FC<MessageInputProps> = ({
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 w-8 p-0 flex-shrink-0 hidden sm:flex hover:bg-muted"
+          className="h-7 w-7 md:h-8 md:w-8 p-0 flex-shrink-0 hidden sm:flex hover:bg-muted"
           disabled={disabled}
         >
-          <Smile className="h-4 w-4 text-muted-foreground" />
+          <Smile className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground" />
         </Button>
 
         {/* Send button */}
@@ -88,9 +88,9 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           onClick={handleSend}
           disabled={!canSend}
           size="sm"
-          className="h-9 w-9 p-0 flex-shrink-0 rounded-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90"
+          className="h-8 w-8 md:h-9 md:w-9 p-0 flex-shrink-0 rounded-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90"
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-3.5 w-3.5 md:h-4 md:w-4" />
         </Button>
       </div>
     </div>

@@ -49,39 +49,39 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
   return (
     <div className={cn(
-      'flex gap-2 mb-3',
+      'flex gap-1.5 md:gap-2 mb-2 md:mb-3',
       isOutbound ? 'justify-end' : 'justify-start'
     )}>
       {/* Avatar for received messages */}
       {!isOutbound && (
-        <Avatar className="h-9 w-9 flex-shrink-0 mt-0.5">
-          <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] text-xs font-medium">
+        <Avatar className="h-6 w-6 md:h-9 md:w-9 flex-shrink-0 mt-0.5">
+          <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] text-[9px] md:text-xs font-medium">
             {senderInitials}
           </AvatarFallback>
         </Avatar>
       )}
 
       <div className={cn(
-        'max-w-[75%] rounded-2xl px-4 py-2.5',
+        'max-w-[80%] md:max-w-[75%] rounded-2xl px-2.5 md:px-4 py-1.5 md:py-2.5',
         isOutbound 
           ? 'bg-[hsl(var(--message-sent))] text-white' 
           : 'bg-[hsl(var(--message-received))] text-[hsl(var(--message-received-fg))]'
       )}>
         {/* Sender name for inbound messages */}
         {!isOutbound && message.sender_name && (
-          <div className="text-xs font-semibold text-[hsl(var(--message-header))] mb-1">
+          <div className="text-[10px] md:text-xs font-semibold text-[hsl(var(--message-header))] mb-0.5 md:mb-1">
             {message.sender_name}
           </div>
         )}
 
         {/* Message content with @mention highlighting */}
-        <div className="text-sm leading-relaxed break-words">
+        <div className="text-[11px] md:text-sm leading-relaxed break-words">
           {highlightMentions(message.message_body)}
         </div>
 
         {/* Message footer */}
         <div className={cn(
-          'flex items-center justify-end gap-1 mt-1.5 text-xs',
+          'flex items-center justify-end gap-0.5 md:gap-1 mt-1 md:mt-1.5 text-[9px] md:text-xs',
           isOutbound ? 'text-white/70' : 'text-muted-foreground'
         )}>
           <span>
@@ -92,11 +92,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {isOutbound && (
             <>
               {isFailed ? (
-                <span className="text-white/90 ml-1">Failed</span>
+                <span className="text-white/90 ml-0.5 md:ml-1">Failed</span>
               ) : isDelivered ? (
-                <CheckCheck className="w-3.5 h-3.5 ml-1" />
+                <CheckCheck className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 ml-0.5 md:ml-1" />
               ) : (
-                <Check className="w-3.5 h-3.5 ml-1" />
+                <Check className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 ml-0.5 md:ml-1" />
               )}
             </>
           )}
