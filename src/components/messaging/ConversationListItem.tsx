@@ -43,9 +43,11 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
     <div
       onClick={onClick}
       className={cn(
-        'flex items-center gap-1.5 md:gap-3 p-1.5 md:p-3 cursor-pointer transition-colors border-b border-border/50',
+        'flex items-center gap-1.5 md:gap-3 cursor-pointer transition-colors border-b border-border/50',
         'hover:bg-accent/5',
-        isSelected && 'bg-[hsl(var(--message-header))]/15 border-l-[3px] md:border-l-4 border-l-[hsl(var(--message-header))]'
+        isSelected 
+          ? 'bg-[hsl(var(--message-header))]/15 border-l-[3px] md:border-l-4 border-l-[hsl(var(--message-header))] p-2 md:p-3 pl-2.5 md:pl-4' 
+          : 'p-1.5 md:p-3'
       )}
     >
       <Avatar className="h-8 w-8 md:h-11 md:w-11 flex-shrink-0">
