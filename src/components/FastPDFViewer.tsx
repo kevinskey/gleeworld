@@ -37,7 +37,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
   const { getPage, preloadPage, clearCache, preloadAdjacentPages } = usePDFPageCache(
     pdf, 
     containerWidth > 0 ? containerWidth : 800, 
-    1.2
+    1.0 // Lower scale for faster rendering during performance
   );
 
   // Touch navigation state
@@ -198,11 +198,11 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         // Show loading only for uncached pages
         setIsLoading(true);
         
-        // Start preloading current and adjacent pages simultaneously
+        // Aggressively preload current and adjacent pages for instant turns
         const preloadPromises = [
           preloadPage(currentPage),
-          ...Array.from({length: 3}, (_, i) => preloadPage(currentPage + i + 1)),
-          ...Array.from({length: 3}, (_, i) => preloadPage(currentPage - i - 1))
+          ...Array.from({length: 7}, (_, i) => preloadPage(currentPage + i + 1)),
+          ...Array.from({length: 7}, (_, i) => preloadPage(currentPage - i - 1))
         ];
         
         // Wait only for current page, let others continue in background
@@ -409,14 +409,16 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
           
           <canvas
             ref={canvasRef}
-            className="w-full h-auto block mx-auto border transition-opacity duration-150"
+            className="w-full h-auto block mx-auto border"
             style={{ 
               maxHeight: '100%', 
               objectFit: 'contain',
               background: 'white',
               minHeight: '400px',
               border: '1px solid #ddd',
-              opacity: isLoading ? 0.7 : 1
+              opacity: isLoading ? 0.5 : 1,
+              willChange: 'contents', // Hint to browser for GPU acceleration
+              imageRendering: 'crisp-edges' // Faster rendering
             }}
           />
 
