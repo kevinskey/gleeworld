@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 interface FavoritesCardProps {
@@ -38,8 +39,9 @@ export const FavoritesCard = ({
         
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {favorites.map(module => {
+        <ScrollArea className="h-48">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
+            {favorites.map(module => {
           const IconComponent = module.icon;
           return <div key={module.id} className="relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => {
             if (module.id === 'librarian') {
@@ -64,8 +66,9 @@ export const FavoritesCard = ({
                   <Heart className="h-5 w-5 fill-current" />
                 </Button>
               </div>;
-        })}
-        </div>
+         })}
+          </div>
+        </ScrollArea>
       </CardContent>
     </Card>;
 };
