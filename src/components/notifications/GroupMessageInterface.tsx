@@ -207,7 +207,7 @@ export const GroupMessageInterface: React.FC = () => {
             </div>
 
             {/* Messages Area - scrollable */}
-            <ScrollArea className="flex-1 px-2 sm:px-3 bg-muted/20">
+            <ScrollArea className="flex-1 px-2 sm:px-3 bg-muted/20 overflow-y-auto">
               {conversationMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-4 sm:py-6 px-3">
                   <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-2 sm:mb-3">
