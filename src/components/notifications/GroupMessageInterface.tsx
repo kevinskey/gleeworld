@@ -71,60 +71,65 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col lg:flex-row gap-0 bg-background">
-      {/* Conversation List - hidden on mobile when messages shown */}
-      <div className={`${isMobile && showMessages ? 'hidden' : 'block'} lg:w-1/3 lg:max-w-sm border-r border-border`}>
-        <div className="h-full flex flex-col bg-background">
+    <div className="h-full flex flex-col md:flex-row gap-0 bg-background">
+      {/* Conversation List - responsive width */}
+      <div className={`${isMobile && showMessages ? 'hidden' : 'flex'} w-full md:w-80 lg:w-96 xl:w-[420px] border-r border-border flex-col bg-background`}>
+        <div className="h-full flex flex-col">
           {/* List Header */}
-          <div className="bg-[hsl(var(--message-header))] text-white px-4 py-4 shadow-md">
-            <h2 className="text-xl font-semibold flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
+          <div className="bg-[hsl(var(--message-header))] text-white px-3 sm:px-4 py-3 sm:py-4 shadow-md flex-shrink-0">
+            <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
               Messages
             </h2>
           </div>
           
           {/* Conversations */}
           <ScrollArea className="flex-1">
-            {conversations.map((conversation) => (
-              <ConversationListItem
-                key={conversation.id}
-                name={conversation.name}
-                lastMessage={conversationMessages[0]?.message_body}
-                timestamp={conversationMessages[0]?.created_at}
-                unreadCount={conversation.unread_count}
-                isSelected={selectedConversationId === conversation.id}
-                onClick={() => handleSelectConversation(conversation)}
-              />
-            ))}
+            <div className="min-w-0">
+              {conversations.map((conversation) => (
+                <ConversationListItem
+                  key={conversation.id}
+                  name={conversation.name}
+                  lastMessage={conversationMessages[0]?.message_body}
+                  timestamp={conversationMessages[0]?.created_at}
+                  unreadCount={conversation.unread_count}
+                  isSelected={selectedConversationId === conversation.id}
+                  onClick={() => handleSelectConversation(conversation)}
+                />
+              ))}
+            </div>
           </ScrollArea>
         </div>
       </div>
 
-      {/* Messages View - hidden on mobile when not selected */}
-      <div className={`${isMobile && !showMessages ? 'hidden' : 'block'} flex-1 flex flex-col min-h-[400px] lg:min-h-0`}>
-        {selectedConversation ? (
-          <div className="h-full flex flex-col bg-background">
-            {/* Group Header */}
-            <GroupHeader
-              groupName={selectedConversation.name}
-              onBack={handleBackToList}
-              showBackButton={isMobile}
-            />
 
-            {/* Messages Area */}
-            <ScrollArea className="flex-1 p-4 bg-background">
+      {/* Messages View - responsive and flexible */}
+      <div className={`${isMobile && !showMessages ? 'hidden' : 'flex'} flex-1 min-w-0 flex-col bg-background`}>
+        {selectedConversation ? (
+          <div className="h-full flex flex-col">
+            {/* Group Header */}
+            <div className="flex-shrink-0">
+              <GroupHeader
+                groupName={selectedConversation.name}
+                onBack={handleBackToList}
+                showBackButton={isMobile}
+              />
+            </div>
+
+            {/* Messages Area - scrollable */}
+            <ScrollArea className="flex-1 px-2 sm:px-4 bg-background">
               {conversationMessages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                  <div className="w-20 h-20 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-4">
-                    <MessageSquare className="h-10 w-10 text-[hsl(var(--message-header))]" />
+                <div className="flex flex-col items-center justify-center h-full text-center py-8 sm:py-12 px-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-3 sm:mb-4">
+                    <MessageSquare className="h-8 w-8 sm:h-10 sm:w-10 text-[hsl(var(--message-header))]" />
                   </div>
-                  <h3 className="text-lg font-medium text-foreground mb-2">No messages yet</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="text-base sm:text-lg font-medium text-foreground mb-2">No messages yet</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-xs">
                     Start a conversation with {selectedConversation.name}
                   </p>
                 </div>
               ) : (
-                <div>
+                <div className="py-4">
                   {conversationMessages.map((message) => (
                     <MessageBubble key={message.id} message={message} />
                   ))}
@@ -133,19 +138,19 @@ export const GroupMessageInterface: React.FC = () => {
               )}
             </ScrollArea>
 
-            {/* Message Input */}
-            <div className="border-t border-border p-4 bg-background">
+            {/* Message Input - fixed at bottom */}
+            <div className="border-t border-border p-2 sm:p-4 bg-background flex-shrink-0">
               <MessageInput onSendMessage={handleSendMessage} />
             </div>
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center bg-background">
-            <div className="text-center p-4">
-              <div className="w-20 h-20 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mx-auto mb-4">
-                <MessageSquare className="h-10 w-10 text-[hsl(var(--message-header))]" />
+          <div className="h-full flex items-center justify-center bg-background p-4">
+            <div className="text-center">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <MessageSquare className="h-8 w-8 sm:h-10 sm:w-10 text-[hsl(var(--message-header))]" />
               </div>
-              <h3 className="text-lg font-medium text-foreground">Select a conversation</h3>
-              <p className="text-sm text-muted-foreground mt-2">Choose a group to start messaging</p>
+              <h3 className="text-base sm:text-lg font-medium text-foreground">Select a conversation</h3>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-2">Choose a group to start messaging</p>
             </div>
           </div>
         )}
