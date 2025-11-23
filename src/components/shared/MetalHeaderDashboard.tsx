@@ -25,7 +25,6 @@ import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
-import { ResizableMessageCenter } from "@/components/dashboard/ResizableMessageCenter";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save } from "lucide-react";
 
@@ -164,11 +163,13 @@ interface MetalHeaderDashboardProps {
   };
   simulatedRole?: string; // Optional role to simulate for viewing purposes
   simulatedUserId?: string; // When simulating, fetch grants for this user id
+  onToggleMessages?: () => void; // Callback to toggle messages panel
 }
 export const MetalHeaderDashboard = ({
   user,
   simulatedRole,
-  simulatedUserId
+  simulatedUserId,
+  onToggleMessages
 }: MetalHeaderDashboardProps) => {
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
@@ -273,7 +274,6 @@ export const MetalHeaderDashboard = ({
   }, [categories]);
   const [filterControlsCollapsed, setFilterControlsCollapsed] = useState(true);
   const [favoritesCollapsed, setFavoritesCollapsed] = useState(false);
-  const [aiAssistantOpen, setAiAssistantOpen] = useState(false);
 
   // Card ordering sensors for drag and drop
   const cardSensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
@@ -613,7 +613,10 @@ export const MetalHeaderDashboard = ({
 
       {/* Message Center Button - Fixed to Right Edge */}
       <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
-        <Button onClick={() => setAiAssistantOpen(!aiAssistantOpen)} className="h-auto w-6 rounded-l-lg rounded-r-none shadow-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold flex flex-col items-center justify-center py-1 px-0 opacity-70 hover:opacity-100 transition-opacity">
+        <Button 
+          onClick={() => onToggleMessages?.()} 
+          className="h-auto w-6 rounded-l-lg rounded-r-none shadow-2xl bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex flex-col items-center justify-center py-1 px-0 opacity-70 hover:opacity-100 transition-opacity"
+        >
           <MessageSquare className="h-3 w-3 mb-0.5" />
           <div className="flex flex-col text-[8px] tracking-wide leading-none">
             {['M', 'E', 'S', 'S', 'A', 'G', 'E', 'S'].map((letter, i) => <span key={i} className="py-[1px]">{letter}</span>)}
@@ -736,8 +739,5 @@ export const MetalHeaderDashboard = ({
               </CollapsibleContent>
             </Card>
           </Collapsible>}
-
-      {/* Resizable Message Center */}
-      <ResizableMessageCenter open={aiAssistantOpen} onOpenChange={setAiAssistantOpen} />
     </div>;
 };

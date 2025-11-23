@@ -346,16 +346,24 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'default') {
     return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
-          <MetalHeaderDashboard user={{
-            id: profile.user_id,
-            email: profile.email || '',
-            full_name: profile.full_name || '',
-            role: profile.role || 'user',
-            exec_board_role: profile.exec_board_role,
-            is_exec_board: profile.is_exec_board || false,
-            created_at: new Date().toISOString()
-          }} />
+          <MetalHeaderDashboard 
+            user={{
+              id: profile.user_id,
+              email: profile.email || '',
+              full_name: profile.full_name || '',
+              role: profile.role || 'user',
+              exec_board_role: profile.exec_board_role,
+              is_exec_board: profile.is_exec_board || false,
+              created_at: new Date().toISOString()
+            }} 
+            onToggleMessages={() => setShowMessages(prev => !prev)}
+          />
         </div>
+        
+        {/* Messages Panel Overlay */}
+        {showMessages && (
+          <MessagesPanel onClose={() => setShowMessages(false)} />
+        )}
       </div>;
   }
   return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
