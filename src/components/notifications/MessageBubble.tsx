@@ -26,31 +26,31 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
   return (
     <div className={cn(
-      'flex mb-4',
+      'flex mb-3',
       isOutbound ? 'justify-end' : 'justify-start'
     )}>
       <div className={cn(
-        'max-w-[70%] rounded-2xl px-4 py-2 relative',
+        'max-w-[75%] rounded-2xl px-4 py-2.5',
         isOutbound 
-          ? 'bg-primary text-primary-foreground rounded-br-md' 
-          : 'bg-muted text-foreground rounded-bl-md'
+          ? 'bg-[hsl(var(--message-sent))] text-white' 
+          : 'bg-[hsl(var(--message-received))] text-[hsl(var(--message-received-fg))]'
       )}>
         {/* Sender name for inbound messages */}
         {!isOutbound && message.sender_name && (
-          <div className="text-xs font-medium text-primary mb-1">
+          <div className="text-xs font-semibold text-[hsl(var(--message-header))] mb-1">
             {message.sender_name}
           </div>
         )}
 
         {/* Message content */}
-        <div className="text-sm leading-relaxed">
+        <div className="text-sm leading-relaxed break-words">
           {message.message_body}
         </div>
 
         {/* Message footer */}
         <div className={cn(
-          'flex items-center justify-end gap-1 mt-1 text-xs',
-          isOutbound ? 'text-primary-foreground/70' : 'text-muted-foreground'
+          'flex items-center justify-end gap-1 mt-1.5 text-xs',
+          isOutbound ? 'text-white/70' : 'text-muted-foreground'
         )}>
           <span>
             {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
@@ -60,23 +60,15 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           {isOutbound && (
             <>
               {isFailed ? (
-                <span className="text-destructive ml-1">Failed</span>
+                <span className="text-white/90 ml-1">Failed</span>
               ) : isDelivered ? (
-                <CheckCheck className="w-3 h-3 ml-1" />
+                <CheckCheck className="w-3.5 h-3.5 ml-1" />
               ) : (
-                <Check className="w-3 h-3 ml-1" />
+                <Check className="w-3.5 h-3.5 ml-1" />
               )}
             </>
           )}
         </div>
-
-        {/* Message tail */}
-        <div className={cn(
-          'absolute top-0 w-0 h-0',
-          isOutbound 
-            ? 'right-0 border-l-[6px] border-l-primary border-t-[6px] border-t-transparent transform translate-x-full'
-            : 'left-0 border-r-[6px] border-r-muted border-t-[6px] border-t-transparent transform -translate-x-full'
-        )} />
       </div>
     </div>
   );
