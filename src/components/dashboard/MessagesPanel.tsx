@@ -31,10 +31,10 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
       } else {
         // Desktop: positioned on the right
         setDimensions({
-          x: window.innerWidth - 490,
-          y: 80,
-          width: 450,
-          height: window.innerHeight * 0.455,
+          x: window.innerWidth - 650,
+          y: 60,
+          width: 600,
+          height: window.innerHeight * 0.75,
         });
       }
     };
