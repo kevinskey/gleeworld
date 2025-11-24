@@ -46,7 +46,8 @@ export const GroupMessageInterface: React.FC = () => {
     conversations: dmConversations,
     messages: dmMessages,
     sendMessage: sendDirectMessage,
-    createConversation
+    createConversation,
+    fetchMessages: fetchDirectMessages
   } = useDirectMessages();
 
   const allConversations = conversationType === 'group' ? conversations : dmConversations;
@@ -61,9 +62,14 @@ export const GroupMessageInterface: React.FC = () => {
     }
   }, [allConversations, selectedConversationId]);
 
-  const handleSelectConversation = (conversation: any, type: 'group' | 'direct') => {
+  const handleSelectConversation = async (conversation: any, type: 'group' | 'direct') => {
     setConversationType(type);
     setSelectedConversationId(conversation.id);
+    
+    // Fetch messages when selecting a direct message conversation
+    if (type === 'direct') {
+      await fetchDirectMessages(conversation.id);
+    }
   };
 
   const handleBackToList = () => {
@@ -103,6 +109,10 @@ export const GroupMessageInterface: React.FC = () => {
       setConversationType('direct');
       setSelectedConversationId(conversationId);
       setNewMessageOpen(false);
+      
+      // Fetch messages for the new/existing conversation
+      await fetchDirectMessages(conversationId);
+      
       if (isMobile) {
         setShowMessages(true);
       }
