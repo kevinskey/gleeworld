@@ -88,9 +88,9 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
       </div>
 
       {/* User List */}
-      <ScrollArea className="h-[400px]">
+      <ScrollArea className="h-[400px] max-h-[60vh]">
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          <div className="text-center py-8 text-foreground">Loading...</div>
         ) : filteredUsers.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             {searchQuery ? 'No users found' : 'No members available'}
@@ -104,7 +104,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
                   onSelectUser(user);
                   onClose();
                 }}
-                className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent/10 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
               >
                 <Avatar className="h-10 w-10 flex-shrink-0">
                   <AvatarImage src={user.avatar_url} />
