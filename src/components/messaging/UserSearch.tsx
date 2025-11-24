@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -85,8 +84,8 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
         />
       </div>
 
-      {/* User List */}
-      <ScrollArea className="h-[50vh] md:h-[60vh]">
+      {/* User List - Native scrolling for mobile compatibility */}
+      <div className="overflow-y-auto h-[50vh] md:h-[60vh] -mx-2 px-2">
         {loading ? (
           <div className="text-center py-8 text-foreground">Loading...</div>
         ) : filteredUsers.length === 0 ? (
@@ -94,7 +93,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
             {searchQuery ? 'No users found' : 'No members available'}
           </div>
         ) : (
-          <div className="space-y-1 pb-2 pr-4">
+          <div className="space-y-1 pb-2">
             {filteredUsers.map((user) => (
               <button
                 key={user.user_id}
@@ -124,7 +123,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
             ))}
           </div>
         )}
-      </ScrollArea>
+      </div>
     </div>
   );
 };
