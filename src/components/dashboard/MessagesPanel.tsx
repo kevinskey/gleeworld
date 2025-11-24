@@ -21,12 +21,12 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
   useEffect(() => {
     const updateDimensions = () => {
       if (isMobile) {
-        // Mobile: reduced by 25% for better data visibility
+        // Mobile: taller height for better text visibility
         setDimensions({
           x: 10,
-          y: 120,
+          y: 80,
           width: (window.innerWidth - 20) * 0.75,
-          height: window.innerHeight * 0.39,
+          height: window.innerHeight * 0.75,
         });
       } else {
         // Desktop: positioned on the right
