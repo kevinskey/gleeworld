@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -72,7 +72,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
   };
 
   return (
-    <div className="flex flex-col max-h-[70vh]">
+    <div className="flex flex-col max-h-[70vh] overflow-hidden">
       {/* Search */}
       <div className="pb-4 flex-shrink-0">
         <div className="relative">
@@ -88,47 +88,45 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
       </div>
 
       {/* User List */}
-      <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full pr-2">
-          {loading ? (
-            <div className="text-center py-8 text-foreground">Loading...</div>
-          ) : filteredUsers.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {searchQuery ? 'No users found' : 'No members available'}
-            </div>
-          ) : (
-            <div className="space-y-1 pb-2">
-              {filteredUsers.map((user) => (
-                <button
-                  key={user.user_id}
-                  onClick={() => {
-                    onSelectUser(user);
-                    onClose();
-                  }}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
-                >
-                  <Avatar className="h-10 w-10 flex-shrink-0">
-                    <AvatarImage src={user.avatar_url} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                      {getInitials(user.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-foreground text-sm truncate">
-                      {user.full_name}
-                    </div>
-                    {user.voice_part && (
-                      <div className="text-xs text-muted-foreground">
-                        {user.voice_part}
-                      </div>
-                    )}
+      <ScrollArea className="max-h-[60vh] pr-2">
+        {loading ? (
+          <div className="text-center py-8 text-foreground">Loading...</div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            {searchQuery ? 'No users found' : 'No members available'}
+          </div>
+        ) : (
+          <div className="space-y-1 pb-2">
+            {filteredUsers.map((user) => (
+              <button
+                key={user.user_id}
+                onClick={() => {
+                  onSelectUser(user);
+                  onClose();
+                }}
+                className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
+              >
+                <Avatar className="h-10 w-10 flex-shrink-0">
+                  <AvatarImage src={user.avatar_url} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                    {getInitials(user.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-foreground text-sm truncate">
+                    {user.full_name}
                   </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-      </div>
+                  {user.voice_part && (
+                    <div className="text-xs text-muted-foreground">
+                      {user.voice_part}
+                    </div>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
     </div>
   );
 };
