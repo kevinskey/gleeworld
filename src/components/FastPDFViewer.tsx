@@ -37,7 +37,7 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
   const { getPage, preloadPage, clearCache, preloadAdjacentPages } = usePDFPageCache(
     pdf, 
     containerWidth > 0 ? containerWidth : 800, 
-    1.0 // Lower scale for faster rendering during performance
+    0.9 // Reduced scale for maximum speed during performance
   );
 
   // Touch navigation state
@@ -201,8 +201,8 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         // Aggressively preload current and adjacent pages for instant turns
         const preloadPromises = [
           preloadPage(currentPage),
-          ...Array.from({length: 7}, (_, i) => preloadPage(currentPage + i + 1)),
-          ...Array.from({length: 7}, (_, i) => preloadPage(currentPage - i - 1))
+          ...Array.from({length: 10}, (_, i) => preloadPage(currentPage + i + 1)),
+          ...Array.from({length: 10}, (_, i) => preloadPage(currentPage - i - 1))
         ];
         
         // Wait only for current page, let others continue in background

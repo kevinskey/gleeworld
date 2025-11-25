@@ -15,8 +15,8 @@ interface PDFPageCacheHook {
   cacheSize: number;
 }
 
-const MAX_CACHE_SIZE = 30; // Cache up to 30 pages for instant performance
-const PRELOAD_RANGE = 5; // Preload 5 pages ahead and behind for quick turns
+const MAX_CACHE_SIZE = 50; // Cache up to 50 pages for instant performance
+const PRELOAD_RANGE = 10; // Preload 10 pages ahead and behind for quick turns
 
 export const usePDFPageCache = (
   pdf: any | null,
@@ -58,9 +58,12 @@ export const usePDFPageCache = (
       
       const viewport = page.getViewport({ scale: fitScale });
       
-      // Create offscreen canvas
+      // Create offscreen canvas with GPU acceleration hints
       const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+      const ctx = canvas.getContext('2d', { 
+        alpha: false, // No transparency for faster rendering
+        desynchronized: true // Allow async rendering
+      });
       if (!ctx) return null;
 
       canvas.width = viewport.width;
@@ -68,7 +71,9 @@ export const usePDFPageCache = (
 
       const renderContext = {
         canvasContext: ctx,
-        viewport: viewport
+        viewport: viewport,
+        intent: 'display', // Optimize for display
+        enableWebGL: true // Use WebGL acceleration if available
       };
 
       await page.render(renderContext).promise;
