@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowLeft, MoreVertical, Search, Calendar, BarChart3, Image, Users, Settings, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,20 +10,26 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { GroupMembersDialog } from './GroupMembersDialog';
 
 interface GroupHeaderProps {
+  groupId: string;
   groupName: string;
   groupAvatar?: string;
   onBack?: () => void;
   showBackButton?: boolean;
+  isAdmin?: boolean;
 }
 
 export const GroupHeader: React.FC<GroupHeaderProps> = ({
+  groupId,
   groupName,
   groupAvatar,
   onBack,
   showBackButton = false,
+  isAdmin = false,
 }) => {
+  const [showMembersDialog, setShowMembersDialog] = useState(false);
   const groupInitials = groupName
     .split(' ')
     .map((n) => n[0])
@@ -93,7 +99,10 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
               <Image className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
               <span className="flex-1 text-base font-medium">Gallery</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+            <DropdownMenuItem 
+              className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent"
+              onClick={() => setShowMembersDialog(true)}
+            >
               <Users className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
               <span className="flex-1 text-base font-medium">Members</span>
             </DropdownMenuItem>
@@ -108,6 +117,14 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <GroupMembersDialog
+        open={showMembersDialog}
+        onOpenChange={setShowMembersDialog}
+        groupId={groupId}
+        groupName={groupName}
+        isAdmin={isAdmin}
+      />
     </div>
   );
 };

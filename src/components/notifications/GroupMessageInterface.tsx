@@ -327,6 +327,7 @@ export const GroupMessageInterface: React.FC = () => {
               <div className="h-full flex flex-col">
                 <div className="flex-shrink-0">
                   <GroupHeader
+                    groupId={(selectedConversation as any).id}
                     groupName={conversationType === 'group' ? (selectedConversation as any).name : (selectedConversation as any).other_user_name}
                     onBack={handleBackToList}
                     showBackButton={false}
