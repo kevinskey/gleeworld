@@ -124,7 +124,7 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-muted/30 overflow-hidden max-w-7xl mx-auto">
+    <div className="h-full flex flex-col bg-muted/30 overflow-hidden max-w-5xl mx-auto">
       {/* Mobile: Single column with groups at top */}
       {isMobile ? (
         <>
@@ -252,7 +252,7 @@ export const GroupMessageInterface: React.FC = () => {
         /* Desktop: Two-column layout */
         <div className="h-full flex gap-0">
           {/* Conversation List Sidebar */}
-          <div className="flex w-[280px] lg:w-[320px] xl:w-[360px] border-r border-border flex-col bg-muted/50">
+          <div className="flex w-[240px] lg:w-[280px] xl:w-[300px] border-r border-border flex-col bg-muted/50">
             <div className="h-full flex flex-col">
               <div className="bg-[hsl(var(--message-header))] text-white px-3 py-2.5 shadow-md flex-shrink-0">
                 <div className="flex items-center justify-between">
