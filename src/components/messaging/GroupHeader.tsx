@@ -12,6 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { GroupMembersDialog } from './GroupMembersDialog';
 import { PollsDialog } from './PollsDialog';
+import { EventsDialog } from './EventsDialog';
 
 interface GroupHeaderProps {
   groupId: string;
@@ -32,6 +33,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
 }) => {
   const [showMembersDialog, setShowMembersDialog] = useState(false);
   const [showPollsDialog, setShowPollsDialog] = useState(false);
+  const [showEventsDialog, setShowEventsDialog] = useState(false);
   const groupInitials = groupName
     .split(' ')
     .map((n) => n[0])
@@ -82,8 +84,11 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
               <MoreVertical className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-64 p-2 bg-background shadow-lg border">
-            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+          <DropdownMenuContent align="end" className="w-64 p-2 bg-background shadow-lg border z-50">
+            <DropdownMenuItem 
+              className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent"
+              onClick={() => setShowEventsDialog(true)}
+            >
               <Calendar className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
               <span className="flex-1 text-base font-medium">Events</span>
               <Badge className="ml-2 bg-blue-500 text-white h-6 min-w-6 px-2 text-xs font-semibold rounded-full">
@@ -135,6 +140,13 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
         open={showPollsDialog}
         onOpenChange={setShowPollsDialog}
         groupId={groupId}
+      />
+
+      <EventsDialog
+        open={showEventsDialog}
+        onOpenChange={setShowEventsDialog}
+        groupId={groupId}
+        groupName={groupName}
       />
     </div>
   );
