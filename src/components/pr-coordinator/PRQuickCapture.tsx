@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useCameraImport } from '@/hooks/useCameraImport';
 import { PRImageTag } from '@/hooks/usePRImages';
-import { Camera, Upload, X } from 'lucide-react';
+import { Camera, Upload, X, SwitchCamera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -48,6 +48,7 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
     startCamera, 
     capturePhoto, 
     stopCamera, 
+    switchCamera,
     isCameraReady,
     cameraError,
     videoRef,
@@ -192,15 +193,25 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
                     className="w-full h-64 object-cover"
                   />
                   {isCameraReady && (
-                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                    <>
                       <Button
-                        onClick={capturePhoto}
-                        size="lg"
-                        className="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16"
+                        variant="secondary"
+                        size="icon"
+                        onClick={switchCamera}
+                        className="absolute top-4 right-4 bg-background/80 hover:bg-background"
                       >
-                        <Camera className="h-6 w-6" />
+                        <SwitchCamera className="h-4 w-4" />
                       </Button>
-                    </div>
+                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                        <Button
+                          onClick={capturePhoto}
+                          size="lg"
+                          className="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16"
+                        >
+                          <Camera className="h-6 w-6" />
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </div>
                 
