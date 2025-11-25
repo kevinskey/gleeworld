@@ -74,36 +74,36 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
               <MoreVertical className="h-4 w-4 md:h-5 md:w-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 sm:w-56">
-            <DropdownMenuItem className="text-sm">
-              <Calendar className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
-              <span className="flex-1">Events</span>
-              <Badge variant="secondary" className="ml-1 sm:ml-2 bg-[hsl(var(--message-header))] text-white h-4 sm:h-5 min-w-4 sm:min-w-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
+          <DropdownMenuContent align="end" className="w-64 p-2 bg-background shadow-lg border">
+            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+              <Calendar className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
+              <span className="flex-1 text-base font-medium">Events</span>
+              <Badge className="ml-2 bg-blue-500 text-white h-6 min-w-6 px-2 text-xs font-semibold rounded-full">
                 18
               </Badge>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm">
-              <BarChart3 className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
-              <span className="flex-1">Polls</span>
-              <Badge variant="secondary" className="ml-1 sm:ml-2 bg-[hsl(var(--message-header))] text-white h-4 sm:h-5 min-w-4 sm:min-w-5 px-1 sm:px-1.5 text-[10px] sm:text-xs">
+            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+              <BarChart3 className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
+              <span className="flex-1 text-base font-medium">Polls</span>
+              <Badge className="ml-2 bg-blue-500 text-white h-6 min-w-6 px-2 text-xs font-semibold rounded-full">
                 1
               </Badge>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm">
-              <Image className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
-              <span>Gallery</span>
+            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+              <Image className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
+              <span className="flex-1 text-base font-medium">Gallery</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm">
-              <Users className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
-              <span>Members</span>
+            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+              <Users className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
+              <span className="flex-1 text-base font-medium">Members</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm">
-              <Wrench className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
-              <span>Services</span>
+            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+              <Wrench className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
+              <span className="flex-1 text-base font-medium">Services</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-sm">
-              <Settings className="h-4 w-4 mr-2 sm:mr-3 text-[hsl(var(--message-header))]" />
-              <span>Settings</span>
+            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+              <Settings className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
+              <span className="flex-1 text-base font-medium">Settings</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
