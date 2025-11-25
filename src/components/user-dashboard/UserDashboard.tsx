@@ -22,6 +22,7 @@ import { NotificationsSection } from "./sections/NotificationsSection";
 import { TasksSection } from "./sections/TasksSection";
 import { BookingRequestManager } from "@/components/tour-manager/BookingRequestManager";
 import { ExecBoardMemberModules } from "@/components/executive/ExecBoardMemberModules";
+import festiveBg from "@/assets/gleeworld-festive-background.webp";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -286,8 +287,8 @@ const UserDashboard = React.memo(() => {
 
   const recentActivity = getRecentActivity();
 
-  // Use the same historic campus background as Executive Board Dashboard
-  const backgroundImage = "/lovable-uploads/7f76a692-7ffc-414c-af69-fc6585338524.png";
+  // Use festive ornaments background
+  const backgroundImage = festiveBg;
 
   return (
     <UniversalLayout 
