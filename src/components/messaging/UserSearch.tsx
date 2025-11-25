@@ -84,8 +84,8 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
         />
       </div>
 
-      {/* User List - Native scrolling for mobile compatibility */}
-      <div className="overflow-y-auto h-[50vh] md:h-[60vh] -mx-2 px-2">
+      {/* User List - Native scrolling with touch support */}
+      <div className="overflow-y-auto overflow-x-hidden h-[50vh] md:h-[60vh] -mx-2 px-2 overscroll-contain touch-pan-y">
         {loading ? (
           <div className="text-center py-8 text-foreground">Loading...</div>
         ) : filteredUsers.length === 0 ? (

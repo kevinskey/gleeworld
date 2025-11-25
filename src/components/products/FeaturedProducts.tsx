@@ -64,15 +64,17 @@ export const FeaturedProducts = ({
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      if (error) throw error;
-      setProducts(data || []);
+      if (error) {
+        console.error('Error loading featured products:', error);
+        // Fail silently to not block the page
+        setProducts([]);
+      } else {
+        setProducts(data || []);
+      }
     } catch (error: any) {
       console.error('Error loading featured products:', error);
-      toast({
-        title: "Error loading products",
-        description: error.message,
-        variant: "destructive"
-      });
+      // Fail silently to not block the page
+      setProducts([]);
     } finally {
       setLoading(false);
     }
