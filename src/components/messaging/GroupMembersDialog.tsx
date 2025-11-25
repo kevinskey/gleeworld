@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { UserPlus, UserMinus, Mail, Crown, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { AddMembersDialog } from './AddMembersDialog';
 
 interface GroupMembersDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -148,7 +150,11 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
               className="flex-1"
             />
             {isAdmin && (
-              <Button size="icon" variant="outline">
+              <Button 
+                size="icon" 
+                variant="outline"
+                onClick={() => setShowAddDialog(true)}
+              >
                 <UserPlus className="h-4 w-4" />
               </Button>
             )}
@@ -224,6 +230,13 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
           </ScrollArea>
         </div>
       </DialogContent>
+
+      <AddMembersDialog
+        open={showAddDialog}
+        onOpenChange={setShowAddDialog}
+        groupId={groupId}
+        onMembersAdded={fetchMembers}
+      />
     </Dialog>
   );
 };
