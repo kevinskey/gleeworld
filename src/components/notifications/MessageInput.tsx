@@ -3,15 +3,20 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Smile, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PollCreator } from '@/components/messaging/PollCreator';
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
+  groupId?: string;
+  onPollCreated?: () => void;
 }
 
 export const MessageInput: React.FC<MessageInputProps> = ({ 
   onSendMessage, 
-  disabled = false 
+  disabled = false,
+  groupId,
+  onPollCreated
 }) => {
   const [message, setMessage] = useState('');
   const [isFocused, setIsFocused] = useState(false);
@@ -34,6 +39,11 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <div className="flex items-end gap-1 md:gap-2">
+      {/* Poll Creator button */}
+      {groupId && (
+        <PollCreator groupId={groupId} onPollCreated={onPollCreated} />
+      )}
+      
       {/* Plus/Attachment button */}
       <Button
         variant="ghost"

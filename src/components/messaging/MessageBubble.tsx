@@ -12,6 +12,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { PollBubble } from './PollBubble';
 
 interface MessageBubbleProps {
   message: GroupMessage;
@@ -63,6 +64,21 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     acc[reaction.emoji].push(reaction);
     return acc;
   }, {} as Record<string, typeof message.reactions>);
+
+  // If this is a poll message, render PollBubble instead
+  if (message.message_type === 'poll') {
+    return (
+      <div className={cn("mb-3", isOwnMessage && "flex justify-end")}>
+        <div className="max-w-md">
+          <PollBubble
+            messageId={message.id}
+            createdBy={message.user_id || ''}
+            createdAt={message.created_at}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

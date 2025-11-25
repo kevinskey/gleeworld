@@ -9625,6 +9625,124 @@ export type Database = {
           },
         ]
       }
+      gw_poll_options: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          option_text: string
+          poll_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          option_text: string
+          poll_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          option_text?: string
+          poll_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_poll_options_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "gw_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_poll_votes: {
+        Row: {
+          created_at: string
+          id: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          option_id: string
+          poll_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          option_id?: string
+          poll_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_poll_votes_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: false
+            referencedRelation: "gw_poll_options"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "gw_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_polls: {
+        Row: {
+          allow_multiple_selections: boolean
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          is_anonymous: boolean
+          is_closed: boolean
+          message_id: string
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          allow_multiple_selections?: boolean
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          is_anonymous?: boolean
+          is_closed?: boolean
+          message_id: string
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          allow_multiple_selections?: boolean
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          is_anonymous?: boolean
+          is_closed?: boolean
+          message_id?: string
+          question?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_polls_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "gw_group_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_practice_links: {
         Row: {
           created_at: string
