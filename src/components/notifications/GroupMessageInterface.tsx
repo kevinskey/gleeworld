@@ -124,7 +124,7 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-muted/30">
+    <div className="h-full flex flex-col bg-muted/30 overflow-hidden">
       {/* Mobile: Single column with groups at top */}
       {isMobile ? (
         <>
@@ -198,11 +198,11 @@ export const GroupMessageInterface: React.FC = () => {
           </div>
 
           {/* Messages and Input - Takes remaining space */}
-          <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {selectedConversation ? (
               <>
                 {/* Messages Area */}
-                <ScrollArea className="flex-1 px-2 bg-muted/20">
+                <ScrollArea className="flex-1 px-2 bg-muted/20 overflow-y-auto">
                   {conversationMessages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center py-6 px-3">
                       <div className="w-12 h-12 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-2">
@@ -227,7 +227,7 @@ export const GroupMessageInterface: React.FC = () => {
                 </ScrollArea>
 
                 {/* Message Input - Fixed at bottom */}
-                <div className="border-t border-border p-2 bg-background flex-shrink-0">
+                <div className="border-t border-border p-2 bg-background flex-shrink-0 safe-bottom">
                   <MessageInput onSendMessage={handleSendMessage} />
                 </div>
               </>
