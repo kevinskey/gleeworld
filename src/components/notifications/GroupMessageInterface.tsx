@@ -228,7 +228,11 @@ export const GroupMessageInterface: React.FC = () => {
 
                 {/* Message Input - Fixed at bottom */}
                 <div className="border-t border-border p-2 bg-background flex-shrink-0 safe-bottom">
-                  <MessageInput onSendMessage={handleSendMessage} />
+                  <MessageInput 
+                    onSendMessage={handleSendMessage} 
+                    groupId={conversationType === 'group' ? selectedConversationId || undefined : undefined}
+                    onPollCreated={() => selectedConversationId && fetchMessagesForConversation(selectedConversationId)}
+                  />
                 </div>
               </>
             ) : (
@@ -360,7 +364,11 @@ export const GroupMessageInterface: React.FC = () => {
                 </ScrollArea>
 
                 <div className="border-t border-border p-2 bg-background flex-shrink-0">
-                  <MessageInput onSendMessage={handleSendMessage} />
+                  <MessageInput 
+                    onSendMessage={handleSendMessage} 
+                    groupId={conversationType === 'group' ? selectedConversationId || undefined : undefined}
+                    onPollCreated={() => selectedConversationId && fetchMessagesForConversation(selectedConversationId)}
+                  />
                 </div>
               </div>
             ) : (

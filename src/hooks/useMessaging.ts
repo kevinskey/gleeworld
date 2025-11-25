@@ -23,7 +23,7 @@ export interface GroupMessage {
   group_id: string;
   user_id?: string;
   content?: string;
-  message_type: 'text' | 'image' | 'file' | 'audio' | 'system';
+  message_type: 'text' | 'image' | 'file' | 'audio' | 'system' | 'poll';
   file_url?: string;
   file_name?: string;
   file_size?: number;
