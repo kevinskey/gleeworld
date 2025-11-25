@@ -21,7 +21,8 @@ interface MessageBubbleProps {
   message: Message;
 }
 
-const highlightMentions = (text: string) => {
+const highlightMentions = (text: string | undefined) => {
+  if (!text) return null;
   // Highlight @mentions with GroupMe-style formatting
   const parts = text.split(/(@\w+)/g);
   return parts.map((part, index) => {
