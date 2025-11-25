@@ -611,16 +611,14 @@ export const MetalHeaderDashboard = ({
       {/* Dashboard Hero Carousel */}
       <DashboardHeroCarousel />
 
-      {/* Message Center Button - Fixed to Right Edge */}
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-50">
+      {/* Message Center Button - Integrated into page */}
+      <div className="flex justify-end mb-4">
         <Button 
           onClick={() => onToggleMessages?.()} 
-          className="h-auto w-6 rounded-l-lg rounded-r-none shadow-2xl bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex flex-col items-center justify-center py-1 px-0 opacity-70 hover:opacity-100 transition-opacity"
+          className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 px-4 py-2"
         >
-          <MessageSquare className="h-3 w-3 mb-0.5" />
-          <div className="flex flex-col text-[8px] tracking-wide leading-none">
-            {['M', 'E', 'S', 'S', 'A', 'G', 'E', 'S'].map((letter, i) => <span key={i} className="py-[1px]">{letter}</span>)}
-          </div>
+          <MessageSquare className="h-4 w-4" />
+          <span className="text-sm">MESSAGES</span>
         </Button>
       </div>
 
