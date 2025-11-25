@@ -196,25 +196,9 @@ export const useGroupMessages = () => {
 
       if (inAppError) throw inAppError;
 
-      // Try to send via SMS if conversation exists
-      try {
-        const response = await supabase.functions.invoke('send-group-sms', {
-          body: {
-            conversationId,
-            message,
-            senderUserId: user.id,
-            senderName: user.user_metadata?.full_name || 'Unknown User'
-          }
-        });
-
-        if (response.error) {
-          console.log('SMS not available for this group:', response.error);
-          // Don't throw - in-app message already sent successfully
-        }
-      } catch (smsErr) {
-        console.log('SMS send failed, but in-app message delivered:', smsErr);
-        // Don't throw - in-app message already sent successfully
-      }
+      // Note: SMS functionality is not yet enabled for groups
+      // When enabled, it will send via the send-group-sms edge function
+      // For now, messages are in-app only
 
       // Refresh messages for this conversation
       await fetchMessagesForConversation(conversationId);
