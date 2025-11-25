@@ -71,7 +71,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
   };
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 h-full min-h-0">
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -85,7 +85,7 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
       </div>
 
       {/* User List - Native scrolling with touch support */}
-      <div className="overflow-y-auto overflow-x-hidden h-[50vh] md:h-[60vh] -mx-2 px-2 overscroll-contain touch-pan-y">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden -mx-2 px-2 overscroll-contain touch-pan-y">
         {loading ? (
           <div className="text-center py-8 text-foreground">Loading...</div>
         ) : filteredUsers.length === 0 ? (
