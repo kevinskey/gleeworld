@@ -1,7 +1,7 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { Button } from './button';
 import { Card, CardContent } from './card';
-import { Camera, RotateCcw, Download, X } from 'lucide-react';
+import { Camera, RotateCcw, Download, X, SwitchCamera } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface CameraCaptureProps {
@@ -20,6 +20,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
   const streamRef = useRef<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
   const { toast } = useToast();
 
   const startCamera = useCallback(async () => {
@@ -28,7 +29,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         video: { 
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: 'user'
+          facingMode: facingMode
         } 
       });
       
@@ -45,7 +46,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         variant: "destructive",
       });
     }
-  }, [toast]);
+  }, [toast, facingMode]);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
@@ -96,6 +97,11 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     onCancel();
   }, [stopCamera, onCancel]);
 
+  const switchCamera = useCallback(() => {
+    stopCamera();
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+  }, [stopCamera]);
+
   React.useEffect(() => {
     if (isOpen && !capturedImage) {
       startCamera();
@@ -104,7 +110,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     return () => {
       stopCamera();
     };
-  }, [isOpen, capturedImage, startCamera, stopCamera]);
+  }, [isOpen, capturedImage, startCamera, stopCamera, facingMode]);
 
   if (!isOpen) return null;
 
@@ -122,12 +128,22 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
 
             <div className="relative bg-black rounded-lg overflow-hidden aspect-[4/3]">
               {!capturedImage ? (
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
+                <>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    onClick={switchCamera}
+                    className="absolute top-4 right-4 bg-background/80 hover:bg-background"
+                  >
+                    <SwitchCamera className="h-4 w-4" />
+                  </Button>
+                </>
               ) : (
                 <img
                   src={capturedImage}
