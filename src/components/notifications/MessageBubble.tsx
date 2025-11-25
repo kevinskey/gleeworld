@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { Check, CheckCheck } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { MessageReactions } from '@/components/messaging/features/MessageReactions';
 
 interface Message {
   id: string;
@@ -101,6 +102,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
             </>
           )}
         </div>
+
+        {/* GroupMe-style Reactions */}
+        <MessageReactions messageId={message.id} />
       </div>
     </div>
   );
