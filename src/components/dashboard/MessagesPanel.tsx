@@ -29,11 +29,11 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           height: window.innerHeight * 0.8,
         });
       } else {
-        // Desktop: positioned on the right
+        // Desktop: positioned on the right with wider layout
         setDimensions({
-          x: window.innerWidth - 650,
+          x: window.innerWidth - 950,
           y: 80,
-          width: 600,
+          width: 900,
           height: window.innerHeight * 0.75,
         });
       }
@@ -50,7 +50,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
       <Rnd
         position={{ x: dimensions.x, y: dimensions.y }}
         size={{ width: dimensions.width, height: dimensions.height }}
-        minWidth={isMobile ? 280 : 350}
+        minWidth={isMobile ? 280 : 600}
         minHeight={300}
         maxWidth={window.innerWidth - 20}
         maxHeight={window.innerHeight - 100}
