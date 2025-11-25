@@ -44,6 +44,23 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
     return () => window.removeEventListener('resize', updateDimensions);
   }, [isMobile]);
 
+  const handleDragStop = (_e: any, data: { x: number; y: number }) => {
+    setDimensions(prev => ({
+      ...prev,
+      x: data.x,
+      y: data.y,
+    }));
+  };
+
+  const handleResizeStop = (_e: any, _direction: any, ref: HTMLElement, _delta: any, position: { x: number; y: number }) => {
+    setDimensions({
+      x: position.x,
+      y: position.y,
+      width: ref.offsetWidth,
+      height: ref.offsetHeight,
+    });
+  };
+
   return (
     <>
       {/* Draggable & Resizable Messages Panel */}
@@ -71,6 +88,8 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
         dragHandleClassName="drag-handle"
         enableUserSelectHack={false}
         cancel=".no-drag"
+        onDragStop={handleDragStop}
+        onResizeStop={handleResizeStop}
       >
         <div className="h-full bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
           {/* Draggable Header */}
