@@ -22,6 +22,7 @@ interface Conversation {
   is_active: boolean;
   last_message?: Message;
   unread_count: number;
+  user_role?: string;
 }
 
 export const useGroupMessages = () => {
@@ -41,6 +42,8 @@ export const useGroupMessages = () => {
     try {
       setLoading(true);
       
+      if (!user) return;
+
       // Fetch actual message groups from database
       const { data: groups, error: groupsError } = await supabase
         .from('gw_message_groups')
@@ -50,6 +53,19 @@ export const useGroupMessages = () => {
         .order('created_at', { ascending: true });
 
       if (groupsError) throw groupsError;
+
+      // Fetch user's membership roles for all groups
+      const { data: memberships, error: membershipsError } = await supabase
+        .from('gw_group_members')
+        .select('group_id, role')
+        .eq('user_id', user.id);
+
+      if (membershipsError) throw membershipsError;
+
+      // Create a map of group_id to user's role
+      const roleMap = new Map(
+        (memberships || []).map(m => [m.group_id, m.role])
+      );
 
       // Check user access
       const userProfile = await getUserProfile();
@@ -62,7 +78,8 @@ export const useGroupMessages = () => {
           group_type: group.type || group.group_type || 'general',
           twilio_phone_number: '',
           is_active: true,
-          unread_count: 0
+          unread_count: 0,
+          user_role: roleMap.get(group.id)
         }))
         .filter(conv => hasAccessToGroup(conv, userProfile));
       
