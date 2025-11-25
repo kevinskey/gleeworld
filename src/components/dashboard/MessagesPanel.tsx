@@ -29,9 +29,9 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           height: window.innerHeight * 0.8,
         });
       } else {
-        // Desktop: positioned on the right with wider layout
+        // Desktop: positioned on the right with wider layout and padding
         setDimensions({
-          x: window.innerWidth - 950,
+          x: window.innerWidth - 930,
           y: 80,
           width: 900,
           height: window.innerHeight * 0.75,
