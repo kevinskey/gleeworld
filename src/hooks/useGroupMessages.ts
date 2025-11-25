@@ -31,74 +31,6 @@ export const useGroupMessages = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Default group conversations based on common Glee Club structure
-  const defaultConversations: Conversation[] = [
-    {
-      id: 'exec-board',
-      name: 'Executive Board',
-      group_type: 'executive_board',
-      twilio_phone_number: '+1234567890',
-      is_active: true,
-      unread_count: 0
-    },
-    {
-      id: 'section-leaders',
-      name: 'Section Leaders',
-      group_type: 'section_leaders',
-      twilio_phone_number: '+1234567890',
-      is_active: true,
-      unread_count: 0
-    },
-    {
-      id: 'soprano-1',
-      name: 'Soprano 1',
-      group_type: 'soprano_1',
-      twilio_phone_number: '+1234567890',
-      is_active: true,
-      unread_count: 0
-    },
-    {
-      id: 'soprano-2',
-      name: 'Soprano 2',
-      group_type: 'soprano_2',
-      twilio_phone_number: '+1234567890',
-      is_active: true,
-      unread_count: 0
-    },
-    {
-      id: 'alto-1',
-      name: 'Alto 1',
-      group_type: 'alto_1',
-      twilio_phone_number: '+1234567890',
-      is_active: true,
-      unread_count: 0
-    },
-    {
-      id: 'alto-2',
-      name: 'Alto 2',
-      group_type: 'alto_2',
-      twilio_phone_number: '+1234567890',
-      is_active: true,
-      unread_count: 0
-    },
-    {
-      id: 'all-members',
-      name: 'All Members',
-      group_type: 'all_members',
-      twilio_phone_number: '+1234567890',
-      is_active: true,
-      unread_count: 0
-    },
-    {
-      id: 'all-alumnae',
-      name: 'All Alumnae',
-      group_type: 'all_alumnae',
-      twilio_phone_number: '+1234567890',
-      is_active: true,
-      unread_count: 0
-    }
-  ];
-
   useEffect(() => {
     if (user) {
       fetchConversations();
@@ -109,10 +41,30 @@ export const useGroupMessages = () => {
     try {
       setLoading(true);
       
-      // In the future, this would check for actual SMS conversations in the database
-      // For now, we'll use the default conversations but check if user has access
+      // Fetch actual message groups from database
+      const { data: groups, error: groupsError } = await supabase
+        .from('gw_message_groups')
+        .select('*')
+        .eq('is_active', true)
+        .eq('is_archived', false)
+        .order('created_at', { ascending: true });
+
+      if (groupsError) throw groupsError;
+
+      // Check user access
       const userProfile = await getUserProfile();
-      const accessibleConversations = filterConversationsByAccess(defaultConversations, userProfile);
+      
+      // Transform database groups to Conversation format
+      const accessibleConversations: Conversation[] = (groups || [])
+        .map(group => ({
+          id: group.id,
+          name: group.name,
+          group_type: group.type || group.group_type || 'general',
+          twilio_phone_number: '',
+          is_active: true,
+          unread_count: 0
+        }))
+        .filter(conv => hasAccessToGroup(conv, userProfile));
       
       setConversations(accessibleConversations);
       setError(null);
@@ -137,37 +89,51 @@ export const useGroupMessages = () => {
     return data;
   };
 
-  const filterConversationsByAccess = (conversations: Conversation[], userProfile: any) => {
-    if (!userProfile) return [];
+  const hasAccessToGroup = (conversation: Conversation, userProfile: any) => {
+    if (!userProfile) return false;
     
     // Admins and super admins can see all conversations
     if (userProfile.is_admin || userProfile.is_super_admin) {
-      return conversations;
+      return true;
     }
     
-    return conversations.filter(conv => {
-      switch (conv.group_type) {
-        case 'executive_board':
-          return userProfile.is_exec_board;
-        case 'section_leaders':
-          // Section leaders would need a specific flag - for now, include exec board
-          return userProfile.is_exec_board;
-        case 'soprano_1':
-          return userProfile.voice_part === 'S1';
-        case 'soprano_2':
-          return userProfile.voice_part === 'S2';
-        case 'alto_1':
-          return userProfile.voice_part === 'A1';
-        case 'alto_2':
-          return userProfile.voice_part === 'A2';
-        case 'all_members':
-          return ['member', 'executive', 'staff'].includes(userProfile.role);
-        case 'all_alumnae':
-          return userProfile.role === 'alumna';
-        default:
-          return false;
-      }
-    });
+    // Check access based on group name (since we don't have a perfect mapping yet)
+    const groupName = conversation.name.toLowerCase();
+    
+    if (groupName.includes('executive') || groupName.includes('exec')) {
+      return userProfile.is_exec_board;
+    }
+    
+    if (groupName.includes('section leader')) {
+      return userProfile.is_exec_board; // For now, exec board can see section leaders
+    }
+    
+    if (groupName.includes('soprano 1') || groupName.includes('s1')) {
+      return userProfile.voice_part === 'S1';
+    }
+    
+    if (groupName.includes('soprano 2') || groupName.includes('s2')) {
+      return userProfile.voice_part === 'S2';
+    }
+    
+    if (groupName.includes('alto 1') || groupName.includes('a1')) {
+      return userProfile.voice_part === 'A1';
+    }
+    
+    if (groupName.includes('alto 2') || groupName.includes('a2')) {
+      return userProfile.voice_part === 'A2';
+    }
+    
+    if (groupName.includes('all members')) {
+      return ['member', 'executive', 'staff'].includes(userProfile.role);
+    }
+    
+    if (groupName.includes('alumnae')) {
+      return userProfile.role === 'alumna';
+    }
+    
+    // Default: allow general groups for members
+    return ['member', 'executive', 'staff'].includes(userProfile.role);
   };
 
   const fetchMessagesForConversation = async (conversationId: string) => {
