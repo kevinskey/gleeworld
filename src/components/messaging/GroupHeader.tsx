@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { GroupMembersDialog } from './GroupMembersDialog';
+import { PollsDialog } from './PollsDialog';
 
 interface GroupHeaderProps {
   groupId: string;
@@ -30,6 +31,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   isAdmin = false,
 }) => {
   const [showMembersDialog, setShowMembersDialog] = useState(false);
+  const [showPollsDialog, setShowPollsDialog] = useState(false);
   const groupInitials = groupName
     .split(' ')
     .map((n) => n[0])
@@ -88,7 +90,10 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
                 18
               </Badge>
             </DropdownMenuItem>
-            <DropdownMenuItem className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent">
+            <DropdownMenuItem 
+              className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent"
+              onClick={() => setShowPollsDialog(true)}
+            >
               <BarChart3 className="h-5 w-5 mr-3 text-blue-500 flex-shrink-0" />
               <span className="flex-1 text-base font-medium">Polls</span>
               <Badge className="ml-2 bg-blue-500 text-white h-6 min-w-6 px-2 text-xs font-semibold rounded-full">
@@ -124,6 +129,12 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
         groupId={groupId}
         groupName={groupName}
         isAdmin={isAdmin}
+      />
+
+      <PollsDialog
+        open={showPollsDialog}
+        onOpenChange={setShowPollsDialog}
+        groupId={groupId}
       />
     </div>
   );
