@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { BellDot } from "lucide-react";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 import { useNavigate } from "react-router-dom";
+import festiveBg from "@/assets/gleeworld-festive-background.webp";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -83,7 +84,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
     <div 
       className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center"
       style={{
-        backgroundImage: 'url("https://oopmlreysjzuxzylyheb.supabase.co/storage/v1/object/public/media-library/7f76a692-7ffc-414c-af69-fc6585338524.png")',
+        backgroundImage: `url("${festiveBg}")`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
