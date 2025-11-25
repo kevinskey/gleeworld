@@ -52,27 +52,27 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
     >
       <Avatar className="h-8 w-8 md:h-11 md:w-11 flex-shrink-0">
         <AvatarImage src={avatar} />
-        <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] font-medium text-[10px] md:text-sm">
+        <AvatarFallback className="bg-[hsl(var(--message-header))]/20 text-[hsl(var(--message-header))] font-medium text-[5px] md:text-[7px]">
           {initials}
         </AvatarFallback>
       </Avatar>
 
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-1 md:gap-2 mb-0.5">
-          <h3 className="font-semibold text-foreground truncate text-[11px] md:text-base">{name}</h3>
+          <h3 className="font-semibold text-foreground truncate text-[5.5px] md:text-[8px]">{name}</h3>
           {timestamp && (
-            <span className="text-[9px] md:text-xs text-muted-foreground flex-shrink-0">
+            <span className="text-[4.5px] md:text-[6px] text-muted-foreground flex-shrink-0">
               {formatTime(timestamp)}
             </span>
           )}
         </div>
         {lastMessage && (
-          <p className="text-[10px] md:text-sm text-muted-foreground truncate">{lastMessage}</p>
+          <p className="text-[5px] md:text-[7px] text-muted-foreground truncate">{lastMessage}</p>
         )}
       </div>
 
       {unreadCount > 0 && (
-        <div className="flex-shrink-0 w-4 h-4 md:w-5 md:h-5 rounded-full bg-[hsl(var(--message-header))] text-white text-[9px] md:text-xs font-medium flex items-center justify-center">
+        <div className="flex-shrink-0 w-4 h-4 md:w-5 md:h-5 rounded-full bg-[hsl(var(--message-header))] text-white text-[4.5px] md:text-[6px] font-medium flex items-center justify-center">
           {unreadCount}
         </div>
       )}
