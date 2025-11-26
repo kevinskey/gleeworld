@@ -3777,6 +3777,116 @@ export type Database = {
           },
         ]
       }
+      glee_academy_courses: {
+        Row: {
+          course_code: string
+          created_at: string | null
+          credits: number | null
+          description: string | null
+          id: string
+          instructor_email: string | null
+          instructor_name: string | null
+          instructor_office: string | null
+          instructor_office_hours: string | null
+          is_active: boolean | null
+          location: string | null
+          max_students: number | null
+          meeting_times: string | null
+          semester: string | null
+          syllabus_data: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_code: string
+          created_at?: string | null
+          credits?: number | null
+          description?: string | null
+          id?: string
+          instructor_email?: string | null
+          instructor_name?: string | null
+          instructor_office?: string | null
+          instructor_office_hours?: string | null
+          is_active?: boolean | null
+          location?: string | null
+          max_students?: number | null
+          meeting_times?: string | null
+          semester?: string | null
+          syllabus_data?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_code?: string
+          created_at?: string | null
+          credits?: number | null
+          description?: string | null
+          id?: string
+          instructor_email?: string | null
+          instructor_name?: string | null
+          instructor_office?: string | null
+          instructor_office_hours?: string | null
+          is_active?: boolean | null
+          location?: string | null
+          max_students?: number | null
+          meeting_times?: string | null
+          semester?: string | null
+          syllabus_data?: Json | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      glee_academy_enrollments: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          course_id: string
+          created_at: string | null
+          enrollment_date: string | null
+          enrollment_status: string | null
+          grade: string | null
+          id: string
+          notes: string | null
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          course_id: string
+          created_at?: string | null
+          enrollment_date?: string | null
+          enrollment_status?: string | null
+          grade?: string | null
+          id?: string
+          notes?: string | null
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          course_id?: string
+          created_at?: string | null
+          enrollment_date?: string | null
+          enrollment_status?: string | null
+          grade?: string | null
+          id?: string
+          notes?: string | null
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "glee_academy_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "glee_academy_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       glee_academy_tests: {
         Row: {
           allow_retakes: boolean | null
