@@ -139,11 +139,11 @@ export const GroupMessageInterface: React.FC = () => {
                     New
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
+                <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
+                  <DialogHeader className="flex-shrink-0">
                     <DialogTitle>New Direct Message</DialogTitle>
                   </DialogHeader>
-                  <div className="mt-4">
+                  <div className="flex-1 min-h-0 mt-4">
                     <UserSearch 
                       onSelectUser={handleUserSelect}
                       onClose={() => setNewMessageOpen(false)}
@@ -277,11 +277,11 @@ export const GroupMessageInterface: React.FC = () => {
                         New
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
+                    <DialogContent className="sm:max-w-md max-h-[80vh] flex flex-col">
+                      <DialogHeader className="flex-shrink-0">
                         <DialogTitle>New Direct Message</DialogTitle>
                       </DialogHeader>
-                      <div className="mt-4">
+                      <div className="flex-1 min-h-0 mt-4">
                         <UserSearch 
                           onSelectUser={handleUserSelect}
                           onClose={() => setNewMessageOpen(false)}
