@@ -18,6 +18,7 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
+import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
 import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
 
@@ -396,6 +397,15 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <MusicTheoryFundamentals />
+                  </PublicRoute>
+                } 
+              />
+              {/* Choral Conducting and Literature landing page */}
+              <Route 
+                path="/choral-conducting-literature" 
+                element={
+                  <PublicRoute>
+                    <ChoralConductingLiterature />
                   </PublicRoute>
                 } 
               />

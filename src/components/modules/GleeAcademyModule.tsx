@@ -67,6 +67,8 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
       navigate('/music-theory-fundamentals');
     } else if (courseId === 'private-lessons') {
       navigate('/booking');
+    } else if (courseId === 'choral-conducting') {
+      navigate('/choral-conducting-literature');
     }
   };
 
@@ -92,7 +94,7 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map(course => {
             const IconComponent = course.icon;
-            const isClickable = course.id === 'african-american-music' || course.id === 'music-fundamentals' || course.id === 'private-lessons';
+            const isClickable = course.id === 'african-american-music' || course.id === 'music-fundamentals' || course.id === 'private-lessons' || course.id === 'choral-conducting';
             return (
               <Card 
                 key={course.id} 
@@ -138,7 +140,8 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
                     >
                       {course.id === 'african-american-music' ? 'Enter MUS 240' : 
                        course.id === 'music-fundamentals' ? 'Enter Music Theory' :
-                       course.id === 'private-lessons' ? 'Book with Doc' : 'Under Development'}
+                       course.id === 'private-lessons' ? 'Book with Doc' :
+                       course.id === 'choral-conducting' ? 'Enter Course' : 'Under Development'}
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </div>
