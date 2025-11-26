@@ -10,6 +10,7 @@ const ChoralConductingLiterature = () => {
   const [showObjectives, setShowObjectives] = React.useState(false);
   const [showMaterials, setShowMaterials] = React.useState(false);
   const [showGrading, setShowGrading] = React.useState(false);
+  const [showSchedule, setShowSchedule] = React.useState(false);
   const [showTextbook, setShowTextbook] = React.useState(false);
 
   return (
@@ -24,17 +25,17 @@ const ChoralConductingLiterature = () => {
               </div>
             </div>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-              Choral Conducting and Literature
+              MUS 210 — Conducting for the Complete Musician
             </h1>
             <div className="flex flex-wrap justify-center gap-3 mb-6">
-              <Badge variant="secondary" className="text-sm">Advanced Level</Badge>
-              <Badge variant="outline" className="text-sm">16 Weeks</Badge>
+              <Badge variant="secondary" className="text-sm">2 Credits</Badge>
+              <Badge variant="outline" className="text-sm">Spring Semester</Badge>
             </div>
             <p className="text-base sm:text-lg text-slate-400 mb-6">
               with Dr. Kevin P. Johnson
             </p>
             <p className="text-base sm:text-lg text-slate-300 max-w-2xl mx-auto mb-8 px-4">
-              Master the art of choral conducting with comprehensive training in technique, score analysis, and repertoire selection
+              Develop the complete modern conductor with baton technique, expressive gesture, score analysis, rehearsal pedagogy, and stylistic fluency across classical, spirituals, gospel, and contemporary choral traditions
             </p>
             <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 justify-center px-4">
               <Link to="/academy-student-registration" className="w-full sm:w-auto">
@@ -69,6 +70,8 @@ const ChoralConductingLiterature = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="font-semibold">Dr. Kevin Johnson</p>
+                  <p className="text-sm text-muted-foreground">kjohns10@spelman.edu</p>
+                  <p className="text-sm text-muted-foreground">Office: Fine Arts 105</p>
                 </CardContent>
               </Card>
 
@@ -80,8 +83,8 @@ const ChoralConductingLiterature = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p>16 Weeks</p>
-                  <p className="text-sm text-muted-foreground">3-Credit Course</p>
+                  <p>MW — 2× per week</p>
+                  <p className="text-sm text-muted-foreground">50 min sessions</p>
                 </CardContent>
               </Card>
 
@@ -93,8 +96,8 @@ const ChoralConductingLiterature = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p>Rockefeller Fine Arts</p>
-                  <p className="text-sm text-muted-foreground">Music Wing</p>
+                  <p>Fine Arts 109</p>
+                  <p className="text-sm text-muted-foreground">Spelman College</p>
                 </CardContent>
               </Card>
 
@@ -121,15 +124,10 @@ const ChoralConductingLiterature = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  This advanced course provides comprehensive training in the art and craft of choral conducting. 
-                  Students will develop technical proficiency in conducting patterns, score analysis, rehearsal 
-                  techniques, and repertoire selection across diverse musical periods and styles.
-                </p>
                 <p className="text-muted-foreground leading-relaxed">
-                  Through hands-on practice, video analysis, and live conducting opportunities with the Spelman 
-                  College Glee Club and other ensembles, students will cultivate their artistic voice and develop 
-                  the leadership skills essential for successful choral direction.
+                  This course develops the complete modern conductor. Students gain baton technique, expressive gesture, 
+                  score analysis methods, rehearsal pedagogy, and stylistic fluency across classical, spirituals, gospel, 
+                  and contemporary choral traditions. Emphasis is placed on artistry, leadership, and practical rehearsal skills.
                 </p>
               </CardContent>
             </Card>
@@ -195,31 +193,47 @@ const ChoralConductingLiterature = () => {
                 <CardContent>
                   <div className="space-y-4">
                     <div>
-                      <h3 className="font-semibold mb-3">By the end of this course, students will be able to:</h3>
+                      <h3 className="font-semibold mb-3">By the end of the semester, students will:</h3>
                       <ul className="space-y-3 text-muted-foreground">
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          Demonstrate proficiency in conducting patterns and expressive gestures for various meters and styles
+                          Demonstrate proper baton and expressive gesture technique
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          Analyze choral scores and prepare interpretive plans that reflect musical and textual understanding
+                          Conduct beat patterns in multiple meters and tempi
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          Plan and execute effective rehearsals that address technical, musical, and ensemble-building goals
+                          Employ advanced conducting techniques (phrase shaping, left hand, fermatas, releases, tempo changes)
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          Select and program appropriate repertoire for various choral ensembles and contexts
+                          Analyze choral scores for harmony, text, structure, and style
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          Develop a personal conducting style grounded in technical precision and artistic expression
+                          Demonstrate musicianship skills essential for conducting success
                         </li>
                         <li className="flex items-start gap-3">
                           <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          Apply knowledge of choral literature from diverse periods, cultures, and traditions
+                          Define major choral forms, styles, and terms
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          Understand ensemble setup, balance, instrumentation, and seating
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          Memorize and conduct 30 minutes of a major choral work
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          Identify online and print choral resources
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          Conduct rehearsals in real ensemble settings
                         </li>
                       </ul>
                     </div>
@@ -241,38 +255,42 @@ const ChoralConductingLiterature = () => {
               </CardHeader>
               {showMaterials && (
                 <CardContent>
-                  <ul className="space-y-3 text-muted-foreground">
-                    <li className="flex items-start gap-3">
-                      <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                      <div>
-                        <span className="font-semibold text-foreground">Conducting baton</span> (professional quality recommended)
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                      <div>
-                        <span className="font-semibold text-foreground">Selected choral scores</span> (provided by instructor)
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                      <div>
-                        <span className="font-semibold text-foreground">Recording device</span> for self-evaluation and practice
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                      <div>
-                        <span className="font-semibold text-foreground">Access to piano/keyboard</span> for score study
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                      <div>
-                        Assigned readings and resources (provided via GleeWorld platform)
-                      </div>
-                    </li>
-                  </ul>
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="font-semibold mb-3 text-foreground">Required Texts</h3>
+                      <ul className="space-y-3 text-muted-foreground">
+                        <li className="flex items-start gap-3">
+                          <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                          <div><em>A Survey of Choral Music</em> — Homer Ulrich</div>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                          <div><em>The Modern Conductor</em> — Elizabeth Green & Mark Gibson</div>
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-3 text-foreground">Required Materials</h3>
+                      <ul className="space-y-3 text-muted-foreground">
+                        <li className="flex items-start gap-3">
+                          <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                          <div><span className="font-semibold text-foreground">Baton</span></div>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                          <div><span className="font-semibold text-foreground">Video recording device</span></div>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                          <div><span className="font-semibold text-foreground">Internet access</span></div>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
+                          <div><span className="font-semibold text-foreground">Pencil</span> (No. 2)</div>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
                 </CardContent>
               )}
             </Card>
@@ -290,68 +308,210 @@ const ChoralConductingLiterature = () => {
               </CardHeader>
               {showGrading && (
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                      <span>Conducting Technique Exams</span>
-                      <Badge variant="secondary">30%</Badge>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-semibold mb-3 text-foreground">Attendance Policy</h3>
+                      <p className="text-muted-foreground mb-2">Students may miss 2 classes without penalty.</p>
+                      <p className="text-muted-foreground mb-2">Each additional absence lowers the final grade by one letter.</p>
+                      <p className="text-muted-foreground mb-2">Four absences result in removal from the class (unless documented emergencies).</p>
+                      <p className="text-muted-foreground">Three tardies = 1 absence.</p>
                     </div>
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                      <span>Score Analysis Papers</span>
-                      <Badge variant="secondary">25%</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                      <span>Rehearsal Plans & Execution</span>
-                      <Badge variant="secondary">25%</Badge>
-                    </div>
-                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                      <span>Final Conducting Project</span>
-                      <Badge variant="secondary">20%</Badge>
-                    </div>
-                  </div>
 
-                  <div className="bg-muted/30 border border-border rounded-lg p-4">
-                    <h4 className="font-semibold text-foreground mb-3">Grading Scale:</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-                      <div><span className="font-semibold">A:</span> 93-100</div>
-                      <div><span className="font-semibold">A-:</span> 90-92</div>
-                      <div><span className="font-semibold">B+:</span> 87-89</div>
-                      <div><span className="font-semibold">B:</span> 83-86</div>
-                      <div><span className="font-semibold">B-:</span> 80-82</div>
-                      <div><span className="font-semibold">C+:</span> 77-79</div>
-                      <div><span className="font-semibold">C:</span> 73-76</div>
-                      <div><span className="font-semibold">C-:</span> 70-72</div>
-                      <div><span className="font-semibold">D:</span> 60-69</div>
-                      <div><span className="font-semibold">F:</span> Below 60</div>
+                    <div>
+                      <h3 className="font-semibold mb-3 text-foreground">Grading Breakdown</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                          <span>Class Participation</span>
+                          <Badge variant="secondary">15%</Badge>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                          <span>5 Choral Warm-Ups (PDF)</span>
+                          <Badge variant="secondary">20%</Badge>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                          <span>30-Minute Major Work (Final)</span>
+                          <Badge variant="secondary">20%</Badge>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                          <span>Midterm Exam</span>
+                          <Badge variant="secondary">15%</Badge>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                          <span>Final Exam</span>
+                          <Badge variant="secondary">15%</Badge>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
+                          <span>Period Presentations</span>
+                          <Badge variant="secondary">15%</Badge>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </CardContent>
               )}
             </Card>
 
+            {/* Weekly Schedule - Collapsed by default */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 cursor-pointer" onClick={() => setShowSchedule(!showSchedule)}>
+                  <Clock className="w-6 h-6" />
+                  Weekly Schedule
+                  <span className="ml-auto text-sm text-muted-foreground">
+                    {showSchedule ? 'Hide' : 'Show'} Details
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              {showSchedule && (
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="border-l-2 border-primary pl-4">
+                      <h4 className="font-semibold">WEEK 1 — Jan 14 & 16</h4>
+                      <p className="text-sm text-muted-foreground">Course introduction • Posture, window, meter • Basic conducting patterns • Diagnostic video</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 2 — Jan 21 & 23</h4>
+                      <p className="text-sm text-muted-foreground">Patterns continued • "Choral Conductor as Leader" presentations • Conducting Exercise 1</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 3 — Jan 28 & 30</h4>
+                      <p className="text-sm text-muted-foreground">Pattern refinement • Conducting Exercise 2</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 4 — Feb 4 & 6</h4>
+                      <p className="text-sm text-muted-foreground">Renaissance presentations • Renaissance style & practice</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 5 — Feb 11 & 13</h4>
+                      <p className="text-sm text-muted-foreground">Renaissance Conducting Exam</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 6 — Feb 18 & 20</h4>
+                      <p className="text-sm text-muted-foreground">Baroque presentations</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 7 — Feb 25 & 27</h4>
+                      <p className="text-sm text-muted-foreground">Baroque Conducting Exam</p>
+                    </div>
+                    <div className="border-l-2 border-primary pl-4">
+                      <h4 className="font-semibold">WEEK 8 — March 5 & 6 (MIDTERM)</h4>
+                      <p className="text-sm text-muted-foreground">Conducting Exercise 3 • Classical presentations • Midterm practical & written</p>
+                    </div>
+                    <div className="border-l-2 border-muted-foreground/50 pl-4 bg-muted/30 rounded p-2">
+                      <h4 className="font-semibold">WEEK 9 — March 9-13</h4>
+                      <p className="text-sm text-muted-foreground">SPRING BREAK — No Classes</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 10 — March 17 & 19</h4>
+                      <p className="text-sm text-muted-foreground">Classical conducting • Classical Conducting Exam</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 11 — March 24 & 26</h4>
+                      <p className="text-sm text-muted-foreground">Romantic presentations</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 12 — March 31 & April 2</h4>
+                      <p className="text-sm text-muted-foreground">Romantic Conducting Exam • Conducting Exercise 4 • Negro Spirituals presentations</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 13 — April 7 & 9</h4>
+                      <p className="text-sm text-muted-foreground">Negro Spirituals Conducting Exam</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 14 — April 14 & 16</h4>
+                      <p className="text-sm text-muted-foreground">Gospel presentations</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 15 — April 21 & 23</h4>
+                      <p className="text-sm text-muted-foreground">Gospel Conducting Exam • Final project coaching</p>
+                    </div>
+                    <div className="border-l-2 border-muted pl-4">
+                      <h4 className="font-semibold">WEEK 16 — April 28 & 29</h4>
+                      <p className="text-sm text-muted-foreground">Final project practice • Course evaluations</p>
+                    </div>
+                    <div className="border-l-2 border-primary pl-4">
+                      <h4 className="font-semibold">FINAL EXAM WEEK — May 4-8</h4>
+                      <p className="text-sm text-muted-foreground">Conduct 30-Minute Final Project • Written Final Exam</p>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+
+            {/* Assignments */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="w-6 h-6" />
+                  Assignments & Requirements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-3 text-muted-foreground">
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    Complete assigned readings and weekly conducting labs
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    Prepare 5 original choral warm-ups (PDF)
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    Present historical periods with one-page handout
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    Conduct one work from each major musical era
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    Midterm written + practical exam
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                    Final project: 30 minutes of a major work by memory
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
             {/* Prerequisites */}
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle>Prerequisites</CardTitle>
+                <CardTitle>Office Hours & Contact</CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2 text-muted-foreground">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                    Completion of Music Theory I & II or equivalent
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                    Proficiency in piano/keyboard skills
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                    Experience in choral ensemble participation
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                    Instructor approval required
-                  </li>
-                </ul>
+                <div className="space-y-2 text-muted-foreground">
+                  <p><span className="font-semibold text-foreground">Office Hours:</span> MWF 3–5 PM or by appointment</p>
+                  <p><span className="font-semibold text-foreground">Email:</span> kjohns10@spelman.edu</p>
+                  <p><span className="font-semibold text-foreground">Office:</span> Fine Arts 105</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Policies */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle>Course Policies</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold mb-2 text-foreground">Disability Statement</h3>
+                    <p className="text-muted-foreground text-sm">
+                      Students requiring accommodations should contact the Office of Disability Services 
+                      (MacVicar Hall, 404-223-7590) for coordination.
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2 text-foreground">Academic Honesty</h3>
+                    <p className="text-muted-foreground text-sm">
+                      All submitted work must be original and comply with Spelman's Code of Conduct regarding 
+                      academic integrity.
+                    </p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
