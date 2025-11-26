@@ -92,11 +92,11 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
         onResizeStop={handleResizeStop}
       >
         <div className="h-full bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
-          {/* Draggable Header */}
-          <div className="drag-handle cursor-move bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between touch-none select-none">
-            <div className="flex items-center gap-2 pointer-events-none">
+          {/* Draggable Header - only left side is draggable so the X stays tappable */}
+          <div className="cursor-default bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between touch-none select-none">
+            <div className="flex items-center gap-2 drag-handle">
               {!isMobile && (
-                <div className="flex gap-1 pointer-events-auto">
+                <div className="flex gap-1">
                   <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors cursor-pointer" onClick={onClose} />
                   <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
                   <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
