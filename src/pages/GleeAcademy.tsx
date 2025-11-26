@@ -77,7 +77,7 @@ const GleeAcademy = () => {
         <img 
           src={academyHeroImage} 
           alt="Glee World Academy" 
-          className="w-full object-contain"
+          className="w-full object-contain max-h-[40vh]"
         />
       </div>
 
