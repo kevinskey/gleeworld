@@ -208,7 +208,6 @@ export const GroupMessageInterface: React.FC = () => {
                     groupName={conversationType === 'group' ? (selectedConversation as any).name : (selectedConversation as any).other_user_name}
                     onBack={handleBackToList}
                     showBackButton={false}
-                    isAdmin={conversationType === 'group' && (selectedConversation as any).user_role === 'admin'}
                   />
                 </div>
                 
@@ -346,7 +345,6 @@ export const GroupMessageInterface: React.FC = () => {
                     groupName={conversationType === 'group' ? (selectedConversation as any).name : (selectedConversation as any).other_user_name}
                     onBack={handleBackToList}
                     showBackButton={false}
-                    isAdmin={conversationType === 'group' && (selectedConversation as any).user_role === 'admin'}
                   />
                 </div>
 

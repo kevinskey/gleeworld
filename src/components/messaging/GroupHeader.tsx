@@ -14,6 +14,7 @@ import { GroupMembersDialog } from './GroupMembersDialog';
 import { PollsDialog } from './PollsDialog';
 import { EventsDialog } from './EventsDialog';
 import { useUnvotedPollCount } from '@/hooks/useUnvotedPollCount';
+import { useCanManageGroupMembers } from '@/hooks/useCanManageGroupMembers';
 
 interface GroupHeaderProps {
   groupId: string;
@@ -21,7 +22,6 @@ interface GroupHeaderProps {
   groupAvatar?: string;
   onBack?: () => void;
   showBackButton?: boolean;
-  isAdmin?: boolean;
 }
 
 export const GroupHeader: React.FC<GroupHeaderProps> = ({
@@ -30,12 +30,12 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   groupAvatar,
   onBack,
   showBackButton = false,
-  isAdmin = false,
 }) => {
   const [showMembersDialog, setShowMembersDialog] = useState(false);
   const [showPollsDialog, setShowPollsDialog] = useState(false);
   const [showEventsDialog, setShowEventsDialog] = useState(false);
   const { unvotedCount } = useUnvotedPollCount(groupId);
+  const { canManage } = useCanManageGroupMembers();
   const groupInitials = groupName
     .split(' ')
     .map((n) => n[0])
@@ -137,7 +137,7 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
         onOpenChange={setShowMembersDialog}
         groupId={groupId}
         groupName={groupName}
-        isAdmin={isAdmin}
+        canManageMembers={canManage}
       />
 
       <PollsDialog

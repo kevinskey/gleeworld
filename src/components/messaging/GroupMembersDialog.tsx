@@ -15,7 +15,7 @@ interface GroupMembersDialogProps {
   onOpenChange: (open: boolean) => void;
   groupId: string;
   groupName: string;
-  isAdmin?: boolean;
+  canManageMembers?: boolean;
 }
 
 interface Member {
@@ -32,7 +32,7 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
   onOpenChange,
   groupId,
   groupName,
-  isAdmin = false,
+  canManageMembers = false,
 }) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -149,7 +149,7 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1"
             />
-            {isAdmin && (
+            {canManageMembers && (
               <Button 
                 size="icon" 
                 variant="outline"
@@ -212,7 +212,7 @@ export const GroupMembersDialog: React.FC<GroupMembersDialogProps> = ({
                       <Button size="icon" variant="ghost" className="h-8 w-8">
                         <Mail className="h-4 w-4" />
                       </Button>
-                      {isAdmin && member.role !== 'admin' && (
+                      {canManageMembers && member.role !== 'admin' && (
                         <Button
                           size="icon"
                           variant="ghost"

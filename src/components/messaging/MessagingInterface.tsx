@@ -110,7 +110,6 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
               groupId={selectedGroupId as string}
               groupName={selectedGroup.name}
               groupAvatar={(selectedGroup as any).avatar_url}
-              isAdmin={(selectedGroup as any).user_role === 'admin'}
             />
 
             <div className="flex-1 flex">
