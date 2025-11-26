@@ -10,6 +10,7 @@ const ChoralConductingLiterature = () => {
   const [showObjectives, setShowObjectives] = React.useState(false);
   const [showMaterials, setShowMaterials] = React.useState(false);
   const [showGrading, setShowGrading] = React.useState(false);
+  const [showTextbook, setShowTextbook] = React.useState(false);
 
   return (
     <PublicLayout>
@@ -352,6 +353,34 @@ const ChoralConductingLiterature = () => {
                   </li>
                 </ul>
               </CardContent>
+            </Card>
+
+            {/* Course Textbook - Collapsed by default */}
+            <Card className="mb-8">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 cursor-pointer" onClick={() => setShowTextbook(!showTextbook)}>
+                  <BookOpen className="w-6 h-6" />
+                  Course Textbook
+                  <span className="ml-auto text-sm text-muted-foreground">
+                    {showTextbook ? 'Hide' : 'Show'} Textbook
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              {showTextbook && (
+                <CardContent>
+                  <div className="w-full h-[600px] border border-border rounded-lg overflow-hidden">
+                    <iframe
+                      src="YOUR_TEXTBOOK_URL_HERE"
+                      className="w-full h-full"
+                      title="Choral Conducting Textbook"
+                      allow="fullscreen"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Replace YOUR_TEXTBOOK_URL_HERE with your actual textbook embed URL
+                  </p>
+                </CardContent>
+              )}
             </Card>
           </div>
         </section>
