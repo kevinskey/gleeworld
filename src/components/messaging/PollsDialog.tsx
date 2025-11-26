@@ -56,7 +56,7 @@ export const PollsDialog: React.FC<PollsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col bg-background z-50">
+      <DialogContent className="sm:max-w-[600px] h-[85vh] flex flex-col bg-background z-50">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-[hsl(var(--message-header))]" />
@@ -97,7 +97,7 @@ export const PollsDialog: React.FC<PollsDialogProps> = ({
           </div>
 
           {/* Polls List */}
-          <ScrollArea className="flex-1 mt-4">
+          <ScrollArea className="flex-1 mt-4 pr-4">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--message-header))]"></div>
