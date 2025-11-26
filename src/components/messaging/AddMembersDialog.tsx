@@ -141,10 +141,10 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] pb-2">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            Add Members
+            Add Members to Group
           </DialogTitle>
         </DialogHeader>
 
@@ -197,17 +197,28 @@ export const AddMembersDialog: React.FC<AddMembersDialogProps> = ({
           </ScrollArea>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleAddMembers}
-            disabled={selectedUserIds.length === 0 || adding}
-          >
-            {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Add {selectedUserIds.length > 0 && `(${selectedUserIds.length})`}
-          </Button>
+        <DialogFooter className="flex-col items-center gap-3 sm:flex-col">
+          <div className="flex gap-2 w-full justify-end">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddMembers}
+              disabled={selectedUserIds.length === 0 || adding}
+            >
+              {adding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add {selectedUserIds.length > 0 && `(${selectedUserIds.length})`}
+            </Button>
+          </div>
+          
+          {/* Glee Club Logo Footer - similar to Carl Fischer reference */}
+          <div className="w-full border-t pt-3 flex justify-center">
+            <img 
+              src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
+              alt="Spelman College Glee Club"
+              className="h-12 object-contain opacity-80"
+            />
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
