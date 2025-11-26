@@ -9,6 +9,7 @@ import { CreateGroupDialog, EditGroupDialog, DeleteGroupDialog, ManageMembersDia
 import { UserSelector } from './UserSelector';
 import { useMessageGroups } from '@/hooks/useMessaging';
 import { MessageSquare, Users, Plus, Settings, UserPlus } from 'lucide-react';
+import { GroupHeader } from '@/components/messaging/GroupHeader';
 
 interface MessagingInterfaceProps {
   embedded?: boolean;
@@ -104,34 +105,13 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
       <div className="flex-1 flex flex-col">
         {selectedGroup ? (
           <>
-            {/* Chat Header */}
-            <div className="p-4 border-b border-border bg-card">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-semibold">
-                    {selectedGroup.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h2 className="font-semibold text-lg">{selectedGroup.name}</h2>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ManageMembersDialog group={selectedGroup} />
-                  <EditGroupDialog group={selectedGroup} />
-                  <DeleteGroupDialog 
-                    group={selectedGroup} 
-                    onClose={() => setSelectedGroupId(null)}
-                  />
-                  <button
-                    onClick={() => setShowMembers(!showMembers)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-accent transition-colors"
-                  >
-                    <Users className="h-4 w-4" />
-                    <span className="text-sm">Members</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            {/* Group Header with Polls menu */}
+            <GroupHeader
+              groupId={selectedGroupId as string}
+              groupName={selectedGroup.name}
+              groupAvatar={(selectedGroup as any).avatar_url}
+              isAdmin={(selectedGroup as any).user_role === 'admin'}
+            />
 
             <div className="flex-1 flex">
               {/* Chat Messages */}
