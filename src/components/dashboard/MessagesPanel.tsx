@@ -93,7 +93,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
       >
         <div className="h-full bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
           {/* Draggable Header - only left side is draggable so the X stays tappable */}
-          <div className="cursor-default bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between touch-none select-none">
+          <div className="cursor-default bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between select-none">
             <div className="flex items-center gap-2 drag-handle">
               {!isMobile && (
                 <div className="flex gap-1">
