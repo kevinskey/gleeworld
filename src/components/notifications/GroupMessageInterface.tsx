@@ -201,6 +201,17 @@ export const GroupMessageInterface: React.FC = () => {
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
             {selectedConversation ? (
               <>
+                {/* Group Header for mobile */}
+                <div className="flex-shrink-0">
+                  <GroupHeader
+                    groupId={(selectedConversation as any).id}
+                    groupName={conversationType === 'group' ? (selectedConversation as any).name : (selectedConversation as any).other_user_name}
+                    onBack={handleBackToList}
+                    showBackButton={false}
+                    isAdmin={conversationType === 'group' && (selectedConversation as any).user_role === 'admin'}
+                  />
+                </div>
+                
                 {/* Messages Area */}
                 <ScrollArea className="flex-1 px-2 bg-muted/20 overflow-y-auto">
                   {conversationMessages.length === 0 ? (
