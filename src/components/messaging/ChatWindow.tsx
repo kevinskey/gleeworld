@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { useGroupMessages, useRealtimeMessaging, useSendMessage, useTypingIndicator, useGroupMembers } from '@/hooks/useMessaging';
 import { useSendSMSNotification } from '@/hooks/useSMSIntegration';
+import { usePollNotifications } from '@/hooks/usePollNotifications';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { TypingIndicator } from './TypingIndicator';
@@ -19,6 +20,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({ groupId }) => {
   const sendMessage = useSendMessage();
   const { mutateAsync: sendSMSNotification } = useSendSMSNotification();
   const { startTyping, stopTyping } = useTypingIndicator(groupId || undefined);
+  
+  // Enable poll notifications for this group
+  usePollNotifications(groupId || '', 'Group Chat');
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);

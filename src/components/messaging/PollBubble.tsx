@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -45,6 +46,7 @@ export const PollBubble: React.FC<PollBubbleProps> = ({
   const canVote = !poll.is_closed && !isExpired && user?.id !== createdBy;
   const showResults = poll.user_has_voted || poll.is_closed || isExpired || user?.id === createdBy;
   const isCreator = user?.id === createdBy;
+  const needsVote = canVote && !poll.user_has_voted;
 
   const handleVote = async () => {
     if (selectedOptions.length === 0) {
@@ -97,14 +99,30 @@ export const PollBubble: React.FC<PollBubbleProps> = ({
   };
 
   return (
-    <Card className="p-4 bg-gradient-to-br from-[hsl(var(--message-header))]/5 to-[hsl(var(--message-header))]/10 border-[hsl(var(--message-header))]/20">
+    <Card className={cn(
+      "p-4 bg-gradient-to-br from-[hsl(var(--message-header))]/5 to-[hsl(var(--message-header))]/10 border-[hsl(var(--message-header))]/20 transition-all",
+      needsVote && "ring-2 ring-red-500/50 shadow-lg shadow-red-500/20 animate-pulse"
+    )}>
       {/* Poll Header */}
       <div className="flex items-start gap-2 mb-3">
-        <div className="p-2 rounded-lg bg-[hsl(var(--message-header))]/10">
-          <BarChart3 className="h-4 w-4 text-[hsl(var(--message-header))]" />
+        <div className={cn(
+          "p-2 rounded-lg bg-[hsl(var(--message-header))]/10",
+          needsVote && "bg-red-500/20"
+        )}>
+          <BarChart3 className={cn(
+            "h-4 w-4 text-[hsl(var(--message-header))]",
+            needsVote && "text-red-500"
+          )} />
         </div>
         <div className="flex-1">
-          <h4 className="font-semibold text-sm mb-1">{poll.question}</h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-semibold text-sm mb-1">{poll.question}</h4>
+            {needsVote && (
+              <Badge variant="destructive" className="text-xs animate-pulse">
+                Vote Needed
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{poll.total_votes} vote{poll.total_votes !== 1 ? 's' : ''}</span>
             {poll.expires_at && !poll.is_closed && (
