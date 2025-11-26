@@ -368,17 +368,14 @@ const ChoralConductingLiterature = () => {
               </CardHeader>
               {showTextbook && (
                 <CardContent>
-                  <div className="w-full h-[600px] border border-border rounded-lg overflow-hidden">
+                  <div className="w-full border border-border rounded-lg overflow-hidden">
                     <iframe
-                      src="YOUR_TEXTBOOK_URL_HERE"
-                      className="w-full h-full"
-                      title="Choral Conducting Textbook"
+                      src="https://gamma.app/embed/qpwgjhqyohq63uo"
+                      className="w-full h-[450px]"
+                      title="Conducting for the Complete Musician: A Choral Conducting Text (1925–2025)"
                       allow="fullscreen"
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Replace YOUR_TEXTBOOK_URL_HERE with your actual textbook embed URL
-                  </p>
                 </CardContent>
               )}
             </Card>
