@@ -437,10 +437,5 @@ export const UnifiedDashboard = () => {
           </Suspense>
         </div>}
 
-      {/* Messages Panel Overlay */}
-      {showMessages && <div className="absolute inset-0 bg-background/95 backdrop-blur-sm z-10">
-          <MessagesPanel onClose={() => setShowMessages(false)} />
-        </div>}
-
     </div>;
 };
