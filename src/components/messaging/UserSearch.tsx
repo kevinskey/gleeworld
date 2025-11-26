@@ -71,9 +71,9 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
   };
 
   return (
-    <div className="flex flex-col gap-4 h-full min-h-0">
+    <div className="flex flex-col gap-3 h-full">
       {/* Search */}
-      <div className="relative">
+      <div className="relative flex-shrink-0">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           type="text"
@@ -84,45 +84,47 @@ export const UserSearch: React.FC<UserSearchProps> = ({ onSelectUser, onClose })
         />
       </div>
 
-      {/* User List - Native scrolling with touch support */}
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden -mx-2 px-2 overscroll-contain touch-pan-y">
-        {loading ? (
-          <div className="text-center py-8 text-foreground">Loading...</div>
-        ) : filteredUsers.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {searchQuery ? 'No users found' : 'No members available'}
-          </div>
-        ) : (
-          <div className="space-y-1 pb-2">
-            {filteredUsers.map((user) => (
-              <button
-                key={user.user_id}
-                onClick={() => {
-                  onSelectUser(user);
-                  onClose();
-                }}
-                className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
-              >
-                <Avatar className="h-10 w-10 flex-shrink-0">
-                  <AvatarImage src={user.avatar_url} />
-                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                    {getInitials(user.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-foreground text-sm truncate">
-                    {user.full_name}
-                  </div>
-                  {user.voice_part && (
-                    <div className="text-xs text-muted-foreground">
-                      {user.voice_part}
+      {/* User List - Scrollable container with fixed height */}
+      <div className="flex-1 min-h-0 -mx-2 px-2">
+        <div className="h-full overflow-y-auto overscroll-contain touch-pan-y">
+          {loading ? (
+            <div className="text-center py-8 text-foreground">Loading...</div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              {searchQuery ? 'No users found' : 'No members available'}
+            </div>
+          ) : (
+            <div className="space-y-1 pb-2">
+              {filteredUsers.map((user) => (
+                <button
+                  key={user.user_id}
+                  onClick={() => {
+                    onSelectUser(user);
+                    onClose();
+                  }}
+                  className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
+                >
+                  <Avatar className="h-10 w-10 flex-shrink-0">
+                    <AvatarImage src={user.avatar_url} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      {getInitials(user.full_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-foreground text-sm truncate">
+                      {user.full_name}
                     </div>
-                  )}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                    {user.voice_part && (
+                      <div className="text-xs text-muted-foreground">
+                        {user.voice_part}
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
