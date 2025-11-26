@@ -49,15 +49,16 @@ export const AcademyStudentRegistration = () => {
     setLoading(true);
 
     try {
-      // Sign up the user
+      // Sign up the user with academy registration metadata
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard?module=music-library`,
+          emailRedirectTo: `${window.location.origin}/glee-academy`,
           data: {
             full_name: formData.fullName,
-            student_id: formData.studentId
+            student_id: formData.studentId,
+            registration_type: 'academy' // Triggers auto-assignment of student role
           }
         }
       });
@@ -68,24 +69,14 @@ export const AcademyStudentRegistration = () => {
         throw new Error('Failed to create user account');
       }
 
-      // Add student role to user_roles_multi table
-      const { error: roleError } = await supabase
-        .from('user_roles_multi')
-        .insert({
-          user_id: authData.user.id,
-          role: 'student'
-        });
+      // Role is automatically assigned via database trigger
+      // No manual role insertion needed
 
-      if (roleError) {
-        console.error('Error adding student role:', roleError);
-        // Don't throw - account was created, role can be added later
-      }
-
-      toast.success('Registration successful! Please check your email to verify your account.');
+      toast.success('Welcome to Glee Academy! Please check your email to verify your account.');
       
-      // Redirect to login page after a short delay
+      // Redirect to academy home after a short delay
       setTimeout(() => {
-        navigate('/auth?tab=login');
+        navigate('/glee-academy');
       }, 2000);
 
     } catch (error: any) {
