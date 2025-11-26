@@ -95,7 +95,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 </Link>
                 <div className="flex items-center gap-2">
                   <HeaderClock className="text-sm ml-2 md:ml-4" />
-                  <CountdownText className="ml-0" />
                 </div>
               </div>
             </EnhancedTooltip>
