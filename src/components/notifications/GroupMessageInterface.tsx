@@ -168,7 +168,7 @@ export const GroupMessageInterface: React.FC = () => {
                     New
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md flex flex-col p-6">
+                <DialogContent className="sm:max-w-md w-[92vw] sm:w-auto h-[80vh] max-h-[80vh] flex flex-col p-6">
                   <DialogHeader className="mb-4">
                     <DialogTitle>New Direct Message</DialogTitle>
                   </DialogHeader>
@@ -359,7 +359,7 @@ export const GroupMessageInterface: React.FC = () => {
                         New
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md flex flex-col p-6">
+                    <DialogContent className="sm:max-w-md w-[92vw] sm:w-auto h-[80vh] max-h-[80vh] flex flex-col p-6">
                       <DialogHeader className="mb-4">
                         <DialogTitle>New Direct Message</DialogTitle>
                       </DialogHeader>
