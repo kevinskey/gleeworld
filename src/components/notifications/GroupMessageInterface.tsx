@@ -185,9 +185,9 @@ export const GroupMessageInterface: React.FC = () => {
                       />
                     </div>
 
-                    <div className="max-h-[50vh] overflow-y-auto -mr-3 pr-3">
+                    <ScrollArea className="max-h-[50vh] h-[50vh] -mr-3 pr-3 overscroll-contain touch-pan-y">
                       {searchResults.length > 0 && (
-                        <div className="space-y-1">
+                        <div className="space-y-1 py-1">
                           {searchResults.map((user) => {
                             const initials = user.full_name
                               .split(' ')
@@ -229,7 +229,7 @@ export const GroupMessageInterface: React.FC = () => {
                           No members found
                         </div>
                       )}
-                    </div>
+                    </ScrollArea>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -376,9 +376,9 @@ export const GroupMessageInterface: React.FC = () => {
                           />
                         </div>
 
-                        <div className="max-h-[50vh] overflow-y-auto -mr-3 pr-3">
+                        <ScrollArea className="max-h-[50vh] h-[50vh] -mr-3 pr-3 overscroll-contain touch-pan-y">
                           {searchResults.length > 0 && (
-                            <div className="space-y-1">
+                            <div className="space-y-1 py-1">
                               {searchResults.map((user) => {
                                 const initials = user.full_name
                                   .split(' ')
@@ -420,7 +420,7 @@ export const GroupMessageInterface: React.FC = () => {
                               No members found
                             </div>
                           )}
-                        </div>
+                        </ScrollArea>
                       </div>
                     </DialogContent>
                   </Dialog>
