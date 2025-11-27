@@ -12,6 +12,30 @@ interface SendSMSRequest {
   from?: string;
 }
 
+// Format phone number to E.164 format (adds +1 for US numbers if missing)
+const formatPhoneNumber = (phone: string): string => {
+  // Remove all non-digit characters
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // If already has country code (11 digits starting with 1), add +
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    return `+${cleaned}`;
+  }
+  
+  // If 10 digits (US number without country code), add +1
+  if (cleaned.length === 10) {
+    return `+1${cleaned}`;
+  }
+  
+  // If already has +, return as is
+  if (phone.startsWith('+')) {
+    return phone;
+  }
+  
+  // Default: assume US and add +1
+  return `+1${cleaned}`;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -35,8 +59,11 @@ const handler = async (req: Request): Promise<Response> => {
   try {
     const { to, message, from }: SendSMSRequest = await req.json();
     
+    // Format phone number to E.164 format
+    const formattedTo = formatPhoneNumber(to);
+    
     console.log("GleeWorld SMS Request:", {
-      to: to.substring(0, 6) + "***", // Mask phone number in logs
+      to: formattedTo.substring(0, 6) + "***", // Mask phone number in logs
       message_length: message.length,
       from
     });
@@ -44,9 +71,9 @@ const handler = async (req: Request): Promise<Response> => {
     // Check if Twilio credentials are available
     const twilioPhone = from || TWILIO_PHONE_NUMBER;
 
-    // Validate phone number format
+    // Validate phone number format (should be E.164 after formatting)
     const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(to)) {
+    if (!phoneRegex.test(formattedTo)) {
       return new Response(JSON.stringify({
         success: false,
         error: "Invalid phone number format"
@@ -61,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
     const credentials = btoa(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`);
 
     const formData = new URLSearchParams();
-    formData.append('To', to);
+    formData.append('To', formattedTo);
     formData.append('From', twilioPhone);
     formData.append('Body', message);
 

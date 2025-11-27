@@ -17,6 +17,30 @@ interface SMSPayload {
   notificationId?: string;
 }
 
+// Format phone number to E.164 format (adds +1 for US numbers if missing)
+const formatPhoneNumber = (phone: string): string => {
+  // Remove all non-digit characters
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // If already has country code (11 digits starting with 1), add +
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    return `+${cleaned}`;
+  }
+  
+  // If 10 digits (US number without country code), add +1
+  if (cleaned.length === 10) {
+    return `+1${cleaned}`;
+  }
+  
+  // If already has +, return as is
+  if (phone.startsWith('+')) {
+    return phone;
+  }
+  
+  // Default: assume US and add +1
+  return `+1${cleaned}`;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -24,7 +48,11 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const payload: SMSPayload = await req.json();
-    console.log('Processing SMS request:', payload);
+    
+    // Format phone number to E.164 format
+    const formattedTo = formatPhoneNumber(payload.to);
+    
+    console.log('Processing SMS request:', { ...payload, to: formattedTo });
 
     // TODO: Implement SMS sending via Twilio
     // For now, we'll just log the attempt and update the delivery status
@@ -57,7 +85,7 @@ const handler = async (req: Request): Promise<Response> => {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body: new URLSearchParams({
-          To: payload.to,
+          To: formattedTo,
           From: twilioFromNumber,
           Body: payload.message,
         }),

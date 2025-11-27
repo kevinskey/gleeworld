@@ -14,6 +14,30 @@ interface GroupSMSRequest {
   senderName: string;
 }
 
+// Format phone number to E.164 format (adds +1 for US numbers if missing)
+const formatPhoneNumber = (phone: string): string => {
+  // Remove all non-digit characters
+  const cleaned = phone.replace(/\D/g, '');
+  
+  // If already has country code (11 digits starting with 1), add +
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    return `+${cleaned}`;
+  }
+  
+  // If 10 digits (US number without country code), add +1
+  if (cleaned.length === 10) {
+    return `+1${cleaned}`;
+  }
+  
+  // If already has +, return as is
+  if (phone.startsWith('+')) {
+    return phone;
+  }
+  
+  // Default: assume US and add +1
+  return `+1${cleaned}`;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -116,7 +140,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const targetPhoneNumbers = members
       .map(member => member.gw_profiles?.phone_number)
-      .filter(phone => phone) as string[];
+      .filter(phone => phone)
+      .map(phone => formatPhoneNumber(phone as string));
 
     if (targetPhoneNumbers.length === 0) {
       return new Response(
@@ -136,7 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
       .from('gw_sms_messages')
       .insert({
         conversation_id: conversation.id,
-        sender_phone: senderProfile.phone_number,
+        sender_phone: formatPhoneNumber(senderProfile.phone_number),
         sender_user_id: senderUserId,
         message_body: message,
         direction: 'outbound',
