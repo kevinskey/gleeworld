@@ -184,50 +184,52 @@ export const GroupMessageInterface: React.FC = () => {
                         autoFocus
                       />
                     </div>
-                    
-                    {searchResults.length > 0 && (
-                      <div className="space-y-1">
-                        {searchResults.map((user) => {
-                          const initials = user.full_name
-                            .split(' ')
-                            .map(n => n[0])
-                            .join('')
-                            .toUpperCase()
-                            .slice(0, 2);
-                          
-                          return (
-                            <button
-                              key={user.user_id}
-                              onClick={() => handleUserSelect(user)}
-                              className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
-                            >
-                              <Avatar className="h-10 w-10 flex-shrink-0">
-                                <AvatarImage src={user.avatar_url} />
-                                <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                  {initials}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium text-foreground text-sm truncate">
-                                  {user.full_name}
-                                </div>
-                                {user.voice_part && (
-                                  <div className="text-xs text-muted-foreground">
-                                    {user.voice_part}
+
+                    <div className="max-h-[50vh] overflow-y-auto -mr-3 pr-3">
+                      {searchResults.length > 0 && (
+                        <div className="space-y-1">
+                          {searchResults.map((user) => {
+                            const initials = user.full_name
+                              .split(' ')
+                              .map(n => n[0])
+                              .join('')
+                              .toUpperCase()
+                              .slice(0, 2);
+                            
+                            return (
+                              <button
+                                key={user.user_id}
+                                onClick={() => handleUserSelect(user)}
+                                className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
+                              >
+                                <Avatar className="h-10 w-10 flex-shrink-0">
+                                  <AvatarImage src={user.avatar_url} />
+                                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                    {initials}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex-1 min-w-0">
+                                  <div className="font-medium text-foreground text-sm truncate">
+                                    {user.full_name}
                                   </div>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                    
-                    {searchQuery && searchResults.length === 0 && (
-                      <div className="text-center py-4 text-sm text-muted-foreground">
-                        No members found
-                      </div>
-                    )}
+                                  {user.voice_part && (
+                                    <div className="text-xs text-muted-foreground">
+                                      {user.voice_part}
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {searchQuery && searchResults.length === 0 && (
+                        <div className="text-center py-4 text-sm text-muted-foreground">
+                          No members found
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -373,50 +375,52 @@ export const GroupMessageInterface: React.FC = () => {
                             autoFocus
                           />
                         </div>
-                        
-                        {searchResults.length > 0 && (
-                          <div className="space-y-1">
-                            {searchResults.map((user) => {
-                              const initials = user.full_name
-                                .split(' ')
-                                .map(n => n[0])
-                                .join('')
-                                .toUpperCase()
-                                .slice(0, 2);
-                              
-                              return (
-                                <button
-                                  key={user.user_id}
-                                  onClick={() => handleUserSelect(user)}
-                                  className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
-                                >
-                                  <Avatar className="h-10 w-10 flex-shrink-0">
-                                    <AvatarImage src={user.avatar_url} />
-                                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                                      {initials}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-foreground text-sm truncate">
-                                      {user.full_name}
-                                    </div>
-                                    {user.voice_part && (
-                                      <div className="text-xs text-muted-foreground">
-                                        {user.voice_part}
+
+                        <div className="max-h-[50vh] overflow-y-auto -mr-3 pr-3">
+                          {searchResults.length > 0 && (
+                            <div className="space-y-1">
+                              {searchResults.map((user) => {
+                                const initials = user.full_name
+                                  .split(' ')
+                                  .map(n => n[0])
+                                  .join('')
+                                  .toUpperCase()
+                                  .slice(0, 2);
+                                
+                                return (
+                                  <button
+                                    key={user.user_id}
+                                    onClick={() => handleUserSelect(user)}
+                                    className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
+                                  >
+                                    <Avatar className="h-10 w-10 flex-shrink-0">
+                                      <AvatarImage src={user.avatar_url} />
+                                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                        {initials}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-medium text-foreground text-sm truncate">
+                                        {user.full_name}
                                       </div>
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                        
-                        {searchQuery && searchResults.length === 0 && (
-                          <div className="text-center py-4 text-sm text-muted-foreground">
-                            No members found
-                          </div>
-                        )}
+                                      {user.voice_part && (
+                                        <div className="text-xs text-muted-foreground">
+                                          {user.voice_part}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {searchQuery && searchResults.length === 0 && (
+                            <div className="text-center py-4 text-sm text-muted-foreground">
+                              No members found
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </DialogContent>
                   </Dialog>
