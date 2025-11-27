@@ -6,11 +6,12 @@
   font-display: swap;
 }
 
+@import './styles/spacing-reduction.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import './styles/spacing-reduction.css';
 /* Definition of the design system with custom brand colors */
 
 @layer base {
