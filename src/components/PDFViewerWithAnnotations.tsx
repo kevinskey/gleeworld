@@ -39,7 +39,7 @@ import { useSheetMusicAnnotations } from '@/hooks/useSheetMusicAnnotations';
 import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import * as pdfjsLib from 'pdfjs-dist';
-import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
+import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker';
 
 // Configure PDF.js worker locally (Vite + ESM)
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfJsWorker();
