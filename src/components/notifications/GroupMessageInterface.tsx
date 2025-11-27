@@ -4,16 +4,18 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ConversationListItem } from '@/components/messaging/ConversationListItem';
 import { GroupHeader } from '@/components/messaging/GroupHeader';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { UserSearch } from '@/components/messaging/UserSearch';
-import { MessageSquare, Plus, User, X } from 'lucide-react';
+import { MessageSquare, Plus, User, X, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import useGroupMessages from '@/hooks/useGroupMessages';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
 
 interface User {
   user_id: string;
@@ -30,7 +32,8 @@ export const GroupMessageInterface: React.FC = () => {
   const [showMessages, setShowMessages] = useState(false);
   const [conversationType, setConversationType] = useState<'group' | 'direct'>('group');
   const [newMessageOpen, setNewMessageOpen] = useState(false);
-  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<User[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
@@ -103,12 +106,38 @@ export const GroupMessageInterface: React.FC = () => {
     }
   };
 
+  const handleSearchChange = async (query: string) => {
+    setSearchQuery(query);
+    
+    if (!query.trim() || !user) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, avatar_url, voice_part')
+        .neq('user_id', user.id)
+        .ilike('full_name', `%${query}%`)
+        .limit(5);
+
+      if (error) throw error;
+      setSearchResults(data || []);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      setSearchResults([]);
+    }
+  };
+
   const handleUserSelect = async (selectedUser: User) => {
     const conversationId = await createConversation(selectedUser.user_id);
     if (conversationId) {
       setConversationType('direct');
       setSelectedConversationId(conversationId);
       setNewMessageOpen(false);
+      setSearchQuery('');
+      setSearchResults([]);
       
       // Fetch messages for the new/existing conversation
       await fetchDirectMessages(conversationId);
@@ -139,15 +168,66 @@ export const GroupMessageInterface: React.FC = () => {
                     New
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md h-[400px] max-h-[50vh] flex flex-col p-0">
-                  <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-2">
+                <DialogContent className="sm:max-w-md flex flex-col p-6">
+                  <DialogHeader className="mb-4">
                     <DialogTitle>New Direct Message</DialogTitle>
                   </DialogHeader>
-                  <div className="flex-1 min-h-0 px-6 pb-6">
-                    <UserSearch 
-                      onSelectUser={handleUserSelect}
-                      onClose={() => setNewMessageOpen(false)}
-                    />
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        placeholder="Type member name..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        className="pl-9"
+                        autoFocus
+                      />
+                    </div>
+                    
+                    {searchResults.length > 0 && (
+                      <div className="space-y-1">
+                        {searchResults.map((user) => {
+                          const initials = user.full_name
+                            .split(' ')
+                            .map(n => n[0])
+                            .join('')
+                            .toUpperCase()
+                            .slice(0, 2);
+                          
+                          return (
+                            <button
+                              key={user.user_id}
+                              onClick={() => handleUserSelect(user)}
+                              className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
+                            >
+                              <Avatar className="h-10 w-10 flex-shrink-0">
+                                <AvatarImage src={user.avatar_url} />
+                                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                  {initials}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium text-foreground text-sm truncate">
+                                  {user.full_name}
+                                </div>
+                                {user.voice_part && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {user.voice_part}
+                                  </div>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    
+                    {searchQuery && searchResults.length === 0 && (
+                      <div className="text-center py-4 text-sm text-muted-foreground">
+                        No members found
+                      </div>
+                    )}
                   </div>
                 </DialogContent>
               </Dialog>
@@ -277,15 +357,66 @@ export const GroupMessageInterface: React.FC = () => {
                         New
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="sm:max-w-md h-[400px] max-h-[50vh] flex flex-col p-0">
-                      <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-2">
+                    <DialogContent className="sm:max-w-md flex flex-col p-6">
+                      <DialogHeader className="mb-4">
                         <DialogTitle>New Direct Message</DialogTitle>
                       </DialogHeader>
-                      <div className="flex-1 min-h-0 px-6 pb-6">
-                        <UserSearch 
-                          onSelectUser={handleUserSelect}
-                          onClose={() => setNewMessageOpen(false)}
-                        />
+                      <div className="space-y-3">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            type="text"
+                            placeholder="Type member name..."
+                            value={searchQuery}
+                            onChange={(e) => handleSearchChange(e.target.value)}
+                            className="pl-9"
+                            autoFocus
+                          />
+                        </div>
+                        
+                        {searchResults.length > 0 && (
+                          <div className="space-y-1">
+                            {searchResults.map((user) => {
+                              const initials = user.full_name
+                                .split(' ')
+                                .map(n => n[0])
+                                .join('')
+                                .toUpperCase()
+                                .slice(0, 2);
+                              
+                              return (
+                                <button
+                                  key={user.user_id}
+                                  onClick={() => handleUserSelect(user)}
+                                  className="w-full flex items-center gap-3 p-2.5 rounded-lg hover:bg-accent transition-colors text-left"
+                                >
+                                  <Avatar className="h-10 w-10 flex-shrink-0">
+                                    <AvatarImage src={user.avatar_url} />
+                                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                      {initials}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium text-foreground text-sm truncate">
+                                      {user.full_name}
+                                    </div>
+                                    {user.voice_part && (
+                                      <div className="text-xs text-muted-foreground">
+                                        {user.voice_part}
+                                      </div>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                        
+                        {searchQuery && searchResults.length === 0 && (
+                          <div className="text-center py-4 text-sm text-muted-foreground">
+                            No members found
+                          </div>
+                        )}
                       </div>
                     </DialogContent>
                   </Dialog>
