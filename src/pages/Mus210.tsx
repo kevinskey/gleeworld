@@ -26,7 +26,8 @@ import {
   Video,
   Headphones,
   FileImage,
-  Mail
+  Mail,
+  UserCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,6 +44,7 @@ import { CalendarSection } from '@/components/course/CalendarSection';
 import { HelpSection } from '@/components/course/HelpSection';
 import { PublishedModulesList } from '@/components/course/PublishedModulesList';
 import { SyllabusSection } from '@/components/course/SyllabusSection';
+import { AttendanceSection } from '@/components/course/AttendanceSection';
 
 export default function Mus210() {
   const navigate = useNavigate();
@@ -106,6 +108,7 @@ export default function Mus210() {
     { id: 'mail-center', label: 'Mail Center', icon: Mail },
     { id: 'modules', label: 'Modules', icon: FolderOpen },
     { id: 'grades', label: 'Gradescope', icon: BarChart3 },
+    { id: 'attendance', label: 'Attendance', icon: UserCheck },
     { id: 'class-notebook', label: 'Class Notebook', icon: BookOpen },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
     { id: 'help', label: 'Help', icon: HelpCircle }
@@ -215,6 +218,7 @@ export default function Mus210() {
         {activeSection === 'mail-center' && <MailCenterSection courseId={courseId} />}
         {activeSection === 'modules' && <ModulesSection courseId={courseId} />}
         {activeSection === 'grades' && <GradesSection courseId={courseId} gradingBreakdown={courseData.gradingBreakdown} />}
+        {activeSection === 'attendance' && <AttendanceSection courseId={courseId} />}
         {activeSection === 'class-notebook' && <NotebookSection courseId={courseId} />}
         {activeSection === 'calendar' && <CalendarSection courseId={courseId} />}
         {activeSection === 'help' && <HelpSection instructor={courseData.instructor} />}
