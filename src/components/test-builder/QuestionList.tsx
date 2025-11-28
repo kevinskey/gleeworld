@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Edit, Trash2, GripVertical, Image, Video, Music, FileText } from 'lucide-react';
+import { Edit, Trash2, GripVertical, Image, Video, Music, FileText, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useDeleteQuestion, type TestQuestion, type AnswerOption } from '@/hooks/useTestBuilder';
+import { useDeleteQuestion, useDuplicateQuestion, type TestQuestion, type AnswerOption } from '@/hooks/useTestBuilder';
 import { EditQuestionDialog } from './EditQuestionDialog';
 import {
   AlertDialog,
@@ -23,6 +23,7 @@ interface QuestionListProps {
 
 export const QuestionList = ({ questions, options, testId }: QuestionListProps) => {
   const deleteQuestion = useDeleteQuestion();
+  const duplicateQuestion = useDuplicateQuestion();
   const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
   const [questionToEdit, setQuestionToEdit] = useState<TestQuestion | null>(null);
 
@@ -111,6 +112,13 @@ export const QuestionList = ({ questions, options, testId }: QuestionListProps) 
                       onClick={() => setQuestionToEdit(question)}
                     >
                       <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => duplicateQuestion.mutate({ questionId: question.id, testId })}
+                    >
+                      <Copy className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"

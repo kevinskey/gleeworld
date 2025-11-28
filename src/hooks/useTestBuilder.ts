@@ -312,6 +312,89 @@ export const useDeleteQuestion = () => {
   });
 };
 
+// Duplicate question
+export const useDuplicateQuestion = () => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ questionId, testId }: { questionId: string; testId: string }) => {
+      // Fetch the original question
+      const { data: originalQuestion, error: questionError } = await supabase
+        .from('test_questions')
+        .select('*')
+        .eq('id', questionId)
+        .single();
+
+      if (questionError) throw questionError;
+
+      // Fetch answer options for the original question
+      const { data: originalOptions, error: optionsError } = await supabase
+        .from('test_answer_options')
+        .select('*')
+        .eq('question_id', questionId)
+        .order('display_order');
+
+      if (optionsError) throw optionsError;
+
+      // Get the max display_order for questions in this test
+      const { data: questions, error: questionsError } = await supabase
+        .from('test_questions')
+        .select('display_order')
+        .eq('test_id', testId)
+        .order('display_order', { ascending: false })
+        .limit(1);
+
+      if (questionsError) throw questionsError;
+
+      const newDisplayOrder = questions.length > 0 ? questions[0].display_order + 1 : 1;
+
+      // Create the duplicate question
+      const { id, created_at, updated_at, ...questionData } = originalQuestion as TestQuestion;
+      const { data: newQuestion, error: insertError } = await supabase
+        .from('test_questions')
+        .insert([{
+          ...questionData,
+          display_order: newDisplayOrder,
+        }] as any)
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      // Duplicate answer options if they exist
+      if (originalOptions && originalOptions.length > 0) {
+        const newOptions = originalOptions.map(({ id, created_at, question_id, ...optionData }) => ({
+          ...optionData,
+          question_id: newQuestion.id,
+        }));
+
+        const { error: optionsInsertError } = await supabase
+          .from('test_answer_options')
+          .insert(newOptions as any);
+
+        if (optionsInsertError) throw optionsInsertError;
+      }
+
+      return testId;
+    },
+    onSuccess: (testId) => {
+      queryClient.invalidateQueries({ queryKey: ['test', testId] });
+      toast({
+        title: 'Question Duplicated',
+        description: 'Question has been duplicated successfully.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to duplicate question: ${error.message}`,
+        variant: 'destructive',
+      });
+    },
+  });
+};
+
 // Batch create answer options
 export const useCreateAnswerOptions = () => {
   const { toast } = useToast();
