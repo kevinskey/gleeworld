@@ -148,7 +148,7 @@ export default function Mus210() {
       </aside>
 
       {/* Middle Content Section - 60% */}
-      <main className="w-3/5 p-6 overflow-y-auto">
+      <main className="w-3/5 p-4 overflow-y-auto">
         {/* Course Header Banner */}
         <div className="mb-6 bg-gradient-to-r from-slate-700 via-slate-600 to-slate-700 text-white p-6 rounded-lg shadow-lg border border-slate-500/30">
           <h2 className="text-xl font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis text-center">
