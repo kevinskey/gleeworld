@@ -4,27 +4,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import {
-  BookOpen,
-  Calendar,
-  Mail,
-  ClipboardList,
-  FileCheck,
-  BarChart,
-  MessageSquare,
-  Video,
-  Headphones,
-  FileText,
-  BookMarked,
-  HelpCircle,
-  UserCheck,
-  Ruler,
-  Settings,
-  ChevronDown,
-  Music,
-} from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, HelpCircle, UserCheck, Ruler, Settings, ChevronDown, Music } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
 interface CoursePageLayoutProps {
   courseSemester: string;
   courseCode: string;
@@ -42,7 +23,6 @@ interface CoursePageLayoutProps {
   onEnroll?: () => void;
   children?: React.ReactNode;
 }
-
 export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
   courseSemester,
   courseCode,
@@ -53,38 +33,90 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
   instructor,
   isEnrolled = false,
   onEnroll,
-  children,
+  children
 }) => {
   const navigate = useNavigate();
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
-
-  const navigationItems = [
-    { icon: BookOpen, label: 'Home', path: '#home', active: true },
-    { icon: FileText, label: 'Syllabus', path: '#syllabus' },
-    { icon: Mail, label: 'Announcements', path: '#announcements' },
-    { icon: ClipboardList, label: 'Assignments', path: '#assignments' },
-    { icon: FileCheck, label: 'Tests', path: '#tests' },
-    { icon: BarChart, label: 'Polls', path: '#polls' },
-    { icon: MessageSquare, label: 'Discussions', path: '#discussions' },
-    { icon: Mail, label: 'Mail Center', path: '#mail' },
-    { icon: BookMarked, label: 'Modules', path: '#modules' },
-    { icon: BarChart, label: 'Gradescope', path: '#grades' },
-    { icon: UserCheck, label: 'Attendance', path: '#attendance' },
-    { icon: Ruler, label: 'Rubrics', path: '#rubrics' },
-    { icon: BookOpen, label: 'Class Notebook', path: '#notebook' },
-    { icon: Calendar, label: 'Calendar', path: '#calendar' },
-    { icon: HelpCircle, label: 'Help', path: '#help' },
-  ];
-
-  const resourceItems = [
-    { icon: Video, label: 'Video Library', description: 'Access conducting demonstration videos' },
-    { icon: Headphones, label: 'Audio Examples', description: 'Listen to choral repertoire samples' },
-    { icon: Music, label: 'Sheet Music Library', description: 'Download scores and study materials' },
-    { icon: FileText, label: 'Course Documents', description: 'Syllabus, handouts, and readings' },
-  ];
-
-  return (
-    <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+  const navigationItems = [{
+    icon: BookOpen,
+    label: 'Home',
+    path: '#home',
+    active: true
+  }, {
+    icon: FileText,
+    label: 'Syllabus',
+    path: '#syllabus'
+  }, {
+    icon: Mail,
+    label: 'Announcements',
+    path: '#announcements'
+  }, {
+    icon: ClipboardList,
+    label: 'Assignments',
+    path: '#assignments'
+  }, {
+    icon: FileCheck,
+    label: 'Tests',
+    path: '#tests'
+  }, {
+    icon: BarChart,
+    label: 'Polls',
+    path: '#polls'
+  }, {
+    icon: MessageSquare,
+    label: 'Discussions',
+    path: '#discussions'
+  }, {
+    icon: Mail,
+    label: 'Mail Center',
+    path: '#mail'
+  }, {
+    icon: BookMarked,
+    label: 'Modules',
+    path: '#modules'
+  }, {
+    icon: BarChart,
+    label: 'Gradescope',
+    path: '#grades'
+  }, {
+    icon: UserCheck,
+    label: 'Attendance',
+    path: '#attendance'
+  }, {
+    icon: Ruler,
+    label: 'Rubrics',
+    path: '#rubrics'
+  }, {
+    icon: BookOpen,
+    label: 'Class Notebook',
+    path: '#notebook'
+  }, {
+    icon: Calendar,
+    label: 'Calendar',
+    path: '#calendar'
+  }, {
+    icon: HelpCircle,
+    label: 'Help',
+    path: '#help'
+  }];
+  const resourceItems = [{
+    icon: Video,
+    label: 'Video Library',
+    description: 'Access conducting demonstration videos'
+  }, {
+    icon: Headphones,
+    label: 'Audio Examples',
+    description: 'Listen to choral repertoire samples'
+  }, {
+    icon: Music,
+    label: 'Sheet Music Library',
+    description: 'Download scores and study materials'
+  }, {
+    icon: FileText,
+    label: 'Course Documents',
+    description: 'Syllabus, handouts, and readings'
+  }];
+  return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
       <div className="flex min-h-screen bg-muted/20">
         {/* Left Sidebar - 15% */}
         <div className="w-[15%] bg-card border-r border-border flex-shrink-0">
@@ -94,19 +126,10 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
           </div>
           
           <nav className="p-2">
-            {navigationItems.map((item) => (
-              <button
-                key={item.label}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                  item.active
-                    ? 'bg-muted text-foreground font-medium'
-                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                }`}
-              >
+            {navigationItems.map(item => <button key={item.label} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${item.active ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 <item.icon className="h-4 w-4" />
                 <span className="text-xs">{item.label}</span>
-              </button>
-            ))}
+              </button>)}
           </nav>
         </div>
 
@@ -115,7 +138,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
           <div className="p-6 space-y-6">
             {/* Course Title Bar */}
             <div className="bg-primary text-primary-foreground p-6 rounded-lg">
-              <h1 className="text-2xl font-bold">{courseTitle}</h1>
+              <h1 className="text-2xl font-bold text-primary-foreground">{courseTitle}</h1>
             </div>
 
             {/* To Do Section */}
@@ -123,11 +146,9 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
               <CardContent className="p-6">
                 <h2 className="text-xl font-bold text-foreground mb-4">Welcome!</h2>
                 <p className="text-muted-foreground mb-6">{welcomeDetails}</p>
-                {!isEnrolled && onEnroll && (
-                  <Button onClick={onEnroll} variant="default">
+                {!isEnrolled && onEnroll && <Button onClick={onEnroll} variant="default">
                     Enroll in Course
-                  </Button>
-                )}
+                  </Button>}
               </CardContent>
             </Card>
 
@@ -149,8 +170,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
                   <BookMarked className="h-5 w-5 text-primary" />
                   <h2 className="text-lg font-bold text-foreground">Learning Modules</h2>
                 </div>
-                {children || (
-                  <div className="space-y-2">
+                {children || <div className="space-y-2">
                     <Collapsible>
                       <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
                         <div className="flex items-center gap-3">
@@ -163,19 +183,13 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
                         <p className="text-sm text-muted-foreground">test info.</p>
                       </CollapsibleContent>
                     </Collapsible>
-                  </div>
-                )}
+                  </div>}
               </CardContent>
             </Card>
 
             {/* Fixed Instructor Control Center Button */}
             <div className="fixed bottom-6 right-6">
-              <Button
-                onClick={() => navigate('/instructor/admin')}
-                variant="default"
-                className="shadow-lg"
-                size="lg"
-              >
+              <Button onClick={() => navigate('/instructor/admin')} variant="default" className="shadow-lg" size="lg">
                 <Settings className="h-5 w-5 mr-2" />
                 Instructor Control Center
               </Button>
@@ -198,8 +212,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
             <div>
               <h3 className="font-bold text-foreground mb-4">Course Resources</h3>
               <div className="space-y-3">
-                {resourceItems.map((resource) => (
-                  <Card key={resource.label} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                {resourceItems.map(resource => <Card key={resource.label} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg">
@@ -211,8 +224,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
                         </div>
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
+                  </Card>)}
               </div>
             </div>
 
@@ -231,6 +243,5 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
           </div>
         </div>
       </div>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 };
