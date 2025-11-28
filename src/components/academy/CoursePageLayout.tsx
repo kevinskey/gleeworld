@@ -138,7 +138,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
           <div className="p-6 space-y-6">
             {/* Course Title Bar */}
             <div className="bg-primary text-primary-foreground p-6 rounded-lg">
-              <h1 className="text-2xl font-bold text-primary-foreground">{courseTitle}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{courseTitle}</h1>
             </div>
 
             {/* To Do Section */}
