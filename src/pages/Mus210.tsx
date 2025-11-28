@@ -25,6 +25,9 @@ import { SyllabusSection } from '@/components/course/SyllabusSection';
 import { AttendanceSection } from '@/components/course/AttendanceSection';
 import { TestsSection } from '@/components/course/TestsSection';
 import { PollsSection } from '@/components/course/PollsSection';
+import { VideoResourcesSection } from '@/components/course/VideoResourcesSection';
+import { AudioExamplesSection } from '@/components/course/AudioExamplesSection';
+import { CourseDocumentsSection } from '@/components/course/CourseDocumentsSection';
 export default function Mus210() {
   const navigate = useNavigate();
   const {
@@ -258,9 +261,12 @@ export default function Mus210() {
         {activeSection === 'class-notebook' && <NotebookSection courseId={courseId} />}
         {activeSection === 'calendar' && <CalendarSection courseId={courseId} />}
         {activeSection === 'help' && <HelpSection instructor={courseData.instructor} />}
+        {activeSection === 'video-library' && <VideoResourcesSection courseId={courseId} />}
+        {activeSection === 'audio-examples' && <AudioExamplesSection courseId={courseId} />}
+        {activeSection === 'course-documents' && <CourseDocumentsSection courseId={courseId} />}
       </main>
 
-      {/* Right Sidebar - Resources - 25% */}
+          {/* Right Sidebar - Resources - 25% */}
       <aside className="w-[25%] border-l bg-card p-6">
         <div className="space-y-6">
           <div>
@@ -272,7 +278,7 @@ export default function Mus210() {
             <h3 className="text-lg font-semibold mb-4">Course Resources</h3>
             
             {/* Video Resources */}
-            <Card className="mb-4">
+            <Card className="mb-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setActiveSection('video-library')}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Video className="h-4 w-4" />
@@ -287,7 +293,7 @@ export default function Mus210() {
             </Card>
 
             {/* Audio Resources */}
-            <Card className="mb-4">
+            <Card className="mb-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setActiveSection('audio-examples')}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Headphones className="h-4 w-4" />
@@ -302,7 +308,7 @@ export default function Mus210() {
             </Card>
 
             {/* Sheet Music */}
-            <Card className="mb-4">
+            <Card className="mb-4 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate('/library')}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <Music className="h-4 w-4" />
@@ -317,7 +323,7 @@ export default function Mus210() {
             </Card>
 
             {/* Additional Resources */}
-            <Card>
+            <Card className="cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setActiveSection('course-documents')}>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <FileImage className="h-4 w-4" />

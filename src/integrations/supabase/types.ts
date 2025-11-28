@@ -2479,6 +2479,48 @@ export type Database = {
         }
         Relationships: []
       }
+      course_audio_resources: {
+        Row: {
+          audio_path: string
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          duration_seconds: number | null
+          id: string
+          is_published: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          audio_path: string
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          duration_seconds?: number | null
+          id?: string
+          is_published?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          audio_path?: string
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          duration_seconds?: number | null
+          id?: string
+          is_published?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       course_discussions: {
         Row: {
           content: string
@@ -2510,6 +2552,54 @@ export type Database = {
           id?: string
           is_locked?: boolean | null
           reply_count?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      course_documents: {
+        Row: {
+          category: string | null
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          document_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          is_published: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          document_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_published?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          document_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_published?: boolean | null
           title?: string
           updated_at?: string | null
         }
@@ -2644,6 +2734,51 @@ export type Database = {
           notes?: string | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      course_video_resources: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_published: boolean | null
+          title: string
+          updated_at: string | null
+          video_path: string | null
+          video_type: string
+          youtube_url: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_published?: boolean | null
+          title: string
+          updated_at?: string | null
+          video_path?: string | null
+          video_type: string
+          youtube_url?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_published?: boolean | null
+          title?: string
+          updated_at?: string | null
+          video_path?: string | null
+          video_type?: string
+          youtube_url?: string | null
         }
         Relationships: []
       }
