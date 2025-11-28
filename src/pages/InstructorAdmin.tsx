@@ -1,0 +1,285 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  FileText,
+  Mail,
+  ClipboardList,
+  FileCheck,
+  BarChart,
+  MessageSquare,
+  FolderOpen,
+  BarChart3,
+  UserCheck,
+  Ruler,
+  BookOpen,
+  Calendar,
+  Video,
+  Headphones,
+  FileImage,
+  Settings,
+  Plus,
+  ArrowLeft,
+} from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { UniversalHeader } from '@/components/layout/UniversalHeader';
+import { useNavigate } from 'react-router-dom';
+
+interface ManagementTool {
+  id: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  category: 'content' | 'assessment' | 'communication' | 'resources';
+}
+
+const managementTools: ManagementTool[] = [
+  // Content Management
+  {
+    id: 'syllabus',
+    title: 'Syllabus',
+    description: 'Create and edit course syllabus',
+    icon: FileText,
+    category: 'content',
+  },
+  {
+    id: 'modules',
+    title: 'Modules',
+    description: 'Organize course content into modules',
+    icon: FolderOpen,
+    category: 'content',
+  },
+  {
+    id: 'class-notes',
+    title: 'Class Notes',
+    description: 'Upload and manage lecture notes',
+    icon: BookOpen,
+    category: 'content',
+  },
+  {
+    id: 'calendar',
+    title: 'Calendar',
+    description: 'Schedule course events and deadlines',
+    icon: Calendar,
+    category: 'content',
+  },
+  
+  // Assessment Management
+  {
+    id: 'assignments',
+    title: 'Assignments',
+    description: 'Create and manage assignments',
+    icon: ClipboardList,
+    category: 'assessment',
+  },
+  {
+    id: 'tests',
+    title: 'Tests & Quizzes',
+    description: 'Create tests and quizzes',
+    icon: FileCheck,
+    category: 'assessment',
+  },
+  {
+    id: 'polls',
+    title: 'Polls',
+    description: 'Create student polls and surveys',
+    icon: BarChart,
+    category: 'assessment',
+  },
+  {
+    id: 'rubrics',
+    title: 'Rubrics',
+    description: 'Design grading rubrics',
+    icon: Ruler,
+    category: 'assessment',
+  },
+  {
+    id: 'grades',
+    title: 'Gradescope',
+    description: 'Manage student grades',
+    icon: BarChart3,
+    category: 'assessment',
+  },
+  {
+    id: 'attendance',
+    title: 'Attendance',
+    description: 'Track student attendance',
+    icon: UserCheck,
+    category: 'assessment',
+  },
+  
+  // Communication
+  {
+    id: 'announcements',
+    title: 'Announcements',
+    description: 'Post announcements to students',
+    icon: Mail,
+    category: 'communication',
+  },
+  {
+    id: 'discussions',
+    title: 'Discussions',
+    description: 'Manage discussion forums',
+    icon: MessageSquare,
+    category: 'communication',
+  },
+  
+  // Resources
+  {
+    id: 'videos',
+    title: 'Video Library',
+    description: 'Upload and manage video resources',
+    icon: Video,
+    category: 'resources',
+  },
+  {
+    id: 'audio',
+    title: 'Audio Examples',
+    description: 'Upload audio files',
+    icon: Headphones,
+    category: 'resources',
+  },
+  {
+    id: 'documents',
+    title: 'Course Documents',
+    description: 'Upload handouts and readings',
+    icon: FileImage,
+    category: 'resources',
+  },
+];
+
+export default function InstructorAdmin() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState<string>('content');
+
+  const isInstructor = (user as any)?.is_admin || (user as any)?.is_super_admin;
+
+  if (!isInstructor) {
+    return (
+      <div className="min-h-screen bg-background">
+        <UniversalHeader />
+        <div className="container mx-auto px-4 py-16">
+          <Card>
+            <CardHeader>
+              <CardTitle>Access Denied</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                You do not have instructor permissions to access this page.
+              </p>
+              <Button className="mt-4" onClick={() => navigate('/')}>
+                Go to Home
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  const filteredTools = managementTools.filter(tool => tool.category === selectedCategory);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <UniversalHeader />
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          
+          <div className="flex items-center gap-4 mb-2">
+            <Settings className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl font-bold">Instructor Control Center</h1>
+          </div>
+          <p className="text-muted-foreground text-lg">
+            Manage all aspects of your courses from this central hub
+          </p>
+        </div>
+
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="mt-8">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="content">Content</TabsTrigger>
+            <TabsTrigger value="assessment">Assessment</TabsTrigger>
+            <TabsTrigger value="communication">Communication</TabsTrigger>
+            <TabsTrigger value="resources">Resources</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value={selectedCategory} className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTools.map((tool) => {
+                const IconComponent = tool.icon;
+                return (
+                  <Card
+                    key={tool.id}
+                    className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-primary/50"
+                  >
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <div className="p-2 rounded-lg bg-primary/10">
+                          <IconComponent className="h-6 w-6 text-primary" />
+                        </div>
+                        {tool.title}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {tool.description}
+                      </p>
+                      <Button size="sm" className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create/Manage
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <Button variant="outline" className="flex flex-col h-auto py-4">
+                <Mail className="h-6 w-6 mb-2" />
+                <span className="text-xs">Send Announcement</span>
+              </Button>
+              <Button variant="outline" className="flex flex-col h-auto py-4">
+                <ClipboardList className="h-6 w-6 mb-2" />
+                <span className="text-xs">Create Assignment</span>
+              </Button>
+              <Button variant="outline" className="flex flex-col h-auto py-4">
+                <FileCheck className="h-6 w-6 mb-2" />
+                <span className="text-xs">Create Test</span>
+              </Button>
+              <Button variant="outline" className="flex flex-col h-auto py-4">
+                <Calendar className="h-6 w-6 mb-2" />
+                <span className="text-xs">Add Event</span>
+              </Button>
+              <Button variant="outline" className="flex flex-col h-auto py-4">
+                <Video className="h-6 w-6 mb-2" />
+                <span className="text-xs">Upload Video</span>
+              </Button>
+              <Button variant="outline" className="flex flex-col h-auto py-4">
+                <FileImage className="h-6 w-6 mb-2" />
+                <span className="text-xs">Upload Document</span>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

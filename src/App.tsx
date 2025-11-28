@@ -22,6 +22,7 @@ import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
 import Mus210 from "./pages/Mus210";
 import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
+import InstructorAdmin from "./pages/InstructorAdmin";
 
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -2048,15 +2049,23 @@ const App = () => {
                                       } 
                                     />
                                     
-                                    {/* Grading System Routes */}
-                                    <Route 
-                                      path="/grading/admin/dashboard" 
-                                      element={
-                                        <ProtectedRoute>
-                                          <GradingAdminDashboard />
-                                        </ProtectedRoute>
-                                      } 
-                                    />
+                                     {/* Grading System Routes */}
+                                     <Route 
+                                       path="/instructor/admin" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <InstructorAdmin />
+                                         </ProtectedRoute>
+                                       } 
+                                     />
+                                     <Route 
+                                       path="/grading/admin/dashboard" 
+                                       element={
+                                         <ProtectedRoute>
+                                           <GradingAdminDashboard />
+                                         </ProtectedRoute>
+                                       } 
+                                     />
                                     <Route 
                                       path="/grading/instructor/dashboard" 
                                       element={
