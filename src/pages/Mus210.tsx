@@ -42,6 +42,7 @@ import { NotebookSection } from '@/components/course/NotebookSection';
 import { CalendarSection } from '@/components/course/CalendarSection';
 import { HelpSection } from '@/components/course/HelpSection';
 import { PublishedModulesList } from '@/components/course/PublishedModulesList';
+import { SyllabusSection } from '@/components/course/SyllabusSection';
 
 export default function Mus210() {
   const navigate = useNavigate();
@@ -50,9 +51,6 @@ export default function Mus210() {
   const { enrollment, isEnrolled, isLoading, enroll } = useCourseEnrollment(courseId);
 
   const [activeSection, setActiveSection] = useState('home');
-  const [showObjectives, setShowObjectives] = useState(false);
-  const [showMaterials, setShowMaterials] = useState(false);
-  const [showGrading, setShowGrading] = useState(false);
   const [showSchedule, setShowSchedule] = useState(false);
 
   const handleEnroll = async () => {
@@ -101,6 +99,7 @@ export default function Mus210() {
 
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
+    { id: 'syllabus', label: 'Syllabus', icon: FileText },
     { id: 'announcements', label: 'Announcements', icon: Bell },
     { id: 'assignments', label: 'Assignments', icon: ClipboardList },
     { id: 'discussions', label: 'Discussions', icon: MessageSquare },
@@ -194,21 +193,6 @@ export default function Mus210() {
               </CardContent>
             </Card>
 
-            {/* Course Question Board */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="h-5 w-5" />
-                  Course Question Board
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm">
-                  Ask questions and engage with course content. Discussion threads will appear here.
-                </p>
-              </CardContent>
-            </Card>
-
             {/* Learning Modules */}
             <Card className="mb-6">
               <CardHeader>
@@ -221,103 +205,10 @@ export default function Mus210() {
                 <PublishedModulesList courseId={courseId} />
               </CardContent>
             </Card>
-
-            {/* Course Objectives */}
-            <Card className="mb-6">
-              <Collapsible open={showObjectives} onOpenChange={setShowObjectives}>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
-                    <CardTitle className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        Learning Objectives
-                      </span>
-                      {showObjectives ? <ChevronUp /> : <ChevronDown />}
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent>
-                    <ol className="list-decimal list-inside space-y-2">
-                      {courseData.objectives.map((objective, index) => (
-                        <li key={index} className="text-foreground/90">{objective}</li>
-                      ))}
-                    </ol>
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
-
-            {/* Grading */}
-            <Card className="mb-6">
-              <Collapsible open={showGrading} onOpenChange={setShowGrading}>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
-                    <CardTitle className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <BarChart3 className="h-5 w-5" />
-                        Grading Breakdown
-                      </span>
-                      {showGrading ? <ChevronUp /> : <ChevronDown />}
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {courseData.gradingBreakdown.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center p-2 bg-accent/30 rounded">
-                          <span className="text-foreground/90">{item.item}</span>
-                          <Badge variant="secondary">{item.percentage}%</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
-
-            {/* Required Materials */}
-            <Card className="mb-6">
-              <Collapsible open={showMaterials} onOpenChange={setShowMaterials}>
-                <CollapsibleTrigger asChild>
-                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
-                    <CardTitle className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <BookOpen className="h-5 w-5" />
-                        Required Materials
-                      </span>
-                      {showMaterials ? <ChevronUp /> : <ChevronDown />}
-                    </CardTitle>
-                  </CardHeader>
-                </CollapsibleTrigger>
-                <CollapsibleContent>
-                  <CardContent>
-                    <div className="mb-4">
-                      <h4 className="font-semibold mb-2">Textbooks</h4>
-                      <ul className="list-disc list-inside space-y-1">
-                        {courseData.requiredTexts.map((text, index) => (
-                          <li key={index} className="text-foreground/90">
-                            <em>{text.title}</em> — {text.author}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold mb-2">Materials</h4>
-                      <ul className="list-disc list-inside space-y-1">
-                        {courseData.requiredMaterials.map((material, index) => (
-                          <li key={index} className="text-foreground/90">{material}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
-            </Card>
           </>
         )}
 
+        {activeSection === 'syllabus' && <SyllabusSection courseData={courseData} />}
         {activeSection === 'announcements' && <AnnouncementsSection courseId={courseId} />}
         {activeSection === 'assignments' && <AssignmentsSection courseId={courseId} />}
         {activeSection === 'discussions' && <DiscussionsSection courseId={courseId} />}
