@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
-import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, HelpCircle, UserCheck, Ruler, Settings, ChevronDown, Music } from 'lucide-react';
+import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, HelpCircle, UserCheck, Ruler, Settings, ChevronDown, Music, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseResourcesList } from './CourseResourcesList';
@@ -143,6 +143,16 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
         {/* Main Content Area - 60% */}
         <div className="w-[60%] flex-shrink-0 overflow-y-auto">
           <div className="p-6 space-y-6">
+            {/* Back to Academy Button */}
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/glee-academy')}
+              className="mb-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Academy
+            </Button>
+
             {/* Course Title Bar */}
             <div className="bg-primary text-primary-foreground p-6 rounded-lg">
               <h1 className="text-2xl font-bold text-white bg-primary">{courseTitle}</h1>
