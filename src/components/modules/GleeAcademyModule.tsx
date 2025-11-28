@@ -16,6 +16,14 @@ const courses = [{
   duration: '16 weeks',
   highlights: ['Conducting Technique', 'Score Analysis', 'Rehearsal Planning', 'Repertoire Selection']
 }, {
+  id: 'mus-210',
+  title: 'MUS 210: Conducting for the Complete Musician',
+  description: 'Comprehensive course in choral conducting covering baton technique, score analysis, and diverse choral traditions.',
+  icon: Music,
+  level: 'Advanced',
+  duration: '16 weeks',
+  highlights: ['Baton Technique', 'Score Study', 'Rehearsal Pedagogy', 'Stylistic Fluency']
+}, {
   id: 'african-american-music',
   title: 'Survey of African American Music',
   description: 'Explore the rich history and cultural impact of African American music from spirituals to contemporary genres.',
@@ -69,6 +77,8 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
       navigate('/booking');
     } else if (courseId === 'choral-conducting') {
       navigate('/choral-conducting-literature');
+    } else if (courseId === 'mus-210') {
+      navigate('/mus-210');
     }
   };
 
@@ -94,7 +104,7 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map(course => {
             const IconComponent = course.icon;
-            const isClickable = course.id === 'african-american-music' || course.id === 'music-fundamentals' || course.id === 'private-lessons' || course.id === 'choral-conducting';
+            const isClickable = course.id === 'african-american-music' || course.id === 'music-fundamentals' || course.id === 'private-lessons' || course.id === 'choral-conducting' || course.id === 'mus-210';
             return (
               <Card 
                 key={course.id} 
@@ -141,7 +151,8 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
                       {course.id === 'african-american-music' ? 'Enter MUS 240' : 
                        course.id === 'music-fundamentals' ? 'Enter Music Theory' :
                        course.id === 'private-lessons' ? 'Book with Doc' :
-                       course.id === 'choral-conducting' ? 'Enter Course' : 'Under Development'}
+                       course.id === 'choral-conducting' ? 'Enter Course' : 
+                       course.id === 'mus-210' ? 'Enter MUS 210' : 'Under Development'}
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </div>

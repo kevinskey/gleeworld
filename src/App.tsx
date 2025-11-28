@@ -19,6 +19,7 @@ import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
 import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
+import Mus210 from "./pages/Mus210";
 import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
 
@@ -407,7 +408,17 @@ const App = () => {
                   <PublicRoute>
                     <ChoralConductingLiterature />
                   </PublicRoute>
-                } 
+                }
+              />
+              
+              {/* MUS 210 Course Page */}
+              <Route 
+                path="/mus-210" 
+                element={
+                  <PublicRoute>
+                    <Mus210 />
+                  </PublicRoute>
+                }
               />
               {/* Grand Staff Classroom page */}
               <Route 
