@@ -6,7 +6,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
@@ -240,6 +240,13 @@ import StudentCoursePage from "./pages/grading/student/StudentCoursePage";
 import StudentAssignmentPage from "./pages/grading/student/StudentAssignmentPage";
 
 // Preview triggers disabled to prevent accidental email sends during development
+
+// Legacy MUS240 redirect component
+const LegacyMus240Redirect = () => {
+  const location = useLocation();
+  const newPath = location.pathname.replace('/classes/mus240', '/mus-240');
+  return <Navigate to={newPath} replace />;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -1752,10 +1759,11 @@ const App = () => {
                                <Route 
                                 path="/mus-240" 
                                 element={<ClassLanding />}
-                               />
-                               {/* Legacy redirect */}
-                               <Route path="/classes/mus240" element={<Navigate to="/mus-240" replace />} />
-                               <Route path="/mus240" element={<Navigate to="/mus-240" replace />} />
+                                />
+                                {/* Legacy redirects - catch all subroutes */}
+                                <Route path="/classes/mus240/*" element={<LegacyMus240Redirect />} />
+                                <Route path="/classes/mus240" element={<Navigate to="/mus-240" replace />} />
+                                <Route path="/mus240" element={<Navigate to="/mus-240" replace />} />
                                
                                  <Route 
                                   path="/mus-240/student/dashboard" 
