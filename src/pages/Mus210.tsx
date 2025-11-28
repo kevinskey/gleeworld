@@ -99,8 +99,8 @@ export default function Mus210() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Left Sidebar Navigation - 25% */}
-      <aside className="w-1/4 border-r bg-card">
+      {/* Left Sidebar Navigation - 10% */}
+      <aside className="w-[10%] border-r bg-card">
         <div className="p-4">
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-1">Fall 2025</h2>
