@@ -20,6 +20,7 @@ import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
 import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
 import Mus210 from "./pages/Mus210";
+import Mus210Page from "./pages/Mus210Page";
 import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
 import InstructorAdmin from "./pages/InstructorAdmin";
@@ -417,7 +418,15 @@ const App = () => {
                 path="/mus-210" 
                 element={
                   <PublicRoute>
-                    <Mus210 />
+                    <Mus210Page />
+                  </PublicRoute>
+                }
+              />
+              <Route 
+                path="/classes/mus210" 
+                element={
+                  <PublicRoute>
+                    <Mus210Page />
                   </PublicRoute>
                 }
               />
