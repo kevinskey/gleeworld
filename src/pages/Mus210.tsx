@@ -28,6 +28,7 @@ import { PollsSection } from '@/components/course/PollsSection';
 import { VideoResourcesSection } from '@/components/course/VideoResourcesSection';
 import { AudioExamplesSection } from '@/components/course/AudioExamplesSection';
 import { CourseDocumentsSection } from '@/components/course/CourseDocumentsSection';
+import { InstructorControlCenter } from '@/components/course/InstructorControlCenter';
 export default function Mus210() {
   const navigate = useNavigate();
   const {
@@ -155,6 +156,10 @@ export default function Mus210() {
   }];
   return <div className="min-h-screen bg-background">
       <UniversalHeader />
+      
+      {/* Instructor Control Center - Fixed Button */}
+      <InstructorControlCenter courseId={courseId} />
+      
       <div className="flex min-h-[calc(100vh-4rem)] bg-background">{/* Account for header height */}
       {/* Left Sidebar Navigation - 15% */}
       <aside className="w-[15%] border-r bg-card">
