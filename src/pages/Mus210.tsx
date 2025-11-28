@@ -99,9 +99,9 @@ export default function Mus210() {
   ];
 
   return (
-    <>
+    <div className="min-h-screen bg-background">
       <UniversalHeader />
-      <div className="flex min-h-screen bg-background pt-16">
+      <div className="flex min-h-[calc(100vh-4rem)] bg-background">{/* Account for header height */}
       {/* Left Sidebar Navigation - 10% */}
       <aside className="w-[10%] border-r bg-card">
         <div className="p-4">
@@ -400,6 +400,6 @@ export default function Mus210() {
         </div>
       </aside>
     </div>
-    </>
+    </div>
   );
 }
