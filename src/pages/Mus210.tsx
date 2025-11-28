@@ -155,7 +155,7 @@ Three tardies = 1 absence.`,
     <div className="container mx-auto py-8 px-4">
       {/* Hero Banner */}
       <div className="mb-8 bg-gradient-to-r from-gray-900 to-gray-800 text-white p-8 rounded-lg">
-        <h1 className="text-4xl font-bold">Fall 2025 {courseData.courseCode} — {courseData.title}</h1>
+        <h1 className="text-4xl font-bold text-white">Fall 2025 {courseData.courseCode} — {courseData.title}</h1>
       </div>
 
       {/* 4-Column Icon Layout */}
