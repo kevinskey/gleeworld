@@ -7871,6 +7871,47 @@ export type Database = {
           },
         ]
       }
+      gw_group_applications: {
+        Row: {
+          applicant_id: string
+          application_message: string | null
+          created_at: string | null
+          full_name: string
+          group_id: string
+          id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          applicant_id: string
+          application_message?: string | null
+          created_at?: string | null
+          full_name: string
+          group_id: string
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          application_message?: string | null
+          created_at?: string | null
+          full_name?: string
+          group_id?: string
+          id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_group_applications_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "gw_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_group_members: {
         Row: {
           group_id: string
@@ -7996,6 +8037,65 @@ export type Database = {
             columns: ["reply_to_id"]
             isOneToOne: false
             referencedRelation: "gw_group_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_groups: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_official: boolean | null
+          leader_id: string
+          legacy_id: string | null
+          legacy_source: string | null
+          max_members: number | null
+          member_count: number | null
+          name: string
+          semester: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_official?: boolean | null
+          leader_id: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          max_members?: number | null
+          member_count?: number | null
+          name: string
+          semester?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_official?: boolean | null
+          leader_id?: string
+          legacy_id?: string | null
+          legacy_source?: string | null
+          max_members?: number | null
+          member_count?: number | null
+          name?: string
+          semester?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_groups_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
         ]
