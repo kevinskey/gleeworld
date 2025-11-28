@@ -337,7 +337,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
 
             {/* Fixed Instructor Control Center Button */}
             <div className="fixed bottom-6 right-6">
-              <Button onClick={() => navigate('/instructor/admin')} variant="default" className="shadow-lg" size="lg">
+              <Button onClick={() => navigate(`/instructor/admin/${courseId}`)} variant="default" className="shadow-lg" size="lg">
                 <Settings className="h-5 w-5 mr-2" />
                 Instructor Control Center
               </Button>
