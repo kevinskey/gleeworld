@@ -554,13 +554,25 @@ export const DashboardHeroManagerModule = () => {
         <CardContent>
           <div className="space-y-4">
             {heroSlides.map((slide) => (
-              <div key={slide.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex-1">
+              <div key={slide.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                {/* Thumbnail */}
+                <div className="flex-shrink-0 w-32 h-20 rounded-md overflow-hidden bg-muted">
+                  <img 
+                    src={slide.image_url} 
+                    alt={slide.title || 'Hero slide'}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
                   <h4 className="font-medium">{slide.title || 'Untitled'}</h4>
-                  <p className="text-sm text-muted-foreground">{slide.description || 'No description'}</p>
+                  <p className="text-sm text-muted-foreground truncate">{slide.description || 'No description'}</p>
                   <p className="text-xs text-muted-foreground mt-1">Order: {slide.display_order}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                
+                {/* Actions */}
+                <div className="flex items-center gap-2 flex-shrink-0">
                   <Button variant="ghost" size="sm" onClick={() => toggleActive(slide.id, slide.is_active)}>
                     {slide.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </Button>
