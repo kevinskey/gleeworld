@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, ChevronUp, BookOpen, Calendar, Users, FileText, Music, Home, Bell, FolderOpen, MessageSquare, GraduationCap, ClipboardList, BarChart3, Clock, HelpCircle, Video, Headphones, FileImage, Mail, UserCheck, FileCheck, BarChart } from 'lucide-react';
+import { ChevronDown, ChevronUp, BookOpen, Calendar, Users, FileText, Music, Home, Bell, FolderOpen, MessageSquare, GraduationCap, ClipboardList, BarChart3, Clock, HelpCircle, Video, Headphones, FileImage, Mail, UserCheck, FileCheck, BarChart, Ruler } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
@@ -134,6 +134,10 @@ export default function Mus210() {
     label: 'Attendance',
     icon: UserCheck
   }, {
+    id: 'rubrics',
+    label: 'Rubrics',
+    icon: Ruler
+  }, {
     id: 'class-notebook',
     label: 'Class Notebook',
     icon: BookOpen
@@ -236,6 +240,21 @@ export default function Mus210() {
         {activeSection === 'modules' && <ModulesSection courseId={courseId} />}
         {activeSection === 'grades' && <GradesSection courseId={courseId} gradingBreakdown={courseData.gradingBreakdown} />}
         {activeSection === 'attendance' && <AttendanceSection courseId={courseId} />}
+        {activeSection === 'rubrics' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Ruler className="h-5 w-5" />
+                Course Rubrics
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Rubrics tied to course objectives will be displayed here. This connects to the academy-wide grading system.
+              </p>
+            </CardContent>
+          </Card>
+        )}
         {activeSection === 'class-notebook' && <NotebookSection courseId={courseId} />}
         {activeSection === 'calendar' && <CalendarSection courseId={courseId} />}
         {activeSection === 'help' && <HelpSection instructor={courseData.instructor} />}
