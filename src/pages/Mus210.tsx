@@ -154,7 +154,7 @@ export default function Mus210() {
         <div className="p-4">
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-1">  Fall 2025</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground text-right">
               {courseData.courseCode}-01
             </p>
           </div>
