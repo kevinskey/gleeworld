@@ -83,18 +83,21 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 -m-6 p-6">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden mb-8 max-h-48 flex items-center justify-center">
-        <img 
-          src={academyHeroImage} 
-          alt="Glee World Academy" 
-          className="max-w-2xl h-full object-contain rounded-lg mx-auto"
-        />
+    <div className="min-h-screen -m-6">
+      {/* Hero Section with Full Background */}
+      <div className="relative w-full bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] py-12 mb-8">
+        <div className="container mx-auto px-4 flex items-center justify-center">
+          <img 
+            src={academyHeroImage} 
+            alt="Glee World Academy" 
+            className="max-w-2xl h-auto object-contain rounded-lg"
+          />
+        </div>
       </div>
 
       {/* Courses Section */}
-      <div className="space-y-8">
+      <div className="px-6 pb-6">
+        <div className="space-y-8">
         <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Our Course Offerings
@@ -161,10 +164,11 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
             );
           })}
         </div>
+        </div>
       </div>
 
       {/* Call to Action Section */}
-      <div className="bg-muted/30 py-12 px-6 mt-12 rounded-lg">
+      <div className="bg-muted/30 py-12 px-6 mt-12 rounded-lg mx-6">
         <div className="max-w-4xl mx-auto text-center">
           <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
             Ready to Begin Your Musical Journey?
