@@ -6,7 +6,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSquare, Video, Headphones, FileText, BookMarked, HelpCircle, UserCheck, Ruler, Settings, ChevronDown, Music } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { CourseAnnouncements } from './CourseAnnouncements';
+import { CourseResourcesList } from './CourseResourcesList';
 interface CoursePageLayoutProps {
+  courseId: string;
   courseSemester: string;
   courseCode: string;
   courseTitle: string;
@@ -24,6 +27,7 @@ interface CoursePageLayoutProps {
   children?: React.ReactNode;
 }
 export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
+  courseId,
   courseSemester,
   courseCode,
   courseTitle,
@@ -201,12 +205,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
             )}
 
             {activeSection === 'announcements' && (
-              <Card className="bg-card/50 border-border">
-                <CardContent className="p-6">
-                  <h2 className="text-xl font-bold text-foreground mb-4">Announcements</h2>
-                  <p className="text-muted-foreground">Course announcements will appear here.</p>
-                </CardContent>
-              </Card>
+              <CourseAnnouncements courseId={courseId} />
             )}
 
             {activeSection === 'assignments' && (
@@ -317,6 +316,18 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
               </Card>
             )}
 
+            {activeSection === 'video-library' && (
+              <CourseResourcesList courseId={courseId} type="videos" />
+            )}
+
+            {activeSection === 'audio-examples' && (
+              <CourseResourcesList courseId={courseId} type="audio" />
+            )}
+
+            {activeSection === 'course-documents' && (
+              <CourseResourcesList courseId={courseId} type="documents" />
+            )}
+
             {/* Fixed Instructor Control Center Button */}
             <div className="fixed bottom-6 right-6">
               <Button onClick={() => navigate('/instructor/admin')} variant="default" className="shadow-lg" size="lg">
@@ -342,19 +353,58 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
             <div>
               <h3 className="font-bold text-foreground mb-4">Course Resources</h3>
               <div className="space-y-3">
-                {resourceItems.map(resource => <Card key={resource.label} onClick={() => setActiveSection(resource.label.toLowerCase().replace(/\s+/g, '-'))} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                          <resource.icon className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-sm text-foreground mb-1">{resource.label}</h4>
-                          <p className="text-xs text-muted-foreground leading-relaxed">{resource.description}</p>
-                        </div>
+                <Card onClick={() => setActiveSection('video-library')} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Video className="h-4 w-4 text-primary" />
                       </div>
-                    </CardContent>
-                  </Card>)}
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm text-foreground mb-1">Video Library</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Access conducting demonstration videos</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card onClick={() => setActiveSection('audio-examples')} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Headphones className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm text-foreground mb-1">Audio Examples</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Listen to choral repertoire samples</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card onClick={() => setActiveSection('sheet-music-library')} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Music className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm text-foreground mb-1">Sheet Music Library</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Download scores and study materials</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card onClick={() => setActiveSection('course-documents')} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <FileText className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm text-foreground mb-1">Course Documents</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">Syllabus, handouts, and readings</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
 
