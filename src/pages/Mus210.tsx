@@ -102,8 +102,8 @@ export default function Mus210() {
     <div className="min-h-screen bg-background">
       <UniversalHeader />
       <div className="flex min-h-[calc(100vh-4rem)] bg-background">{/* Account for header height */}
-      {/* Left Sidebar Navigation - 10% */}
-      <aside className="w-[10%] border-r bg-card">
+      {/* Left Sidebar Navigation - 20% */}
+      <aside className="w-[20%] border-r bg-card">
         <div className="p-4">
           <div className="mb-6">
             <h2 className="text-lg font-semibold mb-1">Fall 2025</h2>
@@ -313,8 +313,8 @@ export default function Mus210() {
         </Card>
       </main>
 
-      {/* Right Sidebar - Resources */}
-      <aside className="flex-1 border-l bg-card p-6">
+      {/* Right Sidebar - Resources - 20% */}
+      <aside className="w-[20%] border-l bg-card p-6">
         <div className="space-y-6">
           <div>
             <h3 className="text-lg font-semibold mb-4">To Do</h3>
