@@ -49,7 +49,7 @@ export const AdminGradesCard: React.FC = () => {
 
   return (
     <Link 
-      to={isAdmin ? "/classes/mus240/instructor/console" : "/classes/mus240/student/dashboard"}
+      to={isAdmin ? "/mus-240/instructor/console" : "/mus-240/student/dashboard"}
       className="group block"
     >
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl lg:rounded-3xl px-6 py-4 sm:px-4 sm:py-3 lg:px-8 lg:py-5 xl:px-10 xl:py-6 shadow-xl border border-white/30 hover:bg-white hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 hover:scale-105">

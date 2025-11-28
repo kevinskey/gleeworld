@@ -321,7 +321,7 @@ export default function JazzPage() {
       <div className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
-          <Link to="/classes/mus240">
+          <Link to="/mus-240">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to MUS240

@@ -19,7 +19,7 @@ export const InstructorJournalsPage = () => {
   const isAuthorized = profile?.is_admin || profile?.is_super_admin || profile?.role === 'instructor';
   
   if (!isAuthorized) {
-    return <Navigate to="/classes/mus240" replace />;
+    return <Navigate to="/mus-240" replace />;
   }
 
   return (

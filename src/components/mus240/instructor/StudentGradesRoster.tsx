@@ -304,7 +304,7 @@ export const StudentGradesRoster: React.FC = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate(`/classes/mus240/instructor/student/${student.student_id}`)}
+                        onClick={() => navigate(`/mus-240/instructor/student/${student.student_id}`)}
                       >
                         View
                       </Button>

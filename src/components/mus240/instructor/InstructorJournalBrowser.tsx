@@ -285,7 +285,7 @@ export const InstructorJournalBrowser: React.FC = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate('/classes/mus240/instructor/console')}
+          onClick={() => navigate('/mus-240/instructor/console')}
           className="gap-2"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -431,7 +431,7 @@ export const InstructorJournalBrowser: React.FC = () => {
                   {journal.content.substring(0, 200)}...
                 </p>
                 <Button 
-                  onClick={() => navigate(`/classes/mus240/instructor/journal/${journal.id}/grade`)}
+                  onClick={() => navigate(`/mus-240/instructor/journal/${journal.id}/grade`)}
                   variant="outline"
                 >
                   Grade Submission

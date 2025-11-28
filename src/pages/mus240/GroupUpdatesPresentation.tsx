@@ -111,7 +111,7 @@ export default function GroupUpdatesPresentation() {
       <UniversalLayout>
         <div className="max-w-4xl mx-auto px-4 py-8">
           <Link 
-            to="/classes/mus240/groups" 
+            to="/mus-240/groups"
             className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -139,7 +139,7 @@ export default function GroupUpdatesPresentation() {
           {/* Header */}
           <div className="mb-8">
             <Link 
-              to="/classes/mus240/groups" 
+              to="/mus-240/groups" 
               className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6 bg-white rounded-lg px-4 py-2 shadow-sm border border-slate-200 hover:shadow-md"
             >
               <ArrowLeft className="h-4 w-4" />
