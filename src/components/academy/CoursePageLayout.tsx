@@ -379,7 +379,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
                     </div>
                   </CardContent>
                 </Card>
-                <Card onClick={() => setActiveSection('sheet-music-library')} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                <Card onClick={() => navigate('/music-library')} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-primary/10 rounded-lg">
