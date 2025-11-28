@@ -27,6 +27,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
+import { UniversalHeader } from '@/components/layout/UniversalHeader';
 
 export default function Mus210() {
   const navigate = useNavigate();
@@ -98,7 +99,9 @@ export default function Mus210() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <>
+      <UniversalHeader />
+      <div className="flex min-h-screen bg-background pt-16">
       {/* Left Sidebar Navigation - 10% */}
       <aside className="w-[10%] border-r bg-card">
         <div className="p-4">
@@ -397,5 +400,6 @@ export default function Mus210() {
         </div>
       </aside>
     </div>
+    </>
   );
 }
