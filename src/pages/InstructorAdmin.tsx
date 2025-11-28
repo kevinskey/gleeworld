@@ -259,7 +259,7 @@ export default function InstructorAdmin() {
         <div className="mb-6">
           <Button
             variant="ghost"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate(courseId ? `/${courseId}` : '/mus-210')}
             className="mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
