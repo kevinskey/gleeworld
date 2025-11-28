@@ -41,6 +41,7 @@ import { GradesSection } from '@/components/course/GradesSection';
 import { NotebookSection } from '@/components/course/NotebookSection';
 import { CalendarSection } from '@/components/course/CalendarSection';
 import { HelpSection } from '@/components/course/HelpSection';
+import { PublishedModulesList } from '@/components/course/PublishedModulesList';
 
 export default function Mus210() {
   const navigate = useNavigate();
@@ -217,20 +218,7 @@ export default function Mus210() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2">
-                    <ChevronDown className="h-4 w-4 text-primary mt-1" />
-                    <span className="text-foreground/90">Week 1: Introduction to Conducting</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronDown className="h-4 w-4 text-primary mt-1" />
-                    <span className="text-foreground/90">Week 2: Basic Patterns & Gestures</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ChevronDown className="h-4 w-4 text-primary mt-1" />
-                    <span className="text-foreground/90">Week 3: Score Analysis Fundamentals</span>
-                  </li>
-                </ul>
+                <PublishedModulesList courseId={courseId} />
               </CardContent>
             </Card>
 
