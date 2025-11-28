@@ -143,51 +143,179 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
               <h1 className="text-2xl font-bold text-white bg-primary">{courseTitle}</h1>
             </div>
 
-            {/* To Do Section */}
-            <Card className="bg-card/50 border-border">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-foreground mb-4">Welcome!</h2>
-                <p className="text-muted-foreground mb-6">{welcomeDetails}</p>
-                {!isEnrolled && onEnroll && <Button onClick={onEnroll} variant="default">
-                    Enroll in Course
-                  </Button>}
-              </CardContent>
-            </Card>
+            {/* Dynamic Content Based on Active Section */}
+            {activeSection === 'home' && (
+              <>
+                <Card className="bg-card/50 border-border">
+                  <CardContent className="p-6">
+                    <h2 className="text-xl font-bold text-foreground mb-4">Welcome!</h2>
+                    <p className="text-muted-foreground mb-6">{welcomeDetails}</p>
+                    {!isEnrolled && onEnroll && <Button onClick={onEnroll} variant="default">
+                        Enroll in Course
+                      </Button>}
+                  </CardContent>
+                </Card>
 
-            {/* Course Overview */}
-            <Card className="bg-card/50 border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-bold text-foreground">Course Overview</h2>
-                </div>
-                <p className="text-muted-foreground leading-relaxed">{courseOverview}</p>
-              </CardContent>
-            </Card>
+                <Card className="bg-card/50 border-border">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <BookOpen className="h-5 w-5 text-primary" />
+                      <h2 className="text-lg font-bold text-foreground">Course Overview</h2>
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed">{courseOverview}</p>
+                  </CardContent>
+                </Card>
 
-            {/* Learning Modules */}
-            <Card className="bg-card/50 border-border">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <BookMarked className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-bold text-foreground">Learning Modules</h2>
-                </div>
-                {children || <div className="space-y-2">
-                    <Collapsible>
-                      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
-                        <div className="flex items-center gap-3">
-                          <BookMarked className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium text-sm">Test</span>
-                        </div>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="px-4 py-2">
-                        <p className="text-sm text-muted-foreground">test info.</p>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  </div>}
-              </CardContent>
-            </Card>
+                <Card className="bg-card/50 border-border">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-4">
+                      <BookMarked className="h-5 w-5 text-primary" />
+                      <h2 className="text-lg font-bold text-foreground">Learning Modules</h2>
+                    </div>
+                    {children || <div className="space-y-2">
+                        <Collapsible>
+                          <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
+                            <div className="flex items-center gap-3">
+                              <BookMarked className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium text-sm">Test</span>
+                            </div>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="px-4 py-2">
+                            <p className="text-sm text-muted-foreground">test info.</p>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </div>}
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {activeSection === 'syllabus' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Course Syllabus</h2>
+                  <p className="text-muted-foreground">Syllabus content will be displayed here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'announcements' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Announcements</h2>
+                  <p className="text-muted-foreground">Course announcements will appear here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'assignments' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Assignments</h2>
+                  <p className="text-muted-foreground">Assignment list and submissions will be displayed here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'tests' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Tests & Quizzes</h2>
+                  <p className="text-muted-foreground">Tests and quizzes will be available here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'polls' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Polls</h2>
+                  <p className="text-muted-foreground">Active and past polls will be shown here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'discussions' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Discussions</h2>
+                  <p className="text-muted-foreground">Discussion forums and threads will appear here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'mail' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Mail Center</h2>
+                  <p className="text-muted-foreground">Course messaging and email communication.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'modules' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Course Modules</h2>
+                  <p className="text-muted-foreground">Learning modules and weekly content will be organized here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'grades' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Gradescope</h2>
+                  <p className="text-muted-foreground">Your grades and performance analytics will be displayed here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'attendance' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Attendance</h2>
+                  <p className="text-muted-foreground">Attendance records and tracking will be shown here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'rubrics' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Rubrics</h2>
+                  <p className="text-muted-foreground">Assignment and assessment rubrics will be available here.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'notebook' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Class Notebook</h2>
+                  <p className="text-muted-foreground">Your class notes and shared notebook content.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'calendar' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Course Calendar</h2>
+                  <p className="text-muted-foreground">Academic calendar with important dates and deadlines.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {activeSection === 'help' && (
+              <Card className="bg-card/50 border-border">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold text-foreground mb-4">Help & Support</h2>
+                  <p className="text-muted-foreground">Course help resources and support information.</p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Fixed Instructor Control Center Button */}
             <div className="fixed bottom-6 right-6">
