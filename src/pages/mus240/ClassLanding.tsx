@@ -45,37 +45,37 @@ export default function ClassLanding() {
   const cards = [
     { 
       title: 'Syllabus', 
-      to: '/classes/mus240/syllabus', 
+      to: '/mus-240/syllabus', 
       desc: 'Policies, grading, schedule',
       icon: BookOpen
     },
     { 
       title: 'Listening Hub', 
-      to: '/classes/mus240/listening', 
+      to: '/mus-240/listening', 
       desc: 'Weekly listening + comments',
       icon: Music
     },
     { 
       title: 'Assignments', 
-      to: '/classes/mus240/assignments', 
+      to: '/mus-240/assignments', 
       desc: 'Prompts, rubrics, due dates',
       icon: Calendar
     },
     { 
       title: 'Grades & Progress', 
-      to: '/classes/mus240/grades', 
+      to: '/mus-240/grades', 
       desc: 'Your performance & attendance',
       icon: TrendingUp
     },
     { 
       title: 'Groups', 
-      to: '/classes/mus240/groups', 
+      to: '/mus-240/groups', 
       desc: 'Study groups & collaboration',
       icon: Users
     },
     { 
       title: 'Resources', 
-      to: '/classes/mus240/resources', 
+      to: '/mus-240/resources', 
       desc: 'Readings, citations, media',
       icon: Brain
     },

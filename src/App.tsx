@@ -394,26 +394,19 @@ const App = () => {
                   </PublicRoute>
                 } 
               />
-              {/* Music Theory Fundamentals landing page */}
+              {/* MUS 100 - Music Theory Fundamentals */}
               <Route 
-                path="/music-theory-fundamentals" 
+                path="/mus-100" 
                 element={
                   <PublicRoute>
                     <MusicTheoryFundamentals />
                   </PublicRoute>
                 } 
               />
-              {/* Choral Conducting and Literature landing page */}
-              <Route 
-                path="/choral-conducting-literature" 
-                element={
-                  <PublicRoute>
-                    <ChoralConductingLiterature />
-                  </PublicRoute>
-                }
-              />
+              {/* Legacy redirect */}
+              <Route path="/music-theory-fundamentals" element={<Navigate to="/mus-100" replace />} />
               
-              {/* MUS 210 Course Page */}
+              {/* MUS 210 - Choral Conducting */}
               <Route 
                 path="/mus-210" 
                 element={
@@ -422,14 +415,9 @@ const App = () => {
                   </PublicRoute>
                 }
               />
-              <Route 
-                path="/classes/mus210" 
-                element={
-                  <PublicRoute>
-                    <Mus210Page />
-                  </PublicRoute>
-                }
-              />
+              {/* Legacy redirects */}
+              <Route path="/choral-conducting-literature" element={<Navigate to="/mus-210" replace />} />
+              <Route path="/classes/mus210" element={<Navigate to="/mus-210" replace />} />
               {/* Grand Staff Classroom page */}
               <Route 
                 path="/grand-staff-classroom" 
@@ -1760,17 +1748,17 @@ const App = () => {
                                 </ProtectedRoute>
                               } 
                              />
-                              {/* MUS 240 Class Pages - Protected by enrollment */}
+                              {/* MUS 240 - Survey of African American Music */}
                                <Route 
-                                path="/mus240" 
+                                path="/mus-240" 
                                 element={<ClassLanding />}
                                />
+                               {/* Legacy redirect */}
+                               <Route path="/classes/mus240" element={<Navigate to="/mus-240" replace />} />
+                               <Route path="/mus240" element={<Navigate to="/mus-240" replace />} />
+                               
                                  <Route 
-                                  path="/classes/mus240" 
-                                  element={<ClassLanding />}
-                                 />
-                                 <Route 
-                                  path="/classes/mus240/student/dashboard" 
+                                  path="/mus-240/student/dashboard" 
                                   element={
                                     <ProtectedRoute>
                                       <Mus240EnrollmentRoute>
@@ -1780,11 +1768,11 @@ const App = () => {
                                    }
                                   />
                                   <Route 
-                                   path="/classes/mus240/student-dashboard" 
-                                   element={<Navigate to="/classes/mus240/student/dashboard" replace />}
+                                   path="/mus-240/student-dashboard" 
+                                   element={<Navigate to="/mus-240/student/dashboard" replace />}
                                   />
                                  <Route 
-                                  path="/classes/mus240/student/journal/:journal_id/grade" 
+                                  path="/mus-240/student/journal/:journal_id/grade" 
                                   element={
                                     <ProtectedRoute>
                                       <Mus240EnrollmentRoute>
@@ -1794,7 +1782,7 @@ const App = () => {
                                   }
                                  />
                               <Route 
-                               path="/classes/mus240/syllabus" 
+                               path="/mus-240/syllabus" 
                                 element={
                                   <Mus240EnrollmentRoute>
                                     <SyllabusPage />
@@ -1802,7 +1790,7 @@ const App = () => {
                                 }
                              />
                                <Route 
-                                 path="/classes/mus240/assignments" 
+                                 path="/mus-240/assignments" 
                                element={
                                    <Mus240EnrollmentRoute>
                                      <AssignmentWeek />
@@ -1810,7 +1798,7 @@ const App = () => {
                                }
                                />
                                <Route 
-                                 path="/classes/mus240/assignments/:assignmentId" 
+                                 path="/mus-240/assignments/:assignmentId" 
                                 element={
                                    <Mus240EnrollmentRoute>
                                      <AssignmentJournal />
@@ -1818,7 +1806,7 @@ const App = () => {
                                 }
                                />
                                <Route 
-                                 path="/classes/mus240/my-submissions" 
+                                 path="/mus-240/my-submissions" 
                                  element={
                                    <ProtectedRoute>
                                      <Mus240EnrollmentRoute>
@@ -1828,7 +1816,7 @@ const App = () => {
                                  }
                                />
                                <Route 
-                                 path="/classes/mus240/listening" 
+                                 path="/mus-240/listening" 
                                 element={
                                   <Mus240EnrollmentRoute>
                                     <ListeningHub />
@@ -1836,7 +1824,7 @@ const App = () => {
                                 }
                                />
                               <Route 
-                                path="/classes/mus240/listening/:week" 
+                                path="/mus-240/listening/:week" 
                                element={
                                  <Mus240EnrollmentRoute>
                                    <WeekDetail />
@@ -1844,7 +1832,7 @@ const App = () => {
                                }
                               />
                                <Route 
-                                 path="/classes/mus240/groups" 
+                                 path="/mus-240/groups" 
                                element={
                                  <Mus240EnrollmentRoute>
                                    <Groups />
@@ -1852,7 +1840,7 @@ const App = () => {
                                }
                                />
                                 <Route 
-                                  path="/classes/mus240/groups/update" 
+                                  path="/mus-240/groups/update" 
                                  element={
                                    <Mus240EnrollmentRoute>
                                      <GroupUpdateForm />
@@ -1860,7 +1848,7 @@ const App = () => {
                                  }
                                  />
                                   <Route 
-                                    path="/classes/mus240/groups/presentation" 
+                                    path="/mus-240/groups/presentation" 
                                    element={
                                      <Mus240EnrollmentRoute>
                                        <GroupUpdatesPresentation />
@@ -1868,7 +1856,7 @@ const App = () => {
                                    }
                                   />
                                   <Route 
-                                    path="/classes/mus240/groups/presentation/:id" 
+                                    path="/mus-240/groups/presentation/:id" 
                                    element={
                                      <Mus240EnrollmentRoute>
                                        <GroupPresentationView />
@@ -1876,7 +1864,7 @@ const App = () => {
                                    }
                                   />
                                 <Route 
-                                  path="/classes/mus240/groups/:groupId" 
+                                  path="/mus-240/groups/:groupId" 
                                  element={
                                    <Mus240EnrollmentRoute>
                                      <GroupDetail />
@@ -1884,7 +1872,7 @@ const App = () => {
                                  }
                                 />
                                <Route 
-                                 path="/classes/mus240/resources" 
+                                 path="/mus-240/resources" 
                                 element={
                                   <Mus240EnrollmentRoute>
                                     <Resources />
@@ -1892,7 +1880,7 @@ const App = () => {
                                 }
                                />
                                <Route 
-                                 path="/classes/mus240/resources/admin" 
+                                 path="/mus-240/resources/admin" 
                                  element={
                                    <ProtectedRoute>
                                      <AdminOnlyRoute>
@@ -1902,7 +1890,7 @@ const App = () => {
                                  } 
                                 />
                                  <Route 
-                                  path="/classes/mus240/midterm" 
+                                  path="/mus-240/midterm" 
                                   element={
                                     <ProtectedRoute>
                                       <Mus240EnrollmentRoute>
@@ -1912,7 +1900,7 @@ const App = () => {
                                   } 
                                  />
                                  <Route 
-                                  path="/classes/mus240/midterm-exam" 
+                                  path="/mus-240/midterm-exam" 
                                   element={
                                     <ProtectedRoute>
                                       <Mus240EnrollmentRoute>
@@ -1922,7 +1910,7 @@ const App = () => {
                                   } 
                                  />
                                <Route 
-                                 path="/classes/mus240/grades"
+                                 path="/mus-240/grades"
                                 element={
                                   <Mus240EnrollmentRoute>
                                     <Mus240GradesPage />
@@ -1930,7 +1918,7 @@ const App = () => {
                                 }
                                 />
                                 <Route 
-                                  path="/classes/mus240/jazz"
+                                  path="/mus-240/jazz"
                                   element={
                                     <Mus240EnrollmentRoute>
                                       <JazzPage />
@@ -1938,15 +1926,15 @@ const App = () => {
                                   }
                                 />
                                   <Route 
-                                    path="/classes/mus240/admin" 
-                                    element={<Navigate to="/classes/mus240/instructor/console" replace />}
+                                    path="/mus-240/admin" 
+                                    element={<Navigate to="/mus-240/instructor/console" replace />}
                                   />
                                   <Route 
-                                    path="/classes/mus240/instructor" 
-                                    element={<Navigate to="/classes/mus240/instructor/console" replace />}
+                                    path="/mus-240/instructor" 
+                                    element={<Navigate to="/mus-240/instructor/console" replace />}
                                   />
                                   <Route 
-                                    path="/classes/mus240/instructor/console" 
+                                    path="/mus-240/instructor/console" 
                                     element={
                                       <ProtectedRoute>
                                         <Mus240StaffRoute>
@@ -1956,7 +1944,7 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
-                                    path="/classes/mus240/instructor/student/:studentId" 
+                                    path="/mus-240/instructor/student/:studentId" 
                                     element={
                                       <ProtectedRoute>
                                         <AdminOnlyRoute>
@@ -1966,7 +1954,7 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
-                                    path="/classes/mus240/instructor/student/:studentId/midterm" 
+                                    path="/mus-240/instructor/student/:studentId/midterm" 
                                     element={
                                       <ProtectedRoute>
                                         <AdminOnlyRoute>
@@ -1976,7 +1964,7 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
-                                    path="/classes/mus240/instructor/bulk-grading" 
+                                    path="/mus-240/instructor/bulk-grading" 
                                     element={
                                       <ProtectedRoute>
                                         <Mus240StaffRoute>
@@ -1986,7 +1974,7 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
-                                    path="/classes/mus240/peer-review" 
+                                    path="/mus-240/peer-review" 
                                     element={
                                       <ProtectedRoute>
                                         <PeerReviewBrowserPage />
@@ -1994,7 +1982,7 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
-                                    path="/classes/mus240/journal/:journalId/review" 
+                                    path="/mus-240/journal/:journalId/review" 
                                     element={
                                       <ProtectedRoute>
                                         <JournalReviewPage />
@@ -2002,7 +1990,7 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
-                                    path="/classes/mus240/instructor/journals" 
+                                    path="/mus-240/instructor/journals" 
                                     element={
                                       <ProtectedRoute>
                                         <InstructorJournalsPage />
@@ -2010,7 +1998,7 @@ const App = () => {
                                     } 
                                   />
                                   <Route 
-                                    path="/classes/mus240/instructor/journal/:journal_id/grade" 
+                                    path="/mus-240/instructor/journal/:journal_id/grade" 
                                     element={
                                       <ProtectedRoute>
                                         <JournalSubmissionGradingPage />
