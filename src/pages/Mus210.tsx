@@ -22,7 +22,8 @@ import {
   HelpCircle,
   Video,
   Headphones,
-  FileImage
+  FileImage,
+  Mail
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -88,13 +89,13 @@ export default function Mus210() {
   const navItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'announcements', label: 'Announcements', icon: Bell },
+    { id: 'assignments', label: 'Assignments', icon: ClipboardList },
+    { id: 'discussions', label: 'Discussions', icon: MessageSquare },
+    { id: 'mail-center', label: 'Mail Center', icon: Mail },
     { id: 'modules', label: 'Modules', icon: FolderOpen },
-    { id: 'collaborations', label: 'Collaborations', icon: MessageSquare },
     { id: 'grades', label: 'Gradescope', icon: BarChart3 },
     { id: 'class-notebook', label: 'Class Notebook', icon: BookOpen },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
-    { id: 'inbox', label: 'Inbox', icon: MessageSquare },
-    { id: 'history', label: 'History', icon: Clock },
     { id: 'help', label: 'Help', icon: HelpCircle }
   ];
 
