@@ -61,11 +61,11 @@ const GleeAcademy = () => {
   
   const handleCourseClick = (courseId: string) => {
     if (courseId === 'choral-conducting') {
-      navigate('/choral-conducting-literature');
+      navigate('/mus-210');
     } else if (courseId === 'african-american-music') {
-      navigate('/classes/mus240');
+      navigate('/mus-240');
     } else if (courseId === 'music-fundamentals') {
-      navigate('/music-theory-fundamentals');
+      navigate('/mus-100');
     } else if (courseId === 'private-lessons') {
       navigate('/booking');
     }

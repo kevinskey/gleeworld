@@ -36,13 +36,15 @@ export const PAGE_NAMES: Record<string, string> = {
   '/treasurer': 'Treasurer Dashboard',
   '/tour-planner': 'Tour Planner',
   
-  // MUS240 Routes
-  '/classes/mus240': 'MUS 240',
-  '/classes/mus240/syllabus': 'MUS 240 Syllabus',
-  '/classes/mus240/listening': 'MUS 240 Listening Hub',
-  '/classes/mus240/assignments': 'MUS 240 Assignments',
-  '/classes/mus240/grades': 'MUS 240 Grades & Progress',
-  '/classes/mus240/resources': 'MUS 240 Resources'
+  // Course Routes
+  '/mus-100': 'MUS 100 - Music Theory Fundamentals',
+  '/mus-210': 'MUS 210 - Choral Conducting',
+  '/mus-240': 'MUS 240 - Survey of African American Music',
+  '/mus-240/syllabus': 'MUS 240 Syllabus',
+  '/mus-240/listening': 'MUS 240 Listening Hub',
+  '/mus-240/assignments': 'MUS 240 Assignments',
+  '/mus-240/grades': 'MUS 240 Grades & Progress',
+  '/mus-240/resources': 'MUS 240 Resources'
 };
 
 export const getPageName = (pathname: string): string => {
@@ -56,10 +58,10 @@ export const getPageName = (pathname: string): string => {
   if (pathname.startsWith('/contract-signing/')) {
     return 'Contract Signing';
   }
-  if (pathname.startsWith('/classes/mus240/listening/')) {
+  if (pathname.startsWith('/mus-240/listening/')) {
     return 'MUS 240 Week Detail';
   }
-  if (pathname.startsWith('/classes/mus240/assignments/')) {
+  if (pathname.startsWith('/mus-240/assignments/')) {
     return 'MUS 240 Assignment';
   }
   
