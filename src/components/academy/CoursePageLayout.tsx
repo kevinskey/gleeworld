@@ -114,7 +114,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
         <div className="w-[60%] flex-shrink-0 overflow-y-auto">
           <div className="p-6 space-y-6">
             {/* Course Title Bar */}
-            <div className="bg-[#1a1a2e] text-white p-6 rounded-lg">
+            <div className="bg-primary text-primary-foreground p-6 rounded-lg">
               <h1 className="text-2xl font-bold">{courseTitle}</h1>
             </div>
 
@@ -124,7 +124,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
                 <h2 className="text-xl font-bold text-foreground mb-4">Welcome!</h2>
                 <p className="text-muted-foreground mb-6">{welcomeDetails}</p>
                 {!isEnrolled && onEnroll && (
-                  <Button onClick={onEnroll} className="bg-[#1a1a2e] hover:bg-[#16213e]">
+                  <Button onClick={onEnroll} variant="default">
                     Enroll in Course
                   </Button>
                 )}
@@ -172,7 +172,8 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
             <div className="fixed bottom-6 right-6">
               <Button
                 onClick={() => navigate('/instructor/admin')}
-                className="bg-[#1a1a2e] hover:bg-[#16213e] text-white shadow-lg"
+                variant="default"
+                className="shadow-lg"
                 size="lg"
               >
                 <Settings className="h-5 w-5 mr-2" />
