@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -154,6 +154,7 @@ const managementTools: ManagementTool[] = [
 export default function InstructorAdmin() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { courseId } = useParams<{ courseId: string }>();
   const [selectedCategory, setSelectedCategory] = useState<string>('content');
 
   // Fetch user profile to check admin status
@@ -214,67 +215,36 @@ export default function InstructorAdmin() {
 
   const filteredTools = managementTools.filter(tool => tool.category === selectedCategory);
 
+  const coursePath = courseId ? `/${courseId}` : '/mus-210';
+
   const handleToolClick = (toolId: string) => {
     switch (toolId) {
       case 'syllabus':
-        // Navigate to course page, syllabus section will be default
-        navigate('/mus-210');
-        break;
       case 'modules':
-        // Navigate to course page, modules section
-        navigate('/mus-210');
-        break;
       case 'class-notes':
-        // Navigate to course page, class notebook section
-        navigate('/mus-210');
-        break;
       case 'calendar':
-        // Navigate to course calendar
-        navigate('/mus-210');
-        break;
       case 'assignments':
-        // Navigate to course assignments section
-        navigate('/mus-210');
+      case 'polls':
+      case 'rubrics':
+      case 'grades':
+      case 'discussions':
+      case 'videos':
+      case 'audio':
+      case 'documents':
+        // Navigate to course page with specific section
+        navigate(`${coursePath}?section=${toolId}`);
         break;
       case 'tests':
-        // Navigate to test builder
-        navigate('/test-builder');
-        break;
-      case 'polls':
-        // Navigate to course polls section
-        navigate('/mus-210');
-        break;
-      case 'rubrics':
-        // Navigate to course rubrics section
-        navigate('/mus-210');
-        break;
-      case 'grades':
-        // Navigate to course grades section
-        navigate('/mus-210');
+        // Navigate to test builder with course context
+        navigate(`/test-builder?courseId=${courseId || 'mus-210-conducting'}`);
         break;
       case 'attendance':
         // Navigate to attendance management
         navigate('/attendance/scan');
         break;
       case 'announcements':
-        // Navigate to create announcement
-        navigate('/admin/create-announcement');
-        break;
-      case 'discussions':
-        // Navigate to course discussions section
-        navigate('/mus-210');
-        break;
-      case 'videos':
-        // Navigate to course video library
-        navigate('/mus-210');
-        break;
-      case 'audio':
-        // Navigate to course audio examples
-        navigate('/mus-210');
-        break;
-      case 'documents':
-        // Navigate to course documents
-        navigate('/mus-210');
+        // Navigate to create announcement with course context
+        navigate(`/admin/create-announcement?courseId=${courseId || 'mus-210-conducting'}`);
         break;
       default:
         console.log('Tool not implemented:', toolId);
@@ -301,7 +271,7 @@ export default function InstructorAdmin() {
             <h1 className="text-4xl font-bold">Instructor Control Center</h1>
           </div>
           <p className="text-muted-foreground text-lg">
-            Manage all aspects of your courses from this central hub
+            {courseId ? `Managing: ${courseId.toUpperCase()}` : 'Manage all aspects of your courses from this central hub'}
           </p>
         </div>
 
@@ -359,7 +329,7 @@ export default function InstructorAdmin() {
               <Button 
                 variant="outline" 
                 className="flex flex-col h-auto py-4"
-                onClick={() => navigate('/admin/create-announcement')}
+                onClick={() => handleToolClick('announcements')}
               >
                 <Mail className="h-6 w-6 mb-2" />
                 <span className="text-xs">Send Announcement</span>
@@ -367,7 +337,7 @@ export default function InstructorAdmin() {
               <Button 
                 variant="outline" 
                 className="flex flex-col h-auto py-4"
-                onClick={() => navigate('/mus-210')}
+                onClick={() => handleToolClick('assignments')}
               >
                 <ClipboardList className="h-6 w-6 mb-2" />
                 <span className="text-xs">Create Assignment</span>
@@ -375,7 +345,7 @@ export default function InstructorAdmin() {
               <Button 
                 variant="outline" 
                 className="flex flex-col h-auto py-4"
-                onClick={() => navigate('/test-builder')}
+                onClick={() => handleToolClick('tests')}
               >
                 <FileCheck className="h-6 w-6 mb-2" />
                 <span className="text-xs">Create Test</span>
@@ -383,7 +353,7 @@ export default function InstructorAdmin() {
               <Button 
                 variant="outline" 
                 className="flex flex-col h-auto py-4"
-                onClick={() => navigate('/mus-210')}
+                onClick={() => handleToolClick('calendar')}
               >
                 <Calendar className="h-6 w-6 mb-2" />
                 <span className="text-xs">Add Event</span>
@@ -391,7 +361,7 @@ export default function InstructorAdmin() {
               <Button 
                 variant="outline" 
                 className="flex flex-col h-auto py-4"
-                onClick={() => navigate('/mus-210')}
+                onClick={() => handleToolClick('videos')}
               >
                 <Video className="h-6 w-6 mb-2" />
                 <span className="text-xs">Upload Video</span>
@@ -399,7 +369,7 @@ export default function InstructorAdmin() {
               <Button 
                 variant="outline" 
                 className="flex flex-col h-auto py-4"
-                onClick={() => navigate('/mus-210')}
+                onClick={() => handleToolClick('documents')}
               >
                 <FileImage className="h-6 w-6 mb-2" />
                 <span className="text-xs">Upload Document</span>

@@ -2046,15 +2046,23 @@ const App = () => {
                                       } 
                                     />
                                     
-                                     {/* Grading System Routes */}
-                                     <Route 
-                                       path="/instructor/admin" 
-                                       element={
-                                         <ProtectedRoute>
-                                           <InstructorAdmin />
-                                         </ProtectedRoute>
-                                       } 
-                                     />
+                                      {/* Grading System Routes */}
+                                      <Route 
+                                        path="/instructor/admin/:courseId" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <InstructorAdmin />
+                                          </ProtectedRoute>
+                                        } 
+                                      />
+                                      <Route 
+                                        path="/instructor/admin" 
+                                        element={
+                                          <ProtectedRoute>
+                                            <InstructorAdmin />
+                                          </ProtectedRoute>
+                                        } 
+                                      />
                                      <Route 
                                        path="/grading/admin/dashboard" 
                                        element={
