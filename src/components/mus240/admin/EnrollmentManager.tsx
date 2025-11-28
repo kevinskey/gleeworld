@@ -439,7 +439,7 @@ export const EnrollmentManager = () => {
             <Card 
               key={enrollment.id}
               className="cursor-pointer hover:shadow-md transition-shadow"
-              onClick={() => navigate(`/classes/mus240/instructor/student/${enrollment.student_id}`)}
+              onClick={() => navigate(`/mus-240/instructor/student/${enrollment.student_id}`)}
             >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">

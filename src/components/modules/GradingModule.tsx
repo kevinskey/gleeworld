@@ -17,7 +17,7 @@ export const GradingModule: React.FC<ModuleProps> = () => {
   return (
     <div className="container mx-auto py-6">
       {isInstructor ? (
-        <Navigate to="/classes/mus240/instructor/console" replace />
+        <Navigate to="/mus-240/instructor/console" replace />
       ) : (
         <StudentDashboardContent />
       )}

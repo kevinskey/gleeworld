@@ -274,7 +274,7 @@ export const AIGroupProjectManager = () => {
               <CardContent className="pt-6 text-center text-muted-foreground">
                 <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>No groups have been created yet.</p>
-                <p className="text-sm mt-2">Students can create groups at <a href="/classes/mus240/groups" className="text-primary hover:underline">/classes/mus240/groups</a></p>
+                <p className="text-sm mt-2">Students can create groups at <a href="/mus-240/groups" className="text-primary hover:underline">/mus-240/groups</a></p>
               </CardContent>
             </Card>
           ) : (

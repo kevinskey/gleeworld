@@ -703,7 +703,7 @@ export const AssignmentManager = () => {
                           );
                         } else {
                           // Navigate to journals page when viewing all students
-                          navigate(`/classes/mus240/instructor/journals?assignment=${assignment.assignment_code}`);
+                          navigate(`/mus-240/instructor/journals?assignment=${assignment.assignment_code}`);
                         }
                       }}
                     >

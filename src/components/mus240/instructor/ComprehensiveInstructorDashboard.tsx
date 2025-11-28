@@ -134,7 +134,7 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
   }
 
   if (!isAdmin()) {
-    return <Navigate to="/classes/mus240" replace />;
+    return <Navigate to="/mus-240" replace />;
   }
 
   // Convert enrollments to student records format
@@ -168,7 +168,7 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
             <Button 
               variant="ghost" 
               size="sm" 
-              onClick={() => navigate('/classes/mus240')}
+              onClick={() => navigate('/mus-240')}
               className="p-2 hover:bg-gray-100"
             >
               <Home className="h-4 w-4" />
@@ -181,7 +181,7 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
           
           <Button 
             variant="outline" 
-            onClick={() => navigate('/classes/mus240')}
+            onClick={() => navigate('/mus-240')}
             className="flex items-center gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -306,7 +306,7 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
                   <Button 
-                    onClick={() => navigate('/classes/mus240/instructor/console')}
+                    onClick={() => navigate('/mus-240/instructor/console')}
                     className="h-20 flex flex-col items-center justify-center bg-primary hover:bg-primary/90"
                   >
                     <Bot className="h-6 w-6 mb-2" />
@@ -458,7 +458,7 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
                 <CardContent>
                   <div className="flex gap-4">
                     <Button 
-                      onClick={() => navigate('/classes/mus240/instructor/bulk-grading')}
+                      onClick={() => navigate('/mus-240/instructor/bulk-grading')}
                       className="flex items-center gap-2 bg-primary hover:bg-primary/90"
                     >
                       <Bot className="h-4 w-4" />
@@ -466,7 +466,7 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
                     </Button>
                     <Button 
                       variant="outline"
-                      onClick={() => navigate('/classes/mus240/instructor/console')}
+                      onClick={() => navigate('/mus-240/instructor/console')}
                       className="flex items-center gap-2"
                     >
                       <Bot className="h-4 w-4" />

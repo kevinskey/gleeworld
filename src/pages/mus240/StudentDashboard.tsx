@@ -233,7 +233,7 @@ export const StudentDashboard = () => {
             <p className="text-muted-foreground">Survey of African American Music</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/classes/mus240')}>
+            <Button variant="outline" onClick={() => navigate('/mus-240')}>
               <Home className="h-4 w-4 mr-2" />
               Back to MUS 240
             </Button>
@@ -408,7 +408,7 @@ export const StudentDashboard = () => {
                       <Button
                         size="sm"
                         variant={assignment.content ? "outline" : "default"}
-                        onClick={() => navigate(`/classes/mus240/assignments/${assignment.assignment_id}`)}
+                        onClick={() => navigate(`/mus-240/assignments/${assignment.assignment_id}`)}
                       >
                         {assignment.content ? (
                           <>
@@ -581,7 +581,7 @@ export const StudentDashboard = () => {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => navigate(`/classes/mus240/assignments/${submission.assignment_id}`)}
+                          onClick={() => navigate(`/mus-240/assignments/${submission.assignment_id}`)}
                         >
                           <Eye className="h-3 w-3 mr-1" />
                           View

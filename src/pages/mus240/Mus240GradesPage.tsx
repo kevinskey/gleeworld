@@ -100,7 +100,7 @@ export const Mus240GradesPage: React.FC = () => {
           {/* Header with back navigation */}
           <div className="mb-8">
             <Link 
-              to="/classes/mus240" 
+              to="/mus-240" 
               className="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-4 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20 hover:bg-white/20"
             >
               <ArrowLeft className="h-4 w-4" />

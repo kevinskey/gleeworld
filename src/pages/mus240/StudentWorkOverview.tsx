@@ -162,7 +162,7 @@ export const StudentWorkOverview = () => {
                   </span>
                 </div>
                 <Button
-                  onClick={() => navigate(`/classes/mus240/instructor/student/${studentId}/midterm`)}
+                  onClick={() => navigate(`/mus-240/instructor/student/${studentId}/midterm`)}
                   className="w-full"
                 >
                   <ClipboardCheck className="h-4 w-4 mr-2" />
@@ -247,7 +247,7 @@ export const StudentWorkOverview = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate('/classes/mus240/instructor/console')}
+            onClick={() => navigate('/mus-240/instructor/console')}
             className="bg-white/70"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -258,7 +258,7 @@ export const StudentWorkOverview = () => {
           <div className="flex-1 max-w-md">
             <Select
               value={studentId}
-              onValueChange={(newStudentId) => navigate(`/classes/mus240/instructor/student/${newStudentId}`)}
+              onValueChange={(newStudentId) => navigate(`/mus-240/instructor/student/${newStudentId}`)}
               disabled={studentsLoading}
             >
               <SelectTrigger className="bg-white border-gray-200 shadow-sm z-50">
@@ -277,7 +277,7 @@ export const StudentWorkOverview = () => {
           <Button
             variant="default"
             size="sm"
-            onClick={() => window.open(`/classes/mus240/student-dashboard`, '_blank')}
+            onClick={() => window.open(`/mus-240/student-dashboard`, '_blank')}
             className="bg-primary"
           >
             <ExternalLink className="h-4 w-4 mr-2" />

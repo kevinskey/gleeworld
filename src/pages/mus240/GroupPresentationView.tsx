@@ -367,7 +367,7 @@ export default function GroupPresentationView() {
         {/* Top Navigation Bar */}
         <div className="flex justify-between items-center px-3 sm:px-6 py-2 sm:py-3 bg-black/40 backdrop-blur-sm">
           <Link 
-            to="/classes/mus240/groups/presentation"
+            to="/mus-240/groups/presentation"
             className="text-white/80 hover:text-white flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
           >
             <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />

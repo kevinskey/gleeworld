@@ -121,7 +121,7 @@ export default function Groups() {
       toast.success('Joined group successfully!');
 
       // Navigate to the group detail page
-      navigate(`/classes/mus240/groups/${groupId}`);
+      navigate(`/mus-240/groups/${groupId}`);
     } catch (err: any) {
       toast.error('Failed to join group: ' + (err.message || 'Unknown error'));
     }
@@ -385,7 +385,7 @@ export default function Groups() {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header with back navigation */}
           <div className="mb-8">
-            <Link to="/classes/mus240" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6 bg-white rounded-lg px-4 py-2 shadow-sm border border-slate-200 hover:shadow-md">
+            <Link to="/mus-240" className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6 bg-white rounded-lg px-4 py-2 shadow-sm border border-slate-200 hover:shadow-md">
               <ArrowLeft className="h-4 w-4" />
               <span className="font-medium">Back to MUS 240</span>
             </Link>
@@ -404,13 +404,13 @@ export default function Groups() {
 
             {/* Link to Update Form */}
             <div className="mt-6 flex gap-4 justify-center">
-              <Link to="/classes/mus240/groups/update">
+              <Link to="/mus-240/groups/update">
                 <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 text-lg shadow-lg">
                   <FileText className="h-5 w-5 mr-2" />
                   Submit Group Update
                 </Button>
               </Link>
-              <Link to="/classes/mus240/groups/presentation">
+              <Link to="/mus-240/groups/presentation">
                 <Button variant="outline" className="px-6 py-3 text-lg shadow-lg border-2">
                   <Presentation className="h-5 w-5 mr-2" />
                   View Presentations
@@ -521,7 +521,7 @@ export default function Groups() {
                            </CardDescription>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Link to={`/classes/mus240/groups/${group.id}`}>
+                          <Link to={`/mus-240/groups/${group.id}`}>
                             <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50" title="View Group Details">
                               <Info className="h-4 w-4" />
                             </Button>
@@ -564,7 +564,7 @@ export default function Groups() {
                         
 
                         {!userGroup && group.member_count < (group.max_members || 4) && <div className="flex flex-col gap-2">
-                              <Link to={`/classes/mus240/groups/${group.id}`} className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center transition-colors">
+                              <Link to={`/mus-240/groups/${group.id}`} className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-center transition-colors">
                                 View Group
                               </Link>
                               <Button onClick={() => handleJoinGroup(group.id)} className="w-full bg-amber-500 hover:bg-amber-600 text-white" disabled={group.member_count >= 4}>
@@ -619,7 +619,7 @@ export default function Groups() {
                             </span>
                           </div>
                           <div className="flex gap-3">
-                            <Link to={`/classes/mus240/groups/${userGroup.id}`} className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors">
+                            <Link to={`/mus-240/groups/${userGroup.id}`} className="inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md transition-colors">
                               Go to Group Workspace
                             </Link>
                             <Button onClick={() => setEditingGroup({

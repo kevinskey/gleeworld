@@ -94,7 +94,7 @@ export default function ResourcesAdmin() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link 
-              to="/classes/mus240/resources" 
+              to="/mus-240/resources" 
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />

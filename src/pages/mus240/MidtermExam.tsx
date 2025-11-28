@@ -15,7 +15,7 @@ export default function MidtermExam() {
         {/* Header Navigation */}
         <div className="mb-8">
           <Link 
-            to="/classes/mus240" 
+            to="/mus-240"
             className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors mb-6 bg-white rounded-lg px-4 py-2 shadow-sm border border-slate-200 hover:shadow-md"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -75,7 +75,7 @@ export default function MidtermExam() {
         {/* Footer Navigation */}
         <div className="mt-12 text-center">
           <Link 
-            to="/classes/mus240" 
+            to="/mus-240" 
             className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors bg-white rounded-lg px-6 py-3 shadow-sm border border-slate-200 hover:shadow-md"
           >
             <ArrowLeft className="h-4 w-4" />

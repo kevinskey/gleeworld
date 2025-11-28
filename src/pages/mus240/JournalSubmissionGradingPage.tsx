@@ -216,7 +216,7 @@ const JournalSubmissionGradingPage = () => {
 
   const isInstructor = profile?.role === 'instructor' || profile?.is_admin || profile?.is_super_admin;
   if (!isInstructor) {
-    return <Navigate to="/classes/mus240" replace />;
+    return <Navigate to="/mus-240" replace />;
   }
 
   if (!journal || !assignment || !student) {

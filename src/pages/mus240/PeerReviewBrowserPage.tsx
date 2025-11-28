@@ -20,7 +20,7 @@ export const PeerReviewBrowserPage = () => {
 
   // Only students and members can access peer review (or just allow anyone not admin)
   if (profile?.role === 'admin' || profile?.role === 'super_admin') {
-    return <Navigate to="/classes/mus240" replace />;
+    return <Navigate to="/mus-240" replace />;
   }
 
   return (
