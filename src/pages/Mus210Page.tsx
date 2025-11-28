@@ -9,6 +9,7 @@ const Mus210Page = () => {
 
   return (
     <CoursePageLayout
+      courseId="mus-210-conducting"
       courseSemester="FALL 2025"
       courseCode="MUS 210-01"
       courseTitle="CONDUCTING FOR THE COMPLETE MUSICIAN"
