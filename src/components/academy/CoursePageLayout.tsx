@@ -8,6 +8,7 @@ import { BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, MessageSq
 import { useNavigate } from 'react-router-dom';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseResourcesList } from './CourseResourcesList';
+import { MusicLibrary } from '@/components/music-library/MusicLibrary';
 interface CoursePageLayoutProps {
   courseId: string;
   courseSemester: string;
@@ -328,6 +329,12 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
               <CourseResourcesList courseId={courseId} type="documents" />
             )}
 
+            {activeSection === 'sheet-music-library' && (
+              <div className="bg-card/50 border border-border rounded-lg overflow-hidden">
+                <MusicLibrary />
+              </div>
+            )}
+
             {/* Fixed Instructor Control Center Button */}
             <div className="fixed bottom-6 right-6">
               <Button onClick={() => navigate('/instructor/admin')} variant="default" className="shadow-lg" size="lg">
@@ -379,7 +386,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
                     </div>
                   </CardContent>
                 </Card>
-                <Card onClick={() => navigate('/music-library')} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                <Card onClick={() => setActiveSection('sheet-music-library')} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="p-2 bg-primary/10 rounded-lg">
