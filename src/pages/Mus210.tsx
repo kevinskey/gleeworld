@@ -27,7 +27,8 @@ import {
   Headphones,
   FileImage,
   Mail,
-  UserCheck
+  UserCheck,
+  FileCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,6 +46,7 @@ import { HelpSection } from '@/components/course/HelpSection';
 import { PublishedModulesList } from '@/components/course/PublishedModulesList';
 import { SyllabusSection } from '@/components/course/SyllabusSection';
 import { AttendanceSection } from '@/components/course/AttendanceSection';
+import { TestsSection } from '@/components/course/TestsSection';
 
 export default function Mus210() {
   const navigate = useNavigate();
@@ -104,6 +106,7 @@ export default function Mus210() {
     { id: 'syllabus', label: 'Syllabus', icon: FileText },
     { id: 'announcements', label: 'Announcements', icon: Bell },
     { id: 'assignments', label: 'Assignments', icon: ClipboardList },
+    { id: 'tests', label: 'Tests', icon: FileCheck },
     { id: 'discussions', label: 'Discussions', icon: MessageSquare },
     { id: 'mail-center', label: 'Mail Center', icon: Mail },
     { id: 'modules', label: 'Modules', icon: FolderOpen },
@@ -214,6 +217,7 @@ export default function Mus210() {
         {activeSection === 'syllabus' && <SyllabusSection courseData={courseData} />}
         {activeSection === 'announcements' && <AnnouncementsSection courseId={courseId} />}
         {activeSection === 'assignments' && <AssignmentsSection courseId={courseId} />}
+        {activeSection === 'tests' && <TestsSection courseId={courseId} />}
         {activeSection === 'discussions' && <DiscussionsSection courseId={courseId} />}
         {activeSection === 'mail-center' && <MailCenterSection courseId={courseId} />}
         {activeSection === 'modules' && <ModulesSection courseId={courseId} />}
