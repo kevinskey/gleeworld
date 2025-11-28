@@ -37,67 +37,69 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
 }) => {
   const navigate = useNavigate();
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState('home');
+  
   const navigationItems = [{
     icon: BookOpen,
     label: 'Home',
-    path: '#home',
+    section: 'home',
     active: true
   }, {
     icon: FileText,
     label: 'Syllabus',
-    path: '#syllabus'
+    section: 'syllabus'
   }, {
     icon: Mail,
     label: 'Announcements',
-    path: '#announcements'
+    section: 'announcements'
   }, {
     icon: ClipboardList,
     label: 'Assignments',
-    path: '#assignments'
+    section: 'assignments'
   }, {
     icon: FileCheck,
     label: 'Tests',
-    path: '#tests'
+    section: 'tests'
   }, {
     icon: BarChart,
     label: 'Polls',
-    path: '#polls'
+    section: 'polls'
   }, {
     icon: MessageSquare,
     label: 'Discussions',
-    path: '#discussions'
+    section: 'discussions'
   }, {
     icon: Mail,
     label: 'Mail Center',
-    path: '#mail'
+    section: 'mail'
   }, {
     icon: BookMarked,
     label: 'Modules',
-    path: '#modules'
+    section: 'modules'
   }, {
     icon: BarChart,
     label: 'Gradescope',
-    path: '#grades'
+    section: 'grades'
   }, {
     icon: UserCheck,
     label: 'Attendance',
-    path: '#attendance'
+    section: 'attendance'
   }, {
     icon: Ruler,
     label: 'Rubrics',
-    path: '#rubrics'
+    section: 'rubrics'
   }, {
     icon: BookOpen,
     label: 'Class Notebook',
-    path: '#notebook'
+    section: 'notebook'
   }, {
     icon: Calendar,
     label: 'Calendar',
-    path: '#calendar'
+    section: 'calendar'
   }, {
     icon: HelpCircle,
     label: 'Help',
-    path: '#help'
+    section: 'help'
   }];
   const resourceItems = [{
     icon: Video,
@@ -126,7 +128,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
           </div>
           
           <nav className="p-2">
-            {navigationItems.map(item => <button key={item.label} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${item.active ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
+            {navigationItems.map(item => <button key={item.label} onClick={() => setActiveSection(item.section)} className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${activeSection === item.section ? 'bg-muted text-foreground font-medium' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}`}>
                 <item.icon className="h-4 w-4" />
                 <span className="text-xs">{item.label}</span>
               </button>)}
@@ -212,7 +214,7 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
             <div>
               <h3 className="font-bold text-foreground mb-4">Course Resources</h3>
               <div className="space-y-3">
-                {resourceItems.map(resource => <Card key={resource.label} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
+                {resourceItems.map(resource => <Card key={resource.label} onClick={() => setActiveSection(resource.label.toLowerCase().replace(/\s+/g, '-'))} className="bg-muted/30 border-border hover:bg-muted/50 transition-colors cursor-pointer">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg">
