@@ -25,6 +25,8 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ManagementTool {
   id: string;
@@ -154,7 +156,38 @@ export default function InstructorAdmin() {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState<string>('content');
 
-  const isInstructor = (user as any)?.is_admin || (user as any)?.is_super_admin;
+  // Fetch user profile to check admin status
+  const { data: profile, isLoading: profileLoading } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, exec_board_role')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isInstructor = profile?.is_admin || profile?.is_super_admin;
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <UniversalHeader />
+        <div className="container mx-auto px-4 py-16 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isInstructor) {
     return (

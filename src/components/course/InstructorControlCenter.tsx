@@ -22,6 +22,8 @@ import {
   Plus,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -162,7 +164,24 @@ export function InstructorControlCenter({ courseId }: InstructorControlCenterPro
   const [selectedCategory, setSelectedCategory] = useState<string>('content');
   const [isOpen, setIsOpen] = useState(false);
 
-  const isInstructor = (user as any)?.is_admin || (user as any)?.is_super_admin;
+  // Fetch user profile to check admin status
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const isInstructor = profile?.is_admin || profile?.is_super_admin;
 
   if (!isInstructor) {
     return null;
