@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   ChevronDown, 
@@ -29,6 +32,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import { UniversalHeader } from '@/components/layout/UniversalHeader';
+import { AnnouncementsSection } from '@/components/course/AnnouncementsSection';
+import { AssignmentsSection } from '@/components/course/AssignmentsSection';
+import { DiscussionsSection } from '@/components/course/DiscussionsSection';
+import { MailCenterSection } from '@/components/course/MailCenterSection';
+import { ModulesSection } from '@/components/course/ModulesSection';
+import { GradesSection } from '@/components/course/GradesSection';
+import { NotebookSection } from '@/components/course/NotebookSection';
+import { CalendarSection } from '@/components/course/CalendarSection';
+import { HelpSection } from '@/components/course/HelpSection';
 
 export default function Mus210() {
   const navigate = useNavigate();
@@ -144,174 +156,189 @@ export default function Mus210() {
           </h2>
         </div>
 
-        {/* Welcome Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-xl">Welcome!</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-foreground/90 mb-4">
-              Welcome to {courseData.courseCode}: {courseData.title}. This comprehensive course develops the complete modern conductor through intensive study of baton technique, score analysis, rehearsal pedagogy, and stylistic fluency.
-            </p>
-            <div className="flex gap-3">
-              {isEnrolled ? (
-                <Badge variant="default" className="px-4 py-2">Enrolled</Badge>
-              ) : (
-                <Button onClick={handleEnroll} disabled={isLoading}>
-                  {isLoading ? 'Enrolling...' : 'Enroll in Course'}
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Course Overview Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Course Overview
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-foreground/90">{courseData.purpose}</p>
-          </CardContent>
-        </Card>
-
-        {/* Course Question Board */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5" />
-              Course Question Board
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              Ask questions and engage with course content. Discussion threads will appear here.
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Learning Modules */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FolderOpen className="h-5 w-5" />
-              Learning Modules
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              <li className="flex items-start gap-2">
-                <ChevronDown className="h-4 w-4 text-primary mt-1" />
-                <span className="text-foreground/90">Week 1: Introduction to Conducting</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <ChevronDown className="h-4 w-4 text-primary mt-1" />
-                <span className="text-foreground/90">Week 2: Basic Patterns & Gestures</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <ChevronDown className="h-4 w-4 text-primary mt-1" />
-                <span className="text-foreground/90">Week 3: Score Analysis Fundamentals</span>
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Course Objectives */}
-        <Card className="mb-6">
-          <Collapsible open={showObjectives} onOpenChange={setShowObjectives}>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Learning Objectives
-                  </span>
-                  {showObjectives ? <ChevronUp /> : <ChevronDown />}
-                </CardTitle>
+        {/* Dynamic Content Based on Active Section */}
+        {activeSection === 'home' && (
+          <>
+            {/* Welcome Card */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-xl">Welcome!</CardTitle>
               </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
               <CardContent>
-                <ol className="list-decimal list-inside space-y-2">
-                  {courseData.objectives.map((objective, index) => (
-                    <li key={index} className="text-foreground/90">{objective}</li>
-                  ))}
-                </ol>
+                <p className="text-foreground/90 mb-4">
+                  Welcome to {courseData.courseCode}: {courseData.title}. This comprehensive course develops the complete modern conductor through intensive study of baton technique, score analysis, rehearsal pedagogy, and stylistic fluency.
+                </p>
+                <div className="flex gap-3">
+                  {isEnrolled ? (
+                    <Badge variant="default" className="px-4 py-2">Enrolled</Badge>
+                  ) : (
+                    <Button onClick={handleEnroll} disabled={isLoading}>
+                      {isLoading ? 'Enrolling...' : 'Enroll in Course'}
+                    </Button>
+                  )}
+                </div>
               </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
+            </Card>
 
-        {/* Grading */}
-        <Card className="mb-6">
-          <Collapsible open={showGrading} onOpenChange={setShowGrading}>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Grading Breakdown
-                  </span>
-                  {showGrading ? <ChevronUp /> : <ChevronDown />}
+            {/* Course Overview Card */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5" />
+                  Course Overview
                 </CardTitle>
               </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
               <CardContent>
-                <div className="space-y-2">
-                  {courseData.gradingBreakdown.map((item, index) => (
-                    <div key={index} className="flex justify-between items-center p-2 bg-accent/30 rounded">
-                      <span className="text-foreground/90">{item.item}</span>
-                      <Badge variant="secondary">{item.percentage}%</Badge>
+                <p className="text-foreground/90">{courseData.purpose}</p>
+              </CardContent>
+            </Card>
+
+            {/* Course Question Board */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5" />
+                  Course Question Board
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-sm">
+                  Ask questions and engage with course content. Discussion threads will appear here.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Learning Modules */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FolderOpen className="h-5 w-5" />
+                  Learning Modules
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <ChevronDown className="h-4 w-4 text-primary mt-1" />
+                    <span className="text-foreground/90">Week 1: Introduction to Conducting</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ChevronDown className="h-4 w-4 text-primary mt-1" />
+                    <span className="text-foreground/90">Week 2: Basic Patterns & Gestures</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ChevronDown className="h-4 w-4 text-primary mt-1" />
+                    <span className="text-foreground/90">Week 3: Score Analysis Fundamentals</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Course Objectives */}
+            <Card className="mb-6">
+              <Collapsible open={showObjectives} onOpenChange={setShowObjectives}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Learning Objectives
+                      </span>
+                      {showObjectives ? <ChevronUp /> : <ChevronDown />}
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent>
+                    <ol className="list-decimal list-inside space-y-2">
+                      {courseData.objectives.map((objective, index) => (
+                        <li key={index} className="text-foreground/90">{objective}</li>
+                      ))}
+                    </ol>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+
+            {/* Grading */}
+            <Card className="mb-6">
+              <Collapsible open={showGrading} onOpenChange={setShowGrading}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5" />
+                        Grading Breakdown
+                      </span>
+                      {showGrading ? <ChevronUp /> : <ChevronDown />}
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {courseData.gradingBreakdown.map((item, index) => (
+                        <div key={index} className="flex justify-between items-center p-2 bg-accent/30 rounded">
+                          <span className="text-foreground/90">{item.item}</span>
+                          <Badge variant="secondary">{item.percentage}%</Badge>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
 
-        {/* Required Materials */}
-        <Card className="mb-6">
-          <Collapsible open={showMaterials} onOpenChange={setShowMaterials}>
-            <CollapsibleTrigger asChild>
-              <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
-                <CardTitle className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    Required Materials
-                  </span>
-                  {showMaterials ? <ChevronUp /> : <ChevronDown />}
-                </CardTitle>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <CardContent>
-                <div className="mb-4">
-                  <h4 className="font-semibold mb-2">Textbooks</h4>
-                  <ul className="list-disc list-inside space-y-1">
-                    {courseData.requiredTexts.map((text, index) => (
-                      <li key={index} className="text-foreground/90">
-                        <em>{text.title}</em> — {text.author}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
-                  <h4 className="font-semibold mb-2">Materials</h4>
-                  <ul className="list-disc list-inside space-y-1">
-                    {courseData.requiredMaterials.map((material, index) => (
-                      <li key={index} className="text-foreground/90">{material}</li>
-                    ))}
-                  </ul>
-                </div>
-              </CardContent>
-            </CollapsibleContent>
-          </Collapsible>
-        </Card>
+            {/* Required Materials */}
+            <Card className="mb-6">
+              <Collapsible open={showMaterials} onOpenChange={setShowMaterials}>
+                <CollapsibleTrigger asChild>
+                  <CardHeader className="cursor-pointer hover:bg-accent/50 transition-colors">
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <BookOpen className="h-5 w-5" />
+                        Required Materials
+                      </span>
+                      {showMaterials ? <ChevronUp /> : <ChevronDown />}
+                    </CardTitle>
+                  </CardHeader>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <CardContent>
+                    <div className="mb-4">
+                      <h4 className="font-semibold mb-2">Textbooks</h4>
+                      <ul className="list-disc list-inside space-y-1">
+                        {courseData.requiredTexts.map((text, index) => (
+                          <li key={index} className="text-foreground/90">
+                            <em>{text.title}</em> — {text.author}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Materials</h4>
+                      <ul className="list-disc list-inside space-y-1">
+                        {courseData.requiredMaterials.map((material, index) => (
+                          <li key={index} className="text-foreground/90">{material}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </CardContent>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
+          </>
+        )}
+
+        {activeSection === 'announcements' && <AnnouncementsSection courseId={courseId} />}
+        {activeSection === 'assignments' && <AssignmentsSection courseId={courseId} />}
+        {activeSection === 'discussions' && <DiscussionsSection courseId={courseId} />}
+        {activeSection === 'mail-center' && <MailCenterSection courseId={courseId} />}
+        {activeSection === 'modules' && <ModulesSection courseId={courseId} />}
+        {activeSection === 'grades' && <GradesSection courseId={courseId} gradingBreakdown={courseData.gradingBreakdown} />}
+        {activeSection === 'class-notebook' && <NotebookSection courseId={courseId} />}
+        {activeSection === 'calendar' && <CalendarSection courseId={courseId} />}
+        {activeSection === 'help' && <HelpSection instructor={courseData.instructor} />}
       </main>
 
       {/* Right Sidebar - Resources - 20% */}

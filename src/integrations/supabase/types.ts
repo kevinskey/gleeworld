@@ -2446,6 +2446,171 @@ export type Database = {
           },
         ]
       }
+      course_announcements: {
+        Row: {
+          content: string
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_pinned: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      course_discussions: {
+        Row: {
+          content: string
+          course_id: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_locked: boolean | null
+          reply_count: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          course_id: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_locked?: boolean | null
+          reply_count?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          course_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_locked?: boolean | null
+          reply_count?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      course_messages: {
+        Row: {
+          content: string
+          course_id: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          recipient_id: string | null
+          sender_id: string | null
+          subject: string
+        }
+        Insert: {
+          content: string
+          course_id: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id?: string | null
+          sender_id?: string | null
+          subject: string
+        }
+        Update: {
+          content?: string
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id?: string | null
+          sender_id?: string | null
+          subject?: string
+        }
+        Relationships: []
+      }
+      course_modules: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          description: string | null
+          display_order: number
+          id: string
+          is_published: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          description?: string | null
+          display_order: number
+          id?: string
+          is_published?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_published?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      course_notes: {
+        Row: {
+          content: string
+          course_id: string
+          created_at: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content: string
+          course_id: string
+          created_at?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       course_teaching_assistants: {
         Row: {
           assigned_at: string | null
@@ -2613,6 +2778,41 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      discussion_replies: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string | null
+          discussion_id: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by?: string | null
+          discussion_id?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string | null
+          discussion_id?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_replies_discussion_id_fkey"
+            columns: ["discussion_id"]
+            isOneToOne: false
+            referencedRelation: "course_discussions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dm_conversations: {
         Row: {
@@ -15642,6 +15842,56 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      module_items: {
+        Row: {
+          content_text: string | null
+          content_url: string | null
+          created_at: string | null
+          display_order: number
+          due_date: string | null
+          id: string
+          item_type: string
+          module_id: string | null
+          points: number | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content_text?: string | null
+          content_url?: string | null
+          created_at?: string | null
+          display_order: number
+          due_date?: string | null
+          id?: string
+          item_type: string
+          module_id?: string | null
+          points?: number | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content_text?: string | null
+          content_url?: string | null
+          created_at?: string | null
+          display_order?: number
+          due_date?: string | null
+          id?: string
+          item_type?: string
+          module_id?: string | null
+          points?: number | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "module_items_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "course_modules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mus240_ai_detection_patterns: {
         Row: {
