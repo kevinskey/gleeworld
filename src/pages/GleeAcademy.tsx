@@ -79,7 +79,7 @@ const GleeAcademy = () => {
           <img 
             src={academyHeroImage} 
             alt="Glee Academy" 
-            className="w-full max-w-4xl mx-auto object-contain"
+            className="w-full max-w-2xl mx-auto object-contain"
           />
         </div>
       </div>
