@@ -75,11 +75,11 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 -m-6 p-6">
       {/* Hero Section */}
-      <div className="relative overflow-hidden mb-8">
+      <div className="relative overflow-hidden mb-8 max-h-64">
         <img 
           src={academyHeroImage} 
           alt="Glee World Academy" 
-          className="w-full object-contain rounded-lg"
+          className="w-full h-full object-cover rounded-lg"
         />
       </div>
 
