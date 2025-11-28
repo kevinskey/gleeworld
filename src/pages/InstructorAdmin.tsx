@@ -214,6 +214,73 @@ export default function InstructorAdmin() {
 
   const filteredTools = managementTools.filter(tool => tool.category === selectedCategory);
 
+  const handleToolClick = (toolId: string) => {
+    switch (toolId) {
+      case 'syllabus':
+        // Navigate to course page, syllabus section will be default
+        navigate('/mus-210');
+        break;
+      case 'modules':
+        // Navigate to course page, modules section
+        navigate('/mus-210');
+        break;
+      case 'class-notes':
+        // Navigate to course page, class notebook section
+        navigate('/mus-210');
+        break;
+      case 'calendar':
+        // Navigate to course calendar
+        navigate('/mus-210');
+        break;
+      case 'assignments':
+        // Navigate to course assignments section
+        navigate('/mus-210');
+        break;
+      case 'tests':
+        // Navigate to test builder
+        navigate('/test-builder');
+        break;
+      case 'polls':
+        // Navigate to course polls section
+        navigate('/mus-210');
+        break;
+      case 'rubrics':
+        // Navigate to course rubrics section
+        navigate('/mus-210');
+        break;
+      case 'grades':
+        // Navigate to course grades section
+        navigate('/mus-210');
+        break;
+      case 'attendance':
+        // Navigate to attendance management
+        navigate('/attendance/scan');
+        break;
+      case 'announcements':
+        // Navigate to create announcement
+        navigate('/admin/create-announcement');
+        break;
+      case 'discussions':
+        // Navigate to course discussions section
+        navigate('/mus-210');
+        break;
+      case 'videos':
+        // Navigate to course video library
+        navigate('/mus-210');
+        break;
+      case 'audio':
+        // Navigate to course audio examples
+        navigate('/mus-210');
+        break;
+      case 'documents':
+        // Navigate to course documents
+        navigate('/mus-210');
+        break;
+      default:
+        console.log('Tool not implemented:', toolId);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <UniversalHeader />
@@ -254,6 +321,7 @@ export default function InstructorAdmin() {
                   <Card
                     key={tool.id}
                     className="hover:shadow-lg transition-all cursor-pointer border-2 hover:border-primary/50"
+                    onClick={() => handleToolClick(tool.id)}
                   >
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-lg">
@@ -267,7 +335,10 @@ export default function InstructorAdmin() {
                       <p className="text-sm text-muted-foreground mb-4">
                         {tool.description}
                       </p>
-                      <Button size="sm" className="w-full">
+                      <Button size="sm" className="w-full" onClick={(e) => {
+                        e.stopPropagation();
+                        handleToolClick(tool.id);
+                      }}>
                         <Plus className="h-4 w-4 mr-2" />
                         Create/Manage
                       </Button>
@@ -285,27 +356,51 @@ export default function InstructorAdmin() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              <Button variant="outline" className="flex flex-col h-auto py-4">
+              <Button 
+                variant="outline" 
+                className="flex flex-col h-auto py-4"
+                onClick={() => navigate('/admin/create-announcement')}
+              >
                 <Mail className="h-6 w-6 mb-2" />
                 <span className="text-xs">Send Announcement</span>
               </Button>
-              <Button variant="outline" className="flex flex-col h-auto py-4">
+              <Button 
+                variant="outline" 
+                className="flex flex-col h-auto py-4"
+                onClick={() => navigate('/mus-210')}
+              >
                 <ClipboardList className="h-6 w-6 mb-2" />
                 <span className="text-xs">Create Assignment</span>
               </Button>
-              <Button variant="outline" className="flex flex-col h-auto py-4">
+              <Button 
+                variant="outline" 
+                className="flex flex-col h-auto py-4"
+                onClick={() => navigate('/test-builder')}
+              >
                 <FileCheck className="h-6 w-6 mb-2" />
                 <span className="text-xs">Create Test</span>
               </Button>
-              <Button variant="outline" className="flex flex-col h-auto py-4">
+              <Button 
+                variant="outline" 
+                className="flex flex-col h-auto py-4"
+                onClick={() => navigate('/mus-210')}
+              >
                 <Calendar className="h-6 w-6 mb-2" />
                 <span className="text-xs">Add Event</span>
               </Button>
-              <Button variant="outline" className="flex flex-col h-auto py-4">
+              <Button 
+                variant="outline" 
+                className="flex flex-col h-auto py-4"
+                onClick={() => navigate('/mus-210')}
+              >
                 <Video className="h-6 w-6 mb-2" />
                 <span className="text-xs">Upload Video</span>
               </Button>
-              <Button variant="outline" className="flex flex-col h-auto py-4">
+              <Button 
+                variant="outline" 
+                className="flex flex-col h-auto py-4"
+                onClick={() => navigate('/mus-210')}
+              >
                 <FileImage className="h-6 w-6 mb-2" />
                 <span className="text-xs">Upload Document</span>
               </Button>
