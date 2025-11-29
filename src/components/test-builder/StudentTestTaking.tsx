@@ -58,17 +58,30 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
 
       const { data: questionsData, error: questionsError } = await supabase
         .from('test_questions')
-        .select(`
-          *,
-          test_answer_options (*)
-        `)
+        .select('*')
         .eq('test_id', testId)
         .order('display_order');
 
       if (questionsError) throw questionsError;
 
+      // Fetch answer options separately for each question
+      const questionsWithOptions = await Promise.all(
+        (questionsData || []).map(async (question) => {
+          const { data: options } = await supabase
+            .from('test_answer_options')
+            .select('*')
+            .eq('question_id', question.id)
+            .order('display_order');
+          
+          return {
+            ...question,
+            options: options || []
+          };
+        })
+      );
+
       setTest(testData);
-      setQuestions(questionsData || []);
+      setQuestions(questionsWithOptions);
       
       if (testData.duration_minutes) {
         setTimeRemaining(testData.duration_minutes * 60);
@@ -248,13 +261,11 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
           </div>
         )}
 
-        {currentQ.media_url && currentQ.media_type === 'audio' && (
+        {currentQ.media_type === 'audio' && currentQ.media_url && (
           <div className="mb-6">
-            <audio controls className="w-full">
-              <source
-                src={currentQ.media_url}
-                type={currentQ.media_url.toLowerCase().endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'}
-              />
+            <audio controls className="w-full" controlsList="nodownload">
+              <source src={currentQ.media_url} type="audio/wav" />
+              <source src={currentQ.media_url} type="audio/mpeg" />
               Your browser does not support the audio element.
             </audio>
           </div>
@@ -275,7 +286,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
             value={answers[currentQ.id] || ''}
             onValueChange={(value) => handleAnswerChange(currentQ.id, value)}
           >
-            {currentQ.test_answer_options?.map((option: any) => (
+            {currentQ.options?.map((option: any) => (
               <div key={option.id} className="flex items-center space-x-2 mb-3">
                 <RadioGroupItem value={option.option_text} id={option.id} />
                 <Label htmlFor={option.id} className="cursor-pointer flex-1">
