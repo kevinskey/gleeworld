@@ -20486,6 +20486,45 @@ export type Database = {
           },
         ]
       }
+      upload_jobs: {
+        Row: {
+          bucket: string
+          created_at: string | null
+          error: string | null
+          file_name: string
+          file_size: number | null
+          id: string
+          job_id: string
+          status: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          bucket: string
+          created_at?: string | null
+          error?: string | null
+          file_name: string
+          file_size?: number | null
+          id?: string
+          job_id: string
+          status: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          bucket?: string
+          created_at?: string | null
+          error?: string | null
+          file_name?: string
+          file_size?: number | null
+          id?: string
+          job_id?: string
+          status?: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
       user_dashboard_categories: {
         Row: {
           category_id: string
