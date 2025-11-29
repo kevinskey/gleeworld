@@ -26,32 +26,27 @@ export function useFileUpload() {
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = path || `${timestamp}-${randomSuffix}-${safeFileName}`;
 
-      // Create FormData for the upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('bucket', bucket);
-      formData.append('fileName', filePath);
+      console.log('Uploading file directly to storage:', filePath);
 
-      console.log('Uploading file via edge function:', filePath);
-
-      // Use the upload-file edge function
-      const { data, error } = await supabase.functions.invoke('upload-file', {
-        body: formData
-      });
+      // Upload directly to Supabase Storage (no edge function)
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (error) {
-        console.error('Upload function error:', error);
+        console.error('Storage upload error:', error);
         throw new Error(error.message || 'Upload failed');
       }
 
-      if (!data?.success) {
-        console.error('Upload function returned error:', data);
-        throw new Error(data?.error || 'Upload failed');
-      }
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucket)
+        .getPublicUrl(filePath);
 
-      // The edge function returns 'url' not 'publicUrl'
-      const publicUrl = data.url;
-      console.log('Upload successful:', data.fileName || data.path, 'URL:', publicUrl);
+      console.log('Upload successful:', filePath, 'URL:', publicUrl);
 
       toast({
         title: "Upload Successful",
