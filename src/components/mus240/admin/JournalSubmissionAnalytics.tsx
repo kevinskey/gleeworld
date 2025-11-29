@@ -14,6 +14,8 @@ interface JournalStats {
   submissionsByAssignment: { assignment_id: string; count: number; avgScore: number }[];
   studentSubmissionCounts: { student_id: string; student_name: string; count: number; avgScore: number }[];
   recentSubmissions: any[];
+  gradesByJournalId: Map<string, any>;
+  profilesByUserId: Map<string, any>;
 }
 
 export const JournalSubmissionAnalytics: React.FC = () => {
@@ -28,20 +30,33 @@ export const JournalSubmissionAnalytics: React.FC = () => {
     try {
       setLoading(true);
 
-      // Fetch all published journal entries with grades
+      // Fetch all published journal entries
       const { data: journals, error: journalsError } = await supabase
         .from('mus240_journal_entries')
-        .select('*, mus240_journal_grades(*), gw_profiles(full_name)')
+        .select('*')
         .eq('is_published', true);
 
       if (journalsError) throw journalsError;
 
-      // Fetch all grades separately for better analysis
+      // Fetch all grades separately
       const { data: grades, error: gradesError } = await supabase
         .from('mus240_journal_grades')
         .select('*');
 
       if (gradesError) throw gradesError;
+
+      // Fetch student profiles
+      const studentIds = [...new Set(journals?.map(j => j.student_id) || [])];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name')
+        .in('user_id', studentIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create lookup maps
+      const gradesByJournalId = new Map(grades?.map(g => [g.journal_id, g]) || []);
+      const profilesByUserId = new Map(profiles?.map(p => [p.user_id, p]) || []);
 
       // Calculate stats
       const totalSubmissions = journals?.length || 0;
@@ -65,7 +80,7 @@ export const JournalSubmissionAnalytics: React.FC = () => {
       // Group by assignment
       const assignmentMap = new Map();
       journals?.forEach(j => {
-        const grade = (j as any).mus240_journal_grades?.[0];
+        const grade = gradesByJournalId.get(j.id);
         const score = grade?.instructor_score ?? grade?.overall_score ?? 0;
         
         if (!assignmentMap.has(j.assignment_id)) {
@@ -87,8 +102,8 @@ export const JournalSubmissionAnalytics: React.FC = () => {
       // Group by student
       const studentMap = new Map();
       journals?.forEach(j => {
-        const profile = (j as any).gw_profiles;
-        const grade = (j as any).mus240_journal_grades?.[0];
+        const profile = profilesByUserId.get(j.student_id);
+        const grade = gradesByJournalId.get(j.id);
         const score = grade?.instructor_score ?? grade?.overall_score ?? 0;
         
         if (!studentMap.has(j.student_id)) {
@@ -129,7 +144,9 @@ export const JournalSubmissionAnalytics: React.FC = () => {
         instructorGraded,
         submissionsByAssignment,
         studentSubmissionCounts,
-        recentSubmissions
+        recentSubmissions,
+        gradesByJournalId,
+        profilesByUserId
       });
     } catch (error) {
       console.error('Error fetching journal stats:', error);
@@ -277,8 +294,8 @@ export const JournalSubmissionAnalytics: React.FC = () => {
         <CardContent>
           <div className="space-y-3">
             {stats.recentSubmissions.map((submission: any) => {
-              const grade = submission.mus240_journal_grades?.[0];
-              const profile = submission.gw_profiles;
+              const grade = stats.gradesByJournalId.get(submission.id);
+              const profile = stats.profilesByUserId.get(submission.student_id);
               return (
                 <div key={submission.id} className="flex items-center justify-between p-3 rounded-lg border">
                   <div>
