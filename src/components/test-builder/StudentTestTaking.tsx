@@ -251,7 +251,10 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
         {currentQ.media_url && currentQ.media_type === 'audio' && (
           <div className="mb-6">
             <audio controls className="w-full">
-              <source src={currentQ.media_url} type="audio/mpeg" />
+              <source
+                src={currentQ.media_url}
+                type={currentQ.media_url.toLowerCase().endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'}
+              />
               Your browser does not support the audio element.
             </audio>
           </div>
