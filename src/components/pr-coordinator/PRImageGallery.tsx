@@ -5,7 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { PRImage } from '@/hooks/usePRImages';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
-import { Calendar, User, Image as ImageIcon, Star, Trash2, Edit, Download, Eye } from 'lucide-react';
+import { Calendar, User, Image as ImageIcon, Star, Trash2, Edit, Download, Eye, Video } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -88,128 +88,153 @@ export const PRImageGallery = ({
   if (viewMode === 'grid') {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-        {images.map((image) => (
-          <Card key={image.id} className="group overflow-hidden">
-            <div className="relative">
-              <img
-                src={getImageUrl(image.file_path)}
-                alt={image.original_filename || 'PR Image'}
-                className="w-full h-48 object-cover cursor-pointer transition-transform group-hover:scale-105"
-                onClick={() => onImageClick(image)}
-              />
-              
-              {/* Selection Checkbox */}
-              <div className="absolute top-2 left-2">
-                <Checkbox
-                  checked={selectedImages.includes(image.id)}
-                  onCheckedChange={() => onImageSelect(image.id)}
-                  className="bg-background"
+        {images.map((image) => {
+          const isVideo = image.mime_type?.startsWith('video/');
+          const displayUrl = isVideo && image.thumbnail_url ? image.thumbnail_url : getImageUrl(image.file_path);
+          
+          return (
+            <Card key={image.id} className="group overflow-hidden">
+              <div className="relative">
+                <img
+                  src={displayUrl}
+                  alt={image.original_filename || 'PR Media'}
+                  className="w-full h-48 object-cover cursor-pointer transition-transform group-hover:scale-105"
+                  onClick={() => onImageClick(image)}
                 />
-              </div>
+                
+                {/* Video Icon Overlay */}
+                {isVideo && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                    <div className="bg-white/90 rounded-full p-3">
+                      <Video className="h-8 w-8 text-primary" />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Selection Checkbox */}
+                <div className="absolute top-2 left-2">
+                  <Checkbox
+                    checked={selectedImages.includes(image.id)}
+                    onCheckedChange={() => onImageSelect(image.id)}
+                    className="bg-background"
+                  />
+                </div>
 
-              {/* Featured Badge */}
-              {image.is_featured && (
-                <Badge className="absolute top-2 right-2 gap-1">
-                  <Star className="h-3 w-3" />
-                  Featured
-                </Badge>
-              )}
+                {/* Featured Badge */}
+                {image.is_featured && (
+                  <Badge className="absolute top-2 right-2 gap-1">
+                    <Star className="h-3 w-3" />
+                    Featured
+                  </Badge>
+                )}
 
-              {/* Action Buttons */}
-              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-7 w-7 p-0"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onImageClick(image);
-                  }}
-                >
-                  <Eye className="h-3 w-3" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="h-7 w-7 p-0"
-                  onClick={(e) => handleDownload(e, image)}
-                >
-                  <Download className="h-3 w-3" />
-                </Button>
-                {onImageDelete && (
+                {/* Action Buttons */}
+                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                   <Button
                     size="sm"
-                    variant="destructive"
+                    variant="secondary"
                     className="h-7 w-7 p-0"
-                    onClick={(e) => handleQuickDelete(e, image.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onImageClick(image);
+                    }}
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Eye className="h-3 w-3" />
                   </Button>
-                )}
-              </div>
-
-              {/* Tags */}
-              {image.tags && image.tags.length > 0 && (
-                <div className="absolute bottom-2 left-2 flex gap-1 max-w-[calc(100%-4rem)]">
-                  {image.tags.slice(0, 2).map((tag) => (
-                    <Badge key={tag.id} variant="secondary" className="text-xs">
-                      {tag.name}
-                    </Badge>
-                  ))}
-                  {image.tags.length > 2 && (
-                    <Badge variant="secondary" className="text-xs">
-                      +{image.tags.length - 2}
-                    </Badge>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 w-7 p-0"
+                    onClick={(e) => handleDownload(e, image)}
+                  >
+                    <Download className="h-3 w-3" />
+                  </Button>
+                  {onImageDelete && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-7 w-7 p-0"
+                      onClick={(e) => handleQuickDelete(e, image.id)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   )}
                 </div>
-              )}
-            </div>
 
-            <CardContent className="p-3">
-              <div className="text-sm font-medium truncate mb-1">
-                {image.original_filename || 'Untitled'}
-              </div>
-              
-              {image.caption && (
-                <div className="text-xs text-muted-foreground truncate mb-2">
-                  {image.caption}
-                </div>
-              )}
-
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{formatDistanceToNow(new Date(image.uploaded_at), { addSuffix: true })}</span>
-                {image.photographer?.full_name && (
-                  <span className="truncate ml-2">by {image.photographer.full_name}</span>
+                {/* Tags */}
+                {image.tags && image.tags.length > 0 && (
+                  <div className="absolute bottom-2 left-2 flex gap-1 max-w-[calc(100%-4rem)]">
+                    {image.tags.slice(0, 2).map((tag) => (
+                      <Badge key={tag.id} variant="secondary" className="text-xs">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                    {image.tags.length > 2 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{image.tags.length - 2}
+                      </Badge>
+                    )}
+                  </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        ))}
+
+              <CardContent className="p-3">
+                <div className="text-sm font-medium truncate mb-1">
+                  {image.original_filename || 'Untitled'}
+                </div>
+                
+                {image.caption && (
+                  <div className="text-xs text-muted-foreground truncate mb-2">
+                    {image.caption}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{formatDistanceToNow(new Date(image.uploaded_at), { addSuffix: true })}</span>
+                  {image.photographer?.full_name && (
+                    <span className="truncate ml-2">by {image.photographer.full_name}</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {images.map((image) => (
-        <Card key={image.id} className="overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex gap-4">
-              {/* Thumbnail */}
-              <div className="relative">
-                <img
-                  src={getImageUrl(image.file_path)}
-                  alt={image.original_filename || 'PR Image'}
-                  className="w-24 h-24 object-cover rounded cursor-pointer"
-                  onClick={() => onImageClick(image)}
-                />
-                <div className="absolute -top-2 -left-2">
-                  <Checkbox
-                    checked={selectedImages.includes(image.id)}
-                    onCheckedChange={() => onImageSelect(image.id)}
+      {images.map((image) => {
+        const isVideo = image.mime_type?.startsWith('video/');
+        const displayUrl = isVideo && image.thumbnail_url ? image.thumbnail_url : getImageUrl(image.file_path);
+        
+        return (
+          <Card key={image.id} className="overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex gap-4">
+                {/* Thumbnail */}
+                <div className="relative">
+                  <img
+                    src={displayUrl}
+                    alt={image.original_filename || 'PR Media'}
+                    className="w-24 h-24 object-cover rounded cursor-pointer"
+                    onClick={() => onImageClick(image)}
                   />
+                  {isVideo && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none rounded">
+                      <div className="bg-white/90 rounded-full p-2">
+                        <Video className="h-5 w-5 text-primary" />
+                      </div>
+                    </div>
+                  )}
+                  <div className="absolute -top-2 -left-2">
+                    <Checkbox
+                      checked={selectedImages.includes(image.id)}
+                      onCheckedChange={() => onImageSelect(image.id)}
+                    />
+                  </div>
                 </div>
-              </div>
 
               {/* Details */}
               <div className="flex-1 space-y-2">
@@ -288,11 +313,12 @@ export const PRImageGallery = ({
                     ))}
                   </div>
                 )}
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 };

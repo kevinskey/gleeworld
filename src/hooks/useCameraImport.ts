@@ -249,16 +249,58 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
           lastModified: Date.now(),
         });
 
-        toast({
-          title: "Video Recorded",
-          description: "Video recorded successfully!",
-        });
-
-        onSuccess?.(file);
-        setRecordingDuration(0);
+        // Generate video thumbnail
+        const videoUrl = URL.createObjectURL(blob);
+        const video = document.createElement('video');
+        video.src = videoUrl;
+        video.currentTime = 0.1; // Capture frame at 0.1s
         
-        // Stop camera after video is processed
-        stopCamera();
+        video.onloadeddata = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(video, 0, 0);
+            canvas.toBlob((thumbnailBlob) => {
+              URL.revokeObjectURL(videoUrl);
+              
+              if (thumbnailBlob) {
+                // Attach thumbnail to file object for later use
+                (file as any).thumbnailBlob = thumbnailBlob;
+              }
+              
+              toast({
+                title: "Video Recorded",
+                description: "Video recorded successfully!",
+              });
+
+              onSuccess?.(file);
+              setRecordingDuration(0);
+              stopCamera();
+            }, 'image/jpeg', 0.8);
+          } else {
+            URL.revokeObjectURL(videoUrl);
+            toast({
+              title: "Video Recorded",
+              description: "Video recorded successfully!",
+            });
+            onSuccess?.(file);
+            setRecordingDuration(0);
+            stopCamera();
+          }
+        };
+        
+        video.onerror = () => {
+          URL.revokeObjectURL(videoUrl);
+          toast({
+            title: "Video Recorded",
+            description: "Video recorded successfully!",
+          });
+          onSuccess?.(file);
+          setRecordingDuration(0);
+          stopCamera();
+        };
       };
 
       mediaRecorderRef.current = mediaRecorder;
