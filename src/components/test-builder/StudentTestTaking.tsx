@@ -27,6 +27,8 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     loadTest();
@@ -49,13 +51,23 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
 
   const loadTest = async () => {
     try {
+      setIsLoading(true);
+      setLoadError(null);
+      
       const { data: testData, error: testError } = await supabase
         .from('glee_academy_tests')
         .select('*')
         .eq('id', testId)
         .single();
 
-      if (testError) throw testError;
+      if (testError) {
+        console.error('Test error:', testError);
+        throw new Error(`Test not found: ${testError.message}`);
+      }
+      
+      if (!testData) {
+        throw new Error('Test not found');
+      }
 
       const { data: questionsData, error: questionsError } = await supabase
         .from('test_questions')
@@ -63,7 +75,14 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
         .eq('test_id', testId)
         .order('display_order');
 
-      if (questionsError) throw questionsError;
+      if (questionsError) {
+        console.error('Questions error:', questionsError);
+        throw new Error(`Failed to load questions: ${questionsError.message}`);
+      }
+      
+      if (!questionsData || questionsData.length === 0) {
+        throw new Error('This test has no questions');
+      }
 
       // Fetch answer options separately for each question and normalize types
       const questionsWithOptions = await Promise.all(
@@ -95,13 +114,17 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
       if (testData.duration_minutes) {
         setTimeRemaining(testData.duration_minutes * 60);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading test:', error);
+      const errorMessage = error.message || 'Failed to load test';
+      setLoadError(errorMessage);
       toast({
         title: 'Error',
-        description: 'Failed to load test',
+        description: errorMessage,
         variant: 'destructive'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -180,8 +203,46 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card className="p-8 text-center">
+          <p className="text-lg">Loading test...</p>
+        </Card>
+      </div>
+    );
+  }
+  
+  if (loadError) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card className="p-8">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{loadError}</AlertDescription>
+          </Alert>
+          <Button onClick={() => navigate(-1)} className="mt-4">
+            Go Back
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
   if (!test || !questions.length) {
-    return <div>Loading...</div>;
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <Card className="p-8">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>Test data not found</AlertDescription>
+          </Alert>
+          <Button onClick={() => navigate(-1)} className="mt-4">
+            Go Back
+          </Button>
+        </Card>
+      </div>
+    );
   }
 
   if (!hasStarted) {
