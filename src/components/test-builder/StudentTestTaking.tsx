@@ -407,6 +407,42 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
         )}
       </Card>
 
+      {/* Show unanswered questions when on last question */}
+      {currentQuestion === questions.length - 1 && answeredCount < questions.length && (
+        <Card className="p-6 mb-6 border-amber-500 bg-amber-50">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-amber-900 mb-2">
+                Unanswered Questions ({questions.length - answeredCount})
+              </h3>
+              <p className="text-sm text-amber-800 mb-3">
+                You still have unanswered questions. Click on a question number below to jump to it:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {questions.map((q, index) => {
+                  const isAnswered = answers[q.id] !== undefined && answers[q.id] !== '';
+                  if (!isAnswered) {
+                    return (
+                      <Button
+                        key={q.id}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentQuestion(index)}
+                        className="border-amber-600 text-amber-900 hover:bg-amber-100"
+                      >
+                        Question {index + 1}
+                      </Button>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
       <div className="flex justify-between">
         <Button
           variant="outline"
