@@ -33,16 +33,27 @@ export function useFileUpload() {
           formData.append('fileName', path);
         }
 
-        // Start background upload
-        const { data: jobData, error: jobError } = await supabase.functions.invoke('upload-large-file', {
-          body: formData,
-        });
+        // Start background upload via direct fetch (functions.invoke doesn't handle FormData properly)
+        const uploadResponse = await fetch(
+          'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1/upload-large-file',
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg'
+            },
+            body: formData
+          }
+        );
 
-        if (jobError) {
-          throw new Error(jobError.message || 'Failed to start upload');
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          throw new Error(`Upload failed: ${errorText}`);
         }
 
+        const jobData = await uploadResponse.json();
         const jobId = jobData?.jobId;
+        
         if (!jobId) {
           throw new Error('No job ID returned from upload service');
         }
