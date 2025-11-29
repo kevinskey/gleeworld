@@ -15,6 +15,7 @@ import { ComprehensiveJournalAdmin } from '@/components/mus240/admin/Comprehensi
 import { StudentScoresViewer } from '@/components/mus240/admin/StudentScoresViewer';
 import { MidtermGradingManager } from '@/components/mus240/admin/MidtermGradingManager';
 import { StudentAnalyticsDashboard } from '@/components/mus240/admin/StudentAnalyticsDashboard';
+import { JournalSubmissionAnalytics } from '@/components/mus240/admin/JournalSubmissionAnalytics';
 import ResourcesAdmin from '@/pages/mus240/admin/ResourcesAdmin';
 import { PollResultsViewer } from '@/components/mus240/admin/PollResultsViewer';
 import { PollParticipationTracker } from '@/components/mus240/admin/PollParticipationTracker';
@@ -432,8 +433,15 @@ export const InstructorConsole = () => {
                   </CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">Track performance metrics and student engagement</p>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <StudentAnalyticsDashboard />
+                <CardContent className="p-6 space-y-8">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Journal Submissions</h3>
+                    <JournalSubmissionAnalytics />
+                  </div>
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold mb-4">Student Analytics</h3>
+                    <StudentAnalyticsDashboard />
+                  </div>
                 </CardContent>
               </Card>}
 
