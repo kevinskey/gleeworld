@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { YouTubeAudioPlayer } from './YouTubeAudioPlayer';
 
 interface StudentTestTakingProps {
   testId: string;
@@ -62,7 +63,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
           test_answer_options (*)
         `)
         .eq('test_id', testId)
-        .order('order_number');
+        .order('display_order');
 
       if (questionsError) throw questionsError;
 
@@ -230,13 +231,43 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
           <span className="text-sm font-medium text-muted-foreground">
             Question {currentQuestion + 1}
           </span>
-          <h2 className="text-xl font-semibold mt-2">{currentQ.question}</h2>
+          <h2 className="text-xl font-semibold mt-2">{currentQ.question_text}</h2>
           <p className="text-sm text-muted-foreground mt-1">
             {currentQ.points} {currentQ.points === 1 ? 'point' : 'points'}
           </p>
         </div>
 
-        {currentQ.type === 'multiple-choice' || currentQ.type === 'true-false' ? (
+        {/* Media section */}
+        {currentQ.youtube_video_id && (
+          <div className="mb-6">
+            <YouTubeAudioPlayer 
+              videoId={currentQ.youtube_video_id}
+              startTime={currentQ.start_time || undefined}
+              endTime={currentQ.end_time || undefined}
+            />
+          </div>
+        )}
+
+        {currentQ.media_url && currentQ.media_type === 'audio' && (
+          <div className="mb-6">
+            <audio controls className="w-full">
+              <source src={currentQ.media_url} type="audio/mpeg" />
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
+
+        {currentQ.media_url && currentQ.media_type === 'image' && (
+          <div className="mb-6">
+            <img 
+              src={currentQ.media_url} 
+              alt={currentQ.media_title || "Question media"}
+              className="max-w-full h-auto rounded-lg"
+            />
+          </div>
+        )}
+
+        {currentQ.question_type === 'multiple-choice' || currentQ.question_type === 'true-false' ? (
           <RadioGroup
             value={answers[currentQ.id] || ''}
             onValueChange={(value) => handleAnswerChange(currentQ.id, value)}
