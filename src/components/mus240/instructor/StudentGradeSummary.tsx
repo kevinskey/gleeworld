@@ -281,10 +281,12 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
       let currentEarned = 0;
       let currentPossible = 0;
 
-      // Add journals if any are graded (only count graded journals' possible points)
+      // Add journals if any are graded
+      // Students only need 10 journals for full credit (200 pts), but current grade caps at graded count
       if (journalGraded > 0) {
         currentEarned += journalPoints;
-        currentPossible += journalGraded * 20; // Each journal is worth 20 points
+        // Cap possible points at 200 (10 journals) once 10+ are graded
+        currentPossible += Math.min(journalGraded * 20, 200);
       }
 
       // Add AI Group Project if graded
