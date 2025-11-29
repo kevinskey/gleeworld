@@ -64,7 +64,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
 
       if (questionsError) throw questionsError;
 
-      // Fetch answer options separately for each question
+      // Fetch answer options separately for each question and normalize types
       const questionsWithOptions = await Promise.all(
         (questionsData || []).map(async (question) => {
           const { data: options } = await supabase
@@ -72,10 +72,18 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
             .select('*')
             .eq('question_id', question.id)
             .order('display_order');
-          
+
+          const normalizedType =
+            question.question_type === 'multiple_choice'
+              ? 'multiple-choice'
+              : question.question_type === 'true_false'
+              ? 'true-false'
+              : question.question_type;
+
           return {
             ...question,
-            options: options || []
+            question_type: normalizedType,
+            options: options || [],
           };
         })
       );
