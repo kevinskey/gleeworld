@@ -281,10 +281,10 @@ export const StudentGradeSummary: React.FC<StudentGradeSummaryProps> = ({ studen
       let currentEarned = 0;
       let currentPossible = 0;
 
-      // Add journals if any are graded
+      // Add journals if any are graded (only count graded journals' possible points)
       if (journalGraded > 0) {
         currentEarned += journalPoints;
-        currentPossible += journalPossible;
+        currentPossible += journalGraded * 20; // Each journal is worth 20 points
       }
 
       // Add AI Group Project if graded
