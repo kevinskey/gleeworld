@@ -255,7 +255,18 @@ Give students the benefit of the doubt - many write formally but authentically. 
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Lovable AI error:', response.status, errorText);
+      console.error('Lovable AI error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        journalId: journalId
+      });
+      
+      // If 503 Service Unavailable, provide a more helpful error message
+      if (response.status === 503) {
+        throw new Error('AI service temporarily unavailable. Please try again in a few moments.');
+      }
+      
       throw new Error(`AI grading failed: ${response.statusText}`);
     }
 
@@ -416,12 +427,21 @@ Give students the benefit of the doubt - many write formally but authentically. 
           feedback: criteriaScore.feedback
         }));
 
-        const { error: rubricError } = await supabase
+        const { error: rubricError, data: rubricData } = await supabase
           .from('gw_grades_rubric_scores')
           .insert(rubricScores);
 
         if (rubricError) {
-          console.error('Error saving rubric scores:', rubricError);
+          console.error('Error saving rubric scores:', {
+            error: rubricError,
+            message: rubricError.message,
+            details: rubricError.details,
+            hint: rubricError.hint,
+            code: rubricError.code,
+            rubricScores: JSON.stringify(rubricScores)
+          });
+        } else {
+          console.log('Rubric scores saved successfully:', rubricData?.length || 0, 'records');
         }
       }
     }
