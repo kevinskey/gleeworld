@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useCameraImport } from '@/hooks/useCameraImport';
 import { PRImageTag } from '@/hooks/usePRImages';
-import { Camera, Upload, X, SwitchCamera } from 'lucide-react';
+import { Camera, Upload, X, SwitchCamera, Video, Circle, Square } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,6 +30,7 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
   const [isUploading, setIsUploading] = useState(false);
   const [capturedImage, setCapturedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [mode, setMode] = useState<'photo' | 'video'>('photo');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -49,8 +51,12 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
     capturePhoto, 
     stopCamera, 
     switchCamera,
+    startRecording,
+    stopRecording,
     isCameraReady,
     cameraError,
+    isRecording,
+    recordingDuration,
     videoRef,
     canvasRef,
     isCapturing
@@ -67,8 +73,15 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
         description: error,
         variant: "destructive",
       });
-    }
+    },
+    mode
   });
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -77,6 +90,8 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
+
+  const isVideoFile = capturedImage?.type.startsWith('video/');
 
   const handleTagToggle = (tagId: string) => {
     setSelectedTags(prev => 
@@ -140,12 +155,28 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Camera className="h-5 w-5" />
-            Quick Capture - PR Photo
+            {mode === 'photo' ? <Camera className="h-5 w-5" /> : <Video className="h-5 w-5" />}
+            Quick Capture - {mode === 'photo' ? 'Photo' : 'Video'}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Mode Selection */}
+          {!capturedImage && !isCameraReady && (
+            <Tabs value={mode} onValueChange={(v) => setMode(v as 'photo' | 'video')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="photo" className="gap-2">
+                  <Camera className="h-4 w-4" />
+                  Photo
+                </TabsTrigger>
+                <TabsTrigger value="video" className="gap-2">
+                  <Video className="h-4 w-4" />
+                  Video
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+
           {/* Camera/Upload Section */}
           {!capturedImage ? (
             <div className="space-y-4">
@@ -160,8 +191,8 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
                   console.log('PRQuickCapture: Start Camera button clicked');
                   startCamera();
                 }} disabled={isCameraReady || isCapturing} className="gap-2">
-                  <Camera className="h-4 w-4" />
-                  {isCapturing ? 'Starting Camera...' : isCameraReady ? 'Camera Active' : 'Start Camera'}
+                  {mode === 'photo' ? <Camera className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+                  {isCapturing ? 'Starting Camera...' : isCameraReady ? 'Camera Active' : `Start ${mode === 'photo' ? 'Camera' : 'Video'}`}
                 </Button>
                 
                 <Button 
@@ -177,7 +208,7 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*,.heic,.heif"
+                accept={mode === 'photo' ? 'image/*,.heic,.heif' : 'video/*'}
                 onChange={handleFileUpload}
                 className="hidden"
               />
@@ -194,22 +225,42 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
                   />
                   {isCameraReady && (
                     <>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        onClick={switchCamera}
-                        className="absolute top-4 right-4 bg-background/80 hover:bg-background"
-                      >
-                        <SwitchCamera className="h-4 w-4" />
-                      </Button>
-                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                      {!isRecording && (
                         <Button
-                          onClick={capturePhoto}
-                          size="lg"
-                          className="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16"
+                          variant="secondary"
+                          size="icon"
+                          onClick={switchCamera}
+                          className="absolute top-4 right-4 bg-background/80 hover:bg-background"
                         >
-                          <Camera className="h-6 w-6" />
+                          <SwitchCamera className="h-4 w-4" />
                         </Button>
+                      )}
+                      
+                      {isRecording && (
+                        <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full flex items-center gap-2">
+                          <Circle className="h-3 w-3 fill-white animate-pulse" />
+                          <span className="text-sm font-mono">{formatDuration(recordingDuration)}</span>
+                        </div>
+                      )}
+                      
+                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                        {mode === 'photo' ? (
+                          <Button
+                            onClick={capturePhoto}
+                            size="lg"
+                            className="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16"
+                          >
+                            <Camera className="h-6 w-6" />
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={isRecording ? stopRecording : startRecording}
+                            size="lg"
+                            className={`${isRecording ? 'bg-red-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded-full w-16 h-16`}
+                          >
+                            {isRecording ? <Square className="h-6 w-6" /> : <Circle className="h-6 w-6" />}
+                          </Button>
+                        )}
                       </div>
                     </>
                   )}
@@ -224,13 +275,21 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
             </div>
           ) : (
             <div className="space-y-4">
-              {/* Image Preview */}
+              {/* Image/Video Preview */}
               <div className="relative">
-                <img
-                  src={previewUrl}
-                  alt="Captured"
-                  className="w-full max-h-64 object-contain rounded-lg border"
-                />
+                {isVideoFile ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    className="w-full max-h-64 object-contain rounded-lg border bg-black"
+                  />
+                ) : (
+                  <img
+                    src={previewUrl}
+                    alt="Captured"
+                    className="w-full max-h-64 object-contain rounded-lg border"
+                  />
+                )}
                 <Button
                   variant="destructive"
                   size="sm"
@@ -291,7 +350,7 @@ export const PRQuickCapture = ({ tags, onClose, onCapture }: PRQuickCaptureProps
                   className="gap-2"
                 >
                   <Upload className="h-4 w-4" />
-                  {isUploading ? 'Uploading...' : 'Upload Image'}
+                  {isUploading ? 'Uploading...' : `Upload ${isVideoFile ? 'Video' : 'Image'}`}
                 </Button>
               </div>
             </div>
