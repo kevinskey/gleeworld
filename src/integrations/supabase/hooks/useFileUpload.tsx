@@ -57,19 +57,59 @@ export function useFileUpload() {
 
         const edgeBaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1';
 
-        // Kick off background upload
-        const startResponse = await fetch(`${edgeBaseUrl}/upload-large-file`, {
-          method: 'POST',
-          headers: {
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          },
-          body: formData,
-        });
+        // Helper function to make fetch with timeout
+        const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs: number = 60000) => {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+          
+          try {
+            const response = await fetch(url, {
+              ...options,
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+            return response;
+          } catch (error) {
+            clearTimeout(timeoutId);
+            throw error;
+          }
+        };
 
-        if (!startResponse.ok) {
-          const text = await startResponse.text();
-          console.error('Failed to start large file upload:', startResponse.status, text);
-          throw new Error('Failed to start large file upload');
+        // Retry logic for starting upload
+        let startResponse;
+        let lastError;
+        const maxRetries = 3;
+        
+        for (let retry = 0; retry < maxRetries; retry++) {
+          try {
+            console.log(`Starting large upload (attempt ${retry + 1}/${maxRetries})...`);
+            startResponse = await fetchWithTimeout(`${edgeBaseUrl}/upload-large-file`, {
+              method: 'POST',
+              headers: {
+                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+              },
+              body: formData,
+            }, 60000); // 60 second timeout
+            
+            if (startResponse.ok) break;
+            
+            const text = await startResponse.text();
+            lastError = new Error(`HTTP ${startResponse.status}: ${text}`);
+            console.warn(`Upload start attempt ${retry + 1} failed:`, lastError);
+          } catch (error: any) {
+            lastError = error;
+            console.warn(`Upload start attempt ${retry + 1} failed:`, error?.message || error);
+            
+            if (retry < maxRetries - 1) {
+              // Wait before retry with exponential backoff
+              await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retry)));
+            }
+          }
+        }
+
+        if (!startResponse || !startResponse.ok) {
+          console.error('Failed to start large file upload after retries:', lastError);
+          throw new Error(`Failed to start upload: ${lastError?.message || 'Unknown error'}`);
         }
 
         const { jobId } = await startResponse.json();
@@ -80,33 +120,42 @@ export function useFileUpload() {
         const pollIntervalMs = 3000;
 
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const statusResponse = await fetch(`${edgeBaseUrl}/check-upload-status?jobId=${encodeURIComponent(jobId)}`, {
-            headers: {
-              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-            },
-          });
+          try {
+            const statusResponse = await fetchWithTimeout(
+              `${edgeBaseUrl}/check-upload-status?jobId=${encodeURIComponent(jobId)}`,
+              {
+                headers: {
+                  ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                },
+              },
+              10000 // 10 second timeout for status checks
+            );
 
-          if (!statusResponse.ok) {
-            const text = await statusResponse.text();
-            console.error('Failed to check upload status:', statusResponse.status, text);
-            throw new Error('Failed to check upload status');
-          }
+            if (!statusResponse.ok) {
+              const text = await statusResponse.text();
+              console.error('Failed to check upload status:', statusResponse.status, text);
+              throw new Error('Failed to check upload status');
+            }
 
-          const statusData = await statusResponse.json() as { status: string; url?: string; error?: string };
-          console.log('Upload job status:', statusData);
+            const statusData = await statusResponse.json() as { status: string; url?: string; error?: string };
+            console.log('Upload job status:', statusData);
 
-          if (statusData.status === 'completed' && statusData.url) {
-            toast({
-              title: "Upload Successful",
-              description: `${file.name} uploaded successfully`,
-            });
+            if (statusData.status === 'completed' && statusData.url) {
+              toast({
+                title: "Upload Successful",
+                description: `${file.name} uploaded successfully`,
+              });
 
-            return statusData.url;
-          }
+              return statusData.url;
+            }
 
-          if (statusData.status === 'failed') {
-            console.error('Large upload failed:', statusData.error);
-            throw new Error(statusData.error || 'Large upload failed');
+            if (statusData.status === 'failed') {
+              console.error('Large upload failed:', statusData.error);
+              throw new Error(statusData.error || 'Large upload failed');
+            }
+          } catch (error: any) {
+            console.warn(`Status check attempt ${attempt + 1} failed:`, error?.message || error);
+            // Continue polling even if one check fails
           }
 
           // Still processing; wait then poll again
