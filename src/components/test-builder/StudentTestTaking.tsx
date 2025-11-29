@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
@@ -21,7 +22,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
   const { toast } = useToast();
   const [test, setTest] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,7 +109,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
     setHasStarted(true);
   };
 
-  const handleAnswerChange = (questionId: string, answer: string) => {
+  const handleAnswerChange = (questionId: string, answer: string | string[]) => {
     setAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
@@ -292,19 +293,49 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
         )}
 
         {currentQ.question_type === 'multiple-choice' || currentQ.question_type === 'true-false' ? (
-          <RadioGroup
-            value={answers[currentQ.id] || ''}
-            onValueChange={(value) => handleAnswerChange(currentQ.id, value)}
-          >
-            {currentQ.options?.map((option: any) => (
-              <div key={option.id} className="flex items-center space-x-2 mb-3">
-                <RadioGroupItem value={option.option_text} id={option.id} />
-                <Label htmlFor={option.id} className="cursor-pointer flex-1">
-                  {option.option_text}
-                </Label>
-              </div>
-            ))}
-          </RadioGroup>
+          currentQ.options.filter((opt: any) => opt.is_correct).length > 1 ? (
+            // Multiple correct answers - use checkboxes
+            <div className="space-y-3">
+              {currentQ.options?.map((option: any) => {
+                const selectedAnswers = (answers[currentQ.id] as string[] | undefined) || [];
+                const isChecked = selectedAnswers.includes(option.option_text);
+                
+                return (
+                  <div
+                    key={option.id}
+                    className="flex items-center space-x-2 border rounded-lg p-4 hover:bg-accent/50 cursor-pointer"
+                    onClick={() => {
+                      const currentSelected = (answers[currentQ.id] as string[] | undefined) || [];
+                      const newSelected = isChecked
+                        ? currentSelected.filter(text => text !== option.option_text)
+                        : [...currentSelected, option.option_text];
+                      handleAnswerChange(currentQ.id, newSelected);
+                    }}
+                  >
+                    <Checkbox id={option.id} checked={isChecked} />
+                    <Label htmlFor={option.id} className="flex-1 cursor-pointer">
+                      {option.option_text}
+                    </Label>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            // Single correct answer - use radio buttons
+            <RadioGroup
+              value={answers[currentQ.id] as string || ''}
+              onValueChange={(value) => handleAnswerChange(currentQ.id, value)}
+            >
+              {currentQ.options?.map((option: any) => (
+                <div key={option.id} className="flex items-center space-x-2 mb-3">
+                  <RadioGroupItem value={option.option_text} id={option.id} />
+                  <Label htmlFor={option.id} className="cursor-pointer flex-1">
+                    {option.option_text}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          )
         ) : (
           <Textarea
             value={answers[currentQ.id] || ''}
