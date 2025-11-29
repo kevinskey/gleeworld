@@ -256,6 +256,9 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
 
         onSuccess?.(file);
         setRecordingDuration(0);
+        
+        // Stop camera after video is processed
+        stopCamera();
       };
 
       mediaRecorderRef.current = mediaRecorder;
@@ -277,7 +280,7 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
       });
       onError?.(errorMessage);
     }
-  }, [isCameraReady, onSuccess, onError, toast]);
+  }, [isCameraReady, onSuccess, onError, toast, stopCamera]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && isRecording) {
@@ -289,9 +292,9 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
         recordingTimerRef.current = null;
       }
       
-      stopCamera();
+      // Camera will be stopped in the onstop handler after video is processed
     }
-  }, [isRecording, stopCamera]);
+  }, [isRecording]);
 
   const switchCamera = useCallback(async () => {
     if (isCapturing) {
