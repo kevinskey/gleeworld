@@ -25,6 +25,12 @@ export function useFileUpload() {
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = path || `${timestamp}-${randomSuffix}-${safeFileName}`;
 
+      // Check file size limit (100MB)
+      const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(`File size exceeds 100MB limit. Please use a smaller file.`);
+      }
+
       // For large files, show progress toast
       const LARGE_FILE_THRESHOLD = 6 * 1024 * 1024; // 6MB
       if (file.size > LARGE_FILE_THRESHOLD) {
