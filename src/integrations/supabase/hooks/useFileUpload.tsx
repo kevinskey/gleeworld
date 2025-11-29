@@ -20,19 +20,29 @@ export function useFileUpload() {
       setUploading(true);
       console.log('Starting file upload:', file.name, 'to bucket:', bucket, 'size:', file.size);
       
-      // Use direct upload for all files
-      console.log('Using direct Supabase Storage upload');
-      
       const timestamp = Date.now();
       const randomSuffix = Math.random().toString(36).substring(7);
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const filePath = path || `${timestamp}-${randomSuffix}-${safeFileName}`;
 
+      // For large files, show progress toast
+      const LARGE_FILE_THRESHOLD = 6 * 1024 * 1024; // 6MB
+      if (file.size > LARGE_FILE_THRESHOLD) {
+        toast({
+          title: "Uploading Large File",
+          description: `${file.name} is being uploaded... This may take a moment.`,
+        });
+      }
+
+      console.log(`Uploading to: ${bucket}/${filePath}`);
+      
+      // Use standard upload with proper content type
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
+          contentType: file.type || 'application/octet-stream'
         });
 
       if (error) {
