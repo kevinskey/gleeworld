@@ -18307,6 +18307,7 @@ export type Database = {
           original_filename: string | null
           photographer_id: string | null
           taken_at: string | null
+          thumbnail_url: string | null
           updated_at: string
           uploaded_at: string
           uploaded_by: string
@@ -18324,6 +18325,7 @@ export type Database = {
           original_filename?: string | null
           photographer_id?: string | null
           taken_at?: string | null
+          thumbnail_url?: string | null
           updated_at?: string
           uploaded_at?: string
           uploaded_by: string
@@ -18341,6 +18343,7 @@ export type Database = {
           original_filename?: string | null
           photographer_id?: string | null
           taken_at?: string | null
+          thumbnail_url?: string | null
           updated_at?: string
           uploaded_at?: string
           uploaded_by?: string

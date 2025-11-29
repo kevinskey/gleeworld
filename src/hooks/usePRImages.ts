@@ -9,6 +9,7 @@ export interface PRImage {
   file_path: string;
   file_size?: number;
   mime_type?: string;
+  thumbnail_url?: string;
   photographer_id?: string;
   uploaded_by: string;
   caption?: string;
@@ -187,6 +188,23 @@ export const usePRImages = () => {
         throw uploadError;
       }
 
+      // Upload thumbnail if it exists (for videos)
+      let thumbnailUrl = null;
+      const thumbnailBlob = (file as any).thumbnailBlob;
+      if (thumbnailBlob) {
+        const thumbnailFileName = `thumbnails/${Date.now()}-thumb.jpg`;
+        const { error: thumbError } = await supabase.storage
+          .from('pr-images')
+          .upload(thumbnailFileName, thumbnailBlob);
+        
+        if (!thumbError) {
+          const { data: thumbUrlData } = supabase.storage
+            .from('pr-images')
+            .getPublicUrl(thumbnailFileName);
+          thumbnailUrl = thumbUrlData.publicUrl;
+        }
+      }
+
       // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       console.log('usePRImages: Current user:', user?.id);
@@ -202,6 +220,7 @@ export const usePRImages = () => {
           file_path: filePath,
           file_size: file.size,
           mime_type: file.type,
+          thumbnail_url: thumbnailUrl,
           uploaded_by: user.id,
           caption: metadata.caption,
           taken_at: metadata.taken_at,
@@ -233,7 +252,7 @@ export const usePRImages = () => {
 
       toast({
         title: "Success",
-        description: `Image "${file.name}" uploaded successfully`,
+        description: `${file.type.startsWith('video/') ? 'Video' : 'Image'} "${file.name}" uploaded successfully`,
       });
 
       console.log('usePRImages: Image uploaded successfully:', data);
@@ -246,7 +265,7 @@ export const usePRImages = () => {
       console.error('usePRImages: Error stack:', error.stack);
       toast({
         title: "Error",
-        description: `Failed to upload image: ${error.message}`,
+        description: `Failed to upload: ${error.message}`,
         variant: "destructive",
       });
       throw error;
