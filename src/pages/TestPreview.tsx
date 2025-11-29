@@ -153,16 +153,16 @@ export default function TestPreview() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {question.media_url && (
+                  {(question.media_url || question.youtube_video_id) && (
                     <div className="mb-4">
-                      {question.media_type === 'image' && (
+                      {question.media_type === 'image' && question.media_url && (
                         <img 
                           src={question.media_url} 
                           alt="Question media" 
                           className="max-w-md rounded-lg border"
                         />
                       )}
-                      {question.media_type === 'audio' && (
+                      {question.media_type === 'audio' && question.media_url && (
                         <div className="space-y-2">
                           <audio 
                             ref={audioRef}
@@ -205,7 +205,18 @@ export default function TestPreview() {
                           </audio>
                         </div>
                       )}
-                      {question.media_type === 'video' && (
+                      {question.media_type === 'youtube' && question.youtube_video_id && (
+                        <div className="aspect-video max-w-2xl">
+                          <iframe
+                            className="w-full h-full rounded-lg border"
+                            src={`https://www.youtube.com/embed/${question.youtube_video_id}`}
+                            title="YouTube video"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      )}
+                      {question.media_type === 'video' && question.media_url && (
                         <video controls className="w-full max-w-md rounded-lg border">
                           <source src={question.media_url} />
                         </video>
