@@ -6,6 +6,7 @@ interface CameraImportOptions {
   onSuccess?: (file: File) => void;
   onError?: (error: string) => void;
   acceptedTypes?: string[];
+  mode?: 'photo' | 'video';
 }
 
 export const useCameraImport = (options: CameraImportOptions = {}) => {
@@ -13,15 +14,21 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const { 
     onSuccess, 
     onError, 
-    acceptedTypes = ['image/*', 'application/pdf'] 
+    acceptedTypes = ['image/*', 'application/pdf'],
+    mode = 'photo'
   } = options;
 
   const startCamera = useCallback(async () => {
@@ -208,6 +215,84 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
     onSuccess?.(file);
   }, [acceptedTypes, onSuccess, onError, toast]);
 
+  const startRecording = useCallback(async () => {
+    if (!streamRef.current || !isCameraReady) {
+      const errorMessage = 'Camera not ready for recording';
+      onError?.(errorMessage);
+      return;
+    }
+
+    try {
+      const options = { mimeType: 'video/webm;codecs=vp9,opus' };
+      let mediaRecorder;
+      
+      try {
+        mediaRecorder = new MediaRecorder(streamRef.current, options);
+      } catch (e) {
+        // Fallback to default codec if vp9 not supported
+        mediaRecorder = new MediaRecorder(streamRef.current);
+      }
+
+      recordedChunksRef.current = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          recordedChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const file = new File([blob], `video-${timestamp}.webm`, {
+          type: 'video/webm',
+          lastModified: Date.now(),
+        });
+
+        toast({
+          title: "Video Recorded",
+          description: "Video recorded successfully!",
+        });
+
+        onSuccess?.(file);
+        setRecordingDuration(0);
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+
+      // Start duration timer
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      const errorMessage = 'Failed to start recording. Please try again.';
+      toast({
+        title: "Recording Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      onError?.(errorMessage);
+    }
+  }, [isCameraReady, onSuccess, onError, toast]);
+
+  const stopRecording = useCallback(() => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      
+      stopCamera();
+    }
+  }, [isRecording, stopCamera]);
+
   const switchCamera = useCallback(async () => {
     if (isCapturing) {
       // Stop current camera
@@ -229,11 +314,15 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
     isCameraReady,
     cameraError,
     facingMode,
+    isRecording,
+    recordingDuration,
     videoRef,
     canvasRef,
     startCamera,
     stopCamera,
     capturePhoto,
+    startRecording,
+    stopRecording,
     handleFileSelect,
     switchCamera,
   };
