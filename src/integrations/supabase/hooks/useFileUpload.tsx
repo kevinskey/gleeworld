@@ -40,9 +40,85 @@ export function useFileUpload() {
         });
       }
 
+      // Files over ~10MB use background edge function to avoid timeouts
+      const LARGE_FILE_DIRECT_UPLOAD_LIMIT = 10 * 1024 * 1024; // 10MB
+
+      if (file.size > LARGE_FILE_DIRECT_UPLOAD_LIMIT) {
+        console.log(`Using edge function for large upload to: ${bucket}/${filePath}`);
+
+        // Get current auth session token if available
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('bucket', bucket);
+        formData.append('fileName', filePath);
+
+        const edgeBaseUrl = 'https://oopmlreysjzuxzylyheb.supabase.co/functions/v1';
+
+        // Kick off background upload
+        const startResponse = await fetch(`${edgeBaseUrl}/upload-large-file`, {
+          method: 'POST',
+          headers: {
+            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+          },
+          body: formData,
+        });
+
+        if (!startResponse.ok) {
+          const text = await startResponse.text();
+          console.error('Failed to start large file upload:', startResponse.status, text);
+          throw new Error('Failed to start large file upload');
+        }
+
+        const { jobId } = await startResponse.json();
+        console.log('Large upload job started:', jobId);
+
+        // Poll status function until completed or failed
+        const maxAttempts = 40; // ~2 minutes at 3s interval
+        const pollIntervalMs = 3000;
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          const statusResponse = await fetch(`${edgeBaseUrl}/check-upload-status?jobId=${encodeURIComponent(jobId)}`, {
+            headers: {
+              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+            },
+          });
+
+          if (!statusResponse.ok) {
+            const text = await statusResponse.text();
+            console.error('Failed to check upload status:', statusResponse.status, text);
+            throw new Error('Failed to check upload status');
+          }
+
+          const statusData = await statusResponse.json() as { status: string; url?: string; error?: string };
+          console.log('Upload job status:', statusData);
+
+          if (statusData.status === 'completed' && statusData.url) {
+            toast({
+              title: "Upload Successful",
+              description: `${file.name} uploaded successfully`,
+            });
+
+            return statusData.url;
+          }
+
+          if (statusData.status === 'failed') {
+            console.error('Large upload failed:', statusData.error);
+            throw new Error(statusData.error || 'Large upload failed');
+          }
+
+          // Still processing; wait then poll again
+          await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+        }
+
+        throw new Error('Upload timed out while processing on server');
+      }
+
       console.log(`Uploading to: ${bucket}/${filePath}`);
       
-      // Use standard upload with proper content type
+      // Use standard upload with proper content type for smaller files
       const { data, error } = await supabase.storage
         .from(bucket)
         .upload(filePath, file, {
