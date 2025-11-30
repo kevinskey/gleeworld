@@ -36,18 +36,26 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const gainNodeRef = useRef<GainNode | null>(null);
 
   const initAudioContext = useCallback(async () => {
-    if (!audioContextRef.current) {
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+      console.log('🎹 Creating new AudioContext for PitchPipe');
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     
+    // Always try to resume if suspended (required for mobile browsers)
     if (audioContextRef.current.state === 'suspended') {
       try {
+        console.log('🔊 Attempting to resume AudioContext...');
         await audioContextRef.current.resume();
+        console.log('✅ AudioContext resumed, state:', audioContextRef.current.state);
       } catch (error) {
-        console.error('Failed to resume AudioContext:', error);
+        console.error('❌ Failed to resume AudioContext:', error);
+        // Try creating fresh context
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        await audioContextRef.current.resume();
       }
     }
     
+    console.log('🎹 AudioContext ready, state:', audioContextRef.current.state);
     return audioContextRef.current;
   }, []);
 
