@@ -21,7 +21,6 @@ import { CountdownText } from "@/components/ui/countdown-text";
 
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
 import { ExecutiveBoardDropdown } from "@/components/navigation/ExecutiveBoardDropdown";
-import { DashboardBackgroundUploader } from "@/components/profile/DashboardBackgroundUploader";
 
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
@@ -303,15 +302,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                            Settings
                          </Link>
                        </DropdownMenuItem>
-                     <DropdownMenuSeparator />
-                     
-                     {/* Dashboard Background Upload Section */}
-                     <div className="px-2 py-2 max-w-[280px]">
-                       <DashboardBackgroundUploader />
-                     </div>
-                     
-                     <DropdownMenuSeparator />
-                     <DropdownMenuItem onClick={handleSignOut} className="py-1.5 text-xs">
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={handleSignOut} className="py-1.5 text-xs">
                        <LogOut className="mr-1.5 h-3 w-3" />
                        Sign out
                      </DropdownMenuItem>

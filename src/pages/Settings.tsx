@@ -27,6 +27,7 @@ import {
   Sun,
   Monitor
 } from "lucide-react";
+import { DashboardBackgroundUploader } from "@/components/profile/DashboardBackgroundUploader";
 
 const settingsSchema = z.object({
   display_name: z.string().min(1, "Display name is required"),
@@ -594,6 +595,12 @@ export default function Settings() {
                         checked={watch("animations")}
                         onCheckedChange={(checked) => setValue("animations", checked)}
                       />
+                    </div>
+
+                    <Separator />
+
+                    <div>
+                      <DashboardBackgroundUploader />
                     </div>
                   </div>
                 </CardContent>
