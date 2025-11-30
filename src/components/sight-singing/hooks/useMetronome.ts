@@ -11,21 +11,26 @@ export const useMetronome = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const initAudioContext = useCallback(async () => {
-    if (!audioContextRef.current) {
+    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
+      console.log('🎵 Creating new AudioContext');
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
     
-    if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'closed') {
+    // Always try to resume if suspended (required for mobile browsers)
+    if (audioContextRef.current.state === 'suspended') {
       try {
+        console.log('🔊 Attempting to resume AudioContext...');
         await audioContextRef.current.resume();
-        console.log('🔊 AudioContext resumed, state:', audioContextRef.current.state);
+        console.log('✅ AudioContext resumed, state:', audioContextRef.current.state);
       } catch (error) {
         console.error('❌ Failed to resume AudioContext:', error);
-        // Create new AudioContext if resume fails
+        // Try creating fresh context
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+        await audioContextRef.current.resume();
       }
     }
     
+    console.log('🎵 AudioContext ready, state:', audioContextRef.current.state);
     return audioContextRef.current;
   }, []);
 
