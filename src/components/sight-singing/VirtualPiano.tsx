@@ -61,6 +61,7 @@ const generateKeys = (startOctave: number) => {
 };
 
 export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onClose }) => {
+  console.log('🎹 VirtualPiano mounted (full-screen):', { className, hasOnClose: !!onClose });
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
@@ -178,7 +179,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   }, []);
 
   return (
-    <div className={`fixed inset-0 z-[100] bg-background flex flex-col ${className}`}>
+    <div className={`fixed inset-0 z-[9999] bg-background flex flex-col ${className}`} >
       {/* Header Bar */}
       <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-card backdrop-blur-sm shrink-0">
         <div className="flex items-center gap-3">
