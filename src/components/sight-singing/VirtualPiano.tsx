@@ -9,8 +9,8 @@ interface VirtualPianoProps {
   className?: string;
 }
 
-// Base frequencies for octave 4 (middle C)
-const baseWhiteKeys = [
+// Base frequencies for one octave starting at C4 (middle C)
+const baseWhiteKeysPerOctave = [
   { note: 'C', baseFrequency: 261.63 },
   { note: 'D', baseFrequency: 293.66 },
   { note: 'E', baseFrequency: 329.63 },
@@ -20,35 +20,57 @@ const baseWhiteKeys = [
   { note: 'B', baseFrequency: 493.88 },
 ];
 
-const baseBlackKeys = [
-  { note: 'C#', baseFrequency: 277.18, position: 0.5 },
-  { note: 'D#', baseFrequency: 311.13, position: 1.5 },
-  { note: 'F#', baseFrequency: 369.99, position: 3.5 },
-  { note: 'G#', baseFrequency: 415.30, position: 4.5 },
-  { note: 'A#', baseFrequency: 466.16, position: 5.5 },
+const baseBlackKeysPerOctave = [
+  { note: 'C#', baseFrequency: 277.18, positionInOctave: 0.5 },
+  { note: 'D#', baseFrequency: 311.13, positionInOctave: 1.5 },
+  { note: 'F#', baseFrequency: 369.99, positionInOctave: 3.5 },
+  { note: 'G#', baseFrequency: 415.30, positionInOctave: 4.5 },
+  { note: 'A#', baseFrequency: 466.16, positionInOctave: 5.5 },
 ];
+
+// Generate 3 octaves of keys based on starting octave
+const generateKeys = (startOctave: number) => {
+  const whiteKeys = [];
+  const blackKeys = [];
+  
+  // Generate 3 full octaves
+  for (let octaveOffset = 0; octaveOffset < 3; octaveOffset++) {
+    const currentOctave = startOctave + octaveOffset;
+    const octaveMultiplier = Math.pow(2, currentOctave - 4); // 4 is base (C4)
+    const whiteKeyOffset = octaveOffset * 7; // 7 white keys per octave
+    
+    baseWhiteKeysPerOctave.forEach((key, index) => {
+      whiteKeys.push({
+        note: key.note,
+        octave: currentOctave,
+        frequency: key.baseFrequency * octaveMultiplier,
+      });
+    });
+    
+    baseBlackKeysPerOctave.forEach((key) => {
+      blackKeys.push({
+        note: key.note,
+        octave: currentOctave,
+        frequency: key.baseFrequency * octaveMultiplier,
+        position: whiteKeyOffset + key.positionInOctave,
+      });
+    });
+  }
+  
+  return { whiteKeys, blackKeys };
+};
 
 export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '' }) => {
   const [isPlaying, setIsPlaying] = useState<string | null>(null);
   const [volume, setVolume] = useState([0.3]);
   const [isMuted, setIsMuted] = useState(false);
-  const [octave, setOctave] = useState<number>(4); // Default to octave 4 (middle C)
+  const [startOctave, setStartOctave] = useState<number>(3); // Default starts at C3
   const audioContextRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
 
-  // Calculate frequencies for selected octave
-  const octaveMultiplier = Math.pow(2, octave - 4); // 4 is the base octave
-  const whiteKeys = baseWhiteKeys.map(key => ({
-    ...key,
-    frequency: key.baseFrequency * octaveMultiplier,
-    octave
-  }));
-  const blackKeys = baseBlackKeys.map(key => ({
-    ...key,
-    frequency: key.baseFrequency * octaveMultiplier,
-    octave
-  }));
+  // Generate 3 octaves starting from selected octave
+  const { whiteKeys, blackKeys } = generateKeys(startOctave);
 
   const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
@@ -150,16 +172,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '' }) =>
         <CardTitle className="flex items-center justify-between">
           <span>Virtual Piano</span>
           <div className="flex items-center gap-2">
-            <Select value={octave.toString()} onValueChange={(value) => setOctave(parseInt(value))}>
-              <SelectTrigger className="w-20 h-8">
+            <Select value={startOctave.toString()} onValueChange={(value) => setStartOctave(parseInt(value))}>
+              <SelectTrigger className="w-24 h-8">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2">C2</SelectItem>
-                <SelectItem value="3">C3</SelectItem>
-                <SelectItem value="4">C4</SelectItem>
-                <SelectItem value="5">C5</SelectItem>
-                <SelectItem value="6">C6</SelectItem>
+                <SelectItem value="1">C1-C3</SelectItem>
+                <SelectItem value="2">C2-C4</SelectItem>
+                <SelectItem value="3">C3-C5</SelectItem>
+                <SelectItem value="4">C4-C6</SelectItem>
               </SelectContent>
             </Select>
             <Button
