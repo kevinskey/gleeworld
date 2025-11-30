@@ -61,12 +61,13 @@ export const UniversalLayout = ({
 
   return (
     <div 
-      className="min-h-screen flex flex-col w-full overflow-x-hidden bg-background"
+      className={`min-h-screen flex flex-col w-full overflow-x-hidden ${userBackground ? '' : 'bg-background'}`}
       style={userBackground ? {
         backgroundImage: `url(${userBackground})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        backgroundAttachment: 'fixed'
+        backgroundAttachment: 'fixed',
+        backgroundColor: 'transparent'
       } : undefined}
     >
       {showHeader && (
@@ -81,7 +82,7 @@ export const UniversalLayout = ({
           )}
         </>
       )}
-      <main className={`flex-1 w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 ${className}`}>
+      <main className={`flex-1 w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 ${userBackground ? 'bg-transparent' : ''} ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth}>
             {children}
