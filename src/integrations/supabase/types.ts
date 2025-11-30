@@ -10614,6 +10614,7 @@ export type Database = {
           class_year: number | null
           created_at: string | null
           current_cart_id: string | null
+          dashboard_background_url: string | null
           data_consent: boolean | null
           default_shipping_address: Json | null
           design_history_ids: string[] | null
@@ -10708,6 +10709,7 @@ export type Database = {
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
+          dashboard_background_url?: string | null
           data_consent?: boolean | null
           default_shipping_address?: Json | null
           design_history_ids?: string[] | null
@@ -10802,6 +10804,7 @@ export type Database = {
           class_year?: number | null
           created_at?: string | null
           current_cart_id?: string | null
+          dashboard_background_url?: string | null
           data_consent?: boolean | null
           default_shipping_address?: Json | null
           design_history_ids?: string[] | null

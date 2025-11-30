@@ -1,10 +1,12 @@
 import { format } from "date-fns";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { BellDot } from "lucide-react";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 import { useNavigate } from "react-router-dom";
 import festiveBg from "@/assets/gleeworld-festive-background.webp";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -23,6 +25,27 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const [imageError, setImageError] = useState(false);
   const { dashboardData } = useUserDashboardContext();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [userBackground, setUserBackground] = useState<string | null>(null);
+
+  // Load user's custom dashboard background
+  useEffect(() => {
+    const loadUserBackground = async () => {
+      if (!user?.id) return;
+      
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .select('dashboard_background_url')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data?.dashboard_background_url) {
+        setUserBackground(data.dashboard_background_url);
+      }
+    };
+    
+    loadUserBackground();
+  }, [user?.id]);
 
   const getUserTitle = () => {
     // Check for executive board role first
@@ -58,39 +81,24 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
     setImageError(false);
   };
 
-  // Memoize values to prevent re-renders causing blinking
-  const backgroundStyles = useMemo(() => {
-    if (!welcomeCardSetting?.image_url || imageError) {
-      console.log('No background image or error:', { 
-        hasImageUrl: !!welcomeCardSetting?.image_url, 
-        imageError,
-        setting: welcomeCardSetting
-      });
-      return {};
-    }
-    
-    console.log('Using background image:', welcomeCardSetting.image_url);
-    return {
-      backgroundImage: `url("${welcomeCardSetting.image_url}")`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat'
-    };
-  }, [welcomeCardSetting?.image_url, imageError]);
-
-  const hasBackgroundImage = Boolean(welcomeCardSetting?.image_url && !imageError);
+  // Determine which background to use: user custom > admin setting > default festive
+  const backgroundImage = useMemo(() => {
+    if (userBackground) return userBackground;
+    if (welcomeCardSetting?.image_url && !imageError) return welcomeCardSetting.image_url;
+    return festiveBg;
+  }, [userBackground, welcomeCardSetting?.image_url, imageError]);
 
   return (
     <div 
       className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center"
       style={{
-        backgroundImage: `url("${festiveBg}")`,
+        backgroundImage: `url("${backgroundImage}")`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
     >
-      
+
       {/* Transparent background - no overlay */}
       
       {/* Content Layer */}
