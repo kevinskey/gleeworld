@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { VolumeX } from 'lucide-react';
 
 interface PitchPipeProps {
@@ -10,28 +11,40 @@ interface PitchPipeProps {
 export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentNote, setCurrentNote] = useState<string | null>(null);
+  const [octave, setOctave] = useState<number>(4); // Default to octave 4 (middle C)
   const audioContextRef = useRef<AudioContext | null>(null);
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
 
-  // Piano keys data for one octave (C to B)
-  const whiteKeys = [
-    { name: 'C', frequency: 261.63 },
-    { name: 'D', frequency: 293.66 },
-    { name: 'E', frequency: 329.63 },
-    { name: 'F', frequency: 349.23 },
-    { name: 'G', frequency: 392.00 },
-    { name: 'A', frequency: 440.00 },
-    { name: 'B', frequency: 493.88 },
+  // Base frequencies for octave 4 (middle C)
+  const baseWhiteKeys = [
+    { name: 'C', baseFrequency: 261.63 },
+    { name: 'D', baseFrequency: 293.66 },
+    { name: 'E', baseFrequency: 329.63 },
+    { name: 'F', baseFrequency: 349.23 },
+    { name: 'G', baseFrequency: 392.00 },
+    { name: 'A', baseFrequency: 440.00 },
+    { name: 'B', baseFrequency: 493.88 },
   ];
 
-  const blackKeys = [
-    { name: 'C#', frequency: 277.18, position: 0.5 }, // Between C and D
-    { name: 'D#', frequency: 311.13, position: 1.5 }, // Between D and E
-    { name: 'F#', frequency: 369.99, position: 3.5 }, // Between F and G
-    { name: 'G#', frequency: 415.30, position: 4.5 }, // Between G and A
-    { name: 'A#', frequency: 466.16, position: 5.5 }, // Between A and B
+  const baseBlackKeys = [
+    { name: 'C#', baseFrequency: 277.18, position: 0.5 },
+    { name: 'D#', baseFrequency: 311.13, position: 1.5 },
+    { name: 'F#', baseFrequency: 369.99, position: 3.5 },
+    { name: 'G#', baseFrequency: 415.30, position: 4.5 },
+    { name: 'A#', baseFrequency: 466.16, position: 5.5 },
   ];
+
+  // Calculate frequencies for selected octave
+  const octaveMultiplier = Math.pow(2, octave - 4); // 4 is the base octave
+  const whiteKeys = baseWhiteKeys.map(key => ({
+    ...key,
+    frequency: key.baseFrequency * octaveMultiplier
+  }));
+  const blackKeys = baseBlackKeys.map(key => ({
+    ...key,
+    frequency: key.baseFrequency * octaveMultiplier
+  }));
 
   const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current) {
@@ -126,6 +139,18 @@ export const PitchPipe: React.FC<PitchPipeProps> = ({ className = '' }) => {
     <Card className={`p-3 ${className}`}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium">Pitch Pipe</h3>
+        <Select value={octave.toString()} onValueChange={(value) => setOctave(parseInt(value))}>
+          <SelectTrigger className="w-20 h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="2">C2</SelectItem>
+            <SelectItem value="3">C3</SelectItem>
+            <SelectItem value="4">C4</SelectItem>
+            <SelectItem value="5">C5</SelectItem>
+            <SelectItem value="6">C6</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       
       {/* Piano Keyboard Layout */}
