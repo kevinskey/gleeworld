@@ -4,7 +4,7 @@ export type MetronomeSoundType = 'pitch' | 'click';
 
 export const useMetronome = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.5);
+  const [volume, setVolume] = useState(0.8);
   const [tempo, setTempo] = useState(120);
   const [soundType, setSoundType] = useState<MetronomeSoundType>('pitch');
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -75,12 +75,12 @@ export const useMetronome = () => {
       gainNode.connect(audioContext.destination);
       
       // Louder click for downbeat
-      const clickVolume = isDownbeat ? volume * 1.3 : volume;
+      const clickVolume = isDownbeat ? volume * 1.5 : volume * 0.8;
       gainNode.gain.setValueAtTime(clickVolume, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.03);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
       
       noiseSource.start(audioContext.currentTime);
-      noiseSource.stop(audioContext.currentTime + 0.03);
+      noiseSource.stop(audioContext.currentTime + 0.05);
     } else {
       // Original pitched sound
       const oscillator = audioContext.createOscillator();
@@ -90,14 +90,15 @@ export const useMetronome = () => {
       gainNode.connect(audioContext.destination);
 
       // Higher pitch for downbeat, lower for other beats
+      const pitchVolume = isDownbeat ? volume * 1.2 : volume * 0.9;
       oscillator.frequency.setValueAtTime(isDownbeat ? 1000 : 800, audioContext.currentTime);
       oscillator.type = 'square';
 
-      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.1);
+      gainNode.gain.setValueAtTime(pitchVolume, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
 
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      oscillator.stop(audioContext.currentTime + 0.08);
     }
   }, [volume, soundType, initAudioContext]);
 
