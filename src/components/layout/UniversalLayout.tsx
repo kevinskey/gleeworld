@@ -61,15 +61,19 @@ export const UniversalLayout = ({
 
   return (
     <div 
-      className={`min-h-screen flex flex-col w-full overflow-x-hidden ${userBackground ? '' : 'bg-background'}`}
-      style={userBackground ? {
-        backgroundImage: `url(${userBackground})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundAttachment: 'fixed',
-        backgroundColor: 'transparent'
-      } : undefined}
+      className={`min-h-screen flex flex-col w-full overflow-x-hidden relative ${userBackground ? '' : 'bg-background'}`}
     >
+      {userBackground && (
+        <div 
+          className="fixed inset-0 w-full h-full -z-10"
+          style={{
+            backgroundImage: `url(${userBackground})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+      )}
       {showHeader && (
         <>
           {shouldUsePublicHeader ? (
