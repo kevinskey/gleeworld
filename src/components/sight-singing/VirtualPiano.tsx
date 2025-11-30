@@ -180,7 +180,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   return (
     <div className={`fixed inset-0 z-[100] bg-background flex flex-col ${className}`}>
       {/* Header Bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/95 backdrop-blur-sm shrink-0">
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-card backdrop-blur-sm shrink-0">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Virtual Piano</h2>
           <Select value={startOctave.toString()} onValueChange={(value) => setStartOctave(parseInt(value))}>
@@ -229,18 +229,18 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       </div>
 
       {/* Piano Keyboard - Full Screen */}
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 overflow-hidden p-4">
-        <div className="relative w-full h-full max-h-[500px] flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 overflow-hidden">
+        <div className="relative w-full h-full flex items-center justify-center py-4">
           <div className="relative w-full h-full max-w-[98vw] mx-auto">
             {/* White Keys Container */}
-            <div className="flex h-full w-full justify-center gap-0.5">
+            <div className="flex h-full w-full justify-center gap-0.5 min-h-[300px] sm:min-h-[400px] landscape:min-h-[50vh]">
               {whiteKeys.map((key, index) => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
                 return (
                   <button
                     key={keyName}
-                    className={`flex-1 min-w-[45px] sm:min-w-[55px] max-w-[90px] cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-3 sm:pb-4 text-xs sm:text-sm font-semibold select-none border-r-2 border-gray-300/50 last:border-r-0 touch-manipulation ${
+                    className={`flex-1 min-w-[55px] sm:min-w-[65px] landscape:min-w-[70px] max-w-[100px] cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-3 sm:pb-4 text-xs sm:text-sm font-semibold select-none border-r-2 border-gray-300/50 last:border-r-0 touch-manipulation ${
                       isActive
                         ? "bg-primary/30 shadow-inner scale-[0.98]"
                         : "bg-white hover:bg-gray-50 shadow-lg active:bg-primary/20 active:scale-[0.98]"
