@@ -178,16 +178,16 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   }, []);
 
   return (
-    <div className={`fixed inset-0 z-50 bg-background flex flex-col ${className}`}>
+    <div className={`fixed inset-0 z-[100] bg-background flex flex-col ${className}`}>
       {/* Header Bar */}
-      <div className="flex items-center justify-between p-3 border-b border-border bg-card shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/95 backdrop-blur-sm shrink-0">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Virtual Piano</h2>
           <Select value={startOctave.toString()} onValueChange={(value) => setStartOctave(parseInt(value))}>
             <SelectTrigger className="w-28 h-9">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="z-[110]">
               <SelectItem value="1">C1-C3</SelectItem>
               <SelectItem value="2">C2-C4</SelectItem>
               <SelectItem value="3">C3-C5</SelectItem>
@@ -229,26 +229,26 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       </div>
 
       {/* Piano Keyboard - Full Screen */}
-      <div className="flex-1 flex items-center justify-center bg-muted/20 overflow-hidden">
-        <div className="relative w-full h-full max-h-[400px] landscape:max-h-[70vh] flex items-center justify-center">
-          <div className="relative w-full max-w-[95vw] landscape:max-w-[90vw] h-48 landscape:h-[60vh] landscape:max-h-64">
-            {/* White Keys */}
-            <div className="flex h-full w-full justify-center">
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 overflow-hidden p-4">
+        <div className="relative w-full h-full max-h-[500px] flex items-center justify-center">
+          <div className="relative w-full h-full max-w-[98vw] mx-auto">
+            {/* White Keys Container */}
+            <div className="flex h-full w-full justify-center gap-0.5">
               {whiteKeys.map((key, index) => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
                 return (
-                  <div
+                  <button
                     key={keyName}
-                    className={`flex-1 min-w-[50px] max-w-[80px] cursor-pointer transition-all duration-75 flex items-end justify-center pb-4 text-sm font-semibold select-none border-r-2 border-gray-300 last:border-r-0 ${
+                    className={`flex-1 min-w-[45px] sm:min-w-[55px] max-w-[90px] cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-3 sm:pb-4 text-xs sm:text-sm font-semibold select-none border-r-2 border-gray-300/50 last:border-r-0 touch-manipulation ${
                       isActive
-                        ? "bg-primary/20 shadow-inner transform translate-y-1"
-                        : "bg-white hover:bg-gray-50 shadow-lg active:bg-primary/10"
-                    } ${index === 0 ? "rounded-l-lg" : ""} ${index === whiteKeys.length - 1 ? "rounded-r-lg" : ""}`}
+                        ? "bg-primary/30 shadow-inner scale-[0.98]"
+                        : "bg-white hover:bg-gray-50 shadow-lg active:bg-primary/20 active:scale-[0.98]"
+                    } ${index === 0 ? "rounded-l-xl" : ""} ${index === whiteKeys.length - 1 ? "rounded-r-xl" : ""}`}
                     style={{
                       boxShadow: isActive 
-                        ? "inset 0 4px 8px rgba(0,0,0,0.3)" 
-                        : "0 4px 8px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.9)"
+                        ? "inset 0 6px 12px rgba(0,0,0,0.35)" 
+                        : "0 6px 12px rgba(0,0,0,0.2), inset 0 3px 0 rgba(255,255,255,0.9)"
                     }}
                     onMouseDown={() => playNote(key.frequency, keyName)}
                     onMouseUp={() => stopNote(keyName)}
@@ -262,39 +262,39 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
                       stopNote(keyName);
                     }}
                   >
-                    <span className="text-gray-700">{key.note}{key.octave}</span>
-                  </div>
+                    <span className="text-gray-700 font-bold">{key.note}<sub className="text-[0.6em]">{key.octave}</sub></span>
+                  </button>
                 );
               })}
             </div>
             
             {/* Black Keys */}
-            <div className="absolute inset-x-0 top-0 h-[60%] pointer-events-none flex justify-center">
-              <div className="relative w-full max-w-full">
+            <div className="absolute inset-x-0 top-0 h-[58%] pointer-events-none flex justify-center">
+              <div className="relative w-full">
                 {blackKeys.map((key) => {
                   const keyName = `${key.note}${key.octave}`;
                   const isActive = activeNotes.has(keyName);
                   const whiteKeyWidth = 100 / whiteKeys.length;
-                  const blackKeyWidth = whiteKeyWidth * 0.65;
+                  const blackKeyWidth = Math.min(whiteKeyWidth * 0.65, 8);
                   const leftPercentage = (key.position / whiteKeys.length) * 100 - (blackKeyWidth / 2);
                   
                   return (
-                    <div
+                    <button
                       key={keyName}
-                      className={`absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-3 text-xs font-semibold pointer-events-auto select-none ${
+                      className={`absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation ${
                         isActive
-                          ? "bg-gray-700 shadow-inner transform translate-y-1"
-                          : "bg-gray-900 hover:bg-gray-800 active:bg-gray-700"
+                          ? "bg-gray-700 shadow-inner scale-[0.96]"
+                          : "bg-gray-900 hover:bg-gray-800 active:bg-gray-700 active:scale-[0.96]"
                       }`}
                       style={{
                         left: `${leftPercentage}%`,
                         width: `${blackKeyWidth}%`,
-                        minWidth: '32px',
-                        maxWidth: '52px',
-                        borderRadius: "0 0 6px 6px",
+                        minWidth: '36px',
+                        maxWidth: '60px',
+                        borderRadius: "0 0 8px 8px",
                         boxShadow: isActive 
-                          ? "inset 0 4px 8px rgba(0,0,0,0.8)" 
-                          : "0 4px 10px rgba(0,0,0,0.6), inset 0 2px 0 rgba(255,255,255,0.15)"
+                          ? "inset 0 5px 10px rgba(0,0,0,0.9)" 
+                          : "0 5px 12px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.2)"
                       }}
                       onMouseDown={() => playNote(key.frequency, keyName)}
                       onMouseUp={() => stopNote(keyName)}
@@ -308,8 +308,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
                         stopNote(keyName);
                       }}
                     >
-                      <span className="text-white text-xs">{key.note}</span>
-                    </div>
+                      <span className="text-white">{key.note.replace('#', '♯')}</span>
+                    </button>
                   );
                 })}
               </div>
