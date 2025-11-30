@@ -21,6 +21,7 @@ import { CountdownText } from "@/components/ui/countdown-text";
 
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
 import { ExecutiveBoardDropdown } from "@/components/navigation/ExecutiveBoardDropdown";
+import { DashboardBackgroundUploader } from "@/components/profile/DashboardBackgroundUploader";
 
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
@@ -116,14 +117,14 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 {/* Keep dashboard switcher as secondary navigation */}
                   <DropdownMenu>
                    <DropdownMenuTrigger asChild>
-                     <Button 
-                       variant="ghost" 
-                       size="sm" 
-                       className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 p-0 rounded-md hover:bg-accent/20"
-                       type="button"
-                     >
-                       <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
-                     </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 p-0 rounded-md hover:bg-accent/20"
+                        type="button"
+                      >
+                        <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+                      </Button>
                    </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-background border border-border shadow-2xl z-[1100]" align="end">
                     <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
@@ -245,30 +246,30 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
-                     <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="relative h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 rounded-full p-0" type="button">
-                          <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 border-2 border-border/30">
-                            <AvatarImage 
-                              src={userProfile?.avatar_url || undefined} 
-                              alt={userProfile?.full_name || user?.email || "Your Profile"}
-                              className="object-cover"
-                              onError={(e) => {
-                                console.log('Avatar image failed to load:', userProfile?.avatar_url);
-                                e.currentTarget.style.display = 'none';
-                              }}
-                              onLoad={() => {
-                                console.log('Avatar image loaded successfully:', userProfile?.avatar_url);
-                              }}
-                            />
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold relative">
-                              {userProfile?.full_name ? 
-                                userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
-                                user?.email?.charAt(0).toUpperCase() || 'U'
-                              }
-                            </AvatarFallback>
-                          </Avatar>
-                       </Button>
-                     </DropdownMenuTrigger>
+                      <DropdownMenuTrigger asChild>
+                         <Button variant="ghost" className="relative h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 rounded-full p-0" type="button">
+                           <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 border-2 border-border/30">
+                             <AvatarImage 
+                               src={userProfile?.avatar_url || undefined} 
+                               alt={userProfile?.full_name || user?.email || "Your Profile"}
+                               className="object-cover"
+                               onError={(e) => {
+                                 console.log('Avatar image failed to load:', userProfile?.avatar_url);
+                                 e.currentTarget.style.display = 'none';
+                               }}
+                               onLoad={() => {
+                                 console.log('Avatar image loaded successfully:', userProfile?.avatar_url);
+                               }}
+                             />
+                             <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold relative">
+                               {userProfile?.full_name ? 
+                                 userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
+                                 user?.email?.charAt(0).toUpperCase() || 'U'
+                               }
+                             </AvatarFallback>
+                           </Avatar>
+                        </Button>
+                      </DropdownMenuTrigger>
                    </EnhancedTooltip>
                     <DropdownMenuContent className="w-48 py-1 bg-background shadow-2xl border border-border z-[1100]" align="end" forceMount>
                       <div className="flex flex-col space-y-0.5 p-1.5">
@@ -302,6 +303,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                            Settings
                          </Link>
                        </DropdownMenuItem>
+                     <DropdownMenuSeparator />
+                     
+                     {/* Dashboard Background Upload Section */}
+                     <div className="px-2 py-2 max-w-[280px]">
+                       <DashboardBackgroundUploader />
+                     </div>
+                     
                      <DropdownMenuSeparator />
                      <DropdownMenuItem onClick={handleSignOut} className="py-1.5 text-xs">
                        <LogOut className="mr-1.5 h-3 w-3" />
