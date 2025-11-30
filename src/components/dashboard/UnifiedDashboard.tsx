@@ -1,6 +1,5 @@
-import React, { useState, lazy, Suspense, useMemo } from 'react';
+import React, { useState, lazy, Suspense, useMemo, useEffect } from 'react';
 import { MessagesPanel } from './MessagesPanel';
-import { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Users, Calendar as CalendarIcon, Eye, Music, ArrowLeft } from 'lucide-react';
@@ -49,6 +48,24 @@ export const UnifiedDashboard = () => {
   const [simulatedStudentId, setSimulatedStudentId] = useState<string | null>(null);
   const [simulatedMemberId, setSimulatedMemberId] = useState<string | null>(null);
   const [simLoading, setSimLoading] = useState(false);
+  const [hasCustomBackground, setHasCustomBackground] = useState(false);
+
+  // Check if user has custom background
+  useEffect(() => {
+    const checkCustomBackground = async () => {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('dashboard_background_url')
+        .eq('user_id', user.id)
+        .single();
+      
+      setHasCustomBackground(!!data?.dashboard_background_url);
+    };
+    
+    checkCustomBackground();
+  }, [user?.id]);
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const moduleId = params.get('module');
@@ -182,7 +199,7 @@ export const UnifiedDashboard = () => {
     const showMemberNav = memberModules.includes(activeModuleId) && !profile?.is_admin && !profile?.is_super_admin;
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
         <div className="px-6 py-4">
           <Button
             variant="ghost"
@@ -221,7 +238,7 @@ export const UnifiedDashboard = () => {
   // Show different dashboard content based on view mode
   if (viewMode === 'member') {
     // Member view: Simulate member role permissions
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+    return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           {simLoading && (
             <div className="text-center text-muted-foreground py-10">Loading member view…</div>
@@ -249,7 +266,7 @@ export const UnifiedDashboard = () => {
   }
   if (viewMode === 'student') {
     // Student view: Simulate student role permissions
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+    return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           {simLoading && (
             <div className="text-center text-muted-foreground py-10">Loading student view…</div>
@@ -278,7 +295,7 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'fan') {
     // Show monitoring interface for admins viewing fan dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
-      return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -302,7 +319,7 @@ export const UnifiedDashboard = () => {
     }
   }
   if (viewMode === 'mus240') {
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+    return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
         <div className="px-6 py-4">
           <div className="text-center py-8">
             <h1 className="text-3xl font-bold text-primary mb-4">MUS 240 Class Dashboard</h1>
@@ -318,7 +335,7 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'public') {
     // Show monitoring interface for admins viewing public dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
-      return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+      return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -344,7 +361,7 @@ export const UnifiedDashboard = () => {
 
   // Default view: Use MetalHeaderDashboard for all members
   if (viewMode === 'default') {
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+    return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           <MetalHeaderDashboard 
             user={{
@@ -366,7 +383,7 @@ export const UnifiedDashboard = () => {
         )}
       </div>;
   }
-  return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
+  return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
       
 
       {/* Row 1: Hero + Features side-by-side */}
