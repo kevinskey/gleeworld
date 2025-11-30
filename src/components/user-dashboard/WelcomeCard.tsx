@@ -1,12 +1,10 @@
 import { format } from "date-fns";
 import { useDashboardSettings } from "@/hooks/useDashboardSettings";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { BellDot } from "lucide-react";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 import { useNavigate } from "react-router-dom";
 import festiveBg from "@/assets/gleeworld-festive-background.webp";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -25,27 +23,6 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   const [imageError, setImageError] = useState(false);
   const { dashboardData } = useUserDashboardContext();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [userBackground, setUserBackground] = useState<string | null>(null);
-
-  // Load user's custom dashboard background
-  useEffect(() => {
-    const loadUserBackground = async () => {
-      if (!user?.id) return;
-      
-      const { data, error } = await supabase
-        .from('gw_profiles')
-        .select('dashboard_background_url')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (data?.dashboard_background_url) {
-        setUserBackground(data.dashboard_background_url);
-      }
-    };
-    
-    loadUserBackground();
-  }, [user?.id]);
 
   const getUserTitle = () => {
     // Check for executive board role first
@@ -81,12 +58,11 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
     setImageError(false);
   };
 
-  // Determine which background to use: user custom > admin setting > default festive
+  // Determine which background to use: admin setting > default festive
   const backgroundImage = useMemo(() => {
-    if (userBackground) return userBackground;
     if (welcomeCardSetting?.image_url && !imageError) return welcomeCardSetting.image_url;
     return festiveBg;
-  }, [userBackground, welcomeCardSetting?.image_url, imageError]);
+  }, [welcomeCardSetting?.image_url, imageError]);
 
   return (
     <div 
