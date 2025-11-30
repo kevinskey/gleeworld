@@ -1,12 +1,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Volume2, VolumeX } from 'lucide-react';
+import { Volume2, VolumeX, X } from 'lucide-react';
 
 interface VirtualPianoProps {
   className?: string;
+  onClose?: () => void;
 }
 
 // Base frequencies for one octave starting at C4 (middle C)
@@ -60,14 +60,13 @@ const generateKeys = (startOctave: number) => {
   return { whiteKeys, blackKeys };
 };
 
-export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '' }) => {
-  const [isPlaying, setIsPlaying] = useState<string | null>(null);
-  const [volume, setVolume] = useState([0.3]);
+export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onClose }) => {
+  const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
+  const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
   const [startOctave, setStartOctave] = useState<number>(3); // Default starts at C3
   const audioContextRef = useRef<AudioContext | null>(null);
-  const oscillatorRef = useRef<OscillatorNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
+  const activeOscillatorsRef = useRef<Map<string, { oscillator: OscillatorNode; gainNode: GainNode }>>(new Map());
 
   // Generate 3 octaves starting from selected octave
   const { whiteKeys, blackKeys } = generateKeys(startOctave);
@@ -97,17 +96,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '' }) =>
   }, []);
 
   const playNote = useCallback(async (frequency: number, noteName: string) => {
+    if (activeOscillatorsRef.current.has(noteName)) return; // Already playing
+    
     const audioContext = await initAudioContext();
+    if (!audioContext || audioContext.state !== 'running') return;
     
-    if (!audioContext || audioContext.state !== 'running') {
-      console.warn('AudioContext not available or not running');
-      return;
-    }
-
-    // Stop any currently playing note
-    stopNote();
-    
-    // Create oscillator and gain nodes
+    // Create oscillator and gain nodes with ADSR envelope
     const oscillator = audioContext.createOscillator();
     const gainNode = audioContext.createGain();
     
@@ -115,169 +109,214 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '' }) =>
     gainNode.connect(audioContext.destination);
     
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-    oscillator.type = 'sine';
+    oscillator.type = 'triangle'; // Warmer sound than sine
     
     const currentVolume = isMuted ? 0 : volume[0];
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(currentVolume, audioContext.currentTime + 0.02);
+    const now = audioContext.currentTime;
+    
+    // ADSR envelope for smoother sound
+    gainNode.gain.setValueAtTime(0, now);
+    gainNode.gain.linearRampToValueAtTime(currentVolume * 0.8, now + 0.01); // Attack
+    gainNode.gain.linearRampToValueAtTime(currentVolume * 0.6, now + 0.05); // Decay
+    gainNode.gain.setValueAtTime(currentVolume * 0.6, now + 0.05); // Sustain
     
     oscillator.start();
     
-    oscillatorRef.current = oscillator;
-    gainNodeRef.current = gainNode;
-    setIsPlaying(noteName);
+    activeOscillatorsRef.current.set(noteName, { oscillator, gainNode });
+    setActiveNotes(prev => new Set(prev).add(noteName));
   }, [volume, isMuted, initAudioContext]);
 
-  const stopNote = useCallback(() => {
-    if (oscillatorRef.current && gainNodeRef.current && audioContextRef.current) {
-      try {
-        const currentTime = audioContextRef.current.currentTime;
-        gainNodeRef.current.gain.linearRampToValueAtTime(0, currentTime + 0.05);
-        
-        setTimeout(() => {
-          oscillatorRef.current?.stop();
-          oscillatorRef.current = null;
-          gainNodeRef.current = null;
-        }, 50);
-      } catch (error) {
-        // Oscillator might already be stopped
-        oscillatorRef.current = null;
-        gainNodeRef.current = null;
-      }
+  const stopNote = useCallback((noteName: string) => {
+    const nodes = activeOscillatorsRef.current.get(noteName);
+    if (!nodes || !audioContextRef.current) return;
+    
+    try {
+      const now = audioContextRef.current.currentTime;
+      // Release envelope
+      nodes.gainNode.gain.cancelScheduledValues(now);
+      nodes.gainNode.gain.setValueAtTime(nodes.gainNode.gain.value, now);
+      nodes.gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      
+      setTimeout(() => {
+        nodes.oscillator.stop();
+        activeOscillatorsRef.current.delete(noteName);
+      }, 150);
+    } catch (error) {
+      activeOscillatorsRef.current.delete(noteName);
     }
-    setIsPlaying(null);
+    
+    setActiveNotes(prev => {
+      const next = new Set(prev);
+      next.delete(noteName);
+      return next;
+    });
   }, []);
 
   const toggleMute = () => {
     setIsMuted(!isMuted);
-    if (gainNodeRef.current && audioContextRef.current) {
+    if (audioContextRef.current) {
       const newVolume = !isMuted ? 0 : volume[0];
-      gainNodeRef.current.gain.setValueAtTime(newVolume, audioContextRef.current.currentTime);
+      activeOscillatorsRef.current.forEach(({ gainNode }) => {
+        gainNode.gain.setValueAtTime(newVolume, audioContextRef.current!.currentTime);
+      });
     }
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopNote();
+      activeOscillatorsRef.current.forEach((nodes) => {
+        try {
+          nodes.oscillator.stop();
+        } catch (e) {}
+      });
+      activeOscillatorsRef.current.clear();
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close();
       }
     };
-  }, [stopNote]);
+  }, []);
 
   return (
-    <Card className={`w-full ${className}`}>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Virtual Piano</span>
-          <div className="flex items-center gap-2">
-            <Select value={startOctave.toString()} onValueChange={(value) => setStartOctave(parseInt(value))}>
-              <SelectTrigger className="w-24 h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="1">C1-C3</SelectItem>
-                <SelectItem value="2">C2-C4</SelectItem>
-                <SelectItem value="3">C3-C5</SelectItem>
-                <SelectItem value="4">C4-C6</SelectItem>
-              </SelectContent>
-            </Select>
+    <div className={`fixed inset-0 z-50 bg-background flex flex-col ${className}`}>
+      {/* Header Bar */}
+      <div className="flex items-center justify-between p-3 border-b border-border bg-card shrink-0">
+        <div className="flex items-center gap-3">
+          <h2 className="text-lg font-semibold">Virtual Piano</h2>
+          <Select value={startOctave.toString()} onValueChange={(value) => setStartOctave(parseInt(value))}>
+            <SelectTrigger className="w-28 h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">C1-C3</SelectItem>
+              <SelectItem value="2">C2-C4</SelectItem>
+              <SelectItem value="3">C3-C5</SelectItem>
+              <SelectItem value="4">C4-C6</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleMute}
+            className="h-9 w-9"
+          >
+            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          </Button>
+          <div className="w-24 hidden sm:block">
+            <Slider
+              value={volume}
+              onValueChange={setVolume}
+              max={1}
+              min={0}
+              step={0.1}
+              className="w-full"
+            />
+          </div>
+          {onClose && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={toggleMute}
-              className="h-8 w-8"
+              onClick={onClose}
+              className="h-9 w-9"
             >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              <X className="h-5 w-5" />
             </Button>
-            <div className="w-20">
-              <Slider
-                value={volume}
-                onValueChange={setVolume}
-                max={1}
-                min={0}
-                step={0.1}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Piano Keyboard */}
-        <div className="relative w-full h-32 bg-gray-100 p-2 rounded-lg overflow-x-auto">
-          {/* White Keys */}
-          <div className="flex h-full min-w-max">
-            {whiteKeys.map((key, index) => {
-              const keyName = `${key.note}${key.octave}`;
-              return (
-                <div
-                  key={keyName}
-                  className={`w-10 h-full cursor-pointer transition-all duration-100 flex items-end justify-center pb-2 text-xs font-medium select-none border-r border-gray-300 last:border-r-0 ${
-                    isPlaying === keyName
-                      ? "bg-blue-200 shadow-inner transform translate-y-1"
-                      : "bg-white hover:bg-gray-50 shadow-md"
-                  } ${index === 0 ? "rounded-l-md" : ""} ${index === whiteKeys.length - 1 ? "rounded-r-md" : ""}`}
-                  style={{
-                    boxShadow: isPlaying === keyName 
-                      ? "inset 0 2px 4px rgba(0,0,0,0.3)" 
-                      : "0 2px 4px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.8)"
-                  }}
-                  onMouseDown={() => playNote(key.frequency, keyName)}
-                  onMouseUp={stopNote}
-                  onMouseLeave={stopNote}
-                  onTouchStart={() => playNote(key.frequency, keyName)}
-                  onTouchEnd={stopNote}
-                >
-                  <span className="text-gray-700 text-xs">{key.note}</span>
-                </div>
-              );
-            })}
-          </div>
-          
-          {/* Black Keys */}
-          <div className="absolute top-2 left-2 right-2 h-20 pointer-events-none">
-            {blackKeys.map((key) => {
-              const keyName = `${key.note}${key.octave}`;
-              const leftOffset = key.position * 40 + 16; // 40px per white key + padding
-              
-              return (
-                <div
-                  key={keyName}
-                  className={`absolute w-6 h-full cursor-pointer transition-all duration-100 flex items-end justify-center pb-2 text-xs font-medium pointer-events-auto select-none ${
-                    isPlaying === keyName
-                      ? "bg-gray-600 shadow-inner transform translate-y-1"
-                      : "bg-gray-900 hover:bg-gray-800"
-                  }`}
-                  style={{
-                    left: `${leftOffset}px`,
-                    borderRadius: "0 0 4px 4px",
-                    boxShadow: isPlaying === keyName 
-                      ? "inset 0 2px 4px rgba(0,0,0,0.6)" 
-                      : "0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1)"
-                  }}
-                  onMouseDown={() => playNote(key.frequency, keyName)}
-                  onMouseUp={stopNote}
-                  onMouseLeave={stopNote}
-                  onTouchStart={() => playNote(key.frequency, keyName)}
-                  onTouchEnd={stopNote}
-                >
-                  <span className="text-white text-xs">{key.note}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        
-        <div className="text-center mt-4">
-          {isPlaying && (
-            <div className="text-sm text-muted-foreground">
-              Playing: <span className="font-semibold text-primary">{isPlaying}</span>
-            </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Piano Keyboard - Full Screen */}
+      <div className="flex-1 flex items-center justify-center bg-muted/20 overflow-hidden">
+        <div className="relative w-full h-full max-h-[400px] landscape:max-h-[70vh] flex items-center justify-center">
+          <div className="relative w-full max-w-[95vw] landscape:max-w-[90vw] h-48 landscape:h-[60vh] landscape:max-h-64">
+            {/* White Keys */}
+            <div className="flex h-full w-full justify-center">
+              {whiteKeys.map((key, index) => {
+                const keyName = `${key.note}${key.octave}`;
+                const isActive = activeNotes.has(keyName);
+                return (
+                  <div
+                    key={keyName}
+                    className={`flex-1 min-w-[50px] max-w-[80px] cursor-pointer transition-all duration-75 flex items-end justify-center pb-4 text-sm font-semibold select-none border-r-2 border-gray-300 last:border-r-0 ${
+                      isActive
+                        ? "bg-primary/20 shadow-inner transform translate-y-1"
+                        : "bg-white hover:bg-gray-50 shadow-lg active:bg-primary/10"
+                    } ${index === 0 ? "rounded-l-lg" : ""} ${index === whiteKeys.length - 1 ? "rounded-r-lg" : ""}`}
+                    style={{
+                      boxShadow: isActive 
+                        ? "inset 0 4px 8px rgba(0,0,0,0.3)" 
+                        : "0 4px 8px rgba(0,0,0,0.15), inset 0 2px 0 rgba(255,255,255,0.9)"
+                    }}
+                    onMouseDown={() => playNote(key.frequency, keyName)}
+                    onMouseUp={() => stopNote(keyName)}
+                    onMouseLeave={() => stopNote(keyName)}
+                    onTouchStart={(e) => {
+                      e.preventDefault();
+                      playNote(key.frequency, keyName);
+                    }}
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      stopNote(keyName);
+                    }}
+                  >
+                    <span className="text-gray-700">{key.note}{key.octave}</span>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Black Keys */}
+            <div className="absolute inset-x-0 top-0 h-[60%] pointer-events-none flex justify-center">
+              <div className="relative w-full max-w-full">
+                {blackKeys.map((key) => {
+                  const keyName = `${key.note}${key.octave}`;
+                  const isActive = activeNotes.has(keyName);
+                  const whiteKeyWidth = 100 / whiteKeys.length;
+                  const blackKeyWidth = whiteKeyWidth * 0.65;
+                  const leftPercentage = (key.position / whiteKeys.length) * 100 - (blackKeyWidth / 2);
+                  
+                  return (
+                    <div
+                      key={keyName}
+                      className={`absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-3 text-xs font-semibold pointer-events-auto select-none ${
+                        isActive
+                          ? "bg-gray-700 shadow-inner transform translate-y-1"
+                          : "bg-gray-900 hover:bg-gray-800 active:bg-gray-700"
+                      }`}
+                      style={{
+                        left: `${leftPercentage}%`,
+                        width: `${blackKeyWidth}%`,
+                        minWidth: '32px',
+                        maxWidth: '52px',
+                        borderRadius: "0 0 6px 6px",
+                        boxShadow: isActive 
+                          ? "inset 0 4px 8px rgba(0,0,0,0.8)" 
+                          : "0 4px 10px rgba(0,0,0,0.6), inset 0 2px 0 rgba(255,255,255,0.15)"
+                      }}
+                      onMouseDown={() => playNote(key.frequency, keyName)}
+                      onMouseUp={() => stopNote(keyName)}
+                      onMouseLeave={() => stopNote(keyName)}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        playNote(key.frequency, keyName);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        stopNote(keyName);
+                      }}
+                    >
+                      <span className="text-white text-xs">{key.note}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };

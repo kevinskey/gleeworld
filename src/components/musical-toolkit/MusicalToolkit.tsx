@@ -79,23 +79,16 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         </DialogContent>
       </Dialog>
 
+      {/* Full Piano - Full Screen */}
+      {open.pianoFull && (
+        <VirtualPiano onClose={() => setOpen((o) => ({ ...o, pianoFull: false }))} />
+      )}
+
       {/* Small Piano */}
       <Dialog open={open.pianoSmall} onOpenChange={(v) => setOpen((o) => ({ ...o, pianoSmall: v }))}>
         <DialogContent className="sm:max-w-[720px] bg-background border border-border">
           <DialogHeader>
             <DialogTitle className="text-base">Small Piano</DialogTitle>
-          </DialogHeader>
-          <div className="overflow-x-auto">
-            <VirtualPiano />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Full Piano */}
-      <Dialog open={open.pianoFull} onOpenChange={(v) => setOpen((o) => ({ ...o, pianoFull: v }))}>
-        <DialogContent className="max-w-[100vw] w-[100vw] h-[80vh] bg-background border border-border">
-          <DialogHeader>
-            <DialogTitle className="text-base">Full Piano (C3–G5)</DialogTitle>
           </DialogHeader>
           <div className="overflow-x-auto">
             <VirtualPiano />
