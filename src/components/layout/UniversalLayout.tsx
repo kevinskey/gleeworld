@@ -1,9 +1,11 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { UniversalHeader } from "./UniversalHeader";
 import { PublicHeader } from "./PublicHeader";
 import { UniversalFooter } from "./UniversalFooter";
 import { ResponsiveContainer } from "@/components/shared/ResponsiveContainer";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UniversalLayoutProps {
   children: ReactNode;
@@ -27,6 +29,8 @@ export const UniversalLayout = ({
   onViewModeChange,
 }: UniversalLayoutProps) => {
   const location = useLocation();
+  const { user } = useAuth();
+  const [userBackground, setUserBackground] = useState<string | null>(null);
   
   // Use PublicHeader for public, fan, and alumnae pages
   const usePublicHeaderPaths = [
@@ -37,8 +41,34 @@ export const UniversalLayout = ({
   
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
 
+  useEffect(() => {
+    const fetchUserBackground = async () => {
+      if (!user?.id) return;
+      
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('dashboard_background_url')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data?.dashboard_background_url) {
+        setUserBackground(data.dashboard_background_url);
+      }
+    };
+    
+    fetchUserBackground();
+  }, [user?.id]);
+
   return (
-    <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
+    <div 
+      className="min-h-screen flex flex-col w-full overflow-x-hidden bg-background"
+      style={userBackground ? {
+        backgroundImage: `url(${userBackground})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed'
+      } : undefined}
+    >
       {showHeader && (
         <>
           {shouldUsePublicHeader ? (
