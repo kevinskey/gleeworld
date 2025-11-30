@@ -112,14 +112,24 @@ export const PRImageDetails = ({
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Image Preview */}
+          {/* Media Preview */}
           <div className="space-y-4">
             <div className="relative">
-              <img
-                src={getImageUrl(image.file_path)}
-                alt={image.original_filename || 'PR Image'}
-                className="w-full rounded-lg border"
-              />
+              {image.mime_type?.startsWith('video/') ? (
+                <video
+                  src={getImageUrl(image.file_path)}
+                  controls
+                  className="w-full rounded-lg border"
+                >
+                  Your browser does not support the video tag.
+                </video>
+              ) : (
+                <img
+                  src={getImageUrl(image.file_path)}
+                  alt={image.original_filename || 'PR Image'}
+                  className="w-full rounded-lg border"
+                />
+              )}
               {image.is_featured && (
                 <Badge className="absolute top-3 right-3 gap-1">
                   <Star className="h-3 w-3" />
