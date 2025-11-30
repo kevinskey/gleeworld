@@ -66,13 +66,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
 
   return (
     <div 
-      className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center"
-      style={{
-        backgroundImage: `url("${backgroundImage}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      }}
+      className="relative rounded-2xl sm:rounded-3xl shadow-lg h-[40vh] flex items-center bg-transparent"
     >
 
       {/* Transparent background - no overlay */}
