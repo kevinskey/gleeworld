@@ -196,7 +196,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
             <SelectTrigger className="w-28 h-9">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-[110]">
+            <SelectContent className="z-[2147483648]">
               <SelectItem value="1">C1-C3</SelectItem>
               <SelectItem value="2">C2-C4</SelectItem>
               <SelectItem value="3">C3-C5</SelectItem>
