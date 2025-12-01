@@ -183,8 +183,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
     };
   }, []);
 
+  // Full-screen mode when onClose is provided
+  const isFullScreen = !!onClose;
+  
   return (
-    <div className={`fixed inset-0 z-[2147483647] bg-background flex flex-col ${className}`}>
+    <div className={isFullScreen ? `fixed inset-0 z-[2147483647] bg-background flex flex-col ${className}` : `w-full flex flex-col ${className}`}>
       {/* Header Bar */}
       <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-card backdrop-blur-sm shrink-0">
         <div className="flex items-center gap-3">
@@ -234,11 +237,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       </div>
 
       {/* Piano Keyboard Area */}
-      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 overflow-auto">
+      <div className={isFullScreen ? "flex-1 flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 overflow-auto" : "w-full flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 py-4"}>
         <div className="relative w-full max-w-6xl mx-auto py-4 px-2 sm:px-4">
           {/* White Keys */}
           <div className="relative w-full">
-            <div className="flex w-full justify-center gap-0.5 h-[320px] sm:h-[400px] md:h-[480px]">
+            <div className={isFullScreen ? "flex w-full justify-center gap-0.5 h-[320px] sm:h-[400px] md:h-[480px]" : "flex w-full justify-center gap-0.5 h-[240px]"}>
               {whiteKeys.map((key, index) => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
