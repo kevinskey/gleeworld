@@ -95,6 +95,13 @@ export const EditQuestionDialog = ({ open, onOpenChange, testId, question, exist
   const onSubmit = async (data: QuestionFormData) => {
     if (!question) return;
 
+    // Debug log to verify what we're saving (especially media fields)
+    console.log('EditQuestionDialog submit payload:', {
+      questionId: question.id,
+      testId,
+      data,
+    });
+
     // Update the question
     await updateQuestion.mutateAsync({
       id: question.id,
