@@ -8,11 +8,14 @@ import { useFileUpload } from '@/integrations/supabase/hooks/useFileUpload';
 
 interface MediaUploadSectionProps {
   onMediaChange: (mediaType: string | null, mediaUrl: string | null, youtubeId: string | null) => void;
+  initialMediaType?: string | null;
+  initialMediaUrl?: string | null;
+  initialYoutubeId?: string | null;
 }
 
-export const MediaUploadSection = ({ onMediaChange }: MediaUploadSectionProps) => {
-  const [mediaType, setMediaType] = useState<string | null>(null);
-  const [youtubeId, setYoutubeId] = useState('');
+export const MediaUploadSection = ({ onMediaChange, initialMediaType = null, initialMediaUrl = null, initialYoutubeId = '' }: MediaUploadSectionProps) => {
+  const [mediaType, setMediaType] = useState<string | null>(initialMediaType);
+  const [youtubeId, setYoutubeId] = useState(initialYoutubeId || '');
   const { uploadFile, uploading } = useFileUpload();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +40,16 @@ export const MediaUploadSection = ({ onMediaChange }: MediaUploadSectionProps) =
     <div className="space-y-3">
       <div>
         <Label>Attach Media (Optional)</Label>
-        <Select value={mediaType || 'none'} onValueChange={(value) => setMediaType(value === 'none' ? null : value)}>
+        <Select
+          value={mediaType || (initialMediaType ? initialMediaType : 'none')}
+          onValueChange={(value) => {
+            const newType = value === 'none' ? null : value;
+            setMediaType(newType);
+            if (newType === null) {
+              onMediaChange(null, null, null);
+            }
+          }}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select media type..." />
           </SelectTrigger>
