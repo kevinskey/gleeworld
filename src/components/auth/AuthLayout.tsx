@@ -4,7 +4,6 @@ import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UniversalHeader } from "@/components/layout/UniversalHeader";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -35,15 +34,13 @@ export const AuthLayout = ({ children, title, subtitle, theme = 'default' }: Aut
   const config = themeConfig[theme];
   
   return (
-    <div className="min-h-screen flex flex-col">
-      <UniversalHeader />
-      <div 
-        className="flex-1 flex items-center justify-center p-4 relative bg-cover bg-no-repeat bg-center md:bg-left-center"
-        style={{
-          background: config.background.startsWith('linear-gradient') ? config.background : `url(${config.background})`
-        }}
-      >
-        <div className={`absolute inset-0 ${config.overlay}`} />
+    <div 
+      className="min-h-screen flex items-center justify-center p-4 relative bg-cover bg-no-repeat bg-center md:bg-left-center"
+      style={{
+        background: config.background.startsWith('linear-gradient') ? config.background : `url(${config.background})`
+      }}
+    >
+      <div className={`absolute inset-0 ${config.overlay}`} />
       
       {/* Back to Home Button */}
       <Button
@@ -69,7 +66,6 @@ export const AuthLayout = ({ children, title, subtitle, theme = 'default' }: Aut
           {children}
         </CardContent>
       </Card>
-      </div>
     </div>
   );
 };
