@@ -228,12 +228,19 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   const [startOctave, setStartOctave] = useState<number>(3); // Default starts at C3
   const [pianoSize, setPianoSize] = useState({ width: 900, height: 600 });
   const [pianoPosition, setPianoPosition] = useState({ x: 100, y: 100 });
-  const [selectedInstrument, setSelectedInstrument] = useState<number>(0); // GM instrument (0 = Acoustic Grand Piano)
+  const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
   const keysContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeOscillatorsRef = useRef<
     Map<string, { oscillator: OscillatorNode; gainNode: GainNode }>
   >(new Map());
+
+  // Calculate scale factor based on window size
+  const baseWidth = 900;
+  const baseHeight = 600;
+  const scaleX = pianoSize.width / baseWidth;
+  const scaleY = pianoSize.height / baseHeight;
+  const scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
 
   // Generate full 88-key piano range (A0-C8)
   const { whiteKeys, blackKeys } = generateFullPianoKeys();
@@ -399,7 +406,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   const isFullScreen = !!onClose;
 
   const pianoContent = (
-    <div className={isFullScreen ? "w-full h-full bg-background flex flex-col rounded-lg overflow-hidden shadow-2xl" : `w-full flex flex-col ${className}`}>
+    <div 
+      className={isFullScreen ? "w-full h-full bg-background flex flex-col rounded-lg overflow-hidden shadow-2xl" : `w-full flex flex-col ${className}`}
+      style={isFullScreen ? {
+        transform: `scale(${scale})`,
+        transformOrigin: 'top left',
+        width: `${baseWidth}px`,
+        height: `${baseHeight}px`
+      } : undefined}
+    >
       {/* Header Bar */}
       <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move">
         <div className="flex items-center gap-3 flex-wrap">
