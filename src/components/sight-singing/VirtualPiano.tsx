@@ -177,33 +177,44 @@ const GM_INSTRUMENTS = [
   { id: 127, name: 'Gunshot', category: 'Sound Effects' },
 ];
 
-// Generate 3 octaves of keys based on starting octave
-const generateKeys = (startOctave: number) => {
+// Generate full piano range A0 to C8 (88 keys)
+const generateFullPianoKeys = () => {
   const whiteKeys: { note: string; octave: number; frequency: number }[] = [];
   const blackKeys: { note: string; octave: number; frequency: number; position: number }[] = [];
+  
+  // Start with A0 and B0
+  const a0Freq = 27.5; // A0 base frequency
+  whiteKeys.push({ note: 'A', octave: 0, frequency: a0Freq });
+  whiteKeys.push({ note: 'B', octave: 0, frequency: a0Freq * Math.pow(2, 2/12) });
+  blackKeys.push({ note: 'A#', octave: 0, frequency: a0Freq * Math.pow(2, 1/12), position: 0.5 });
 
-  // Generate 3 full octaves
-  for (let octaveOffset = 0; octaveOffset < 3; octaveOffset++) {
-    const currentOctave = startOctave + octaveOffset;
-    const octaveMultiplier = Math.pow(2, currentOctave - 4); // 4 is base (C4)
-    const whiteKeyOffset = octaveOffset * 7; // 7 white keys per octave
+  // Generate C1 through C8
+  for (let octave = 1; octave <= 8; octave++) {
+    const octaveMultiplier = Math.pow(2, octave - 4); // 4 is base (C4 = middle C)
+    const whiteKeyOffset = (octave - 1) * 7 + 2; // +2 for A0, B0
 
-    baseWhiteKeysPerOctave.forEach((key) => {
+    // Add white keys for this octave (or just C for octave 8)
+    const keysToAdd = octave === 8 ? [baseWhiteKeysPerOctave[0]] : baseWhiteKeysPerOctave;
+    
+    keysToAdd.forEach((key) => {
       whiteKeys.push({
         note: key.note,
-        octave: currentOctave,
+        octave: octave,
         frequency: key.baseFrequency * octaveMultiplier,
       });
     });
 
-    baseBlackKeysPerOctave.forEach((key) => {
-      blackKeys.push({
-        note: key.note,
-        octave: currentOctave,
-        frequency: key.baseFrequency * octaveMultiplier,
-        position: whiteKeyOffset + key.positionInOctave,
+    // Add black keys for this octave (skip for octave 8)
+    if (octave < 8) {
+      baseBlackKeysPerOctave.forEach((key) => {
+        blackKeys.push({
+          note: key.note,
+          octave: octave,
+          frequency: key.baseFrequency * octaveMultiplier,
+          position: whiteKeyOffset + key.positionInOctave,
+        });
       });
-    });
+    }
   }
 
   return { whiteKeys, blackKeys };
@@ -218,13 +229,35 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   const [pianoSize, setPianoSize] = useState({ width: 900, height: 600 });
   const [pianoPosition, setPianoPosition] = useState({ x: 100, y: 100 });
   const [selectedInstrument, setSelectedInstrument] = useState<number>(0); // GM instrument (0 = Acoustic Grand Piano)
+  const keysContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeOscillatorsRef = useRef<
     Map<string, { oscillator: OscillatorNode; gainNode: GainNode }>
   >(new Map());
 
-  // Generate 3 octaves starting from selected octave
-  const { whiteKeys, blackKeys } = generateKeys(startOctave);
+  // Generate full 88-key piano range (A0-C8)
+  const { whiteKeys, blackKeys } = generateFullPianoKeys();
+
+  // Scroll to selected octave range when dropdown changes
+  useEffect(() => {
+    if (keysContainerRef.current) {
+      // Calculate scroll position based on selected octave
+      // Each white key is approximately 60px wide
+      const whiteKeyWidth = 60;
+      let scrollPosition = 0;
+      
+      if (startOctave === 0) {
+        scrollPosition = 0; // A0-B0, C1-B1 (start)
+      } else if (startOctave === 1) {
+        scrollPosition = whiteKeyWidth * 9; // C1 starts at position 2 (after A0, B0), show C1-B2
+      } else {
+        // For C2 and above, calculate based on octave
+        scrollPosition = whiteKeyWidth * (2 + (startOctave - 1) * 7); // 2 for A0,B0, then 7 per octave
+      }
+      
+      keysContainerRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+    }
+  }, [startOctave]);
 
   const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
@@ -375,14 +408,18 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
             value={startOctave.toString()}
             onValueChange={(value) => setStartOctave(parseInt(value, 10))}
           >
-            <SelectTrigger className="w-28 h-9">
+            <SelectTrigger className="w-32 h-9">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="z-[2147483648] bg-popover">
-              <SelectItem value="1">C1-B3</SelectItem>
-              <SelectItem value="2">C2-B4</SelectItem>
-              <SelectItem value="3">C3-B5</SelectItem>
-              <SelectItem value="4">C4-B6</SelectItem>
+              <SelectItem value="0">A0-B1</SelectItem>
+              <SelectItem value="1">C1-B2</SelectItem>
+              <SelectItem value="2">C2-B3</SelectItem>
+              <SelectItem value="3">C3-B4</SelectItem>
+              <SelectItem value="4">C4-B5</SelectItem>
+              <SelectItem value="5">C5-B6</SelectItem>
+              <SelectItem value="6">C6-B7</SelectItem>
+              <SelectItem value="7">C7-C8</SelectItem>
             </SelectContent>
           </Select>
           <Select
@@ -431,18 +468,25 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       </div>
 
       {/* Piano Keyboard Area */}
-      <div className={isFullScreen ? "flex-1 flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 overflow-auto" : "w-full flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 py-4"}>
-        <div className="relative w-full max-w-6xl mx-auto py-4 px-2 sm:px-4">
+      <div 
+        ref={keysContainerRef}
+        className={isFullScreen ? "flex-1 overflow-x-auto overflow-y-hidden bg-gradient-to-b from-muted/30 to-muted/10" : "w-full overflow-x-auto overflow-y-hidden bg-gradient-to-b from-muted/30 to-muted/10 py-4"}
+        style={{ 
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))'
+        }}
+      >
+        <div className="relative inline-block py-4 px-2 sm:px-4 min-w-full">
           {/* White Keys */}
-          <div className="relative w-full">
-            <div className={isFullScreen ? "flex w-full justify-center gap-0.5 h-[320px] sm:h-[400px] md:h-[480px]" : "flex w-full justify-center gap-0.5 h-[240px]"}>
+          <div className="relative">
+            <div className={isFullScreen ? "flex gap-0.5 h-[320px] sm:h-[400px] md:h-[480px]" : "flex gap-0.5 h-[240px]"}>
               {whiteKeys.map((key, index) => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
                 return (
                   <button
                     key={keyName}
-                    className={`flex-1 min-w-[55px] sm:min-w-[65px] landscape:min-w-[70px] max-w-[100px] cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-3 sm:pb-4 text-xs sm:text-sm font-semibold select-none border-r-2 border-gray-300/50 last:border-r-0 touch-manipulation ${
+                    className={`w-[60px] cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-3 sm:pb-4 text-xs sm:text-sm font-semibold select-none border-r-2 border-gray-300/50 last:border-r-0 touch-manipulation ${
                       isActive
                         ? 'bg-primary/30 shadow-inner scale-[0.98]'
                         : 'bg-white hover:bg-gray-50 shadow-lg active:bg-primary/20 active:scale-[0.98]'
@@ -474,14 +518,14 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
             </div>
 
             {/* Black Keys */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[60%] flex justify-center">
-              <div className="relative w-full">
+            <div className="pointer-events-none absolute inset-0 top-0 h-[60%]">
+              <div className="relative w-full h-full">
                 {blackKeys.map((key) => {
                   const keyName = `${key.note}${key.octave}`;
                   const isActive = activeNotes.has(keyName);
-                  const whiteKeyWidth = 100 / whiteKeys.length;
-                  const blackKeyWidth = Math.min(whiteKeyWidth * 0.65, 8);
-                  const leftPercentage = (key.position / whiteKeys.length) * 100 - blackKeyWidth / 2;
+                  const whiteKeyWidth = 60; // Fixed width matching white keys
+                  const blackKeyWidth = 40; // Black key width
+                  const leftPosition = key.position * whiteKeyWidth - blackKeyWidth / 2;
 
                   return (
                     <button
@@ -492,8 +536,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
                           : 'bg-gray-900 hover:bg-gray-800 active:bg-gray-700 active:scale-[0.96]'
                       }`}
                       style={{
-                        left: `${leftPercentage}%`,
-                        width: `${blackKeyWidth}%`,
+                        left: `${leftPosition}px`,
+                        width: `${blackKeyWidth}px`,
                         minWidth: '36px',
                         maxWidth: '60px',
                         borderRadius: '0 0 8px 8px',
