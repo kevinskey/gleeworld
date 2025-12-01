@@ -195,6 +195,9 @@ export const EditQuestionDialog = ({ open, onOpenChange, testId, question, exist
             </div>
 
             <MediaUploadSection
+              initialMediaType={question.media_type}
+              initialMediaUrl={question.media_url}
+              initialYoutubeId={question.youtube_video_id}
               onMediaChange={(mediaType, mediaUrl, youtubeId) => {
                 setValue('media_type', mediaType);
                 setValue('media_url', mediaUrl);
