@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { Rnd } from 'react-rnd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
@@ -66,6 +67,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
   const [startOctave, setStartOctave] = useState<number>(3); // Default starts at C3
+  const [pianoSize, setPianoSize] = useState({ width: 900, height: 600 });
+  const [pianoPosition, setPianoPosition] = useState({ x: 100, y: 100 });
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeOscillatorsRef = useRef<
     Map<string, { oscillator: OscillatorNode; gainNode: GainNode }>
@@ -185,11 +188,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
 
   // Full-screen mode when onClose is provided
   const isFullScreen = !!onClose;
-  
-  return (
-    <div className={isFullScreen ? `fixed inset-0 z-[2147483647] bg-background flex flex-col ${className}` : `w-full flex flex-col ${className}`}>
+
+  const pianoContent = (
+    <div className={isFullScreen ? "w-full h-full bg-background flex flex-col rounded-lg overflow-hidden shadow-2xl" : `w-full flex flex-col ${className}`}>
       {/* Header Bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-card backdrop-blur-sm shrink-0">
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move">
         <div className="flex items-center gap-3">
           <h2 className="text-lg font-semibold">Virtual Piano</h2>
           <Select
@@ -269,7 +272,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
                       e.preventDefault();
                       stopNote(keyName);
                     }}
-                 >
+                  >
                     <span className="text-gray-700 font-bold">
                       {key.note}
                       <sub className="text-[0.6em]">{key.octave}</sub>
@@ -330,4 +333,34 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       </div>
     </div>
   );
+  
+  if (isFullScreen) {
+    return (
+      <Rnd
+        size={{ width: pianoSize.width, height: pianoSize.height }}
+        position={{ x: pianoPosition.x, y: pianoPosition.y }}
+        onDragStop={(e, d) => {
+          setPianoPosition({ x: d.x, y: d.y });
+        }}
+        onResizeStop={(e, direction, ref, delta, position) => {
+          setPianoSize({
+            width: parseInt(ref.style.width),
+            height: parseInt(ref.style.height),
+          });
+          setPianoPosition(position);
+        }}
+        minWidth={600}
+        minHeight={400}
+        maxWidth={1400}
+        maxHeight={900}
+        dragHandleClassName="cursor-move"
+        className="z-[2147483647]"
+        bounds="window"
+      >
+        {pianoContent}
+      </Rnd>
+    );
+  }
+
+  return pianoContent;
 };
