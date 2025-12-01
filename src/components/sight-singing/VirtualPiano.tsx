@@ -290,7 +290,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       const audioContext = await initAudioContext();
       if (!audioContext || audioContext.state !== 'running') return;
 
-      // Get instrument-specific settings
+      // Get instrument-specific synthesis settings
       const getInstrumentSettings = (instrumentId: number) => {
         // Map instrument categories to waveforms and settings
         if (instrumentId <= 7) return { type: 'triangle' as OscillatorType, filterFreq: 3000, attack: 0.01, decay: 0.05 }; // Piano
