@@ -1946,6 +1946,48 @@ export type Database = {
         }
         Relationships: []
       }
+      concert_ticket_requests: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          notes: string | null
+          num_tickets: number
+          phone: string
+          special_requests: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          num_tickets: number
+          phone: string
+          special_requests?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          num_tickets?: number
+          phone?: string
+          special_requests?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contract_documents: {
         Row: {
           content: string

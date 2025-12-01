@@ -35,7 +35,11 @@ const QRGeneratorPage = () => {
             
             <div className="mt-8 p-4 bg-muted rounded-lg">
               <h3 className="font-semibold mb-2">Quick Access</h3>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                <QRCodeGenerator 
+                  defaultText="https://gleeworld.org/concert-ticket-request"
+                  title="Concert Ticket Request"
+                />
                 <QRCodeGenerator 
                   defaultText="https://gleeworld.org/dashboard"
                   title="Dashboard"
