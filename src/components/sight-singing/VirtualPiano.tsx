@@ -242,8 +242,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   useEffect(() => {
     if (keysContainerRef.current) {
       // Calculate scroll position based on selected octave
-      // Each white key is approximately 60px wide
-      const whiteKeyWidth = 60;
+      // Each white key is 60px on mobile, 69px on desktop
+      const whiteKeyWidth = window.innerWidth >= 640 ? 69 : 60;
       let scrollPosition = 0;
       
       if (startOctave === 0) {
@@ -486,7 +486,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
                 return (
                   <button
                     key={keyName}
-                    className={`w-[60px] cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-3 sm:pb-4 text-xs sm:text-sm font-semibold select-none border-r-2 border-gray-300/50 last:border-r-0 touch-manipulation ${
+                    className={`w-[60px] sm:w-[69px] cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-3 sm:pb-4 text-xs sm:text-sm font-semibold select-none border-r-2 border-gray-300/50 last:border-r-0 touch-manipulation ${
                       isActive
                         ? 'bg-primary/30 shadow-inner scale-[0.98]'
                         : 'bg-white hover:bg-gray-50 shadow-lg active:bg-primary/20 active:scale-[0.98]'
@@ -523,8 +523,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
                 {blackKeys.map((key) => {
                   const keyName = `${key.note}${key.octave}`;
                   const isActive = activeNotes.has(keyName);
-                  const whiteKeyWidth = 60; // Fixed width matching white keys
-                  const blackKeyWidth = 40; // Black key width
+                  const whiteKeyWidth = window.innerWidth >= 640 ? 69 : 60; // Responsive width
+                  const blackKeyWidth = window.innerWidth >= 640 ? 46 : 40; // 15% wider on desktop
                   const leftPosition = key.position * whiteKeyWidth - blackKeyWidth / 2;
 
                   return (
