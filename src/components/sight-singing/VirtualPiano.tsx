@@ -257,31 +257,58 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       const audioContext = await initAudioContext();
       if (!audioContext || audioContext.state !== 'running') return;
 
-      // Create oscillator and gain nodes with ADSR envelope
+      // Get instrument-specific settings
+      const getInstrumentSettings = (instrumentId: number) => {
+        // Map instrument categories to waveforms and settings
+        if (instrumentId <= 7) return { type: 'triangle' as OscillatorType, filterFreq: 3000, attack: 0.01, decay: 0.05 }; // Piano
+        if (instrumentId <= 15) return { type: 'sine' as OscillatorType, filterFreq: 5000, attack: 0.001, decay: 0.02 }; // Chromatic Percussion
+        if (instrumentId <= 23) return { type: 'square' as OscillatorType, filterFreq: 2000, attack: 0.02, decay: 0.1 }; // Organ
+        if (instrumentId <= 31) return { type: 'sawtooth' as OscillatorType, filterFreq: 2500, attack: 0.01, decay: 0.08 }; // Guitar
+        if (instrumentId <= 39) return { type: 'triangle' as OscillatorType, filterFreq: 1500, attack: 0.02, decay: 0.1 }; // Bass
+        if (instrumentId <= 47) return { type: 'sawtooth' as OscillatorType, filterFreq: 4000, attack: 0.05, decay: 0.15 }; // Strings
+        if (instrumentId <= 55) return { type: 'sawtooth' as OscillatorType, filterFreq: 3500, attack: 0.08, decay: 0.2 }; // Ensemble
+        if (instrumentId <= 63) return { type: 'square' as OscillatorType, filterFreq: 3000, attack: 0.03, decay: 0.1 }; // Brass
+        if (instrumentId <= 71) return { type: 'sawtooth' as OscillatorType, filterFreq: 3500, attack: 0.02, decay: 0.08 }; // Reed
+        if (instrumentId <= 79) return { type: 'sine' as OscillatorType, filterFreq: 4500, attack: 0.01, decay: 0.05 }; // Pipe
+        if (instrumentId <= 87) return { type: 'square' as OscillatorType, filterFreq: 5000, attack: 0.005, decay: 0.03 }; // Synth Lead
+        if (instrumentId <= 95) return { type: 'sawtooth' as OscillatorType, filterFreq: 2500, attack: 0.1, decay: 0.3 }; // Synth Pad
+        return { type: 'triangle' as OscillatorType, filterFreq: 3000, attack: 0.01, decay: 0.05 }; // Default
+      };
+
+      const settings = getInstrumentSettings(selectedInstrument);
+
+      // Create oscillator, filter, and gain nodes with ADSR envelope
       const oscillator = audioContext.createOscillator();
+      const filter = audioContext.createBiquadFilter();
       const gainNode = audioContext.createGain();
 
-      oscillator.connect(gainNode);
+      oscillator.connect(filter);
+      filter.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
       oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-      oscillator.type = 'triangle'; // Warmer sound than sine
+      oscillator.type = settings.type;
+
+      // Configure filter
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(settings.filterFreq, audioContext.currentTime);
+      filter.Q.setValueAtTime(1, audioContext.currentTime);
 
       const currentVolume = isMuted ? 0 : volume[0];
       const now = audioContext.currentTime;
 
-      // ADSR envelope for smoother sound
+      // ADSR envelope with instrument-specific timing
       gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.8, now + 0.01); // Attack
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.6, now + 0.05); // Decay
-      gainNode.gain.setValueAtTime(currentVolume * 0.6, now + 0.05); // Sustain
+      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.8, now + settings.attack); // Attack
+      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.6, now + settings.attack + settings.decay); // Decay
+      gainNode.gain.setValueAtTime(currentVolume * 0.6, now + settings.attack + settings.decay); // Sustain
 
       oscillator.start();
 
       activeOscillatorsRef.current.set(noteName, { oscillator, gainNode });
       setActiveNotes((prev) => new Set(prev).add(noteName));
     },
-    [volume, isMuted, initAudioContext],
+    [volume, isMuted, initAudioContext, selectedInstrument],
   );
 
   const stopNote = useCallback((noteName: string) => {
