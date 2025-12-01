@@ -234,7 +234,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       </div>
 
       {/* Piano Keyboard Area */}
-      <div className="flex-1 flex items-stretch justify-center bg-gradient-to-b from-muted/30 to-muted/10 overflow-auto">
+      <div className="flex-1 flex items-center justify-center bg-gradient-to-b from-muted/30 to-muted/10 overflow-auto">
         <div className="relative w-full max-w-6xl mx-auto py-4 px-2 sm:px-4">
           {/* White Keys */}
           <div className="relative w-full">
