@@ -238,7 +238,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
         <div className="relative w-full max-w-6xl mx-auto py-4 px-2 sm:px-4">
           {/* White Keys */}
           <div className="relative w-full">
-            <div className="flex w-full justify-center gap-0.5 h-[260px] sm:h-[320px] md:h-[360px]">
+            <div className="flex w-full justify-center gap-0.5 h-[320px] sm:h-[400px] md:h-[480px]">
               {whiteKeys.map((key, index) => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
