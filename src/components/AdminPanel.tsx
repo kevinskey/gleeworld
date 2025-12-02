@@ -104,7 +104,7 @@ export const AdminPanel = ({ activeTab }: AdminPanelProps) => {
             {/* Community Hub */}
             <Card className="bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5 border-primary/10 shadow-lg">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-primary">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <Users className="h-5 w-5" />
                   Community Hub
                 </CardTitle>
