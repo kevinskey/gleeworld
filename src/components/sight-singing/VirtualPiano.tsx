@@ -229,11 +229,20 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   const [pianoSize, setPianoSize] = useState({ width: 900, height: 600 });
   const [pianoPosition, setPianoPosition] = useState({ x: 100, y: 100 });
   const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
+  const [isMobile, setIsMobile] = useState(false);
   const keysContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const activeOscillatorsRef = useRef<
     Map<string, { oscillator: OscillatorNode; gainNode: GainNode }>
   >(new Map());
+
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Calculate scale factor based on window size
   const baseWidth = 900;
@@ -423,8 +432,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
 
   const pianoContent = (
     <div 
-      className={isFullScreen ? "w-full h-full bg-background flex flex-col rounded-lg overflow-hidden shadow-2xl" : `w-full flex flex-col ${className}`}
-      style={isFullScreen ? {
+      className={isFullScreen ? "w-full h-full bg-background flex flex-col rounded-none md:rounded-lg overflow-hidden shadow-2xl" : `w-full flex flex-col ${className}`}
+      style={isFullScreen && !isMobile ? {
         transform: `scale(${scale})`,
         transformOrigin: 'top left',
         width: `${baseWidth}px`,
@@ -432,14 +441,14 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       } : undefined}
     >
       {/* Header Bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h2 className="text-lg font-semibold">Virtual Piano</h2>
+      <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <h2 className="text-sm sm:text-lg font-semibold hidden sm:block">Piano</h2>
           <Select
             value={startOctave.toString()}
             onValueChange={(value) => setStartOctave(parseInt(value, 10))}
           >
-            <SelectTrigger className="w-32 h-9">
+            <SelectTrigger className="w-24 sm:w-32 h-8 sm:h-9 text-xs sm:text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="z-[2147483648] bg-popover">
@@ -457,8 +466,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
             value={selectedInstrument.toString()}
             onValueChange={(value) => setSelectedInstrument(parseInt(value, 10))}
           >
-            <SelectTrigger className="w-48 h-9">
-              <SelectValue placeholder="Select Instrument" />
+            <SelectTrigger className="w-32 sm:w-48 h-8 sm:h-9 text-xs sm:text-sm">
+              <SelectValue placeholder="Instrument" />
             </SelectTrigger>
             <SelectContent className="z-[2147483648] max-h-[300px] bg-popover">
               {GM_INSTRUMENTS.map((instrument) => (
@@ -470,11 +479,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={toggleMute} className="h-9 w-9">
+        <div className="flex items-center gap-2 justify-end">
+          <Button variant="ghost" size="sm" onClick={toggleMute} className="h-8 w-8 sm:h-9 sm:w-9">
             {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
           </Button>
-          <div className="w-24 hidden sm:block">
+          <div className="w-20 sm:w-24">
             <Slider
               value={volume}
               onValueChange={setVolume}
@@ -489,7 +498,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
               variant="ghost"
               size="sm"
               onClick={onClose}
-              className="h-9 w-9"
+              className="h-8 w-8 sm:h-9 sm:w-9"
               aria-label="Close piano"
             >
               <X className="h-5 w-5" />
@@ -510,23 +519,26 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
         <div className="relative inline-block py-4 px-2 sm:px-4 min-w-full">
           {/* White Keys */}
           <div className="relative">
-            <div className={isFullScreen ? "flex gap-0.5 h-[320px] sm:h-[400px] md:h-[480px]" : "flex gap-0.5 h-[240px]"}>
+            <div className={isFullScreen ? "flex gap-0.5 h-[200px] sm:h-[320px] md:h-[400px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
               {whiteKeys.map((key, index) => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
+                const whiteKeyWidth = isMobile ? 50 : 69;
                 return (
                   <button
                     key={keyName}
-                    className={`w-[60px] sm:w-[69px] cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-3 sm:pb-4 text-xs sm:text-sm font-semibold select-none border-r-2 border-gray-300/50 last:border-r-0 touch-manipulation ${
-                      isActive
-                        ? 'bg-primary/30 shadow-inner scale-[0.98]'
-                        : 'bg-white hover:bg-gray-50 shadow-lg active:bg-primary/20 active:scale-[0.98]'
-                    } ${index === 0 ? 'rounded-l-xl' : ''} ${index === whiteKeys.length - 1 ? 'rounded-r-xl' : ''}`}
-                    style={{
+                    style={{ 
+                      width: `${whiteKeyWidth}px`, 
+                      minWidth: `${whiteKeyWidth}px`,
                       boxShadow: isActive
                         ? 'inset 0 6px 12px rgba(0,0,0,0.35)'
                         : '0 6px 12px rgba(0,0,0,0.2), inset 0 3px 0 rgba(255,255,255,0.9)',
                     }}
+                    className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none border-r border-gray-300/50 last:border-r-0 touch-manipulation ${
+                      isActive
+                        ? 'bg-primary/30 shadow-inner scale-[0.98]'
+                        : 'bg-white hover:bg-gray-50 shadow-lg active:bg-primary/20 active:scale-[0.98]'
+                    } ${index === 0 ? 'rounded-l-lg sm:rounded-l-xl' : ''} ${index === whiteKeys.length - 1 ? 'rounded-r-lg sm:rounded-r-xl' : ''}`}
                     onMouseDown={() => playNote(key.frequency, keyName)}
                     onMouseUp={() => stopNote(keyName)}
                     onMouseLeave={() => stopNote(keyName)}
@@ -554,8 +566,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
                 {blackKeys.map((key) => {
                   const keyName = `${key.note}${key.octave}`;
                   const isActive = activeNotes.has(keyName);
-                  const whiteKeyWidth = window.innerWidth >= 640 ? 69 : 60; // Responsive width
-                  const blackKeyWidth = window.innerWidth >= 640 ? 46 : 40; // 15% wider on desktop
+                  const whiteKeyWidth = isMobile ? 50 : 69; // Smaller on mobile
+                  const blackKeyWidth = isMobile ? 34 : 46;
                   const leftPosition = key.position * whiteKeyWidth - blackKeyWidth / 2;
 
                   return (
@@ -601,6 +613,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   );
   
   if (isFullScreen) {
+    // On mobile, use a full-screen fixed overlay instead of Rnd
+    if (isMobile) {
+      return (
+        <div className="fixed inset-0 z-[2147483647] bg-background flex flex-col">
+          {pianoContent}
+        </div>
+      );
+    }
+    
     return (
       <Rnd
         size={{ width: pianoSize.width, height: pianoSize.height }}
