@@ -220,6 +220,7 @@ import { PaymentSuccess } from "./pages/dues-management/PaymentSuccess";
 import WritingGraderPage from "./pages/writing/WritingGraderPage";
 import ChildrenGoAudition from "./pages/ChildrenGoAudition";
 import ChildrenGoAuditionsAdmin from "./pages/admin/ChildrenGoAuditionsAdmin";
+import ConcertTicketRequest from "./pages/ConcertTicketRequest";
 
 import GrandStaves from "./pages/GrandStaves";
 import GrandStaffClassroom from "./pages/GrandStaffClassroom";
@@ -365,6 +366,14 @@ const App = () => {
                 element={
                   <PublicRoute>
                     <MemberRegistration />
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/concert-ticket-request" 
+                element={
+                  <PublicRoute>
+                    <ConcertTicketRequest />
                   </PublicRoute>
                 } 
               />
