@@ -8,6 +8,7 @@ import { TooltipProvider as CustomTooltipProvider } from "@/contexts/TooltipCont
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
@@ -2171,18 +2172,21 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
-                              </Routes>
+                               </Routes>
                       </Suspense>
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
-                 </div>
-              </MusicPlayerProvider>
+                  </div>
+                  </MusicPlayerProvider>
+                </ThemeProvider>
+              </AuthProvider>
             </CustomTooltipProvider>
           </TooltipProvider>
-        </AuthProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
+        </QueryClientProvider>
+      </BrowserRouter>
   );
 };
+
+export default App;
 
 export default App;

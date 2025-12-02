@@ -10723,6 +10723,7 @@ export type Database = {
           status: string | null
           student_id: string | null
           student_number: string | null
+          theme_preference: string | null
           title: string | null
           tshirt_size: string | null
           updated_at: string | null
@@ -10818,6 +10819,7 @@ export type Database = {
           status?: string | null
           student_id?: string | null
           student_number?: string | null
+          theme_preference?: string | null
           title?: string | null
           tshirt_size?: string | null
           updated_at?: string | null
@@ -10913,6 +10915,7 @@ export type Database = {
           status?: string | null
           student_id?: string | null
           student_number?: string | null
+          theme_preference?: string | null
           title?: string | null
           tshirt_size?: string | null
           updated_at?: string | null

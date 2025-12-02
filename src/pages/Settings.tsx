@@ -28,6 +28,7 @@ import {
   Monitor
 } from "lucide-react";
 import { DashboardBackgroundUploader } from "@/components/profile/DashboardBackgroundUploader";
+import { ThemeSelector } from "@/components/settings/ThemeSelector";
 
 const settingsSchema = z.object({
   display_name: z.string().min(1, "Display name is required"),
@@ -520,91 +521,8 @@ export default function Settings() {
             </TabsContent>
 
             {/* Theme Preferences */}
-            <TabsContent value="theme">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Palette className="h-5 w-5" />
-                    Theme Preferences
-                  </CardTitle>
-                  <CardDescription>
-                    Customize the appearance of your interface
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Theme</Label>
-                      <Select
-                        value={watch("theme")}
-                        onValueChange={(value: "light" | "dark" | "system") => 
-                          setValue("theme", value)
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="light">
-                            <div className="flex items-center gap-2">
-                              <Sun className="h-4 w-4" />
-                              Light
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="dark">
-                            <div className="flex items-center gap-2">
-                              <Moon className="h-4 w-4" />
-                              Dark
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="system">
-                            <div className="flex items-center gap-2">
-                              <Monitor className="h-4 w-4" />
-                              System
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">Compact Mode</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Use a more condensed interface layout
-                        </p>
-                      </div>
-                      <Switch
-                        checked={watch("compact_mode")}
-                        onCheckedChange={(checked) => setValue("compact_mode", checked)}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="text-base">Animations</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Enable smooth transitions and animations
-                        </p>
-                      </div>
-                      <Switch
-                        checked={watch("animations")}
-                        onCheckedChange={(checked) => setValue("animations", checked)}
-                      />
-                    </div>
-
-                    <Separator />
-
-                    <div>
-                      <DashboardBackgroundUploader />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            <TabsContent value="theme" className="space-y-6">
+              <ThemeSelector />
             </TabsContent>
           </Tabs>
 
