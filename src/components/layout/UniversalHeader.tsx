@@ -89,7 +89,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     />
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 pointer-events-none"></div>
                   </div>
-                  <span className="text-foreground font-bold text-base sm:text-lg md:text-xl lg:text-2xl whitespace-nowrap drop-shadow-sm relative">
+                  <span className="text-slate-900 font-bold text-base sm:text-lg md:text-xl lg:text-2xl whitespace-nowrap drop-shadow-sm relative">
                     GleeWorld
                   </span>
                 </Link>
@@ -119,7 +119,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 p-0 rounded-md hover:bg-accent/20"
+                        className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 p-0 rounded-md hover:bg-accent/20 text-slate-800"
                         type="button"
                       >
                         <LayoutDashboard className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
@@ -246,7 +246,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className="relative h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 rounded-full p-0" type="button">
+                         <Button variant="ghost" className="relative h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 rounded-full p-0 text-slate-800" type="button">
                            <Avatar className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 border-2 border-border/30">
                              <AvatarImage 
                                src={userProfile?.avatar_url || undefined} 

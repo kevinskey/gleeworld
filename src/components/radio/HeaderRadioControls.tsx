@@ -42,7 +42,7 @@ export const HeaderRadioControls = () => {
                 togglePlayPause();
               }}
               disabled={isLoading}
-              className="relative h-8 w-8 p-0 rounded-full hover:bg-accent/20"
+              className="relative h-8 w-8 p-0 rounded-full hover:bg-accent/20 text-slate-800"
               type="button"
             >
               {isLoading ? (
@@ -62,14 +62,14 @@ export const HeaderRadioControls = () => {
           </EnhancedTooltip>
 
           <EnhancedTooltip content="Glee World Radio Controls">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 hover:bg-accent/20 hidden sm:flex"
-            >
-              <Radio className="h-4 w-4 mr-1" />
-              <span className="text-xs font-medium">Radio</span>
-            </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-2 hover:bg-accent/20 hidden sm:flex text-slate-800"
+              >
+                <Radio className="h-4 w-4 mr-1" />
+                <span className="text-xs font-medium">Radio</span>
+              </Button>
           </EnhancedTooltip>
         </div>
       </PopoverTrigger>

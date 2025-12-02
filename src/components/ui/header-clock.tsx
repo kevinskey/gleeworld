@@ -91,7 +91,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           onClick={() => setShowCountdown(!showCountdown)}
         >
           {/* SVG Clock with spinning globe */}
-          <svg width="40" height="40" viewBox="0 0 40 40" className="text-foreground">
+          <svg width="40" height="40" viewBox="0 0 40 40" className="text-slate-800">
             <defs>
               {/* Gradient for 3D effect */}
               <radialGradient id="headerGlobeGradient" cx="40%" cy="40%">
@@ -224,14 +224,14 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           onMouseLeave={() => setShowCountdown(false)}
           onClick={() => setShowCountdown(!showCountdown)}
         >
-          <span className="text-xs sm:text-sm font-semibold text-foreground whitespace-nowrap">
+          <span className="text-xs sm:text-sm font-semibold text-slate-800 whitespace-nowrap">
             {formatTime(currentTime)}
           </span>
         </div>
         
         {/* Countdown Text - Visible on large screens */}
         <div className="hidden xl:block">
-          <span className="text-sm text-foreground/80 font-medium whitespace-nowrap">
+          <span className="text-sm text-slate-700 font-medium whitespace-nowrap">
             🎄 {getCountdownText()}
           </span>
         </div>

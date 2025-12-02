@@ -33,7 +33,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         <DropdownMenuTrigger asChild>
           <button
             aria-label="Musical Toolkit"
-            className="inline-flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full border border-border bg-background hover:bg-accent text-foreground shadow-sm transition-colors"
+            className="inline-flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full border border-border bg-white hover:bg-accent text-slate-800 shadow-sm transition-colors"
           >
             <TuningForkIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
           </button>
