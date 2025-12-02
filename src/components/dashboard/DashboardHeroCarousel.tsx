@@ -181,7 +181,7 @@ export const DashboardHeroCarousel = () => {
 
                 {/* Content Overlay */}
                 {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                    {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg bg-[#e8e7e6]/0 text-white">{slide.title}</h3>}
+                    {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg bg-white/0 text-secondary-foreground">{slide.title}</h3>}
                     {slide.description && <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>}
                   </div>}
               </div>)}
