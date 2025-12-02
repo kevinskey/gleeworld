@@ -15,6 +15,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { HeroSlideshow } from "@/components/alumnae/HeroSlideshow";
 import { SpotlightSection } from "@/components/alumnae/SpotlightSection";
 import { AnnouncementSection } from "@/components/alumnae/AnnouncementSection";
+import { ConcertTicketBanner } from "@/components/shared/ConcertTicketBanner";
 interface AlumnaeStats {
   classYear: number | null;
   yearsOut: number;
@@ -197,6 +198,7 @@ export default function AlumnaeLanding() {
   };
   return (
     <div className="min-h-screen bg-background">
+      <ConcertTicketBanner />
 
       <div className="relative z-10 container mx-auto px-4 py-8 space-y-8">
         {/* Header Section */}
