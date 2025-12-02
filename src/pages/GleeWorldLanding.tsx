@@ -257,7 +257,7 @@ export const GleeWorldLanding = () => {
 
       {/* Concert Ticket Request Banner */}
       <section className="relative z-40 w-full bg-gradient-to-r from-primary via-primary/95 to-accent">
-        <div className="container mx-auto px-4 py-6 md:py-8">
+        <div className="container mx-auto px-4 py-6 md:py-8 bg-sidebar-primary">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
             <div className="flex items-center gap-3 md:gap-4 text-primary-foreground">
               <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 md:p-4">
@@ -273,11 +273,7 @@ export const GleeWorldLanding = () => {
               </div>
             </div>
             <Link to="/concert-ticket-request">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg font-semibold text-base md:text-lg px-6 md:px-8 py-4 md:py-6 whitespace-nowrap"
-              >
+              <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg font-semibold text-base md:text-lg px-6 md:px-8 py-4 md:py-6 whitespace-nowrap">
                 Request Tickets
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -553,8 +549,7 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Albums Section - Fan Only */}
-      {albums.length > 0 && (
-        <FanOnlyMusicSection albumCount={albums.length}>
+      {albums.length > 0 && <FanOnlyMusicSection albumCount={albums.length}>
           <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
             <div className="w-full max-w-screen-2xl mx-auto">
               <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
@@ -606,8 +601,7 @@ export const GleeWorldLanding = () => {
               </Card>
             </div>
           </section>
-        </FanOnlyMusicSection>
-      )}
+        </FanOnlyMusicSection>}
 
       {/* Album Modal */}
       <AlbumModal album={selectedAlbum} isOpen={isAlbumModalOpen} onClose={handleCloseAlbumModal} />
