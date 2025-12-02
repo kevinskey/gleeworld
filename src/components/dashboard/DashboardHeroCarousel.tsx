@@ -168,7 +168,7 @@ export const DashboardHeroCarousel = () => {
   };
   const visibleSlides = getVisibleSlides();
   return <Card className="bg-black/30 backdrop-blur-md border-0 shadow-2xl mb-4 rounded-xl">
-      <CardContent className="p-3 px-[6px] my-0">
+      <CardContent className="p-3 my-0 py-[4px] px-[4px]">
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div key={`${slide.id}-${idx}`} className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`} onClick={() => handleSlideClick(slide)}>
@@ -180,7 +180,7 @@ export const DashboardHeroCarousel = () => {
                 </div>
 
                 {/* Content Overlay */}
-                {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+                {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 py-[20px] px-[10px]">
                     {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg bg-white/0 text-secondary-foreground">{slide.title}</h3>}
                     {slide.description && <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>}
                   </div>}
