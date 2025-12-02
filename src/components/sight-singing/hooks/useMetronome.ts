@@ -27,50 +27,22 @@ export const useMetronome = () => {
     if (!ctx || ctx.state !== 'running') return;
     
     const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     
-    if (soundType === 'click') {
-      // Short noise burst for click sound
-      const bufferSize = Math.floor(ctx.sampleRate * 0.02); // 20ms
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      
-      for (let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize); // Decay envelope
-      }
-      
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = 3000;
-      filter.Q.value = 1;
-      
-      const gain = ctx.createGain();
-      gain.gain.value = volume;
-      
-      source.connect(filter);
-      filter.connect(gain);
-      gain.connect(ctx.destination);
-      
-      source.start(now);
-    } else {
-      // Simple pitched beep
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.frequency.value = 800;
-      osc.type = 'sine';
-      
-      gain.gain.setValueAtTime(volume, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-      
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      osc.start(now);
-      osc.stop(now + 0.05);
-    }
+    // Same sound every time - just different waveform based on type
+    osc.frequency.value = soundType === 'click' ? 1000 : 800;
+    osc.type = soundType === 'click' ? 'square' : 'sine';
+    
+    // Quick attack and decay - same every beat
+    gain.gain.setValueAtTime(volume * 0.5, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.03);
   }, [volume, soundType, getAudioContext]);
 
   const stopMetronome = useCallback(() => {
@@ -94,7 +66,6 @@ export const useMetronome = () => {
     
     const intervalMs = 60000 / bpm;
     
-    // Play first click immediately
     playClick();
     
     intervalRef.current = window.setInterval(() => {
@@ -109,15 +80,10 @@ export const useMetronome = () => {
     }
   }, [isPlaying, startMetronome]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (audioContextRef.current) audioContextRef.current.close();
     };
   }, []);
 
