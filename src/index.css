@@ -296,31 +296,7 @@
     font-family: var(--font-family, 'Roboto', sans-serif);
     font-size: 14px;
     line-height: 1.5;
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
   }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-@keyframes equalizer {
-  0%, 100% {
-    transform: scaleY(0.3);
-  }
-  50% {
-    transform: scaleY(1);
-  }
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-equalizer {
-  animation: equalizer 0.8s ease-in-out infinite;
-}
   
   @media (min-width: 640px) {
     body {
@@ -449,6 +425,32 @@
       font-size: 0.875rem; /* 14px desktop */
     }
   }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes equalizer {
+  0%, 100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-equalizer {
+  animation: equalizer 0.8s ease-in-out infinite;
 }
 
 @layer components {
