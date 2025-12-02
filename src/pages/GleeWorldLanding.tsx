@@ -247,33 +247,29 @@ export const GleeWorldLanding = () => {
         <LoadingSpinner size="lg" text="Loading GleeWorld..." />
       </div>;
   }
-  return <div className="min-h-screen w-full relative">
-      <div className="absolute inset-0 -z-10 [background-image:radial-gradient(1200px_800px_at_20%_0%,hsl(var(--primary)/0.12),transparent_60%),radial-gradient(900px_700px_at_80%_100%,hsl(var(--accent)/0.10),transparent_60%),linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--background)))]" aria-hidden="true" />
-      <div className="absolute inset-0 -z-10 opacity-20 mix-blend-overlay" style={{
-      backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.08'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")"
-    }} aria-hidden="true" />
+  return <div className="min-h-screen w-full relative bg-white">
       
       <PublicLayout>
 
       {/* Concert Ticket Request Banner */}
-      <section className="relative z-40 w-full bg-gradient-to-r from-primary via-primary/95 to-accent">
-        <div className="container mx-auto px-4 py-6 md:py-8 bg-sidebar-primary">
+      <section className="relative z-40 w-full bg-slate-100 border-b border-slate-200">
+        <div className="container mx-auto px-4 py-6 md:py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-            <div className="flex items-center gap-3 md:gap-4 text-primary-foreground">
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 md:p-4">
-                <Calendar className="w-6 h-6 md:w-8 md:h-8" />
+            <div className="flex items-center gap-3 md:gap-4 text-slate-800">
+              <div className="bg-primary/10 rounded-full p-3 md:p-4">
+                <Calendar className="w-6 h-6 md:w-8 md:h-8 text-primary" />
               </div>
               <div className="text-center md:text-left">
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight">
+                <h2 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight text-slate-900">
                   Upcoming Concert - Request Your Tickets Now!
                 </h2>
-                <p className="text-sm md:text-base text-primary-foreground/90 mt-1">
+                <p className="text-sm md:text-base text-slate-600 mt-1">
                   Don't miss our next performance. Limited seating available.
                 </p>
               </div>
             </div>
             <Link to="/concert-ticket-request">
-              <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg font-semibold text-base md:text-lg px-6 md:px-8 py-4 md:py-6 whitespace-nowrap">
+              <Button size="lg" className="bg-primary text-white hover:bg-primary/90 hover:scale-105 transition-all duration-300 shadow-lg font-semibold text-base md:text-lg px-6 md:px-8 py-4 md:py-6 whitespace-nowrap">
                 Request Tickets
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
