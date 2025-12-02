@@ -38,6 +38,7 @@ import { DashboardHeroManagerModule } from '@/components/modules/DashboardHeroMa
 import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
 import { AlumnaeManagementModule } from '../modules/AlumnaeManagementModule';
 import { GradingModule } from '../modules/GradingModule';
+import { ConcertTicketRequestsModule } from '../modules/ConcertTicketRequestsModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -103,6 +104,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <GleeWritingWidget />;
       case 'fan-engagement':
         return <FanEngagementModule />;
+      case 'concert-ticket-requests':
+        return <ConcertTicketRequestsModule />;
       case 'scheduling-module':
         return <SchedulingModule />;
       case 'service-management':

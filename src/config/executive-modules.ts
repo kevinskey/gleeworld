@@ -22,6 +22,7 @@ export const EXECUTIVE_MODULE_IDS = [
   'buckets-of-love',
   'glee-writing',
   'fan-engagement',
+  'concert-ticket-requests',
   
   // Finances
   'budgets',
