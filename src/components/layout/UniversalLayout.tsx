@@ -29,9 +29,7 @@ export const UniversalLayout = ({
   // Use PublicHeader for public, fan, and alumnae pages
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
-  return <div className="min-h-screen flex flex-col w-full overflow-x-hidden relative" style={{
-    background: 'var(--theme-background, hsl(var(--background)))'
-  }}>
+  return <div className="min-h-screen flex flex-col w-full overflow-x-hidden relative bg-background">
       {showHeader && <>
           {shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />}
         </>}
