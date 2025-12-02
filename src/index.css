@@ -315,7 +315,7 @@
     font-family: 'Bebas Neue', cursive;
     font-weight: 400;
     letter-spacing: 0.025em;
-    color: hsl(var(--foreground));
+    color: inherit;
     line-height: 1.2;
   }
 
