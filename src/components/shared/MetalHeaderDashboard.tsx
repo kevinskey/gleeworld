@@ -582,7 +582,7 @@ export const MetalHeaderDashboard = ({
         </button>
         
         {/* Personalized Title */}
-        <h1 className="text-xl lg:text-2xl font-bold text-center text-slate-800 dark:text-slate-100 tracking-wide font-mono uppercase">
+        <h1 className="text-xl lg:text-2xl font-bold text-center tracking-wide font-mono uppercase text-black">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
