@@ -3,7 +3,8 @@ import { Rnd } from 'react-rnd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Volume2, VolumeX, X } from 'lucide-react';
+import { Volume2, VolumeX, X, Loader2 } from 'lucide-react';
+import { SoundfontPlayer } from '@/utils/soundfontLoader';
 
 interface VirtualPianoProps {
   className?: string;
@@ -230,8 +231,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   const [pianoPosition, setPianoPosition] = useState({ x: 100, y: 100 });
   const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [isLoadingSoundfont, setIsLoadingSoundfont] = useState(false);
+  const [soundfontReady, setSoundfontReady] = useState(false);
   const keysContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const soundfontPlayerRef = useRef<SoundfontPlayer | null>(null);
   const activeOscillatorsRef = useRef<
     Map<string, { oscillator: OscillatorNode; gainNode: GainNode }>
   >(new Map());
@@ -254,27 +258,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   // Generate full 88-key piano range (A0-C8)
   const { whiteKeys, blackKeys } = generateFullPianoKeys();
 
-  // Scroll to selected octave range when dropdown changes
-  useEffect(() => {
-    if (keysContainerRef.current) {
-      // Calculate scroll position based on selected octave
-      // Each white key is 60px on mobile, 69px on desktop
-      const whiteKeyWidth = window.innerWidth >= 640 ? 69 : 60;
-      let scrollPosition = 0;
-      
-      if (startOctave === 0) {
-        scrollPosition = 0; // A0-B0, C1-B1 (start)
-      } else if (startOctave === 1) {
-        scrollPosition = whiteKeyWidth * 9; // C1 starts at position 2 (after A0, B0), show C1-B2
-      } else {
-        // For C2 and above, calculate based on octave
-        scrollPosition = whiteKeyWidth * (2 + (startOctave - 1) * 7); // 2 for A0,B0, then 7 per octave
-      }
-      
-      keysContainerRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-    }
-  }, [startOctave]);
-
+  // Initialize audio context and soundfont player
   const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
       console.log('🎹 Creating new AudioContext for VirtualPiano');
@@ -289,19 +273,77 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
         console.log('✅ AudioContext resumed, state:', audioContextRef.current.state);
       } catch (error) {
         console.error('❌ Failed to resume AudioContext:', error);
-        // Try creating fresh context
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         await audioContextRef.current.resume();
       }
     }
 
-    console.log('🎹 AudioContext ready, state:', audioContextRef.current.state);
+    // Initialize soundfont player if not already
+    if (!soundfontPlayerRef.current && audioContextRef.current) {
+      soundfontPlayerRef.current = new SoundfontPlayer(audioContextRef.current);
+    }
+
     return audioContextRef.current;
   }, []);
 
+  // Load soundfont when instrument changes
+  useEffect(() => {
+    const loadSoundfont = async () => {
+      const audioContext = await initAudioContext();
+      if (!audioContext || !soundfontPlayerRef.current) return;
+
+      setIsLoadingSoundfont(true);
+      setSoundfontReady(false);
+      
+      const success = await soundfontPlayerRef.current.loadInstrument(selectedInstrument);
+      
+      setIsLoadingSoundfont(false);
+      setSoundfontReady(success);
+      
+      if (success) {
+        soundfontPlayerRef.current.setVolume(isMuted ? 0 : volume[0]);
+      }
+    };
+
+    loadSoundfont();
+  }, [selectedInstrument, initAudioContext]);
+
+  // Update soundfont volume when volume changes
+  useEffect(() => {
+    if (soundfontPlayerRef.current) {
+      soundfontPlayerRef.current.setVolume(isMuted ? 0 : volume[0]);
+    }
+  }, [volume, isMuted]);
+
+  // Scroll to selected octave range when dropdown changes
+  useEffect(() => {
+    if (keysContainerRef.current) {
+      const whiteKeyWidth = window.innerWidth >= 640 ? 69 : 60;
+      let scrollPosition = 0;
+      
+      if (startOctave === 0) {
+        scrollPosition = 0;
+      } else if (startOctave === 1) {
+        scrollPosition = whiteKeyWidth * 9;
+      } else {
+        scrollPosition = whiteKeyWidth * (2 + (startOctave - 1) * 7);
+      }
+      
+      keysContainerRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+    }
+  }, [startOctave]);
+
   const playNote = useCallback(
     async (frequency: number, noteName: string) => {
-      if (activeOscillatorsRef.current.has(noteName)) return; // Already playing
+      // Try soundfont first if ready
+      if (soundfontReady && soundfontPlayerRef.current) {
+        await soundfontPlayerRef.current.playNote(noteName);
+        setActiveNotes((prev) => new Set(prev).add(noteName));
+        return;
+      }
+
+      // Fallback to oscillator synthesis
+      if (activeOscillatorsRef.current.has(noteName)) return;
 
       const audioContext = await initAudioContext();
       if (!audioContext) {
@@ -309,90 +351,63 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
         return;
       }
       
-      // Wait for AudioContext to be running if it's not yet
       if (audioContext.state !== 'running') {
-        console.log('🎹 AudioContext not running, attempting resume...');
         try {
           await audioContext.resume();
-          console.log('🎹 AudioContext resumed successfully, state:', audioContext.state);
         } catch (err) {
           console.error('🎹 Failed to resume AudioContext:', err);
           return;
         }
       }
 
-      // Get instrument-specific synthesis settings
-      const getInstrumentSettings = (instrumentId: number) => {
-        // Map instrument categories to waveforms and settings
-        if (instrumentId <= 7) return { type: 'triangle' as OscillatorType, filterFreq: 3000, attack: 0.01, decay: 0.05 }; // Piano
-        if (instrumentId <= 15) return { type: 'sine' as OscillatorType, filterFreq: 5000, attack: 0.001, decay: 0.02 }; // Chromatic Percussion
-        if (instrumentId <= 23) return { type: 'square' as OscillatorType, filterFreq: 2000, attack: 0.02, decay: 0.1 }; // Organ
-        if (instrumentId <= 31) return { type: 'sawtooth' as OscillatorType, filterFreq: 2500, attack: 0.01, decay: 0.08 }; // Guitar
-        if (instrumentId <= 39) return { type: 'triangle' as OscillatorType, filterFreq: 1500, attack: 0.02, decay: 0.1 }; // Bass
-        if (instrumentId <= 47) return { type: 'sawtooth' as OscillatorType, filterFreq: 4000, attack: 0.05, decay: 0.15 }; // Strings
-        if (instrumentId <= 55) return { type: 'sawtooth' as OscillatorType, filterFreq: 3500, attack: 0.08, decay: 0.2 }; // Ensemble
-        if (instrumentId <= 63) return { type: 'square' as OscillatorType, filterFreq: 3000, attack: 0.03, decay: 0.1 }; // Brass
-        if (instrumentId <= 71) return { type: 'sawtooth' as OscillatorType, filterFreq: 3500, attack: 0.02, decay: 0.08 }; // Reed
-        if (instrumentId <= 79) return { type: 'sine' as OscillatorType, filterFreq: 4500, attack: 0.01, decay: 0.05 }; // Pipe
-        if (instrumentId <= 87) return { type: 'square' as OscillatorType, filterFreq: 5000, attack: 0.005, decay: 0.03 }; // Synth Lead
-        if (instrumentId <= 95) return { type: 'sawtooth' as OscillatorType, filterFreq: 2500, attack: 0.1, decay: 0.3 }; // Synth Pad
-        return { type: 'triangle' as OscillatorType, filterFreq: 3000, attack: 0.01, decay: 0.05 }; // Default
-      };
-
-      const settings = getInstrumentSettings(selectedInstrument);
-
-      // Create oscillator, filter, and gain nodes with ADSR envelope
+      // Oscillator-based fallback synthesis
       const oscillator = audioContext.createOscillator();
-      const filter = audioContext.createBiquadFilter();
       const gainNode = audioContext.createGain();
 
-      oscillator.connect(filter);
-      filter.connect(gainNode);
+      oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
       oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-      oscillator.type = settings.type;
-
-      // Configure filter
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(settings.filterFreq, audioContext.currentTime);
-      filter.Q.setValueAtTime(1, audioContext.currentTime);
+      oscillator.type = 'triangle';
 
       const currentVolume = isMuted ? 0 : volume[0];
       const now = audioContext.currentTime;
 
-      // ADSR envelope with instrument-specific timing
       gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.8, now + settings.attack); // Attack
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.6, now + settings.attack + settings.decay); // Decay
-      gainNode.gain.setValueAtTime(currentVolume * 0.6, now + settings.attack + settings.decay); // Sustain
+      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.8, now + 0.01);
+      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.6, now + 0.06);
 
       oscillator.start();
-      console.log('🎵 Playing note:', noteName, 'freq:', frequency, 'vol:', currentVolume);
+      console.log('🎵 Playing note (fallback):', noteName);
 
       activeOscillatorsRef.current.set(noteName, { oscillator, gainNode });
       setActiveNotes((prev) => new Set(prev).add(noteName));
     },
-    [volume, isMuted, initAudioContext, selectedInstrument],
+    [volume, isMuted, initAudioContext, soundfontReady],
   );
 
   const stopNote = useCallback((noteName: string) => {
+    // Stop soundfont note if player exists
+    if (soundfontPlayerRef.current) {
+      soundfontPlayerRef.current.stopNote(noteName);
+    }
+
+    // Also stop oscillator if it exists (fallback mode)
     const nodes = activeOscillatorsRef.current.get(noteName);
-    if (!nodes || !audioContextRef.current) return;
+    if (nodes && audioContextRef.current) {
+      try {
+        const now = audioContextRef.current.currentTime;
+        nodes.gainNode.gain.cancelScheduledValues(now);
+        nodes.gainNode.gain.setValueAtTime(nodes.gainNode.gain.value, now);
+        nodes.gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
-    try {
-      const now = audioContextRef.current.currentTime;
-      // Release envelope
-      nodes.gainNode.gain.cancelScheduledValues(now);
-      nodes.gainNode.gain.setValueAtTime(nodes.gainNode.gain.value, now);
-      nodes.gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-
-      setTimeout(() => {
-        nodes.oscillator.stop();
+        setTimeout(() => {
+          nodes.oscillator.stop();
+          activeOscillatorsRef.current.delete(noteName);
+        }, 150);
+      } catch (error) {
         activeOscillatorsRef.current.delete(noteName);
-      }, 150);
-    } catch (error) {
-      activeOscillatorsRef.current.delete(noteName);
+      }
     }
 
     setActiveNotes((prev) => {
@@ -410,17 +425,27 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
         gainNode.gain.setValueAtTime(newVolume, audioContextRef.current!.currentTime);
       });
     }
+    if (soundfontPlayerRef.current) {
+      soundfontPlayerRef.current.setVolume(!isMuted ? 0 : volume[0]);
+    }
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Stop all oscillators
       activeOscillatorsRef.current.forEach((nodes) => {
         try {
           nodes.oscillator.stop();
         } catch (e) {}
       });
       activeOscillatorsRef.current.clear();
+      
+      // Stop all soundfont notes
+      if (soundfontPlayerRef.current) {
+        soundfontPlayerRef.current.stopAllNotes();
+      }
+      
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close();
       }
@@ -465,6 +490,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
           <Select
             value={selectedInstrument.toString()}
             onValueChange={(value) => setSelectedInstrument(parseInt(value, 10))}
+            disabled={isLoadingSoundfont}
           >
             <SelectTrigger className="w-32 sm:w-48 h-8 sm:h-9 text-xs sm:text-sm">
               <SelectValue placeholder="Instrument" />
@@ -477,6 +503,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
               ))}
             </SelectContent>
           </Select>
+          {isLoadingSoundfont && (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          )}
+          {soundfontReady && !isLoadingSoundfont && (
+            <span className="text-xs text-green-500 hidden sm:inline">✓</span>
+          )}
         </div>
 
         <div className="flex items-center gap-2 justify-end">
