@@ -48,24 +48,8 @@ export const UnifiedDashboard = () => {
   const [simulatedStudentId, setSimulatedStudentId] = useState<string | null>(null);
   const [simulatedMemberId, setSimulatedMemberId] = useState<string | null>(null);
   const [simLoading, setSimLoading] = useState(false);
-  const [hasCustomBackground, setHasCustomBackground] = useState(false);
 
-  // Check if user has custom background
-  useEffect(() => {
-    const checkCustomBackground = async () => {
-      if (!user?.id) return;
-      
-      const { data } = await supabase
-        .from('gw_profiles')
-        .select('dashboard_background_url')
-        .eq('user_id', user.id)
-        .single();
-      
-      setHasCustomBackground(!!data?.dashboard_background_url);
-    };
-    
-    checkCustomBackground();
-  }, [user?.id]);
+  // Background removed - no longer checking for custom backgrounds
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const moduleId = params.get('module');
@@ -162,7 +146,7 @@ export const UnifiedDashboard = () => {
   // Show loading if profile is still loading
   if (profileLoading) {
     console.log('🎯 UnifiedDashboard: Profile still loading...');
-    return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+    return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading your dashboard...</p>
@@ -173,13 +157,13 @@ export const UnifiedDashboard = () => {
   // Check if we have a profile - if not, show access restricted
   if (!profile) {
     console.log('🎯 UnifiedDashboard: No profile found, showing access restricted');
-    return <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
-        <div className="max-w-md mx-auto p-8 bg-white rounded-xl shadow-lg text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Restricted</h1>
-          <p className="text-gray-600 mb-6">
+    return <div className="min-h-screen flex items-center justify-center">
+        <div className="max-w-md mx-auto p-8 bg-card rounded-xl shadow-lg text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>
+          <p className="text-muted-foreground mb-6">
             Your account profile is not properly configured. Please contact an administrator for assistance.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             User ID: {user?.id}
           </p>
         </div>
@@ -199,7 +183,7 @@ export const UnifiedDashboard = () => {
     const showMemberNav = memberModules.includes(activeModuleId) && !profile?.is_admin && !profile?.is_super_admin;
     
     return (
-      <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
+      <div className="min-h-screen">
         <div className="px-6 py-4">
           <Button
             variant="ghost"
@@ -238,7 +222,7 @@ export const UnifiedDashboard = () => {
   // Show different dashboard content based on view mode
   if (viewMode === 'member') {
     // Member view: Simulate member role permissions
-    return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
+    return <div className="min-h-screen">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           {simLoading && (
             <div className="text-center text-muted-foreground py-10">Loading member view…</div>
@@ -266,7 +250,7 @@ export const UnifiedDashboard = () => {
   }
   if (viewMode === 'student') {
     // Student view: Simulate student role permissions
-    return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
+    return <div className="min-h-screen">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           {simLoading && (
             <div className="text-center text-muted-foreground py-10">Loading student view…</div>
@@ -295,7 +279,7 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'fan') {
     // Show monitoring interface for admins viewing fan dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
-      return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
+      return <div className="min-h-screen">
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -319,7 +303,7 @@ export const UnifiedDashboard = () => {
     }
   }
   if (viewMode === 'mus240') {
-    return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
+    return <div className="min-h-screen">
         <div className="px-6 py-4">
           <div className="text-center py-8">
             <h1 className="text-3xl font-bold text-primary mb-4">MUS 240 Class Dashboard</h1>
@@ -335,7 +319,7 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'public') {
     // Show monitoring interface for admins viewing public dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
-      return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
+      return <div className="min-h-screen">
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -361,7 +345,7 @@ export const UnifiedDashboard = () => {
 
   // Default view: Use MetalHeaderDashboard for all members
   if (viewMode === 'default') {
-    return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
+    return <div className="min-h-screen">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           <MetalHeaderDashboard 
             user={{
@@ -383,7 +367,7 @@ export const UnifiedDashboard = () => {
         )}
       </div>;
   }
-  return <div className={hasCustomBackground ? "min-h-screen bg-transparent" : "min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30"}>
+  return <div className="min-h-screen">
       
 
       {/* Row 1: Hero + Features side-by-side */}
