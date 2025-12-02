@@ -56,6 +56,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Apply theme to document root whenever it changes
   useEffect(() => {
+    console.log('🎨 Applying theme to document:', themeName);
     applyThemeToDocument(themeName);
   }, [themeName]);
 
@@ -112,6 +113,12 @@ function applyThemeToDocument(themeName: ThemeName) {
   const theme = getTheme(themeName);
   const root = document.documentElement;
 
+  console.log('🎨 Theme being applied:', {
+    themeName,
+    background: theme.background,
+    colors: theme.colors
+  });
+
   // Apply color variables
   Object.entries(theme.colors).forEach(([key, value]) => {
     const cssVarName = key.replace(/([A-Z])/g, '-$1').toLowerCase();
@@ -127,6 +134,7 @@ function applyThemeToDocument(themeName: ThemeName) {
   // Apply background
   if (theme.background.type === 'gradient' || theme.background.type === 'solid') {
     root.style.setProperty('--theme-background', theme.background.value);
+    console.log('🎨 Set --theme-background to:', theme.background.value);
   }
 
   // Store theme name as data attribute for CSS targeting
