@@ -9,10 +9,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Music, UserPlus, LogIn, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 const authBackground = '/lovable-uploads/1e93a440-6349-4948-a145-7b55dedea9fc.png';
-
 export default function AuthPage() {
-  const { user, loading } = useAuth();
-  const { toast } = useToast();
+  const {
+    user,
+    loading
+  } = useAuth();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -20,25 +24,22 @@ export default function AuthPage() {
   const [name, setName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
   useEffect(() => {
     // If user is already authenticated, redirect them
     if (user && !loading) {
       // Check sessionStorage first for stored redirect path
       const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
-      
       if (storedRedirect) {
         // Clear the stored redirect and use it
         sessionStorage.removeItem('redirectAfterAuth');
         window.location.href = storedRedirect;
         return;
       }
-      
+
       // Fall back to URL parameters
       const urlParams = new URLSearchParams(window.location.search);
       const returnTo = urlParams.get('returnTo');
       const hasTimeSlot = urlParams.get('timeSlot');
-      
       if (returnTo) {
         // User came from a specific page (like QR scanning), redirect back
         window.location.href = returnTo;
@@ -51,30 +52,28 @@ export default function AuthPage() {
       }
     }
   }, [user, loading]);
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
       if (isLogin) {
         // Login flow
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const {
+          data,
+          error
+        } = await supabase.auth.signInWithPassword({
           email,
-          password,
+          password
         });
-
         if (error) throw error;
-
         toast({
           title: "Welcome back!",
-          description: "You have been successfully logged in.",
+          description: "You have been successfully logged in."
         });
 
         // Handle redirect after successful login
         // Check sessionStorage first
         const storedRedirect = sessionStorage.getItem('redirectAfterAuth');
-        
         if (storedRedirect) {
           sessionStorage.removeItem('redirectAfterAuth');
           window.location.href = storedRedirect;
@@ -88,33 +87,32 @@ export default function AuthPage() {
             window.location.href = '/dashboard';
           }
         }
-
       } else {
         // Signup flow
         const redirectUrl = `${window.location.origin}/audition-application`;
-        
-        const { data, error } = await supabase.auth.signUp({
+        const {
+          data,
+          error
+        } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: redirectUrl,
             data: {
-              full_name: name,
+              full_name: name
             }
           }
         });
-
         if (error) throw error;
-
         if (data.user && !data.user.email_confirmed_at) {
           toast({
             title: "Check your email",
-            description: "We sent you a confirmation link. Please check your email to complete registration.",
+            description: "We sent you a confirmation link. Please check your email to complete registration."
           });
         } else {
           toast({
             title: "Account created!",
-            description: "Please complete your audition application.",
+            description: "Please complete your audition application."
           });
         }
       }
@@ -129,27 +127,20 @@ export default function AuthPage() {
       setIsSubmitting(false);
     }
   };
-
   if (loading) {
-    return (
-      <div 
-        className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative auth-page"
-        style={{ backgroundImage: `url(${authBackground})` }}
-      >
+    return <div className="min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat relative auth-page" style={{
+      backgroundImage: `url(${authBackground})`
+    }}>
         <div className="absolute inset-0 bg-black/60" />
         <div className="text-center relative z-10">
           <Music className="h-12 w-12 text-white mx-auto mb-4 animate-pulse" />
           <p className="text-white/90 text-lg">Loading...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div 
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4 auth-page"
-      style={{ backgroundImage: `url(${authBackground})` }}
-    >
+  return <div className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center p-4 auth-page" style={{
+    backgroundImage: `url(${authBackground})`
+  }}>
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70" />
       
@@ -159,12 +150,7 @@ export default function AuthPage() {
       <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-accent/5 rounded-full blur-xl animate-pulse delay-500" />
       
       {/* Back Button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => navigate('/')}
-        className="absolute top-6 left-6 z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300"
-      >
+      <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="absolute top-6 left-6 z-20 text-white hover:bg-white/20 border border-white/30 backdrop-blur-sm transition-all duration-300">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Home
       </Button>
@@ -180,7 +166,7 @@ export default function AuthPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-2xl">
             Spelman College
           </h1>
-          <h2 className="text-6xl md:text-8xl font-bold text-blue-400 mb-4 drop-shadow-lg">
+          <h2 className="text-6xl font-bold mb-4 drop-shadow-lg text-secondary-foreground md:text-9xl">
             GLEE CLUB
           </h2>
           <p className="text-white/80 text-lg drop-shadow-md">
@@ -194,50 +180,30 @@ export default function AuthPage() {
           
           <CardHeader className="relative">
             <CardTitle className="flex items-center justify-center text-white text-xl">
-              {isLogin ? (
-                <>
+              {isLogin ? <>
                   <LogIn className="h-5 w-5 mr-2" />
                   Welcome Back
-                </>
-              ) : (
-                <>
+                </> : <>
                   <UserPlus className="h-5 w-5 mr-2" />
                   Create Account
-                </>
-              )}
+                </>}
             </CardTitle>
           </CardHeader>
           
           <CardContent className="relative">
             <form onSubmit={handleAuth} className="space-y-5">
-              {!isLogin && (
-                <div>
+              {!isLogin && <div>
                   <label className="text-sm font-medium text-white/90 mb-2 block">
                     Full Name *
                   </label>
-                  <Input
-                    type="text"
-                    placeholder="Your full name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required={!isLogin}
-                    className="auth-input"
-                  />
-                </div>
-              )}
+                  <Input type="text" placeholder="Your full name" value={name} onChange={e => setName(e.target.value)} required={!isLogin} className="auth-input" />
+                </div>}
 
               <div>
                 <label className="text-sm font-medium text-black mb-2 block">
                   Email Address *
                 </label>
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="auth-input"
-                />
+                <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="auth-input" />
               </div>
 
               <div>
@@ -245,58 +211,29 @@ export default function AuthPage() {
                   Password *
                 </label>
                 <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="auth-input pr-10"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-white/60 hover:text-white/80 hover:bg-white/10"
-                  >
+                  <Input type={showPassword ? "text" : "password"} placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} required className="auth-input pr-10" />
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-white/60 hover:text-white/80 hover:bg-white/10">
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-6 text-lg font-semibold"
-                disabled={isSubmitting}
-              >
-                {isSubmitting 
-                  ? (isLogin ? 'Signing in...' : 'Creating account...') 
-                  : (isLogin ? 'Sign In' : 'Create Account & Apply')
-                }
+              <Button type="submit" className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 backdrop-blur-sm transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 py-6 text-lg font-semibold" disabled={isSubmitting}>
+                {isSubmitting ? isLogin ? 'Signing in...' : 'Creating account...' : isLogin ? 'Sign In' : 'Create Account & Apply'}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <Button
-                variant="link"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-white/80 hover:text-white text-sm transition-colors duration-300 no-underline"
-              >
-                {isLogin 
-                  ? "Don't have an account? Create one here" 
-                  : "Already have an account? Sign in here"
-                }
+              <Button variant="link" onClick={() => setIsLogin(!isLogin)} className="text-white/80 hover:text-white text-sm transition-colors duration-300 no-underline">
+                {isLogin ? "Don't have an account? Create one here" : "Already have an account? Sign in here"}
               </Button>
             </div>
 
-            {!isLogin && (
-              <div className="mt-6 p-4 bg-white/10 rounded-lg border border-white/20 backdrop-blur-sm">
+            {!isLogin && <div className="mt-6 p-4 bg-white/10 rounded-lg border border-white/20 backdrop-blur-sm">
                 <p className="text-sm text-white/80">
                   <strong className="text-white">New users:</strong> After creating your account, you'll be redirected to fill out your audition application with your selected time slot automatically saved.
                 </p>
-              </div>
-            )}
+              </div>}
           </CardContent>
         </Card>
 
@@ -307,6 +244,5 @@ export default function AuthPage() {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }
