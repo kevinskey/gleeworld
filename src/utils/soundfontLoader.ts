@@ -163,9 +163,17 @@ export class SoundfontPlayer {
 
     try {
       this.buffers = await loadPromise;
-      audioBufferCache.set(instrumentName, this.buffers);
       this.currentInstrument = instrumentName;
       this.isLoading = false;
+      
+      // Only consider it a success if we actually loaded some buffers
+      if (this.buffers.size === 0) {
+        console.warn(`🎹 No buffers loaded for ${instrumentName} - CDN may be unavailable`);
+        loadingPromises.delete(instrumentName);
+        return false;
+      }
+      
+      audioBufferCache.set(instrumentName, this.buffers);
       console.log(`🎹 Soundfont ${instrumentName} loaded successfully (${this.buffers.size} notes)`);
       return true;
     } catch (error) {

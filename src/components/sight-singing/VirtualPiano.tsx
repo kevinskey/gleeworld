@@ -382,18 +382,22 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
         }
       }
 
-      // Try soundfont first if ready
-      if (soundfontReady && soundfontPlayerRef.current) {
+      // Try soundfont first if ready and has buffers loaded
+      let soundfontPlayed = false;
+      if (soundfontReady && soundfontPlayerRef.current && soundfontPlayerRef.current.isReady()) {
         try {
           await soundfontPlayerRef.current.playNote(noteName);
           setActiveNotes((prev) => new Set(prev).add(noteName));
-          return;
+          soundfontPlayed = true;
+          console.log('🎹 Soundfont played:', noteName);
         } catch (error) {
           console.warn('🎹 Soundfont playNote failed, using fallback:', error);
+          soundfontPlayed = false;
         }
       }
 
-      // Fallback to oscillator synthesis (always works)
+      // If soundfont didn't play, use oscillator synthesis (always works)
+      if (soundfontPlayed) return;
       if (activeOscillatorsRef.current.has(noteName)) return;
 
       // Enhanced oscillator synthesis with better piano-like sound
