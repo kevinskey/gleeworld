@@ -163,8 +163,8 @@ export const DashboardHeroCarousel = () => {
     return (
       <Card className="bg-black/30 backdrop-blur-md border-0 shadow-2xl mb-4 rounded-xl">
         <CardContent className="p-3">
-          <div className="relative w-full rounded-lg overflow-hidden group">
-            <div className={`grid gap-4 ${
+          <div className="relative w-full rounded-lg overflow-hidden group flex justify-center">
+            <div className={`grid gap-4 place-items-center ${
               slidesToShow === 2 ? 'grid-cols-2' : 
               slidesToShow === 3 ? 'grid-cols-3' : 
               'grid-cols-4'
@@ -214,8 +214,8 @@ export const DashboardHeroCarousel = () => {
   return (
     <Card className="bg-black/30 backdrop-blur-md border-0 shadow-2xl mb-4 rounded-xl">
       <CardContent className="p-3">
-        <div className="relative w-full rounded-lg overflow-hidden group">
-          <div className={`grid gap-4 ${
+        <div className="relative w-full rounded-lg overflow-hidden group flex justify-center">
+          <div className={`grid gap-4 place-items-center ${
             slidesToShow === 2 ? 'grid-cols-2' : 
             slidesToShow === 3 ? 'grid-cols-3' : 
             'grid-cols-4'
