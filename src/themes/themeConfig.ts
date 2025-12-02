@@ -75,13 +75,13 @@ const gleeWorldTheme: ThemeConfig = {
     secondaryForeground: '0 0% 100%', // White on blue
     accent: '203 85% 63%',            // Sky blue accent
     accentForeground: '0 0% 100%',
-    background: '0 0% 98%',           // Very light gray
-    foreground: '0 0% 8%',            // Near black
-    card: '0 0% 100%',                // White cards
-    cardForeground: '0 0% 8%',
-    muted: '0 0% 96%',
-    mutedForeground: '0 0% 25%',
-    border: '0 0% 85%',
+    background: '0 0% 10%',           // Dark background for image overlay
+    foreground: '0 0% 100%',          // White text for dark background
+    card: '0 0% 15% / 0.9',           // Semi-transparent dark cards
+    cardForeground: '0 0% 100%',      // White text on cards
+    muted: '0 0% 20%',                // Dark muted
+    mutedForeground: '0 0% 85%',      // Light muted text
+    border: '0 0% 30%',               // Subtle border on dark
   },
   
   typography: {
