@@ -149,12 +149,12 @@ export const HeroSlideshow = () => {
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
           {slide.title && (
             <h2
-              className="mb-2"
+              className="mb-2 text-white"
               style={titleFormatting ? {
                 fontSize: `${titleFormatting.fontSize}px`,
                 fontWeight: titleFormatting.fontWeight,
                 textAlign: titleFormatting.textAlign as any,
-                color: titleFormatting.color || 'inherit',
+                color: '#ffffff',
                 marginBottom: `${titleFormatting.marginBottom}px`,
                 textTransform: titleFormatting.textTransform as any,
                 letterSpacing: `${titleFormatting.letterSpacing}px`,
