@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,7 +24,9 @@ type TicketRequestFormData = z.infer<typeof ticketRequestSchema>;
 
 export const ConcertTicketRequestForm = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [countdown, setCountdown] = useState(5);
   const {
     register,
     handleSubmit,
@@ -35,6 +38,16 @@ export const ConcertTicketRequestForm = () => {
       num_tickets: 1,
     },
   });
+
+  // Redirect to join as fan after countdown
+  useEffect(() => {
+    if (isSubmitted && countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (isSubmitted && countdown === 0) {
+      navigate('/auth?mode=signup&role=fan');
+    }
+  }, [isSubmitted, countdown, navigate]);
 
   const onSubmit = async (data: TicketRequestFormData) => {
     try {
@@ -71,12 +84,20 @@ export const ConcertTicketRequestForm = () => {
         <CardContent className="pt-12 pb-12 text-center">
           <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Ticket Request Received</h2>
-          <p className="text-muted-foreground mb-6">
+          <p className="text-muted-foreground mb-4">
             Thank you! We will contact you soon regarding your ticket request.
           </p>
-          <Button onClick={() => setIsSubmitted(false)} variant="outline">
-            Submit Another Request
-          </Button>
+          <p className="text-sm text-muted-foreground mb-6">
+            Redirecting to create your fan account in {countdown} seconds...
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button onClick={() => navigate('/auth?mode=signup&role=fan')} className="bg-primary hover:bg-primary/90">
+              Join as Fan Now
+            </Button>
+            <Button onClick={() => setIsSubmitted(false)} variant="outline">
+              Submit Another Request
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
