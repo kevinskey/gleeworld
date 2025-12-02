@@ -565,7 +565,7 @@ export const MetalHeaderDashboard = ({
     }
   }
   // All users get the full metal header dashboard experience
-  return <div className="space-y-4 relative min-h-screen">
+  return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Metal Plate Header */}
       <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg pt-[15px] px-5 pb-5">
         {/* Left Rivet */}
@@ -634,7 +634,7 @@ export const MetalHeaderDashboard = ({
       {/* Draggable Dashboard Cards */}
       <DndContext sensors={cardSensors} collisionDetection={closestCenter} onDragEnd={handleCardDragEnd}>
         <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {cardOrder.map(cardId => {
             // Favorites card using moduleFavorites
             if (cardId === 'favorites') {
