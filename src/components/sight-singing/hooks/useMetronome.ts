@@ -87,23 +87,26 @@ export const useMetronome = () => {
       noiseSource.start(audioContext.currentTime);
       noiseSource.stop(audioContext.currentTime + 0.05);
     } else {
-      // Original pitched sound
+      // Pitched sound - same frequency for all beats, differentiate by volume/duration only
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
 
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
-      // Higher pitch for downbeat, lower for other beats
-      const pitchVolume = isDownbeat ? volume * 1.2 : volume * 0.9;
-      oscillator.frequency.setValueAtTime(isDownbeat ? 1000 : 800, audioContext.currentTime);
+      // Use consistent pitch (880 Hz = A5) for all beats - no melody effect
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
       oscillator.type = 'square';
 
+      // Differentiate downbeat by volume and duration only
+      const pitchVolume = isDownbeat ? volume * 1.3 : volume * 0.8;
+      const duration = isDownbeat ? 0.1 : 0.06;
+
       gainNode.gain.setValueAtTime(pitchVolume, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.08);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
 
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.08);
+      oscillator.stop(audioContext.currentTime + duration);
     }
   }, [volume, soundType, initAudioContext]);
 
