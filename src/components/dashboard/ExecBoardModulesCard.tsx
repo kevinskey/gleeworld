@@ -134,7 +134,7 @@ export const ExecBoardModulesCard = ({ userId }: ExecBoardModulesCardProps) => {
                     params.set('module', module.id);
                     navigate(`${location.pathname}?${params.toString()}`, { replace: true });
                   }}
-                  className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                  className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card text-card-foreground hover:bg-accent/50 transition-colors cursor-pointer"
                 >
                   {IconComponent && (
                     <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
@@ -142,7 +142,7 @@ export const ExecBoardModulesCard = ({ userId }: ExecBoardModulesCardProps) => {
                     </div>
                   )}
                   <div className="text-center">
-                    <p className="text-xs font-medium line-clamp-2">{module.title}</p>
+                    <p className="text-xs font-medium line-clamp-2 text-card-foreground">{module.title}</p>
                     {module.description && (
                       <p className="text-[10px] text-muted-foreground line-clamp-1 mt-1">
                         {module.description}

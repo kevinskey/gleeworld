@@ -45,7 +45,7 @@ export const FavoritesCard = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
             {favorites.map(module => {
           const IconComponent = module.icon;
-          return <div key={module.id} className="relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => {
+          return <div key={module.id} className="relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card text-card-foreground hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => {
             if (module.id === 'librarian') {
               navigate('/librarian-dashboard');
             } else {
@@ -57,7 +57,7 @@ export const FavoritesCard = ({
                       <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
                     </div>}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{module.title}</p>
+                    <p className="text-sm font-medium truncate text-card-foreground">{module.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{module.description}</p>
                   </div>
                 </div>
