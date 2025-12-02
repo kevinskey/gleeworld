@@ -295,7 +295,22 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       if (activeOscillatorsRef.current.has(noteName)) return; // Already playing
 
       const audioContext = await initAudioContext();
-      if (!audioContext || audioContext.state !== 'running') return;
+      if (!audioContext) {
+        console.error('🎹 No AudioContext available');
+        return;
+      }
+      
+      // Wait for AudioContext to be running if it's not yet
+      if (audioContext.state !== 'running') {
+        console.log('🎹 AudioContext not running, attempting resume...');
+        try {
+          await audioContext.resume();
+          console.log('🎹 AudioContext resumed successfully, state:', audioContext.state);
+        } catch (err) {
+          console.error('🎹 Failed to resume AudioContext:', err);
+          return;
+        }
+      }
 
       // Get instrument-specific synthesis settings
       const getInstrumentSettings = (instrumentId: number) => {
@@ -344,6 +359,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       gainNode.gain.setValueAtTime(currentVolume * 0.6, now + settings.attack + settings.decay); // Sustain
 
       oscillator.start();
+      console.log('🎵 Playing note:', noteName, 'freq:', frequency, 'vol:', currentVolume);
 
       activeOscillatorsRef.current.set(noteName, { oscillator, gainNode });
       setActiveNotes((prev) => new Set(prev).add(noteName));
