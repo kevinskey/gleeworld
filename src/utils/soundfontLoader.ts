@@ -179,27 +179,47 @@ export class SoundfontPlayer {
   private async fetchInstrumentSamples(instrumentName: string): Promise<Map<string, AudioBuffer>> {
     const buffers = new Map<string, AudioBuffer>();
     
-    // Load a subset of notes for faster loading (we'll use nearest neighbor for missing notes)
-    const notesToLoad = [
-      'A0', 'C1', 'D#1', 'F#1', 'A1',
-      'C2', 'D#2', 'F#2', 'A2',
-      'C3', 'D#3', 'F#3', 'A3',
-      'C4', 'D#4', 'F#4', 'A4',
-      'C5', 'D#5', 'F#5', 'A5',
-      'C6', 'D#6', 'F#6', 'A6',
-      'C7', 'D#7', 'F#7', 'A7',
-      'C8'
-    ];
+    // Load all chromatic notes for best quality (no pitch shifting needed)
+    const notesToLoad: string[] = [];
+    const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    
+    // A0, A#0, B0
+    notesToLoad.push('A0', 'A#0', 'B0');
+    
+    // C1 through B7 (all notes)
+    for (let octave = 1; octave <= 7; octave++) {
+      for (const note of noteNames) {
+        notesToLoad.push(`${note}${octave}`);
+      }
+    }
+    
+    // C8
+    notesToLoad.push('C8');
+    
+    console.log(`🎹 Loading ${notesToLoad.length} notes for ${instrumentName}...`);
 
     const loadPromises = notesToLoad.map(async (note) => {
       try {
-        // Convert note name to soundfont format (e.g., C4 -> C4, C#4 -> Db4)
-        const soundfontNote = note.replace('#', 's');
+        // Convert note name to soundfont format (sharps become flats: C# -> Db, D# -> Eb, etc.)
+        let soundfontNote = note;
+        if (note.includes('#')) {
+          const sharpToFlat: Record<string, string> = {
+            'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb'
+          };
+          const notePart = note.slice(0, -1); // e.g., "C#" from "C#4"
+          const octave = note.slice(-1); // e.g., "4" from "C#4"
+          const flatNote = sharpToFlat[notePart];
+          if (flatNote) {
+            soundfontNote = `${flatNote}${octave}`;
+          }
+        }
+        
         const url = `${SOUNDFONT_CDN}/${instrumentName}-mp3/${soundfontNote}.mp3`;
         
         const response = await fetch(url);
         if (!response.ok) {
-          console.warn(`🎹 Note ${note} not available for ${instrumentName}`);
+          // Try alternate URL format
+          console.warn(`🎹 Note ${soundfontNote} not available, trying alternate...`);
           return;
         }
         
@@ -216,16 +236,19 @@ export class SoundfontPlayer {
   }
 
   private findNearestBuffer(noteName: string): { buffer: AudioBuffer; pitchShift: number } | null {
-    // Try exact match first
+    // Try exact match first (should work for most notes now)
     if (this.buffers.has(noteName)) {
       return { buffer: this.buffers.get(noteName)!, pitchShift: 0 };
     }
 
     // Get MIDI number for the requested note
     const targetMidi = NOTE_TO_MIDI[noteName];
-    if (targetMidi === undefined) return null;
+    if (targetMidi === undefined) {
+      console.warn(`🎹 Unknown note: ${noteName}`);
+      return null;
+    }
 
-    // Find nearest loaded note
+    // Find nearest loaded note (fallback only)
     let nearestNote: string | null = null;
     let nearestDistance = Infinity;
 
@@ -240,12 +263,14 @@ export class SoundfontPlayer {
       }
     });
 
-    if (nearestNote && nearestDistance <= 6) { // Max 6 semitones shift
+    if (nearestNote && nearestDistance <= 2) { // Max 2 semitones shift for quality
       const loadedMidi = NOTE_TO_MIDI[nearestNote];
       const pitchShift = targetMidi - loadedMidi;
+      console.log(`🎹 Using nearest note ${nearestNote} for ${noteName} (shift: ${pitchShift})`);
       return { buffer: this.buffers.get(nearestNote)!, pitchShift };
     }
 
+    console.warn(`🎹 No suitable buffer found for ${noteName}`);
     return null;
   }
 
