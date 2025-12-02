@@ -177,8 +177,8 @@ const spelhouseTheme: ThemeConfig = {
   
   background: {
     type: 'gradient',
-    value: 'linear-gradient(90deg, hsl(201 52% 96%) 0%, hsl(0 0% 99%) 50%, hsl(352 53% 96%) 100%)',
-    overlay: 'rgba(255, 255, 255, 0.85)',
+    value: 'linear-gradient(90deg, hsl(201 52% 66%) 0%, hsl(352 53% 32%) 100%)',
+    overlay: 'rgba(255, 255, 255, 0.05)',
   },
 };
 
