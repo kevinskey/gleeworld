@@ -4,7 +4,6 @@ import { useState, useMemo } from "react";
 import { BellDot } from "lucide-react";
 import { useUserDashboardContext } from "@/contexts/UserDashboardContext";
 import { useNavigate } from "react-router-dom";
-import festiveBg from "@/assets/gleeworld-festive-background.webp";
 
 interface WelcomeCardProps {
   displayName: string;
@@ -61,7 +60,7 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
   // Determine which background to use: admin setting > default festive
   const backgroundImage = useMemo(() => {
     if (welcomeCardSetting?.image_url && !imageError) return welcomeCardSetting.image_url;
-    return festiveBg;
+    return null;
   }, [welcomeCardSetting?.image_url, imageError]);
 
   return (

@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import gleeSculptureBg from '@/assets/glee-sculpture-bg.png';
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
@@ -506,15 +505,6 @@ export const SuperAdminDashboard = ({
     }
   }
   return <div className="space-y-4 relative min-h-screen">
-      {/* Background Image */}
-      <div 
-        className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none"
-        style={{ 
-          backgroundImage: `url(${gleeSculptureBg})`,
-          backgroundPosition: 'center 15%',
-          filter: 'sepia(0.15) saturate(1.2)'
-        }}
-      />
       
       {/* Content with relative positioning to appear above background */}
       <div className="relative z-10 space-y-4">
