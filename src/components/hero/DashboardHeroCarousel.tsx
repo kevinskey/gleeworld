@@ -155,8 +155,8 @@ export const DashboardHeroCarousel: React.FC = () => {
                   <div
                     className={`absolute inset-0 flex ${getVerticalAlignment(slide.title_position_vertical)} ${getHorizontalAlignment(slide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
                   >
-                    <div className="bg-background/70 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-white/20 pointer-events-auto">
-                      <h1 className={`${getTitleSize(slide.title_size)} font-bold text-foreground`}>{slide.title}</h1>
+                    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-white/20 pointer-events-auto">
+                      <h1 className={`${getTitleSize(slide.title_size)} font-bold text-white drop-shadow-lg`}>{slide.title}</h1>
                     </div>
                   </div>
                 )}
@@ -166,8 +166,8 @@ export const DashboardHeroCarousel: React.FC = () => {
                   <div
                     className={`absolute inset-0 flex ${getVerticalAlignment(slide.description_position_vertical)} ${getHorizontalAlignment(slide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
                   >
-                    <div className="bg-background/70 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-white/20 pointer-events-auto max-w-2xl">
-                      <p className={`${getDescriptionSize(slide.description_size)} text-foreground`}>{slide.description}</p>
+                    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-white/20 pointer-events-auto max-w-2xl">
+                      <p className={`${getDescriptionSize(slide.description_size)} text-white drop-shadow-md`}>{slide.description}</p>
                     </div>
                   </div>
                 )}
