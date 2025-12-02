@@ -15,7 +15,7 @@ const ticketRequestSchema = z.object({
   full_name: z.string().trim().min(1, 'Name is required').max(100),
   email: z.string().trim().email('Invalid email address').max(255),
   phone: z.string().trim().min(10, 'Phone number is required').max(20),
-  num_tickets: z.number().min(1, 'At least 1 ticket required').max(10, 'Maximum 10 tickets'),
+  num_tickets: z.number().min(1, 'At least 1 ticket required').max(2, 'Maximum 2 tickets'),
   special_requests: z.string().max(500).optional(),
 });
 
@@ -120,7 +120,7 @@ export const ConcertTicketRequestForm = () => {
               id="num_tickets"
               type="number"
               min="1"
-              max="10"
+              max="2"
               {...register('num_tickets', { valueAsNumber: true })}
             />
             {errors.num_tickets && (
