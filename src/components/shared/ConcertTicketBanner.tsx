@@ -2,9 +2,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Calendar, ArrowRight } from "lucide-react";
 
-export const ConcertTicketBanner = () => {
+interface ConcertTicketBannerProps {
+  showOnMobile?: boolean;
+}
+
+export const ConcertTicketBanner = ({ showOnMobile = false }: ConcertTicketBannerProps) => {
   return (
-    <section className="w-full bg-gradient-to-r from-primary via-primary/95 to-accent hidden md:block">
+    <section className={`w-full bg-gradient-to-r from-primary via-primary/95 to-accent ${showOnMobile ? 'block' : 'hidden md:block'}`}>
       <div className="container mx-auto px-4 py-4 md:py-6 bg-sidebar-primary">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 md:gap-4 text-primary-foreground">
