@@ -16,6 +16,7 @@ import { GleeWorldLanding } from '@/pages/GleeWorldLanding';
 import { ModuleDisplay } from './ModuleDisplay';
 import { DashboardNavigation } from './DashboardNavigation';
 import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
+import { ConcertTicketBanner } from '@/components/shared/ConcertTicketBanner';
 import { supabase } from '@/integrations/supabase/client';
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
@@ -194,6 +195,7 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'member') {
     // Member view: Simulate member role permissions
     return <div className="min-h-screen">
+        <ConcertTicketBanner />
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           {simLoading && <div className="text-center text-muted-foreground py-10">Loading member view…</div>}
           {!simLoading && !simulatedMemberId && <div className="text-center text-muted-foreground py-10">No member found to simulate. Add a member or pass ?memberId=UUID in the URL.</div>}
@@ -212,6 +214,7 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'student') {
     // Student view: Simulate student role permissions
     return <div className="min-h-screen">
+        <ConcertTicketBanner />
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
           {simLoading && <div className="text-center text-muted-foreground py-10">Loading student view…</div>}
           {!simLoading && !simulatedStudentId && <div className="text-center text-muted-foreground py-10">No student found to simulate. Add a student or pass ?studentId=UUID in the URL.</div>}
@@ -232,6 +235,7 @@ export const UnifiedDashboard = () => {
     // Show monitoring interface for admins viewing fan dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
       return <div className="min-h-screen">
+          <ConcertTicketBanner />
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -256,6 +260,7 @@ export const UnifiedDashboard = () => {
   }
   if (viewMode === 'mus240') {
     return <div className="min-h-screen">
+        <ConcertTicketBanner />
         <div className="px-6 py-4">
           <div className="text-center py-8">
             <h1 className="text-3xl font-bold text-primary mb-4">MUS 240 Class Dashboard</h1>
@@ -272,6 +277,7 @@ export const UnifiedDashboard = () => {
     // Show monitoring interface for admins viewing public dashboard
     if (profile?.role === 'super-admin' || profile?.role === 'admin') {
       return <div className="min-h-screen">
+          <ConcertTicketBanner />
           <div className="px-6 py-4">
             <div className="mb-6">
               <div className="flex items-center gap-4 mb-4">
@@ -298,6 +304,7 @@ export const UnifiedDashboard = () => {
   // Default view: Use MetalHeaderDashboard for all members
   if (viewMode === 'default') {
     return <div className="min-h-screen">
+        <ConcertTicketBanner />
         <div className="sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto px-0 py-px">
           <MetalHeaderDashboard user={{
           id: profile.user_id,
