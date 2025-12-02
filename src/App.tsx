@@ -313,10 +313,11 @@ const App = () => {
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <TooltipProvider>
-            <CustomTooltipProvider>
-              <MusicPlayerProvider>
-                <div>
+          <ThemeProvider>
+            <TooltipProvider>
+              <CustomTooltipProvider>
+                <MusicPlayerProvider>
+                  <div>
                   <Toaster />
                   <Sonner />
                   <DesignSystemEnforcer />
@@ -2176,17 +2177,15 @@ const App = () => {
                       </Suspense>
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
-                  </div>
+                   </div>
                   </MusicPlayerProvider>
-                </ThemeProvider>
-              </AuthProvider>
-            </CustomTooltipProvider>
-          </TooltipProvider>
+                </CustomTooltipProvider>
+              </TooltipProvider>
+            </ThemeProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </BrowserRouter>
   );
 };
-
-export default App;
 
 export default App;
