@@ -26,7 +26,7 @@ export const SpiritualReflectionsSection = () => {
     return (
       <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 h-full">
         <CardHeader className="pb-1">
-          <CardTitle className="flex items-center gap-2 text-primary text-base">
+          <CardTitle className="flex items-center gap-2 text-foreground text-base">
             <Trees className="h-4 w-4" />
             Spiritual Gleeflections
             <Sparkles className="h-3 w-3 text-accent animate-pulse" />
@@ -46,7 +46,7 @@ export const SpiritualReflectionsSection = () => {
   return (
     <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20 shadow-lg">
       <CardHeader className="pb-2 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <CardTitle className="flex items-center justify-between text-primary text-lg sm:text-xl">
+        <CardTitle className="flex items-center justify-between text-foreground text-lg sm:text-xl">
           <div className="flex items-center gap-2">
             <Trees className="h-5 w-5" />
             Spiritual Gleeflections
