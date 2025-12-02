@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import gleeSculptureBg from '@/assets/glee-sculpture-bg.png';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -198,14 +197,6 @@ export default function AlumnaeLanding() {
   };
   return (
     <div className="min-h-screen bg-background">
-      {/* Background with Steel Texture */}
-      <div 
-        className="fixed inset-0 z-0 opacity-20 dark:opacity-15 bg-cover bg-no-repeat pointer-events-none" 
-        style={{
-          backgroundImage: `url(${gleeSculptureBg})`,
-          backgroundPosition: 'center 15%'
-        }} 
-      />
 
       <div className="relative z-10 container mx-auto px-4 py-8 space-y-8">
         {/* Header Section */}

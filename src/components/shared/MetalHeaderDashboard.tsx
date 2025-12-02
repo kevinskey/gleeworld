@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import gleeSculptureBg from '@/assets/glee-sculpture-bg.png';
 import { useNavigate, useLocation } from "react-router-dom";
 import { DashboardHeroCarousel } from "@/components/dashboard/DashboardHeroCarousel";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
@@ -542,11 +541,6 @@ export const MetalHeaderDashboard = ({
     if (moduleConfig?.component) {
       const ModuleComponent = moduleConfig.component;
       return <div className="space-y-6 relative min-h-screen">
-          {/* Background Image */}
-          <div className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" style={{
-          backgroundImage: `url(${gleeSculptureBg})`,
-          backgroundPosition: 'center 15%'
-        }} />
           
           <div className="relative z-10 space-y-4">
             {/* Module Header with Back Button */}
@@ -572,11 +566,6 @@ export const MetalHeaderDashboard = ({
   }
   // All users get the full metal header dashboard experience
   return <div className="space-y-4 relative min-h-screen">
-      {/* Background Image */}
-      <div className="fixed inset-0 z-0 opacity-35 dark:opacity-30 bg-cover bg-no-repeat pointer-events-none" style={{
-      backgroundImage: `url(${gleeSculptureBg})`,
-      backgroundPosition: 'center 15%'
-    }} />
       {/* Metal Plate Header */}
       <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg pt-[15px] px-5 pb-5">
         {/* Left Rivet */}

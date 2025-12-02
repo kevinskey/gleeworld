@@ -22,7 +22,6 @@ import { NotificationsSection } from "./sections/NotificationsSection";
 import { TasksSection } from "./sections/TasksSection";
 import { BookingRequestManager } from "@/components/tour-manager/BookingRequestManager";
 import { ExecBoardMemberModules } from "@/components/executive/ExecBoardMemberModules";
-import festiveBg from "@/assets/gleeworld-festive-background.webp";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -287,26 +286,13 @@ const UserDashboard = React.memo(() => {
 
   const recentActivity = getRecentActivity();
 
-  // Use festive ornaments background
-  const backgroundImage = festiveBg;
-
   return (
-    <UniversalLayout 
+    <UniversalLayout
       containerized={false} 
       className="min-h-screen"
       viewMode={viewMode}
       onViewModeChange={setViewMode}
     >
-      {/* Background Image */}
-      {backgroundImage && (
-        <div 
-          className="fixed inset-0 bg-repeat z-0 after:absolute after:inset-0 after:bg-white after:opacity-20"
-          style={{ 
-            backgroundImage: `url(${backgroundImage})`,
-            backgroundPosition: 'center calc(50% - 400px)'
-          }}
-        />
-      )}
       
       {/* Content overlay */}
       <div className="relative z-10 w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4 py-1 sm:py-2 md:py-4 flex flex-col gap-4">
