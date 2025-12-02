@@ -66,11 +66,9 @@ export const UnifiedDashboard = () => {
     return 'default'; // /dashboard route
   }, [location.pathname]);
 
-
   // When simulating student view, select a sample student (or from ?studentId=)
   useEffect(() => {
     if (viewMode !== 'student') return;
-
     const run = async () => {
       setSimLoading(true);
       try {
@@ -80,13 +78,10 @@ export const UnifiedDashboard = () => {
           setSimulatedStudentId(sid);
           return;
         }
-        const { data, error } = await supabase
-          .from('gw_profiles')
-          .select('user_id')
-          .eq('role', 'student')
-          .eq('status', 'active')
-          .limit(1)
-          .single();
+        const {
+          data,
+          error
+        } = await supabase.from('gw_profiles').select('user_id').eq('role', 'student').eq('status', 'active').limit(1).single();
         if (error) {
           console.error('Error fetching sample student:', error);
         }
@@ -95,14 +90,12 @@ export const UnifiedDashboard = () => {
         setSimLoading(false);
       }
     };
-
     run();
   }, [viewMode, location.search]);
 
   // When simulating member view, select a sample member (or from ?memberId=)
   useEffect(() => {
     if (viewMode !== 'member') return;
-
     const run = async () => {
       setSimLoading(true);
       try {
@@ -112,13 +105,10 @@ export const UnifiedDashboard = () => {
           setSimulatedMemberId(mid);
           return;
         }
-        const { data, error } = await supabase
-          .from('gw_profiles')
-          .select('user_id')
-          .eq('role', 'member')
-          .eq('status', 'active')
-          .limit(1)
-          .single();
+        const {
+          data,
+          error
+        } = await supabase.from('gw_profiles').select('user_id').eq('role', 'member').eq('status', 'active').limit(1).single();
         if (error) {
           console.error('Error fetching sample member:', error);
         }
@@ -127,7 +117,6 @@ export const UnifiedDashboard = () => {
         setSimLoading(false);
       }
     };
-
     run();
   }, [viewMode, location.search]);
 
@@ -173,50 +162,32 @@ export const UnifiedDashboard = () => {
   // If module specified via query param, render it directly
   if (activeModuleId && activeModuleId !== 'collapsed-toggle' && viewMode === 'default') {
     // Check if this is a member-specific module that needs the member navigation
-    const memberModules = [
-      'music-library',
-      'member-sight-reading-studio',
-      'attendance',
-      'wardrobe',
-      'karaoke'
-    ];
+    const memberModules = ['music-library', 'member-sight-reading-studio', 'attendance', 'wardrobe', 'karaoke'];
     const showMemberNav = memberModules.includes(activeModuleId) && !profile?.is_admin && !profile?.is_super_admin;
-    
-    return (
-      <div className="min-h-screen">
+    return <div className="min-h-screen">
         <div className="px-6 py-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/dashboard')}
-            className="mb-4 hover:bg-primary/10"
-          >
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')} className="mb-4 hover:bg-primary/10">
             <ArrowLeft className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Back to Dashboard</span>
             <span className="sm:hidden">Back</span>
           </Button>
           <ModuleDisplay selectedModule={activeModuleId} />
         </div>
-        {showMemberNav && profile && (
-          <div className="px-6 pb-8">
+        {showMemberNav && profile && <div className="px-6 pb-8">
             <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded" />}> 
-              <MemberNavigation
-                user={{
-                  id: profile.user_id,
-                  email: profile.email,
-                  full_name: profile.full_name,
-                  role: profile.role,
-                  exec_board_role: profile.exec_board_role,
-                  is_exec_board: profile.is_exec_board,
-                  is_admin: profile.is_admin,
-                  is_super_admin: profile.is_super_admin,
-                }}
-              />
+              <MemberNavigation user={{
+            id: profile.user_id,
+            email: profile.email,
+            full_name: profile.full_name,
+            role: profile.role,
+            exec_board_role: profile.exec_board_role,
+            is_exec_board: profile.is_exec_board,
+            is_admin: profile.is_admin,
+            is_super_admin: profile.is_super_admin
+          }} />
             </Suspense>
-          </div>
-        )}
-      </div>
-    );
+          </div>}
+      </div>;
   }
 
   // Show different dashboard content based on view mode
@@ -224,27 +195,17 @@ export const UnifiedDashboard = () => {
     // Member view: Simulate member role permissions
     return <div className="min-h-screen">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
-          {simLoading && (
-            <div className="text-center text-muted-foreground py-10">Loading member view…</div>
-          )}
-          {!simLoading && !simulatedMemberId && (
-            <div className="text-center text-muted-foreground py-10">No member found to simulate. Add a member or pass ?memberId=UUID in the URL.</div>
-          )}
-          {simulatedMemberId && (
-            <MetalHeaderDashboard 
-              user={{
-                id: profile.user_id,
-                email: profile.email || '',
-                full_name: profile.full_name || '',
-                role: 'member',
-                exec_board_role: undefined,
-                is_exec_board: false,
-                created_at: new Date().toISOString()
-              }}
-              simulatedRole="member"
-              simulatedUserId={simulatedMemberId}
-            />
-          )}
+          {simLoading && <div className="text-center text-muted-foreground py-10">Loading member view…</div>}
+          {!simLoading && !simulatedMemberId && <div className="text-center text-muted-foreground py-10">No member found to simulate. Add a member or pass ?memberId=UUID in the URL.</div>}
+          {simulatedMemberId && <MetalHeaderDashboard user={{
+          id: profile.user_id,
+          email: profile.email || '',
+          full_name: profile.full_name || '',
+          role: 'member',
+          exec_board_role: undefined,
+          is_exec_board: false,
+          created_at: new Date().toISOString()
+        }} simulatedRole="member" simulatedUserId={simulatedMemberId} />}
         </div>
       </div>;
   }
@@ -252,27 +213,18 @@ export const UnifiedDashboard = () => {
     // Student view: Simulate student role permissions
     return <div className="min-h-screen">
         <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
-          {simLoading && (
-            <div className="text-center text-muted-foreground py-10">Loading student view…</div>
-          )}
-          {!simLoading && !simulatedStudentId && (
-            <div className="text-center text-muted-foreground py-10">No student found to simulate. Add a student or pass ?studentId=UUID in the URL.</div>
-          )}
-          {simulatedStudentId && (
-            <MetalHeaderDashboard 
-              user={{
-                id: profile.user_id,
-                email: profile.email || '',
-                full_name: profile.full_name || '',
-                role: 'student', // Override to simulate student view
-                exec_board_role: undefined,
-                is_exec_board: false,
-                created_at: new Date().toISOString()
-              }}
-              simulatedRole="student"
-              simulatedUserId={simulatedStudentId}
-            />
-          )}
+          {simLoading && <div className="text-center text-muted-foreground py-10">Loading student view…</div>}
+          {!simLoading && !simulatedStudentId && <div className="text-center text-muted-foreground py-10">No student found to simulate. Add a student or pass ?studentId=UUID in the URL.</div>}
+          {simulatedStudentId && <MetalHeaderDashboard user={{
+          id: profile.user_id,
+          email: profile.email || '',
+          full_name: profile.full_name || '',
+          role: 'student',
+          // Override to simulate student view
+          exec_board_role: undefined,
+          is_exec_board: false,
+          created_at: new Date().toISOString()
+        }} simulatedRole="student" simulatedUserId={simulatedStudentId} />}
         </div>
       </div>;
   }
@@ -346,25 +298,20 @@ export const UnifiedDashboard = () => {
   // Default view: Use MetalHeaderDashboard for all members
   if (viewMode === 'default') {
     return <div className="min-h-screen">
-        <div className="py-2 px-2 sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto">
-          <MetalHeaderDashboard 
-            user={{
-              id: profile.user_id,
-              email: profile.email || '',
-              full_name: profile.full_name || '',
-              role: profile.role || 'user',
-              exec_board_role: profile.exec_board_role,
-              is_exec_board: profile.is_exec_board || false,
-              created_at: new Date().toISOString()
-            }} 
-            onToggleMessages={() => setShowMessages(prev => !prev)}
-          />
+        <div className="sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto px-0 py-px">
+          <MetalHeaderDashboard user={{
+          id: profile.user_id,
+          email: profile.email || '',
+          full_name: profile.full_name || '',
+          role: profile.role || 'user',
+          exec_board_role: profile.exec_board_role,
+          is_exec_board: profile.is_exec_board || false,
+          created_at: new Date().toISOString()
+        }} onToggleMessages={() => setShowMessages(prev => !prev)} className="mx-0" />
         </div>
         
         {/* Messages Panel Overlay */}
-        {showMessages && (
-          <MessagesPanel onClose={() => setShowMessages(false)} />
-        )}
+        {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
       </div>;
   }
   return <div className="min-h-screen">
