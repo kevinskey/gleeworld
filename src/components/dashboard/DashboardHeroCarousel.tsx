@@ -161,8 +161,8 @@ export const DashboardHeroCarousel = () => {
     const visibleFallback = fallbackSlides.slice(0, slidesToShow);
 
     return (
-      <Card className="bg-card/80 backdrop-blur-sm border border-border/50 shadow-xl mb-4">
-        <CardContent className="p-4">
+      <Card className="bg-black/30 backdrop-blur-md border-0 shadow-2xl mb-4 rounded-xl">
+        <CardContent className="p-3">
           <div className="relative w-full rounded-lg overflow-hidden group">
             <div className={`grid gap-4 ${
               slidesToShow === 2 ? 'grid-cols-2' : 
@@ -212,8 +212,8 @@ export const DashboardHeroCarousel = () => {
   const visibleSlides = getVisibleSlides();
 
   return (
-    <Card className="bg-card/80 backdrop-blur-sm border border-border/50 shadow-xl mb-4">
-      <CardContent className="p-4">
+    <Card className="bg-black/30 backdrop-blur-md border-0 shadow-2xl mb-4 rounded-xl">
+      <CardContent className="p-3">
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 ${
             slidesToShow === 2 ? 'grid-cols-2' : 
