@@ -21474,6 +21474,7 @@ export type Database = {
         Returns: undefined
       }
       can_manage_appointments: { Args: never; Returns: boolean }
+      can_update_sheet_music: { Args: { user_id: string }; Returns: boolean }
       can_view_auditioner_profiles: { Args: never; Returns: boolean }
       check_appointment_availability: {
         Args: {
