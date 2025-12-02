@@ -229,8 +229,8 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           </span>
         </div>
         
-        {/* Countdown Text - Visible on large screens */}
-        <div className="hidden xl:block">
+        {/* Countdown Text - Visible on desktop */}
+        <div className="hidden lg:block">
           <span className="text-sm text-slate-700 font-medium whitespace-nowrap">
             🎄 {getCountdownText()}
           </span>
