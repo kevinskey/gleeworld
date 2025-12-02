@@ -39,7 +39,7 @@ export const PublicHeader = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
-      <header className={`bg-background border-b border-border sticky top-0 z-50 ${hideForAnnotation ? 'hidden' : ''}`}>
+      <header className={`bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm ${hideForAnnotation ? 'hidden' : ''}`}>
         <div className="container mx-auto px-4 lg:px-6">
           <div className="flex items-center justify-between h-16 lg:h-20 min-w-0 gap-4">
             {/* Logo */}
@@ -50,7 +50,7 @@ export const PublicHeader = () => {
                 className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 flex-shrink-0"
               />
               <div className="min-w-0">
-                <h1 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-foreground truncate">GleeWorld</h1>
+                <h1 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-slate-900 truncate">GleeWorld</h1>
               </div>
             </Link>
             
