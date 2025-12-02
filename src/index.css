@@ -20,12 +20,12 @@
     /* High-Contrast Design System for GleeWorld */
     
     /* Core Brand Colors - Bold and Professional */
-    --spelman-blue-dark: 212 100% 15%; /* Deep navy blue - maximum impact */
-    --spelman-blue-light: 212 100% 45%; /* Vibrant blue - high visibility */
+    --spelman-blue-dark: 219 78% 31%; /* Spelman dark blue #11448B */
+    --spelman-blue-light: 203 85% 63%; /* Sky blue accent #55BBEE */
     --spelman-gold: 45 100% 55%; /* Elegant gold accent */
     
     /* Primary Brand Palette */
-    --primary: var(--spelman-blue-dark);
+    --primary: 219 78% 31%; /* Spelman dark blue */
     --primary-foreground: 0 0% 100%; /* Pure white for maximum contrast */
 
     /* Secondary Accent Colors */
