@@ -255,35 +255,6 @@ export const GleeWorldLanding = () => {
       
       <PublicLayout>
 
-      {/* Concert Ticket Request Banner - Desktop only for logged-in users */}
-      {user && (
-        <section className="relative z-40 w-full bg-gradient-to-r from-primary via-primary/95 to-accent hidden md:block">
-          <div className="container mx-auto px-4 py-6 md:py-8 bg-sidebar-primary">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
-              <div className="flex items-center gap-3 md:gap-4 text-primary-foreground">
-                <div className="bg-white/20 backdrop-blur-sm rounded-full p-3 md:p-4">
-                  <Calendar className="w-6 h-6 md:w-8 md:h-8" />
-                </div>
-                <div className="text-center md:text-left">
-                  <h2 className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight">
-                    Upcoming Concert - Request Your Tickets Now!
-                  </h2>
-                  <p className="text-sm md:text-base text-primary-foreground/90 mt-1">
-                    Don't miss our next performance. Limited seating available.
-                  </p>
-                </div>
-              </div>
-              <Link to="/concert-ticket-request">
-                <Button size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg font-semibold text-base md:text-lg px-6 md:px-8 py-4 md:py-6 whitespace-nowrap">
-                  Request Tickets
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Hero Section */}
       <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
