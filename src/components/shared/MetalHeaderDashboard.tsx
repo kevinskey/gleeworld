@@ -194,13 +194,12 @@ export const MetalHeaderDashboard = ({
   const getUserRole = () => {
     // If simulating a role, use that instead of actual role
     if (simulatedRole) return simulatedRole;
-    
     if (user.role === 'super-admin') return 'super-admin';
     if (user.role === 'admin') return 'admin';
     if (user.is_exec_board) return 'executive';
     return user.role || 'user';
   };
-  const isAdmin = simulatedRole ? false : (user.role === 'super-admin' || user.role === 'admin');
+  const isAdmin = simulatedRole ? false : user.role === 'super-admin' || user.role === 'admin';
 
   // Get modules available to this user - ONLY modules they have access to
   const {
@@ -212,7 +211,8 @@ export const MetalHeaderDashboard = ({
     getModuleById
   } = useUnifiedModules({
     userRole: getUserRole(),
-    userId: simulatedRole ? simulatedUserId : user.id, // Use simulated student's grants when simulating
+    userId: simulatedRole ? simulatedUserId : user.id,
+    // Use simulated student's grants when simulating
     isAdmin: simulatedRole ? false : isAdmin,
     showInactive: false // Only show active modules user can access
   });
@@ -392,19 +392,16 @@ export const MetalHeaderDashboard = ({
 
     // All other accessible modules (not in favorites/communications/other groups)
     const existingIds = new Set([...favoritesGroup.map(m => m.id), ...communicationsGroup.map(m => m.id), ...otherGroup.map(m => m.id)]);
-    const remainingModules = accessibleModules
-      .filter(m => !existingIds.has(m.id))
-      .map(module => {
-        const moduleConfig = ModuleRegistry.getModule(module.id);
-        return {
-          ...module,
-          icon: moduleConfig?.icon || Calendar,
-          iconColor: moduleConfig?.iconColor || 'blue',
-          component: moduleConfig?.component,
-          isNew: moduleConfig?.isNew || false
-        };
-      });
-    
+    const remainingModules = accessibleModules.filter(m => !existingIds.has(m.id)).map(module => {
+      const moduleConfig = ModuleRegistry.getModule(module.id);
+      return {
+        ...module,
+        icon: moduleConfig?.icon || Calendar,
+        iconColor: moduleConfig?.iconColor || 'blue',
+        component: moduleConfig?.component,
+        isNew: moduleConfig?.isNew || false
+      };
+    });
     console.log('🔍 Module grouping:', {
       accessibleModuleCount: accessibleModules.length,
       favoritesCount: favoritesGroup.length,
@@ -521,7 +518,7 @@ export const MetalHeaderDashboard = ({
   if (selectedModule) {
     // Try to get module from registry first, then fall back to unified modules
     let moduleConfig = ModuleRegistry.getModule(selectedModule);
-    
+
     // Fallback: check UNIFIED_MODULES directly if not in registry yet
     if (!moduleConfig) {
       const unifiedModule = UNIFIED_MODULES.find(m => m.id === selectedModule || m.name === selectedModule);
@@ -539,7 +536,6 @@ export const MetalHeaderDashboard = ({
         };
       }
     }
-    
     if (moduleConfig?.component) {
       const ModuleComponent = moduleConfig.component;
       return <div className="space-y-6 relative min-h-screen">
@@ -604,10 +600,7 @@ export const MetalHeaderDashboard = ({
 
       {/* Message Center Button - Integrated into page */}
       <div className="flex justify-end mb-4">
-        <Button 
-          onClick={() => onToggleMessages?.()} 
-          className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 px-4 py-2"
-        >
+        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-[8px]">
           <MessageSquare className="h-4 w-4" />
           <span className="text-sm">MESSAGES</span>
         </Button>
