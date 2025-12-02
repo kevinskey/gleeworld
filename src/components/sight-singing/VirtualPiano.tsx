@@ -400,43 +400,29 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       if (soundfontPlayed) return;
       if (activeOscillatorsRef.current.has(noteName)) return;
 
-      // Enhanced oscillator synthesis with better piano-like sound
+      // Clean oscillator synthesis - simple and reliable
       const oscillator = audioContext.createOscillator();
-      const oscillator2 = audioContext.createOscillator(); // Second oscillator for richness
       const gainNode = audioContext.createGain();
-      const filterNode = audioContext.createBiquadFilter();
 
-      // Low-pass filter for warmer sound
-      filterNode.type = 'lowpass';
-      filterNode.frequency.value = Math.min(frequency * 6, 8000);
-      filterNode.Q.value = 1;
-
-      oscillator.connect(filterNode);
-      oscillator2.connect(filterNode);
-      filterNode.connect(gainNode);
+      oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
+      // Use sine wave for cleaner sound
       oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-      oscillator.type = 'triangle';
-      
-      // Slight detuning for richness
-      oscillator2.frequency.setValueAtTime(frequency * 1.001, audioContext.currentTime);
-      oscillator2.type = 'sine';
+      oscillator.type = 'sine';
 
       const currentVolume = isMuted ? 0 : volume[0];
       const now = audioContext.currentTime;
 
-      // Piano-like ADSR envelope
-      gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.7, now + 0.005); // Fast attack
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.5, now + 0.08); // Decay
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.4, now + 0.3); // Sustain
+      // Simple envelope - immediate attack, gradual decay
+      gainNode.gain.setValueAtTime(currentVolume * 0.8, now);
+      gainNode.gain.exponentialRampToValueAtTime(currentVolume * 0.3, now + 0.5);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 2);
 
       oscillator.start();
-      oscillator2.start();
-      console.log('🎵 Playing note (synthesis):', noteName);
+      console.log('🎵 Playing note (synthesis):', noteName, 'at', frequency, 'Hz');
 
-      activeOscillatorsRef.current.set(noteName, { oscillators: [oscillator, oscillator2], gainNode });
+      activeOscillatorsRef.current.set(noteName, { oscillators: [oscillator], gainNode });
       setActiveNotes((prev) => new Set(prev).add(noteName));
     },
     [volume, isMuted, initAudioContext, soundfontReady],
