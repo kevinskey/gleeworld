@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Ticket } from 'lucide-react';
+import { Ticket, CheckCircle } from 'lucide-react';
 
 const ticketRequestSchema = z.object({
   full_name: z.string().trim().min(1, 'Name is required').max(100),
@@ -23,6 +23,7 @@ type TicketRequestFormData = z.infer<typeof ticketRequestSchema>;
 
 export const ConcertTicketRequestForm = () => {
   const { toast } = useToast();
+  const [isSubmitted, setIsSubmitted] = useState(false);
   const {
     register,
     handleSubmit,
@@ -52,6 +53,7 @@ export const ConcertTicketRequestForm = () => {
         description: 'Your ticket request has been received. We will contact you soon!',
       });
 
+      setIsSubmitted(true);
       reset();
     } catch (error) {
       console.error('Error submitting ticket request:', error);
@@ -62,6 +64,23 @@ export const ConcertTicketRequestForm = () => {
       });
     }
   };
+
+  if (isSubmitted) {
+    return (
+      <Card className="max-w-2xl mx-auto">
+        <CardContent className="pt-12 pb-12 text-center">
+          <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Ticket Request Received</h2>
+          <p className="text-muted-foreground mb-6">
+            Thank you! We will contact you soon regarding your ticket request.
+          </p>
+          <Button onClick={() => setIsSubmitted(false)} variant="outline">
+            Submit Another Request
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="max-w-2xl mx-auto">
