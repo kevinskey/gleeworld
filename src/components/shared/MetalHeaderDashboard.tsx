@@ -163,12 +163,14 @@ interface MetalHeaderDashboardProps {
   simulatedRole?: string; // Optional role to simulate for viewing purposes
   simulatedUserId?: string; // When simulating, fetch grants for this user id
   onToggleMessages?: () => void; // Callback to toggle messages panel
+  className?: string; // Optional className for styling
 }
 export const MetalHeaderDashboard = ({
   user,
   simulatedRole,
   simulatedUserId,
-  onToggleMessages
+  onToggleMessages,
+  className
 }: MetalHeaderDashboardProps) => {
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
