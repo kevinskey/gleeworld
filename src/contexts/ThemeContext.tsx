@@ -132,7 +132,11 @@ function applyThemeToDocument(themeName: ThemeName) {
   }
 
   // Apply background
-  if (theme.background.type === 'gradient' || theme.background.type === 'solid') {
+  if (theme.background.type === 'image') {
+    const bgValue = `${theme.background.value} no-repeat ${theme.background.position || 'center center'} / cover`;
+    root.style.setProperty('--theme-background', bgValue);
+    console.log('🎨 Set --theme-background (image) to:', bgValue);
+  } else if (theme.background.type === 'gradient' || theme.background.type === 'solid') {
     root.style.setProperty('--theme-background', theme.background.value);
     console.log('🎨 Set --theme-background to:', theme.background.value);
   }
