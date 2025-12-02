@@ -233,11 +233,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   const [isMobile, setIsMobile] = useState(false);
   const [isLoadingSoundfont, setIsLoadingSoundfont] = useState(false);
   const [soundfontReady, setSoundfontReady] = useState(false);
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
   const keysContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const soundfontPlayerRef = useRef<SoundfontPlayer | null>(null);
   const activeOscillatorsRef = useRef<
-    Map<string, { oscillator: OscillatorNode; gainNode: GainNode }>
+    Map<string, { oscillators: OscillatorNode[]; gainNode: GainNode }>
   >(new Map());
 
   // Detect mobile on mount and resize
@@ -258,7 +259,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
   // Generate full 88-key piano range (A0-C8)
   const { whiteKeys, blackKeys } = generateFullPianoKeys();
 
-  // Initialize audio context and soundfont player
+  // Initialize audio context with mobile unlock
   const initAudioContext = useCallback(async () => {
     if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
       console.log('🎹 Creating new AudioContext for VirtualPiano');
@@ -273,8 +274,24 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
         console.log('✅ AudioContext resumed, state:', audioContextRef.current.state);
       } catch (error) {
         console.error('❌ Failed to resume AudioContext:', error);
+        // Try creating a new context
         audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
         await audioContextRef.current.resume();
+      }
+    }
+
+    // Play a silent buffer to unlock audio on iOS/Safari
+    if (!audioUnlocked && audioContextRef.current.state === 'running') {
+      try {
+        const silentBuffer = audioContextRef.current.createBuffer(1, 1, 22050);
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = silentBuffer;
+        source.connect(audioContextRef.current.destination);
+        source.start(0);
+        setAudioUnlocked(true);
+        console.log('✅ Audio unlocked for mobile');
+      } catch (e) {
+        console.warn('Silent buffer unlock failed:', e);
       }
     }
 
@@ -284,7 +301,14 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
     }
 
     return audioContextRef.current;
-  }, []);
+  }, [audioUnlocked]);
+
+  // Handle touch/click to unlock audio on mobile (must be user-initiated)
+  const handleUserInteraction = useCallback(async () => {
+    if (!audioUnlocked) {
+      await initAudioContext();
+    }
+  }, [audioUnlocked, initAudioContext]);
 
   // Load soundfont when instrument changes
   useEffect(() => {
@@ -295,18 +319,23 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
       setIsLoadingSoundfont(true);
       setSoundfontReady(false);
       
-      const success = await soundfontPlayerRef.current.loadInstrument(selectedInstrument);
+      try {
+        const success = await soundfontPlayerRef.current.loadInstrument(selectedInstrument);
+        setSoundfontReady(success);
+        
+        if (success) {
+          soundfontPlayerRef.current.setVolume(isMuted ? 0 : volume[0]);
+        }
+      } catch (error) {
+        console.warn('🎹 Soundfont loading failed, using fallback synthesis:', error);
+        setSoundfontReady(false);
+      }
       
       setIsLoadingSoundfont(false);
-      setSoundfontReady(success);
-      
-      if (success) {
-        soundfontPlayerRef.current.setVolume(isMuted ? 0 : volume[0]);
-      }
     };
 
     loadSoundfont();
-  }, [selectedInstrument, initAudioContext]);
+  }, [selectedInstrument, initAudioContext, isMuted, volume]);
 
   // Update soundfont volume when volume changes
   useEffect(() => {
@@ -335,52 +364,75 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
 
   const playNote = useCallback(
     async (frequency: number, noteName: string) => {
-      // Try soundfont first if ready
-      if (soundfontReady && soundfontPlayerRef.current) {
-        await soundfontPlayerRef.current.playNote(noteName);
-        setActiveNotes((prev) => new Set(prev).add(noteName));
-        return;
-      }
-
-      // Fallback to oscillator synthesis
-      if (activeOscillatorsRef.current.has(noteName)) return;
-
+      // Always ensure audio context is initialized and unlocked (mobile requirement)
       const audioContext = await initAudioContext();
       if (!audioContext) {
         console.error('🎹 No AudioContext available');
         return;
       }
       
+      // Ensure context is running
       if (audioContext.state !== 'running') {
         try {
           await audioContext.resume();
+          console.log('🔊 AudioContext resumed for playNote');
         } catch (err) {
           console.error('🎹 Failed to resume AudioContext:', err);
           return;
         }
       }
 
-      // Oscillator-based fallback synthesis
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      // Try soundfont first if ready
+      if (soundfontReady && soundfontPlayerRef.current) {
+        try {
+          await soundfontPlayerRef.current.playNote(noteName);
+          setActiveNotes((prev) => new Set(prev).add(noteName));
+          return;
+        } catch (error) {
+          console.warn('🎹 Soundfont playNote failed, using fallback:', error);
+        }
+      }
 
-      oscillator.connect(gainNode);
+      // Fallback to oscillator synthesis (always works)
+      if (activeOscillatorsRef.current.has(noteName)) return;
+
+      // Enhanced oscillator synthesis with better piano-like sound
+      const oscillator = audioContext.createOscillator();
+      const oscillator2 = audioContext.createOscillator(); // Second oscillator for richness
+      const gainNode = audioContext.createGain();
+      const filterNode = audioContext.createBiquadFilter();
+
+      // Low-pass filter for warmer sound
+      filterNode.type = 'lowpass';
+      filterNode.frequency.value = Math.min(frequency * 6, 8000);
+      filterNode.Q.value = 1;
+
+      oscillator.connect(filterNode);
+      oscillator2.connect(filterNode);
+      filterNode.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
       oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
       oscillator.type = 'triangle';
+      
+      // Slight detuning for richness
+      oscillator2.frequency.setValueAtTime(frequency * 1.001, audioContext.currentTime);
+      oscillator2.type = 'sine';
 
       const currentVolume = isMuted ? 0 : volume[0];
       const now = audioContext.currentTime;
 
+      // Piano-like ADSR envelope
       gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.8, now + 0.01);
-      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.6, now + 0.06);
+      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.7, now + 0.005); // Fast attack
+      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.5, now + 0.08); // Decay
+      gainNode.gain.linearRampToValueAtTime(currentVolume * 0.4, now + 0.3); // Sustain
 
       oscillator.start();
-      console.log('🎵 Playing note (fallback):', noteName);
+      oscillator2.start();
+      console.log('🎵 Playing note (synthesis):', noteName);
 
-      activeOscillatorsRef.current.set(noteName, { oscillator, gainNode });
+      activeOscillatorsRef.current.set(noteName, { oscillators: [oscillator, oscillator2], gainNode });
       setActiveNotes((prev) => new Set(prev).add(noteName));
     },
     [volume, isMuted, initAudioContext, soundfontReady],
@@ -402,7 +454,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
         nodes.gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
 
         setTimeout(() => {
-          nodes.oscillator.stop();
+          nodes.oscillators.forEach(osc => {
+            try { osc.stop(); } catch (e) {}
+          });
           activeOscillatorsRef.current.delete(noteName);
         }, 150);
       } catch (error) {
@@ -435,9 +489,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({ className = '', onCl
     return () => {
       // Stop all oscillators
       activeOscillatorsRef.current.forEach((nodes) => {
-        try {
-          nodes.oscillator.stop();
-        } catch (e) {}
+        nodes.oscillators.forEach(osc => {
+          try { osc.stop(); } catch (e) {}
+        });
       });
       activeOscillatorsRef.current.clear();
       
