@@ -221,6 +221,7 @@ import WritingGraderPage from "./pages/writing/WritingGraderPage";
 import ChildrenGoAudition from "./pages/ChildrenGoAudition";
 import ChildrenGoAuditionsAdmin from "./pages/admin/ChildrenGoAuditionsAdmin";
 import ConcertTicketRequest from "./pages/ConcertTicketRequest";
+import ConcertTicketAdmin from "./pages/admin/ConcertTicketAdmin";
 
 import GrandStaves from "./pages/GrandStaves";
 import GrandStaffClassroom from "./pages/GrandStaffClassroom";
@@ -1097,6 +1098,16 @@ const App = () => {
                                 <ProtectedRoute>
                                   <AdminOnlyRoute>
                                     <ChildrenGoAuditionsAdmin />
+                                  </AdminOnlyRoute>
+                                </ProtectedRoute>
+                              } 
+                            />
+                            <Route 
+                              path="/admin/concert-tickets" 
+                              element={
+                                <ProtectedRoute>
+                                  <AdminOnlyRoute>
+                                    <ConcertTicketAdmin />
                                   </AdminOnlyRoute>
                                 </ProtectedRoute>
                               } 
