@@ -166,7 +166,7 @@ export default function AuthPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-2xl">
             Spelman College
           </h1>
-          <h2 className="text-6xl font-bold mb-4 drop-shadow-lg text-secondary-foreground md:text-9xl">
+          <h2 className="text-6xl font-bold mb-4 drop-shadow-lg text-secondary-foreground font-serif md:text-xl">
             GLEE CLUB
           </h2>
           <p className="text-white/80 text-lg drop-shadow-md">
