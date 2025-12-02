@@ -75,8 +75,8 @@ const gleeWorldTheme: ThemeConfig = {
     secondaryForeground: '0 0% 100%', // White on blue
     accent: '203 85% 63%',            // Sky blue accent
     accentForeground: '0 0% 100%',
-    background: '0 0% 8%',            // Dark background for image overlay
-    foreground: '0 0% 100%',          // White text for dark background
+    background: '0 0% 98%',           // Light background (near white)
+    foreground: '0 0% 8%',            // Dark text for light background
     card: '0 0% 100%',                // White cards
     cardForeground: '0 0% 8%',        // Dark text on white cards
     muted: '0 0% 96%',                // Light muted backgrounds
