@@ -198,7 +198,7 @@ export default function AlumnaeLanding() {
   };
   return (
     <div className="min-h-screen bg-background">
-      <ConcertTicketBanner />
+      <ConcertTicketBanner showOnMobile />
 
       <div className="relative z-10 container mx-auto px-4 py-8 space-y-8">
         {/* Header Section */}
