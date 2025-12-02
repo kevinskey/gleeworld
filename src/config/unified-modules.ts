@@ -96,6 +96,7 @@ import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
 import { TestBuilderModule } from '@/components/modules/TestBuilderModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 import { GradingModule } from '@/components/modules/GradingModule';
+import { ConcertTicketRequestsModule } from '@/components/modules/ConcertTicketRequestsModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -209,6 +210,18 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: FanEngagementModule,
     dbFunctionName: "fan-engagement"
+  },
+  {
+    id: "concert-ticket-requests",
+    name: "concert-ticket-requests",
+    title: "Concert Tickets",
+    description: "Manage concert ticket requests and reservations",
+    icon: FileCheck,
+    iconColor: "orange",
+    category: "communications",
+    isActive: true,
+    component: ConcertTicketRequestsModule,
+    dbFunctionName: "concert-ticket-requests"
   },
   {
     id: "scheduling-module",
