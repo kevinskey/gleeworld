@@ -187,7 +187,7 @@ export const EventsDialog: React.FC<EventsDialogProps> = ({
           </div>
 
           {/* Events List */}
-          <ScrollArea className="flex-1 mt-4">
+          <ScrollArea className="flex-1 mt-4 h-[calc(85vh-180px)]">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[hsl(var(--message-header))]"></div>
