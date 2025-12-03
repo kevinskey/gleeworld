@@ -112,48 +112,22 @@ export const DesignSystemEnforcer = () => {
         border-color: hsl(var(--border)) !important;
       }
       
-      /* === SPACING SYSTEM FIXES === */
+      /* === RESPONSIVE TYPOGRAPHY FIXES === */
       
       @media (max-width: 768px) {
-        /* Mobile spacing consistency */
-        .card {
-          padding: 0.75rem !important;
-          margin: 0.25rem !important;
-        }
-        
-        .card-header {
-          padding-bottom: 0.25rem !important;
-        }
-        
         /* Mobile text size consistency */
         h1 { font-size: 1.5rem !important; }
         h2 { font-size: 1.25rem !important; }
         h3 { font-size: 1.125rem !important; }
-        
-        p, div:not(.card-title):not(.card-description) {
-          font-size: 0.875rem !important;
-        }
       }
       
       @media (min-width: 769px) and (max-width: 1024px) {
-        /* Tablet spacing consistency */
-        .card {
-          padding: 1rem !important;
-          margin: 0.5rem !important;
-        }
-        
         h1 { font-size: 2rem !important; }
         h2 { font-size: 1.75rem !important; }
         h3 { font-size: 1.5rem !important; }
       }
       
       @media (min-width: 1025px) {
-        /* Desktop spacing consistency */
-        .card {
-          padding: 1.5rem !important;
-          margin: 0.75rem !important;
-        }
-        
         h1 { font-size: 2.5rem !important; }
         h2 { font-size: 2rem !important; }
         h3 { font-size: 1.75rem !important; }
