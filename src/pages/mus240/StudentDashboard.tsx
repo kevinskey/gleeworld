@@ -69,30 +69,7 @@ export const StudentDashboard = () => {
   const [sortBy, setSortBy] = useState<'dueDate' | 'title'>('dueDate');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
-  // Fetch published tests for practice
-  const { data: practiceTests = [], isLoading: testsLoading } = useQuery({
-    queryKey: ['practice-tests', 'mus240'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('glee_academy_tests')
-        .select('*')
-        .eq('course_id', 'mus240')
-        .eq('is_published', true)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      
-      // Filter out real exams (midterms, finals) - only show practice tests
-      const filtered = (data || []).filter(test => {
-        const title = test.title.toLowerCase();
-        return !title.includes('midterm') && !title.includes('final');
-      });
-      
-      return filtered;
-    },
-  });
-
-  // Fetch ALL published tests (including exams)
+  // Fetch ALL published tests
   const { data: allTests = [], isLoading: allTestsLoading } = useQuery({
     queryKey: ['all-tests', 'mus240'],
     queryFn: async () => {
@@ -385,36 +362,32 @@ export const StudentDashboard = () => {
             <TabsTrigger value="announcements" className="flex-1 min-w-[50px] text-xs sm:text-sm">News</TabsTrigger>
           </TabsList>
 
-          {/* Tests Tab - All tests including exams and practice */}
+          {/* Tests Tab - All tests unified */}
           <TabsContent value="tests" className="space-y-6">
-            {/* Exams Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <FileCheck className="h-5 w-5" />
-                  Tests & Exams
+                  All Tests
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {allTestsLoading ? (
                   <div className="text-center py-8 text-muted-foreground">Loading tests...</div>
-                ) : allTests.filter(t => {
-                  const title = t.title.toLowerCase();
-                  return title.includes('midterm') || title.includes('final') || title.includes('exam');
-                }).length === 0 ? (
+                ) : allTests.length === 0 ? (
                   <div className="text-center py-8">
                     <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No exams available yet.</p>
+                    <p className="text-muted-foreground">No tests available yet.</p>
                   </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2">
-                    {allTests.filter(t => {
-                      const title = t.title.toLowerCase();
-                      return title.includes('midterm') || title.includes('final') || title.includes('exam');
-                    }).map((test) => {
+                    {allTests.map((test) => {
                       const submission = testSubmissions.find(s => s.test_id === test.id);
                       const hasSubmitted = submission && submission.status === 'submitted';
                       const inProgress = submission && submission.status === 'in_progress';
+                      const isExam = test.title.toLowerCase().includes('midterm') || 
+                                     test.title.toLowerCase().includes('final') || 
+                                     test.title.toLowerCase().includes('exam');
                       
                       return (
                         <div
@@ -424,134 +397,17 @@ export const StudentDashboard = () => {
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1">
                               <h3 className="font-semibold flex items-center gap-2">
-                                <FileCheck className="h-4 w-4 text-primary" />
+                                {isExam ? (
+                                  <FileCheck className="h-4 w-4 text-primary" />
+                                ) : (
+                                  <Brain className="h-4 w-4 text-purple-500" />
+                                )}
                                 {test.title}
                               </h3>
                               {test.description && (
                                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                                   {test.description}
                                 </p>
-                              )}
-                              <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
-                                <span>{test.total_points} points</span>
-                                {test.duration_minutes && (
-                                  <>
-                                    <span>•</span>
-                                    <span>{test.duration_minutes} min</span>
-                                  </>
-                                )}
-                                {test.allow_retakes && (
-                                  <>
-                                    <span>•</span>
-                                    <span>Retakes allowed</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                            {hasSubmitted && (
-                              <Badge variant={submission.percentage >= test.passing_score ? 'default' : 'destructive'}>
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                {submission.percentage?.toFixed(0)}%
-                              </Badge>
-                            )}
-                            {inProgress && (
-                              <Badge variant="secondary">
-                                <Clock className="h-3 w-3 mr-1" />
-                                In Progress
-                              </Badge>
-                            )}
-                            {!submission && (
-                              <Badge variant="outline">Not Started</Badge>
-                            )}
-                          </div>
-                          
-                          {hasSubmitted && (
-                            <div className="mt-3 p-2 bg-muted/50 rounded text-sm">
-                              <div className="flex justify-between">
-                                <span>Score:</span>
-                                <span className="font-semibold">{submission.total_score}/{test.total_points}</span>
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="mt-3">
-                            {!submission && (
-                              <Button 
-                                className="w-full" 
-                                onClick={() => navigate(`/test/${test.id}`)}
-                              >
-                                <Play className="h-4 w-4 mr-2" />
-                                Take Test
-                              </Button>
-                            )}
-                            {inProgress && (
-                              <Button 
-                                className="w-full" 
-                                onClick={() => navigate(`/test/${test.id}`)}
-                              >
-                                <Play className="h-4 w-4 mr-2" />
-                                Continue Test
-                              </Button>
-                            )}
-                            {hasSubmitted && test.allow_retakes && (
-                              <Button 
-                                variant="outline" 
-                                className="w-full" 
-                                onClick={() => navigate(`/test/${test.id}`)}
-                              >
-                                <RotateCcw className="h-4 w-4 mr-2" />
-                                Retake Test
-                              </Button>
-                            )}
-                            {hasSubmitted && !test.allow_retakes && (
-                              <Button variant="outline" className="w-full" disabled>
-                                Completed
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Practice Tests Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
-                  Practice Tests
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {testsLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">Loading tests...</div>
-                ) : practiceTests.length === 0 ? (
-                  <div className="text-center py-8">
-                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No practice tests available yet.</p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    {practiceTests.map((test) => {
-                      const submission = testSubmissions.find(s => s.test_id === test.id);
-                      const hasCompleted = submission?.submitted_at;
-                      
-                      return (
-                        <div
-                          key={test.id}
-                          className="p-4 border rounded-lg hover:shadow-md transition-all"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="flex-1">
-                              <h3 className="font-semibold flex items-center gap-2">
-                                <Brain className="h-4 w-4 text-purple-500" />
-                                {test.title}
-                              </h3>
-                              {test.description && (
-                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{test.description}</p>
                               )}
                               <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
                                 <span>{test.total_points} points</span>
@@ -569,16 +425,22 @@ export const StudentDashboard = () => {
                                 )}
                               </div>
                             </div>
-                            {hasCompleted && (
+                            {hasSubmitted && (
                               <Badge variant="secondary" className="bg-green-100 text-green-700">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Completed
                               </Badge>
                             )}
+                            {inProgress && (
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+                                <Clock className="h-3 w-3 mr-1" />
+                                In Progress
+                              </Badge>
+                            )}
                           </div>
                           
                           <div className="mt-3 flex gap-2">
-                            {hasCompleted && test.show_correct_answers && submission && (
+                            {hasSubmitted && test.show_correct_answers && submission && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -588,28 +450,42 @@ export const StudentDashboard = () => {
                                 View Results
                               </Button>
                             )}
-                            <Button
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => navigate(`/test/${test.id}/take`)}
-                              disabled={hasCompleted && !test.allow_retakes}
-                            >
-                              {hasCompleted ? (
-                                test.allow_retakes ? (
-                                  <>
-                                    <RotateCcw className="h-3 w-3 mr-1" />
-                                    Retake
-                                  </>
-                                ) : (
-                                  'No Retakes'
-                                )
-                              ) : (
-                                <>
-                                  <Play className="h-3 w-3 mr-1" />
-                                  Start Test
-                                </>
-                              )}
-                            </Button>
+                            {!hasSubmitted && !inProgress && (
+                              <Button
+                                size="sm"
+                                className="flex-1"
+                                onClick={() => navigate(`/test/${test.id}/take`)}
+                              >
+                                <Play className="h-4 w-4 mr-2" />
+                                Take Test
+                              </Button>
+                            )}
+                            {inProgress && (
+                              <Button
+                                size="sm"
+                                className="flex-1"
+                                onClick={() => navigate(`/test/${test.id}/take`)}
+                              >
+                                <Play className="h-4 w-4 mr-2" />
+                                Continue Test
+                              </Button>
+                            )}
+                            {hasSubmitted && test.allow_retakes && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => navigate(`/test/${test.id}`)}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Retake Test
+                              </Button>
+                            )}
+                            {hasSubmitted && !test.allow_retakes && (
+                              <Button variant="outline" className="flex-1" size="sm" disabled>
+                                Completed
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
