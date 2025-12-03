@@ -93,6 +93,7 @@ import { ProviderAppointmentModule } from '@/components/modules/ProviderAppointm
 import { AssignableAppointmentModule } from '@/components/modules/AssignableAppointmentModule';
 import { ServiceProviderManagementModule } from '@/components/modules/ServiceProviderManagementModule';
 import { Mus240GroupsModule } from '@/components/modules/Mus240GroupsModule';
+import { AnnouncementsModule } from '@/components/modules/AnnouncementsModule';
 import { TestBuilderModule } from '@/components/modules/TestBuilderModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 import { GradingModule } from '@/components/modules/GradingModule';
@@ -800,6 +801,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: EmailManagementModule,
     dbFunctionName: "internal-communications"
+  },
+  {
+    id: "announcements",
+    name: "announcements",
+    title: "Announcements",
+    description: "Create and manage club announcements",
+    icon: Megaphone,
+    iconColor: "amber",
+    category: "communications",
+    isActive: true,
+    component: AnnouncementsModule,
+    dbFunctionName: "announcements",
+    requiredRoles: ["super-admin", "admin", "exec-board"]
   },
   {
     id: "pr-manager",
