@@ -18,12 +18,11 @@ export const ConcertTicketBanner = ({
               <h2 className="text-lg md:text-xl lg:text-2xl font-bold tracking-tight py-0">
                 Christmas Carol Concert Armband Request Here!     
               </h2>
-              <p className="text-xs md:text-sm text-accent">Wrist bands are for Saturday evening performance in Sisters Chapel.
-Requests are limited to two per person. Available first come first serve basis. You will be notified by email the status of your request. Thank you</p>
+              <p className="text-xs md:text-sm text-accent">Wrist bands are for the Saturday evening performance in Sisters Chapel. Requests are limited to two per person. Available first come first serve basis. You will be notified by email. Thank you!</p>
             </div>
           </div>
           <Link to="/concert-ticket-request">
-            <Button size="default" variant="secondary" className="bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg font-semibold text-sm md:text-base px-4 md:px-6 py-2 md:py-3 whitespace-nowrap">
+            <Button size="default" variant="secondary" className="hover:scale-105 transition-all duration-300 shadow-lg font-semibold text-sm md:text-base px-4 md:px-6 py-2 md:py-3 whitespace-nowrap bg-primary text-secondary">
               Request Armbands!
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
