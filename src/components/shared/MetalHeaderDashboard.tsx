@@ -600,19 +600,19 @@ export const MetalHeaderDashboard = ({
       <DashboardHeroCarousel />
 
       {/* Message Center Button with Announcements Ticker */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center mb-4 gap-0">
         {/* Announcements Ticker - Desktop only */}
         <div className="hidden lg:flex items-center flex-1 overflow-hidden">
           <div className="flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 w-full overflow-hidden">
             <Megaphone className="w-4 h-4 text-primary shrink-0" />
             <div className="overflow-hidden flex-1">
-              <AnnouncementsTicker />
+              <AnnouncementsTicker className="bg-white/[0.83] rounded-sm shadow" />
             </div>
           </div>
         </div>
         
         {/* Messages Button */}
-        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-[8px] shrink-0">
+        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-[8px] shrink-0 bg-secondary">
           <MessageSquare className="h-4 w-4" />
           <span className="text-sm">MESSAGES</span>
         </Button>
