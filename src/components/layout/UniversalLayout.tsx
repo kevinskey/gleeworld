@@ -4,22 +4,24 @@ import { UniversalHeader } from "./UniversalHeader";
 import { PublicHeader } from "./PublicHeader";
 import { UniversalFooter } from "./UniversalFooter";
 import { ResponsiveContainer } from "@/components/shared/ResponsiveContainer";
+
 interface UniversalLayoutProps {
   children: ReactNode;
   showHeader?: boolean;
   showFooter?: boolean;
   className?: string;
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "full";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "7xl" | "full";
   containerized?: boolean;
   viewMode?: 'admin' | 'member';
   onViewModeChange?: (mode: 'admin' | 'member') => void;
 }
+
 export const UniversalLayout = ({
   children,
   showHeader = true,
   showFooter = true,
   className = "",
-  maxWidth = "full",
+  maxWidth = "7xl",
   containerized = true,
   viewMode,
   onViewModeChange
@@ -29,15 +31,22 @@ export const UniversalLayout = ({
   // Use PublicHeader for public, fan, and alumnae pages
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
-  return <div className="min-h-screen flex flex-col w-full overflow-x-hidden relative bg-background">
-      {showHeader && <>
+
+  return (
+    <div className="min-h-screen flex flex-col w-full overflow-x-hidden relative bg-background">
+      {showHeader && (
+        <>
           {shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />}
-        </>}
-      <main className={`flex-1 w-full overflow-x-hidden px-2 sm:px-4 lg:px-6 ${className}`}>
-        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="mx-0 px-px">
+        </>
+      )}
+      <main className={`flex-1 w-full overflow-x-hidden ${className}`}>
+        {containerized ? (
+          <ResponsiveContainer maxWidth={maxWidth}>
             {children}
-          </ResponsiveContainer> : children}
+          </ResponsiveContainer>
+        ) : children}
       </main>
       {showFooter && <UniversalFooter />}
-    </div>;
+    </div>
+  );
 };
