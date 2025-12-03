@@ -37,8 +37,7 @@ export const AnnouncementsTicker = () => {
   return (
     <div className="overflow-hidden whitespace-nowrap">
       <div className="animate-marquee inline-block text-sm text-foreground/80">
-        <span>{tickerText}</span>
-        <span className="ml-16">{tickerText}</span>
+        {tickerText}
       </div>
     </div>
   );
