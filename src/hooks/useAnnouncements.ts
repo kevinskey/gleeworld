@@ -81,12 +81,16 @@ export const useAnnouncements = () => {
 
   const createAnnouncement = async (data: CreateAnnouncementData) => {
     try {
+      // Clean up empty strings for timestamp fields
+      const cleanedData = {
+        ...data,
+        expire_date: data.expire_date || null,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+      };
+      
       const { error } = await supabase
         .from('gw_announcements')
-        .insert([{
-          ...data,
-          created_by: (await supabase.auth.getUser()).data.user?.id,
-        }]);
+        .insert([cleanedData]);
 
       if (error) throw error;
 
