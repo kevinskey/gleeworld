@@ -49,6 +49,7 @@ import TestBuilderEdit from "./pages/TestBuilderEdit";
 import TestPreview from "./pages/TestPreview";
 import StudentTestPage from "./pages/StudentTestPage";
 import TestScoresPage from "./pages/TestScoresPage";
+import PollViewPage from "./pages/PollViewPage";
 
 import AuditionerDashboardPage from "./pages/AuditionerDashboardPage";
 import Mus240Auth from "./pages/Mus240Auth";
@@ -508,6 +509,15 @@ const App = () => {
                     <Mus240EnrollmentRoute>
                       <Mus240PollPage />
                     </Mus240EnrollmentRoute>
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Poll View Page - accessible to authenticated users */}
+              <Route 
+                path="/polls/:pollId" 
+                element={
+                  <ProtectedRoute>
+                    <PollViewPage />
                   </ProtectedRoute>
                 } 
               />
