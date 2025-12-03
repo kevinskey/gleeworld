@@ -56,8 +56,7 @@ const DashboardFeaturesCarousel: React.FC = () => {
                       <img 
                         src={s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} 
                         alt={s.title || 'Featured promotion'} 
-                        className="hidden md:block absolute inset-0 w-full h-full" 
-                        style={{ objectFit: 'cover', objectPosition: 'center center' }}
+                        className="hidden md:block absolute inset-0 w-full h-full hero-carousel-img" 
                         onError={e => {
                           if (!e.currentTarget.src.includes('unsplash.com')) {
                             e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
@@ -68,8 +67,7 @@ const DashboardFeaturesCarousel: React.FC = () => {
                       <img 
                         src={s.ipad_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} 
                         alt={s.title || 'Featured promotion'} 
-                        className="hidden sm:block md:hidden absolute inset-0 w-full h-full" 
-                        style={{ objectFit: 'cover', objectPosition: 'center center' }}
+                        className="hidden sm:block md:hidden absolute inset-0 w-full h-full hero-carousel-img" 
                         onError={e => {
                           if (!e.currentTarget.src.includes('unsplash.com')) {
                             e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
@@ -80,8 +78,7 @@ const DashboardFeaturesCarousel: React.FC = () => {
                       <img 
                         src={s.mobile_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} 
                         alt={s.title || 'Featured promotion'} 
-                        className="block sm:hidden absolute inset-0 w-full h-full" 
-                        style={{ objectFit: 'cover', objectPosition: 'center center' }}
+                        className="block sm:hidden absolute inset-0 w-full h-full hero-carousel-img" 
                         onError={e => {
                           if (!e.currentTarget.src.includes('unsplash.com')) {
                             e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
