@@ -35,8 +35,11 @@ export const AnnouncementsTicker = () => {
   const tickerText = announcements.map(a => a.content).join('  •  ');
 
   return (
-    <div className="animate-marquee whitespace-nowrap text-sm text-foreground/80">
-      {tickerText}
+    <div className="overflow-hidden whitespace-nowrap">
+      <div className="animate-marquee inline-block text-sm text-foreground/80">
+        <span>{tickerText}</span>
+        <span className="ml-16">{tickerText}</span>
+      </div>
     </div>
   );
 };
