@@ -18,15 +18,11 @@ const PhoneNumberInput: React.FC<PhoneNumberInputProps> = ({
     // Remove all non-numeric characters
     const cleaned = input.replace(/\D/g, '');
     
-    // Format as (XXX) XXX-XXXX for US numbers
-    if (cleaned.length >= 10) {
-      const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})/);
-      if (match) {
-        return `(${match[1]}) ${match[2]}-${match[3]}`;
-      }
-    }
-    
-    return cleaned;
+    // Progressive formatting as user types
+    if (cleaned.length === 0) return '';
+    if (cleaned.length <= 3) return `(${cleaned}`;
+    if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
