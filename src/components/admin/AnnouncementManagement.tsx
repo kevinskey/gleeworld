@@ -355,7 +355,7 @@ export const AnnouncementManagement = () => {
             {previewAnnouncement?.expire_date && (
               <p className="text-sm text-muted-foreground flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                Expires: {new Date(previewAnnouncement.expire_date).toLocaleDateString()}
+                Expires: {new Date(previewAnnouncement.expire_date).toLocaleString()}
               </p>
             )}
           </div>
