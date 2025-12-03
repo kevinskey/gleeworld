@@ -178,8 +178,8 @@ const spelhouseTheme: ThemeConfig = {
   
   background: {
     type: 'gradient',
-    value: 'linear-gradient(135deg, hsl(210 65% 45%) 0%, hsl(210 65% 45%) 50%, hsl(352 65% 28%) 50%, hsl(352 65% 28%) 100%)',
-    overlay: 'rgba(255, 255, 255, 0.08)',
+    value: 'linear-gradient(to right, hsl(210 65% 45%) 0%, hsl(210 65% 45%) 50%, hsl(352 65% 28%) 50%, hsl(352 65% 28%) 100%)',
+    overlay: 'rgba(255, 255, 255, 0.03)',
   },
 };
 
