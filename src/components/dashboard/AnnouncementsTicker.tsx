@@ -32,7 +32,7 @@ export const AnnouncementsTicker = () => {
     return <span className="text-sm text-muted-foreground">No announcements</span>;
   }
 
-  const tickerText = announcements.map(a => `${a.title}: ${a.content}`).join('  •  ');
+  const tickerText = announcements.map(a => a.content).join('  •  ');
 
   return (
     <div className="animate-marquee whitespace-nowrap text-sm text-foreground/80">
