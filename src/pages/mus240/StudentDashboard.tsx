@@ -23,7 +23,10 @@ import {
   MessageSquare,
   Brain,
   ArrowUpDown,
-  Home
+  Home,
+  FileCheck,
+  Play,
+  RotateCcw
 } from 'lucide-react';
 import { AIGroupRoleSubmission } from '@/components/mus240/student/AIGroupRoleSubmission';
 import { useStudentSubmissions } from '@/hooks/useStudentSubmissions';
@@ -84,6 +87,22 @@ export const StudentDashboard = () => {
       });
       
       return filtered;
+    },
+  });
+
+  // Fetch ALL published tests (including exams)
+  const { data: allTests = [], isLoading: allTestsLoading } = useQuery({
+    queryKey: ['all-tests', 'mus240'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('glee_academy_tests')
+        .select('*')
+        .eq('course_id', 'mus240')
+        .eq('is_published', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
     },
   });
 
@@ -349,13 +368,140 @@ export const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="assignments" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="practice-tests">Practice Tests</TabsTrigger>
+            <TabsTrigger value="tests">Tests</TabsTrigger>
+            <TabsTrigger value="practice-tests">Practice</TabsTrigger>
             <TabsTrigger value="ai-group">AI Group</TabsTrigger>
             <TabsTrigger value="grades">Grades</TabsTrigger>
-            <TabsTrigger value="announcements">Announcements</TabsTrigger>
+            <TabsTrigger value="announcements">News</TabsTrigger>
           </TabsList>
+
+          {/* Tests Tab - All tests including exams */}
+          <TabsContent value="tests" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <FileCheck className="h-5 w-5" />
+                  Tests & Exams
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {allTestsLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading tests...</div>
+                ) : allTests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No tests available yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {allTests.map((test) => {
+                      const submission = testSubmissions.find(s => s.test_id === test.id);
+                      const hasSubmitted = submission && submission.status === 'submitted';
+                      const inProgress = submission && submission.status === 'in_progress';
+                      
+                      return (
+                        <div
+                          key={test.id}
+                          className="p-4 border rounded-lg hover:shadow-md transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h3 className="font-semibold flex items-center gap-2">
+                                <FileCheck className="h-4 w-4 text-primary" />
+                                {test.title}
+                              </h3>
+                              {test.description && (
+                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                  {test.description}
+                                </p>
+                              )}
+                              <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
+                                <span>{test.total_points} points</span>
+                                {test.duration_minutes && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{test.duration_minutes} min</span>
+                                  </>
+                                )}
+                                {test.allow_retakes && (
+                                  <>
+                                    <span>•</span>
+                                    <span>Retakes allowed</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            {hasSubmitted && (
+                              <Badge variant={submission.percentage >= test.passing_score ? 'default' : 'destructive'}>
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                {submission.percentage?.toFixed(0)}%
+                              </Badge>
+                            )}
+                            {inProgress && (
+                              <Badge variant="secondary">
+                                <Clock className="h-3 w-3 mr-1" />
+                                In Progress
+                              </Badge>
+                            )}
+                            {!submission && (
+                              <Badge variant="outline">Not Started</Badge>
+                            )}
+                          </div>
+                          
+                          {hasSubmitted && (
+                            <div className="mt-3 p-2 bg-muted/50 rounded text-sm">
+                              <div className="flex justify-between">
+                                <span>Score:</span>
+                                <span className="font-semibold">{submission.total_score}/{test.total_points}</span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="mt-3">
+                            {!submission && (
+                              <Button 
+                                className="w-full" 
+                                onClick={() => navigate(`/test/${test.id}`)}
+                              >
+                                <Play className="h-4 w-4 mr-2" />
+                                Take Test
+                              </Button>
+                            )}
+                            {inProgress && (
+                              <Button 
+                                className="w-full" 
+                                onClick={() => navigate(`/test/${test.id}`)}
+                              >
+                                <Play className="h-4 w-4 mr-2" />
+                                Continue Test
+                              </Button>
+                            )}
+                            {hasSubmitted && test.allow_retakes && (
+                              <Button 
+                                variant="outline" 
+                                className="w-full" 
+                                onClick={() => navigate(`/test/${test.id}`)}
+                              >
+                                <RotateCcw className="h-4 w-4 mr-2" />
+                                Retake Test
+                              </Button>
+                            )}
+                            {hasSubmitted && !test.allow_retakes && (
+                              <Button variant="outline" className="w-full" disabled>
+                                Completed
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="assignments" className="space-y-4">
             <Card>
