@@ -116,7 +116,19 @@ export const useMessageGroups = () => {
         throw error;
       }
       
-      return data as MessageGroup[];
+      // Sort groups: "All Members" first, then by updated_at
+      const sortedData = (data || []).sort((a, b) => {
+        const aIsAllMembers = a.name?.toLowerCase().includes('all members');
+        const bIsAllMembers = b.name?.toLowerCase().includes('all members');
+        
+        if (aIsAllMembers && !bIsAllMembers) return -1;
+        if (!aIsAllMembers && bIsAllMembers) return 1;
+        
+        // Both are or aren't "All Members", sort by updated_at
+        return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+      });
+      
+      return sortedData as MessageGroup[];
     },
     retry: 1,
     staleTime: 0, // Always fetch fresh data
