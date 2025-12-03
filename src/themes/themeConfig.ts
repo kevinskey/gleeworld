@@ -57,6 +57,9 @@ export interface ThemeConfig {
     floatingElements?: 'music-notes' | 'equalizer' | 'watermark';
     animations?: boolean;
   };
+  
+  // Glass effect for cards (liquid glass / glassmorphism)
+  glassEffect?: boolean;
 }
 
 /**
@@ -121,12 +124,15 @@ const spelmanBlueTheme: ThemeConfig = {
     accentForeground: '220 50% 20%',
     background: '0 0% 100%',          // Pure white
     foreground: '220 50% 20%',        // Navy text
-    card: '201 70% 98%',              // Very light blue tint
+    card: '201 70% 98% / 0.7',        // Semi-transparent for glass effect
     cardForeground: '220 50% 20%',
-    muted: '201 50% 95%',
+    muted: '201 50% 95% / 0.6',
     mutedForeground: '220 30% 40%',
-    border: '201 40% 85%',
+    border: '201 40% 85% / 0.5',
   },
+  
+  // Glass effect settings
+  glassEffect: true,
   
   typography: {
     fontFamily: "'Georgia', serif",
@@ -137,7 +143,7 @@ const spelmanBlueTheme: ThemeConfig = {
   background: {
     type: 'image',
     value: 'url(/images/themes/spelman-logo-bg.png)',
-    overlay: 'rgba(255, 255, 255, 0.85)',
+    overlay: 'rgba(255, 255, 255, 0.5)',
     position: 'center center',
   },
   
