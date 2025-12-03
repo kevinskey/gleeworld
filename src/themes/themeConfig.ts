@@ -135,9 +135,10 @@ const spelmanBlueTheme: ThemeConfig = {
   },
   
   background: {
-    type: 'gradient',
-    value: 'linear-gradient(160deg, hsl(201 70% 97%) 0%, hsl(0 0% 100%) 50%, hsl(201 50% 95%) 100%)',
-    position: 'center',
+    type: 'image',
+    value: 'url(/images/themes/spelman-logo-bg.png)',
+    overlay: 'rgba(255, 255, 255, 0.85)',
+    position: 'center center',
   },
   
   decorations: {
