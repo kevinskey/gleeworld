@@ -136,7 +136,7 @@ export const DashboardHeroCarousel = () => {
       display_order: 3
     }];
     const visibleFallback = fallbackSlides.slice(0, slidesToShow);
-    return <div className="bg-background/95 backdrop-blur-sm mb-4 rounded-xl border p-3">
+    return <div className="mb-4 rounded-xl border-2 border-slate-400/50 dark:border-slate-500 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 shadow-lg p-3">
           <div className="relative w-full rounded-lg overflow-hidden group">
             <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
               {visibleFallback.map((slide, idx) => <div 
@@ -167,12 +167,12 @@ export const DashboardHeroCarousel = () => {
     return visible;
   };
   const visibleSlides = getVisibleSlides();
-  return <div className="bg-background/95 backdrop-blur-sm mb-4 rounded-xl border p-3">
+  return <div className="mb-4 rounded-xl border-2 border-slate-400/50 dark:border-slate-500 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 shadow-lg p-3">
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
               key={`${slide.id}-${idx}`} 
-              className={`relative w-full h-40 rounded-lg overflow-hidden hero-carousel-bg ${slide.link_url ? 'cursor-pointer group' : ''}`} 
+              className={`relative w-full h-40 rounded-lg overflow-hidden hero-carousel-bg ${slide.link_url ? 'cursor-pointer group' : ''}`}
               onClick={() => handleSlideClick(slide)}
               style={{
                 backgroundImage: `url(${getImageUrl(slide)})`
