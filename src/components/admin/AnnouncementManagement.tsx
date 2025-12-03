@@ -18,6 +18,7 @@ export const AnnouncementManagement = () => {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<string | null>(null);
+  const [previewAnnouncement, setPreviewAnnouncement] = useState<any | null>(null);
   const [formData, setFormData] = useState<CreateAnnouncementData>({
     title: '',
     content: '',
@@ -293,6 +294,7 @@ export const AnnouncementManagement = () => {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => setPreviewAnnouncement(announcement)}
                             className="text-blue-600 hover:text-blue-700"
                           >
                             <Eye className="h-4 w-4" />
@@ -323,6 +325,42 @@ export const AnnouncementManagement = () => {
           </div>
         </ScrollArea>
       </CardContent>
+
+      {/* Preview Dialog */}
+      <Dialog open={!!previewAnnouncement} onOpenChange={(open) => !open && setPreviewAnnouncement(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {previewAnnouncement?.title}
+              {previewAnnouncement?.is_featured && (
+                <Badge variant="secondary" className="text-xs">Featured</Badge>
+              )}
+            </DialogTitle>
+            <DialogDescription>
+              Published {previewAnnouncement?.publish_date && new Date(previewAnnouncement.publish_date).toLocaleDateString()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              {previewAnnouncement?.announcement_type && (
+                <Badge className={`${getAnnouncementTypeColor(previewAnnouncement.announcement_type)} text-xs`}>
+                  {previewAnnouncement.announcement_type}
+                </Badge>
+              )}
+              <Badge variant="outline">Audience: {previewAnnouncement?.target_audience || 'all'}</Badge>
+            </div>
+            <div className="prose prose-sm max-w-none">
+              <p className="whitespace-pre-wrap">{previewAnnouncement?.content}</p>
+            </div>
+            {previewAnnouncement?.expire_date && (
+              <p className="text-sm text-muted-foreground flex items-center gap-1">
+                <Calendar className="h-4 w-4" />
+                Expires: {new Date(previewAnnouncement.expire_date).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
