@@ -39,6 +39,7 @@ import { GleeLedgerModule } from '../admin/financial/GleeLedgerModule';
 import { AlumnaeManagementModule } from '../modules/AlumnaeManagementModule';
 import { GradingModule } from '../modules/GradingModule';
 import { ConcertTicketRequestsModule } from '../modules/ConcertTicketRequestsModule';
+import { AnnouncementsModule } from '../modules/AnnouncementsModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -138,6 +139,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <DashboardHeroManagerModule />;
       case 'glee-ledger':
         return <GleeLedgerModule />;
+      case 'announcements':
+        return <AnnouncementsModule />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
