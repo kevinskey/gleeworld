@@ -70,15 +70,12 @@ export const WelcomeCard = ({ displayName, profile }: WelcomeCardProps) => {
 
       {/* Transparent background - no overlay */}
       
-      {/* Content Layer */}
-      <div className="relative z-10 text-center w-full px-4 sm:px-6 py-6 sm:py-8 pb-12 sm:pb-16 md:pb-20">
-        {/* Welcome text positioned at center bottom */}
-        <div className="absolute bottom-6 left-0 right-0 text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-white leading-tight"
-              style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8), 0px 0px 6px rgba(0,0,0,0.6)' }}>
-            Welcome back {displayName}!
-          </h1>
-        </div>
+      {/* Content Layer - vertically centered */}
+      <div className="relative z-10 text-center w-full px-4 sm:px-6">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-white leading-tight"
+            style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8), 0px 0px 6px rgba(0,0,0,0.6)' }}>
+          Welcome back {displayName}!
+        </h1>
       </div>
       
       {/* Role badge positioned at bottom right */}
