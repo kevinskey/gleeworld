@@ -61,11 +61,6 @@ export const GlobalDesignFixes = () => {
       
       /* Mobile-first responsive improvements */
       @media (max-width: 640px) {
-        .card {
-          margin: 0.25rem !important;
-          padding: 0.75rem !important;
-        }
-        
         .text-4xl {
           font-size: 1.5rem !important;
         }
@@ -84,11 +79,6 @@ export const GlobalDesignFixes = () => {
       }
       
       @media (min-width: 641px) and (max-width: 768px) {
-        .card {
-          margin: 0.5rem !important;
-          padding: 1rem !important;
-        }
-        
         .text-4xl {
           font-size: 2rem !important;
         }
