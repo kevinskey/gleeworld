@@ -8,12 +8,13 @@ import { useNavigate } from 'react-router-dom';
 import { BookOpen } from 'lucide-react';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { StudentGradesOverview } from './StudentGradesOverview';
+import { StudentTestsSection } from './StudentTestsSection';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const StudentDashboardContent: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'courses' | 'grades'>('courses');
+  const [activeTab, setActiveTab] = useState<'courses' | 'tests' | 'grades'>('courses');
 
   const { data: enrollments, isLoading, refetch } = useQuery({
     queryKey: ['gw-student-enrollments', user?.id],
@@ -66,10 +67,11 @@ export const StudentDashboardContent: React.FC = () => {
         <p className="text-sm sm:text-base text-muted-foreground">View your courses, assignments, and grades</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'courses' | 'grades')}>
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'courses' | 'tests' | 'grades')}>
+        <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="courses" className="text-sm sm:text-base">My Courses</TabsTrigger>
-          <TabsTrigger value="grades" className="text-sm sm:text-base">Grades & Progress</TabsTrigger>
+          <TabsTrigger value="tests" className="text-sm sm:text-base">Tests</TabsTrigger>
+          <TabsTrigger value="grades" className="text-sm sm:text-base">Grades</TabsTrigger>
         </TabsList>
 
         <TabsContent value="courses" className="mt-6">
@@ -102,6 +104,10 @@ export const StudentDashboardContent: React.FC = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="tests" className="mt-6">
+          <StudentTestsSection />
         </TabsContent>
 
         <TabsContent value="grades" className="mt-6">
