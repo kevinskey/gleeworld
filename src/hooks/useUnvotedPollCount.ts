@@ -15,11 +15,28 @@ export const useUnvotedPollCount = (groupId: string) => {
 
     const fetchUnvotedCount = async () => {
       try {
-        // Get all active polls for this group
-        const { data: polls, error: pollsError } = await (supabase as any)
-          .from('gw_polls')
-          .select('id, is_closed, expires_at')
+        // Get poll messages for this group from gw_group_messages
+        const { data: pollMessages, error: messagesError } = await supabase
+          .from('gw_group_messages')
+          .select('id')
           .eq('group_id', groupId)
+          .eq('message_type', 'poll');
+        
+        if (messagesError) throw messagesError;
+
+        if (!pollMessages || pollMessages.length === 0) {
+          setUnvotedCount(0);
+          setLoading(false);
+          return;
+        }
+
+        const messageIds = pollMessages.map(m => m.id);
+
+        // Get polls linked to these messages
+        const { data: polls, error: pollsError } = await supabase
+          .from('gw_polls')
+          .select('id, is_closed, expires_at, message_id')
+          .in('message_id', messageIds)
           .eq('is_closed', false);
         
         if (pollsError) throw pollsError;
@@ -45,7 +62,7 @@ export const useUnvotedPollCount = (groupId: string) => {
 
         // Get user's votes for these polls
         const pollIds = activePolls.map((p: any) => p.id);
-        const { data: votes, error: votesError } = await (supabase as any)
+        const { data: votes, error: votesError } = await supabase
           .from('gw_poll_votes')
           .select('poll_id')
           .eq('user_id', user.id)
@@ -68,15 +85,15 @@ export const useUnvotedPollCount = (groupId: string) => {
 
     fetchUnvotedCount();
 
-    // Subscribe to poll changes
-    const pollChannel = (supabase as any)
-      .channel(`polls:${groupId}`)
+    // Subscribe to poll message changes
+    const pollChannel = supabase
+      .channel(`poll-messages:${groupId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'gw_polls',
+          table: 'gw_group_messages',
           filter: `group_id=eq.${groupId}`
         },
         () => fetchUnvotedCount()
