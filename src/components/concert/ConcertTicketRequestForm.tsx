@@ -27,10 +27,12 @@ export const ConcertTicketRequestForm = () => {
   const navigate = useNavigate();
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const [phoneDisplay, setPhoneDisplay] = useState('');
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<TicketRequestFormData>({
     resolver: zodResolver(ticketRequestSchema),
@@ -38,6 +40,20 @@ export const ConcertTicketRequestForm = () => {
       num_tickets: 1,
     },
   });
+
+  const formatPhoneNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length === 0) return '';
+    if (cleaned.length <= 3) return `(${cleaned}`;
+    if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhoneDisplay(formatted);
+    setValue('phone', formatted, { shouldValidate: true });
+  };
 
   // Redirect to join as fan after countdown
   useEffect(() => {
@@ -67,6 +83,7 @@ export const ConcertTicketRequestForm = () => {
       });
 
       setIsSubmitted(true);
+      setPhoneDisplay('');
       reset();
     } catch (error) {
       console.error('Error submitting ticket request:', error);
@@ -146,20 +163,8 @@ export const ConcertTicketRequestForm = () => {
             <Input
               id="phone"
               type="tel"
-              {...register('phone', {
-                onChange: (e) => {
-                  const cleaned = e.target.value.replace(/\D/g, '');
-                  if (cleaned.length === 0) {
-                    e.target.value = '';
-                  } else if (cleaned.length <= 3) {
-                    e.target.value = `(${cleaned}`;
-                  } else if (cleaned.length <= 6) {
-                    e.target.value = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
-                  } else {
-                    e.target.value = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
-                  }
-                }
-              })}
+              value={phoneDisplay}
+              onChange={handlePhoneChange}
               placeholder="(555) 123-4567"
               maxLength={14}
             />
