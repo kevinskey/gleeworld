@@ -147,7 +147,7 @@ const spelmanBlueTheme: ThemeConfig = {
 
 /**
  * SPELHOUSE THEME
- * Combined Spelman + Morehouse identity
+ * Combined Spelman + Morehouse identity - Bold collegiate styling
  */
 const spelhouseTheme: ThemeConfig = {
   id: 'spelhouse',
@@ -155,31 +155,31 @@ const spelhouseTheme: ThemeConfig = {
   description: 'United excellence - Spelman Blue meets Morehouse Maroon',
   
   colors: {
-    primary: '201 52% 66%',           // Spelman Blue
+    primary: '210 65% 45%',              // Bold Spelman Blue (darker, more saturated)
     primaryForeground: '0 0% 100%',
-    secondary: '352 53% 32%',         // Morehouse Maroon #79242F
+    secondary: '352 65% 28%',            // Bold Morehouse Maroon (richer)
     secondaryForeground: '0 0% 100%',
-    accent: '201 70% 75%',
-    accentForeground: '352 53% 32%',
-    background: '0 0% 98%',
-    foreground: '0 0% 8%',
+    accent: '210 70% 55%',               // Lighter Spelman Blue accent
+    accentForeground: '0 0% 100%',
+    background: '210 30% 95%',           // Light blue-tinted background
+    foreground: '352 65% 20%',           // Dark maroon text
     card: '0 0% 100%',
-    cardForeground: '0 0% 8%',
-    muted: '0 0% 96%',
-    mutedForeground: '0 0% 30%',
-    border: '0 0% 85%',
+    cardForeground: '352 65% 20%',
+    muted: '210 20% 92%',
+    mutedForeground: '352 30% 35%',
+    border: '210 20% 80%',
   },
   
   typography: {
-    fontFamily: "'Merriweather', serif",
-    headingFamily: "'Cinzel', serif",
+    fontFamily: "'Libre Baskerville', 'Georgia', serif",
+    headingFamily: "'Playfair Display', 'Georgia', serif",
     style: 'collegiate',
   },
   
   background: {
     type: 'gradient',
-    value: 'linear-gradient(90deg, hsl(201 52% 66%) 0%, hsl(352 53% 32%) 100%)',
-    overlay: 'rgba(255, 255, 255, 0.05)',
+    value: 'linear-gradient(135deg, hsl(210 65% 45%) 0%, hsl(210 65% 45%) 50%, hsl(352 65% 28%) 50%, hsl(352 65% 28%) 100%)',
+    overlay: 'rgba(255, 255, 255, 0.08)',
   },
 };
 
