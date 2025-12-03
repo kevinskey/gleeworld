@@ -25,6 +25,7 @@ import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
+import { AnnouncementsScroller } from "@/components/dashboard/AnnouncementsScroller";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save } from "lucide-react";
 
 // Sortable Dashboard Card Component
@@ -631,6 +632,14 @@ export const MetalHeaderDashboard = ({
         <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
           <div className="space-y-6">
             {cardOrder.map(cardId => {
+            // Announcements card
+            if (cardId === 'announcements') {
+              return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
+                    <div className="h-64">
+                      <AnnouncementsScroller />
+                    </div>
+                  </SortableDashboardCard>;
+            }
             // Favorites card using moduleFavorites
             if (cardId === 'favorites') {
               const hasFavorites = moduleFavorites && moduleFavorites.size > 0;
