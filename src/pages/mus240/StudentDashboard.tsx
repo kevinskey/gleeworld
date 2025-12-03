@@ -244,26 +244,26 @@ export const StudentDashboard = () => {
 
   return (
     <UniversalLayout>
-      <div className="container mx-auto py-6 space-y-6">
+      <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">MUS 240 Dashboard</h1>
-            <p className="text-muted-foreground">Survey of African American Music</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">MUS 240 Dashboard</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">Survey of African American Music</p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => navigate('/mus-240')}>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => navigate('/mus-240')}>
               <Home className="h-4 w-4 mr-2" />
-              Back to MUS 240
+              <span className="hidden xs:inline">Back to </span>MUS 240
             </Button>
             <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
                   <Mail className="h-4 w-4 mr-2" />
-                  Email Instructor
+                  <span className="hidden xs:inline">Email </span>Instructor
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-[95vw] sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>Email Dr. Kevin Phillip Johnson</DialogTitle>
                 </DialogHeader>
@@ -368,13 +368,13 @@ export const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="assignments" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
-            <TabsTrigger value="tests">Tests</TabsTrigger>
-            <TabsTrigger value="practice-tests">Practice</TabsTrigger>
-            <TabsTrigger value="ai-group">AI Group</TabsTrigger>
-            <TabsTrigger value="grades">Grades</TabsTrigger>
-            <TabsTrigger value="announcements">News</TabsTrigger>
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 sm:grid sm:grid-cols-6">
+            <TabsTrigger value="assignments" className="flex-1 min-w-[80px] text-xs sm:text-sm">Assignments</TabsTrigger>
+            <TabsTrigger value="tests" className="flex-1 min-w-[60px] text-xs sm:text-sm">Tests</TabsTrigger>
+            <TabsTrigger value="practice-tests" className="flex-1 min-w-[60px] text-xs sm:text-sm">Practice</TabsTrigger>
+            <TabsTrigger value="ai-group" className="flex-1 min-w-[70px] text-xs sm:text-sm">AI Group</TabsTrigger>
+            <TabsTrigger value="grades" className="flex-1 min-w-[60px] text-xs sm:text-sm">Grades</TabsTrigger>
+            <TabsTrigger value="announcements" className="flex-1 min-w-[50px] text-xs sm:text-sm">News</TabsTrigger>
           </TabsList>
 
           {/* Tests Tab - All tests including exams */}
