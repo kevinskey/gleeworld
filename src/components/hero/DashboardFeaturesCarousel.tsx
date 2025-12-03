@@ -53,19 +53,19 @@ const DashboardFeaturesCarousel: React.FC = () => {
               {slides.length > 0 ? slides.map(s => <CarouselItem key={s.id}>
                     <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden">
                       {/* Desktop */}
-                      <img src={s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="hidden md:block w-full h-full object-contain" onError={e => {
+                      <img src={s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="hidden md:block w-full h-full object-contain object-center mx-auto" onError={e => {
                   if (!e.currentTarget.src.includes('unsplash.com')) {
                     e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
                   }
                 }} />
                       {/* iPad */}
-                      <img src={s.ipad_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="hidden sm:block md:hidden w-full h-full object-contain" onError={e => {
+                      <img src={s.ipad_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="hidden sm:block md:hidden w-full h-full object-contain object-center mx-auto" onError={e => {
                   if (!e.currentTarget.src.includes('unsplash.com')) {
                     e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
                   }
                 }} />
                       {/* Mobile */}
-                      <img src={s.mobile_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="block sm:hidden w-full h-full object-contain" onError={e => {
+                      <img src={s.mobile_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="block sm:hidden w-full h-full object-contain object-center mx-auto" onError={e => {
                   if (!e.currentTarget.src.includes('unsplash.com')) {
                     e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
                   }
