@@ -141,8 +141,10 @@ export const DashboardHeroCarousel = () => {
           <div className="relative w-full rounded-lg overflow-hidden group">
             <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
               {visibleFallback.map((slide, idx) => <div key={`${slide.id}-${idx}`} className="relative w-full h-40 rounded-lg overflow-hidden">
-                  <div className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500" style={{
-                backgroundImage: `url(${slide.image_url})`
+                  <div className="absolute inset-0 bg-no-repeat transition-all duration-500" style={{
+                backgroundImage: `url(${slide.image_url})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center center'
               }}>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
                   </div>
@@ -173,8 +175,10 @@ export const DashboardHeroCarousel = () => {
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div key={`${slide.id}-${idx}`} className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`} onClick={() => handleSlideClick(slide)}>
                 {/* Background Image */}
-                <div className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`} style={{
-              backgroundImage: `url(${getImageUrl(slide)})`
+                <div className={`absolute inset-0 bg-no-repeat transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`} style={{
+              backgroundImage: `url(${getImageUrl(slide)})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center center'
             }}>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
                 </div>
