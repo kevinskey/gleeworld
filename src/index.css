@@ -908,6 +908,18 @@
   }
 }
 
+/* Force vertical centering for hero carousel images */
+.hero-carousel-img {
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+
+.hero-carousel-bg {
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
 /* Site-wide override: Change all yellow/gold buttons to brand blue */
 button[style*="background-color: rgb(250, 204, 21)"],
 button[style*="background-color: rgb(245, 158, 11)"],

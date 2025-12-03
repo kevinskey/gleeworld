@@ -143,12 +143,9 @@ export const DashboardHeroCarousel = () => {
             <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
               {visibleFallback.map((slide, idx) => <div 
                 key={`${slide.id}-${idx}`} 
-                className="relative w-full h-40 rounded-lg overflow-hidden"
+                className="relative w-full h-40 rounded-lg overflow-hidden hero-carousel-bg"
                 style={{
-                  backgroundImage: `url(${slide.image_url})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: '50% 50%',
-                  backgroundRepeat: 'no-repeat'
+                  backgroundImage: `url(${slide.image_url})`
                 }}
               >
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
@@ -179,13 +176,10 @@ export const DashboardHeroCarousel = () => {
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
               key={`${slide.id}-${idx}`} 
-              className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`} 
+              className={`relative w-full h-40 rounded-lg overflow-hidden hero-carousel-bg ${slide.link_url ? 'cursor-pointer group' : ''}`} 
               onClick={() => handleSlideClick(slide)}
               style={{
-                backgroundImage: `url(${getImageUrl(slide)})`,
-                backgroundSize: 'cover',
-                backgroundPosition: '50% 50%',
-                backgroundRepeat: 'no-repeat'
+                backgroundImage: `url(${getImageUrl(slide)})`
               }}
             >
                 <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`} />
