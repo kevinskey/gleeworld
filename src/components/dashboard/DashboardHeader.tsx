@@ -1,11 +1,11 @@
 import React from 'react';
 import { MessageCircle, Bell, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { AnnouncementsTicker } from './AnnouncementsTicker';
 
 interface DashboardHeaderProps {
   user: any;
@@ -35,8 +35,10 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
             <p className="text-sm text-muted-foreground">Dashboard</p>
           </div>
         </div>
-        
       </div>
+
+      {/* Center - Announcements ticker */}
+      <AnnouncementsTicker />
 
       {/* Right side - Actions and profile */}
       <div className="flex items-center gap-4">
