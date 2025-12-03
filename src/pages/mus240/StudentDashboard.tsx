@@ -370,10 +370,12 @@ export const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="assignments" className="space-y-4">
-          <TabsList className="flex flex-wrap h-auto gap-1 p-1 sm:grid sm:grid-cols-7">
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 sm:grid sm:grid-cols-6">
             <TabsTrigger value="assignments" className="flex-1 min-w-[80px] text-xs sm:text-sm">Assignments</TabsTrigger>
-            <TabsTrigger value="tests" className="flex-1 min-w-[60px] text-xs sm:text-sm">Tests</TabsTrigger>
-            <TabsTrigger value="practice-tests" className="flex-1 min-w-[60px] text-xs sm:text-sm">Practice</TabsTrigger>
+            <TabsTrigger value="tests" className="flex-1 min-w-[60px] text-xs sm:text-sm">
+              <FileCheck className="h-3 w-3 mr-1" />
+              Tests
+            </TabsTrigger>
             <TabsTrigger value="polls" className="flex-1 min-w-[50px] text-xs sm:text-sm">
               <BarChart3 className="h-3 w-3 mr-1" />
               Polls
@@ -383,8 +385,9 @@ export const StudentDashboard = () => {
             <TabsTrigger value="announcements" className="flex-1 min-w-[50px] text-xs sm:text-sm">News</TabsTrigger>
           </TabsList>
 
-          {/* Tests Tab - All tests including exams */}
-          <TabsContent value="tests" className="space-y-4">
+          {/* Tests Tab - All tests including exams and practice */}
+          <TabsContent value="tests" className="space-y-6">
+            {/* Exams Section */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -395,14 +398,20 @@ export const StudentDashboard = () => {
               <CardContent className="space-y-4">
                 {allTestsLoading ? (
                   <div className="text-center py-8 text-muted-foreground">Loading tests...</div>
-                ) : allTests.length === 0 ? (
+                ) : allTests.filter(t => {
+                  const title = t.title.toLowerCase();
+                  return title.includes('midterm') || title.includes('final') || title.includes('exam');
+                }).length === 0 ? (
                   <div className="text-center py-8">
                     <FileCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No tests available yet.</p>
+                    <p className="text-muted-foreground">No exams available yet.</p>
                   </div>
                 ) : (
                   <div className="grid gap-4 md:grid-cols-2">
-                    {allTests.map((test) => {
+                    {allTests.filter(t => {
+                      const title = t.title.toLowerCase();
+                      return title.includes('midterm') || title.includes('final') || title.includes('exam');
+                    }).map((test) => {
                       const submission = testSubmissions.find(s => s.test_id === test.id);
                       const hasSubmitted = submission && submission.status === 'submitted';
                       const inProgress = submission && submission.status === 'in_progress';
@@ -507,6 +516,108 @@ export const StudentDashboard = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Practice Tests Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  Practice Tests
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {testsLoading ? (
+                  <div className="text-center py-8 text-muted-foreground">Loading tests...</div>
+                ) : practiceTests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No practice tests available yet.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {practiceTests.map((test) => {
+                      const submission = testSubmissions.find(s => s.test_id === test.id);
+                      const hasCompleted = submission?.submitted_at;
+                      
+                      return (
+                        <div
+                          key={test.id}
+                          className="p-4 border rounded-lg hover:shadow-md transition-all"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h3 className="font-semibold flex items-center gap-2">
+                                <Brain className="h-4 w-4 text-purple-500" />
+                                {test.title}
+                              </h3>
+                              {test.description && (
+                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{test.description}</p>
+                              )}
+                              <div className="flex flex-wrap gap-2 mt-2 text-xs text-muted-foreground">
+                                <span>{test.total_points} points</span>
+                                {test.duration_minutes && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{test.duration_minutes} min</span>
+                                  </>
+                                )}
+                                {submission?.percentage !== null && submission?.percentage !== undefined && (
+                                  <>
+                                    <span>•</span>
+                                    <span className="font-semibold text-blue-600">Score: {submission.percentage}%</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            {hasCompleted && (
+                              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Completed
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <div className="mt-3 flex gap-2">
+                            {hasCompleted && test.show_correct_answers && submission && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/test/${test.id}/results/${submission.id}`)}
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                View Results
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => navigate(`/test/${test.id}/take`)}
+                              disabled={hasCompleted && !test.allow_retakes}
+                            >
+                              {hasCompleted ? (
+                                test.allow_retakes ? (
+                                  <>
+                                    <RotateCcw className="h-3 w-3 mr-1" />
+                                    Retake
+                                  </>
+                                ) : (
+                                  'No Retakes'
+                                )
+                              ) : (
+                                <>
+                                  <Play className="h-3 w-3 mr-1" />
+                                  Start Test
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="assignments" className="space-y-4">
@@ -588,103 +699,6 @@ export const StudentDashboard = () => {
             </Card>
           </TabsContent>
 
-          <TabsContent value="practice-tests" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Brain className="h-5 w-5" />
-                  Practice Tests
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {testsLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">Loading tests...</div>
-                ) : practiceTests.length === 0 ? (
-                  <div className="text-center py-8">
-                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No practice tests available yet.</p>
-                  </div>
-                ) : (
-                  practiceTests.map((test) => {
-                    const submission = testSubmissions.find(s => s.test_id === test.id);
-                    const hasCompleted = submission?.submitted_at;
-                    
-                    return (
-                      <div
-                        key={test.id}
-                        className="p-4 border rounded-lg hover:shadow-md transition-all"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold">{test.title}</h3>
-                              {hasCompleted && (
-                                <Badge variant="secondary" className="bg-green-100 text-green-700">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Completed
-                                </Badge>
-                              )}
-                            </div>
-                            {test.description && (
-                              <p className="text-sm text-muted-foreground mt-1">{test.description}</p>
-                            )}
-                            <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                <span>{test.duration_minutes} minutes</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Trophy className="h-3 w-3" />
-                                <span>{test.total_points} points</span>
-                              </div>
-                              {submission?.percentage !== null && submission?.percentage !== undefined && (
-                                <div className="flex items-center gap-1 font-semibold text-blue-600">
-                                  Score: {submission.percentage}%
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            {hasCompleted && test.show_correct_answers && submission && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => navigate(`/test/${test.id}/results/${submission.id}`)}
-                              >
-                                <Eye className="h-3 w-3 mr-1" />
-                                View Results
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              onClick={() => navigate(`/test/${test.id}/take`)}
-                              disabled={hasCompleted && !test.allow_retakes}
-                            >
-                              {hasCompleted ? (
-                                test.allow_retakes ? (
-                                  <>
-                                    <Edit className="h-3 w-3 mr-1" />
-                                    Retake
-                                  </>
-                                ) : (
-                                  'No Retakes'
-                                )
-                              ) : (
-                                <>
-                                  <Edit className="h-3 w-3 mr-1" />
-                                  Start Test
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="ai-group" className="space-y-4">
             <AIGroupRoleSubmission />
