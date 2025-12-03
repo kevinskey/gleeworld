@@ -105,6 +105,13 @@ export const usePoll = (messageId?: string) => {
     try {
       if (!user) throw new Error('User not authenticated');
 
+      // Get user's profile for the notification
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('full_name')
+        .eq('user_id', user.id)
+        .single();
+
       // Create message first
       const { data: messageData, error: messageError } = await supabase
         .from('gw_group_messages')
@@ -151,6 +158,22 @@ export const usePoll = (messageId?: string) => {
         );
 
       if (optionsError) throw optionsError;
+
+      // Send SMS notifications to group members (non-blocking)
+      supabase.functions.invoke('send-poll-notification', {
+        body: {
+          groupId,
+          pollQuestion: question,
+          creatorUserId: user.id,
+          creatorName: profile?.full_name || 'A member'
+        }
+      }).then(({ error }) => {
+        if (error) {
+          console.error('Failed to send poll SMS notifications:', error);
+        } else {
+          console.log('Poll SMS notifications sent');
+        }
+      });
 
       return messageData.id;
     } catch (error) {
