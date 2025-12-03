@@ -52,16 +52,18 @@ export const StudentTestsSection: React.FC = () => {
         .eq('student_id', user?.id);
 
       if (enrollError) throw enrollError;
-      if (!enrollments || enrollments.length === 0) return [];
 
-      const courseIds = enrollments.map((e: any) => e.course_id);
-      const courseMap = new Map(enrollments.map((e: any) => [e.course_id, e.gw_courses]));
+      const courseIds = enrollments?.map((e: any) => e.course_id) || [];
+      const courseMap = new Map(enrollments?.map((e: any) => [e.course_id, e.gw_courses]) || []);
 
-      // Get published tests for enrolled courses
+      // Also include MUS240 tests directly (legacy course not in gw_enrollments)
+      const allCourseIds = [...new Set([...courseIds, 'mus240'])];
+
+      // Get published tests for enrolled courses AND MUS240
       const { data: tests, error: testsError } = await supabase
         .from('glee_academy_tests')
         .select('*')
-        .in('course_id', courseIds)
+        .in('course_id', allCourseIds)
         .eq('is_published', true)
         .order('created_at', { ascending: false });
 
@@ -90,10 +92,12 @@ export const StudentTestsSection: React.FC = () => {
       // Combine tests with their submissions
       return tests.map((test: any) => {
         const course = courseMap.get(test.course_id) as any;
+        // For MUS240, provide fallback course info
+        const isMus240 = test.course_id === 'mus240';
         return {
           ...test,
-          course_code: course?.course_code,
-          course_name: course?.course_name,
+          course_code: course?.course_code || (isMus240 ? 'MUS 240' : test.course_id),
+          course_name: course?.course_name || (isMus240 ? 'Survey of African American Music' : ''),
           submission: submissionMap.get(test.id),
         } as TestWithSubmission;
       });
