@@ -6,13 +6,14 @@ import { toast } from 'sonner';
 // Default card order
 export const DEFAULT_CARD_ORDER: string[] = [
   'hero-carousel',
+  'announcements',
   'favorites',
   'ai-assistant',
   'search-filters',
   'modules'
 ];
 
-export type DashboardCard = 'hero-carousel' | 'favorites' | 'ai-assistant' | 'search-filters' | 'modules';
+export type DashboardCard = 'hero-carousel' | 'announcements' | 'favorites' | 'ai-assistant' | 'search-filters' | 'modules';
 
 export const useDashboardCardOrder = () => {
   const { user } = useAuth();
