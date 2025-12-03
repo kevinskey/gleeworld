@@ -33,7 +33,10 @@ export const UniversalLayout = ({
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
 
   return (
-    <div className="min-h-screen flex flex-col w-full overflow-x-hidden relative bg-background">
+    <div 
+      className="min-h-screen flex flex-col w-full overflow-x-hidden relative"
+      style={{ background: 'var(--theme-background, hsl(var(--background)))' }}
+    >
       {showHeader && (
         <>
           {shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />}
