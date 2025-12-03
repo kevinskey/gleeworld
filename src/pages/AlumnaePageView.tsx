@@ -95,15 +95,13 @@ export default function AlumnaePageView() {
                 <Ticket className="h-4 w-4 mr-2" />
                 Limited Availability
               </Badge>
-              <h2 className="text-2xl md:text-4xl font-display text-white tracking-tight">
-                Request 99th Annual Christmas Carol Concert Wristbands Here! 
-              </h2>
+              <h2 className="text-2xl md:text-4xl font-display text-white tracking-tight">Request Christmas Carol Concert Wristbands Here!</h2>
               <p className="text-base md:text-lg text-white/90 leading-relaxed">
-                Join us for an unforgettable evening of music and sisterhood. Reserve your seats for the upcoming Spelman College Glee Club performance.
+                Request a wristband to the concert here. This year seating is limited. We will respond by email to acknowledge your request as soon as possible.                        
               </p>
             </div>
             <div className="flex flex-col items-center gap-3">
-              <Button onClick={() => navigate('/concert-ticket-request')} size="lg" className="bg-white text-primary hover:bg-white/90 text-base md:text-lg px-6 py-5 h-auto shadow-xl">
+              <Button onClick={() => navigate('/concert-ticket-request')} size="lg" className="bg-white text-primary hover:bg-white/90 text-base md:text-lg px-6 py-5 h-auto shadow-xl mx-px pr-[24px]">
                 <Music className="h-5 w-5 mr-2" />
                 Request Tickets Now
               </Button>
