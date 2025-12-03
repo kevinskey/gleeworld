@@ -70,8 +70,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   return (
     <>
       <header className="border-b border-border sticky top-0 z-50 shadow-lg" style={{ backgroundColor: '#ffffff' }}>
-          <div className="container mx-auto px-2 sm:px-4 lg:px-6 flex justify-center">
-            <div className="flex items-center justify-between w-full max-w-7xl min-h-12 sm:min-h-14 md:min-h-16 py-2 sm:py-2.5 md:py-3">
+          <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between w-full min-h-12 sm:min-h-14 md:min-h-16 py-2 sm:py-2.5 md:py-3">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 sm:gap-2 md:gap-5 min-w-0 flex-1">
             <EnhancedTooltip 
