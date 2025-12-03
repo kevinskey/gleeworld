@@ -2060,9 +2060,17 @@ const App = () => {
                                          <TestBuilderEdit />
                                        </ProtectedRoute>
                                      } 
-                                   />
+                                    />
                                     <Route 
-                                      path="/test/:testId/preview" 
+                                      path="/test/:testId" 
+                                      element={
+                                        <ProtectedRoute>
+                                          <StudentTestPage />
+                                        </ProtectedRoute>
+                                      } 
+                                    />
+                                    <Route 
+                                      path="/test/:testId/preview"
                                       element={
                                         <ProtectedRoute>
                                           <TestPreview />
