@@ -270,7 +270,7 @@ export const PollBubble: React.FC<PollBubbleProps> = ({
         )}
         <Button
           onClick={() => {
-            const pollLink = `${window.location.origin}/polls/${poll.id}`;
+            const pollLink = `https://gleeworld.org/polls/${poll.id}`;
             navigator.clipboard.writeText(pollLink);
             toast({
               title: 'Link Copied',
