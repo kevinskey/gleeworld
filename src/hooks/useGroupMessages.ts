@@ -81,7 +81,17 @@ export const useGroupMessages = () => {
           unread_count: 0,
           user_role: roleMap.get(group.id)
         }))
-        .filter(conv => hasAccessToGroup(conv, userProfile));
+        .filter(conv => hasAccessToGroup(conv, userProfile))
+        // Sort: "All Members" first, then alphabetically
+        .sort((a, b) => {
+          const aIsAllMembers = a.name.toLowerCase().includes('all members');
+          const bIsAllMembers = b.name.toLowerCase().includes('all members');
+          
+          if (aIsAllMembers && !bIsAllMembers) return -1;
+          if (!aIsAllMembers && bIsAllMembers) return 1;
+          
+          return a.name.localeCompare(b.name);
+        });
       
       setConversations(accessibleConversations);
       setError(null);
