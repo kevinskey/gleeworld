@@ -52,13 +52,14 @@ const handler = async (req: Request): Promise<Response> => {
   const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   const TWILIO_ACCOUNT_SID = Deno.env.get("TWILIO_ACCOUNT_SID");
   const TWILIO_AUTH_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN");
+  const TWILIO_PHONE_NUMBER = Deno.env.get("TWILIO_PHONE_NUMBER");
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     return new Response(JSON.stringify({ error: "Missing Supabase env vars" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
-  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN) {
+  if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
     return new Response(JSON.stringify({ error: "Missing Twilio credentials" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
@@ -182,7 +183,7 @@ const handler = async (req: Request): Promise<Response> => {
     const results = await Promise.allSettled(
       targetPhoneNumbers.map(async (phoneNumber) => {
         const formData = new URLSearchParams();
-        formData.append('From', conversation.twilio_phone_number);
+        formData.append('From', TWILIO_PHONE_NUMBER);
         formData.append('To', phoneNumber);
         formData.append('Body', truncatedMessage);
 
