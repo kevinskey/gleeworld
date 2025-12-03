@@ -16,15 +16,15 @@ export const AnnouncementsTicker = () => {
   }, []);
 
   const fetchAnnouncements = async () => {
-    const { data, error } = await (supabase as any)
+    const { data, error } = await supabase
       .from('gw_announcements')
       .select('id, title, content, created_at')
-      .eq('is_active', true)
+      .not('publish_date', 'is', null)
       .order('created_at', { ascending: false })
       .limit(10);
 
     if (!error && data) {
-      setAnnouncements(data as Announcement[]);
+      setAnnouncements(data);
     }
   };
 
