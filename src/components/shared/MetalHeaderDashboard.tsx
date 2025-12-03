@@ -566,26 +566,30 @@ export const MetalHeaderDashboard = ({
   // All users get the full metal header dashboard experience
   return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Metal Plate Header */}
-      <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg py-4 px-5 text-slate-800 dark:text-slate-100 flex items-center justify-center min-h-[56px]">
-        {/* Left Rivet */}
-        <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+      <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg py-4 px-3 sm:px-5 text-slate-800 dark:text-slate-100 flex items-center justify-between min-h-[56px]">
+        {/* Left Rivet - Hidden on mobile */}
+        <div className="hidden sm:block absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
           <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
         </div>
         
-        {/* Right Rivet */}
-        <div className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
+        {/* Right Rivet - Hidden on mobile */}
+        <div className="hidden sm:block absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
           <div className="w-2 h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
         </div>
 
-        {/* Key Ignition - Vertically Centered Right */}
-        <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="absolute top-1/2 -translate-y-1/2 right-12 w-8 h-8 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group">
-          <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
-        </button>
-        
-        {/* Personalized Title */}
-        <h1 className="text-xl lg:text-2xl font-bold text-center tracking-wide font-mono uppercase text-black">
+        {/* Personalized Title - Left aligned on mobile, centered on desktop */}
+        <h1 className="text-base sm:text-xl lg:text-2xl font-bold tracking-wide font-mono uppercase text-black truncate flex-1 text-center sm:pl-8">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
+
+        {/* Key Ignition - Quick Actions Button */}
+        <button 
+          onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} 
+          className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 ml-2 sm:mr-6"
+          aria-label="Quick Actions"
+        >
+          <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
+        </button>
 
         {/* Quick Actions Panel - slides out from underneath */}
         <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={isMember ? {
