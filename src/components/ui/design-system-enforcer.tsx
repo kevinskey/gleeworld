@@ -84,7 +84,7 @@ export const DesignSystemEnforcer = () => {
         background-color: hsl(var(--primary) / 0.9) !important;
       }
       
-      /* Card consistency */
+      /* Card colors - no padding/spacing overrides to allow custom styling */
       .card, [data-component="card"] {
         background-color: hsl(var(--card)) !important;
         color: hsl(var(--card-foreground)) !important;
