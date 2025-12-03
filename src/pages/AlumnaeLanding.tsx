@@ -15,7 +15,6 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { HeroSlideshow } from "@/components/alumnae/HeroSlideshow";
 import { SpotlightSection } from "@/components/alumnae/SpotlightSection";
 import { AnnouncementSection } from "@/components/alumnae/AnnouncementSection";
-import { ConcertTicketBanner } from "@/components/shared/ConcertTicketBanner";
 interface AlumnaeStats {
   classYear: number | null;
   yearsOut: number;
@@ -198,7 +197,38 @@ export default function AlumnaeLanding() {
   };
   return (
     <div className="min-h-screen bg-background">
-      <ConcertTicketBanner showOnMobile />
+      {/* Concert Ticket Request Hero */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-spelman-blue via-primary to-brand-maroon">
+        <div className="absolute inset-0 bg-[url('/images/themes/gleeworld-bg.jpg')] bg-cover bg-center opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/60" />
+        <div className="relative container mx-auto px-4 py-12 md:py-20">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="text-center md:text-left space-y-4 max-w-2xl">
+              <Badge className="bg-white/20 text-white border-white/30 text-sm px-4 py-1">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Limited Availability
+              </Badge>
+              <h2 className="text-3xl md:text-5xl font-display text-white tracking-tight">
+                Request Your Concert Tickets
+              </h2>
+              <p className="text-lg md:text-xl text-white/90 leading-relaxed">
+                Join us for an unforgettable evening of music and sisterhood. Reserve your seats for the upcoming Spelman College Glee Club performance.
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-4">
+              <Button 
+                onClick={() => navigate('/concert-ticket-request')}
+                size="lg"
+                className="bg-white text-primary hover:bg-white/90 text-lg px-8 py-6 h-auto shadow-xl"
+              >
+                <Music className="h-5 w-5 mr-2" />
+                Request Tickets Now
+              </Button>
+              <p className="text-white/70 text-sm">Maximum 2 tickets per request</p>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="relative z-10 container mx-auto px-4 py-8 space-y-8">
         {/* Header Section */}
