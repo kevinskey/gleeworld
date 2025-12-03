@@ -48,18 +48,22 @@ export default function PollViewPage() {
           }
 
           setPollMessage(message);
-        } else if (poll?.message_id) {
-          // Found poll, get the associated message
-          const { data: message } = await supabase
-            .from('gw_group_messages')
-            .select('*')
-            .eq('id', poll.message_id)
-            .single();
-
-          setPollMessage(message || { id: pollId, user_id: poll.created_by, created_at: poll.created_at });
         } else {
-          // Use poll data directly
-          setPollMessage({ id: pollId, user_id: poll?.created_by, created_at: poll?.created_at });
+          // Found poll - use message_id for PollBubble (it fetches poll by message_id)
+          const messageId = poll.message_id;
+          if (messageId) {
+            const { data: message } = await supabase
+              .from('gw_group_messages')
+              .select('*')
+              .eq('id', messageId)
+              .single();
+
+            setPollMessage(message || { id: messageId, user_id: poll.created_by, created_at: poll.created_at });
+          } else {
+            setError('Poll message not found');
+            setLoading(false);
+            return;
+          }
         }
       } catch (err) {
         console.error('Error fetching poll:', err);
