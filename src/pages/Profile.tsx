@@ -153,9 +153,24 @@ const Profile = () => {
   const [isAvatarUploading, setIsAvatarUploading] = useState(false);
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [requestField, setRequestField] = useState<{ label: string; currentValue?: string | number | null } | null>(null);
+  const [phoneDisplay, setPhoneDisplay] = useState('');
   const openRequestChange = (label: string, currentValue?: string | number | null) => {
     setRequestField({ label, currentValue });
     setRequestDialogOpen(true);
+  };
+
+  const formatPhoneNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length === 0) return '';
+    if (cleaned.length <= 3) return `(${cleaned}`;
+    if (cleaned.length <= 6) return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setPhoneDisplay(formatted);
+    setValue('phone_number', formatted, { shouldValidate: true });
   };
 
   // Basic SEO for Profile page
@@ -200,6 +215,7 @@ const Profile = () => {
       setValue("bio", profile.bio || "");
       setValue("website_url", profile.website_url || "");
       setValue("phone_number", profile.phone_number || "");
+      setPhoneDisplay(profile.phone_number || "");
       setValue("student_number", profile.student_number || "");
       setValue("workplace", profile.workplace || "");
       setValue("school_address", profile.school_address || "");
@@ -718,20 +734,8 @@ const Profile = () => {
                 <Input
                   id="phone_number"
                   type="tel"
-                  {...register("phone_number", {
-                    onChange: (e) => {
-                      const cleaned = e.target.value.replace(/\D/g, '');
-                      if (cleaned.length === 0) {
-                        e.target.value = '';
-                      } else if (cleaned.length <= 3) {
-                        e.target.value = `(${cleaned}`;
-                      } else if (cleaned.length <= 6) {
-                        e.target.value = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
-                      } else {
-                        e.target.value = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
-                      }
-                    }
-                  })}
+                  value={phoneDisplay}
+                  onChange={handlePhoneChange}
                   disabled={!isEditing}
                   className="mt-1"
                   placeholder="(555) 123-4567"
