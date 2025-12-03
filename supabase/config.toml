@@ -255,3 +255,6 @@ verify_jwt = true
 
 [functions.soundcloud-search]
 verify_jwt = true
+
+[functions.broadcast-sms]
+verify_jwt = true
