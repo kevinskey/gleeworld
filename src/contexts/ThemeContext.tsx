@@ -133,7 +133,8 @@ function applyThemeToDocument(themeName: ThemeName) {
 
   // Apply background
   if (theme.background.type === 'image') {
-    const bgValue = `${theme.background.value} no-repeat ${theme.background.position || 'center center'} / cover`;
+    const bgSize = theme.background.size || 'cover';
+    const bgValue = `${theme.background.value} no-repeat ${theme.background.position || 'center center'} / ${bgSize}`;
     root.style.setProperty('--theme-background', bgValue);
     console.log('🎨 Set --theme-background (image) to:', bgValue);
   } else if (theme.background.type === 'gradient' || theme.background.type === 'solid') {

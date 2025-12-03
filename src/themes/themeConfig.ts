@@ -49,6 +49,7 @@ export interface ThemeConfig {
     value: string; // Image URL, gradient CSS, or solid color
     overlay?: string; // Optional overlay for readability
     position?: string; // Background position for images
+    size?: string; // Background size (e.g., 'cover', '50%', '100px')
   };
   
   // Optional decorative elements
@@ -143,8 +144,9 @@ const spelmanBlueTheme: ThemeConfig = {
   background: {
     type: 'image',
     value: 'url(/images/themes/spelman-logo-bg.png)',
-    overlay: 'rgba(0, 0, 0, 0.4)',
+    overlay: 'rgba(255, 255, 255, 0.5)',
     position: 'center center',
+    size: '50%',
   },
   
   decorations: {
