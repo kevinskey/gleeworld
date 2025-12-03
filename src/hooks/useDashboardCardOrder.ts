@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 // Default card order
 export const DEFAULT_CARD_ORDER: string[] = [
   'hero-carousel',
-  'announcements',
   'favorites',
   'ai-assistant',
   'search-filters',
