@@ -141,13 +141,16 @@ export const DashboardHeroCarousel = () => {
         <CardContent className="p-3 flex items-center justify-center">
           <div className="relative w-full rounded-lg overflow-hidden group">
             <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
-              {visibleFallback.map((slide, idx) => <div key={`${slide.id}-${idx}`} className="relative w-full h-40 rounded-lg overflow-hidden">
-                  <img 
-                    src={slide.image_url} 
-                    alt={slide.title || 'Hero slide'} 
-                    className="absolute inset-0 w-full h-full transition-all duration-500"
-                    style={{ objectFit: 'cover', objectPosition: 'center center' }}
-                  />
+              {visibleFallback.map((slide, idx) => <div 
+                key={`${slide.id}-${idx}`} 
+                className="relative w-full h-40 rounded-lg overflow-hidden"
+                style={{
+                  backgroundImage: `url(${slide.image_url})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: '50% 50%',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              >
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
 
                   {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
@@ -174,15 +177,18 @@ export const DashboardHeroCarousel = () => {
       <CardContent className="p-3 flex items-center justify-center">
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
-            {visibleSlides.map((slide, idx) => <div key={`${slide.id}-${idx}`} className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`} onClick={() => handleSlideClick(slide)}>
-                {/* Background Image */}
-                <img 
-                  src={getImageUrl(slide)} 
-                  alt={slide.title || 'Hero slide'} 
-                  className={`absolute inset-0 w-full h-full transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`}
-                  style={{ objectFit: 'cover', objectPosition: 'center center' }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+            {visibleSlides.map((slide, idx) => <div 
+              key={`${slide.id}-${idx}`} 
+              className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`} 
+              onClick={() => handleSlideClick(slide)}
+              style={{
+                backgroundImage: `url(${getImageUrl(slide)})`,
+                backgroundSize: 'cover',
+                backgroundPosition: '50% 50%',
+                backgroundRepeat: 'no-repeat'
+              }}
+            >
+                <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`} />
 
                 {/* Content Overlay */}
                 {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 py-[20px] px-[10px]">
