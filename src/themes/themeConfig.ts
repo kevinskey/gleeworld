@@ -142,11 +142,8 @@ const spelmanBlueTheme: ThemeConfig = {
   },
   
   background: {
-    type: 'image',
-    value: 'url(/images/themes/spelman-logo-bg.png)',
-    overlay: 'rgba(255, 255, 255, 0.5)',
-    position: 'center center',
-    size: '50%',
+    type: 'solid',
+    value: 'hsl(201 52% 66%)',
   },
   
   decorations: {
