@@ -577,22 +577,22 @@ export const MetalHeaderDashboard = ({
           <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
         </div>
 
-        {/* Key Ignition - Quick Actions Button - Left side */}
-        <button 
-          onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} 
-          className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 ml-4 sm:ml-8"
-          aria-label="Quick Actions"
-        >
-          <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
-        </button>
+        {/* Empty spacer to balance layout */}
+        <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 ml-4 sm:ml-8"></div>
 
         {/* Personalized Title - Centered */}
         <h1 className="text-base sm:text-xl lg:text-2xl font-bold tracking-wide font-mono uppercase text-black truncate flex-1 text-center px-2">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
-        {/* Empty spacer to balance layout */}
-        <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 mr-4 sm:mr-8"></div>
+        {/* Key Ignition - Quick Actions Button - Right side */}
+        <button 
+          onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} 
+          className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-4 sm:mr-8"
+          aria-label="Quick Actions"
+        >
+          <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
+        </button>
 
         {/* Quick Actions Panel - slides out from underneath */}
         <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={isMember ? {
