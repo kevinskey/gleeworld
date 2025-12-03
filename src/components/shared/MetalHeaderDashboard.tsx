@@ -26,7 +26,7 @@ import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
 import { AnnouncementsTicker } from "@/components/dashboard/AnnouncementsTicker";
-import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save, Megaphone } from "lucide-react";
+import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save } from "lucide-react";
 
 // Sortable Dashboard Card Component
 interface SortableDashboardCardProps {
@@ -586,11 +586,7 @@ export const MetalHeaderDashboard = ({
         </h1>
 
         {/* Key Ignition - Quick Actions Button - Right side */}
-        <button 
-          onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} 
-          className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-4 sm:mr-8"
-          aria-label="Quick Actions"
-        >
+        <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-4 sm:mr-8" aria-label="Quick Actions">
           <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
         </button>
 
@@ -611,7 +607,7 @@ export const MetalHeaderDashboard = ({
         {/* Announcements Ticker - All screen sizes */}
         <div className="flex items-center flex-1 overflow-hidden order-2 sm:order-1">
           <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 w-full overflow-hidden">
-            <Megaphone className="w-4 h-4 text-primary shrink-0" />
+            
             <div className="overflow-hidden flex-1">
               <AnnouncementsTicker className="bg-white/[0.83] rounded-sm shadow" />
             </div>
