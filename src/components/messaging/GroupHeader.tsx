@@ -68,6 +68,21 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
       </div>
 
       <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
+        {/* Prominent Polls Button */}
+        <Button
+          variant="ghost"
+          onClick={() => setShowPollsDialog(true)}
+          className="relative h-8 md:h-9 px-2 md:px-3 text-white hover:bg-white/20 flex items-center gap-1"
+        >
+          <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
+          <span className="hidden sm:inline text-xs md:text-sm font-medium">Polls</span>
+          {unvotedCount > 0 && (
+            <Badge className="absolute -top-1 -right-1 bg-red-500 text-white h-5 min-w-5 px-1.5 text-[10px] font-bold rounded-full animate-pulse">
+              {unvotedCount}
+            </Badge>
+          )}
+        </Button>
+
         <Button
           variant="ghost"
           size="icon"
