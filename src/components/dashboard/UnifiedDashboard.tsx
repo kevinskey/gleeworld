@@ -314,7 +314,7 @@ export const UnifiedDashboard = () => {
           exec_board_role: profile.exec_board_role,
           is_exec_board: profile.is_exec_board || false,
           created_at: new Date().toISOString()
-        }} onToggleMessages={() => setShowMessages(prev => !prev)} className="mx-0 px-0" />
+        }} onToggleMessages={() => setShowMessages(prev => !prev)} className="mx-0 px-px" />
         </div>
         
         {/* Messages Panel Overlay */}
