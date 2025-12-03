@@ -35,16 +35,16 @@ export const AllModulesCard = ({
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="pb-3 hover:bg-muted/50 transition-colors cursor-pointer">
-            <div className="flex items-center justify-between">
+          <CardHeader className="py-4 hover:bg-muted/50 transition-colors cursor-pointer">
+            <div className="flex items-center justify-between min-h-[48px]">
               <div className="flex items-center gap-3">
-                <Grid3x3 className="h-5 w-5 text-primary" />
+                <Grid3x3 className="h-5 w-5 text-primary flex-shrink-0" />
                 <div className="text-left">
-                  <CardTitle className="text-lg">My Modules</CardTitle>
-                  <CardDescription>All modules assigned to you</CardDescription>
+                  <CardTitle className="text-lg leading-tight">My Modules</CardTitle>
+                  <CardDescription className="leading-tight">All modules assigned to you</CardDescription>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 flex-shrink-0">
                 <Badge variant="secondary" className="text-sm">
                   {modules.length}
                 </Badge>
