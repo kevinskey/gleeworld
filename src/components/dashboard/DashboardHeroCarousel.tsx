@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { useIsMobile } from "@/hooks/use-mobile";
 interface HeroSlide {
   id: string;
@@ -136,28 +136,24 @@ export const DashboardHeroCarousel = () => {
       display_order: 3
     }];
     const visibleFallback = fallbackSlides.slice(0, slidesToShow);
-    return <Card className="bg-black/30 backdrop-blur-md border-0 shadow-2xl mb-4 rounded-xl">
-        <CardContent className="p-3">
-          <div className="relative w-full rounded-lg overflow-hidden group">
-            <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
-              {visibleFallback.map((slide, idx) => <div key={`${slide.id}-${idx}`} className="relative w-full h-40 rounded-lg overflow-hidden">
-                  <div className="absolute inset-0 bg-no-repeat transition-all duration-500" style={{
-                backgroundImage: `url(${slide.image_url})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center center'
-              }}>
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
-                  </div>
+    return <div className="relative w-full rounded-lg overflow-hidden group mb-4">
+        <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+          {visibleFallback.map((slide, idx) => <div key={`${slide.id}-${idx}`} className="relative w-full h-40 rounded-lg overflow-hidden">
+              <div className="absolute inset-0 bg-no-repeat transition-all duration-500" style={{
+            backgroundImage: `url(${slide.image_url})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center'
+          }}>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+              </div>
 
-                  {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                      {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 text-white drop-shadow-lg">{slide.title}</h3>}
-                      {slide.description && <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>}
-                    </div>}
-                </div>)}
-            </div>
-          </div>
-        </CardContent>
-      </Card>;
+              {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+                  {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 text-white drop-shadow-lg">{slide.title}</h3>}
+                  {slide.description && <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>}
+                </div>}
+            </div>)}
+        </div>
+      </div>;
   }
 
   // Get visible slides for the carousel
@@ -169,43 +165,39 @@ export const DashboardHeroCarousel = () => {
     return visible;
   };
   const visibleSlides = getVisibleSlides();
-  return <Card className="bg-black/30 backdrop-blur-md border-0 shadow-2xl mb-4 rounded-xl">
-      <CardContent className="p-3 my-0 mx-0 px-[15px] py-[7px]">
-        <div className="relative w-full rounded-lg overflow-hidden group mx-0 py-0 px-0 my-0">
-          <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
-            {visibleSlides.map((slide, idx) => <div key={`${slide.id}-${idx}`} className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`} onClick={() => handleSlideClick(slide)}>
-                {/* Background Image */}
-                <div className={`absolute inset-0 bg-no-repeat transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`} style={{
-              backgroundImage: `url(${getImageUrl(slide)})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center center'
-            }}>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
-                </div>
+  return <div className="relative w-full rounded-lg overflow-hidden group mb-4">
+      <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+        {visibleSlides.map((slide, idx) => <div key={`${slide.id}-${idx}`} className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`} onClick={() => handleSlideClick(slide)}>
+            {/* Background Image */}
+            <div className={`absolute inset-0 bg-no-repeat transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`} style={{
+          backgroundImage: `url(${getImageUrl(slide)})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center'
+        }}>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
+            </div>
 
-                {/* Content Overlay */}
-                {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 py-[20px] px-[10px]">
-                    {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg bg-white/0 text-secondary-foreground">{slide.title}</h3>}
-                    {slide.description && <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>}
-                  </div>}
-              </div>)}
+            {/* Content Overlay */}
+            {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 py-[20px] px-[10px]">
+                {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg bg-white/0 text-secondary-foreground">{slide.title}</h3>}
+                {slide.description && <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>}
+              </div>}
+          </div>)}
+      </div>
+
+      {/* Navigation Buttons - Only show if more slides than visible */}
+      {slides.length > slidesToShow && <>
+          <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={prevSlide}>
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
+          <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={nextSlide}>
+            <ChevronRight className="h-6 w-6" />
+          </Button>
+
+          {/* Dots Indicator */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-2 h-2 rounded-full transition-all ${index === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/75'}`} aria-label={`Go to slide ${index + 1}`} />)}
           </div>
-
-          {/* Navigation Buttons - Only show if more slides than visible */}
-          {slides.length > slidesToShow && <>
-              <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={prevSlide}>
-                <ChevronLeft className="h-6 w-6" />
-              </Button>
-              <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={nextSlide}>
-                <ChevronRight className="h-6 w-6" />
-              </Button>
-
-              {/* Dots Indicator */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-2 h-2 rounded-full transition-all ${index === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/75'}`} aria-label={`Go to slide ${index + 1}`} />)}
-              </div>
-            </>}
-        </div>
-      </CardContent>
-    </Card>;
+        </>}
+    </div>;
 };
