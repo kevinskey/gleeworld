@@ -168,7 +168,7 @@ export const DashboardHeroCarousel = () => {
   };
   const visibleSlides = getVisibleSlides();
   return <Card className="bg-black/30 backdrop-blur-md border-0 shadow-2xl mb-4 rounded-xl">
-      <CardContent className="p-3 my-0 px-[10px] py-[10px]">
+      <CardContent className="p-3 my-0 px-[5px] py-[15px]">
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div key={`${slide.id}-${idx}`} className={`relative w-full h-40 rounded-lg overflow-hidden ${slide.link_url ? 'cursor-pointer group' : ''}`} onClick={() => handleSlideClick(slide)}>
