@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Megaphone } from 'lucide-react';
 
 interface Announcement {
   id: string;
@@ -30,21 +29,14 @@ export const AnnouncementsTicker = () => {
   };
 
   if (announcements.length === 0) {
-    return null;
+    return <span className="text-sm text-muted-foreground">No announcements</span>;
   }
 
   const tickerText = announcements.map(a => a.title || a.content).join('  •  ');
 
   return (
-    <div className="hidden lg:flex items-center flex-1 mx-6 max-w-2xl">
-      <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-1.5 w-full overflow-hidden">
-        <Megaphone className="w-4 h-4 text-primary shrink-0" />
-        <div className="overflow-hidden flex-1">
-          <div className="animate-marquee whitespace-nowrap text-sm text-foreground/80">
-            {tickerText}  •  {tickerText}
-          </div>
-        </div>
-      </div>
+    <div className="animate-marquee whitespace-nowrap text-sm text-foreground/80">
+      {tickerText}  •  {tickerText}
     </div>
   );
 };

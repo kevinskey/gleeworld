@@ -25,7 +25,8 @@ import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
-import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save } from "lucide-react";
+import { AnnouncementsTicker } from "@/components/dashboard/AnnouncementsTicker";
+import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save, Megaphone } from "lucide-react";
 
 // Sortable Dashboard Card Component
 interface SortableDashboardCardProps {
@@ -598,9 +599,20 @@ export const MetalHeaderDashboard = ({
       {/* Dashboard Hero Carousel */}
       <DashboardHeroCarousel />
 
-      {/* Message Center Button - Integrated into page */}
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-[8px]">
+      {/* Message Center Button with Announcements Ticker */}
+      <div className="flex items-center gap-4 mb-4">
+        {/* Announcements Ticker - Desktop only */}
+        <div className="hidden lg:flex items-center flex-1 overflow-hidden">
+          <div className="flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 w-full overflow-hidden">
+            <Megaphone className="w-4 h-4 text-primary shrink-0" />
+            <div className="overflow-hidden flex-1">
+              <AnnouncementsTicker />
+            </div>
+          </div>
+        </div>
+        
+        {/* Messages Button */}
+        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-[8px] shrink-0">
           <MessageSquare className="h-4 w-4" />
           <span className="text-sm">MESSAGES</span>
         </Button>
