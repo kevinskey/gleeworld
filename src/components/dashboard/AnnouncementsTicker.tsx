@@ -8,7 +8,11 @@ interface Announcement {
   created_at: string;
 }
 
-export const AnnouncementsTicker = () => {
+interface AnnouncementsTickerProps {
+  className?: string;
+}
+
+export const AnnouncementsTicker = ({ className }: AnnouncementsTickerProps) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
 
   useEffect(() => {
@@ -35,7 +39,7 @@ export const AnnouncementsTicker = () => {
   const tickerText = announcements.map(a => a.content).join('  •  ');
 
   return (
-    <div className="overflow-hidden whitespace-nowrap">
+    <div className={`overflow-hidden whitespace-nowrap ${className || ''}`}>
       <div className="animate-marquee inline-block text-sm text-foreground/80">
         {tickerText}
       </div>
