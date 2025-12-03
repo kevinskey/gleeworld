@@ -71,6 +71,7 @@ export const PollsDialog: React.FC<PollsDialogProps> = ({
               <div className="space-y-2">
                 <PollCreator 
                   groupId={groupId} 
+                  inline={true}
                   onPollCreated={() => {
                     setShowPollCreator(false);
                     fetchPolls();
