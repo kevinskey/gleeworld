@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 
 import { useIsMobile } from "@/hooks/use-mobile";
 interface HeroSlide {
@@ -137,8 +136,7 @@ export const DashboardHeroCarousel = () => {
       display_order: 3
     }];
     const visibleFallback = fallbackSlides.slice(0, slidesToShow);
-    return <Card className="bg-background/95 backdrop-blur-sm mb-4">
-        <CardContent className="p-3 flex items-center justify-center">
+    return <div className="bg-background/95 backdrop-blur-sm mb-4 rounded-xl border p-3">
           <div className="relative w-full rounded-lg overflow-hidden group">
             <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
               {visibleFallback.map((slide, idx) => <div 
@@ -157,8 +155,7 @@ export const DashboardHeroCarousel = () => {
                 </div>)}
             </div>
           </div>
-        </CardContent>
-      </Card>;
+        </div>;
   }
 
   // Get visible slides for the carousel
@@ -170,8 +167,7 @@ export const DashboardHeroCarousel = () => {
     return visible;
   };
   const visibleSlides = getVisibleSlides();
-  return <Card className="bg-background/95 backdrop-blur-sm mb-4">
-      <CardContent className="p-3 flex items-center justify-center">
+  return <div className="bg-background/95 backdrop-blur-sm mb-4 rounded-xl border p-3">
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
@@ -207,6 +203,5 @@ export const DashboardHeroCarousel = () => {
               </div>
             </>}
         </div>
-      </CardContent>
-    </Card>;
+    </div>;
 };
