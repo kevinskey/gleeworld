@@ -683,15 +683,14 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     width: 900,
     height: 600
   });
-  const [pianoPosition, setPianoPosition] = useState(() => {
-    // Center the piano on initial render
-    const centerX = Math.max(0, (window.innerWidth - 900) / 2);
-    const centerY = Math.max(0, (window.innerHeight - 600) / 2);
-    return {
-      x: centerX,
-      y: centerY
-    };
-  });
+  const [pianoPosition, setPianoPosition] = useState({ x: 0, y: 0 });
+  
+  // Center piano on mount
+  useEffect(() => {
+    const centerX = Math.max(0, (window.innerWidth - pianoSize.width) / 2);
+    const centerY = Math.max(0, (window.innerHeight - pianoSize.height) / 2);
+    setPianoPosition({ x: centerX, y: centerY });
+  }, []);
   const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isLoadingSoundfont, setIsLoadingSoundfont] = useState(false);
