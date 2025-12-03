@@ -53,23 +53,41 @@ const DashboardFeaturesCarousel: React.FC = () => {
               {slides.length > 0 ? slides.map(s => <CarouselItem key={s.id}>
                     <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] w-full relative overflow-hidden flex items-center justify-center">
                       {/* Desktop */}
-                      <img src={s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="hidden md:block absolute inset-0 w-full h-full object-cover object-center" onError={e => {
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
-                  }
-                }} />
+                      <img 
+                        src={s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} 
+                        alt={s.title || 'Featured promotion'} 
+                        className="hidden md:block absolute inset-0 w-full h-full" 
+                        style={{ objectFit: 'cover', objectPosition: 'center center' }}
+                        onError={e => {
+                          if (!e.currentTarget.src.includes('unsplash.com')) {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+                          }
+                        }} 
+                      />
                       {/* iPad */}
-                      <img src={s.ipad_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="hidden sm:block md:hidden absolute inset-0 w-full h-full object-cover object-center" onError={e => {
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
-                  }
-                }} />
+                      <img 
+                        src={s.ipad_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} 
+                        alt={s.title || 'Featured promotion'} 
+                        className="hidden sm:block md:hidden absolute inset-0 w-full h-full" 
+                        style={{ objectFit: 'cover', objectPosition: 'center center' }}
+                        onError={e => {
+                          if (!e.currentTarget.src.includes('unsplash.com')) {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+                          }
+                        }} 
+                      />
                       {/* Mobile */}
-                      <img src={s.mobile_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} alt={s.title || 'Featured promotion'} className="block sm:hidden absolute inset-0 w-full h-full object-cover object-center" onError={e => {
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
-                  }
-                }} />
+                      <img 
+                        src={s.mobile_image_url || s.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'} 
+                        alt={s.title || 'Featured promotion'} 
+                        className="block sm:hidden absolute inset-0 w-full h-full" 
+                        style={{ objectFit: 'cover', objectPosition: 'center center' }}
+                        onError={e => {
+                          if (!e.currentTarget.src.includes('unsplash.com')) {
+                            e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+                          }
+                        }} 
+                      />
 
                       {/* Overlay content */}
                       {(s.title || s.description) && <div className="absolute inset-0 flex items-end justify-start p-4 md:p-6 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
