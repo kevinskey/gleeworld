@@ -22,9 +22,9 @@ export const ConcertTicketBanner = ({
             </div>
           </div>
           <Link to="/concert-ticket-request">
-            <Button size="default" variant="secondary" className="hover:scale-105 transition-all duration-300 shadow-lg font-semibold text-sm md:text-base px-4 md:px-6 py-2 md:py-3 whitespace-nowrap bg-primary text-secondary">
+            <Button size="sm" variant="secondary" className="hover:scale-105 transition-all duration-300 shadow-sm font-medium text-xs px-2 py-1 whitespace-nowrap bg-primary text-secondary">
               Request Armbands!
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
           </Link>
         </div>
