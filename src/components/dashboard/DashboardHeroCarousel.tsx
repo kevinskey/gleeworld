@@ -145,7 +145,8 @@ export const DashboardHeroCarousel = () => {
                   <img 
                     src={slide.image_url} 
                     alt={slide.title || 'Hero slide'} 
-                    className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-500"
+                    className="absolute inset-0 w-full h-full transition-all duration-500"
+                    style={{ objectFit: 'cover', objectPosition: 'center center' }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
 
@@ -178,7 +179,8 @@ export const DashboardHeroCarousel = () => {
                 <img 
                   src={getImageUrl(slide)} 
                   alt={slide.title || 'Hero slide'} 
-                  className={`absolute inset-0 w-full h-full object-cover object-center transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`}
+                  className={`absolute inset-0 w-full h-full transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`}
+                  style={{ objectFit: 'cover', objectPosition: 'center center' }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
 
