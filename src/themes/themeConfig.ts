@@ -143,7 +143,7 @@ const spelmanBlueTheme: ThemeConfig = {
   
   background: {
     type: 'solid',
-    value: 'hsl(201 52% 66%)',
+    value: 'hsl(197 79% 63%)',
   },
   
   decorations: {
