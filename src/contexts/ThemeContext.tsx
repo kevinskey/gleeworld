@@ -150,4 +150,11 @@ function applyThemeToDocument(themeName: ThemeName) {
   } else {
     root.classList.remove('dark');
   }
+  
+  // Apply glass effect class
+  if (theme.glassEffect) {
+    root.classList.add('glass-theme');
+  } else {
+    root.classList.remove('glass-theme');
+  }
 }
