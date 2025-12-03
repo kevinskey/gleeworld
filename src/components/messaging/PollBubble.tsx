@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { BarChart3, CheckCircle2, Clock, Lock } from 'lucide-react';
+import { BarChart3, CheckCircle2, Clock, Lock, Link2 } from 'lucide-react';
 import { usePoll } from '@/hooks/usePoll';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -268,8 +268,24 @@ export const PollBubble: React.FC<PollBubbleProps> = ({
             Close Poll
           </Button>
         )}
+        <Button
+          onClick={() => {
+            const pollLink = `${window.location.origin}/polls/${poll.id}`;
+            navigator.clipboard.writeText(pollLink);
+            toast({
+              title: 'Link Copied',
+              description: 'Poll link copied to clipboard'
+            });
+          }}
+          variant="ghost"
+          size="sm"
+          className="ml-auto"
+        >
+          <Link2 className="h-4 w-4 mr-1" />
+          Copy Link
+        </Button>
         {poll.allow_multiple_selections && !showResults && (
-          <span className="text-xs text-muted-foreground ml-auto">
+          <span className="text-xs text-muted-foreground">
             Select multiple options
           </span>
         )}
