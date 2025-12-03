@@ -717,9 +717,25 @@ const Profile = () => {
                 <Label htmlFor="phone_number">Phone Number</Label>
                 <Input
                   id="phone_number"
-                  {...register("phone_number")}
+                  type="tel"
+                  {...register("phone_number", {
+                    onChange: (e) => {
+                      const cleaned = e.target.value.replace(/\D/g, '');
+                      if (cleaned.length === 0) {
+                        e.target.value = '';
+                      } else if (cleaned.length <= 3) {
+                        e.target.value = `(${cleaned}`;
+                      } else if (cleaned.length <= 6) {
+                        e.target.value = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3)}`;
+                      } else {
+                        e.target.value = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6, 10)}`;
+                      }
+                    }
+                  })}
                   disabled={!isEditing}
                   className="mt-1"
+                  placeholder="(555) 123-4567"
+                  maxLength={14}
                 />
               </div>
               <div>
