@@ -36,7 +36,7 @@ export const AnnouncementsTicker = () => {
 
   return (
     <div className="animate-marquee whitespace-nowrap text-sm text-foreground/80">
-      {tickerText}  •  {tickerText}
+      {tickerText}
     </div>
   );
 };
