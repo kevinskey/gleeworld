@@ -39,8 +39,8 @@ export const AnnouncementsTicker = ({ className }: AnnouncementsTickerProps) => 
   const tickerText = announcements.map(a => a.content).join('  •  ');
 
   return (
-    <div className={`overflow-hidden whitespace-nowrap ${className || ''}`}>
-      <div className="animate-marquee inline-block text-sm text-foreground/80">
+    <div className={`overflow-hidden whitespace-nowrap w-full ${className || ''}`}>
+      <div className="animate-marquee inline-block text-sm text-foreground/80 pl-[100%]">
         {tickerText}
       </div>
     </div>
