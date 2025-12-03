@@ -607,10 +607,10 @@ export const MetalHeaderDashboard = ({
       <DashboardHeroCarousel />
 
       {/* Message Center Button with Announcements Ticker */}
-      <div className="flex items-center mb-4 gap-0">
-        {/* Announcements Ticker - Desktop only */}
-        <div className="hidden lg:flex items-center flex-1 overflow-hidden">
-          <div className="flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 w-full overflow-hidden">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-4 gap-2 sm:gap-0">
+        {/* Announcements Ticker - All screen sizes */}
+        <div className="flex items-center flex-1 overflow-hidden order-2 sm:order-1">
+          <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 w-full overflow-hidden">
             <Megaphone className="w-4 h-4 text-primary shrink-0" />
             <div className="overflow-hidden flex-1">
               <AnnouncementsTicker className="bg-white/[0.83] rounded-sm shadow" />
@@ -619,7 +619,7 @@ export const MetalHeaderDashboard = ({
         </div>
         
         {/* Messages Button */}
-        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-[8px] shrink-0 bg-secondary">
+        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-[8px] shrink-0 bg-secondary order-1 sm:order-2 w-full sm:w-auto justify-center">
           <MessageSquare className="h-4 w-4" />
           <span className="text-sm">MESSAGES</span>
         </Button>
