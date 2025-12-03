@@ -26,8 +26,10 @@ import {
   Home,
   FileCheck,
   Play,
-  RotateCcw
+  RotateCcw,
+  BarChart3
 } from 'lucide-react';
+import { GroupPollsPage } from '@/components/polls/GroupPollsPage';
 import { AIGroupRoleSubmission } from '@/components/mus240/student/AIGroupRoleSubmission';
 import { useStudentSubmissions } from '@/hooks/useStudentSubmissions';
 import { useMus240Progress } from '@/hooks/useMus240Progress';
@@ -368,10 +370,14 @@ export const StudentDashboard = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="assignments" className="space-y-4">
-          <TabsList className="flex flex-wrap h-auto gap-1 p-1 sm:grid sm:grid-cols-6">
+          <TabsList className="flex flex-wrap h-auto gap-1 p-1 sm:grid sm:grid-cols-7">
             <TabsTrigger value="assignments" className="flex-1 min-w-[80px] text-xs sm:text-sm">Assignments</TabsTrigger>
             <TabsTrigger value="tests" className="flex-1 min-w-[60px] text-xs sm:text-sm">Tests</TabsTrigger>
             <TabsTrigger value="practice-tests" className="flex-1 min-w-[60px] text-xs sm:text-sm">Practice</TabsTrigger>
+            <TabsTrigger value="polls" className="flex-1 min-w-[50px] text-xs sm:text-sm">
+              <BarChart3 className="h-3 w-3 mr-1" />
+              Polls
+            </TabsTrigger>
             <TabsTrigger value="ai-group" className="flex-1 min-w-[70px] text-xs sm:text-sm">AI Group</TabsTrigger>
             <TabsTrigger value="grades" className="flex-1 min-w-[60px] text-xs sm:text-sm">Grades</TabsTrigger>
             <TabsTrigger value="announcements" className="flex-1 min-w-[50px] text-xs sm:text-sm">News</TabsTrigger>
@@ -742,6 +748,21 @@ export const StudentDashboard = () => {
                     <p className="text-muted-foreground">No graded assignments yet</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Polls Tab */}
+          <TabsContent value="polls" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Group Polls
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <GroupPollsPage />
               </CardContent>
             </Card>
           </TabsContent>
