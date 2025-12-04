@@ -82,7 +82,8 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
           style={{ 
             transformOrigin: 'center center',
             transformStyle: 'preserve-3d',
-            backfaceVisibility: 'hidden'
+            backfaceVisibility: 'hidden',
+            fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
           }}
         >
           <span className="font-bold">{current.title}:</span> {current.content}
