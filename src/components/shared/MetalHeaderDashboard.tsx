@@ -600,7 +600,7 @@ export const MetalHeaderDashboard = ({
 
 
       {/* Dashboard Hero Carousel */}
-      <DashboardHeroCarousel />
+      <DashboardHeroCarousel className="px-[111px] pt-[5px] pl-[5px] pr-[5px] pb-[5px] mx-0" />
 
       {/* Message Center Button with Announcements Ticker */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-4 gap-2 sm:gap-3">
@@ -610,14 +610,12 @@ export const MetalHeaderDashboard = ({
         </div>
         
         {/* Messages Button - Steel with rivets style */}
-        <button 
-          onClick={() => onToggleMessages?.()} 
-          className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10
+        <button onClick={() => onToggleMessages?.()} className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10
             bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
             text-slate-100 shadow-md border border-slate-600/50 flex items-center gap-2 justify-center
-            hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 transition-all"
-          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
-        >
+            hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 transition-all" style={{
+        textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+      }}>
           {/* Left rivet */}
           <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
           {/* Right rivet */}
