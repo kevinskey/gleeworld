@@ -1261,3 +1261,118 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
 }
 
 
+/* ============================================
+   FEATURE CARD STYLES
+   Gradient cards with hover effects
+   ============================================ */
+
+.feature-card {
+  @apply relative overflow-hidden rounded-2xl border transition-all shadow-lg hover:shadow-xl;
+}
+
+.feature-card-primary {
+  @apply bg-gradient-to-br from-primary/20 via-primary/10 to-background border-primary/20 hover:border-primary/40;
+}
+
+.feature-card-amber {
+  @apply bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-background border-amber-500/20 hover:border-amber-500/40;
+}
+
+.feature-card-emerald {
+  @apply bg-gradient-to-br from-emerald-500/20 via-emerald-500/10 to-background border-emerald-500/20 hover:border-emerald-500/40;
+}
+
+.feature-card-violet {
+  @apply bg-gradient-to-br from-violet-500/20 via-violet-500/10 to-background border-violet-500/20 hover:border-violet-500/40;
+}
+
+.feature-card-rose {
+  @apply bg-gradient-to-br from-rose-500/20 via-rose-500/10 to-background border-rose-500/20 hover:border-rose-500/40;
+}
+
+.feature-card-cyan {
+  @apply bg-gradient-to-br from-cyan-500/20 via-cyan-500/10 to-background border-cyan-500/20 hover:border-cyan-500/40;
+}
+
+.feature-card-overlay {
+  @apply absolute inset-0 opacity-50;
+  background: linear-gradient(135deg, transparent 0%, hsl(var(--background) / 0.1) 100%);
+}
+
+.feature-card-content {
+  @apply relative p-6 flex flex-col items-center text-center space-y-3;
+}
+
+.feature-card-icon {
+  @apply w-20 h-20 rounded-full flex items-center justify-center transition-transform;
+}
+
+.feature-card:hover .feature-card-icon {
+  @apply scale-110;
+}
+
+.feature-card-icon-primary {
+  @apply bg-primary/20;
+}
+
+.feature-card-icon-amber {
+  @apply bg-amber-500/20;
+}
+
+.feature-card-icon-emerald {
+  @apply bg-emerald-500/20;
+}
+
+.feature-card-icon-violet {
+  @apply bg-violet-500/20;
+}
+
+.feature-card-icon-rose {
+  @apply bg-rose-500/20;
+}
+
+.feature-card-icon-cyan {
+  @apply bg-cyan-500/20;
+}
+
+.feature-card-title {
+  @apply text-xl font-bold text-foreground;
+}
+
+.feature-card-description {
+  @apply text-sm text-muted-foreground;
+}
+
+.feature-card-link {
+  @apply inline-flex items-center gap-1 text-sm font-medium transition-all;
+}
+
+.feature-card:hover .feature-card-link {
+  @apply gap-2;
+}
+
+.feature-card-link-primary {
+  @apply text-primary;
+}
+
+.feature-card-link-amber {
+  @apply text-amber-600;
+}
+
+.feature-card-link-emerald {
+  @apply text-emerald-600;
+}
+
+.feature-card-link-violet {
+  @apply text-violet-600;
+}
+
+.feature-card-link-rose {
+  @apply text-rose-600;
+}
+
+.feature-card-link-cyan {
+  @apply text-cyan-600;
+}
+
+

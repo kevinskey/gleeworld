@@ -26,7 +26,7 @@ import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
 import { AnnouncementsDisplay } from "@/components/dashboard/AnnouncementsDisplay";
-import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save } from "lucide-react";
+import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, ChevronRight, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save, Globe, Users } from "lucide-react";
 
 // Sortable Dashboard Card Component
 interface SortableDashboardCardProps {
@@ -630,47 +630,33 @@ export const MetalHeaderDashboard = ({
       {/* Feature Cards - 2 Column Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         {/* 2026 Tour Information Center */}
-        <a 
-          href="/2026-tour" 
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-background border border-primary/20 hover:border-primary/40 transition-all shadow-lg hover:shadow-xl"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
-          <div className="relative p-6 flex flex-col items-center text-center space-y-3">
-            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+        <a href="/2026-tour" className="group feature-card feature-card-primary">
+          <div className="feature-card-overlay" />
+          <div className="feature-card-content">
+            <div className="feature-card-icon feature-card-icon-primary group-hover:scale-110 transition-transform">
+              <Globe className="h-10 w-10 text-primary" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">2026 Tour Information Center</h3>
-            <p className="text-sm text-muted-foreground">Access tour dates, destinations, and travel information</p>
-            <span className="inline-flex items-center gap-1 text-primary text-sm font-medium group-hover:gap-2 transition-all">
+            <h3 className="feature-card-title">2026 Tour Information Center</h3>
+            <p className="feature-card-description">Access tour dates, destinations, and travel information</p>
+            <span className="feature-card-link feature-card-link-primary">
               Learn More 
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="h-4 w-4" />
             </span>
           </div>
         </a>
 
         {/* Executive Board Workshop */}
-        <a 
-          href="/executive-board-workshop" 
-          className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-background border border-amber-500/20 hover:border-amber-500/40 transition-all shadow-lg hover:shadow-xl"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-50" />
-          <div className="relative p-6 flex flex-col items-center text-center space-y-3">
-            <div className="w-20 h-20 rounded-full bg-amber-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
+        <a href="/executive-board-workshop" className="group feature-card feature-card-amber">
+          <div className="feature-card-overlay" />
+          <div className="feature-card-content">
+            <div className="feature-card-icon feature-card-icon-amber group-hover:scale-110 transition-transform">
+              <Users className="h-10 w-10 text-amber-600" />
             </div>
-            <h3 className="text-xl font-bold text-foreground">Executive Board Workshop</h3>
-            <p className="text-sm text-muted-foreground">Training resources and leadership development tools</p>
-            <span className="inline-flex items-center gap-1 text-amber-600 text-sm font-medium group-hover:gap-2 transition-all">
+            <h3 className="feature-card-title">Executive Board Workshop</h3>
+            <p className="feature-card-description">Training resources and leadership development tools</p>
+            <span className="feature-card-link feature-card-link-amber">
               Learn More 
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
+              <ChevronRight className="h-4 w-4" />
             </span>
           </div>
         </a>
