@@ -23,11 +23,22 @@ interface Conversation {
   last_message?: Message;
   unread_count: number;
   user_role?: string;
+  folder_id?: string | null;
+}
+
+interface Folder {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  sort_order: number;
+  is_collapsed: boolean;
 }
 
 export const useGroupMessages = () => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
   const [messages, setMessages] = useState<{ [conversationId: string]: Message[] }>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,8 +46,23 @@ export const useGroupMessages = () => {
   useEffect(() => {
     if (user) {
       fetchConversations();
+      fetchFolders();
     }
   }, [user]);
+
+  const fetchFolders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_message_folders')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      setFolders(data || []);
+    } catch (err) {
+      console.error('Error fetching folders:', err);
+    }
+  };
 
   const fetchConversations = async () => {
     try {
@@ -85,7 +111,8 @@ export const useGroupMessages = () => {
           twilio_phone_number: '',
           is_active: true,
           unread_count: 0,
-          user_role: roleMap.get(group.id)
+          user_role: roleMap.get(group.id),
+          folder_id: group.folder_id
         }))
         .filter(conv => hasAccessToGroup(conv, userProfile))
         // Sort: "All Members" first, then alphabetically
@@ -315,8 +342,92 @@ export const useGroupMessages = () => {
     }
   };
 
+  const createFolder = async (name: string, color?: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_message_folders')
+        .insert({ 
+          name, 
+          color: color || '#6366f1',
+          created_by: user?.id 
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setFolders(prev => [...prev, data]);
+      return data;
+    } catch (err: any) {
+      console.error('Error creating folder:', err);
+      throw err;
+    }
+  };
+
+  const updateFolder = async (folderId: string, updates: Partial<Folder>) => {
+    try {
+      const { error } = await supabase
+        .from('gw_message_folders')
+        .update(updates)
+        .eq('id', folderId);
+
+      if (error) throw error;
+
+      setFolders(prev => prev.map(f => 
+        f.id === folderId ? { ...f, ...updates } : f
+      ));
+    } catch (err: any) {
+      console.error('Error updating folder:', err);
+      throw err;
+    }
+  };
+
+  const deleteFolder = async (folderId: string) => {
+    try {
+      // First, unassign all groups from this folder
+      await supabase
+        .from('gw_message_groups')
+        .update({ folder_id: null })
+        .eq('folder_id', folderId);
+
+      const { error } = await supabase
+        .from('gw_message_folders')
+        .delete()
+        .eq('id', folderId);
+
+      if (error) throw error;
+
+      setFolders(prev => prev.filter(f => f.id !== folderId));
+      setConversations(prev => prev.map(c => 
+        c.folder_id === folderId ? { ...c, folder_id: null } : c
+      ));
+    } catch (err: any) {
+      console.error('Error deleting folder:', err);
+      throw err;
+    }
+  };
+
+  const moveGroupToFolder = async (groupId: string, folderId: string | null) => {
+    try {
+      const { error } = await supabase
+        .from('gw_message_groups')
+        .update({ folder_id: folderId })
+        .eq('id', groupId);
+
+      if (error) throw error;
+
+      setConversations(prev => prev.map(c => 
+        c.id === groupId ? { ...c, folder_id: folderId } : c
+      ));
+    } catch (err: any) {
+      console.error('Error moving group to folder:', err);
+      throw err;
+    }
+  };
+
   return {
     conversations,
+    folders,
     messages,
     loading,
     error,
@@ -325,7 +436,12 @@ export const useGroupMessages = () => {
     markConversationAsRead,
     deleteGroup,
     updateGroup,
-    refetchConversations: fetchConversations
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    moveGroupToFolder,
+    refetchConversations: fetchConversations,
+    refetchFolders: fetchFolders
   };
 };
 

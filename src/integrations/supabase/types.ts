@@ -8916,12 +8916,49 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_message_folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          created_by: string | null
+          icon: string | null
+          id: string
+          is_collapsed: boolean | null
+          name: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          icon?: string | null
+          id?: string
+          is_collapsed?: boolean | null
+          name: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          created_by?: string | null
+          icon?: string | null
+          id?: string
+          is_collapsed?: boolean | null
+          name?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_message_groups: {
         Row: {
           avatar_url: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          folder_id: string | null
           group_type: string
           id: string
           is_active: boolean | null
@@ -8937,6 +8974,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          folder_id?: string | null
           group_type?: string
           id?: string
           is_active?: boolean | null
@@ -8952,6 +8990,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          folder_id?: string | null
           group_type?: string
           id?: string
           is_active?: boolean | null
@@ -8962,7 +9001,15 @@ export type Database = {
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gw_message_groups_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "gw_message_folders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_message_reactions: {
         Row: {
