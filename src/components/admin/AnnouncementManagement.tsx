@@ -54,15 +54,18 @@ export const AnnouncementManagement = () => {
     setEditingAnnouncement(null);
   };
 
-  // Combine date and time into ISO string for EST timezone
+  // Combine date and time into ISO string - treat input as EST and convert to UTC
   const combineDateTime = (date: string, time: string) => {
     if (!date) return '';
     const timeStr = time || '09:00';
-    // Create date in EST and convert to UTC for storage
-    const estDateTime = new Date(`${date}T${timeStr}:00`);
-    // Add 5 hours to convert EST to UTC (EST is UTC-5)
-    const utcDateTime = new Date(estDateTime.getTime() + 5 * 60 * 60 * 1000);
-    return utcDateTime.toISOString();
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    const [year, month, day] = date.split('-').map(Number);
+    
+    // Create UTC date, adding 5 hours to convert EST to UTC
+    // EST is UTC-5, so 9am EST = 2pm UTC (14:00)
+    const utcHours = hours + 5;
+    const utcDate = new Date(Date.UTC(year, month - 1, day, utcHours, minutes, 0));
+    return utcDate.toISOString();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,10 +110,19 @@ export const AnnouncementManagement = () => {
   const parseDateTime = (isoString: string) => {
     if (!isoString) return { date: '', time: '09:00' };
     const utcDate = new Date(isoString);
-    // Subtract 5 hours to convert UTC to EST
-    const estDate = new Date(utcDate.getTime() - 5 * 60 * 60 * 1000);
-    const date = estDate.toISOString().split('T')[0];
-    const time = estDate.toTimeString().slice(0, 5);
+    // Get UTC hours and subtract 5 to get EST
+    const estHours = utcDate.getUTCHours() - 5;
+    const estMinutes = utcDate.getUTCMinutes();
+    
+    // Handle day rollover if hours go negative
+    let estDate = new Date(utcDate);
+    if (estHours < 0) {
+      estDate = new Date(utcDate.getTime() - 5 * 60 * 60 * 1000);
+    }
+    
+    const date = `${estDate.getUTCFullYear()}-${String(estDate.getUTCMonth() + 1).padStart(2, '0')}-${String(estDate.getUTCDate()).padStart(2, '0')}`;
+    const adjustedHours = estHours < 0 ? estHours + 24 : estHours;
+    const time = `${String(adjustedHours).padStart(2, '0')}:${String(estMinutes).padStart(2, '0')}`;
     return { date, time };
   };
 
