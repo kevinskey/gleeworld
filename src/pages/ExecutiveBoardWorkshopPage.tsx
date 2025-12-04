@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { HandbookModule } from "@/components/handbook/HandbookModule";
 
 const ExecutiveBoardWorkshopPage = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   if (activeSection === "handbook") {
     return (
@@ -60,7 +62,10 @@ const ExecutiveBoardWorkshopPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="border-2 hover:border-amber-500/50 transition-colors">
+          <Card 
+            className="border-2 hover:border-amber-500/50 transition-colors cursor-pointer"
+            onClick={() => navigate('/exec-board-training-videos')}
+          >
             <CardHeader className="pb-2">
               <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
                 <Video className="h-6 w-6 text-amber-600" />
