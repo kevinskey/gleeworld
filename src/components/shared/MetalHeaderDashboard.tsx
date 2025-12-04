@@ -609,11 +609,22 @@ export const MetalHeaderDashboard = ({
           <AnnouncementsDisplay className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md w-full" />
         </div>
         
-        {/* Messages Button */}
-        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-3 sm:px-[8px] shrink-0 bg-secondary order-1 sm:order-2 w-full sm:w-auto justify-center rounded-2xl h-12">
+        {/* Messages Button - Steel with rivets style */}
+        <button 
+          onClick={() => onToggleMessages?.()} 
+          className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs sm:text-sm font-bold uppercase tracking-wider
+            bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
+            text-slate-100 shadow-lg border border-slate-600/50 flex items-center gap-2 justify-center h-12
+            hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 transition-all"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+        >
+          {/* Left rivet */}
+          <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+          {/* Right rivet */}
+          <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
           <MessageSquare className="h-4 w-4" />
-          <span className="text-xs sm:text-sm">MESSAGES</span>
-        </Button>
+          <span>Messages</span>
+        </button>
       </div>
 
       {/* Super Admin Layout Controls */}
