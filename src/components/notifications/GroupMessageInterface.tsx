@@ -538,7 +538,7 @@ export const GroupMessageInterface: React.FC = () => {
                       className="h-5 px-1.5 text-[10px]"
                       onClick={() => setNewFolderOpen(true)}
                     >
-                      <FolderPlus className="h-3 w-3 mr-1" />
+                      <FolderPlus className="h-3 w-3 mr-2" />
                       Folder
                     </Button>
                   </div>
