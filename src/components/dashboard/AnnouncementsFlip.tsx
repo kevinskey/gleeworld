@@ -55,13 +55,20 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
   const current = announcements[currentIndex];
 
   return (
-    <div className={`overflow-hidden h-10 flex items-center justify-center px-4 ${className || ''}`} style={{ perspective: '500px' }}>
+    <div 
+      className={`overflow-hidden h-10 flex items-center justify-center px-4 ${className || ''}`} 
+      style={{ perspective: '400px' }}
+    >
       <div
         key={current.id}
-        className={`text-xs sm:text-sm text-foreground/80 transform-gpu text-center ${
+        className={`text-xs sm:text-sm text-foreground/80 bg-background/80 px-4 py-2 rounded ${
           isFlipping ? 'animate-flip-out' : 'animate-flip-in'
         }`}
-        style={{ transformOrigin: 'center center' }}
+        style={{ 
+          transformOrigin: 'center center',
+          transformStyle: 'preserve-3d',
+          backfaceVisibility: 'hidden'
+        }}
       >
         <span className="font-bold">{current.title}:</span> {current.content}
       </div>
