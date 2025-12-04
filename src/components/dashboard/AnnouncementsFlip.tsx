@@ -55,10 +55,10 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
   const current = announcements[currentIndex];
 
   return (
-    <div className={`overflow-hidden h-6 perspective-500 ${className || ''}`} style={{ perspective: '500px' }}>
+    <div className={`overflow-hidden h-6 flex items-center justify-center px-4 ${className || ''}`} style={{ perspective: '500px' }}>
       <div
         key={current.id}
-        className={`text-xs sm:text-sm text-foreground/80 transform-gpu ${
+        className={`text-xs sm:text-sm text-foreground/80 transform-gpu text-center ${
           isFlipping ? 'animate-flip-out' : 'animate-flip-in'
         }`}
         style={{ transformOrigin: 'center center' }}
