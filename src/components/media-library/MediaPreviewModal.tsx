@@ -14,11 +14,21 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
   const [zoom, setZoom] = useState(1);
   const fileType = getFileType(file);
 
-  // Encode URL to handle special characters like apostrophes
+  // Encode URL to handle special characters - including ! ' ( ) which encodeURIComponent doesn't encode
   const encodeFileUrl = (url: string) => {
     try {
       const urlObj = new URL(url);
-      urlObj.pathname = urlObj.pathname.split('/').map(segment => encodeURIComponent(decodeURIComponent(segment))).join('/');
+      urlObj.pathname = urlObj.pathname
+        .split('/')
+        .map(segment => {
+          let encoded = encodeURIComponent(decodeURIComponent(segment));
+          encoded = encoded.replace(/!/g, '%21');
+          encoded = encoded.replace(/'/g, '%27');
+          encoded = encoded.replace(/\(/g, '%28');
+          encoded = encoded.replace(/\)/g, '%29');
+          return encoded;
+        })
+        .join('/');
       return urlObj.toString();
     } catch {
       return url;
