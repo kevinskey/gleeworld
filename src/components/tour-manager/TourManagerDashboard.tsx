@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ import { CrewAssignmentsSection } from '@/components/tour/CrewAssignmentsSection
 import { BusBuddiesSection } from '@/components/tour/BusBuddiesSection';
 import { TourDocumentsSection } from '@/components/tour/TourDocumentsSection';
 import { LivePerformancesSection } from '@/components/tour/LivePerformancesSection';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TourManagerDashboardProps {
   user?: {
@@ -35,8 +36,71 @@ interface TourManagerDashboardProps {
   };
 }
 
+interface DashboardStats {
+  newRequests: number;
+  activeContracts: number;
+  signedContracts: number;
+  pendingContracts: number;
+  totalHosts: number;
+  upcomingTours: number;
+}
+
 export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
   const [activeTab, setActiveTab] = useState('booking-requests');
+  const [stats, setStats] = useState<DashboardStats>({
+    newRequests: 0,
+    activeContracts: 0,
+    signedContracts: 0,
+    pendingContracts: 0,
+    totalHosts: 0,
+    upcomingTours: 0
+  });
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      // Fetch booking requests count
+      const { count: newRequestsCount } = await supabase
+        .from('booking_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'new');
+
+      // Fetch contracts stats
+      const { data: contracts } = await supabase
+        .from('contracts_v2')
+        .select('status');
+
+      const activeContracts = contracts?.filter(c => c.status === 'active' || c.status === 'pending').length || 0;
+      const signedContracts = contracts?.filter(c => c.status === 'completed' || c.status === 'signed').length || 0;
+      const pendingContracts = contracts?.filter(c => c.status === 'pending' || c.status === 'sent').length || 0;
+
+      // Fetch hosts count
+      const { count: hostsCount } = await supabase
+        .from('hosts')
+        .select('*', { count: 'exact', head: true });
+
+      // Fetch upcoming tours/events
+      const { count: upcomingToursCount } = await supabase
+        .from('events')
+        .select('*', { count: 'exact', head: true })
+        .gte('date', new Date().toISOString().split('T')[0])
+        .in('event_type', ['tour', 'performance', 'concert']);
+
+      setStats({
+        newRequests: newRequestsCount || 0,
+        activeContracts,
+        signedContracts,
+        pendingContracts,
+        totalHosts: hostsCount || 0,
+        upcomingTours: upcomingToursCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+  };
 
   const getUserInitials = (name?: string) => {
     if (!name) return 'TM';
@@ -80,7 +144,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
             <CardContent className="relative p-3">
               <div className="flex items-center justify-between">
                 <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 truncate">0</p>
+                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 truncate">{stats.newRequests}</p>
                   <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium">New Requests</p>
                 </div>
                 <div className="relative flex-shrink-0 ml-2">
@@ -92,8 +156,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </div>
               <div className="mt-2 flex items-center gap-1 text-xs">
                 <TrendingUp className="h-3 w-3 text-green-500 flex-shrink-0" />
-                <span className="text-green-600 font-medium">+0%</span>
-                <span className="text-muted-foreground truncate">from last month</span>
+                <span className="text-muted-foreground truncate">booking requests</span>
               </div>
             </CardContent>
           </Card>
@@ -103,7 +166,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
             <CardContent className="relative p-3">
               <div className="flex items-center justify-between">
                 <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300 truncate">0</p>
+                  <p className="text-2xl font-bold text-green-700 dark:text-green-300 truncate">{stats.activeContracts}</p>
                   <p className="text-xs text-green-600/80 dark:text-green-400/80 font-medium">Active Contracts</p>
                 </div>
                 <div className="relative flex-shrink-0 ml-2">
@@ -115,8 +178,8 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </div>
               <div className="mt-2 flex items-center gap-1 text-xs">
                 <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
-                <span className="text-green-600 font-medium">0 signed</span>
-                <span className="text-muted-foreground truncate">0 pending</span>
+                <span className="text-green-600 font-medium">{stats.signedContracts} signed</span>
+                <span className="text-muted-foreground truncate">{stats.pendingContracts} pending</span>
               </div>
             </CardContent>
           </Card>
@@ -126,20 +189,19 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
             <CardContent className="relative p-3">
               <div className="flex items-center justify-between">
                 <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300 truncate">0</p>
-                  <p className="text-xs text-purple-600/80 dark:text-purple-400/80 font-medium">Planned Routes</p>
+                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300 truncate">{stats.totalHosts}</p>
+                  <p className="text-xs text-purple-600/80 dark:text-purple-400/80 font-medium">Performance Hosts</p>
                 </div>
                 <div className="relative flex-shrink-0 ml-2">
                   <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-lg"></div>
                   <div className="relative bg-purple-500/10 p-2 rounded-full">
-                    <MapPin className="h-5 w-5 text-purple-600" />
+                    <Building2 className="h-5 w-5 text-purple-600" />
                   </div>
                 </div>
               </div>
               <div className="mt-2 flex items-center gap-1 text-xs">
                 <Activity className="h-3 w-3 text-purple-500 flex-shrink-0" />
-                <span className="text-purple-600 font-medium">0 optimized</span>
-                <span className="text-muted-foreground truncate">0 planning</span>
+                <span className="text-muted-foreground truncate">venues & organizations</span>
               </div>
             </CardContent>
           </Card>
@@ -149,8 +211,8 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
             <CardContent className="relative p-3">
               <div className="flex items-center justify-between">
                 <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300 truncate">0</p>
-                  <p className="text-xs text-orange-600/80 dark:text-orange-400/80 font-medium">Upcoming Tours</p>
+                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300 truncate">{stats.upcomingTours}</p>
+                  <p className="text-xs text-orange-600/80 dark:text-orange-400/80 font-medium">Upcoming Events</p>
                 </div>
                 <div className="relative flex-shrink-0 ml-2">
                   <div className="absolute inset-0 bg-orange-500/20 rounded-full blur-lg"></div>
@@ -161,8 +223,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </div>
               <div className="mt-2 flex items-center gap-1 text-xs">
                 <Calendar className="h-3 w-3 text-orange-500 flex-shrink-0" />
-                <span className="text-orange-600 font-medium">No tours</span>
-                <span className="text-muted-foreground truncate">scheduled</span>
+                <span className="text-muted-foreground truncate">tours & performances</span>
               </div>
             </CardContent>
           </Card>
