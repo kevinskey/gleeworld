@@ -109,11 +109,8 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
         <Rnd
           position={{ x: dimensions.x, y: dimensions.y }}
           size={{ width: dimensions.width, height: dimensions.height }}
-          minWidth={600}
+          minWidth={400}
           minHeight={300}
-          maxWidth={window.innerWidth - 20}
-          maxHeight={window.innerHeight - 100}
-          bounds="window"
           className="z-50"
           style={{ position: 'fixed' }}
           enableResizing={{
