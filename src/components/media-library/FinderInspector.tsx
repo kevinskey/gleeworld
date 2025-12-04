@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MediaFile } from './types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,6 +43,34 @@ export const FinderInspector = ({
   const [title, setTitle] = useState(file.title || '');
   const { toast } = useToast();
 
+  // Update title when file changes
+  useEffect(() => {
+    setTitle(file.title || '');
+    setIsEditing(false);
+  }, [file.id, file.title]);
+
+  // Encode URL to handle special characters
+  const encodeFileUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      urlObj.pathname = urlObj.pathname
+        .split('/')
+        .map(segment => {
+          let encoded = encodeURIComponent(decodeURIComponent(segment));
+          encoded = encoded.replace(/!/g, '%21');
+          encoded = encoded.replace(/'/g, '%27');
+          encoded = encoded.replace(/\(/g, '%28');
+          encoded = encoded.replace(/\)/g, '%29');
+          return encoded;
+        })
+        .join('/');
+      return urlObj.toString();
+    } catch {
+      return url;
+    }
+  };
+
+  const encodedUrl = encodeFileUrl(file.file_url);
   const fileType = getFileType(file);
 
   const getIcon = () => {
@@ -119,11 +147,11 @@ export const FinderInspector = ({
           onClick={onPreview}
         >
           {fileType === 'image' ? (
-            <img src={file.file_url} alt={file.title} className="w-full h-full object-cover" />
+            <img src={encodedUrl} alt={file.title} className="w-full h-full object-cover" />
           ) : fileType === 'video' ? (
             <div className="w-full h-full relative">
               {file.thumbnail_url ? (
-                <img src={file.thumbnail_url} alt={file.title} className="w-full h-full object-cover" />
+                <img src={encodeFileUrl(file.thumbnail_url)} alt={file.title} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-purple-500/10">
                   <Video className="h-16 w-16 text-purple-500" />
@@ -205,7 +233,7 @@ export const FinderInspector = ({
         <Button
           variant="outline"
           size="sm"
-          onClick={() => window.open(file.file_url, '_blank')}
+          onClick={() => window.open(encodedUrl, '_blank')}
           className="w-full justify-start"
         >
           <Download className="h-4 w-4 mr-2" />
