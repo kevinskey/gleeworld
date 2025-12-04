@@ -1,6 +1,7 @@
+import { useState, useRef } from 'react';
 import { MediaFile } from './types';
 import { cn } from '@/lib/utils';
-import { Image, Video, Music, FileText, File, Play } from 'lucide-react';
+import { Image, Video, Music, FileText, File, Play, Pause } from 'lucide-react';
 import { ContextMenu, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSeparator } from '@/components/ui/context-menu';
 
 interface FinderFileGridProps {
@@ -18,6 +19,10 @@ export const FinderFileGrid = ({
   onOpen,
   getFileType
 }: FinderFileGridProps) => {
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [hoveredAudio, setHoveredAudio] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
   const getIcon = (type: string) => {
     switch (type) {
       case 'image': return Image;
@@ -38,12 +43,34 @@ export const FinderFileGrid = ({
     }
   };
 
+  const handleAudioToggle = (e: React.MouseEvent, file: MediaFile) => {
+    e.stopPropagation();
+    
+    if (playingAudio === file.id) {
+      // Stop playing
+      audioRef.current?.pause();
+      setPlayingAudio(null);
+    } else {
+      // Start playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const audio = new Audio(file.file_url);
+      audio.onended = () => setPlayingAudio(null);
+      audio.play();
+      audioRef.current = audio;
+      setPlayingAudio(file.id);
+    }
+  };
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
       {files.map((file) => {
         const fileType = getFileType(file);
         const Icon = getIcon(fileType);
         const isSelected = selectedFiles.includes(file.id);
+        const isPlaying = playingAudio === file.id;
+        const isHovered = hoveredAudio === file.id;
 
         return (
           <ContextMenu key={file.id}>
@@ -56,6 +83,8 @@ export const FinderFileGrid = ({
                 )}
                 onClick={(e) => onSelect(file, e)}
                 onDoubleClick={() => onOpen(file)}
+                onMouseEnter={() => fileType === 'audio' && setHoveredAudio(file.id)}
+                onMouseLeave={() => setHoveredAudio(null)}
               >
                 {/* Thumbnail */}
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted mb-2">
@@ -81,6 +110,26 @@ export const FinderFileGrid = ({
                       )}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/30">
                         <Play className="h-8 w-8 text-white fill-white" />
+                      </div>
+                    </div>
+                  ) : fileType === 'audio' ? (
+                    <div className={cn("w-full h-full flex items-center justify-center relative", getIconColor(fileType))}>
+                      <Icon className={cn("h-12 w-12 transition-transform", isPlaying && "animate-pulse")} />
+                      {/* Play/Pause overlay on hover */}
+                      <div 
+                        className={cn(
+                          "absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity",
+                          (isHovered || isPlaying) ? "opacity-100" : "opacity-0"
+                        )}
+                        onClick={(e) => handleAudioToggle(e, file)}
+                      >
+                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center hover:scale-110 transition-transform">
+                          {isPlaying ? (
+                            <Pause className="h-6 w-6 text-blue-600 fill-blue-600" />
+                          ) : (
+                            <Play className="h-6 w-6 text-blue-600 fill-blue-600 ml-0.5" />
+                          )}
+                        </div>
                       </div>
                     </div>
                   ) : (
