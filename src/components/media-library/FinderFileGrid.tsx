@@ -45,19 +45,45 @@ export const FinderFileGrid = ({
 
   const handleAudioToggle = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation();
+    e.preventDefault();
     
     if (playingAudio === file.id) {
       // Stop playing
-      audioRef.current?.pause();
-      setPlayingAudio(null);
-    } else {
-      // Start playing
       if (audioRef.current) {
         audioRef.current.pause();
+        audioRef.current = null;
       }
-      const audio = new Audio(file.file_url);
-      audio.onended = () => setPlayingAudio(null);
-      audio.play();
+      setPlayingAudio(null);
+    } else {
+      // Stop any currently playing audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      
+      // Create and play new audio
+      const audio = new Audio();
+      audio.crossOrigin = "anonymous";
+      audio.src = file.file_url;
+      
+      audio.oncanplaythrough = () => {
+        audio.play().catch(err => {
+          console.error('Audio play error:', err);
+        });
+      };
+      
+      audio.onended = () => {
+        setPlayingAudio(null);
+        audioRef.current = null;
+      };
+      
+      audio.onerror = (err) => {
+        console.error('Audio load error:', err);
+        setPlayingAudio(null);
+        audioRef.current = null;
+      };
+      
+      audio.load();
       audioRef.current = audio;
       setPlayingAudio(file.id);
     }
