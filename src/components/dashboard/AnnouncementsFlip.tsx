@@ -60,16 +60,16 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
       style={{ perspective: '400px' }}
     >
       {/* Steel badge with rivets */}
-      <div className="shrink-0 relative px-4 py-1.5 rounded-sm text-[10px] sm:text-xs font-bold uppercase tracking-wider
+      <div className="shrink-0 relative px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10 flex items-center
         bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
         text-slate-100 shadow-md border border-slate-600/50"
         style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
       >
         {/* Left rivet */}
-        <span className="absolute top-1/2 -translate-y-1/2 left-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+        <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
         {/* Right rivet */}
-        <span className="absolute top-1/2 -translate-y-1/2 right-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
-        <span className="relative px-2">Announcements</span>
+        <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+        <span className="relative px-1">Announcements</span>
       </div>
 
       {/* Flip content */}

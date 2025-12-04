@@ -612,9 +612,9 @@ export const MetalHeaderDashboard = ({
         {/* Messages Button - Steel with rivets style */}
         <button 
           onClick={() => onToggleMessages?.()} 
-          className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs sm:text-sm font-bold uppercase tracking-wider
+          className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10
             bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
-            text-slate-100 shadow-lg border border-slate-600/50 flex items-center gap-2 justify-center h-12
+            text-slate-100 shadow-md border border-slate-600/50 flex items-center gap-2 justify-center
             hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 transition-all"
           style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
         >
