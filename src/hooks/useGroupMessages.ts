@@ -70,8 +70,14 @@ export const useGroupMessages = () => {
       // Check user access
       const userProfile = await getUserProfile();
       
-      // Transform database groups to Conversation format
+      // Transform database groups to Conversation format and deduplicate by id
+      const seenIds = new Set<string>();
       const accessibleConversations: Conversation[] = (groups || [])
+        .filter(group => {
+          if (seenIds.has(group.id)) return false;
+          seenIds.add(group.id);
+          return true;
+        })
         .map(group => ({
           id: group.id,
           name: group.name,
