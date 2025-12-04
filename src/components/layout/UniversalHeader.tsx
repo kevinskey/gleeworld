@@ -21,8 +21,11 @@ import { CountdownText } from "@/components/ui/countdown-text";
 
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
 import { ExecutiveBoardDropdown } from "@/components/navigation/ExecutiveBoardDropdown";
+import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
+import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
 
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
+
 
 
 interface UniversalHeaderProps {
@@ -38,6 +41,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   const { userProfile } = useUserProfile(user);
   const { pageName } = usePageTitle();
   
+  // Quick Capture state
+  const [showCategorySelector, setShowCategorySelector] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
   
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true || userProfile?.is_exec_board === true;
@@ -213,22 +219,15 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 
                 {/* PR Camera Quick Capture */}
                 {canAccessPR && (
-                  <EnhancedTooltip content="PR Quick Capture - Take photo instantly">
+                  <EnhancedTooltip content="Quick Capture - Record media">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
-                        console.log('Camera button clicked - navigating to PR Hub');
-                        // Set flag in sessionStorage for backup trigger method
-                        sessionStorage.setItem('trigger-pr-quick-capture', 'true');
-                        navigate('/pr-hub');
-                        // Trigger quick capture after navigation with longer delay to ensure component is mounted
-                        setTimeout(() => {
-                          console.log('Dispatching trigger-pr-quick-capture event');
-                          window.dispatchEvent(new CustomEvent('trigger-pr-quick-capture'));
-                        }, 500);
+                        console.log('Camera button clicked - showing category selector');
+                        setShowCategorySelector(true);
                       }}
                       className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 p-0 rounded-full hover:bg-accent/20"
                       type="button"
@@ -323,6 +322,28 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             </div>
           </div>
         </header>
+
+      {/* Quick Capture Category Selector */}
+      <QuickCaptureCategorySelector
+        open={showCategorySelector}
+        onClose={() => setShowCategorySelector(false)}
+        onSelectCategory={(category) => {
+          setShowCategorySelector(false);
+          setSelectedCategory(category);
+        }}
+      />
+
+      {/* Categorized Quick Capture */}
+      {selectedCategory && (
+        <CategorizedQuickCapture
+          category={selectedCategory}
+          onClose={() => setSelectedCategory(null)}
+          onBack={() => {
+            setSelectedCategory(null);
+            setShowCategorySelector(true);
+          }}
+        />
+      )}
     </>
   );
 };
