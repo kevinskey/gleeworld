@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GroupMessageInterface } from '@/components/notifications/GroupMessageInterface';
@@ -11,7 +11,9 @@ interface MessagesPanelProps {
 
 export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
   const isMobile = useIsMobile();
-  const [dimensions, setDimensions] = useState(() => {
+  const rndRef = useRef<Rnd>(null);
+  
+  const getInitialDimensions = useCallback(() => {
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 900;
     const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
     const width = Math.min(900, viewportWidth - 40);
@@ -22,7 +24,9 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
       width,
       height,
     };
-  });
+  }, []);
+
+  const [dimensions, setDimensions] = useState(getInitialDimensions);
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -30,7 +34,6 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
       const viewportHeight = window.innerHeight;
       
       if (isMobile) {
-        // Mobile: Centered with 90% width
         const mobileWidth = Math.min(viewportWidth * 0.9, 400);
         const mobileHeight = viewportHeight * 0.75;
         setDimensions({
@@ -40,7 +43,6 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           height: mobileHeight,
         });
       } else {
-        // Desktop/Tablet: absolute center in viewport
         const desktopWidth = Math.min(900, viewportWidth - 40);
         const desktopHeight = Math.min(viewportHeight * 0.8, viewportHeight - 40);
         setDimensions({
@@ -57,30 +59,34 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
     return () => window.removeEventListener('resize', updateDimensions);
   }, [isMobile]);
 
-  const handleDragStop = (_e: any, data: { x: number; y: number }) => {
+  const handleDragStop = useCallback((_e: any, data: { x: number; y: number }) => {
     setDimensions(prev => ({
       ...prev,
       x: data.x,
       y: data.y,
     }));
-  };
+  }, []);
 
-  const handleResizeStop = (_e: any, _direction: any, ref: HTMLElement, _delta: any, position: { x: number; y: number }) => {
+  const handleResizeStop = useCallback((_e: any, _direction: any, ref: HTMLElement, _delta: any, position: { x: number; y: number }) => {
     setDimensions({
       x: position.x,
       y: position.y,
       width: ref.offsetWidth,
       height: ref.offsetHeight,
     });
-  };
+  }, []);
+
+  const handleClose = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onClose();
+  }, [onClose]);
 
   return (
     <>
       {isMobile ? (
-        // Mobile: centered overlay without drag/resize to avoid scroll issues
         <div className="fixed inset-0 z-50 flex items-center justify-center m-0 p-0">
           <div className="h-[90dvh] w-[90vw] max-w-[90vw] bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden m-0 p-0">
-            {/* Header */}
             <div className="cursor-default bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between select-none">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium ml-2">Messages</span>
@@ -88,31 +94,34 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClose();
-                }}
+                onClick={handleClose}
                 className="h-8 w-8 rounded-full text-white hover:bg-white/20 pointer-events-auto"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Content */}
             <div className="flex-1 min-h-0 overflow-hidden">
               <GroupMessageInterface />
             </div>
           </div>
         </div>
       ) : (
-        // Desktop: draggable & resizable panel
         <Rnd
-          position={{ x: dimensions.x, y: dimensions.y }}
-          size={{ width: dimensions.width, height: dimensions.height }}
+          ref={rndRef}
+          default={{
+            x: dimensions.x,
+            y: dimensions.y,
+            width: dimensions.width,
+            height: dimensions.height,
+          }}
           minWidth={400}
           minHeight={300}
           className="z-50"
-          style={{ position: 'fixed' }}
+          style={{ 
+            position: 'fixed',
+            willChange: 'transform',
+          }}
           enableResizing={{
             top: true,
             right: true,
@@ -130,14 +139,19 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           onDragStop={handleDragStop}
           onResizeStop={handleResizeStop}
         >
-          <div className="h-full bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
-            {/* Draggable Header - only left side is draggable so the X stays tappable */}
-            <div className="cursor-default bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between select-none">
-              <div className="flex items-center gap-2 drag-handle">
+          <div 
+            className="h-full bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden"
+            style={{ willChange: 'auto' }}
+          >
+            <div className="drag-handle cursor-move bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between select-none">
+              <div className="flex items-center gap-2">
                 <div className="flex gap-1">
-                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors cursor-pointer" onClick={onClose} />
-                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
-                  <div className="w-3 h-3 rounded-full bg-white/30 hover:bg-white/50 transition-colors" />
+                  <div 
+                    className="no-drag w-3 h-3 rounded-full bg-white/30 hover:bg-red-500 transition-colors cursor-pointer" 
+                    onClick={handleClose} 
+                  />
+                  <div className="w-3 h-3 rounded-full bg-white/30" />
+                  <div className="w-3 h-3 rounded-full bg-white/30" />
                 </div>
                 <span className="text-sm font-medium ml-2">Messages</span>
               </div>
@@ -145,17 +159,13 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClose();
-                }}
-                className="h-8 w-8 rounded-full text-white hover:bg-white/20 pointer-events-auto"
+                onClick={handleClose}
+                className="no-drag h-8 w-8 rounded-full text-white hover:bg-white/20"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
 
-            {/* Messages Content */}
             <div className="flex-1 min-h-0 overflow-hidden">
               <GroupMessageInterface />
             </div>
