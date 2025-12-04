@@ -16,7 +16,11 @@ interface HeroSlide {
   link_url?: string;
   link_target?: string;
 }
-export const DashboardHeroCarousel = () => {
+interface DashboardHeroCarouselProps {
+  className?: string;
+}
+
+export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps) => {
   const navigate = useNavigate();
   const [slides, setSlides] = useState<HeroSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -167,7 +171,7 @@ export const DashboardHeroCarousel = () => {
     return visible;
   };
   const visibleSlides = getVisibleSlides();
-  return <div className="mb-4 rounded-xl border-2 border-slate-400/50 dark:border-slate-500 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 shadow-lg p-3">
+  return <div className={`mb-4 rounded-xl border-2 border-slate-400/50 dark:border-slate-500 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 shadow-lg p-3 ${className || ''}`}>
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
