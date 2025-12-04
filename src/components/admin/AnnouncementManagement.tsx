@@ -126,7 +126,7 @@ export const AnnouncementManagement = () => {
                 New Announcement
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingAnnouncement ? 'Edit Announcement' : 'Create New Announcement'}
@@ -136,7 +136,7 @@ export const AnnouncementManagement = () => {
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="title">Title</Label>
                     <Input
@@ -181,7 +181,7 @@ export const AnnouncementManagement = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="audience">Target Audience</Label>
                     <Select 
@@ -220,7 +220,7 @@ export const AnnouncementManagement = () => {
                   <Label htmlFor="featured">Featured Announcement</Label>
                 </div>
 
-                <div className="flex justify-end space-x-2">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
@@ -328,7 +328,7 @@ export const AnnouncementManagement = () => {
 
       {/* Preview Dialog */}
       <Dialog open={!!previewAnnouncement} onOpenChange={(open) => !open && setPreviewAnnouncement(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {previewAnnouncement?.title}
