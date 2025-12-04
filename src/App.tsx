@@ -230,6 +230,8 @@ import GrandStaffClassroom from "./pages/GrandStaffClassroom";
 import { Mus240PollPage } from "./pages/Mus240PollPage";
 import MySubmissionsPage from "./pages/student/MySubmissionsPage";
 import JazzPage from "./pages/mus240/JazzPage";
+import Tour2026Page from "./pages/Tour2026Page";
+import ExecutiveBoardWorkshopPage from "./pages/ExecutiveBoardWorkshopPage";
 
 // Grading System
 import InstructorDashboard from "./pages/grading/instructor/InstructorDashboard";
@@ -920,6 +922,22 @@ const App = () => {
                     <PublicRoute>
                       <About />
                     </PublicRoute>
+                  } 
+                />
+                <Route 
+                  path="/2026-tour" 
+                  element={
+                    <ProtectedRoute>
+                      <Tour2026Page />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/executive-board-workshop" 
+                  element={
+                    <ProtectedRoute>
+                      <ExecutiveBoardWorkshopPage />
+                    </ProtectedRoute>
                   } 
                 />
                <Route 
