@@ -61,15 +61,39 @@ export const AnnouncementsTicker = ({
   }
 
   return (
-    <div className={`overflow-hidden whitespace-nowrap w-full min-w-0 ${className || ''}`}>
-      <div className="animate-marquee inline-block text-xs sm:text-sm text-foreground/80 pl-[100%] my-0 py-0 px-2 sm:px-[40px]">
-        {announcements.map((a, i) => (
-          <span key={a.id}>
-            <span className="font-bold">{a.title}:</span> {a.content}
-            {i < announcements.length - 1 && '  •  '}
-          </span>
-        ))}
+    <>
+      {/* Mobile - Compact card style */}
+      <div className={`lg:hidden ${className || ''}`}>
+        <div className="flex items-center gap-2 p-2">
+          <div className="shrink-0 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide
+            bg-gradient-to-b from-primary/80 to-primary text-primary-foreground shadow-sm"
+          >
+            📢 News
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <div className="animate-marquee inline-block text-xs text-muted-foreground whitespace-nowrap">
+              {announcements.map((a, i) => (
+                <span key={a.id}>
+                  <span className="font-semibold text-foreground">{a.title}:</span> {a.content}
+                  {i < announcements.length - 1 && '  •  '}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Desktop - Original ticker */}
+      <div className={`hidden lg:block overflow-hidden whitespace-nowrap w-full min-w-0 ${className || ''}`}>
+        <div className="animate-marquee inline-block text-xs sm:text-sm text-foreground/80 pl-[100%] my-0 py-0 px-2 sm:px-[40px]">
+          {announcements.map((a, i) => (
+            <span key={a.id}>
+              <span className="font-bold">{a.title}:</span> {a.content}
+              {i < announcements.length - 1 && '  •  '}
+            </span>
+          ))}
+        </div>
+      </div>
+    </>
   );
 };
