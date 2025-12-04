@@ -70,8 +70,8 @@ export const AnnouncementsTicker = ({
           >
             📢 News
           </div>
-          <div className="flex-1 overflow-hidden">
-            <div className="animate-marquee inline-block text-xs text-muted-foreground whitespace-nowrap">
+          <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
+            <div className="text-xs text-muted-foreground whitespace-nowrap">
               {announcements.map((a, i) => (
                 <span key={a.id}>
                   <span className="font-semibold text-foreground">{a.title}:</span> {a.content}
