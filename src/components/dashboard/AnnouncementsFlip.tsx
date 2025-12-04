@@ -10,9 +10,10 @@ interface Announcement {
 
 interface AnnouncementsFlipProps {
   className?: string;
+  direction?: 'left' | 'right' | 'up';
 }
 
-export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
+export const AnnouncementsFlip = ({ className, direction = 'left' }: AnnouncementsFlipProps) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -29,7 +30,7 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % announcements.length);
         setIsFlipping(false);
-      }, 600);
+      }, 400);
     }, 8000);
 
     return () => clearInterval(interval);
@@ -54,6 +55,17 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
 
   const current = announcements[currentIndex];
 
+  // Get animation classes based on direction
+  const getAnimationClass = () => {
+    if (direction === 'left') {
+      return isFlipping ? 'animate-slide-out-left' : 'animate-slide-in-left';
+    } else if (direction === 'right') {
+      return isFlipping ? 'animate-slide-out-right' : 'animate-slide-in-right';
+    } else {
+      return isFlipping ? 'animate-flip-out' : 'animate-flip-in';
+    }
+  };
+
   return (
     <div 
       className={`overflow-hidden h-12 flex items-center gap-3 px-3 ${className || ''}`} 
@@ -72,17 +84,13 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
         <span className="relative px-1">Announcements</span>
       </div>
 
-      {/* Flip content */}
+      {/* Slide/Flip content */}
       <div className="flex-1 overflow-hidden flex items-center justify-center">
         <div
           key={current.id}
-          className={`text-sm sm:text-base text-foreground font-medium px-4 py-2 ${
-            isFlipping ? 'animate-flip-out' : 'animate-flip-in'
-          }`}
+          className={`text-sm sm:text-base text-foreground font-medium px-4 py-2 ${getAnimationClass()}`}
           style={{ 
             transformOrigin: 'center center',
-            transformStyle: 'preserve-3d',
-            backfaceVisibility: 'hidden',
             fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
           }}
         >
