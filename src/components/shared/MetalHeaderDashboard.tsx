@@ -626,7 +626,7 @@ export const MetalHeaderDashboard = ({
       </div>
 
       {/* Feature Cards - 2 Column Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6">
         {/* 2026 Tour Information Center */}
         <a href="/2026-tour" className="group feature-card feature-card-primary">
           <div className="feature-card-overlay" />
