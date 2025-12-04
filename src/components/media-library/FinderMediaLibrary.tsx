@@ -367,6 +367,7 @@ export const FinderMediaLibrary = () => {
       {/* Inspector Panel */}
       {showInspector && inspectorFile && (
         <FinderInspector
+          key={inspectorFile.id}
           file={inspectorFile}
           onClose={() => setShowInspector(false)}
           onPreview={() => setPreviewFile(inspectorFile)}
