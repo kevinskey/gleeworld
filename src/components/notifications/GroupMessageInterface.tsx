@@ -69,6 +69,7 @@ export const GroupMessageInterface: React.FC = () => {
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set());
+  const [foldersInitialized, setFoldersInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -109,6 +110,14 @@ export const GroupMessageInterface: React.FC = () => {
       setSelectedConversationId(allConversations[0].id);
     }
   }, [allConversations, selectedConversationId]);
+
+  // Collapse all folders by default when messages open
+  useEffect(() => {
+    if (folders.length > 0 && !foldersInitialized) {
+      setCollapsedFolders(new Set(folders.map(f => f.id)));
+      setFoldersInitialized(true);
+    }
+  }, [folders, foldersInitialized]);
 
   const handleSelectConversation = async (conversation: any, type: 'group' | 'direct') => {
     setConversationType(type);
