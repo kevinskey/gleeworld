@@ -68,33 +68,72 @@ export const AnnouncementsFlip = ({ className, direction = 'left' }: Announcemen
 
   return (
     <div 
-      className={`overflow-hidden h-12 flex items-center gap-3 px-3 ${className || ''}`} 
+      className={`overflow-hidden ${className || ''}`} 
       style={{ perspective: '400px' }}
     >
-      {/* Steel badge with rivets */}
-      <div className="shrink-0 relative px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10 flex items-center
-        bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
-        text-slate-100 shadow-md border border-slate-600/50"
-        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
-      >
-        {/* Left rivet */}
-        <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
-        {/* Right rivet */}
-        <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
-        <span className="relative px-1">Announcements</span>
-      </div>
-
-      {/* Slide/Flip content */}
-      <div className="flex-1 overflow-hidden flex items-center justify-center">
+      {/* Mobile Layout - Stacked card design */}
+      <div className="flex lg:hidden flex-col gap-2 p-2">
+        <div className="flex items-center gap-2">
+          {/* Compact badge */}
+          <div className="shrink-0 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide
+            bg-gradient-to-b from-primary/80 to-primary
+            text-primary-foreground shadow-sm"
+          >
+            📢 News
+          </div>
+          {/* Dot indicators */}
+          <div className="flex gap-1 ml-auto">
+            {announcements.slice(0, 5).map((_, idx) => (
+              <span 
+                key={idx}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                  idx === currentIndex % 5 ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+        
+        {/* Mobile announcement card */}
         <div
           key={current.id}
-          className={`text-sm sm:text-base text-foreground font-medium px-4 py-2 ${getAnimationClass()}`}
-          style={{ 
-            transformOrigin: 'center center',
-            fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
-          }}
+          className={`bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50 shadow-sm ${getAnimationClass()}`}
+          style={{ transformOrigin: 'center center' }}
         >
-          <span className="font-bold">{current.title}:</span> {current.content}
+          <p className="text-xs leading-relaxed text-foreground">
+            <span className="font-semibold text-primary">{current.title}:</span>{' '}
+            <span className="text-muted-foreground">{current.content}</span>
+          </p>
+        </div>
+      </div>
+
+      {/* Desktop Layout - Original horizontal design */}
+      <div className="hidden lg:flex items-center gap-3 px-3 h-12">
+        {/* Steel badge with rivets */}
+        <div className="shrink-0 relative px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10 flex items-center
+          bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
+          text-slate-100 shadow-md border border-slate-600/50"
+          style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
+        >
+          {/* Left rivet */}
+          <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+          {/* Right rivet */}
+          <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+          <span className="relative px-1">Announcements</span>
+        </div>
+
+        {/* Slide/Flip content */}
+        <div className="flex-1 overflow-hidden flex items-center justify-center">
+          <div
+            key={current.id}
+            className={`text-sm sm:text-base text-foreground font-medium px-4 py-2 ${getAnimationClass()}`}
+            style={{ 
+              transformOrigin: 'center center',
+              fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
+            }}
+          >
+            <span className="font-bold">{current.title}:</span> {current.content}
+          </div>
         </div>
       </div>
     </div>
