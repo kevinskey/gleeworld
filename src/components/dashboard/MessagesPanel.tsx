@@ -11,32 +11,41 @@ interface MessagesPanelProps {
 
 export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
   const isMobile = useIsMobile();
-  const [dimensions, setDimensions] = useState({
-    x: 0,
-    y: 0,
-    width: 600,
-    height: 400,
+  const [dimensions, setDimensions] = useState(() => {
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 900;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
+    const width = Math.min(900, viewportWidth - 40);
+    const height = Math.min(viewportHeight * 0.8, viewportHeight - 40);
+    return {
+      x: Math.round((viewportWidth - width) / 2),
+      y: Math.round((viewportHeight - height) / 2),
+      width,
+      height,
+    };
   });
 
   useEffect(() => {
     const updateDimensions = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
       if (isMobile) {
         // Mobile: Centered with 90% width
-        const mobileWidth = Math.min(window.innerWidth * 0.9, 400);
-        const mobileHeight = window.innerHeight * 0.75;
+        const mobileWidth = Math.min(viewportWidth * 0.9, 400);
+        const mobileHeight = viewportHeight * 0.75;
         setDimensions({
-          x: (window.innerWidth - mobileWidth) / 2,
-          y: (window.innerHeight - mobileHeight) / 2,
+          x: Math.round((viewportWidth - mobileWidth) / 2),
+          y: Math.round((viewportHeight - mobileHeight) / 2),
           width: mobileWidth,
           height: mobileHeight,
         });
       } else {
-        // Desktop: centered in viewport
-        const desktopWidth = Math.min(900, window.innerWidth - 40);
-        const desktopHeight = Math.min(window.innerHeight * 0.8, window.innerHeight - 80);
+        // Desktop/Tablet: absolute center in viewport
+        const desktopWidth = Math.min(900, viewportWidth - 40);
+        const desktopHeight = Math.min(viewportHeight * 0.8, viewportHeight - 40);
         setDimensions({
-          x: (window.innerWidth - desktopWidth) / 2,
-          y: (window.innerHeight - desktopHeight) / 2,
+          x: Math.round((viewportWidth - desktopWidth) / 2),
+          y: Math.round((viewportHeight - desktopHeight) / 2),
           width: desktopWidth,
           height: desktopHeight,
         });
