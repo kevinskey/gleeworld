@@ -56,7 +56,7 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
 
   return (
     <div 
-      className={`overflow-hidden h-10 flex items-center gap-2 px-2 ${className || ''}`} 
+      className={`overflow-hidden h-12 flex items-center gap-3 px-3 ${className || ''}`} 
       style={{ perspective: '400px' }}
     >
       {/* Steel badge with rivets */}
