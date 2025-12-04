@@ -1,8 +1,9 @@
 import { MediaFile } from './types';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X, Download, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { X, Download, ZoomIn, ZoomOut } from 'lucide-react';
 import { useState } from 'react';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface MediaPreviewModalProps {
   file: MediaFile;
@@ -14,28 +15,8 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
   const [zoom, setZoom] = useState(1);
   const fileType = getFileType(file);
 
-  // Encode URL to handle special characters - including ! ' ( ) which encodeURIComponent doesn't encode
-  const encodeFileUrl = (url: string) => {
-    try {
-      const urlObj = new URL(url);
-      urlObj.pathname = urlObj.pathname
-        .split('/')
-        .map(segment => {
-          let encoded = encodeURIComponent(decodeURIComponent(segment));
-          encoded = encoded.replace(/!/g, '%21');
-          encoded = encoded.replace(/'/g, '%27');
-          encoded = encoded.replace(/\(/g, '%28');
-          encoded = encoded.replace(/\)/g, '%29');
-          return encoded;
-        })
-        .join('/');
-      return urlObj.toString();
-    } catch {
-      return url;
-    }
-  };
-
-  const encodedUrl = encodeFileUrl(file.file_url);
+  // Use raw URL - Supabase handles encoding
+  const fileUrl = file.file_url;
 
   const renderContent = () => {
     switch (fileType) {
@@ -43,7 +24,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
         return (
           <div className="relative flex items-center justify-center h-full overflow-auto">
             <img
-              src={encodedUrl}
+              src={fileUrl}
               alt={file.title}
               className="max-w-full max-h-full object-contain transition-transform"
               style={{ transform: `scale(${zoom})` }}
@@ -54,7 +35,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
       case 'video':
         return (
           <video
-            src={encodedUrl}
+            src={fileUrl}
             controls
             autoPlay
             className="max-w-full max-h-full"
@@ -76,7 +57,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
               )}
             </div>
             <audio 
-              src={encodedUrl} 
+              src={fileUrl} 
               controls 
               className="w-full max-w-md"
               onError={(e) => console.error('Audio preview error:', e.currentTarget.error?.message)}
@@ -88,7 +69,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
       case 'document':
         return (
           <iframe
-            src={encodedUrl}
+            src={fileUrl}
             className="w-full h-full"
             title={file.title}
           />
@@ -98,7 +79,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
         return (
           <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
             <p>Preview not available for this file type</p>
-            <Button onClick={() => window.open(encodedUrl, '_blank')}>
+            <Button onClick={() => window.open(fileUrl, '_blank')}>
               <Download className="h-4 w-4 mr-2" />
               Download to View
             </Button>
@@ -110,6 +91,9 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-[90vw] max-h-[90vh] w-full h-full p-0 overflow-hidden">
+        <VisuallyHidden>
+          <DialogTitle>{file.title || 'Media Preview'}</DialogTitle>
+        </VisuallyHidden>
         {/* Header */}
         <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
           <h3 className="text-white font-medium truncate max-w-[60%]">
@@ -142,7 +126,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(encodedUrl, '_blank')}
+              onClick={() => window.open(fileUrl, '_blank')}
               className="text-white hover:bg-white/20"
             >
               <Download className="h-4 w-4" />

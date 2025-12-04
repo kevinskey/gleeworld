@@ -20,7 +20,6 @@ export const FinderFileGrid = ({
   getFileType
 }: FinderFileGridProps) => {
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
-  const [hoveredAudio, setHoveredAudio] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const getIcon = (type: string) => {
@@ -43,35 +42,14 @@ export const FinderFileGrid = ({
     }
   };
 
-  // Encode URL to handle special characters - including ! ' ( ) which encodeURIComponent doesn't encode
-  const encodeFileUrl = (url: string) => {
-    try {
-      const urlObj = new URL(url);
-      // Encode each path segment, then also encode special chars that encodeURIComponent misses
-      urlObj.pathname = urlObj.pathname
-        .split('/')
-        .map(segment => {
-          let encoded = encodeURIComponent(decodeURIComponent(segment));
-          // Encode additional special characters
-          encoded = encoded.replace(/!/g, '%21');
-          encoded = encoded.replace(/'/g, '%27');
-          encoded = encoded.replace(/\(/g, '%28');
-          encoded = encoded.replace(/\)/g, '%29');
-          return encoded;
-        })
-        .join('/');
-      return urlObj.toString();
-    } catch {
-      return url;
-    }
-  };
 
   const handleAudioToggle = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation();
     e.preventDefault();
     
-    const encodedUrl = encodeFileUrl(file.file_url);
-    console.log('Audio toggle for:', file.title, 'Encoded URL:', encodedUrl);
+    // Use raw URL - Supabase handles encoding
+    const audioUrl = file.file_url;
+    console.log('Audio toggle for:', file.title, 'URL:', audioUrl);
     
     if (playingAudio === file.id) {
       if (audioRef.current) {
@@ -85,9 +63,11 @@ export const FinderFileGrid = ({
         audioRef.current = null;
       }
       
-      const audio = new Audio(encodedUrl);
+      const audio = new Audio();
+      audio.crossOrigin = 'anonymous';
+      audio.preload = 'auto';
       
-      audio.oncanplay = () => {
+      audio.oncanplaythrough = () => {
         console.log('Audio ready to play');
         audio.play().catch(err => {
           console.error('Play failed:', err);
@@ -101,13 +81,38 @@ export const FinderFileGrid = ({
         audioRef.current = null;
       };
       
-      audio.onerror = () => {
-        console.error('Audio error:', audio.error?.code, audio.error?.message);
+      audio.onerror = (e) => {
+        console.error('Audio error:', audio.error?.code, audio.error?.message, 'URL:', audioUrl);
+        // Try without crossOrigin as fallback
+        if (audio.crossOrigin) {
+          console.log('Retrying without crossOrigin...');
+          const fallbackAudio = new Audio(audioUrl);
+          fallbackAudio.oncanplaythrough = () => {
+            fallbackAudio.play().catch(err => {
+              console.error('Fallback play failed:', err);
+              setPlayingAudio(null);
+            });
+          };
+          fallbackAudio.onended = () => {
+            setPlayingAudio(null);
+            audioRef.current = null;
+          };
+          fallbackAudio.onerror = () => {
+            console.error('Fallback also failed');
+            setPlayingAudio(null);
+            audioRef.current = null;
+          };
+          audioRef.current = fallbackAudio;
+          fallbackAudio.load();
+          return;
+        }
         setPlayingAudio(null);
         audioRef.current = null;
       };
       
       audioRef.current = audio;
+      audio.src = audioUrl;
+      audio.load();
       setPlayingAudio(file.id);
     }
   };
@@ -119,7 +124,6 @@ export const FinderFileGrid = ({
         const Icon = getIcon(fileType);
         const isSelected = selectedFiles.includes(file.id);
         const isPlaying = playingAudio === file.id;
-        const isHovered = hoveredAudio === file.id;
 
         return (
           <ContextMenu key={file.id}>
@@ -132,8 +136,6 @@ export const FinderFileGrid = ({
                 )}
                 onClick={(e) => onSelect(file, e)}
                 onDoubleClick={() => onOpen(file)}
-                onMouseEnter={() => fileType === 'audio' && setHoveredAudio(file.id)}
-                onMouseLeave={() => setHoveredAudio(null)}
               >
                 {/* Thumbnail */}
                 <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-muted mb-2">
@@ -164,15 +166,15 @@ export const FinderFileGrid = ({
                   ) : fileType === 'audio' ? (
                     <div className={cn("w-full h-full flex items-center justify-center relative", getIconColor(fileType))}>
                       <Icon className={cn("h-12 w-12 transition-transform", isPlaying && "animate-pulse")} />
-                      {/* Play/Pause overlay on hover */}
+                      {/* Play/Pause button - always visible for audio */}
                       <div 
-                        className={cn(
-                          "absolute inset-0 flex items-center justify-center bg-black/40 transition-opacity",
-                          (isHovered || isPlaying) ? "opacity-100" : "opacity-0"
-                        )}
+                        className="absolute inset-0 flex items-center justify-center bg-black/30"
                         onClick={(e) => handleAudioToggle(e, file)}
                       >
-                        <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center hover:scale-110 transition-transform">
+                        <div className={cn(
+                          "w-12 h-12 rounded-full bg-white/90 flex items-center justify-center transition-transform",
+                          "hover:scale-110 shadow-lg"
+                        )}>
                           {isPlaying ? (
                             <Pause className="h-6 w-6 text-blue-600 fill-blue-600" />
                           ) : (
