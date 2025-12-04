@@ -35,7 +35,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
       
       if (isMobile) {
         const mobileWidth = Math.min(viewportWidth * 0.9, 400);
-        const mobileHeight = viewportHeight * 0.75;
+        const mobileHeight = viewportHeight * 0.45;
         setDimensions({
           x: Math.round((viewportWidth - mobileWidth) / 2),
           y: Math.round((viewportHeight - mobileHeight) / 2),
@@ -85,8 +85,8 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
   return (
     <>
       {isMobile ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center m-0 p-0">
-          <div className="h-[90dvh] w-[90vw] max-w-[90vw] bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden m-0 p-0">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="h-[45dvh] w-[90vw] max-w-[400px] bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
             <div className="cursor-default bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between select-none">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium ml-2">Messages</span>
