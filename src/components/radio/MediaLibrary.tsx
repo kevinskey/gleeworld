@@ -36,7 +36,10 @@ import {
   Trash2,
   Upload,
   Album,
-  Loader2
+  Loader2,
+  Camera,
+  Mic,
+  UserCheck
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -94,11 +97,14 @@ export const MediaLibrary = ({
   const [editDescription, setEditDescription] = useState('');
   const [uploading, setUploading] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [quickCaptureMedia, setQuickCaptureMedia] = useState<any[]>([]);
+  const [quickCaptureCategory, setQuickCaptureCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchAdminStatus();
     fetchMediaData();
+    fetchQuickCaptureMedia();
   }, []);
 
   const fetchAdminStatus = async () => {
@@ -147,6 +153,24 @@ export const MediaLibrary = ({
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchQuickCaptureMedia = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('quick_capture_media')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching quick capture media:', error);
+      } else {
+        console.log(`✅ Loaded ${data?.length || 0} quick capture files`);
+        setQuickCaptureMedia(data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching quick capture media:', error);
     }
   };
 
@@ -856,7 +880,13 @@ export const MediaLibrary = ({
 
       {/* Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5 bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30 shadow-lg h-14">
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30 shadow-lg h-14">
+          <TabsTrigger value="quick-capture" className="flex items-center gap-2">
+            <Camera className="h-4 w-4" />
+            <span className="hidden sm:inline">Quick Capture</span>
+            <span className="sm:hidden">Capture</span>
+            ({quickCaptureMedia.length})
+          </TabsTrigger>
           <TabsTrigger value="images" className="flex items-center gap-2">
             <Images className="h-4 w-4" />
             Images ({imageFiles.length})
@@ -878,6 +908,121 @@ export const MediaLibrary = ({
             Other ({otherFiles.length})
           </TabsTrigger>
         </TabsList>
+
+        {/* Quick Capture Tab */}
+        <TabsContent value="quick-capture" className="mt-6">
+          <div className="space-y-6">
+            {/* Category Cards */}
+            {!quickCaptureCategory ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { id: 'glee_cam_pic', title: 'Glee Cam Pics', icon: Camera, color: 'from-amber-500 to-orange-500' },
+                  { id: 'voice_part_recording', title: 'Voice Recordings', icon: Mic, color: 'from-blue-500 to-cyan-500' },
+                  { id: 'exec_board_video', title: 'ExecBoard Videos', icon: Video, color: 'from-purple-500 to-pink-500' },
+                  { id: 'member_audition_video', title: 'Audition Videos', icon: UserCheck, color: 'from-emerald-500 to-teal-500' },
+                ].map((cat) => {
+                  const count = quickCaptureMedia.filter(m => m.category === cat.id).length;
+                  const IconComp = cat.icon;
+                  return (
+                    <Card 
+                      key={cat.id}
+                      className="cursor-pointer hover:shadow-lg transition-all group bg-background/50 backdrop-blur-sm border-border/50"
+                      onClick={() => setQuickCaptureCategory(cat.id)}
+                    >
+                      <CardContent className="p-6 text-center">
+                        <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-white mb-4 group-hover:scale-110 transition-transform`}>
+                          <IconComp className="h-8 w-8" />
+                        </div>
+                        <h3 className="font-semibold text-foreground">{cat.title}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{count} files</p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Back button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setQuickCaptureCategory(null)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  ← Back to Categories
+                </Button>
+
+                {/* Media Grid */}
+                <ScrollArea className="h-96">
+                  {quickCaptureMedia.filter(m => m.category === quickCaptureCategory).length > 0 ? (
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {quickCaptureMedia
+                        .filter(m => m.category === quickCaptureCategory)
+                        .map(item => (
+                          <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-all bg-background/50 backdrop-blur-sm border-border/50">
+                            <div className="aspect-square overflow-hidden bg-muted relative">
+                              {item.file_type?.startsWith('video') || item.file_url?.match(/\.(mp4|mov|webm)$/i) ? (
+                                <>
+                                  {item.thumbnail_url ? (
+                                    <img 
+                                      src={item.thumbnail_url} 
+                                      alt={item.title}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center">
+                                      <Video className="h-12 w-12 text-muted-foreground" />
+                                    </div>
+                                  )}
+                                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                    <Play className="h-12 w-12 text-white" />
+                                  </div>
+                                </>
+                              ) : item.file_type?.startsWith('audio') || item.file_url?.match(/\.(mp3|wav|m4a)$/i) ? (
+                                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500/20 to-cyan-500/20">
+                                  <Mic className="h-12 w-12 text-blue-500" />
+                                </div>
+                              ) : (
+                                <img 
+                                  src={item.file_url} 
+                                  alt={item.title}
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                                  onClick={() => window.open(item.file_url, '_blank')}
+                                />
+                              )}
+                            </div>
+                            <CardContent className="p-3">
+                              <h4 className="font-medium text-foreground text-sm truncate mb-1">
+                                {item.title || 'Untitled'}
+                              </h4>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(item.created_at).toLocaleDateString()}
+                                </span>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => window.open(item.file_url, '_blank')}
+                                  className="h-7 w-7 p-0"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Camera className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">No files in this category</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
         <TabsContent value="images" className="mt-6">
           <ScrollArea className="h-96">
