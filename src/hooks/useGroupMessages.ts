@@ -297,12 +297,22 @@ export const useGroupMessages = () => {
 
   const deleteGroup = async (groupId: string) => {
     try {
-      const { error } = await supabase
+      console.log('Attempting to delete group:', groupId);
+      
+      const { data, error, count } = await supabase
         .from('gw_message_groups')
         .update({ is_archived: true, is_active: false })
-        .eq('id', groupId);
+        .eq('id', groupId)
+        .select();
+
+      console.log('Delete result:', { data, error, count });
 
       if (error) throw error;
+      
+      // Check if any rows were actually updated (RLS might silently block)
+      if (!data || data.length === 0) {
+        throw new Error('Failed to delete group - you may not have permission');
+      }
 
       // Remove from local state
       setConversations(prev => prev.filter(conv => conv.id !== groupId));
