@@ -141,9 +141,15 @@ export const useAnnouncements = () => {
 
   const updateAnnouncement = async (id: string, updates: Partial<CreateAnnouncementData>) => {
     try {
+      // Clean up empty strings for timestamp fields
+      const cleanedUpdates = {
+        ...updates,
+        expire_date: updates.expire_date || null,
+      };
+      
       const { error } = await supabase
         .from('gw_announcements')
-        .update(updates)
+        .update(cleanedUpdates)
         .eq('id', id);
 
       if (error) throw error;
