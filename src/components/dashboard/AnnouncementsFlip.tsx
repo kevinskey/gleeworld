@@ -29,8 +29,8 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
       setTimeout(() => {
         setCurrentIndex((prev) => (prev + 1) % announcements.length);
         setIsFlipping(false);
-      }, 400);
-    }, 5000);
+      }, 600);
+    }, 8000);
 
     return () => clearInterval(interval);
   }, [announcements.length]);
