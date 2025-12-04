@@ -1,9 +1,9 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Pencil } from 'lucide-react';
 
 interface ConversationListItemProps {
   name: string;
@@ -14,6 +14,7 @@ interface ConversationListItemProps {
   isSelected?: boolean;
   onClick?: () => void;
   onDelete?: () => void;
+  onEdit?: () => void;
 }
 
 export const ConversationListItem: React.FC<ConversationListItemProps> = ({
@@ -24,7 +25,8 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
   unreadCount = 0,
   isSelected = false,
   onClick,
-  onDelete
+  onDelete,
+  onEdit
 }) => {
   const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const formatTime = (time?: string) => {
@@ -62,17 +64,26 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
     </div>
   );
 
-  if (onDelete) {
+  if (onDelete || onEdit) {
     return (
       <ContextMenu>
         <ContextMenuTrigger asChild>
           {content}
         </ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete Group
-          </ContextMenuItem>
+          {onEdit && (
+            <ContextMenuItem onClick={onEdit}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit Group
+            </ContextMenuItem>
+          )}
+          {onEdit && onDelete && <ContextMenuSeparator />}
+          {onDelete && (
+            <ContextMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete Group
+            </ContextMenuItem>
+          )}
         </ContextMenuContent>
       </ContextMenu>
     );

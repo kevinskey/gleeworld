@@ -294,6 +294,27 @@ export const useGroupMessages = () => {
     }
   };
 
+  const updateGroup = async (groupId: string, newName: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_message_groups')
+        .update({ name: newName })
+        .eq('id', groupId);
+
+      if (error) throw error;
+
+      // Update local state
+      setConversations(prev => prev.map(conv => 
+        conv.id === groupId ? { ...conv, name: newName } : conv
+      ));
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error updating group:', err);
+      throw err;
+    }
+  };
+
   return {
     conversations,
     messages,
@@ -303,6 +324,7 @@ export const useGroupMessages = () => {
     sendMessage,
     markConversationAsRead,
     deleteGroup,
+    updateGroup,
     refetchConversations: fetchConversations
   };
 };

@@ -32,6 +32,9 @@ export const GroupMessageInterface: React.FC = () => {
   const [showMessages, setShowMessages] = useState(false);
   const [conversationType, setConversationType] = useState<'group' | 'direct'>('group');
   const [newMessageOpen, setNewMessageOpen] = useState(false);
+  const [editGroupOpen, setEditGroupOpen] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<{ id: string; name: string } | null>(null);
+  const [editGroupName, setEditGroupName] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,7 +46,8 @@ export const GroupMessageInterface: React.FC = () => {
     fetchMessagesForConversation,
     sendMessage,
     markConversationAsRead,
-    deleteGroup
+    deleteGroup,
+    updateGroup
   } = useGroupMessages();
 
   const {
@@ -123,6 +127,32 @@ export const GroupMessageInterface: React.FC = () => {
       toast({
         title: 'Delete Failed',
         description: 'Failed to delete group. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleEditGroup = (groupId: string, groupName: string) => {
+    setEditingGroup({ id: groupId, name: groupName });
+    setEditGroupName(groupName);
+    setEditGroupOpen(true);
+  };
+
+  const handleSaveEditGroup = async () => {
+    if (!editingGroup || !editGroupName.trim()) return;
+    
+    try {
+      await updateGroup(editingGroup.id, editGroupName.trim());
+      setEditGroupOpen(false);
+      setEditingGroup(null);
+      toast({
+        title: 'Group Updated',
+        description: 'Group name has been updated.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Update Failed',
+        description: 'Failed to update group. Please try again.',
         variant: 'destructive'
       });
     }
@@ -466,6 +496,7 @@ export const GroupMessageInterface: React.FC = () => {
                           unreadCount={conversation.unread_count}
                           isSelected={selectedConversationId === conversation.id && conversationType === 'group'}
                           onClick={() => handleSelectConversation(conversation, 'group')}
+                          onEdit={() => handleEditGroup(conversation.id, conversation.name)}
                           onDelete={() => handleDeleteGroup(conversation.id, conversation.name)}
                         />
                       ))}
@@ -552,6 +583,33 @@ export const GroupMessageInterface: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Edit Group Dialog */}
+      <Dialog open={editGroupOpen} onOpenChange={setEditGroupOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Group</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Group Name</label>
+              <Input
+                value={editGroupName}
+                onChange={(e) => setEditGroupName(e.target.value)}
+                placeholder="Enter group name"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setEditGroupOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEditGroup}>
+                Save
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
