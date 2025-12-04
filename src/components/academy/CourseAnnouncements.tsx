@@ -38,15 +38,15 @@ export const CourseAnnouncements: React.FC<CourseAnnouncementsProps> = ({ course
     <Card className="bg-card/50 border-border">
       <CardContent className="p-6">
         <h2 className="text-xl font-bold text-foreground mb-6">Announcements</h2>
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {announcements.map((announcement) => (
             <Card key={announcement.id} className="bg-muted/30 border-border">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-foreground">{announcement.title}</h3>
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-semibold text-foreground text-sm sm:text-base">{announcement.title}</h3>
                     {announcement.is_pinned && (
-                      <Badge variant="secondary" className="gap-1">
+                      <Badge variant="secondary" className="gap-1 text-xs">
                         <Pin className="h-3 w-3" />
                         Pinned
                       </Badge>
@@ -59,7 +59,7 @@ export const CourseAnnouncements: React.FC<CourseAnnouncementsProps> = ({ course
                     </div>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                <p className="text-xs sm:text-sm text-muted-foreground whitespace-pre-wrap">
                   {announcement.content}
                 </p>
               </CardContent>

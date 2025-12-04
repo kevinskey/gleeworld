@@ -60,23 +60,23 @@ export const AnnouncementsSection = () => {
             No announcements at this time. Check back later!
           </p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {announcements.map((announcement) => (
               <div 
                 key={announcement.id} 
-                className="border-l-4 border-primary/30 pl-4 py-2 hover:bg-muted/30 transition-colors rounded-r"
+                className="border-l-4 border-primary/30 pl-3 sm:pl-4 py-2 hover:bg-muted/30 transition-colors rounded-r"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-foreground mb-1">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-foreground mb-1 text-sm sm:text-base">
                       {announcement.title}
                     </h4>
-                    <p className="text-muted-foreground text-sm line-clamp-2">
+                    <p className="text-muted-foreground text-xs sm:text-sm line-clamp-2">
                       {announcement.content}
                     </p>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge variant={announcement.category === 'first-year' ? 'default' : 'secondary'}>
+                  <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2">
+                    <Badge variant={announcement.category === 'first-year' ? 'default' : 'secondary'} className="text-xs">
                       {announcement.category}
                     </Badge>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">

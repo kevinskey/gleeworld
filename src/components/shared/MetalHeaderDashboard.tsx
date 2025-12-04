@@ -603,21 +603,20 @@ export const MetalHeaderDashboard = ({
       <DashboardHeroCarousel />
 
       {/* Message Center Button with Announcements Ticker */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-4 gap-2 sm:gap-0">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-4 gap-2 sm:gap-3">
         {/* Announcements Ticker - All screen sizes */}
-        <div className="flex items-center flex-1 overflow-hidden order-2 sm:order-1">
-          <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 sm:px-4 py-1.5 sm:py-2 w-full overflow-hidden">
-            
-            <div className="overflow-hidden flex-1">
+        <div className="flex items-center flex-1 min-w-0 overflow-hidden order-2 sm:order-1">
+          <div className="flex items-center gap-1 sm:gap-2 bg-primary/10 rounded-full px-2 sm:px-4 py-1 sm:py-2 w-full min-w-0 overflow-hidden">
+            <div className="overflow-hidden flex-1 min-w-0">
               <AnnouncementsTicker className="bg-white/[0.83] rounded-sm shadow" />
             </div>
           </div>
         </div>
         
         {/* Messages Button */}
-        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-[8px] shrink-0 bg-secondary order-1 sm:order-2 w-full sm:w-auto justify-center">
+        <Button onClick={() => onToggleMessages?.()} className="shadow-lg bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 text-white font-semibold flex items-center gap-2 py-2 px-3 sm:px-[8px] shrink-0 bg-secondary order-1 sm:order-2 w-full sm:w-auto justify-center">
           <MessageSquare className="h-4 w-4" />
-          <span className="text-sm">MESSAGES</span>
+          <span className="text-xs sm:text-sm">MESSAGES</span>
         </Button>
       </div>
 

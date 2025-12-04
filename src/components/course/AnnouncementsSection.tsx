@@ -32,40 +32,40 @@ export const AnnouncementsSection: React.FC<AnnouncementsSectionProps> = ({ cour
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Announcements</h2>
+        <h2 className="text-xl sm:text-2xl font-bold">Announcements</h2>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {announcements && announcements.length > 0 ? (
           announcements.map((announcement) => (
             <Card key={announcement.id}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-5 w-5 text-primary" />
-                    <CardTitle className="text-lg">{announcement.title}</CardTitle>
+              <CardHeader className="p-3 sm:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Bell className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <CardTitle className="text-base sm:text-lg">{announcement.title}</CardTitle>
                     {announcement.is_pinned && (
-                      <Badge variant="secondary">
+                      <Badge variant="secondary" className="text-xs">
                         <Pin className="h-3 w-3 mr-1" />
                         Pinned
                       </Badge>
                     )}
                   </div>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     {format(new Date(announcement.created_at), 'MMM d, yyyy')}
                   </span>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-foreground/80 whitespace-pre-wrap">{announcement.content}</p>
+              <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0">
+                <p className="text-sm sm:text-base text-foreground/80 whitespace-pre-wrap">{announcement.content}</p>
               </CardContent>
             </Card>
           ))
         ) : (
           <Card>
-            <CardContent className="py-8 text-center text-muted-foreground">
+            <CardContent className="py-6 sm:py-8 text-center text-muted-foreground text-sm sm:text-base">
               No announcements yet
             </CardContent>
           </Card>
