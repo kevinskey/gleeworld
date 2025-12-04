@@ -764,6 +764,28 @@
       transform: translate3d(-200%, 0, 0);
     }
   }
+
+  @keyframes flip-in {
+    0% {
+      transform: rotateX(90deg);
+      opacity: 0;
+    }
+    100% {
+      transform: rotateX(0deg);
+      opacity: 1;
+    }
+  }
+
+  @keyframes flip-out {
+    0% {
+      transform: rotateX(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: rotateX(-90deg);
+      opacity: 0;
+    }
+  }
 }
 
 .animate-marquee {
@@ -772,6 +794,14 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: translateZ(0);
+}
+
+.animate-flip-in {
+  animation: flip-in 0.4s ease-out forwards;
+}
+
+.animate-flip-out {
+  animation: flip-out 0.4s ease-in forwards;
 }
 
 /* Spacing reduction utilities imported at top */

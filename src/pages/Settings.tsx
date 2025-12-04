@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { DashboardBackgroundUploader } from "@/components/profile/DashboardBackgroundUploader";
 import { ThemeSelector } from "@/components/settings/ThemeSelector";
+import { AnnouncementStyleSelector } from "@/components/settings/AnnouncementStyleSelector";
 
 const settingsSchema = z.object({
   display_name: z.string().min(1, "Display name is required"),
@@ -523,6 +524,7 @@ export default function Settings() {
             {/* Theme Preferences */}
             <TabsContent value="theme" className="space-y-6">
               <ThemeSelector />
+              <AnnouncementStyleSelector />
             </TabsContent>
           </Tabs>
 

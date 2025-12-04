@@ -25,7 +25,7 @@ import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
-import { AnnouncementsTicker } from "@/components/dashboard/AnnouncementsTicker";
+import { AnnouncementsDisplay } from "@/components/dashboard/AnnouncementsDisplay";
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save } from "lucide-react";
 
 // Sortable Dashboard Card Component
@@ -608,7 +608,7 @@ export const MetalHeaderDashboard = ({
         <div className="flex items-center flex-1 min-w-0 overflow-hidden order-2 sm:order-1">
           <div className="flex items-center gap-1 sm:gap-2 bg-primary/10 rounded-full px-2 sm:px-4 py-1 sm:py-2 w-full min-w-0 overflow-hidden">
             <div className="overflow-hidden flex-1 min-w-0">
-              <AnnouncementsTicker className="bg-white/[0.83] rounded-sm shadow" />
+              <AnnouncementsDisplay className="bg-white/[0.83] rounded-sm shadow" />
             </div>
           </div>
         </div>
