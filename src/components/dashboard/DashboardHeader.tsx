@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { AnnouncementsTicker } from './AnnouncementsTicker';
+import { AnnouncementsDisplay } from './AnnouncementsDisplay';
 
 interface DashboardHeaderProps {
   user: any;
@@ -38,7 +38,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
       </div>
 
       {/* Center - Announcements ticker */}
-      <AnnouncementsTicker />
+      <AnnouncementsDisplay />
 
       {/* Right side - Actions and profile */}
       <div className="flex items-center gap-4">
