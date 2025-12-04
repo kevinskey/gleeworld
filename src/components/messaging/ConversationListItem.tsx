@@ -40,7 +40,7 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-baseline justify-between gap-1 md:gap-2 mb-0.5">
-          <h3 className="font-semibold text-foreground truncate text-[5.5px] md:text-base">{name}</h3>
+          <h3 className="font-semibold text-foreground truncate text-[3px] md:text-[8px]">{name}</h3>
           {timestamp && <span className="text-[4.5px] md:text-[6px] text-muted-foreground flex-shrink-0">
               {formatTime(timestamp)}
             </span>}
