@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Edit, Trash2, Send, Eye, Calendar } from "lucide-react";
+import { Plus, Edit, Trash2, Send, Eye, Calendar, Repeat, CalendarClock } from "lucide-react";
 import { useAnnouncements, CreateAnnouncementData } from "@/hooks/useAnnouncements";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,6 +26,10 @@ export const AnnouncementManagement = () => {
     target_audience: 'all',
     expire_date: '',
     is_featured: false,
+    is_recurring: false,
+    recurrence_type: null,
+    recurrence_start_date: '',
+    recurrence_end_date: '',
   });
 
   const resetForm = () => {
@@ -36,6 +40,10 @@ export const AnnouncementManagement = () => {
       target_audience: 'all',
       expire_date: '',
       is_featured: false,
+      is_recurring: false,
+      recurrence_type: null,
+      recurrence_start_date: '',
+      recurrence_end_date: '',
     });
     setEditingAnnouncement(null);
   };
@@ -47,6 +55,15 @@ export const AnnouncementManagement = () => {
       toast({
         title: "Error",
         description: "Title and content are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.is_recurring && !formData.recurrence_type) {
+      toast({
+        title: "Error",
+        description: "Please select a recurrence frequency",
         variant: "destructive",
       });
       return;
@@ -70,6 +87,10 @@ export const AnnouncementManagement = () => {
       target_audience: announcement.target_audience || 'all',
       expire_date: announcement.expire_date || '',
       is_featured: announcement.is_featured || false,
+      is_recurring: announcement.is_recurring || false,
+      recurrence_type: announcement.recurrence_type || null,
+      recurrence_start_date: announcement.recurrence_start_date || '',
+      recurrence_end_date: announcement.recurrence_end_date || '',
     });
     setEditingAnnouncement(announcement.id);
     setIsDialogOpen(true);
@@ -92,6 +113,15 @@ export const AnnouncementManagement = () => {
       case 'performance': return 'bg-purple-100 text-purple-800';
       case 'tour': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRecurrenceLabel = (type: string) => {
+    switch (type) {
+      case 'daily': return 'Daily';
+      case 'weekly': return 'Weekly';
+      case 'monthly': return 'Monthly';
+      default: return type;
     }
   };
 
@@ -220,6 +250,74 @@ export const AnnouncementManagement = () => {
                   <Label htmlFor="featured">Featured Announcement</Label>
                 </div>
 
+                {/* Recurring Announcement Section */}
+                <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="recurring"
+                      checked={formData.is_recurring}
+                      onCheckedChange={(checked) => setFormData({ 
+                        ...formData, 
+                        is_recurring: checked,
+                        recurrence_type: checked ? 'daily' : null
+                      })}
+                    />
+                    <Label htmlFor="recurring" className="flex items-center gap-2">
+                      <Repeat className="h-4 w-4" />
+                      Auto-Recurring Announcement
+                    </Label>
+                  </div>
+
+                  {formData.is_recurring && (
+                    <div className="space-y-4 pt-2">
+                      <div className="space-y-2">
+                        <Label>Recurrence Frequency</Label>
+                        <Select 
+                          value={formData.recurrence_type || ''} 
+                          onValueChange={(value) => setFormData({ 
+                            ...formData, 
+                            recurrence_type: value as 'daily' | 'weekly' | 'monthly' 
+                          })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select frequency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="recurrenceStart">Start Date</Label>
+                          <Input
+                            id="recurrenceStart"
+                            type="datetime-local"
+                            value={formData.recurrence_start_date}
+                            onChange={(e) => setFormData({ ...formData, recurrence_start_date: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="recurrenceEnd">End Date (Optional)</Label>
+                          <Input
+                            id="recurrenceEnd"
+                            type="datetime-local"
+                            value={formData.recurrence_end_date}
+                            onChange={(e) => setFormData({ ...formData, recurrence_end_date: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">
+                        This announcement will automatically reappear {formData.recurrence_type} until the end date (or indefinitely if no end date is set).
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
@@ -246,10 +344,16 @@ export const AnnouncementManagement = () => {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <h3 className="font-semibold text-lg">{announcement.title}</h3>
                           {announcement.is_featured && (
                             <Badge variant="secondary" className="text-xs">Featured</Badge>
+                          )}
+                          {announcement.is_recurring && (
+                            <Badge variant="outline" className="text-xs flex items-center gap-1 bg-primary/10">
+                              <Repeat className="h-3 w-3" />
+                              {getRecurrenceLabel(announcement.recurrence_type || '')}
+                            </Badge>
                           )}
                           {announcement.announcement_type && (
                             <Badge 
@@ -266,12 +370,18 @@ export const AnnouncementManagement = () => {
                         <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                           {announcement.content}
                         </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
                           <span>Audience: {announcement.target_audience || 'all'}</span>
                           {announcement.expire_date && (
                             <span className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
                               Expires: {new Date(announcement.expire_date).toLocaleDateString()}
+                            </span>
+                          )}
+                          {announcement.is_recurring && announcement.recurrence_end_date && (
+                            <span className="flex items-center gap-1">
+                              <CalendarClock className="h-3 w-3" />
+                              Until: {new Date(announcement.recurrence_end_date).toLocaleDateString()}
                             </span>
                           )}
                           {announcement.created_at && (
@@ -335,13 +445,19 @@ export const AnnouncementManagement = () => {
               {previewAnnouncement?.is_featured && (
                 <Badge variant="secondary" className="text-xs">Featured</Badge>
               )}
+              {previewAnnouncement?.is_recurring && (
+                <Badge variant="outline" className="text-xs flex items-center gap-1">
+                  <Repeat className="h-3 w-3" />
+                  {getRecurrenceLabel(previewAnnouncement.recurrence_type || '')}
+                </Badge>
+              )}
             </DialogTitle>
             <DialogDescription>
               Published {previewAnnouncement?.publish_date && new Date(previewAnnouncement.publish_date).toLocaleDateString()}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               {previewAnnouncement?.announcement_type && (
                 <Badge className={`${getAnnouncementTypeColor(previewAnnouncement.announcement_type)} text-xs`}>
                   {previewAnnouncement.announcement_type}
@@ -357,6 +473,20 @@ export const AnnouncementManagement = () => {
                 <Calendar className="h-4 w-4" />
                 Expires: {new Date(previewAnnouncement.expire_date).toLocaleString()}
               </p>
+            )}
+            {previewAnnouncement?.is_recurring && (
+              <div className="text-sm text-muted-foreground border-t pt-2">
+                <p className="flex items-center gap-1">
+                  <Repeat className="h-4 w-4" />
+                  Recurring: {getRecurrenceLabel(previewAnnouncement.recurrence_type)}
+                </p>
+                {previewAnnouncement.recurrence_start_date && (
+                  <p>Started: {new Date(previewAnnouncement.recurrence_start_date).toLocaleDateString()}</p>
+                )}
+                {previewAnnouncement.recurrence_end_date && (
+                  <p>Ends: {new Date(previewAnnouncement.recurrence_end_date).toLocaleDateString()}</p>
+                )}
+              </div>
             )}
           </div>
         </DialogContent>
