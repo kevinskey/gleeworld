@@ -60,19 +60,16 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
       style={{ perspective: '400px' }}
     >
       {/* Steel badge with rivets */}
-      <div className="shrink-0 relative px-3 py-1 rounded-sm text-[10px] sm:text-xs font-bold uppercase tracking-wider
-        bg-gradient-to-b from-slate-300 via-slate-400 to-slate-500
-        text-slate-800 shadow-inner border border-slate-500/50
-        before:absolute before:top-1 before:left-1 before:w-1.5 before:h-1.5 before:rounded-full before:bg-gradient-to-br before:from-slate-200 before:to-slate-500 before:shadow-inner
-        after:absolute after:top-1 after:right-1 after:w-1.5 after:h-1.5 after:rounded-full after:bg-gradient-to-br after:from-slate-200 after:to-slate-500 after:shadow-inner"
-        style={{ textShadow: '0 1px 0 rgba(255,255,255,0.3)' }}
+      <div className="shrink-0 relative px-4 py-1.5 rounded-sm text-[10px] sm:text-xs font-bold uppercase tracking-wider
+        bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
+        text-slate-100 shadow-md border border-slate-600/50"
+        style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}
       >
-        <span className="relative">
-          {/* Bottom rivets */}
-          <span className="absolute -bottom-[3px] -left-[6px] w-1.5 h-1.5 rounded-full bg-gradient-to-br from-slate-200 to-slate-500 shadow-inner" />
-          <span className="absolute -bottom-[3px] -right-[6px] w-1.5 h-1.5 rounded-full bg-gradient-to-br from-slate-200 to-slate-500 shadow-inner" />
-          Announcements
-        </span>
+        {/* Left rivet */}
+        <span className="absolute top-1/2 -translate-y-1/2 left-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+        {/* Right rivet */}
+        <span className="absolute top-1/2 -translate-y-1/2 right-1.5 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+        <span className="relative px-2">Announcements</span>
       </div>
 
       {/* Flip content */}
