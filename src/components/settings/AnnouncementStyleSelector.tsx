@@ -2,14 +2,14 @@
  * ANNOUNCEMENT STYLE SELECTOR
  * 
  * Allows users to choose how announcements are displayed: 
- * scrolling ticker or slot-machine flip animation.
+ * scrolling ticker, flip animation, or slide left/right.
  */
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Megaphone, ArrowRight, RotateCw } from 'lucide-react';
+import { Check, Megaphone, ArrowRight, ArrowLeft, RotateCw, MoveHorizontal } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { 
   getAnnouncementStyle, 
@@ -19,16 +19,28 @@ import {
 
 const styles: { id: AnnouncementDisplayStyle; name: string; description: string; icon: React.ReactNode }[] = [
   {
+    id: 'slide-left',
+    name: 'Slide Left',
+    description: 'Announcements slide in from the right and exit to the left',
+    icon: <ArrowLeft className="h-5 w-5" />
+  },
+  {
+    id: 'slide-right',
+    name: 'Slide Right',
+    description: 'Announcements slide in from the left and exit to the right',
+    icon: <ArrowRight className="h-5 w-5" />
+  },
+  {
     id: 'flip',
-    name: 'Flip Animation',
-    description: 'Announcements flip like a slot machine every 5 seconds',
+    name: 'Flip Up',
+    description: 'Announcements flip up like a slot machine',
     icon: <RotateCw className="h-5 w-5" />
   },
   {
     id: 'ticker',
     name: 'Scrolling Ticker',
-    description: 'Announcements scroll horizontally across the screen',
-    icon: <ArrowRight className="h-5 w-5" />
+    description: 'Announcements scroll continuously across the screen',
+    icon: <MoveHorizontal className="h-5 w-5" />
   }
 ];
 
@@ -73,7 +85,7 @@ export function AnnouncementStyleSelector() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Current Style</p>
-              <p className="text-lg font-bold">{styles.find(s => s.id === currentStyle)?.name}</p>
+              <p className="text-lg font-bold">{styles.find(s => s.id === currentStyle)?.name || 'Slide Left'}</p>
             </div>
             <Badge variant="secondary" className="gap-1">
               <Check className="h-3 w-3" />
@@ -105,30 +117,31 @@ export function AnnouncementStyleSelector() {
                 )}
 
                 {/* Style Preview */}
-                <div className="h-20 rounded-t-lg bg-muted flex items-center justify-center">
+                <div className="h-16 rounded-t-lg bg-muted flex items-center justify-center">
                   {style.icon}
                 </div>
 
                 {/* Style Info */}
-                <CardContent className="pt-4">
-                  <div className="space-y-2">
-                    <h3 className="font-bold text-lg">{style.name}</h3>
-                    <p className="text-sm text-muted-foreground">{style.description}</p>
+                <CardContent className="pt-3 pb-3">
+                  <div className="space-y-1">
+                    <h3 className="font-bold">{style.name}</h3>
+                    <p className="text-xs text-muted-foreground">{style.description}</p>
                   </div>
                 </CardContent>
 
                 {/* Select Button */}
                 {!isSelected && (
-                  <div className="px-4 pb-4">
+                  <div className="px-4 pb-3">
                     <Button
                       className="w-full"
                       variant="outline"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleStyleSelect(style.id);
                       }}
                     >
-                      Apply Style
+                      Apply
                     </Button>
                   </div>
                 )}

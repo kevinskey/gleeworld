@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { AnnouncementsTicker } from './AnnouncementsTicker';
 import { AnnouncementsFlip } from './AnnouncementsFlip';
 
-export type AnnouncementDisplayStyle = 'ticker' | 'flip';
+export type AnnouncementDisplayStyle = 'ticker' | 'flip' | 'slide-left' | 'slide-right';
 
 interface AnnouncementsDisplayProps {
   className?: string;
 }
 
 export const getAnnouncementStyle = (): AnnouncementDisplayStyle => {
-  return (localStorage.getItem('announcement_style') as AnnouncementDisplayStyle) || 'flip';
+  return (localStorage.getItem('announcement_style') as AnnouncementDisplayStyle) || 'slide-left';
 };
 
 export const setAnnouncementStyle = (style: AnnouncementDisplayStyle) => {
@@ -31,9 +31,11 @@ export const AnnouncementsDisplay = ({ className }: AnnouncementsDisplayProps) =
     };
   }, []);
 
-  if (displayStyle === 'flip') {
-    return <AnnouncementsFlip className={className} />;
+  if (displayStyle === 'ticker') {
+    return <AnnouncementsTicker className={className} />;
   }
 
-  return <AnnouncementsTicker className={className} />;
+  // flip, slide-left, slide-right all use AnnouncementsFlip with direction prop
+  const direction = displayStyle === 'slide-right' ? 'right' : displayStyle === 'flip' ? 'up' : 'left';
+  return <AnnouncementsFlip className={className} direction={direction} />;
 };
