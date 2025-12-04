@@ -17,12 +17,16 @@ export const AnnouncementsTicker = ({
     fetchAnnouncements();
   }, []);
   const fetchAnnouncements = async () => {
+    const now = new Date().toISOString();
     const {
       data,
       error
-    } = await supabase.from('gw_announcements').select('id, title, content, created_at').not('publish_date', 'is', null).order('created_at', {
-      ascending: false
-    }).limit(10);
+    } = await supabase.from('gw_announcements')
+      .select('id, title, content, created_at')
+      .not('publish_date', 'is', null)
+      .lte('publish_date', now) // Only show announcements where publish_date has passed
+      .order('created_at', { ascending: false })
+      .limit(10);
     if (!error && data) {
       setAnnouncements(data);
     }
