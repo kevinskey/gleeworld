@@ -1,20 +1,31 @@
-import React, { useState } from 'react';
-import { ArrowLeft, MoreVertical, Search, Calendar, BarChart3, Image, Users, Settings, Wrench } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, MoreVertical, Search, Calendar, BarChart3, Image, Users, Settings, Wrench, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { GroupMembersDialog } from './GroupMembersDialog';
 import { PollsDialog } from './PollsDialog';
 import { EventsDialog } from './EventsDialog';
 import { useUnvotedPollCount } from '@/hooks/useUnvotedPollCount';
 import { useCanManageGroupMembers } from '@/hooks/useCanManageGroupMembers';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface GroupHeaderProps {
   groupId: string;
@@ -34,6 +45,9 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
   const [showMembersDialog, setShowMembersDialog] = useState(false);
   const [showPollsDialog, setShowPollsDialog] = useState(false);
   const [showEventsDialog, setShowEventsDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editFormData, setEditFormData] = useState({ name: '', description: '' });
+  const [saving, setSaving] = useState(false);
   const { unvotedCount } = useUnvotedPollCount(groupId);
   const { canManage } = useCanManageGroupMembers();
   const groupInitials = groupName
@@ -42,6 +56,50 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
     .join('')
     .toUpperCase()
     .slice(0, 2);
+
+  // Fetch group details when edit dialog opens
+  useEffect(() => {
+    if (showEditDialog && groupId) {
+      const fetchGroup = async () => {
+        const { data } = await supabase
+          .from('gw_message_groups')
+          .select('name, description')
+          .eq('id', groupId)
+          .single();
+        if (data) {
+          setEditFormData({ name: data.name || '', description: data.description || '' });
+        }
+      };
+      fetchGroup();
+    }
+  }, [showEditDialog, groupId]);
+
+  const handleSaveEdit = async () => {
+    if (!editFormData.name.trim()) {
+      toast.error('Group name is required');
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('gw_message_groups')
+        .update({ 
+          name: editFormData.name.trim(), 
+          description: editFormData.description.trim() 
+        })
+        .eq('id', groupId);
+      
+      if (error) throw error;
+      toast.success('Group updated successfully');
+      setShowEditDialog(false);
+      window.location.reload(); // Refresh to show updated name
+    } catch (error) {
+      console.error('Error updating group:', error);
+      toast.error('Failed to update group');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="bg-[hsl(var(--message-header))] text-white px-1.5 md:px-4 py-2 md:py-3 flex items-center justify-between shadow-md">
@@ -102,6 +160,15 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64 p-2 bg-background shadow-lg border z-50">
+            {canManage && (
+              <DropdownMenuItem 
+                className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent"
+                onClick={() => setShowEditDialog(true)}
+              >
+                <Edit className="h-5 w-5 mr-3 text-green-500 flex-shrink-0" />
+                <span className="flex-1 text-base font-medium">Edit Group</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem 
               className="py-3 px-3 cursor-pointer rounded-md hover:bg-accent focus:bg-accent"
               onClick={() => setShowEventsDialog(true)}
@@ -167,6 +234,44 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
         groupId={groupId}
         groupName={groupName}
       />
+
+      {/* Edit Group Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Group</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-name">Group Name</Label>
+              <Input
+                id="edit-name"
+                value={editFormData.name}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter group name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editFormData.description}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter group description"
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveEdit} disabled={saving}>
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
