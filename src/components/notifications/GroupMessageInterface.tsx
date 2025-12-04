@@ -10,12 +10,13 @@ import { ConversationListItem } from '@/components/messaging/ConversationListIte
 import { GroupHeader } from '@/components/messaging/GroupHeader';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight } from 'lucide-react';
+import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import useGroupMessages from '@/hooks/useGroupMessages';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, closestCenter } from '@dnd-kit/core';
 
 interface User {
   user_id: string;
@@ -23,6 +24,36 @@ interface User {
   avatar_url?: string;
   voice_part?: string;
 }
+
+// Draggable wrapper for groups
+const DraggableGroup: React.FC<{ id: string; children: React.ReactNode }> = ({ id, children }) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+  
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    opacity: isDragging ? 0.5 : 1,
+  } : undefined;
+
+  return (
+    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="cursor-grab active:cursor-grabbing">
+      {children}
+    </div>
+  );
+};
+
+// Droppable wrapper for folders
+const DroppableFolder: React.FC<{ id: string; children: React.ReactNode; isOver?: boolean }> = ({ id, children }) => {
+  const { isOver, setNodeRef } = useDroppable({ id });
+  
+  return (
+    <div 
+      ref={setNodeRef} 
+      className={`border-b border-border/30 transition-colors ${isOver ? 'bg-primary/10' : ''}`}
+    >
+      {children}
+    </div>
+  );
+};
 
 export const GroupMessageInterface: React.FC = () => {
   const { user } = useAuth();
@@ -40,6 +71,7 @@ export const GroupMessageInterface: React.FC = () => {
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
@@ -204,6 +236,27 @@ export const GroupMessageInterface: React.FC = () => {
       else next.add(folderId);
       return next;
     });
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveGroupId(event.active.id as string);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveGroupId(null);
+    
+    if (!over) return;
+    
+    const groupId = active.id as string;
+    const targetId = over.id as string;
+    
+    // Check if dropped on a folder or "no-folder" zone
+    if (targetId === 'no-folder') {
+      handleMoveToFolder(groupId, null);
+    } else if (folders.some(f => f.id === targetId)) {
+      handleMoveToFolder(groupId, targetId);
+    }
   };
 
   const handleSearchChange = async (query: string) => {
@@ -543,74 +596,92 @@ export const GroupMessageInterface: React.FC = () => {
                     </Button>
                   </div>
 
-                  {/* Folders with groups */}
-                  {folders.map(folder => {
-                    const folderGroups = conversations.filter(c => c.folder_id === folder.id);
-                    const isCollapsed = collapsedFolders.has(folder.id);
-                    
-                    return (
-                      <div key={folder.id} className="border-b border-border/30">
-                        <div 
-                          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/50 group"
-                          onClick={() => toggleFolderCollapse(folder.id)}
-                          onContextMenu={(e) => {
-                            e.preventDefault();
-                            if (confirm(`Delete folder "${folder.name}"?`)) {
-                              handleDeleteFolder(folder.id, folder.name);
-                            }
-                          }}
-                        >
-                          {isCollapsed ? (
-                            <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                          ) : (
-                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                          )}
-                          <Folder className="h-4 w-4" style={{ color: folder.color }} />
-                          <span className="text-xs font-medium flex-1">{folder.name}</span>
-                          <span className="text-[10px] text-muted-foreground">{folderGroups.length}</span>
-                        </div>
-                        {!isCollapsed && folderGroups.map(conversation => (
-                          <div key={conversation.id} className="pl-6">
-                            <ConversationListItem
-                              name={conversation.name}
-                              lastMessage={messages[conversation.id]?.[0]?.message_body}
-                              timestamp={messages[conversation.id]?.[0]?.created_at}
-                              unreadCount={conversation.unread_count}
-                              isSelected={selectedConversationId === conversation.id && conversationType === 'group'}
-                              onClick={() => handleSelectConversation(conversation, 'group')}
-                              onEdit={() => handleEditGroup(conversation.id, conversation.name)}
-                              onDelete={() => handleDeleteGroup(conversation.id, conversation.name)}
-                              folders={folders.map(f => ({ id: f.id, name: f.name }))}
-                              currentFolderId={conversation.folder_id}
-                              onMoveToFolder={(folderId) => handleMoveToFolder(conversation.id, folderId)}
-                            />
+                  <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                    {/* Folders with groups */}
+                    {folders.map(folder => {
+                      const folderGroups = conversations.filter(c => c.folder_id === folder.id);
+                      const isCollapsed = collapsedFolders.has(folder.id);
+                      
+                      return (
+                        <DroppableFolder key={folder.id} id={folder.id} isOver={false}>
+                          <div 
+                            className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/50 group"
+                            onClick={() => toggleFolderCollapse(folder.id)}
+                            onContextMenu={(e) => {
+                              e.preventDefault();
+                              if (confirm(`Delete folder "${folder.name}"?`)) {
+                                handleDeleteFolder(folder.id, folder.name);
+                              }
+                            }}
+                          >
+                            {isCollapsed ? (
+                              <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                            )}
+                            <Folder className="h-4 w-4" style={{ color: folder.color }} />
+                            <span className="text-xs font-medium flex-1">{folder.name}</span>
+                            <span className="text-[10px] text-muted-foreground">{folderGroups.length}</span>
                           </div>
-                        ))}
-                      </div>
-                    );
-                  })}
+                          {!isCollapsed && folderGroups.map(conversation => (
+                            <DraggableGroup key={conversation.id} id={conversation.id}>
+                              <div className="pl-6">
+                                <ConversationListItem
+                                  name={conversation.name}
+                                  lastMessage={messages[conversation.id]?.[0]?.message_body}
+                                  timestamp={messages[conversation.id]?.[0]?.created_at}
+                                  unreadCount={conversation.unread_count}
+                                  isSelected={selectedConversationId === conversation.id && conversationType === 'group'}
+                                  onClick={() => handleSelectConversation(conversation, 'group')}
+                                  onEdit={() => handleEditGroup(conversation.id, conversation.name)}
+                                  onDelete={() => handleDeleteGroup(conversation.id, conversation.name)}
+                                  folders={folders.map(f => ({ id: f.id, name: f.name }))}
+                                  currentFolderId={conversation.folder_id}
+                                  onMoveToFolder={(folderId) => handleMoveToFolder(conversation.id, folderId)}
+                                />
+                              </div>
+                            </DraggableGroup>
+                          ))}
+                        </DroppableFolder>
+                      );
+                    })}
 
-                  {/* Ungrouped conversations (no folder) */}
-                  {conversations.filter(c => !c.folder_id).length > 0 && (
-                    <div className="py-1">
-                      {conversations.filter(c => !c.folder_id).map((conversation) => (
-                        <ConversationListItem
-                          key={conversation.id}
-                          name={conversation.name}
-                          lastMessage={messages[conversation.id]?.[0]?.message_body}
-                          timestamp={messages[conversation.id]?.[0]?.created_at}
-                          unreadCount={conversation.unread_count}
-                          isSelected={selectedConversationId === conversation.id && conversationType === 'group'}
-                          onClick={() => handleSelectConversation(conversation, 'group')}
-                          onEdit={() => handleEditGroup(conversation.id, conversation.name)}
-                          onDelete={() => handleDeleteGroup(conversation.id, conversation.name)}
-                          folders={folders.map(f => ({ id: f.id, name: f.name }))}
-                          currentFolderId={conversation.folder_id}
-                          onMoveToFolder={(folderId) => handleMoveToFolder(conversation.id, folderId)}
-                        />
-                      ))}
-                    </div>
-                  )}
+                    {/* Ungrouped conversations (no folder) - also a drop zone */}
+                    <DroppableFolder id="no-folder" isOver={false}>
+                      {conversations.filter(c => !c.folder_id).length > 0 && (
+                        <div className="py-1">
+                          {conversations.filter(c => !c.folder_id).map((conversation) => (
+                            <DraggableGroup key={conversation.id} id={conversation.id}>
+                              <ConversationListItem
+                                name={conversation.name}
+                                lastMessage={messages[conversation.id]?.[0]?.message_body}
+                                timestamp={messages[conversation.id]?.[0]?.created_at}
+                                unreadCount={conversation.unread_count}
+                                isSelected={selectedConversationId === conversation.id && conversationType === 'group'}
+                                onClick={() => handleSelectConversation(conversation, 'group')}
+                                onEdit={() => handleEditGroup(conversation.id, conversation.name)}
+                                onDelete={() => handleDeleteGroup(conversation.id, conversation.name)}
+                                folders={folders.map(f => ({ id: f.id, name: f.name }))}
+                                currentFolderId={conversation.folder_id}
+                                onMoveToFolder={(folderId) => handleMoveToFolder(conversation.id, folderId)}
+                              />
+                            </DraggableGroup>
+                          ))}
+                        </div>
+                      )}
+                    </DroppableFolder>
+
+                    {/* Drag overlay */}
+                    <DragOverlay>
+                      {activeGroupId ? (
+                        <div className="bg-background border border-primary rounded-md shadow-lg p-2 opacity-90">
+                          <span className="text-xs font-medium">
+                            {conversations.find(c => c.id === activeGroupId)?.name}
+                          </span>
+                        </div>
+                      ) : null}
+                    </DragOverlay>
+                  </DndContext>
                   
                   {dmConversations.length > 0 && (
                     <div className="py-1">
