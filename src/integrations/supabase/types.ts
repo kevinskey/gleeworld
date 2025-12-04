@@ -4907,7 +4907,13 @@ export type Database = {
           expire_date: string | null
           id: string
           is_featured: boolean | null
+          is_recurring: boolean | null
+          last_recurrence_at: string | null
+          parent_announcement_id: string | null
           publish_date: string | null
+          recurrence_end_date: string | null
+          recurrence_start_date: string | null
+          recurrence_type: string | null
           target_audience: string | null
           title: string
         }
@@ -4919,7 +4925,13 @@ export type Database = {
           expire_date?: string | null
           id?: string
           is_featured?: boolean | null
+          is_recurring?: boolean | null
+          last_recurrence_at?: string | null
+          parent_announcement_id?: string | null
           publish_date?: string | null
+          recurrence_end_date?: string | null
+          recurrence_start_date?: string | null
+          recurrence_type?: string | null
           target_audience?: string | null
           title: string
         }
@@ -4931,7 +4943,13 @@ export type Database = {
           expire_date?: string | null
           id?: string
           is_featured?: boolean | null
+          is_recurring?: boolean | null
+          last_recurrence_at?: string | null
+          parent_announcement_id?: string | null
           publish_date?: string | null
+          recurrence_end_date?: string | null
+          recurrence_start_date?: string | null
+          recurrence_type?: string | null
           target_audience?: string | null
           title?: string
         }
@@ -4941,6 +4959,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_announcements_parent_announcement_id_fkey"
+            columns: ["parent_announcement_id"]
+            isOneToOne: false
+            referencedRelation: "gw_announcements"
             referencedColumns: ["id"]
           },
         ]

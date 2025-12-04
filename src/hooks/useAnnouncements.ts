@@ -13,6 +13,13 @@ export interface Announcement {
   created_by?: string;
   target_audience?: string;
   created_at?: string;
+  // Recurrence fields
+  is_recurring?: boolean;
+  recurrence_type?: 'daily' | 'weekly' | 'monthly' | null;
+  recurrence_start_date?: string;
+  recurrence_end_date?: string;
+  last_recurrence_at?: string;
+  parent_announcement_id?: string;
 }
 
 export interface CreateAnnouncementData {
@@ -22,6 +29,11 @@ export interface CreateAnnouncementData {
   target_audience?: string;
   expire_date?: string;
   is_featured?: boolean;
+  // Recurrence fields
+  is_recurring?: boolean;
+  recurrence_type?: 'daily' | 'weekly' | 'monthly' | null;
+  recurrence_start_date?: string;
+  recurrence_end_date?: string;
 }
 
 export const useAnnouncements = () => {
@@ -85,6 +97,10 @@ export const useAnnouncements = () => {
       const cleanedData = {
         ...data,
         expire_date: data.expire_date || null,
+        recurrence_start_date: data.recurrence_start_date || null,
+        recurrence_end_date: data.recurrence_end_date || null,
+        recurrence_type: data.is_recurring ? data.recurrence_type : null,
+        is_recurring: data.is_recurring || false,
         created_by: (await supabase.auth.getUser()).data.user?.id,
       };
       
@@ -96,7 +112,9 @@ export const useAnnouncements = () => {
 
       toast({
         title: "Success",
-        description: "Announcement created successfully",
+        description: data.is_recurring 
+          ? `Recurring announcement created (${data.recurrence_type})` 
+          : "Announcement created successfully",
       });
 
       await fetchAnnouncements();
@@ -145,6 +163,9 @@ export const useAnnouncements = () => {
       const cleanedUpdates = {
         ...updates,
         expire_date: updates.expire_date || null,
+        recurrence_start_date: updates.recurrence_start_date || null,
+        recurrence_end_date: updates.recurrence_end_date || null,
+        recurrence_type: updates.is_recurring ? updates.recurrence_type : null,
       };
       
       const { error } = await supabase
