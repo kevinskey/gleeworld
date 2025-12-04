@@ -27,9 +27,11 @@ export const ExecBoardInterviewForm = () => {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [existingInterview, setExistingInterview] = useState<any>(null);
+  const [userName, setUserName] = useState<string>("");
   const [formData, setFormData] = useState({
     semester: getCurrentSemester(),
     position: "",
+    full_name: "",
     progress_summary: "",
     challenges_faced: "",
     projects_created: "",
@@ -40,6 +42,24 @@ export const ExecBoardInterviewForm = () => {
     recommendations_for_successor: "",
     additional_comments: ""
   });
+
+  // Fetch user's name from profile
+  useEffect(() => {
+    const fetchUserName = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from("gw_profiles")
+        .select("full_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      
+      if (data?.full_name) {
+        setUserName(data.full_name);
+        setFormData(prev => ({ ...prev, full_name: data.full_name }));
+      }
+    };
+    fetchUserName();
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -60,6 +80,7 @@ export const ExecBoardInterviewForm = () => {
       setFormData({
         semester: data.semester,
         position: data.position,
+        full_name: data.full_name || userName,
         progress_summary: data.progress_summary || "",
         challenges_faced: data.challenges_faced || "",
         projects_created: data.projects_created || "",
@@ -156,7 +177,14 @@ export const ExecBoardInterviewForm = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="full_name">Your Name *</Label>
+              <div className="p-3 bg-muted rounded-md text-sm font-medium">
+                {userName || "Loading..."}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="semester">Semester *</Label>
               <Select value={formData.semester} onValueChange={(v) => handleChange("semester", v)}>

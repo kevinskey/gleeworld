@@ -3730,6 +3730,7 @@ export type Database = {
           additional_comments: string | null
           challenges_faced: string | null
           created_at: string
+          full_name: string | null
           id: string
           lessons_learned: string | null
           new_ideas: string | null
@@ -3747,6 +3748,7 @@ export type Database = {
           additional_comments?: string | null
           challenges_faced?: string | null
           created_at?: string
+          full_name?: string | null
           id?: string
           lessons_learned?: string | null
           new_ideas?: string | null
@@ -3764,6 +3766,7 @@ export type Database = {
           additional_comments?: string | null
           challenges_faced?: string | null
           created_at?: string
+          full_name?: string | null
           id?: string
           lessons_learned?: string | null
           new_ideas?: string | null
