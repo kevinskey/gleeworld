@@ -104,60 +104,12 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
     setCustomActions(serialized);
   };
 
-  const defaultActions = [
-    {
-      id: 'music-library',
-      title: 'Music Library',
-      description: 'Browse sheet music & recordings',
-      icon: 'Music',
-      color: 'purple',
-      action: () => onModuleSelect('music-library'),
-      isDefault: true
-    },
-    {
-      id: 'glee-academy',
-      title: 'Glee Academy',
-      description: 'Educational platform & courses',
-      icon: 'BookOpen',
-      color: 'blue',
-      action: () => onModuleSelect('glee-academy'),
-      isDefault: true
-    },
-    {
-      id: 'calendar',
-      title: 'Calendar',
-      description: 'View events & schedule',
-      icon: 'Calendar',
-      color: 'green',
-      action: () => onModuleSelect('calendar'),
-      isDefault: true
-    },
-    {
-      id: 'wardrobe',
-      title: 'Wardrobe',
-      description: 'Concert attire & uniforms',
-      icon: 'Star',
-      color: 'pink',
-      action: () => onModuleSelect('wardrobe'),
-      isDefault: true
-    },
-    {
-      id: 'community-hub',
-      title: 'Community Hub',
-      description: 'Connect with members',
-      icon: 'Heart',
-      color: 'red',
-      action: () => onModuleSelect('community-hub'),
-      isDefault: true
-    }
-  ];
-
   const computedCustomActions = customActions.map((a) => ({
     ...a,
     action: typeof a.action === 'function' ? a.action : () => onModuleSelect(a.moduleId || a.name || a.id),
   }));
 
-  const allActions = [...defaultActions, ...computedCustomActions];
+  const allActions = computedCustomActions;
 
   const handleActionClick = (actionFn?: () => void, fallbackModuleId?: string) => {
     try {
@@ -376,7 +328,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                       <ChevronRight className="h-4 w-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100 transition-colors" />
                     </div>
                   </Button>
-                  {isManaging && !action.isDefault && (
+                  {isManaging && (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -391,7 +343,8 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
             })}
             {allActions.length === 0 && (
               <div className="text-center py-8 text-slate-600 dark:text-slate-300">
-                <p className="text-sm font-mono">No quick actions configured</p>
+                <p className="text-sm font-mono mb-2">No quick actions configured</p>
+                <p className="text-xs font-mono">Click the + button above to add modules</p>
               </div>
             )}
           </div>
