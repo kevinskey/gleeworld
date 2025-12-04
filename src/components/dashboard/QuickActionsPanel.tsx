@@ -115,12 +115,39 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       isDefault: true
     },
     {
+      id: 'glee-academy',
+      title: 'Glee Academy',
+      description: 'Educational platform & courses',
+      icon: 'BookOpen',
+      color: 'blue',
+      action: () => onModuleSelect('glee-academy'),
+      isDefault: true
+    },
+    {
       id: 'calendar',
       title: 'Calendar',
       description: 'View events & schedule',
       icon: 'Calendar',
       color: 'green',
       action: () => onModuleSelect('calendar'),
+      isDefault: true
+    },
+    {
+      id: 'wardrobe',
+      title: 'Wardrobe',
+      description: 'Concert attire & uniforms',
+      icon: 'Star',
+      color: 'pink',
+      action: () => onModuleSelect('wardrobe'),
+      isDefault: true
+    },
+    {
+      id: 'community-hub',
+      title: 'Community Hub',
+      description: 'Connect with members',
+      icon: 'Heart',
+      color: 'red',
+      action: () => onModuleSelect('community-hub'),
       isDefault: true
     }
   ];
