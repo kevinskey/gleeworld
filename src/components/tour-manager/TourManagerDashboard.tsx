@@ -4,12 +4,24 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, CheckCircle2, ArrowRight, Building2 } from 'lucide-react';
+import { 
+  Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, 
+  CheckCircle2, ArrowRight, Building2, Bed, Bus, Video, Package, 
+  ClipboardList, Shirt, DollarSign
+} from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
 import { AIRoutePlanner } from './AIRoutePlanner';
 import { TourCorrespondence } from './TourCorrespondence';
 import { HostManager } from './HostManager';
+import { WardrobeMistressHub } from './WardrobeMistressHub';
+import { TourStipends } from './TourStipends';
+import { TourDatesSection } from '@/components/tour/TourDatesSection';
+import { RoomingAssignmentsSection } from '@/components/tour/RoomingAssignmentsSection';
+import { CrewAssignmentsSection } from '@/components/tour/CrewAssignmentsSection';
+import { BusBuddiesSection } from '@/components/tour/BusBuddiesSection';
+import { TourDocumentsSection } from '@/components/tour/TourDocumentsSection';
+import { LivePerformancesSection } from '@/components/tour/LivePerformancesSection';
 
 interface TourManagerDashboardProps {
   user?: {
@@ -160,33 +172,77 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl blur-xl"></div>
-            <TabsList className="relative grid w-full grid-cols-5 bg-card/50 backdrop-blur-sm border border-border/50 p-2 pb-4 rounded-2xl shadow-lg">
-              <TabsTrigger value="booking-requests" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-blue-600/10 data-[state=active]:text-blue-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                <div className="relative">
+            <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 p-2 rounded-2xl shadow-lg">
+              {/* Admin Functions Row */}
+              <p className="text-xs text-muted-foreground px-2 py-1 font-medium">Admin & Booking</p>
+              <TabsList className="grid w-full grid-cols-5 bg-transparent mb-2">
+                <TabsTrigger value="booking-requests" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-blue-600/10 data-[state=active]:text-blue-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
                   <Mail className="h-4 w-4" />
-                  <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-                </div>
-                <span className="hidden lg:inline font-medium">Requests</span>
-              </TabsTrigger>
-              <TabsTrigger value="hosts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/10 data-[state=active]:to-cyan-600/10 data-[state=active]:text-cyan-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                <Building2 className="h-4 w-4" />
-                <span className="hidden lg:inline font-medium">Hosts</span>
-              </TabsTrigger>
-              <TabsTrigger value="correspondence" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/10 data-[state=active]:to-purple-600/10 data-[state=active]:text-purple-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                <Users className="h-4 w-4" />
-                <span className="hidden lg:inline font-medium">Messages</span>
-              </TabsTrigger>
-              <TabsTrigger value="contracts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/10 data-[state=active]:to-green-600/10 data-[state=active]:text-green-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                <FileText className="h-4 w-4" />
-                <span className="hidden lg:inline font-medium">Contracts</span>
-              </TabsTrigger>
-              <TabsTrigger value="route-planning" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/10 data-[state=active]:to-orange-600/10 data-[state=active]:text-orange-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                <MapPin className="h-4 w-4" />
-                <span className="hidden lg:inline font-medium">Routes</span>
-              </TabsTrigger>
-            </TabsList>
+                  <span className="hidden lg:inline font-medium">Requests</span>
+                </TabsTrigger>
+                <TabsTrigger value="hosts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/10 data-[state=active]:to-cyan-600/10 data-[state=active]:text-cyan-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <Building2 className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Hosts</span>
+                </TabsTrigger>
+                <TabsTrigger value="correspondence" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/10 data-[state=active]:to-purple-600/10 data-[state=active]:text-purple-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Messages</span>
+                </TabsTrigger>
+                <TabsTrigger value="contracts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/10 data-[state=active]:to-green-600/10 data-[state=active]:text-green-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <FileText className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Contracts</span>
+                </TabsTrigger>
+                <TabsTrigger value="route-planning" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/10 data-[state=active]:to-orange-600/10 data-[state=active]:text-orange-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <MapPin className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Routes</span>
+                </TabsTrigger>
+              </TabsList>
+              
+              {/* Tour Info Center Row */}
+              <p className="text-xs text-muted-foreground px-2 py-1 font-medium border-t border-border/30 pt-2">Tour Information</p>
+              <TabsList className="grid w-full grid-cols-6 bg-transparent mb-2">
+                <TabsTrigger value="tour-dates" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-indigo-600/10 data-[state=active]:text-indigo-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <Calendar className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Dates</span>
+                </TabsTrigger>
+                <TabsTrigger value="rooming" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500/10 data-[state=active]:to-pink-600/10 data-[state=active]:text-pink-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <Bed className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Rooms</span>
+                </TabsTrigger>
+                <TabsTrigger value="crew" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/10 data-[state=active]:to-amber-600/10 data-[state=active]:text-amber-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <Package className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Crew</span>
+                </TabsTrigger>
+                <TabsTrigger value="bus-buddies" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500/10 data-[state=active]:to-teal-600/10 data-[state=active]:text-teal-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <Bus className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Bus</span>
+                </TabsTrigger>
+                <TabsTrigger value="documents" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-slate-500/10 data-[state=active]:to-slate-600/10 data-[state=active]:text-slate-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <ClipboardList className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Docs</span>
+                </TabsTrigger>
+                <TabsTrigger value="live-performances" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500/10 data-[state=active]:to-red-600/10 data-[state=active]:text-red-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <Video className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Live</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Operations Row */}
+              <p className="text-xs text-muted-foreground px-2 py-1 font-medium border-t border-border/30 pt-2">Operations</p>
+              <TabsList className="grid w-full grid-cols-2 bg-transparent">
+                <TabsTrigger value="wardrobe" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500/10 data-[state=active]:to-violet-600/10 data-[state=active]:text-violet-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <Shirt className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Wardrobe</span>
+                </TabsTrigger>
+                <TabsTrigger value="stipends" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/10 data-[state=active]:to-emerald-600/10 data-[state=active]:text-emerald-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Stipends</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
           </div>
 
+          {/* Admin Tabs Content */}
           <TabsContent value="booking-requests" className="space-y-6 animate-fade-in">
             <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-blue-500/10 to-blue-600/5 border-b border-border/50">
@@ -205,7 +261,6 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                       Manage incoming performance requests and bookings
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-blue-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -232,7 +287,6 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                       Manage performance venues, contacts, and host relationships
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-cyan-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -259,7 +313,6 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                       Manage communications with organizations and media
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-purple-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -286,7 +339,6 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                       Create, manage, and track contract signatures
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-green-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
@@ -313,11 +365,220 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                       Optimize tour routes with intelligent AI planning
                     </p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-orange-500 ml-auto" />
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
                 <AIRoutePlanner user={user} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tour Information Tabs Content */}
+          <TabsContent value="tour-dates" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-indigo-500/10 to-indigo-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-indigo-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-indigo-500/10 p-2 rounded-lg">
+                      <Calendar className="h-5 w-5 text-indigo-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-indigo-600 to-indigo-700 bg-clip-text text-transparent">
+                      Tour Schedule & Locations
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      View all tour dates, venues, and locations
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <TourDatesSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="rooming" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-pink-500/10 to-pink-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-pink-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-pink-500/10 p-2 rounded-lg">
+                      <Bed className="h-5 w-5 text-pink-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent">
+                      Rooming Assignments
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      View and manage hotel room assignments
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <RoomingAssignmentsSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="crew" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-amber-500/10 to-amber-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-amber-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-amber-500/10 p-2 rounded-lg">
+                      <Package className="h-5 w-5 text-amber-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">
+                      Merch & Setup Crew
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      View crew assignments for merchandise and setup
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <CrewAssignmentsSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bus-buddies" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-teal-500/10 to-teal-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-teal-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-teal-500/10 p-2 rounded-lg">
+                      <Bus className="h-5 w-5 text-teal-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-teal-600 to-teal-700 bg-clip-text text-transparent">
+                      Bus Buddies
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      View bus seating assignments and travel partners
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <BusBuddiesSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="documents" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-slate-500/10 to-slate-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-slate-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-slate-500/10 p-2 rounded-lg">
+                      <ClipboardList className="h-5 w-5 text-slate-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-slate-600 to-slate-700 bg-clip-text text-transparent">
+                      Tour Documents
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Access excuse letters, contracts, itinerary, and more
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <TourDocumentsSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="live-performances" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-red-500/10 to-red-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-red-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-red-500/10 p-2 rounded-lg">
+                      <Video className="h-5 w-5 text-red-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
+                      Live Performances
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Watch live and recorded on-the-road performances
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <LivePerformancesSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Operations Tabs Content */}
+          <TabsContent value="wardrobe" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-violet-500/10 to-violet-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-violet-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-violet-500/10 p-2 rounded-lg">
+                      <Shirt className="h-5 w-5 text-violet-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-violet-600 to-violet-700 bg-clip-text text-transparent">
+                      Wardrobe Management
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Manage tour wardrobe, costumes, and attire
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <WardrobeMistressHub />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="stipends" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-emerald-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-emerald-500/10 p-2 rounded-lg">
+                      <DollarSign className="h-5 w-5 text-emerald-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+                      Tour Stipends
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Manage tour performance stipends and payments
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <TourStipends />
               </CardContent>
             </Card>
           </TabsContent>
