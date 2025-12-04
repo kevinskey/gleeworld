@@ -8,24 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ClipboardList, Loader2, CheckCircle } from "lucide-react";
-
-const EXEC_POSITIONS = [
-  "President",
-  "Vice President",
-  "Secretary",
-  "Treasurer",
-  "Chaplain",
-  "Historian",
-  "Parliamentarian",
-  "Public Relations Coordinator",
-  "Student Conductor",
-  "Section Leader - Soprano",
-  "Section Leader - Alto",
-  "Wardrobe Coordinator",
-  "Librarian",
-  "Chief of Staff",
-  "Other"
-];
+import { EXECUTIVE_POSITIONS } from "@/hooks/useExecutivePermissions";
 
 const getCurrentSemester = () => {
   const now = new Date();
@@ -195,8 +178,8 @@ export const ExecBoardInterviewForm = () => {
                   <SelectValue placeholder="Select your position" />
                 </SelectTrigger>
                 <SelectContent>
-                  {EXEC_POSITIONS.map(pos => (
-                    <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                  {EXECUTIVE_POSITIONS.map(pos => (
+                    <SelectItem key={pos.value} value={pos.label}>{pos.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
