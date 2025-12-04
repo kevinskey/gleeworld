@@ -61,16 +61,8 @@ export const FinderFileGrid = ({
         audioRef.current = null;
       }
       
-      // Create and play new audio
-      const audio = new Audio();
-      audio.crossOrigin = "anonymous";
-      audio.src = file.file_url;
-      
-      audio.oncanplaythrough = () => {
-        audio.play().catch(err => {
-          console.error('Audio play error:', err);
-        });
-      };
+      // Create and play new audio - no CORS needed for public Supabase URLs
+      const audio = new Audio(file.file_url);
       
       audio.onended = () => {
         setPlayingAudio(null);
@@ -83,9 +75,15 @@ export const FinderFileGrid = ({
         audioRef.current = null;
       };
       
-      audio.load();
       audioRef.current = audio;
       setPlayingAudio(file.id);
+      
+      // Play immediately
+      audio.play().catch(err => {
+        console.error('Audio play error:', err);
+        setPlayingAudio(null);
+        audioRef.current = null;
+      });
     }
   };
 
