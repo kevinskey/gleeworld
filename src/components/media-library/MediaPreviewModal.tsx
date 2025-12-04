@@ -52,7 +52,13 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
                 <p className="text-muted-foreground text-sm mt-1">{file.description}</p>
               )}
             </div>
-            <audio src={file.file_url} controls autoPlay className="w-full max-w-md" />
+            <audio 
+              src={file.file_url} 
+              controls 
+              className="w-full max-w-md"
+              onError={(e) => console.error('Audio preview error:', e.currentTarget.error?.message)}
+            />
+            <p className="text-muted-foreground text-xs">Click play to start audio</p>
           </div>
         );
 
