@@ -620,7 +620,7 @@ export const GroupMessageInterface: React.FC = () => {
                               <ChevronDown className="h-3 w-3 text-muted-foreground" />
                             )}
                             <Folder className="h-4 w-4" style={{ color: folder.color }} />
-                            <span className="text-sm font-medium flex-1">{folder.name}</span>
+                            <span className="text-sm md:text-lg font-medium flex-1">{folder.name}</span>
                             <span className="text-[10px] text-muted-foreground">{folderGroups.length}</span>
                           </div>
                           {!isCollapsed && folderGroups.map(conversation => (
