@@ -18974,6 +18974,60 @@ export type Database = {
         }
         Relationships: []
       }
+      quick_capture_media: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          duration_seconds: number | null
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          is_approved: boolean | null
+          is_featured: boolean | null
+          metadata: Json | null
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          metadata?: Json | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          duration_seconds?: number | null
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          metadata?: Json | null
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       radio_playlist_tracks: {
         Row: {
           added_at: string | null

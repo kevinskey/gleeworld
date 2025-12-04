@@ -232,6 +232,7 @@ import MySubmissionsPage from "./pages/student/MySubmissionsPage";
 import JazzPage from "./pages/mus240/JazzPage";
 import Tour2026Page from "./pages/Tour2026Page";
 import ExecutiveBoardWorkshopPage from "./pages/ExecutiveBoardWorkshopPage";
+import ExecBoardTrainingVideosPage from "./pages/ExecBoardTrainingVideosPage";
 
 // Grading System
 import InstructorDashboard from "./pages/grading/instructor/InstructorDashboard";
@@ -937,6 +938,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <ExecutiveBoardWorkshopPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/exec-board-training-videos" 
+                  element={
+                    <ProtectedRoute>
+                      <ExecBoardTrainingVideosPage />
                     </ProtectedRoute>
                   } 
                 />
