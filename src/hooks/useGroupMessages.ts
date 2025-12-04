@@ -268,6 +268,32 @@ export const useGroupMessages = () => {
     );
   };
 
+  const deleteGroup = async (groupId: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_message_groups')
+        .update({ is_archived: true, is_active: false })
+        .eq('id', groupId);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setConversations(prev => prev.filter(conv => conv.id !== groupId));
+      
+      // Clear messages for this group
+      setMessages(prev => {
+        const newMessages = { ...prev };
+        delete newMessages[groupId];
+        return newMessages;
+      });
+
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error deleting group:', err);
+      throw err;
+    }
+  };
+
   return {
     conversations,
     messages,
@@ -276,6 +302,7 @@ export const useGroupMessages = () => {
     fetchMessagesForConversation,
     sendMessage,
     markConversationAsRead,
+    deleteGroup,
     refetchConversations: fetchConversations
   };
 };

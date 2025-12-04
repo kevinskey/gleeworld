@@ -42,7 +42,8 @@ export const GroupMessageInterface: React.FC = () => {
     loading,
     fetchMessagesForConversation,
     sendMessage,
-    markConversationAsRead
+    markConversationAsRead,
+    deleteGroup
   } = useGroupMessages();
 
   const {
@@ -101,6 +102,27 @@ export const GroupMessageInterface: React.FC = () => {
       toast({
         title: 'Send Failed',
         description: 'Failed to send message. Please try again.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: string, groupName: string) => {
+    if (!confirm(`Are you sure you want to delete "${groupName}"?`)) return;
+    
+    try {
+      await deleteGroup(groupId);
+      if (selectedConversationId === groupId) {
+        setSelectedConversationId(null);
+      }
+      toast({
+        title: 'Group Deleted',
+        description: `"${groupName}" has been removed.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Delete Failed',
+        description: 'Failed to delete group. Please try again.',
         variant: 'destructive'
       });
     }
@@ -444,6 +466,7 @@ export const GroupMessageInterface: React.FC = () => {
                           unreadCount={conversation.unread_count}
                           isSelected={selectedConversationId === conversation.id && conversationType === 'group'}
                           onClick={() => handleSelectConversation(conversation, 'group')}
+                          onDelete={() => handleDeleteGroup(conversation.id, conversation.name)}
                         />
                       ))}
                     </div>
