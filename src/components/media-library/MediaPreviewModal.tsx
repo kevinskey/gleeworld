@@ -14,13 +14,26 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
   const [zoom, setZoom] = useState(1);
   const fileType = getFileType(file);
 
+  // Encode URL to handle special characters like apostrophes
+  const encodeFileUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      urlObj.pathname = urlObj.pathname.split('/').map(segment => encodeURIComponent(decodeURIComponent(segment))).join('/');
+      return urlObj.toString();
+    } catch {
+      return url;
+    }
+  };
+
+  const encodedUrl = encodeFileUrl(file.file_url);
+
   const renderContent = () => {
     switch (fileType) {
       case 'image':
         return (
           <div className="relative flex items-center justify-center h-full overflow-auto">
             <img
-              src={file.file_url}
+              src={encodedUrl}
               alt={file.title}
               className="max-w-full max-h-full object-contain transition-transform"
               style={{ transform: `scale(${zoom})` }}
@@ -31,7 +44,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
       case 'video':
         return (
           <video
-            src={file.file_url}
+            src={encodedUrl}
             controls
             autoPlay
             className="max-w-full max-h-full"
@@ -53,7 +66,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
               )}
             </div>
             <audio 
-              src={file.file_url} 
+              src={encodedUrl} 
               controls 
               className="w-full max-w-md"
               onError={(e) => console.error('Audio preview error:', e.currentTarget.error?.message)}
@@ -65,7 +78,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
       case 'document':
         return (
           <iframe
-            src={file.file_url}
+            src={encodedUrl}
             className="w-full h-full"
             title={file.title}
           />
@@ -75,7 +88,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
         return (
           <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
             <p>Preview not available for this file type</p>
-            <Button onClick={() => window.open(file.file_url, '_blank')}>
+            <Button onClick={() => window.open(encodedUrl, '_blank')}>
               <Download className="h-4 w-4 mr-2" />
               Download to View
             </Button>
@@ -119,7 +132,7 @@ export const MediaPreviewModal = ({ file, onClose, getFileType }: MediaPreviewMo
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(file.file_url, '_blank')}
+              onClick={() => window.open(encodedUrl, '_blank')}
               className="text-white hover:bg-white/20"
             >
               <Download className="h-4 w-4" />

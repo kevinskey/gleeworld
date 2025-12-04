@@ -43,54 +43,58 @@ export const FinderFileGrid = ({
     }
   };
 
+  // Encode URL to handle special characters like apostrophes
+  const encodeFileUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      // Encode the pathname to handle special characters
+      urlObj.pathname = urlObj.pathname.split('/').map(segment => encodeURIComponent(decodeURIComponent(segment))).join('/');
+      return urlObj.toString();
+    } catch {
+      return url;
+    }
+  };
+
   const handleAudioToggle = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation();
     e.preventDefault();
     
-    console.log('Audio toggle clicked for:', file.title, 'URL:', file.file_url);
+    const encodedUrl = encodeFileUrl(file.file_url);
+    console.log('Audio toggle for:', file.title, 'Encoded URL:', encodedUrl);
     
     if (playingAudio === file.id) {
-      // Stop playing
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
       setPlayingAudio(null);
     } else {
-      // Stop any currently playing audio
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
       }
       
-      // Create audio element
-      const audio = new Audio();
+      const audio = new Audio(encodedUrl);
       
-      audio.onloadeddata = () => {
-        console.log('Audio loaded successfully, playing...');
+      audio.oncanplay = () => {
+        console.log('Audio ready to play');
         audio.play().catch(err => {
-          console.error('Audio play error:', err);
+          console.error('Play failed:', err);
           setPlayingAudio(null);
           audioRef.current = null;
         });
       };
       
       audio.onended = () => {
-        console.log('Audio ended');
         setPlayingAudio(null);
         audioRef.current = null;
       };
       
       audio.onerror = () => {
-        const error = audio.error;
-        console.error('Audio error code:', error?.code, 'message:', error?.message);
+        console.error('Audio error:', audio.error?.code, audio.error?.message);
         setPlayingAudio(null);
         audioRef.current = null;
       };
-      
-      // Set source and start loading
-      audio.src = file.file_url;
-      audio.load();
       
       audioRef.current = audio;
       setPlayingAudio(file.id);
