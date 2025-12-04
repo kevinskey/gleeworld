@@ -43,12 +43,23 @@ export const FinderFileGrid = ({
     }
   };
 
-  // Encode URL to handle special characters like apostrophes
+  // Encode URL to handle special characters - including ! ' ( ) which encodeURIComponent doesn't encode
   const encodeFileUrl = (url: string) => {
     try {
       const urlObj = new URL(url);
-      // Encode the pathname to handle special characters
-      urlObj.pathname = urlObj.pathname.split('/').map(segment => encodeURIComponent(decodeURIComponent(segment))).join('/');
+      // Encode each path segment, then also encode special chars that encodeURIComponent misses
+      urlObj.pathname = urlObj.pathname
+        .split('/')
+        .map(segment => {
+          let encoded = encodeURIComponent(decodeURIComponent(segment));
+          // Encode additional special characters
+          encoded = encoded.replace(/!/g, '%21');
+          encoded = encoded.replace(/'/g, '%27');
+          encoded = encoded.replace(/\(/g, '%28');
+          encoded = encoded.replace(/\)/g, '%29');
+          return encoded;
+        })
+        .join('/');
       return urlObj.toString();
     } catch {
       return url;
