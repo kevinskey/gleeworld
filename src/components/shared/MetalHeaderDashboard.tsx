@@ -625,41 +625,6 @@ export const MetalHeaderDashboard = ({
         </button>
       </div>
 
-      {/* Feature Cards - 2 Column Section */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6">
-        {/* 2026 Tour Information Center */}
-        <a href="/2026-tour" className="group feature-card feature-card-primary">
-          <div className="feature-card-overlay" />
-          <div className="feature-card-content">
-            <div className="feature-card-icon feature-card-icon-primary group-hover:scale-110 transition-transform">
-              <Globe className="h-10 w-10 text-primary" />
-            </div>
-            <h3 className="feature-card-title">2026 Tour Information Center</h3>
-            <p className="feature-card-description">Access tour dates, destinations, and travel information</p>
-            <span className="feature-card-link feature-card-link-primary">
-              Learn More 
-              <ChevronRight className="h-4 w-4" />
-            </span>
-          </div>
-        </a>
-
-        {/* Executive Board Workshop */}
-        <a href="/executive-board-workshop" className="group feature-card feature-card-amber">
-          <div className="feature-card-overlay" />
-          <div className="feature-card-content">
-            <div className="feature-card-icon feature-card-icon-amber group-hover:scale-110 transition-transform">
-              <Users className="h-10 w-10 text-amber-600" />
-            </div>
-            <h3 className="feature-card-title">Executive Board Workshop</h3>
-            <p className="feature-card-description">Training resources and leadership development tools</p>
-            <span className="feature-card-link feature-card-link-amber">
-              Learn More 
-              <ChevronRight className="h-4 w-4" />
-            </span>
-          </div>
-        </a>
-      </div>
-
       {/* Super Admin Layout Controls */}
       {isSuperAdmin() && <div className="flex items-center gap-2 justify-end">
           
@@ -716,6 +681,41 @@ export const MetalHeaderDashboard = ({
           </div>
         </SortableContext>
       </DndContext>
+
+      {/* Feature Cards - 2 Column Section */}
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-6">
+        {/* 2026 Tour Information Center */}
+        <a href="/2026-tour" className="group feature-card feature-card-primary">
+          <div className="feature-card-overlay" />
+          <div className="feature-card-content">
+            <div className="feature-card-icon feature-card-icon-primary group-hover:scale-110 transition-transform">
+              <Globe className="h-10 w-10 text-primary" />
+            </div>
+            <h3 className="feature-card-title">2026 Tour Information Center</h3>
+            <p className="feature-card-description">Access tour dates, destinations, and travel information</p>
+            <span className="feature-card-link feature-card-link-primary">
+              Learn More 
+              <ChevronRight className="h-4 w-4" />
+            </span>
+          </div>
+        </a>
+
+        {/* Executive Board Workshop */}
+        <a href="/executive-board-workshop" className="group feature-card feature-card-amber">
+          <div className="feature-card-overlay" />
+          <div className="feature-card-content">
+            <div className="feature-card-icon feature-card-icon-amber group-hover:scale-110 transition-transform">
+              <Users className="h-10 w-10 text-amber-600" />
+            </div>
+            <h3 className="feature-card-title">Executive Board Workshop</h3>
+            <p className="feature-card-description">Training resources and leadership development tools</p>
+            <span className="feature-card-link feature-card-link-amber">
+              Learn More 
+              <ChevronRight className="h-4 w-4" />
+            </span>
+          </div>
+        </a>
+      </div>
 
       {/* Favorites Section - Hidden, now handled by draggable FavoritesCard */}
       {false && moduleFavorites.size > 0 && <Collapsible open={!favoritesCollapsed} onOpenChange={open => setFavoritesCollapsed(!open)}>
