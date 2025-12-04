@@ -31,12 +31,14 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           height: mobileHeight,
         });
       } else {
-        // Desktop: positioned on the right with wider layout and padding
+        // Desktop: centered in viewport
+        const desktopWidth = Math.min(900, window.innerWidth - 40);
+        const desktopHeight = Math.min(window.innerHeight * 0.8, window.innerHeight - 80);
         setDimensions({
-          x: window.innerWidth - 1000,
-          y: 80,
-          width: 900,
-          height: window.innerHeight * 0.75,
+          x: (window.innerWidth - desktopWidth) / 2,
+          y: (window.innerHeight - desktopHeight) / 2,
+          width: desktopWidth,
+          height: desktopHeight,
         });
       }
     };
