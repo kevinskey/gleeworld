@@ -47,6 +47,8 @@ export const FinderFileGrid = ({
     e.stopPropagation();
     e.preventDefault();
     
+    console.log('Audio toggle clicked for:', file.title, 'URL:', file.file_url);
+    
     if (playingAudio === file.id) {
       // Stop playing
       if (audioRef.current) {
@@ -61,29 +63,37 @@ export const FinderFileGrid = ({
         audioRef.current = null;
       }
       
-      // Create and play new audio - no CORS needed for public Supabase URLs
-      const audio = new Audio(file.file_url);
+      // Create audio element
+      const audio = new Audio();
+      
+      audio.onloadeddata = () => {
+        console.log('Audio loaded successfully, playing...');
+        audio.play().catch(err => {
+          console.error('Audio play error:', err);
+          setPlayingAudio(null);
+          audioRef.current = null;
+        });
+      };
       
       audio.onended = () => {
+        console.log('Audio ended');
         setPlayingAudio(null);
         audioRef.current = null;
       };
       
-      audio.onerror = (err) => {
-        console.error('Audio load error:', err);
+      audio.onerror = () => {
+        const error = audio.error;
+        console.error('Audio error code:', error?.code, 'message:', error?.message);
         setPlayingAudio(null);
         audioRef.current = null;
       };
+      
+      // Set source and start loading
+      audio.src = file.file_url;
+      audio.load();
       
       audioRef.current = audio;
       setPlayingAudio(file.id);
-      
-      // Play immediately
-      audio.play().catch(err => {
-        console.error('Audio play error:', err);
-        setPlayingAudio(null);
-        audioRef.current = null;
-      });
     }
   };
 
