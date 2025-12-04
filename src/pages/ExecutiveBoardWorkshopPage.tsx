@@ -21,17 +21,19 @@ const ExecutiveBoardWorkshopPage = () => {
 
         {/* Training Modules */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="border-2 hover:border-amber-500/50 transition-colors">
-            <CardHeader className="pb-2">
-              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
-                <BookOpen className="h-6 w-6 text-amber-600" />
-              </div>
-              <CardTitle className="text-lg">Handbook</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Role responsibilities and procedures</p>
-            </CardContent>
-          </Card>
+          <a href="/handbook" className="block">
+            <Card className="border-2 hover:border-amber-500/50 transition-colors h-full">
+              <CardHeader className="pb-2">
+                <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
+                  <BookOpen className="h-6 w-6 text-amber-600" />
+                </div>
+                <CardTitle className="text-lg">Handbook</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Role responsibilities and procedures</p>
+              </CardContent>
+            </Card>
+          </a>
 
           <Card className="border-2 hover:border-amber-500/50 transition-colors">
             <CardHeader className="pb-2">
