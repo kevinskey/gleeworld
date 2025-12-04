@@ -3725,6 +3725,60 @@ export type Database = {
         }
         Relationships: []
       }
+      exec_board_interviews: {
+        Row: {
+          additional_comments: string | null
+          challenges_faced: string | null
+          created_at: string
+          id: string
+          lessons_learned: string | null
+          new_ideas: string | null
+          position: string
+          progress_summary: string
+          projects_completed: string | null
+          projects_created: string | null
+          projects_participated: string | null
+          recommendations_for_successor: string | null
+          semester: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_comments?: string | null
+          challenges_faced?: string | null
+          created_at?: string
+          id?: string
+          lessons_learned?: string | null
+          new_ideas?: string | null
+          position: string
+          progress_summary: string
+          projects_completed?: string | null
+          projects_created?: string | null
+          projects_participated?: string | null
+          recommendations_for_successor?: string | null
+          semester: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_comments?: string | null
+          challenges_faced?: string | null
+          created_at?: string
+          id?: string
+          lessons_learned?: string | null
+          new_ideas?: string | null
+          position?: string
+          progress_summary?: string
+          projects_completed?: string | null
+          projects_created?: string | null
+          projects_participated?: string | null
+          recommendations_for_successor?: string | null
+          semester?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       exercises: {
         Row: {
           created_at: string | null

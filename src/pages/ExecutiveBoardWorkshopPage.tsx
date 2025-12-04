@@ -1,8 +1,8 @@
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, BookOpen, Video, FileText, Target, Award, Lightbulb, Calendar } from "lucide-react";
-
+import { Users, BookOpen, Video, FileText, Target, Award, Lightbulb, Calendar, ClipboardList } from "lucide-react";
+import { ExecBoardInterviewForm } from "@/components/executive/ExecBoardInterviewForm";
 const ExecutiveBoardWorkshopPage = () => {
   return (
     <UniversalLayout>
@@ -178,6 +178,11 @@ const ExecutiveBoardWorkshopPage = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* End of Semester Interview Section */}
+        <div className="mt-8">
+          <ExecBoardInterviewForm />
+        </div>
       </div>
     </UniversalLayout>
   );
