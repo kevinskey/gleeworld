@@ -49,6 +49,7 @@ import { MediaLibrary as MediaLibraryComponent } from '@/components/radio/MediaL
 import { HeroManagement } from '@/components/admin/HeroManagement';
 import { FirstYearConsole } from '@/components/console/first-year/FirstYearConsole';
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
+import { TourManagerModule } from '@/components/modules/TourManagerModule';
 
 interface MemberModulesProps {
   user: {
@@ -129,7 +130,7 @@ const getModuleComponent = (moduleName: string) => {
     'executive-functions': ExecutiveBoardNavigationHub,
     
     'merch-store': PRHubModule, // Placeholder - needs actual component
-    'tour-management': EventPlannerModule, // Placeholder
+    'tour-management': TourManagerModule,
     'ai-tools': AIFinancialPlanningModule, // Reuse for now
     'hero-manager': HeroManagement, // Fixed to use proper HeroManagement component
     'pr-manager': PRHubModule,
