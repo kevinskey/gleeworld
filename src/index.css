@@ -797,11 +797,11 @@
 }
 
 .animate-flip-in {
-  animation: flip-in 0.4s ease-out forwards;
+  animation: flip-in 0.6s ease-out forwards;
 }
 
 .animate-flip-out {
-  animation: flip-out 0.4s ease-in forwards;
+  animation: flip-out 0.6s ease-in forwards;
 }
 
 /* Spacing reduction utilities imported at top */
