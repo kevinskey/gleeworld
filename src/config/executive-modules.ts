@@ -14,6 +14,7 @@ export const EXECUTIVE_MODULE_IDS = [
   // Communications
   'email-management',
   'notifications',
+  'announcements',
   'pr-coordinator',
   'pr-hub',
   'scheduling-module',
