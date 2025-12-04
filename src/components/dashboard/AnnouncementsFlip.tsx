@@ -72,7 +72,7 @@ export const AnnouncementsFlip = ({ className, direction = 'left' }: Announcemen
       style={{ perspective: '400px' }}
     >
       {/* Mobile Layout - Stacked card design */}
-      <div className="flex lg:hidden flex-col gap-2 p-2">
+      <div className="flex lg:hidden flex-col gap-2 p-3 bg-[hsl(220,50%,15%)] rounded-lg">
         <div className="flex items-center gap-2">
           {/* Compact badge */}
           <div className="shrink-0 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide
@@ -97,12 +97,12 @@ export const AnnouncementsFlip = ({ className, direction = 'left' }: Announcemen
         {/* Mobile announcement card */}
         <div
           key={current.id}
-          className={`bg-card/50 backdrop-blur-sm rounded-lg p-3 border border-border/50 shadow-sm ${getAnimationClass()}`}
+          className={`bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 shadow-sm ${getAnimationClass()}`}
           style={{ transformOrigin: 'center center' }}
         >
-          <p className="text-xs leading-relaxed text-foreground">
-            <span className="font-semibold text-primary">{current.title}:</span>{' '}
-            <span className="text-muted-foreground">{current.content}</span>
+          <p className="text-xs leading-relaxed text-white">
+            <span className="font-semibold text-primary-foreground">{current.title}:</span>{' '}
+            <span className="text-white/80">{current.content}</span>
           </p>
         </div>
       </div>
