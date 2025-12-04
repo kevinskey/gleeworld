@@ -10,7 +10,7 @@ import { ConversationListItem } from '@/components/messaging/ConversationListIte
 import { GroupHeader } from '@/components/messaging/GroupHeader';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { MessageSquare, Plus, User, X, Search } from 'lucide-react';
+import { MessageSquare, Plus, User, X, Search, FolderPlus, Folder, ChevronDown, ChevronRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import useGroupMessages from '@/hooks/useGroupMessages';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
@@ -35,19 +35,27 @@ export const GroupMessageInterface: React.FC = () => {
   const [editGroupOpen, setEditGroupOpen] = useState(false);
   const [editingGroup, setEditingGroup] = useState<{ id: string; name: string } | null>(null);
   const [editGroupName, setEditGroupName] = useState('');
+  const [newFolderOpen, setNewFolderOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
     conversations,
+    folders,
     messages,
     loading,
     fetchMessagesForConversation,
     sendMessage,
     markConversationAsRead,
     deleteGroup,
-    updateGroup
+    updateGroup,
+    createFolder,
+    updateFolder,
+    deleteFolder,
+    moveGroupToFolder
   } = useGroupMessages();
 
   const {
@@ -156,6 +164,46 @@ export const GroupMessageInterface: React.FC = () => {
         variant: 'destructive'
       });
     }
+  };
+
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
+    try {
+      await createFolder(newFolderName.trim());
+      setNewFolderOpen(false);
+      setNewFolderName('');
+      toast({ title: 'Folder Created', description: 'New folder has been created.' });
+    } catch (error) {
+      toast({ title: 'Create Failed', description: 'Failed to create folder.', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteFolder = async (folderId: string, folderName: string) => {
+    if (!confirm(`Delete folder "${folderName}"? Groups will be moved to root.`)) return;
+    try {
+      await deleteFolder(folderId);
+      toast({ title: 'Folder Deleted', description: 'Folder has been removed.' });
+    } catch (error) {
+      toast({ title: 'Delete Failed', description: 'Failed to delete folder.', variant: 'destructive' });
+    }
+  };
+
+  const handleMoveToFolder = async (groupId: string, folderId: string | null) => {
+    try {
+      await moveGroupToFolder(groupId, folderId);
+      toast({ title: 'Group Moved', description: 'Group has been moved.' });
+    } catch (error) {
+      toast({ title: 'Move Failed', description: 'Failed to move group.', variant: 'destructive' });
+    }
+  };
+
+  const toggleFolderCollapse = (folderId: string) => {
+    setCollapsedFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      return next;
+    });
   };
 
   const handleSearchChange = async (query: string) => {
@@ -481,13 +529,71 @@ export const GroupMessageInterface: React.FC = () => {
               
               <ScrollArea className="flex-1 bg-background">
                 <div className="min-w-0">
-                  {conversations.length > 0 && (
-                    <div className="py-1">
-                      <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase bg-muted/30 flex items-center justify-between">
-                        <span>Groups</span>
-                        <span className="text-[10px] opacity-60">In-App Only</span>
+                  {/* Groups Header with New Folder button */}
+                  <div className="px-3 py-1.5 text-xs font-semibold text-muted-foreground uppercase bg-muted/30 flex items-center justify-between">
+                    <span>Groups</span>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-5 px-1.5 text-[10px]"
+                      onClick={() => setNewFolderOpen(true)}
+                    >
+                      <FolderPlus className="h-3 w-3 mr-1" />
+                      Folder
+                    </Button>
+                  </div>
+
+                  {/* Folders with groups */}
+                  {folders.map(folder => {
+                    const folderGroups = conversations.filter(c => c.folder_id === folder.id);
+                    const isCollapsed = collapsedFolders.has(folder.id);
+                    
+                    return (
+                      <div key={folder.id} className="border-b border-border/30">
+                        <div 
+                          className="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-muted/50 group"
+                          onClick={() => toggleFolderCollapse(folder.id)}
+                          onContextMenu={(e) => {
+                            e.preventDefault();
+                            if (confirm(`Delete folder "${folder.name}"?`)) {
+                              handleDeleteFolder(folder.id, folder.name);
+                            }
+                          }}
+                        >
+                          {isCollapsed ? (
+                            <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                          )}
+                          <Folder className="h-4 w-4" style={{ color: folder.color }} />
+                          <span className="text-xs font-medium flex-1">{folder.name}</span>
+                          <span className="text-[10px] text-muted-foreground">{folderGroups.length}</span>
+                        </div>
+                        {!isCollapsed && folderGroups.map(conversation => (
+                          <div key={conversation.id} className="pl-6">
+                            <ConversationListItem
+                              name={conversation.name}
+                              lastMessage={messages[conversation.id]?.[0]?.message_body}
+                              timestamp={messages[conversation.id]?.[0]?.created_at}
+                              unreadCount={conversation.unread_count}
+                              isSelected={selectedConversationId === conversation.id && conversationType === 'group'}
+                              onClick={() => handleSelectConversation(conversation, 'group')}
+                              onEdit={() => handleEditGroup(conversation.id, conversation.name)}
+                              onDelete={() => handleDeleteGroup(conversation.id, conversation.name)}
+                              folders={folders.map(f => ({ id: f.id, name: f.name }))}
+                              currentFolderId={conversation.folder_id}
+                              onMoveToFolder={(folderId) => handleMoveToFolder(conversation.id, folderId)}
+                            />
+                          </div>
+                        ))}
                       </div>
-                      {conversations.map((conversation) => (
+                    );
+                  })}
+
+                  {/* Ungrouped conversations (no folder) */}
+                  {conversations.filter(c => !c.folder_id).length > 0 && (
+                    <div className="py-1">
+                      {conversations.filter(c => !c.folder_id).map((conversation) => (
                         <ConversationListItem
                           key={conversation.id}
                           name={conversation.name}
@@ -498,6 +604,9 @@ export const GroupMessageInterface: React.FC = () => {
                           onClick={() => handleSelectConversation(conversation, 'group')}
                           onEdit={() => handleEditGroup(conversation.id, conversation.name)}
                           onDelete={() => handleDeleteGroup(conversation.id, conversation.name)}
+                          folders={folders.map(f => ({ id: f.id, name: f.name }))}
+                          currentFolderId={conversation.folder_id}
+                          onMoveToFolder={(folderId) => handleMoveToFolder(conversation.id, folderId)}
                         />
                       ))}
                     </div>
@@ -606,6 +715,26 @@ export const GroupMessageInterface: React.FC = () => {
               <Button onClick={handleSaveEditGroup}>
                 Save
               </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Folder Dialog */}
+      <Dialog open={newFolderOpen} onOpenChange={setNewFolderOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create Folder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Input
+              value={newFolderName}
+              onChange={(e) => setNewFolderName(e.target.value)}
+              placeholder="Folder name"
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setNewFolderOpen(false)}>Cancel</Button>
+              <Button onClick={handleCreateFolder}>Create</Button>
             </div>
           </div>
         </DialogContent>

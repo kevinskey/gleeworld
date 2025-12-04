@@ -1,9 +1,14 @@
 import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator } from '@/components/ui/context-menu';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger, ContextMenuSeparator, ContextMenuSub, ContextMenuSubTrigger, ContextMenuSubContent } from '@/components/ui/context-menu';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { Trash2, Pencil } from 'lucide-react';
+import { Trash2, Pencil, FolderInput, Folder } from 'lucide-react';
+
+interface FolderOption {
+  id: string;
+  name: string;
+}
 
 interface ConversationListItemProps {
   name: string;
@@ -15,6 +20,9 @@ interface ConversationListItemProps {
   onClick?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
+  folders?: FolderOption[];
+  currentFolderId?: string | null;
+  onMoveToFolder?: (folderId: string | null) => void;
 }
 
 export const ConversationListItem: React.FC<ConversationListItemProps> = ({
@@ -26,7 +34,10 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
   isSelected = false,
   onClick,
   onDelete,
-  onEdit
+  onEdit,
+  folders = [],
+  currentFolderId,
+  onMoveToFolder
 }) => {
   const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const formatTime = (time?: string) => {
@@ -64,7 +75,9 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
     </div>
   );
 
-  if (onDelete || onEdit) {
+  const hasContextMenu = onDelete || onEdit || onMoveToFolder;
+
+  if (hasContextMenu) {
     return (
       <ContextMenu>
         <ContextMenuTrigger asChild>
@@ -77,7 +90,34 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({
               Edit Group
             </ContextMenuItem>
           )}
-          {onEdit && onDelete && <ContextMenuSeparator />}
+          {onMoveToFolder && folders.length > 0 && (
+            <ContextMenuSub>
+              <ContextMenuSubTrigger>
+                <FolderInput className="h-4 w-4 mr-2" />
+                Move to Folder
+              </ContextMenuSubTrigger>
+              <ContextMenuSubContent>
+                {currentFolderId && (
+                  <ContextMenuItem onClick={() => onMoveToFolder(null)}>
+                    <Folder className="h-4 w-4 mr-2" />
+                    Remove from Folder
+                  </ContextMenuItem>
+                )}
+                {currentFolderId && folders.length > 0 && <ContextMenuSeparator />}
+                {folders.map(folder => (
+                  <ContextMenuItem 
+                    key={folder.id} 
+                    onClick={() => onMoveToFolder(folder.id)}
+                    disabled={folder.id === currentFolderId}
+                  >
+                    <Folder className="h-4 w-4 mr-2" />
+                    {folder.name}
+                  </ContextMenuItem>
+                ))}
+              </ContextMenuSubContent>
+            </ContextMenuSub>
+          )}
+          {(onEdit || onMoveToFolder) && onDelete && <ContextMenuSeparator />}
           {onDelete && (
             <ContextMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
               <Trash2 className="h-4 w-4 mr-2" />
