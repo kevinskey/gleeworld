@@ -1,7 +1,8 @@
 // Executive board module definitions
 export const EXECUTIVE_MODULE_IDS = [
-  // Core executive modules
+// Core executive modules
   'executive',
+  'executive-board-workshop',
   'user-management',
   'attendance-management',
   'tour-management',
