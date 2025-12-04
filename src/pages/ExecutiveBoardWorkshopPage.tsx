@@ -1,9 +1,33 @@
+import { useState } from "react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, BookOpen, Video, FileText, Target, Award, Lightbulb, Calendar, ClipboardList } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, BookOpen, Video, FileText, Target, Award, Lightbulb, Calendar, ArrowLeft } from "lucide-react";
 import { ExecBoardInterviewForm } from "@/components/executive/ExecBoardInterviewForm";
+import { HandbookModule } from "@/components/handbook/HandbookModule";
+
 const ExecutiveBoardWorkshopPage = () => {
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  if (activeSection === "handbook") {
+    return (
+      <UniversalLayout>
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <Button 
+            variant="ghost" 
+            onClick={() => setActiveSection(null)}
+            className="mb-4 gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Workshop
+          </Button>
+          <HandbookModule />
+        </div>
+      </UniversalLayout>
+    );
+  }
+
   return (
     <UniversalLayout>
       <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -21,19 +45,20 @@ const ExecutiveBoardWorkshopPage = () => {
 
         {/* Training Modules */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <a href="/handbook" className="block">
-            <Card className="border-2 hover:border-amber-500/50 transition-colors h-full">
-              <CardHeader className="pb-2">
-                <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
-                  <BookOpen className="h-6 w-6 text-amber-600" />
-                </div>
-                <CardTitle className="text-lg">Handbook</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">Role responsibilities and procedures</p>
-              </CardContent>
-            </Card>
-          </a>
+          <Card 
+            className="border-2 hover:border-amber-500/50 transition-colors cursor-pointer"
+            onClick={() => setActiveSection("handbook")}
+          >
+            <CardHeader className="pb-2">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
+                <BookOpen className="h-6 w-6 text-amber-600" />
+              </div>
+              <CardTitle className="text-lg">Handbook</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">Role responsibilities and procedures</p>
+            </CardContent>
+          </Card>
 
           <Card className="border-2 hover:border-amber-500/50 transition-colors">
             <CardHeader className="pb-2">
