@@ -31,6 +31,9 @@ export const AnnouncementManagement = () => {
     recurrence_start_date: '',
     recurrence_end_date: '',
   });
+  const [recurrenceDate, setRecurrenceDate] = useState('');
+  const [recurrenceTime, setRecurrenceTime] = useState('09:00');
+  const [recurrenceEndDateOnly, setRecurrenceEndDateOnly] = useState('');
 
   const resetForm = () => {
     setFormData({
@@ -45,7 +48,21 @@ export const AnnouncementManagement = () => {
       recurrence_start_date: '',
       recurrence_end_date: '',
     });
+    setRecurrenceDate('');
+    setRecurrenceTime('09:00');
+    setRecurrenceEndDateOnly('');
     setEditingAnnouncement(null);
+  };
+
+  // Combine date and time into ISO string for EST timezone
+  const combineDateTime = (date: string, time: string) => {
+    if (!date) return '';
+    const timeStr = time || '09:00';
+    // Create date in EST and convert to UTC for storage
+    const estDateTime = new Date(`${date}T${timeStr}:00`);
+    // Add 5 hours to convert EST to UTC (EST is UTC-5)
+    const utcDateTime = new Date(estDateTime.getTime() + 5 * 60 * 60 * 1000);
+    return utcDateTime.toISOString();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,9 +86,16 @@ export const AnnouncementManagement = () => {
       return;
     }
 
+    // Build submission data with combined date/time
+    const submitData: CreateAnnouncementData = {
+      ...formData,
+      recurrence_start_date: formData.is_recurring ? combineDateTime(recurrenceDate, recurrenceTime) : '',
+      recurrence_end_date: formData.is_recurring && recurrenceEndDateOnly ? combineDateTime(recurrenceEndDateOnly, '23:59') : '',
+    };
+
     const success = editingAnnouncement 
-      ? await updateAnnouncement(editingAnnouncement, formData)
-      : await createAnnouncement(formData);
+      ? await updateAnnouncement(editingAnnouncement, submitData)
+      : await createAnnouncement(submitData);
 
     if (success) {
       setIsDialogOpen(false);
@@ -79,7 +103,22 @@ export const AnnouncementManagement = () => {
     }
   };
 
+  // Parse UTC datetime to EST date and time
+  const parseDateTime = (isoString: string) => {
+    if (!isoString) return { date: '', time: '09:00' };
+    const utcDate = new Date(isoString);
+    // Subtract 5 hours to convert UTC to EST
+    const estDate = new Date(utcDate.getTime() - 5 * 60 * 60 * 1000);
+    const date = estDate.toISOString().split('T')[0];
+    const time = estDate.toTimeString().slice(0, 5);
+    return { date, time };
+  };
+
   const handleEdit = (announcement: any) => {
+    // Parse existing dates to separate date and time
+    const startParsed = parseDateTime(announcement.recurrence_start_date);
+    const endParsed = parseDateTime(announcement.recurrence_end_date);
+    
     setFormData({
       title: announcement.title,
       content: announcement.content,
@@ -92,6 +131,9 @@ export const AnnouncementManagement = () => {
       recurrence_start_date: announcement.recurrence_start_date || '',
       recurrence_end_date: announcement.recurrence_end_date || '',
     });
+    setRecurrenceDate(startParsed.date);
+    setRecurrenceTime(startParsed.time);
+    setRecurrenceEndDateOnly(endParsed.date);
     setEditingAnnouncement(announcement.id);
     setIsDialogOpen(true);
   };
@@ -290,29 +332,38 @@ export const AnnouncementManagement = () => {
                         </Select>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="recurrenceStart">Start Date</Label>
+                          <Label htmlFor="recurrenceDate">Start Date</Label>
                           <Input
-                            id="recurrenceStart"
-                            type="datetime-local"
-                            value={formData.recurrence_start_date}
-                            onChange={(e) => setFormData({ ...formData, recurrence_start_date: e.target.value })}
+                            id="recurrenceDate"
+                            type="date"
+                            value={recurrenceDate}
+                            onChange={(e) => setRecurrenceDate(e.target.value)}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="recurrenceEnd">End Date (Optional)</Label>
+                          <Label htmlFor="recurrenceTime">Time (EST)</Label>
                           <Input
-                            id="recurrenceEnd"
-                            type="datetime-local"
-                            value={formData.recurrence_end_date}
-                            onChange={(e) => setFormData({ ...formData, recurrence_end_date: e.target.value })}
+                            id="recurrenceTime"
+                            type="time"
+                            value={recurrenceTime}
+                            onChange={(e) => setRecurrenceTime(e.target.value)}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="recurrenceEndDate">End Date (Optional)</Label>
+                          <Input
+                            id="recurrenceEndDate"
+                            type="date"
+                            value={recurrenceEndDateOnly}
+                            onChange={(e) => setRecurrenceEndDateOnly(e.target.value)}
                           />
                         </div>
                       </div>
 
                       <p className="text-xs text-muted-foreground">
-                        This announcement will automatically reappear {formData.recurrence_type} until the end date (or indefinitely if no end date is set).
+                        This announcement will appear {formData.recurrence_type} at {recurrenceTime || '9:00 AM'} EST until the end date (or indefinitely if no end date is set).
                       </p>
                     </div>
                   )}
