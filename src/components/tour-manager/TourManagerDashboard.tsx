@@ -86,8 +86,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
       const { count: upcomingToursCount } = await supabase
         .from('events')
         .select('*', { count: 'exact', head: true })
-        .gte('date', new Date().toISOString().split('T')[0])
-        .in('event_type', ['tour', 'performance', 'concert']);
+        .gte('start_date', new Date().toISOString().split('T')[0]);
 
       setStats({
         newRequests: newRequestsCount || 0,
