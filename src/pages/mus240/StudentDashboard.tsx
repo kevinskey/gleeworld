@@ -29,7 +29,7 @@ import {
   RotateCcw,
   BarChart3
 } from 'lucide-react';
-import { GroupPollsPage } from '@/components/polls/GroupPollsPage';
+import { StudentPollInterface } from '@/components/mus240/StudentPollInterface';
 import { AIGroupRoleSubmission } from '@/components/mus240/student/AIGroupRoleSubmission';
 import { useStudentSubmissions } from '@/hooks/useStudentSubmissions';
 import { useMus240Progress } from '@/hooks/useMus240Progress';
@@ -648,11 +648,11 @@ export const StudentDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  Group Polls
+                  Class Polls
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <GroupPollsPage />
+                <StudentPollInterface />
               </CardContent>
             </Card>
           </TabsContent>
