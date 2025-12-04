@@ -76,7 +76,7 @@ export const AnnouncementsFlip = ({ className }: AnnouncementsFlipProps) => {
       <div className="flex-1 overflow-hidden flex items-center justify-center">
         <div
           key={current.id}
-          className={`text-xs sm:text-sm text-foreground/80 px-4 py-2 ${
+          className={`text-sm sm:text-base text-foreground font-medium px-4 py-2 ${
             isFlipping ? 'animate-flip-out' : 'animate-flip-in'
           }`}
           style={{ 
