@@ -65,10 +65,10 @@ export const AnnouncementsFlip = ({
         
         
         {/* Mobile announcement card */}
-        <div key={current.id} className={`bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 shadow-sm ${getAnimationClass()}`} style={{
+        <div key={current.id} className={`bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 shadow-sm overflow-x-auto scrollbar-hide ${getAnimationClass()}`} style={{
         transformOrigin: 'center center'
       }}>
-          <p className="text-xs leading-relaxed text-white">
+          <p className="text-xs text-white whitespace-nowrap">
             <span className="font-semibold text-primary-foreground">{current.title}:</span>{' '}
             <span className="text-white/80">{current.content}</span>
           </p>
