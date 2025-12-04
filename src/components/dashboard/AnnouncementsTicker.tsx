@@ -30,7 +30,7 @@ export const AnnouncementsTicker = ({
   if (announcements.length === 0) {
     return <span className="text-xs sm:text-sm text-muted-foreground">No announcements</span>;
   }
-  const tickerText = announcements.map(a => a.content).join('  •  ');
+  const tickerText = announcements.map(a => `${a.title}: ${a.content}`).join('  •  ');
   return (
     <div className={`overflow-hidden whitespace-nowrap w-full min-w-0 ${className || ''}`}>
       <div className="animate-marquee inline-block text-xs sm:text-sm text-foreground/80 pl-[100%] my-0 py-0 px-2 sm:px-[40px]">
