@@ -601,7 +601,7 @@ export const MetalHeaderDashboard = ({
       <DashboardHeroCarousel className="px-[111px] pt-[5px] pl-[5px] pr-[5px] pb-[5px] mx-0" />
 
       {/* Message Center Button with Announcements Ticker */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-4 gap-2 sm:gap-3">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-2 gap-2 sm:gap-3">
         {/* Announcements Ticker - All screen sizes */}
         <div className="flex items-center flex-1 min-w-0 overflow-hidden order-2 sm:order-1">
           <AnnouncementsDisplay className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md w-full" />
@@ -624,17 +624,15 @@ export const MetalHeaderDashboard = ({
       </div>
 
       {/* Super Admin Layout Controls */}
-      {isSuperAdmin() && <div className="flex items-center gap-2 justify-end">
-          
-          {isEditingLayout && <Button variant="ghost" size="sm" onClick={() => resetCardOrder()} disabled={isSaving}>
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Reset
-            </Button>}
+      {isSuperAdmin() && isEditingLayout && <div className="flex items-center gap-2 justify-end mb-2">
+          <Button variant="ghost" size="sm" onClick={() => resetCardOrder()} disabled={isSaving}>
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Reset
+          </Button>
         </div>}
 
-
       {/* Edit Mode Banner */}
-      {isEditingLayout && <Card className="bg-primary/10 border-primary">
+      {isEditingLayout && <Card className="bg-primary/10 border-primary mb-2">
           <CardContent className="py-3 px-4">
             <p className="text-sm font-medium text-primary flex items-center gap-2">
               <GripVertical className="h-4 w-4" />
