@@ -121,11 +121,16 @@ const scrollModePluginInstance = scrollModePlugin();
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [scale, setScale] = useState(1.2);
+  const [zoomLevel, setZoomLevel] = useState(1); // Zoom level for annotation mode
   const [pageAnnotations, setPageAnnotations] = useState<Record<number, any[]>>({});
   const [useGoogle, setUseGoogle] = useState(false);
   const [googleProvider, setGoogleProvider] = useState<'gview' | 'viewerng'>('gview');
 const timerRef = useRef<number | null>(null);
 const [engine, setEngine] = useState<'google' | 'react'>('google');
+
+  // Pinch-to-zoom state for annotation mode
+  const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
+  const [initialZoom, setInitialZoom] = useState(1);
 
   // Page navigation helpers (annotation mode)
   const goToPage = useCallback((page: number) => {
@@ -155,6 +160,45 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       goToPage(currentPage - 1);
     }
   }, [currentPage, isLoading, goToPage]);
+
+  // Zoom controls for annotation mode
+  const handleZoomIn = useCallback(() => {
+    setZoomLevel(prev => Math.min(prev + 0.25, 3));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
+  }, []);
+
+  const handleResetZoom = useCallback(() => {
+    setZoomLevel(1);
+  }, []);
+
+  // Pinch-to-zoom handler for annotation mode
+  const handleAnnotationPinchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      setInitialPinchDistance(distance);
+      setInitialZoom(zoomLevel);
+    }
+  }, [zoomLevel]);
+
+  const handleAnnotationPinchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialPinchDistance !== null) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const scaleChange = distance / initialPinchDistance;
+      const newZoom = Math.max(0.5, Math.min(3, initialZoom * scaleChange));
+      setZoomLevel(newZoom);
+    }
+  }, [initialPinchDistance, initialZoom]);
+
+  const handleAnnotationPinchEnd = useCallback(() => {
+    setInitialPinchDistance(null);
+  }, []);
 
   // Touch navigation functions
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -870,6 +914,39 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               <Badge variant="outline" className="text-xs px-1 py-0">{brushSize[0]}</Badge>
             </div>
 
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-0.5 sm:gap-1 border-l pl-1.5 sm:pl-2 ml-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleZoomOut}
+                disabled={zoomLevel <= 0.5}
+                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
+                title="Zoom out"
+              >
+                <ZoomOut className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleResetZoom}
+                className="h-7 px-1.5 text-xs sm:h-8 sm:px-2"
+                title="Reset zoom"
+              >
+                {Math.round(zoomLevel * 100)}%
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleZoomIn}
+                disabled={zoomLevel >= 3}
+                className="h-7 w-7 p-0 sm:h-8 sm:w-8"
+                title="Zoom in"
+              >
+                <ZoomIn className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              </Button>
+            </div>
+
             {/* Actions */}
             <div className="flex gap-0.5 sm:gap-1 ml-auto">
               <Button
@@ -956,48 +1033,80 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           )}
 
-          {/* Annotation Mode: PDF + Overlay Canvas */}
+          {/* Annotation Mode: PDF + Overlay Canvas with Zoom */}
           {annotationMode && (
-            <div className="w-full overflow-y-auto touch-pan-y" style={{ maxHeight: 'calc(100vh - 18rem)', WebkitOverflowScrolling: 'touch' } as React.CSSProperties} ref={containerRef}>
-            <div className="relative w-full">
+            <div 
+              className="w-full overflow-auto" 
+              style={{ 
+                maxHeight: 'calc(100vh - 18rem)', 
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-x pan-y'
+              } as React.CSSProperties} 
+              ref={containerRef}
+              onTouchStart={handleAnnotationPinchStart}
+              onTouchMove={handleAnnotationPinchMove}
+              onTouchEnd={handleAnnotationPinchEnd}
+            >
+              <div 
+                className="relative origin-top-left transition-transform duration-100"
+                style={{ 
+                  transform: `scale(${zoomLevel})`,
+                  width: `${100 / zoomLevel}%`,
+                  minWidth: zoomLevel > 1 ? '100%' : undefined
+                }}
+              >
                 <canvas
                   ref={canvasRef}
                   className="w-full bg-white block transition-opacity duration-300"
                   style={{ height: 'auto', minHeight: '100%', opacity: isLoading ? 0.6 : 1 }}
                 />
-                  <canvas
-                    ref={drawingCanvasRef}
-                    className={`absolute top-0 left-0 w-full h-full pointer-events-auto z-20 touch-none ${
-                      activeTool !== "select" ? "cursor-crosshair" : "cursor-default"
-                    }`}
-                    onMouseDown={handleStart}
-                    onMouseMove={handleMove}
-                    onMouseUp={handleEnd}
-                    onMouseLeave={() => setIsDrawing(false)}
-                    onTouchStart={(e) => {
-                      if (activeTool !== "select") {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleStart(e);
-                      }
-                    }}
-                    onTouchMove={(e) => {
-                      if (activeTool !== "select" && isDrawing) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleMove(e);
-                      }
-                    }}
-                    onTouchEnd={(e) => {
-                      if (activeTool !== "select") {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleEnd();
-                      }
-                    }}
-                    onTouchCancel={() => setIsDrawing(false)}
-                  />
-                </div>
+                <canvas
+                  ref={drawingCanvasRef}
+                  className={`absolute top-0 left-0 w-full h-full pointer-events-auto z-20 ${
+                    activeTool !== "select" ? "cursor-crosshair touch-none" : "cursor-default"
+                  }`}
+                  onMouseDown={handleStart}
+                  onMouseMove={handleMove}
+                  onMouseUp={handleEnd}
+                  onMouseLeave={() => setIsDrawing(false)}
+                  onTouchStart={(e) => {
+                    // Allow pinch-to-zoom when in select mode (2 fingers)
+                    if (e.touches.length === 2) {
+                      handleAnnotationPinchStart(e);
+                      return;
+                    }
+                    if (activeTool !== "select") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleStart(e);
+                    }
+                  }}
+                  onTouchMove={(e) => {
+                    // Handle pinch-to-zoom
+                    if (e.touches.length === 2) {
+                      handleAnnotationPinchMove(e);
+                      return;
+                    }
+                    if (activeTool !== "select" && isDrawing) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleMove(e);
+                    }
+                  }}
+                  onTouchEnd={(e) => {
+                    handleAnnotationPinchEnd();
+                    if (activeTool !== "select") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleEnd();
+                    }
+                  }}
+                  onTouchCancel={() => {
+                    setIsDrawing(false);
+                    handleAnnotationPinchEnd();
+                  }}
+                />
+              </div>
             </div>
           )}
 
