@@ -2231,6 +2231,8 @@ const App = () => {
                                        </ProtectedRoute>
                                      } 
                                    />
+                                   {/* Catch-all route for 404 */}
+                                   <Route path="*" element={<NotFound />} />
                                </Routes>
                       </Suspense>
                     <GlobalMusicPlayer />
