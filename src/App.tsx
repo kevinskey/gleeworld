@@ -233,6 +233,9 @@ import JazzPage from "./pages/mus240/JazzPage";
 import Tour2026Page from "./pages/Tour2026Page";
 import ExecutiveBoardWorkshopPage from "./pages/ExecutiveBoardWorkshopPage";
 import ExecBoardTrainingVideosPage from "./pages/ExecBoardTrainingVideosPage";
+import MeetingAgendasPage from "./pages/exec-board/MeetingAgendasPage";
+import TransitionDocumentsPage from "./pages/exec-board/TransitionDocumentsPage";
+import PolicyManualPage from "./pages/exec-board/PolicyManualPage";
 
 // Grading System
 import InstructorDashboard from "./pages/grading/instructor/InstructorDashboard";
@@ -946,6 +949,30 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <ExecBoardTrainingVideosPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/exec-board/meeting-agendas" 
+                  element={
+                    <ProtectedRoute>
+                      <MeetingAgendasPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/exec-board/transition-documents" 
+                  element={
+                    <ProtectedRoute>
+                      <TransitionDocumentsPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/exec-board/policy-manual" 
+                  element={
+                    <ProtectedRoute>
+                      <PolicyManualPage />
                     </ProtectedRoute>
                   } 
                 />
