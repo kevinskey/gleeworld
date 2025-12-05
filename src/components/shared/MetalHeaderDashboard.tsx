@@ -549,7 +549,7 @@ export const MetalHeaderDashboard = ({
               <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
                 {moduleConfig.title}
               </h1>
-              <Button variant="ghost" size="sm" onClick={handleBackToModules} className="flex items-center gap-1 text-foreground hover:text-foreground/80 shrink-0">
+              <Button variant="outline" size="sm" onClick={handleBackToModules} className="flex items-center gap-1 bg-background text-foreground border-border hover:bg-accent shrink-0">
                 <span className="hidden sm:inline">← Back to Dashboard</span>
                 <span className="sm:hidden">← Back</span>
               </Button>
