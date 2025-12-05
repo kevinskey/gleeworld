@@ -104,8 +104,11 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
     ...a,
     action: typeof a.action === 'function' ? a.action : () => {
       const moduleId = a.moduleId || a.name || a.id;
-      // Use direct navigation to ensure proper URL encoding
-      navigate(`/dashboard?module=${encodeURIComponent(moduleId)}`, { replace: false });
+      // Use react-router object syntax to prevent URL encoding issues
+      navigate({
+        pathname: '/dashboard',
+        search: `?module=${moduleId}`
+      });
     },
   }));
 
