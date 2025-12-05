@@ -3,8 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, CheckCircle, XCircle, TrendingUp } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, TrendingUp, Edit } from 'lucide-react';
+import { ManualGradingDialog } from './ManualGradingDialog';
 
 interface TestScoresViewProps {
   testId: string;
@@ -15,6 +17,8 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
   const [test, setTest] = useState<any>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
+  const [gradingDialogOpen, setGradingDialogOpen] = useState(false);
 
   useEffect(() => {
     loadScores();
@@ -97,6 +101,11 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
     };
   };
 
+  const handleGradeSubmission = (submission: any) => {
+    setSelectedSubmission(submission);
+    setGradingDialogOpen(true);
+  };
+
   const stats = calculateStats();
 
   if (loading) {
@@ -165,16 +174,13 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
               <TableHead>Score</TableHead>
               <TableHead>Percentage</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Time Taken</TableHead>
               <TableHead>Submitted</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {submissions.map((submission) => {
               const percentage = ((submission.total_score / (test?.total_points || 100)) * 100).toFixed(1);
-              const timeTaken = submission.time_taken_seconds 
-                ? `${Math.floor(submission.time_taken_seconds / 60)}:${(submission.time_taken_seconds % 60).toString().padStart(2, '0')}`
-                : 'N/A';
 
               return (
                 <TableRow key={submission.id}>
@@ -201,9 +207,18 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell>{timeTaken}</TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(submission.created_at!).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGradeSubmission(submission)}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Grade
+                    </Button>
                   </TableCell>
                 </TableRow>
               );
@@ -217,6 +232,14 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
           </div>
         )}
       </Card>
+
+      <ManualGradingDialog
+        open={gradingDialogOpen}
+        onOpenChange={setGradingDialogOpen}
+        submission={selectedSubmission}
+        test={test}
+        onGraded={loadScores}
+      />
     </div>
   );
 };
