@@ -33,13 +33,12 @@ export const AnnouncementsFlip = ({
   }, [announcements.length]);
   const fetchAnnouncements = async () => {
     try {
-      const { data, error } = await supabase
-        .from('gw_announcements')
-        .select('id, title, content, created_at')
-        .not('publish_date', 'is', null)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
+      const {
+        data,
+        error
+      } = await supabase.from('gw_announcements').select('id, title, content, created_at').not('publish_date', 'is', null).order('created_at', {
+        ascending: false
+      }).limit(10);
       if (!error && data) {
         setAnnouncements(data);
       }
@@ -83,11 +82,9 @@ export const AnnouncementsFlip = ({
       {/* Desktop Layout - Original horizontal design */}
       <div className="hidden lg:flex items-center gap-3 px-3 h-12">
         {/* Steel badge with rivets */}
-        <div className="shrink-0 relative px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10 flex items-center
-          bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
-          text-slate-100 shadow-md border border-slate-600/50" style={{
+        <div style={{
         textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-      }}>
+      }} className="shrink-0 relative px-6 rounded-sm text-xs font-bold uppercase tracking-wider h-10 flex items-center bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600 text-slate-100 shadow-md border border-slate-600/50 py-[20px] pt-[20px] pb-[20px]">
           {/* Left rivet */}
           <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
           {/* Right rivet */}
@@ -96,12 +93,12 @@ export const AnnouncementsFlip = ({
         </div>
 
         {/* Slide/Flip content */}
-        <div className="flex-1 overflow-hidden flex items-center justify-center">
+        <div className="flex-1 overflow-hidden flex items-center justify-center text-destructive py-0 opacity-70 bg-destructive">
           <div key={current.id} className={`text-sm sm:text-base text-foreground font-medium px-4 py-2 ${getAnimationClass()}`} style={{
           transformOrigin: 'center center',
           fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif'
         }}>
-            <span className="font-bold">{current.title}:</span> {current.content}
+            <span className="font-bold text-secondary">{current.title}:</span> {current.content}
           </div>
         </div>
       </div>

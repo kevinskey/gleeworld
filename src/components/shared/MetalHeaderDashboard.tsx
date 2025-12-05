@@ -603,7 +603,7 @@ export const MetalHeaderDashboard = ({
       {/* Message Center Button with Announcements Ticker */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-2 gap-2 sm:gap-3">
         {/* Announcements Ticker - All screen sizes */}
-        <div className="flex items-center flex-1 min-w-0 overflow-hidden order-2 sm:order-1">
+        <div className="flex items-center flex-1 min-w-0 overflow-hidden order-2 sm:order-1 py-0">
           <AnnouncementsDisplay className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md w-full" />
         </div>
         
@@ -624,11 +624,9 @@ export const MetalHeaderDashboard = ({
       </div>
 
       {/* Exit Interview Call-to-Action */}
-      <a 
-        href="/member-exit-interview" 
-        className="block w-full px-4 py-3 mb-2 rounded-lg text-white text-center font-semibold text-sm hover:opacity-90 transition-opacity"
-        style={{ backgroundColor: '#79242F' }}
-      >
+      <a href="/member-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-white text-center font-semibold text-sm hover:opacity-90 transition-opacity" style={{
+      backgroundColor: '#79242F'
+    }}>
         📋 Complete Your Fall 2025 Exit Interview - Required for All Members
       </a>
 
