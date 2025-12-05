@@ -61,13 +61,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedModuleToAdd, setSelectedModuleToAdd] = useState('');
   
-  // Debug logging
-  console.log('QuickActionsPanel user:', {
-    role: user.role,
-    is_exec_board: user.is_exec_board,
-    isAdmin,
-    exec_board_role: user.exec_board_role
-  });
+  // Debug logging removed for performance
 
   // Available modules for selection
   const availableModules = UNIFIED_MODULES.filter(module => module.isActive).map(module => ({
@@ -88,30 +82,22 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
   // Load custom actions from localStorage
   useEffect(() => {
     const storageKey = `quickActions_${user.id}`;
-    console.log('Loading custom actions, storage key:', storageKey);
     const stored = localStorage.getItem(storageKey);
-    console.log('Retrieved from localStorage:', stored);
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        console.log('Parsed custom actions:', parsed);
         setCustomActions(parsed);
       } catch (error) {
-        console.error('Error loading custom actions:', error);
+        // Silent error handling in production
       }
-    } else {
-      console.log('No custom actions found in localStorage');
     }
   }, [user.id]);
 
   // Save custom actions to localStorage (strip runtime functions)
   const saveCustomActions = (actions: any[]) => {
-    console.log('saveCustomActions called with', actions.length, 'actions');
     const serialized = actions.map(({ action, ...rest }) => rest);
-    console.log('Serialized actions:', serialized);
     localStorage.setItem(`quickActions_${user.id}`, JSON.stringify(serialized));
     setCustomActions(serialized);
-    console.log('Custom actions saved to localStorage');
   };
 
   const computedCustomActions = customActions.map((a) => ({
@@ -123,7 +109,6 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
 
   const handleActionClick = (actionFn?: () => void, fallbackModuleId?: string) => {
     try {
-      console.log('Action clicked, executing...');
       if (typeof actionFn === 'function') {
         actionFn();
       } else if (fallbackModuleId) {
@@ -131,16 +116,13 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       } else {
         throw new TypeError('actionFn is not a function');
       }
-      console.log('Action executed successfully');
       onClose();
     } catch (error) {
-      console.error('Error executing action:', error);
+      // Silent error handling
     }
   };
 
   const handleAddAction = async () => {
-    console.log('handleAddAction called, selectedModuleToAdd:', selectedModuleToAdd);
-    
     if (!selectedModuleToAdd || selectedModuleToAdd === 'none') {
       toast.error('Please select a module');
       return;
@@ -148,7 +130,6 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
 
     // If member with quickActions, use the hook
     if (isMember && quickActions) {
-      console.log('Using member quickActions hook');
       const success = await quickActions.addQuickAction(selectedModuleToAdd);
       if (success) {
         setSelectedModuleToAdd('');
@@ -156,8 +137,6 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       }
       return;
     }
-    
-    console.log('Using localStorage for non-member');
 
     // Otherwise, add to custom actions (for non-members)
     const selectedModule = availableModules.find(m => m.name === selectedModuleToAdd);
@@ -260,10 +239,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium">Select Module</label>
-                      <Select value={selectedModuleToAdd} onValueChange={(val) => {
-                        console.log('Select onValueChange:', val);
-                        setSelectedModuleToAdd(val);
-                      }}>
+                        <Select value={selectedModuleToAdd} onValueChange={setSelectedModuleToAdd}>
                         <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
                           <SelectValue placeholder="Choose a module to add" />
                         </SelectTrigger>
