@@ -1,6 +1,8 @@
 // CDN-based soundfont loader for real MIDI instrument sounds
 // Uses MIDI.js soundfonts from gleitz.github.io
 
+import { unlockAudioContext } from './mobileAudioUnlock';
+
 const SOUNDFONT_CDN = 'https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM';
 
 // Map GM instrument IDs to soundfont names
@@ -297,9 +299,19 @@ export class SoundfontPlayer {
 
     const { buffer, pitchShift } = result;
 
-    // Make sure audio context is running
+    // Make sure audio context is running (iOS compatibility)
     if (this.audioContext.state === 'suspended') {
-      await this.audioContext.resume();
+      try {
+        await this.audioContext.resume();
+      } catch (e) {
+        // Try using the shared unlock utility
+        try {
+          await unlockAudioContext();
+        } catch (unlockError) {
+          console.error('Failed to unlock audio context:', unlockError);
+          return;
+        }
+      }
     }
 
     const source = this.audioContext.createBufferSource();
