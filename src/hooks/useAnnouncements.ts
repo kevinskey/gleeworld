@@ -41,7 +41,9 @@ export const useAnnouncements = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = async (retryCount = 0) => {
+    const maxRetries = 2;
+    
     try {
       setLoading(true);
       
@@ -79,11 +81,19 @@ export const useAnnouncements = () => {
         .sort((a, b) => new Date(b.created_at || b.publish_date).getTime() - new Date(a.created_at || a.publish_date).getTime());
 
       setAnnouncements(allAnnouncements);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching announcements:', error);
+      
+      // Retry on network errors
+      if (retryCount < maxRetries && (error.message?.includes('Load failed') || error.message?.includes('network'))) {
+        console.log(`Retrying fetch announcements (attempt ${retryCount + 2}/${maxRetries + 1})...`);
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        return fetchAnnouncements(retryCount + 1);
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to load announcements",
+        description: "Failed to load announcements. Please refresh the page.",
         variant: "destructive",
       });
     } finally {
