@@ -15,7 +15,7 @@ export function ModuleWrapper({
   return <div className={`space-y-6 ${className}`}>
       <div className="flex items-center gap-3">
         <Icon className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold text-secondary-foreground">{title}</h1>
+        <h1 className="text-2xl font-bold text-secondary-foreground px-[10px] py-[10px] bg-secondary-foreground">{title}</h1>
       </div>
       {children}
     </div>;
