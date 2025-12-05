@@ -262,15 +262,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                             .sort((a, b) => a.title.localeCompare(b.title))
                             .map((module) => (
                             <SelectItem key={module.id} value={module.name}>
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
-                                  {module.category}
-                                </span>
-                                <div>
-                                  <div className="font-medium">{module.title}</div>
-                                  <div className="text-xs text-gray-500">{module.description}</div>
-                                </div>
-                              </div>
+                              {module.title}
                             </SelectItem>
                           ))}
                         </SelectContent>
