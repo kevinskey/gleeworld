@@ -90,8 +90,8 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           onMouseLeave={() => setShowCountdown(false)}
           onClick={() => setShowCountdown(!showCountdown)}
         >
-          {/* SVG Clock with spinning globe */}
-          <svg width="40" height="40" viewBox="0 0 40 40" className="text-slate-800">
+          {/* SVG Clock with spinning globe - smaller on mobile */}
+          <svg width="28" height="28" viewBox="0 0 40 40" className="text-slate-800">
             <defs>
               {/* Gradient for 3D effect */}
               <radialGradient id="headerGlobeGradient" cx="40%" cy="40%">
