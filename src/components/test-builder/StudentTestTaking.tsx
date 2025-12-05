@@ -130,7 +130,9 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
           test_id: testId,
           student_id: user.user.id,
           total_score: totalScore,
-          passed: totalScore >= (test?.passing_score || 70)
+          passed: totalScore >= (test?.passing_score || 70),
+          status: 'submitted',
+          submitted_at: new Date().toISOString()
         })
         .select()
         .single();
