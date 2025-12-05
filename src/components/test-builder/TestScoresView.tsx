@@ -37,19 +37,35 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
       // Get all submissions for this test
       const { data: submissionsData, error: submissionsError } = await supabase
         .from('test_submissions')
-        .select(`
-          *,
-          gw_profiles!test_submissions_student_id_fkey (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('test_id', testId)
         .order('created_at', { ascending: false });
 
       if (submissionsError) throw submissionsError;
 
-      setSubmissions(submissionsData || []);
+      // Fetch student profiles separately
+      const studentIds = [...new Set((submissionsData || []).map(s => s.student_id))];
+      let profilesMap: Record<string, { full_name: string; email: string }> = {};
+      
+      if (studentIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('gw_profiles')
+          .select('user_id, full_name, email')
+          .in('user_id', studentIds);
+        
+        profilesMap = (profilesData || []).reduce((acc, p) => {
+          acc[p.user_id] = { full_name: p.full_name, email: p.email };
+          return acc;
+        }, {} as Record<string, { full_name: string; email: string }>);
+      }
+
+      // Combine submissions with profile data
+      const enrichedSubmissions = (submissionsData || []).map(s => ({
+        ...s,
+        gw_profiles: profilesMap[s.student_id] || { full_name: 'Unknown', email: '' }
+      }));
+
+      setSubmissions(enrichedSubmissions);
     } catch (error) {
       console.error('Error loading scores:', error);
       toast({
