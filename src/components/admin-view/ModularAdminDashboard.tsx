@@ -69,7 +69,6 @@ export const ModularAdminDashboard = ({ user }: ModularAdminDashboardProps) => {
 
       {/* Render each category with its modules */}
       {ModuleRegistry.getCategories().map((category) => {
-        console.log('ModularAdminDashboard: Rendering category:', category.title, 'modules:', category.modules.length, 'id:', category.id);
         const CategoryIcon = category.icon;
         
         // Calculate if we need scrolling (more than 8 modules for 2 rows x 4 cols)

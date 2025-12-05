@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import { DashboardHeroCarousel } from "@/components/dashboard/DashboardHeroCarousel";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
@@ -237,6 +237,16 @@ export const MetalHeaderDashboard = ({
     getVisibleQuickActions
   } = useMemberQuickActions(simulatedRole ? undefined : user.id, simulatedRole || user.role); // Don't use personal quick actions when simulating
 
+  // Memoize quickActions prop to prevent re-renders in QuickActionsPanel
+  const memoizedQuickActions = useMemo(() => {
+    if (!isMember) return undefined;
+    return {
+      addQuickAction,
+      removeQuickAction,
+      isInQuickActions
+    };
+  }, [isMember, addQuickAction, removeQuickAction, isInQuickActions]);
+
   // Navigation hooks
   const location = useLocation();
 
@@ -402,14 +412,6 @@ export const MetalHeaderDashboard = ({
         component: moduleConfig?.component,
         isNew: moduleConfig?.isNew || false
       };
-    });
-    console.log('🔍 Module grouping:', {
-      accessibleModuleCount: accessibleModules.length,
-      favoritesCount: favoritesGroup.length,
-      communicationsCount: communicationsGroup.length,
-      otherCount: otherGroup.length,
-      remainingCount: remainingModules.length,
-      allModuleIds: accessibleModules.map(m => m.id)
     });
     return {
       favorites: favoritesGroup,
@@ -591,11 +593,7 @@ export const MetalHeaderDashboard = ({
         </button>
 
         {/* Quick Actions Panel - slides out from underneath */}
-        <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={isMember ? {
-        addQuickAction,
-        removeQuickAction,
-        isInQuickActions
-      } : undefined} />
+        <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
       </div>
 
 
