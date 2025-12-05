@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, CheckCircle, XCircle, TrendingUp, Edit, Eye, Trash2 } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, TrendingUp, Edit, Eye, Trash2, ArrowLeft } from 'lucide-react';
 import { ManualGradingDialog } from './ManualGradingDialog';
 import {
   AlertDialog,
@@ -198,6 +198,30 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
 
   return (
     <div className="space-y-6">
+      {/* Breadcrumb Navigation */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link to="/dashboard?module=test-builder" className="hover:text-foreground transition-colors">
+          Test Builder
+        </Link>
+        <span>/</span>
+        <Link to={`/test-builder/${testId}`} className="hover:text-foreground transition-colors">
+          {test?.title}
+        </Link>
+        <span>/</span>
+        <span className="text-foreground font-medium">Scores</span>
+      </div>
+
+      {/* Back Button */}
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={() => navigate(-1)}
+        className="hover:bg-accent"
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
+
       <div className="flex items-start justify-between">
         <div>
           <h2 className="text-2xl font-bold mb-2">{test?.title}</h2>
