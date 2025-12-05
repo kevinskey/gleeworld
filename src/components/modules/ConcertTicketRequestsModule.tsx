@@ -260,37 +260,37 @@ export const ConcertTicketRequestsModule = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         <Card className="text-center px-[20px] py-[20px]">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold py-[10px]">{stats.total}</div>
+            <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.total}</div>
             <Badge className="mt-2 bg-blue-100 text-blue-800">Total</Badge>
           </CardContent>
         </Card>
         <Card className="text-center px-[20px] py-[20px]">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold py-[10px]">{stats.pending}</div>
+            <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.pending}</div>
             <Badge className="mt-2 bg-yellow-100 text-yellow-800">Pending</Badge>
           </CardContent>
         </Card>
         <Card className="text-center px-[20px] py-[20px]">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold py-[10px]">{stats.contacted}</div>
+            <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.contacted}</div>
             <Badge className="mt-2 bg-purple-100 text-purple-800">Contacted</Badge>
           </CardContent>
         </Card>
         <Card className="text-center px-[20px] py-[20px]">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold py-[10px]">{stats.approved}</div>
+            <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.approved}</div>
             <Badge className="mt-2 bg-green-100 text-green-800">Approved</Badge>
           </CardContent>
         </Card>
         <Card className="text-center px-[20px] py-[20px]">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold py-[10px]">{stats.rejected}</div>
+            <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.rejected}</div>
             <Badge className="mt-2 bg-red-100 text-red-800">Rejected</Badge>
           </CardContent>
         </Card>
         <Card className="text-center px-[20px] py-[20px]">
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold py-[10px]">{stats.totalTickets}</div>
+            <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.totalTickets}</div>
             <Badge className="mt-2 bg-indigo-100 text-indigo-800">Total Tickets</Badge>
           </CardContent>
         </Card>
