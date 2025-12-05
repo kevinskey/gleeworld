@@ -36,16 +36,13 @@ export const useUserRole = () => {
           .maybeSingle();
 
         if (error) {
-          console.error('🔍 useUserRole: Error fetching user profile:', error);
-          setProfile(null);
-        } else if (!data) {
-          console.log('🔍 useUserRole: No profile found for user:', user.id);
+          console.error('useUserRole error:', error.message);
           setProfile(null);
         } else {
           setProfile(data);
         }
       } catch (error) {
-        console.error('🔍 useUserRole: Exception fetching user profile:', error);
+        console.error('useUserRole error:', error);
         setProfile(null);
       } finally {
         setLoading(false);

@@ -185,12 +185,9 @@ export const useUserDashboard = () => {
     }
   };
 
-  // COMPLETELY DISABLE ALL SUBSCRIPTIONS TO TEST
+  // Subscriptions disabled for performance
   useEffect(() => {
-    console.log('useUserDashboard: ALL SUBSCRIPTIONS DISABLED FOR TESTING');
-    return () => {
-      console.log('useUserDashboard: Cleanup (no subscriptions to clean)');
-    };
+    return () => {};
   }, [user?.id]);
 
   useEffect(() => {

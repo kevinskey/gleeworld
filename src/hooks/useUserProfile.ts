@@ -67,12 +67,8 @@ export const useUserProfile = (user: User | null) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserProfile = async () => {
-    if (!user) {
-      console.log('useUserProfile: No user provided');
-      return;
-    }
+    if (!user) return;
     
-    console.log('useUserProfile: Fetching profile for user:', user.id);
     setLoading(true);
     setError(null);
     
@@ -96,16 +92,6 @@ export const useUserProfile = (user: User | null) => {
                            user?.user_metadata?.name || 
                            user?.email || 
                            'User';
-
-        console.log('useUserProfile: Setting profile data:', {
-          userId: user.id,
-          email: user.email,
-          role: data.role,
-          isAdmin: data.is_admin,
-          isSuperAdmin: data.is_super_admin,
-          displayName,
-          rawData: data
-        });
 
         setUserProfile({
           ...data,

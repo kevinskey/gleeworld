@@ -70,20 +70,8 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  console.log('useMergedProfile: Hook initialized with user:', {
-    hasUser: !!user,
-    userId: user?.id,
-    userEmail: user?.email
-  });
-
   const fetchProfile = async () => {
-    console.log('useMergedProfile: fetchProfile called with user:', {
-      hasUser: !!user,
-      userId: user?.id
-    });
-    
     if (!user?.id) {
-      console.log('useMergedProfile: No user ID, setting profile to null');
       setProfile(null);
       setLoading(false);
       return;
@@ -93,45 +81,17 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
     setError(null);
 
     try {
-      console.log('useMergedProfile: About to query gw_profiles for user:', user.id);
-      
-      // Test if we can even connect to Supabase
-      const { data: testConnection, error: testError } = await supabase
-        .from('gw_profiles')
-        .select('count')
-        .limit(1);
-      
-      console.log('Test connection result:', { testConnection, testError });
-      
-      if (testError) {
-        console.error('Database connection test failed:', testError);
-        throw new Error(`Database connection failed: ${testError.message}`);
-      }
-
-      // Test specific user query
-      const { data: gwProfile, error: gwError, status, statusText } = await supabase
+      const { data: gwProfile, error: gwError } = await supabase
         .from('gw_profiles')
         .select('user_id, email, full_name, role, is_admin, is_super_admin, class_year, voice_part, exec_board_role')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      console.log('Profile query details:', { 
-        gwProfile, 
-        gwError, 
-        status, 
-        statusText,
-        userId: user.id 
-      });
-
       if (gwError) {
-        console.error('Error fetching gw_profiles:', gwError);
-        throw new Error(`Profile query failed: ${gwError.message} (Code: ${gwError.code})`);
+        throw new Error(`Profile query failed: ${gwError.message}`);
       }
 
       if (gwProfile) {
-        console.log('Profile found, creating merged profile...');
-        
-        // Create a basic profile first
         const mergedProfile: MergedProfile = {
           id: gwProfile.user_id || user.id,
           user_id: user.id,
@@ -144,11 +104,8 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
           voice_part: gwProfile.voice_part,
           exec_board_role: gwProfile.exec_board_role,
         };
-
-        console.log('Basic profile created:', mergedProfile);
         setProfile(mergedProfile);
       } else {
-        console.log('No profile found for user, creating minimal profile');
         const minimalProfile: MergedProfile = {
           id: user.id,
           user_id: user.id,
@@ -159,9 +116,8 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
         setProfile(minimalProfile);
       }
     } catch (err) {
-      console.error('Error in fetchProfile:', err);
+      console.error('useMergedProfile error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
-      console.error('Setting error:', errorMessage);
       setError(errorMessage);
       setProfile(null);
     } finally {
@@ -175,7 +131,6 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
     }
 
     try {
-      // Update gw_profiles (triggers will sync to profiles)
       const { data, error } = await supabase
         .from('gw_profiles')
         .update(updates)
@@ -186,7 +141,6 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
       if (error) throw error;
 
       if (data) {
-        // Update local state
         const updatedProfile = { ...profile, ...updates };
         setProfile(updatedProfile);
         return { data: updatedProfile, error: null };
@@ -201,7 +155,6 @@ export const useMergedProfile = (user: User | null): UseProfileReturn => {
   };
 
   useEffect(() => {
-    console.log('useMergedProfile: useEffect triggered, calling fetchProfile');
     fetchProfile();
   }, [user?.id]);
 

@@ -22,22 +22,19 @@ export const useAuth = () => {
 
 // Auth state cleanup utility
 const cleanupAuthState = () => {
-  console.log('AuthContext: Cleaning up auth state...');
   try {
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        console.log('AuthContext: Removing localStorage key:', key);
         localStorage.removeItem(key);
       }
     });
     Object.keys(sessionStorage || {}).forEach((key) => {
       if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        console.log('AuthContext: Removing sessionStorage key:', key);
         sessionStorage.removeItem(key);
       }
     });
   } catch (error) {
-    console.warn('AuthContext: Error during auth cleanup:', error);
+    // Silent cleanup failure
   }
 };
 
@@ -57,16 +54,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const initializeAuth = async () => {
       try {
-        console.log('AuthContext: Initializing auth state...');
-        
-        // Get existing session quickly without retries to reduce loading time
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('AuthContext: Error getting session:', error);
-          // If we get a JWT error, clean up auth state and force sign out
+          console.error('AuthContext session error:', error.message);
           if (error.message?.includes('JWT') || error.message?.includes('exp') || error.message?.includes('InvalidJWT')) {
-            console.log('AuthContext: JWT expired/invalid, cleaning up and signing out');
             cleanupAuthState();
             await supabase.auth.signOut({ scope: 'global' });
             if (mountedRef.current) {
@@ -79,59 +71,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         const session = data?.session || null;
-        console.log('AuthContext: Initial session retrieved:', {
-          hasSession: !!session,
-          userId: session?.user?.id || 'no user',
-          userEmail: session?.user?.email,
-          sessionExpiry: session?.expires_at
-        });
         
         if (mountedRef.current) {
           setSession(session);
           setUser(session?.user ?? null);
-          console.log('AuthContext: State updated - user:', session?.user?.email || 'none');
-          // Set loading to false AFTER setting state
           setLoading(false);
         }
 
-        // Set up auth state listener AFTER initial session check
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            console.log('AuthContext: Auth state changed:', event, session?.user?.id || 'no user');
-            console.log('AuthContext: Session details:', {
-              hasSession: !!session,
-              hasUser: !!session?.user,
-              userEmail: session?.user?.email,
-              userMetadata: session?.user?.user_metadata
-            });
-            
             if (!mountedRef.current) return;
             
-            // Handle JWT errors specifically
             if (event === 'TOKEN_REFRESHED' && !session) {
-              console.log('AuthContext: Token refresh failed, cleaning up auth state');
               cleanupAuthState();
               setSession(null);
               setUser(null);
               return;
             }
             
-            // Update state immediately for all events
             setSession(session);
             setUser(session?.user ?? null);
             
             if (event === 'SIGNED_OUT') {
-              console.log('AuthContext: User signed out, clearing state');
               cleanupAuthState();
-            } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-              console.log('AuthContext: User signed in/token refreshed');
             }
           }
         );
 
         subscriptionRef.current = subscription;
       } catch (error) {
-        console.error('AuthContext: Failed to initialize auth:', error);
+        console.error('AuthContext init error:', error);
         if (mountedRef.current) {
           setLoading(false);
         }
