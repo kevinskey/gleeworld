@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,27 +51,34 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
   }, [hasStarted, timeRemaining]);
 
   // Extract test and questions from useTest hook with proper mapping
+  // Use useMemo to stabilize the questions array and prevent audio restarts on re-render
   const test = testData?.test;
-  const questions = testData?.questions.map(question => {
-    const normalizedType =
-      question.question_type === 'multiple_choice'
-        ? 'multiple-choice'
-        : question.question_type === 'true_false'
-        ? 'true-false'
-        : question.question_type;
+  const questions = useMemo(() => {
+    if (!testData?.questions) return [];
+    
+    const cacheTimestamp = Date.now(); // Generate once per test load
+    
+    return testData.questions.map(question => {
+      const normalizedType =
+        question.question_type === 'multiple_choice'
+          ? 'multiple-choice'
+          : question.question_type === 'true_false'
+          ? 'true-false'
+          : question.question_type;
 
-    const questionOptions = testData.options.filter(opt => opt.question_id === question.id);
+      const questionOptions = testData.options.filter(opt => opt.question_id === question.id);
 
-    return {
-      ...question,
-      question_type: normalizedType,
-      options: questionOptions || [],
-      // Add cache-busting timestamp to audio URLs
-      media_url: question.media_url && question.media_type === 'audio' 
-        ? `${question.media_url}${question.media_url.includes('?') ? '&' : '?'}t=${Date.now()}`
-        : question.media_url,
-    };
-  }) || [];
+      return {
+        ...question,
+        question_type: normalizedType,
+        options: questionOptions || [],
+        // Add cache-busting timestamp (stable per test load to prevent audio restart)
+        media_url: question.media_url && question.media_type === 'audio' 
+          ? `${question.media_url}${question.media_url.includes('?') ? '&' : '?'}t=${cacheTimestamp}`
+          : question.media_url,
+      };
+    });
+  }, [testData?.questions, testData?.options]);
 
   const startTest = () => {
     setHasStarted(true);
