@@ -32,14 +32,19 @@ export const AnnouncementsFlip = ({
     return () => clearInterval(interval);
   }, [announcements.length]);
   const fetchAnnouncements = async () => {
-    const {
-      data,
-      error
-    } = await supabase.from('gw_announcements').select('id, title, content, created_at').not('publish_date', 'is', null).order('created_at', {
-      ascending: false
-    }).limit(10);
-    if (!error && data) {
-      setAnnouncements(data);
+    try {
+      const { data, error } = await supabase
+        .from('gw_announcements')
+        .select('id, title, content, created_at')
+        .not('publish_date', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (!error && data) {
+        setAnnouncements(data);
+      }
+    } catch (err) {
+      console.warn('AnnouncementsFlip fetch failed:', err);
     }
   };
   if (announcements.length === 0) {

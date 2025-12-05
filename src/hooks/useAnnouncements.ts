@@ -38,7 +38,7 @@ export interface CreateAnnouncementData {
 
 export const useAnnouncements = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   const fetchAnnouncements = async () => {

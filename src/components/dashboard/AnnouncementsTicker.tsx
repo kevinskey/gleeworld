@@ -24,35 +24,39 @@ export const AnnouncementsTicker = ({
   }, []);
 
   const fetchAnnouncements = async () => {
-    const now = new Date();
-    const nowISO = now.toISOString();
+    try {
+      const now = new Date();
+      const nowISO = now.toISOString();
 
-    const { data, error } = await supabase.from('gw_announcements')
-      .select('id, title, content, created_at, is_recurring, recurrence_start_date, publish_date')
-      .not('publish_date', 'is', null)
-      .lte('publish_date', nowISO)
-      .order('created_at', { ascending: false })
-      .limit(20);
+      const { data, error } = await supabase.from('gw_announcements')
+        .select('id, title, content, created_at, is_recurring, recurrence_start_date, publish_date')
+        .not('publish_date', 'is', null)
+        .lte('publish_date', nowISO)
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-    if (!error && data) {
-      // Filter recurring announcements based on time of day
-      const filtered = data.filter((announcement) => {
-        if (announcement.is_recurring && announcement.recurrence_start_date) {
-          const recurrenceDate = new Date(announcement.recurrence_start_date);
-          const recurrenceHour = recurrenceDate.getUTCHours();
-          const recurrenceMinute = recurrenceDate.getUTCMinutes();
-          
-          const currentHour = now.getUTCHours();
-          const currentMinute = now.getUTCMinutes();
-          
-          // Check if current time is past the recurrence start time
-          if (currentHour < recurrenceHour) return false;
-          if (currentHour === recurrenceHour && currentMinute < recurrenceMinute) return false;
-        }
-        return true;
-      });
+      if (!error && data) {
+        // Filter recurring announcements based on time of day
+        const filtered = data.filter((announcement) => {
+          if (announcement.is_recurring && announcement.recurrence_start_date) {
+            const recurrenceDate = new Date(announcement.recurrence_start_date);
+            const recurrenceHour = recurrenceDate.getUTCHours();
+            const recurrenceMinute = recurrenceDate.getUTCMinutes();
+            
+            const currentHour = now.getUTCHours();
+            const currentMinute = now.getUTCMinutes();
+            
+            // Check if current time is past the recurrence start time
+            if (currentHour < recurrenceHour) return false;
+            if (currentHour === recurrenceHour && currentMinute < recurrenceMinute) return false;
+          }
+          return true;
+        });
 
-      setAnnouncements(filtered.slice(0, 10));
+        setAnnouncements(filtered.slice(0, 10));
+      }
+    } catch (err) {
+      console.warn('AnnouncementsTicker fetch failed:', err);
     }
   };
 
