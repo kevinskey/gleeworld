@@ -87,21 +87,31 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
 
   // Load custom actions from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(`quickActions_${user.id}`);
+    const storageKey = `quickActions_${user.id}`;
+    console.log('Loading custom actions, storage key:', storageKey);
+    const stored = localStorage.getItem(storageKey);
+    console.log('Retrieved from localStorage:', stored);
     if (stored) {
       try {
-        setCustomActions(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        console.log('Parsed custom actions:', parsed);
+        setCustomActions(parsed);
       } catch (error) {
         console.error('Error loading custom actions:', error);
       }
+    } else {
+      console.log('No custom actions found in localStorage');
     }
   }, [user.id]);
 
   // Save custom actions to localStorage (strip runtime functions)
   const saveCustomActions = (actions: any[]) => {
+    console.log('saveCustomActions called with', actions.length, 'actions');
     const serialized = actions.map(({ action, ...rest }) => rest);
+    console.log('Serialized actions:', serialized);
     localStorage.setItem(`quickActions_${user.id}`, JSON.stringify(serialized));
     setCustomActions(serialized);
+    console.log('Custom actions saved to localStorage');
   };
 
   const computedCustomActions = customActions.map((a) => ({
@@ -129,6 +139,8 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
   };
 
   const handleAddAction = async () => {
+    console.log('handleAddAction called, selectedModuleToAdd:', selectedModuleToAdd);
+    
     if (!selectedModuleToAdd || selectedModuleToAdd === 'none') {
       toast.error('Please select a module');
       return;
@@ -136,6 +148,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
 
     // If member with quickActions, use the hook
     if (isMember && quickActions) {
+      console.log('Using member quickActions hook');
       const success = await quickActions.addQuickAction(selectedModuleToAdd);
       if (success) {
         setSelectedModuleToAdd('');
@@ -143,6 +156,8 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       }
       return;
     }
+    
+    console.log('Using localStorage for non-member');
 
     // Otherwise, add to custom actions (for non-members)
     const selectedModule = availableModules.find(m => m.name === selectedModuleToAdd);
@@ -245,7 +260,10 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                   <div className="space-y-4">
                     <div>
                       <label className="text-sm font-medium">Select Module</label>
-                      <Select value={selectedModuleToAdd} onValueChange={setSelectedModuleToAdd}>
+                      <Select value={selectedModuleToAdd} onValueChange={(val) => {
+                        console.log('Select onValueChange:', val);
+                        setSelectedModuleToAdd(val);
+                      }}>
                         <SelectTrigger className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600">
                           <SelectValue placeholder="Choose a module to add" />
                         </SelectTrigger>
