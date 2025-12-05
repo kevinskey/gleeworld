@@ -194,6 +194,9 @@ export const ConcertTicketRequestsModule = () => {
     }
   });
 
+  // Total ticket inventory
+  const TOTAL_TICKET_INVENTORY = 225;
+
   // Calculate stats
   const stats = React.useMemo(() => {
     if (!requests) return {
@@ -202,11 +205,10 @@ export const ConcertTicketRequestsModule = () => {
       contacted: 0,
       approved: 0,
       rejected: 0,
-      totalTickets: 0,
+      totalTickets: TOTAL_TICKET_INVENTORY,
       approvedTickets: 0,
-      availableTickets: 0
+      availableTickets: TOTAL_TICKET_INVENTORY
     };
-    const totalTickets = requests.reduce((sum, r) => sum + r.num_tickets, 0);
     const approvedTickets = requests
       .filter(r => r.status === 'approved')
       .reduce((sum, r) => sum + r.num_tickets, 0);
@@ -216,9 +218,9 @@ export const ConcertTicketRequestsModule = () => {
       contacted: requests.filter(r => r.status === 'contacted').length,
       approved: requests.filter(r => r.status === 'approved').length,
       rejected: requests.filter(r => r.status === 'rejected').length,
-      totalTickets,
+      totalTickets: TOTAL_TICKET_INVENTORY,
       approvedTickets,
-      availableTickets: totalTickets - approvedTickets
+      availableTickets: TOTAL_TICKET_INVENTORY - approvedTickets
     };
   }, [requests]);
 
@@ -301,7 +303,7 @@ export const ConcertTicketRequestsModule = () => {
         <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-card-foreground">{stats.totalTickets}</div>
-            <Badge className="text-xs bg-slate-100 text-slate-800">Total Tickets</Badge>
+            <Badge className="text-xs bg-slate-100 text-slate-800">Inventory</Badge>
           </CardContent>
         </Card>
         <Card className="text-center px-2 py-2 flex items-center justify-center">
