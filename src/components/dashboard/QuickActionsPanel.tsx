@@ -259,6 +259,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                               // For non-members, filter out modules already in custom actions
                               return !customActions.some(action => action.moduleId === module.name);
                             })
+                            .sort((a, b) => a.title.localeCompare(b.title))
                             .map((module) => (
                             <SelectItem key={module.id} value={module.name}>
                               <div className="flex items-center gap-2">
