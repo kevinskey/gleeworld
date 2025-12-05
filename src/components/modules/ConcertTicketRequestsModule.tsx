@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Ticket, Mail, Phone, User, Calendar, MessageSquare, Search, Plus, Check, X, Send, BarChart3, List } from 'lucide-react';
+import { Ticket, Mail, Phone, User, Calendar, MessageSquare, Search, Plus, Check, X, Send, BarChart3, List, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ModuleWrapper } from './ModuleWrapper';
@@ -28,7 +28,12 @@ interface TicketRequest {
   assigned_to: string | null;
   created_at: string;
   updated_at: string;
+  class_year?: number | null;
+  user_role?: string | null;
 }
+
+type SortField = 'full_name' | 'num_tickets' | 'class_year' | 'user_role' | 'created_at';
+type SortDirection = 'asc' | 'desc';
 export const ConcertTicketRequestsModule = () => {
   const {
     toast
@@ -36,6 +41,8 @@ export const ConcertTicketRequestsModule = () => {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortField, setSortField] = useState<SortField>('full_name');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [selectedRequest, setSelectedRequest] = useState<TicketRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -51,21 +58,40 @@ export const ConcertTicketRequestsModule = () => {
     status: 'pending'
   });
 
-  // Fetch all ticket requests
+  // Fetch all ticket requests with profile data for class/role
   const {
     data: requests,
     isLoading
   } = useQuery({
-    queryKey: ['concert-ticket-requests'],
+    queryKey: ['concert-ticket-requests-with-profiles'],
     queryFn: async () => {
-      const {
-        data,
-        error
-      } = await supabase.from('concert_ticket_requests').select('*').order('created_at', {
-        ascending: false
+      // Fetch ticket requests
+      const { data: ticketData, error: ticketError } = await supabase
+        .from('concert_ticket_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (ticketError) throw ticketError;
+
+      // Fetch all profiles to match by email or name
+      const { data: profiles, error: profileError } = await supabase
+        .from('gw_profiles')
+        .select('email, full_name, class_year, role');
+      if (profileError) throw profileError;
+
+      // Match requests with profile data
+      const enrichedRequests = ticketData.map(request => {
+        const matchedProfile = profiles?.find(
+          p => p.email?.toLowerCase() === request.email?.toLowerCase() ||
+               p.full_name?.toLowerCase() === request.full_name?.toLowerCase()
+        );
+        return {
+          ...request,
+          class_year: matchedProfile?.class_year || null,
+          user_role: matchedProfile?.role || null
+        };
       });
-      if (error) throw error;
-      return data as TicketRequest[];
+
+      return enrichedRequests as TicketRequest[];
     }
   });
 
@@ -224,12 +250,69 @@ export const ConcertTicketRequestsModule = () => {
     };
   }, [requests]);
 
-  // Filter requests based on search and status
-  const filteredRequests = requests?.filter(request => {
-    const matchesSearch = request.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || request.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Filter and sort requests based on search, status, and sort settings
+  const filteredRequests = React.useMemo(() => {
+    if (!requests) return [];
+    
+    let filtered = requests.filter(request => {
+      const matchesSearch = request.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || request.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+
+    // Sort the filtered results
+    filtered.sort((a, b) => {
+      let aVal: any, bVal: any;
+      
+      switch (sortField) {
+        case 'full_name':
+          aVal = a.full_name?.toLowerCase() || '';
+          bVal = b.full_name?.toLowerCase() || '';
+          break;
+        case 'num_tickets':
+          aVal = a.num_tickets || 0;
+          bVal = b.num_tickets || 0;
+          break;
+        case 'class_year':
+          aVal = a.class_year || 9999;
+          bVal = b.class_year || 9999;
+          break;
+        case 'user_role':
+          aVal = a.user_role?.toLowerCase() || 'zzz';
+          bVal = b.user_role?.toLowerCase() || 'zzz';
+          break;
+        case 'created_at':
+          aVal = new Date(a.created_at).getTime();
+          bVal = new Date(b.created_at).getTime();
+          break;
+        default:
+          aVal = a.full_name?.toLowerCase() || '';
+          bVal = b.full_name?.toLowerCase() || '';
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return filtered;
+  }, [requests, searchTerm, statusFilter, sortField, sortDirection]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-3 w-3 ml-1" />
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
   const handleUpdateRequest = (updates: Partial<TicketRequest>) => {
     if (!selectedRequest) return;
     updateRequestMutation.mutate({
@@ -371,15 +454,48 @@ export const ConcertTicketRequestsModule = () => {
           </div>
 
           {/* Requests Table */}
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('full_name')}
+                  >
+                    <div className="flex items-center">
+                      Name
+                      <SortIcon field="full_name" />
+                    </div>
+                  </TableHead>
                   <TableHead>Contact</TableHead>
-                  <TableHead>Tickets</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('num_tickets')}
+                  >
+                    <div className="flex items-center">
+                      Tickets
+                      <SortIcon field="num_tickets" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('class_year')}
+                  >
+                    <div className="flex items-center">
+                      Class
+                      <SortIcon field="class_year" />
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50 select-none"
+                    onClick={() => handleSort('user_role')}
+                  >
+                    <div className="flex items-center">
+                      Role
+                      <SortIcon field="user_role" />
+                    </div>
+                  </TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Date</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -404,23 +520,33 @@ export const ConcertTicketRequestsModule = () => {
                         </div>
                       </TableCell>
                       <TableCell>{request.num_tickets}</TableCell>
-                      <TableCell>{getStatusBadge(request.status)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(request.created_at).toLocaleDateString()}
-                        </div>
+                        {request.class_year ? (
+                          <Badge variant="outline">{request.class_year}</Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        )}
                       </TableCell>
+                      <TableCell>
+                        {request.user_role ? (
+                          <Badge variant="secondary" className="capitalize text-xs">
+                            {request.user_role}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">Guest</span>
+                        )}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(request.status)}</TableCell>
                       <TableCell>
                         <Button variant="outline" size="sm" onClick={() => {
                     setSelectedRequest(request);
                     setIsDialogOpen(true);
                   }}>
-                          View Details
+                          View
                         </Button>
                       </TableCell>
                     </TableRow>) : <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No ticket requests found
                     </TableCell>
                   </TableRow>}
