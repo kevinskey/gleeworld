@@ -28,7 +28,7 @@ serve(async (req) => {
         caption,
         uploaded_at,
         is_featured,
-        pr_image_tag_assignments(
+        pr_image_tag_associations(
           pr_image_tags(name)
         )
       `)
@@ -40,9 +40,9 @@ serve(async (req) => {
 
     // Filter images tagged with "Glee Cam" (case insensitive)
     const gleeCamImages = prImages?.filter(image => {
-      const assignments = image.pr_image_tag_assignments as any[];
-      return assignments?.some(assignment => 
-        assignment.pr_image_tags?.name?.toLowerCase() === 'glee cam'
+      const associations = image.pr_image_tag_associations as any[];
+      return associations?.some(association => 
+        association.pr_image_tags?.name?.toLowerCase() === 'glee cam'
       );
     }) || [];
 
