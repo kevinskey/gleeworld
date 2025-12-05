@@ -13,15 +13,14 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle, Music, ArrowLeft, Star, Award, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
-const FALL_2025_PERFORMANCES = [
-  'Founder\'s Day Convocation',
-  'Homecoming Concert',
-  'Fall Choral Concert',
-  'Community Outreach Performance',
-  'Holiday Concert',
-  'Special Campus Events',
-];
+interface PerformanceEvent {
+  id: string;
+  title: string;
+  start_date: string;
+  location: string | null;
+}
 
 const EXEC_BOARD_POSITIONS = [
   'President',
@@ -96,6 +95,7 @@ const MemberExitInterview = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [existingInterview, setExistingInterview] = useState<any>(null);
+  const [performanceEvents, setPerformanceEvents] = useState<PerformanceEvent[]>([]);
 
   // Original form state
   const [performancesParticipated, setPerformancesParticipated] = useState<string[]>([]);
@@ -138,8 +138,26 @@ const MemberExitInterview = () => {
       navigate('/auth?redirect=/member-exit-interview');
       return;
     }
+    fetchPerformances();
     checkExistingInterview();
   }, [user, navigate]);
+
+  const fetchPerformances = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, title, start_date, location')
+        .eq('event_type', 'performance')
+        .gte('start_date', '2025-08-01')
+        .lte('start_date', '2025-12-31')
+        .order('start_date', { ascending: true });
+
+      if (error) throw error;
+      setPerformanceEvents(data || []);
+    } catch (error) {
+      console.error('Error fetching performances:', error);
+    }
+  };
 
   const checkExistingInterview = async () => {
     if (!user) return;
@@ -363,18 +381,25 @@ const MemberExitInterview = () => {
                     Which performances did you participate in this semester?
                   </Label>
                   <div className="grid grid-cols-1 gap-3">
-                    {FALL_2025_PERFORMANCES.map((performance) => (
-                      <div key={performance} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={performance}
-                          checked={performancesParticipated.includes(performance)}
-                          onCheckedChange={() => handlePerformanceToggle(performance)}
-                        />
-                        <Label htmlFor={performance} className="font-normal cursor-pointer">
-                          {performance}
-                        </Label>
-                      </div>
-                    ))}
+                    {performanceEvents.length > 0 ? (
+                      performanceEvents.map((event) => {
+                        const displayLabel = `${event.title}${event.start_date ? ` - ${format(new Date(event.start_date), 'MMM d, yyyy')}` : ''}`;
+                        return (
+                          <div key={event.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={event.id}
+                              checked={performancesParticipated.includes(event.title)}
+                              onCheckedChange={() => handlePerformanceToggle(event.title)}
+                            />
+                            <Label htmlFor={event.id} className="font-normal cursor-pointer">
+                              {displayLabel}
+                            </Label>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Loading performances...</p>
+                    )}
                   </div>
                   <div className="mt-2">
                     <Label htmlFor="performancesOther" className="text-sm text-muted-foreground">
