@@ -17,6 +17,7 @@ import { ModuleDisplay } from './ModuleDisplay';
 import { DashboardNavigation } from './DashboardNavigation';
 import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
 import { ConcertTicketBanner } from '@/components/shared/ConcertTicketBanner';
+import { PollReminderPopup } from '@/components/polls/PollReminderPopup';
 import { supabase } from '@/integrations/supabase/client';
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
@@ -392,5 +393,6 @@ export const UnifiedDashboard = () => {
           </Suspense>
         </div>}
 
+      <PollReminderPopup />
     </div>;
 };
