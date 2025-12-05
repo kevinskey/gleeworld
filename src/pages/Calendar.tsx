@@ -1,29 +1,38 @@
 import { CalendarViews } from "@/components/calendar/CalendarViews";
-import { NextEventCard } from "@/components/calendar/NextEventCard";
-import { NotificationIndicator } from "@/components/calendar/NotificationIndicator";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
-import { useAuth } from "@/contexts/AuthContext";
 import { GoogleCalendarSync } from "@/components/calendar/GoogleCalendarSync";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { BackNavigation } from "@/components/shared/BackNavigation";
 
 const Calendar = () => {
-  const { user } = useAuth();
-  
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
       <div className="min-h-screen w-full">
-        <header className="h-12 flex items-center border-b px-4">
-          <h1 className="text-lg font-semibold">Calendar</h1>
-        </header>
-        <main className="flex-1 p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
+        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
+          {/* Back Navigation */}
+          <BackNavigation className="mb-4" />
+          
+          {/* Header */}
+          <div className="flex items-center gap-3 mb-4 sm:mb-6">
+            <div className="rounded-xl p-2.5 sm:p-3 bg-primary/10">
+              <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Calendar</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">View and manage events</p>
+            </div>
+          </div>
+          
+          {/* Main Content */}
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
             <div className="flex-1">
               <CalendarViews />
             </div>
-            <div className="lg:w-80">
+            <div className="lg:w-72 xl:w-80">
               <GoogleCalendarSync />
             </div>
           </div>
-        </main>
+        </div>
       </div>
     </UniversalLayout>
   );
