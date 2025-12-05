@@ -16,7 +16,7 @@ import useGroupMessages from '@/hooks/useGroupMessages';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, closestCenter } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, useDraggable, useDroppable, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 
 interface User {
   user_id: string;
@@ -74,6 +74,15 @@ export const GroupMessageInterface: React.FC = () => {
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Configure drag sensors with activation constraints to prevent clicks from being treated as drags
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 10, // Require 10px movement before drag starts
+      },
+    })
+  );
   
   const {
     conversations,
@@ -605,7 +614,7 @@ export const GroupMessageInterface: React.FC = () => {
                     </Button>
                   </div>
 
-                  <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                  <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                     {/* Folders with groups */}
                     {folders.map(folder => {
                       const folderGroups = conversations.filter(c => c.folder_id === folder.id);
