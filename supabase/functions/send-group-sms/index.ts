@@ -125,24 +125,65 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Get all group members' phone numbers except sender
-    const { data: members, error: membersError } = await supabase
-      .from('gw_group_members')
-      .select(`
-        gw_profiles!inner(phone_number, user_id)
-      `)
-      .eq('group_id', conversation.gw_message_groups.id)
-      .neq('gw_profiles.user_id', senderUserId)
-      .not('gw_profiles.phone_number', 'is', null);
+    // If "All Members" group, fetch ALL users with member role, not just group members
+    const groupName = conversation.gw_message_groups.name;
+    const isAllMembersGroup = groupName.toLowerCase().includes('all members');
+    
+    let targetPhoneNumbers: string[] = [];
+    
+    if (isAllMembersGroup) {
+      // Fetch all profiles with is_member = true OR who have 'member' role in user_roles
+      const { data: allMembers, error: allMembersError } = await supabase
+        .from('gw_profiles')
+        .select('phone_number, user_id')
+        .neq('user_id', senderUserId)
+        .not('phone_number', 'is', null);
+      
+      if (allMembersError) {
+        console.error('Error fetching all members:', allMembersError);
+        throw new Error('Failed to get all members');
+      }
+      
+      // Also check user_roles for members
+      const { data: memberRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'member');
+      
+      const memberUserIds = new Set(memberRoles?.map(r => r.user_id) || []);
+      
+      // Filter to only include users who are members (either by is_member flag or user_roles)
+      const memberProfiles = allMembers?.filter(profile => 
+        memberUserIds.has(profile.user_id)
+      ) || [];
+      
+      console.log(`All Members group: Found ${memberProfiles.length} members with phone numbers`);
+      
+      targetPhoneNumbers = memberProfiles
+        .map(profile => profile.phone_number)
+        .filter(phone => phone)
+        .map(phone => formatPhoneNumber(phone as string));
+    } else {
+      // Regular group - fetch only explicit group members
+      const { data: members, error: membersError } = await supabase
+        .from('gw_group_members')
+        .select(`
+          gw_profiles!inner(phone_number, user_id)
+        `)
+        .eq('group_id', conversation.gw_message_groups.id)
+        .neq('gw_profiles.user_id', senderUserId)
+        .not('gw_profiles.phone_number', 'is', null);
 
-    if (membersError) {
-      console.error('Error fetching group members:', membersError);
-      throw new Error('Failed to get group members');
+      if (membersError) {
+        console.error('Error fetching group members:', membersError);
+        throw new Error('Failed to get group members');
+      }
+
+      targetPhoneNumbers = members
+        .map(member => member.gw_profiles?.phone_number)
+        .filter(phone => phone)
+        .map(phone => formatPhoneNumber(phone as string));
     }
-
-    const targetPhoneNumbers = members
-      .map(member => member.gw_profiles?.phone_number)
-      .filter(phone => phone)
-      .map(phone => formatPhoneNumber(phone as string));
 
     if (targetPhoneNumbers.length === 0) {
       return new Response(
@@ -152,7 +193,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Format message for group SMS: "[Group Name] FirstName: message"
-    const groupName = conversation.gw_message_groups.name;
     const firstName = senderName.split(' ')[0];
     const smsText = `${groupName}: ${firstName}: ${message}`;
     const truncatedMessage = smsText.length > 160 ? smsText.substring(0, 157) + '...' : smsText;
