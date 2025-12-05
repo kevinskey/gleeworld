@@ -1,12 +1,23 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Clock, CheckCircle, XCircle, TrendingUp, Edit } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, TrendingUp, Edit, Eye, Trash2 } from 'lucide-react';
 import { ManualGradingDialog } from './ManualGradingDialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface TestScoresViewProps {
   testId: string;
@@ -14,11 +25,14 @@ interface TestScoresViewProps {
 
 export const TestScoresView = ({ testId }: TestScoresViewProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [test, setTest] = useState<any>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
   const [gradingDialogOpen, setGradingDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadScores();
@@ -106,6 +120,76 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
     setGradingDialogOpen(true);
   };
 
+  const handleDeleteTest = async () => {
+    try {
+      setDeleting(true);
+      
+      // Delete answers first
+      const { error: answersError } = await supabase
+        .from('test_answers')
+        .delete()
+        .in('submission_id', submissions.map(s => s.id));
+      
+      if (answersError) console.error('Error deleting answers:', answersError);
+
+      // Delete submissions
+      const { error: submissionsError } = await supabase
+        .from('test_submissions')
+        .delete()
+        .eq('test_id', testId);
+
+      if (submissionsError) console.error('Error deleting submissions:', submissionsError);
+
+      // Delete question options
+      const { data: questions } = await supabase
+        .from('test_questions')
+        .select('id')
+        .eq('test_id', testId);
+
+      if (questions?.length) {
+        const { error: optionsError } = await supabase
+          .from('test_answer_options')
+          .delete()
+          .in('question_id', questions.map(q => q.id));
+        
+        if (optionsError) console.error('Error deleting options:', optionsError);
+      }
+
+      // Delete questions
+      const { error: questionsError } = await supabase
+        .from('test_questions')
+        .delete()
+        .eq('test_id', testId);
+
+      if (questionsError) console.error('Error deleting questions:', questionsError);
+
+      // Delete test
+      const { error: testError } = await supabase
+        .from('glee_academy_tests')
+        .delete()
+        .eq('id', testId);
+
+      if (testError) throw testError;
+
+      toast({
+        title: 'Test Deleted',
+        description: 'The test and all submissions have been deleted.'
+      });
+
+      navigate(-1);
+    } catch (error) {
+      console.error('Error deleting test:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete test',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  };
+
   const stats = calculateStats();
 
   if (loading) {
@@ -114,9 +198,27 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-2">{test?.title}</h2>
-        <p className="text-muted-foreground">Test Scores and Analytics</p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">{test?.title}</h2>
+          <p className="text-muted-foreground">Test Scores and Analytics</p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/test/${testId}/preview`)}
+          >
+            <Eye className="h-4 w-4 mr-2" />
+            View Test
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => setDeleteDialogOpen(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Test
+          </Button>
+        </div>
       </div>
 
       {stats && (
@@ -240,6 +342,27 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
         test={test}
         onGraded={loadScores}
       />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Test?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete "{test?.title}" and all {submissions.length} submission(s). This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteTest}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? 'Deleting...' : 'Delete Test'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
