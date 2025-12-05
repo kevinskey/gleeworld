@@ -452,16 +452,16 @@ export const AssignmentManager = () => {
   }
   return <div className="space-y-3 sm:space-y-4 md:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-        <div className="w-full sm:w-auto">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">Assignment Manager</h2>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 sm:gap-4">
+        <div className="w-full lg:w-auto">
+          <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-foreground">Assignment Manager</h2>
           <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Create and manage listening journal assignments</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center w-full sm:w-auto">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
             <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-[130px] sm:w-[160px] md:w-[180px] h-8 sm:h-9 text-xs sm:text-sm">
                 <SelectValue placeholder="All Students" />
               </SelectTrigger>
               <SelectContent>
@@ -471,40 +471,16 @@ export const AssignmentManager = () => {
                   </SelectItem>)}
               </SelectContent>
             </Select>
-            {selectedStudent !== 'all' && (
-              <>
-                <Button 
-                  onClick={() => handleGradeAllWithAI(false)}
-                  disabled={isGradingAll}
-                  variant="outline"
-                  size="sm"
-                  className="whitespace-nowrap"
-                >
-                  <Brain className="h-4 w-4 mr-2" />
-                  {isGradingAll ? 'Grading...' : 'Grade All with AI'}
-                </Button>
-                <Button 
-                  onClick={() => handleGradeAllWithAI(true)}
-                  disabled={isGradingAll}
-                  variant="default"
-                  size="sm"
-                  className="whitespace-nowrap"
-                >
-                  <Brain className="h-4 w-4 mr-2" />
-                  {isGradingAll ? 'Regrading...' : 'Regrade All with AI'}
-                </Button>
-              </>
-            )}
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <ArrowUpDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-            <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-              <SelectTrigger className="w-full sm:w-[160px] md:w-[180px]">
-                <SelectValue placeholder="Sort by..." />
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <ArrowUpDown className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+              <SelectTrigger className="w-[100px] sm:w-[120px] md:w-[140px] h-8 sm:h-9 text-xs sm:text-sm">
+                <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="journal_number">Journal #</SelectItem>
-                <SelectItem value="date">Created Date</SelectItem>
+                <SelectItem value="date">Date Created</SelectItem>
                 <SelectItem value="due_date">Due Date</SelectItem>
                 <SelectItem value="submissions">Submissions</SelectItem>
                 <SelectItem value="ungraded">Ungraded</SelectItem>
@@ -512,12 +488,11 @@ export const AssignmentManager = () => {
               </SelectContent>
             </Select>
           </div>
-          
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
-              <Button className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                <span className="whitespace-nowrap">New Assignment</span>
+              <Button size="sm" className="h-8 sm:h-9 text-xs sm:text-sm gap-1 sm:gap-2">
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden xs:inline">New </span>Assignment
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -575,6 +550,30 @@ export const AssignmentManager = () => {
               </form>
             </DialogContent>
           </Dialog>
+          {selectedStudent !== 'all' && (
+            <>
+              <Button 
+                onClick={() => handleGradeAllWithAI(false)}
+                disabled={isGradingAll}
+                variant="outline"
+                size="sm"
+                className="whitespace-nowrap h-8 sm:h-9 text-xs sm:text-sm"
+              >
+                <Brain className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {isGradingAll ? 'Grading...' : 'Grade All'}
+              </Button>
+              <Button 
+                onClick={() => handleGradeAllWithAI(true)}
+                disabled={isGradingAll}
+                variant="default"
+                size="sm"
+                className="whitespace-nowrap h-8 sm:h-9 text-xs sm:text-sm"
+              >
+                <Brain className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {isGradingAll ? 'Regrading...' : 'Regrade All'}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 

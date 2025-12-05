@@ -191,47 +191,47 @@ export const InstructorConsole = () => {
       <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
         <div className="border-b bg-card">
-          <div className="max-w-[1800px] mx-auto px-3 sm:px-6 py-3 sm:py-4">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 sm:gap-4">
-              <div className="flex items-center gap-3 sm:gap-6 overflow-x-auto scrollbar-hide w-full lg:w-auto pb-2 lg:pb-0">
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-                  <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+          <div className="max-w-[1800px] mx-auto px-2 sm:px-4 md:px-6 py-2 sm:py-3 md:py-4">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 sm:gap-3 md:gap-4">
+              <div className="flex items-center gap-2 sm:gap-4 md:gap-6 overflow-x-auto scrollbar-hide w-full md:w-auto pb-1 md:pb-0">
+                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
+                  <BookOpen className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
                   <span className="text-muted-foreground">Assignments:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.activeAssignments}</span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-600 flex-shrink-0" />
+                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
+                  <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-emerald-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Journals:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalJournals}</span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-                  <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-600 flex-shrink-0" />
+                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
+                  <BarChart3 className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-orange-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Pending:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.pendingGrades}</span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-                  <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600 flex-shrink-0" />
+                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
+                  <GraduationCap className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-purple-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Students:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.totalStudents}</span>
                 </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm whitespace-nowrap">
-                  <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600 flex-shrink-0" />
+                <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
+                  <Users className="h-3 w-3 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4 text-indigo-600 flex-shrink-0" />
                   <span className="text-muted-foreground">Avg:</span>
                   <span className="font-semibold text-foreground">{statsLoading ? '...' : stats.averageGrade ? `${stats.averageGrade}%` : 'N/A'}</span>
                 </div>
               </div>
               
-              <div className="flex items-center gap-2 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end">
-                <Button variant="outline" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-2">
-                  <Menu className="h-4 w-4" />
+              <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
+                <Button variant="outline" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-1 sm:gap-2 h-7 sm:h-8 text-xs sm:text-sm">
+                  <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Menu</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/student/dashboard')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
-                  <Eye className="h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/student/dashboard')} className="hidden sm:flex items-center gap-1 sm:gap-2 whitespace-nowrap h-7 sm:h-8 text-xs sm:text-sm">
+                  <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Student View</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/admin')} className="hidden sm:flex items-center gap-2 whitespace-nowrap">
-                  <Home className="h-4 w-4" />
+                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/admin')} className="hidden sm:flex items-center gap-1 sm:gap-2 whitespace-nowrap h-7 sm:h-8 text-xs sm:text-sm">
+                  <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Home</span>
                 </Button>
               </div>
@@ -242,12 +242,12 @@ export const InstructorConsole = () => {
         {/* Main Layout */}
         <div className="flex max-w-[1800px] mx-auto">
           {/* Desktop Sidebar */}
-          <aside className="hidden lg:block w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[132px]">
-            <div className="p-6">
-              <div className="mb-8 pb-6 border-b">
-                <h2 className="text-xl font-bold text-foreground">MUS 240</h2>
-                <p className="text-sm text-muted-foreground mt-1.5">Survey of African American Music</p>
-                <p className="text-xs text-muted-foreground mt-1">Dr. Kevin Phillip Johnson</p>
+          <aside className="hidden lg:block w-56 xl:w-64 border-r bg-card min-h-[calc(100vh-10rem)] sticky top-[132px]">
+            <div className="p-4 xl:p-6">
+              <div className="mb-6 xl:mb-8 pb-4 xl:pb-6 border-b">
+                <h2 className="text-lg xl:text-xl font-bold text-foreground">MUS 240</h2>
+                <p className="text-xs xl:text-sm text-muted-foreground mt-1 xl:mt-1.5">Survey of African American Music</p>
+                <p className="text-[10px] xl:text-xs text-muted-foreground mt-0.5 xl:mt-1">Dr. Kevin Phillip Johnson</p>
               </div>
               <SidebarNav />
             </div>
@@ -255,18 +255,18 @@ export const InstructorConsole = () => {
 
           {/* Mobile Sidebar */}
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-            <SheetContent side="left" className="w-72 p-6">
-              <div className="mb-8 pb-6 border-b">
-                <h2 className="text-xl font-bold text-foreground">MUS 240</h2>
-                <p className="text-sm text-muted-foreground mt-1.5">Survey of African American Music</p>
-                <p className="text-xs text-muted-foreground mt-1">Dr. Kevin Phillip Johnson</p>
+            <SheetContent side="left" className="w-64 sm:w-72 p-4 sm:p-6">
+              <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b">
+                <h2 className="text-lg sm:text-xl font-bold text-foreground">MUS 240</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 sm:mt-1.5">Survey of African American Music</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Dr. Kevin Phillip Johnson</p>
               </div>
               <SidebarNav isMobile />
             </SheetContent>
           </Sheet>
 
           {/* Main Content */}
-          <main className="flex-1 p-2 sm:p-4 md:p-6 lg:p-8">
+          <main className="flex-1 p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8">
             {/* Page Header */}
             <div className="mb-4 sm:mb-6 md:mb-8">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-1 sm:mb-2">
