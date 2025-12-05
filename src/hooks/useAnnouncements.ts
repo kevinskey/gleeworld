@@ -44,9 +44,12 @@ export const useAnnouncements = () => {
   const fetchAnnouncements = async (retryCount = 0) => {
     const maxRetries = 2;
     
-    try {
+    // Only set loading true on first attempt
+    if (retryCount === 0) {
       setLoading(true);
-      
+    }
+    
+    try {
       // Fetch both announcements and recent communications
       const [announcementsResult, communicationsResult] = await Promise.all([
         supabase
@@ -81,6 +84,7 @@ export const useAnnouncements = () => {
         .sort((a, b) => new Date(b.created_at || b.publish_date).getTime() - new Date(a.created_at || a.publish_date).getTime());
 
       setAnnouncements(allAnnouncements);
+      setLoading(false);
     } catch (error: any) {
       console.error('Error fetching announcements:', error);
       
@@ -91,13 +95,12 @@ export const useAnnouncements = () => {
         return fetchAnnouncements(retryCount + 1);
       }
       
+      setLoading(false);
       toast({
         title: "Error",
         description: "Failed to load announcements. Please refresh the page.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
