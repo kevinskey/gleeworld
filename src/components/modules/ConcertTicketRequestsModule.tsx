@@ -9,11 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { Ticket, Mail, Phone, User, Calendar, MessageSquare, Search, Plus, Check, X, Send } from 'lucide-react';
+import { Ticket, Mail, Phone, User, Calendar, MessageSquare, Search, Plus, Check, X, Send, BarChart3, List } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ModuleWrapper } from './ModuleWrapper';
+import { ConcertTicketAnalytics } from './ConcertTicketAnalytics';
 interface TicketRequest {
   id: string;
   full_name: string;
@@ -316,7 +318,21 @@ export const ConcertTicketRequestsModule = () => {
         </Card>
       </div>
 
-      <Card>
+      {/* Tabs for Data vs Analytics */}
+      <Tabs defaultValue="data" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="data" className="flex items-center gap-2">
+            <List className="h-4 w-4" />
+            Requests
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="data">
+          <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle>Manage Ticket Requests</CardTitle>
@@ -411,6 +427,12 @@ export const ConcertTicketRequestsModule = () => {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="analytics">
+          <ConcertTicketAnalytics />
+        </TabsContent>
+      </Tabs>
 
       {/* Detail Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
