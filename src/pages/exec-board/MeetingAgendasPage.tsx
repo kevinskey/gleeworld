@@ -274,15 +274,17 @@ VII. CLOSING REMARKS`
                   <Calendar className="h-5 w-5" />
                   Past Meeting Notes
                 </span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="h-4 w-4" />
-                  Upload
-                </Button>
+                {uploadedNotes.length > 0 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
