@@ -130,11 +130,6 @@ export const useProfile = () => {
 
     try {
       setUpdating(true);
-      console.log('Profile update attempt:', {
-        userId: user.id,
-        userEmail: user.email,
-        updates
-      });
       
       const { error } = await supabase
         .from("gw_profiles")
@@ -145,11 +140,9 @@ export const useProfile = () => {
         .eq("user_id", user.id);
 
       if (error) {
-        console.error('Profile update error:', error);
+        console.error('Profile update error:', error.message);
         throw error;
       }
-      
-      console.log('Profile update successful for user:', user.id);
 
       // Refetch profile to get updated data
       await fetchProfile();

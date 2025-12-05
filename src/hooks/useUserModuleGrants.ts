@@ -14,36 +14,27 @@ export function useUserModuleGrants(userId?: string) {
       try {
         setLoading(true);
         setError(null);
-        
-        console.log('🔧 useUserModuleGrants: fetchGrants called with userId:', userId);
 
-        // If no userId, try to get current user
         let targetUserId = userId;
         if (!targetUserId) {
           const { data: { user } } = await supabase.auth.getUser();
           targetUserId = user?.id;
-          console.log('🔧 useUserModuleGrants: Got current user ID:', targetUserId);
         }
 
         if (!targetUserId) {
-          console.log('🔧 useUserModuleGrants: No user ID available, returning empty grants');
           setGrants([]);
           setLoading(false);
           return;
         }
 
-        // First check if user is admin/super-admin
         const { data: profileData } = await supabase
           .from('gw_profiles')
           .select('is_admin, is_super_admin, role')
           .eq('user_id', targetUserId)
           .single();
 
-        console.log('🔧 useUserModuleGrants: User profile:', profileData);
-
-        // If super admin, grant access to all modules
+        // Super admin gets all modules
         if (profileData?.is_super_admin || profileData?.role === 'super-admin') {
-          console.log('🔧 useUserModuleGrants: User is super admin, granting all modules');
           const { data: allModules } = await supabase
             .from('gw_modules')
             .select('key, name, category')
@@ -71,24 +62,21 @@ export function useUserModuleGrants(userId?: string) {
 
         if (!cancelled) {
           if (permError) {
-            console.error('🔧 useUserModuleGrants: Permission query error:', permError);
+            console.error('Module grants error:', permError);
             setError(permError.message);
             setGrants([]);
           } else {
-            console.log('🔧 useUserModuleGrants: User permissions data:', userPermissions);
-
             const moduleIds = (userPermissions || [])
               .map((p: any) => p.module_id)
               .filter(Boolean);
 
             if (moduleIds.length === 0) {
-              console.log('🔧 useUserModuleGrants: No permissions found, returning empty grants');
               setGrants([]);
               setLoading(false);
               return;
             }
 
-            // Handle legacy aliases and split UUID vs text keys
+            // Handle legacy aliases
             const LEGACY_ALIAS: Record<string, string> = {
               attendance: 'attendance-management',
               calendar: 'calendar-management'
@@ -104,43 +92,32 @@ export function useUserModuleGrants(userId?: string) {
               }
             }
 
-            // Fetch corresponding modules by UUID and by key (with aliases)
             let modulesData: any[] = [];
-            // By UUID ids
+            
             if (uuidIds.length > 0) {
-              const { data, error } = await supabase
+              const { data } = await supabase
                 .from('gw_modules')
                 .select('id, key, name, category, is_active')
                 .in('id', uuidIds)
                 .eq('is_active', true);
-              if (error) {
-                console.error('🔧 useUserModuleGrants: Modules fetch (by id) error:', error);
-              } else {
-                modulesData = data || [];
-              }
+              modulesData = data || [];
             }
-            // By key ids (including legacy aliases)
+            
             const keyIds = Array.from(textIdsSet);
             if (keyIds.length > 0) {
-              const { data, error } = await supabase
+              const { data } = await supabase
                 .from('gw_modules')
                 .select('id, key, name, category, is_active')
                 .in('key', keyIds)
                 .eq('is_active', true);
-              if (error) {
-                console.error('🔧 useUserModuleGrants: Modules fetch (by key) error:', error);
-              } else {
-                modulesData = [...modulesData, ...(data || [])];
-              }
+              modulesData = [...modulesData, ...(data || [])];
             }
 
             const moduleById = new Map((modulesData || []).map((m: any) => [m.id, m]));
             const moduleByKey = new Map((modulesData || []).map((m: any) => [m.key, m]));
 
-            // Map permissions to grants (all assigned modules have view + manage)
             const parsedGrants: ModuleGrant[] = (userPermissions || []).map((item: any) => {
               const rawId = item.module_id;
-              // Try to find module by ID first, then by key, then by legacy alias
               const module = moduleById.get(rawId) || moduleByKey.get(rawId) || moduleByKey.get(LEGACY_ALIAS[rawId]);
               const resolvedKey = module?.key || module?.id || LEGACY_ALIAS[rawId] || rawId;
               return {
@@ -152,14 +129,13 @@ export function useUserModuleGrants(userId?: string) {
               };
             }).filter(grant => grant.module_key);
 
-            console.log('🔧 useUserModuleGrants: Parsed grants:', parsedGrants);
             setGrants(parsedGrants);
           }
           setLoading(false);
         }
       } catch (err) {
         if (!cancelled) {
-          console.error('🔧 useUserModuleGrants: Unexpected error:', err);
+          console.error('useUserModuleGrants error:', err);
           setError(err instanceof Error ? err.message : 'Unknown error');
           setGrants([]);
           setLoading(false);
@@ -169,9 +145,10 @@ export function useUserModuleGrants(userId?: string) {
 
     fetchGrants();
 
-    // Set up real-time subscription for instant updates
+    // Real-time subscription
     let cleanup: (() => void) | undefined;
     let targetUserId = userId;
+    
     if (!targetUserId) {
       supabase.auth.getUser().then(({ data: { user } }) => {
         if (user?.id) {
@@ -194,10 +171,7 @@ export function useUserModuleGrants(userId?: string) {
             table: 'gw_user_module_permissions',
             filter: `user_id=eq.${uid}`
           },
-          (payload) => {
-            console.log('🔧 useUserModuleGrants: Real-time update received:', payload);
-            fetchGrants();
-          }
+          () => fetchGrants()
         )
         .subscribe();
 
@@ -216,7 +190,6 @@ export function useUserModuleGrants(userId?: string) {
     if (userId) {
       setLoading(true);
       setError(null);
-      // Trigger useEffect by updating dependency
     }
   };
 

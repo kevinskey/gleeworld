@@ -122,21 +122,8 @@ export const UnifiedDashboard = () => {
     run();
   }, [viewMode, location.search]);
 
-  // Debug logging
-  console.log('🎯 UnifiedDashboard rendering:', {
-    user: !!user,
-    userEmail: user?.email,
-    profile: !!profile,
-    profileLoading,
-    profileData: profile,
-    viewMode: viewMode,
-    pathname: location.pathname,
-    timestamp: new Date().toISOString()
-  });
-
   // Show loading if profile is still loading
   if (profileLoading) {
-    console.log('🎯 UnifiedDashboard: Profile still loading...');
     return <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
@@ -147,7 +134,6 @@ export const UnifiedDashboard = () => {
 
   // Check if we have a profile - if not, show access restricted
   if (!profile) {
-    console.log('🎯 UnifiedDashboard: No profile found, showing access restricted');
     return <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md mx-auto p-8 bg-card rounded-xl shadow-lg text-center">
           <h1 className="text-2xl font-bold mb-4">Access Restricted</h1>

@@ -272,39 +272,25 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   try {
     const { user, loading } = useAuth();
   
-  console.log('🔒 ProtectedRoute DEBUG:', {
-    user: !!user,
-    userEmail: user?.email,
-    userId: user?.id,
-    loading,
-    pathname: window.location.pathname,
-    timestamp: new Date().toISOString()
-  });
-  
-  if (loading) {
-    console.log('🔒 ProtectedRoute: Still loading auth...');
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
-      </div>
-    );
-  }
-  
-  if (!user) {
-    console.log('🔒 ProtectedRoute: No user found, redirecting to auth');
-    // Store the current path to redirect back after login, but only if it's not the root path
-    const currentPath = window.location.pathname + window.location.search;
-    if (currentPath !== '/auth' && currentPath !== '/' && !currentPath.startsWith('/auth')) {
-      console.log('ProtectedRoute: Storing redirect path:', currentPath);
-      sessionStorage.setItem('redirectAfterAuth', currentPath);
+    if (loading) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+          <LoadingSpinner size="lg" text="Loading..." />
+        </div>
+      );
     }
-    return <Navigate to="/auth" replace />;
-  }
   
-  console.log('🔒 ProtectedRoute: User authenticated, rendering children');
-  return <>{children}</>;
+    if (!user) {
+      const currentPath = window.location.pathname + window.location.search;
+      if (currentPath !== '/auth' && currentPath !== '/' && !currentPath.startsWith('/auth')) {
+        sessionStorage.setItem('redirectAfterAuth', currentPath);
+      }
+      return <Navigate to="/auth" replace />;
+    }
+  
+    return <>{children}</>;
   } catch (error) {
-    console.error('ProtectedRoute: Error accessing auth context:', error);
+    console.error('ProtectedRoute error:', error);
     return <Navigate to="/auth" replace />;
   }
 };
