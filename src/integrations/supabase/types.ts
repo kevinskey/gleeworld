@@ -16255,6 +16255,69 @@ export type Database = {
         }
         Relationships: []
       }
+      member_exit_interviews: {
+        Row: {
+          additional_comments: string | null
+          advanced_ensemble_notes: string | null
+          created_at: string
+          exec_board_work_done: string | null
+          id: string
+          in_other_campus_show: boolean | null
+          intent_to_continue: boolean | null
+          intent_to_continue_notes: string | null
+          interested_in_advanced_ensemble: boolean | null
+          interested_in_fall_tour: boolean | null
+          interested_in_private_lessons: boolean | null
+          other_campus_show_details: string | null
+          performances_other: string | null
+          performances_participated: string[] | null
+          private_lessons_instrument: string | null
+          semester: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_comments?: string | null
+          advanced_ensemble_notes?: string | null
+          created_at?: string
+          exec_board_work_done?: string | null
+          id?: string
+          in_other_campus_show?: boolean | null
+          intent_to_continue?: boolean | null
+          intent_to_continue_notes?: string | null
+          interested_in_advanced_ensemble?: boolean | null
+          interested_in_fall_tour?: boolean | null
+          interested_in_private_lessons?: boolean | null
+          other_campus_show_details?: string | null
+          performances_other?: string | null
+          performances_participated?: string[] | null
+          private_lessons_instrument?: string | null
+          semester?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_comments?: string | null
+          advanced_ensemble_notes?: string | null
+          created_at?: string
+          exec_board_work_done?: string | null
+          id?: string
+          in_other_campus_show?: boolean | null
+          intent_to_continue?: boolean | null
+          intent_to_continue_notes?: string | null
+          interested_in_advanced_ensemble?: boolean | null
+          interested_in_fall_tour?: boolean | null
+          interested_in_private_lessons?: boolean | null
+          other_campus_show_details?: string | null
+          performances_other?: string | null
+          performances_participated?: string[] | null
+          private_lessons_instrument?: string | null
+          semester?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       module_items: {
         Row: {
           content_text: string | null

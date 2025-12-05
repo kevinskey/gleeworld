@@ -189,6 +189,7 @@ import { Mus240StaffRoute } from "./components/auth/Mus240StaffRoute";
 import TimesheetPage from "./pages/TimesheetPage";
 import BownaScholarLanding from "./pages/BownaScholarLanding";
 import SMSTest from "./pages/SMSTest";
+import MemberExitInterview from "./pages/MemberExitInterview";
 
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
@@ -1484,6 +1485,14 @@ const App = () => {
                                         <ReceiptsPage />
                                       </ProtectedRoute>
                                     } 
+                />
+                <Route 
+                  path="/member-exit-interview" 
+                  element={
+                    <ProtectedRoute>
+                      <MemberExitInterview />
+                    </ProtectedRoute>
+                  } 
                 />
                 <Route 
                   path="/bowna-scholar" 
