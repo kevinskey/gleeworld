@@ -73,19 +73,19 @@ const gleeWorldTheme: ThemeConfig = {
   description: 'Bold, musical, and vibrant - the signature Glee World experience',
   
   colors: {
-    primary: '219 78% 31%',           // Spelman dark blue #11448B
-    primaryForeground: '0 0% 100%',   // White text on blue
-    secondary: '203 85% 63%',         // Sky blue accent #55BBEE
+    primary: '203 85% 63%',           // Sky blue accent #55BBEE
+    primaryForeground: '219 78% 15%', // Dark blue text on primary
+    secondary: '219 78% 31%',         // Spelman dark blue #11448B
     secondaryForeground: '0 0% 100%', // White on blue
     accent: '203 85% 63%',            // Sky blue accent
-    accentForeground: '0 0% 100%',
-    background: '0 0% 98%',           // Light background (near white)
-    foreground: '0 0% 8%',            // Dark text for light background
-    card: '0 0% 100%',                // White cards
-    cardForeground: '0 0% 8%',        // Dark text on white cards
-    muted: '0 0% 96%',                // Light muted backgrounds
-    mutedForeground: '0 0% 25%',      // Dark muted text
-    border: '0 0% 85%',               // Light border
+    accentForeground: '219 78% 15%',
+    background: '219 78% 15%',        // Dark navy background
+    foreground: '0 0% 100%',          // White text for dark background
+    card: '219 60% 20%',              // Slightly lighter navy for cards
+    cardForeground: '0 0% 100%',      // White text on cards
+    muted: '219 50% 25%',             // Muted navy backgrounds
+    mutedForeground: '0 0% 85%',      // Light muted text
+    border: '219 40% 35%',            // Navy border
   },
   
   typography: {
