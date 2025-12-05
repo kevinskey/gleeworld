@@ -183,27 +183,45 @@ const ExecutiveBoardWorkshopPage = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 transition-colors cursor-pointer">
+              <div 
+                onClick={() => navigate('/exec-board/meeting-agendas')}
+                className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 hover:bg-muted/50 transition-colors cursor-pointer"
+              >
                 <h4 className="font-medium mb-1">Meeting Agendas</h4>
                 <p className="text-sm text-muted-foreground">Templates and past meeting notes</p>
               </div>
-              <div className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 transition-colors cursor-pointer">
+              <div 
+                onClick={() => setActiveSection('handbook')}
+                className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 hover:bg-muted/50 transition-colors cursor-pointer"
+              >
                 <h4 className="font-medium mb-1">Role Guides</h4>
                 <p className="text-sm text-muted-foreground">Position-specific responsibilities</p>
               </div>
-              <div className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 transition-colors cursor-pointer">
+              <div 
+                onClick={() => navigate('/exec-board/transition-documents')}
+                className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 hover:bg-muted/50 transition-colors cursor-pointer"
+              >
                 <h4 className="font-medium mb-1">Transition Documents</h4>
                 <p className="text-sm text-muted-foreground">Onboarding for new board members</p>
               </div>
-              <div className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 transition-colors cursor-pointer">
+              <div 
+                onClick={() => navigate('/directory')}
+                className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 hover:bg-muted/50 transition-colors cursor-pointer"
+              >
                 <h4 className="font-medium mb-1">Contact Directory</h4>
                 <p className="text-sm text-muted-foreground">Key contacts and advisors</p>
               </div>
-              <div className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 transition-colors cursor-pointer">
+              <div 
+                onClick={() => navigate('/exec-board/policy-manual')}
+                className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 hover:bg-muted/50 transition-colors cursor-pointer"
+              >
                 <h4 className="font-medium mb-1">Policy Manual</h4>
                 <p className="text-sm text-muted-foreground">Club policies and procedures</p>
               </div>
-              <div className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 transition-colors cursor-pointer">
+              <div 
+                onClick={() => navigate('/calendar')}
+                className="p-4 rounded-lg bg-muted/30 border hover:border-amber-500/30 hover:bg-muted/50 transition-colors cursor-pointer"
+              >
                 <h4 className="font-medium mb-1">Calendar</h4>
                 <p className="text-sm text-muted-foreground">Important dates and deadlines</p>
               </div>
