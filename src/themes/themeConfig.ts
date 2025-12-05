@@ -95,9 +95,9 @@ const gleeWorldTheme: ThemeConfig = {
   },
   
   background: {
-    type: 'image',
-    value: 'url(/images/themes/gleeworld-bg.jpg)',
-    overlay: 'rgba(0, 0, 0, 0.4)',
+    type: 'gradient',
+    value: 'linear-gradient(135deg, hsl(219 78% 15%) 0%, hsl(219 78% 25%) 50%, hsl(203 60% 20%) 100%)',
+    overlay: 'none',
     position: 'center center',
   },
   
