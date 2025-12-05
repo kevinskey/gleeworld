@@ -117,7 +117,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
         }
         return {
           question_id: q.id,
-          user_answer: typeof userAnswer === 'string' ? userAnswer : JSON.stringify(userAnswer),
+          text_answer: typeof userAnswer === 'string' ? userAnswer : JSON.stringify(userAnswer),
           is_correct: isCorrect,
           points_earned: isCorrect ? q.points : 0
         };
