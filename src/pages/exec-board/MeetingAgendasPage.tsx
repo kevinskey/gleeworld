@@ -1,20 +1,31 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, FileText, Plus, Calendar, Download, Copy, Upload } from "lucide-react";
+import { ArrowLeft, FileText, Plus, Calendar, Download, Copy, Upload, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
+interface UploadedNote {
+  id: string;
+  name: string;
+  date: Date;
+  size: number;
+  content?: string;
+}
+
 const MeetingAgendasPage = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [showNewAgendaDialog, setShowNewAgendaDialog] = useState(false);
   const [newAgendaTitle, setNewAgendaTitle] = useState("");
   const [newAgendaNotes, setNewAgendaNotes] = useState("");
+  const [uploadedNotes, setUploadedNotes] = useState<UploadedNote[]>([]);
+  const [selectedNote, setSelectedNote] = useState<UploadedNote | null>(null);
 
   const templates = [
     {
@@ -164,6 +175,49 @@ VII. CLOSING REMARKS`
     setNewAgendaNotes("");
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['text/plain', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type) && !file.name.endsWith('.txt') && !file.name.endsWith('.md')) {
+      toast.error("Please upload a text, PDF, or Word document");
+      return;
+    }
+
+    let content = '';
+    if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+      content = await file.text();
+    }
+
+    const newNote: UploadedNote = {
+      id: crypto.randomUUID(),
+      name: file.name,
+      date: new Date(),
+      size: file.size,
+      content
+    };
+
+    setUploadedNotes(prev => [newNote, ...prev]);
+    toast.success(`"${file.name}" uploaded successfully!`);
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeleteNote = (noteId: string) => {
+    setUploadedNotes(prev => prev.filter(n => n.id !== noteId));
+    setSelectedNote(null);
+    toast.success("Meeting notes deleted");
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
+
   const selectedTemplateData = templates.find(t => t.id === selectedTemplate);
 
   return (
@@ -215,21 +269,75 @@ VII. CLOSING REMARKS`
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Past Meeting Notes
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Past Meeting Notes
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No meeting notes uploaded yet.</p>
-                <p className="text-sm mb-4">Meeting notes will appear here once added.</p>
-                <Button variant="outline" className="gap-2">
-                  <Upload className="h-4 w-4" />
-                  Upload Meeting Notes
-                </Button>
-              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept=".txt,.md,.pdf,.doc,.docx"
+                className="hidden"
+              />
+              {uploadedNotes.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No meeting notes uploaded yet.</p>
+                  <p className="text-sm mb-4">Meeting notes will appear here once added.</p>
+                  <Button 
+                    variant="outline" 
+                    className="gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Upload className="h-4 w-4" />
+                    Upload Meeting Notes
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {uploadedNotes.map((note) => (
+                    <div 
+                      key={note.id}
+                      className="p-3 rounded-lg bg-muted/30 border hover:bg-muted/50 transition-colors flex items-center justify-between cursor-pointer"
+                      onClick={() => note.content && setSelectedNote(note)}
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <p className="font-medium">{note.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {note.date.toLocaleDateString()} • {formatFileSize(note.size)}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteNote(note.id);
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -299,6 +407,23 @@ VII. CLOSING REMARKS`
                   Cancel
                 </Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Note Preview Dialog */}
+        <Dialog open={!!selectedNote} onOpenChange={() => setSelectedNote(null)}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{selectedNote?.name}</DialogTitle>
+              <DialogDescription>
+                Uploaded {selectedNote?.date.toLocaleDateString()} • {selectedNote && formatFileSize(selectedNote.size)}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="mt-4">
+              <pre className="bg-muted p-4 rounded-lg text-sm whitespace-pre-wrap font-mono overflow-x-auto">
+                {selectedNote?.content}
+              </pre>
             </div>
           </DialogContent>
         </Dialog>
