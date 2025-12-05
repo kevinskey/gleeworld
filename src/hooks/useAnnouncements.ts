@@ -44,61 +44,54 @@ export const useAnnouncements = () => {
   const fetchAnnouncements = async () => {
     setLoading(true);
     
+    let announcementsData: Announcement[] = [];
+    let communications: Announcement[] = [];
+    
+    // Fetch announcements - non-throwing
     try {
-      // Fetch announcements - primary data source
       const announcementsResult = await supabase
         .from('gw_announcements')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (announcementsResult.error) throw announcementsResult.error;
-
-      const announcementsData: Announcement[] = (announcementsResult.data || []) as Announcement[];
-      
-      // Try to fetch communications separately - non-blocking
-      let communications: Announcement[] = [];
-      try {
-        const communicationsResult = await supabase
-          .from('gw_communications')
-          .select('*')
-          .eq('status', 'sent')
-          .order('sent_at', { ascending: false })
-          .limit(10);
-        
-        if (!communicationsResult.error && communicationsResult.data) {
-          communications = communicationsResult.data.map(comm => ({
-            id: comm.id,
-            title: comm.title,
-            content: comm.content,
-            announcement_type: 'communication',
-            is_featured: false,
-            created_at: comm.sent_at || comm.created_at,
-            publish_date: comm.sent_at,
-            created_by: comm.sender_id
-          }));
-        }
-      } catch (commError) {
-        console.warn('Communications fetch failed, continuing with announcements only:', commError);
+      if (!announcementsResult.error && announcementsResult.data) {
+        announcementsData = announcementsResult.data as Announcement[];
       }
-
-      // Merge and sort by date
-      const allAnnouncements: Announcement[] = [...announcementsData, ...communications]
-        .sort((a, b) => new Date(b.created_at || b.publish_date || '').getTime() - new Date(a.created_at || a.publish_date || '').getTime());
-
-      setAnnouncements(allAnnouncements);
-    } catch (error: any) {
-      console.error('Error fetching announcements:', error);
-      // Don't show toast for network errors - just log them
-      if (!error.message?.includes('Load failed')) {
-        toast({
-          title: "Error",
-          description: "Failed to load announcements. Please refresh the page.",
-          variant: "destructive",
-        });
-      }
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.warn('Announcements fetch failed:', error);
     }
+    
+    // Fetch communications - non-throwing
+    try {
+      const communicationsResult = await supabase
+        .from('gw_communications')
+        .select('*')
+        .eq('status', 'sent')
+        .order('sent_at', { ascending: false })
+        .limit(10);
+      
+      if (!communicationsResult.error && communicationsResult.data) {
+        communications = communicationsResult.data.map(comm => ({
+          id: comm.id,
+          title: comm.title,
+          content: comm.content,
+          announcement_type: 'communication',
+          is_featured: false,
+          created_at: comm.sent_at || comm.created_at,
+          publish_date: comm.sent_at,
+          created_by: comm.sender_id
+        }));
+      }
+    } catch (error) {
+      console.warn('Communications fetch failed:', error);
+    }
+
+    // Merge and sort by date
+    const allAnnouncements: Announcement[] = [...announcementsData, ...communications]
+      .sort((a, b) => new Date(b.created_at || b.publish_date || '').getTime() - new Date(a.created_at || a.publish_date || '').getTime());
+
+    setAnnouncements(allAnnouncements);
+    setLoading(false);
   };
 
   const createAnnouncement = async (data: CreateAnnouncementData) => {
