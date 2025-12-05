@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Ticket, Mail, Phone, User, Calendar, MessageSquare, Search } from 'lucide-react';
+import { Ticket, Mail, Phone, User, Calendar, MessageSquare, Search, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ModuleWrapper } from './ModuleWrapper';
@@ -36,6 +36,15 @@ export const ConcertTicketRequestsModule = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedRequest, setSelectedRequest] = useState<TicketRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [newRecipient, setNewRecipient] = useState({
+    full_name: '',
+    email: '',
+    phone: '',
+    num_tickets: 1,
+    special_requests: '',
+    status: 'pending'
+  });
 
   // Fetch all ticket requests
   const {
@@ -86,6 +95,45 @@ export const ConcertTicketRequestsModule = () => {
         variant: 'destructive'
       });
       console.error('Update error:', error);
+    }
+  });
+
+  // Add recipient mutation
+  const addRecipientMutation = useMutation({
+    mutationFn: async (recipient: typeof newRecipient) => {
+      const { error } = await supabase.from('concert_ticket_requests').insert({
+        full_name: recipient.full_name,
+        email: recipient.email,
+        phone: recipient.phone,
+        num_tickets: recipient.num_tickets,
+        special_requests: recipient.special_requests || null,
+        status: recipient.status
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['concert-ticket-requests'] });
+      toast({
+        title: 'Success',
+        description: 'Ticket recipient added successfully'
+      });
+      setIsAddDialogOpen(false);
+      setNewRecipient({
+        full_name: '',
+        email: '',
+        phone: '',
+        num_tickets: 1,
+        special_requests: '',
+        status: 'pending'
+      });
+    },
+    onError: error => {
+      toast({
+        title: 'Error',
+        description: 'Failed to add ticket recipient',
+        variant: 'destructive'
+      });
+      console.error('Add error:', error);
     }
   });
 
@@ -180,11 +228,17 @@ export const ConcertTicketRequestsModule = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Manage Ticket Requests</CardTitle>
-          <CardDescription>
-            View and manage concert ticket requests from the public
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Manage Ticket Requests</CardTitle>
+            <CardDescription>
+              View and manage concert ticket requests from the public
+            </CardDescription>
+          </div>
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Recipient
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Filters */}
@@ -356,6 +410,103 @@ export const ConcertTicketRequestsModule = () => {
                 </Button>
               </div>
             </div>}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Recipient Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Ticket Recipient</DialogTitle>
+            <DialogDescription>Manually add a ticket recipient to the list</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="add_full_name">Full Name *</Label>
+              <Input
+                id="add_full_name"
+                value={newRecipient.full_name}
+                onChange={e => setNewRecipient({ ...newRecipient, full_name: e.target.value })}
+                placeholder="Enter full name"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="add_email">Email *</Label>
+              <Input
+                id="add_email"
+                type="email"
+                value={newRecipient.email}
+                onChange={e => setNewRecipient({ ...newRecipient, email: e.target.value })}
+                placeholder="Enter email address"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="add_phone">Phone *</Label>
+              <Input
+                id="add_phone"
+                type="tel"
+                value={newRecipient.phone}
+                onChange={e => setNewRecipient({ ...newRecipient, phone: e.target.value })}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="add_num_tickets">Number of Tickets</Label>
+              <Input
+                id="add_num_tickets"
+                type="number"
+                min="1"
+                max="10"
+                value={newRecipient.num_tickets}
+                onChange={e => setNewRecipient({ ...newRecipient, num_tickets: parseInt(e.target.value) || 1 })}
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="add_status">Status</Label>
+              <Select
+                value={newRecipient.status}
+                onValueChange={value => setNewRecipient({ ...newRecipient, status: value })}
+              >
+                <SelectTrigger id="add_status">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="contacted">Contacted</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="add_special_requests">Special Requests</Label>
+              <Textarea
+                id="add_special_requests"
+                value={newRecipient.special_requests}
+                onChange={e => setNewRecipient({ ...newRecipient, special_requests: e.target.value })}
+                placeholder="Any special requests or notes..."
+                rows={2}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => addRecipientMutation.mutate(newRecipient)}
+                disabled={!newRecipient.full_name || !newRecipient.email || !newRecipient.phone || addRecipientMutation.isPending}
+              >
+                {addRecipientMutation.isPending ? 'Adding...' : 'Add Recipient'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </ModuleWrapper>;
