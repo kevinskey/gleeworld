@@ -16259,62 +16259,113 @@ export type Database = {
         Row: {
           additional_comments: string | null
           advanced_ensemble_notes: string | null
+          can_attend_all_sessions: boolean | null
           created_at: string
+          current_gpa: number | null
+          exec_board_position_interest: string | null
           exec_board_work_done: string | null
           id: string
           in_other_campus_show: boolean | null
           intent_to_continue: boolean | null
           intent_to_continue_notes: string | null
           interested_in_advanced_ensemble: boolean | null
+          interested_in_exec_board: boolean | null
           interested_in_fall_tour: boolean | null
           interested_in_private_lessons: boolean | null
+          leadership_program_notes: string | null
           other_campus_show_details: string | null
           performances_other: string | null
           performances_participated: string[] | null
           private_lessons_instrument: string | null
+          satisfaction_communication: number | null
+          satisfaction_community: number | null
+          satisfaction_leadership: number | null
+          satisfaction_overall: number | null
+          satisfaction_performances: number | null
+          satisfaction_rehearsals: number | null
           semester: string
+          suggestions_for_next_semester: string | null
+          understands_leadership_program: boolean | null
           updated_at: string
           user_id: string
+          what_could_improve: string | null
+          what_worked_well: string | null
+          willing_to_give_election_speech: boolean | null
+          willing_to_submit_purpose_statement: boolean | null
         }
         Insert: {
           additional_comments?: string | null
           advanced_ensemble_notes?: string | null
+          can_attend_all_sessions?: boolean | null
           created_at?: string
+          current_gpa?: number | null
+          exec_board_position_interest?: string | null
           exec_board_work_done?: string | null
           id?: string
           in_other_campus_show?: boolean | null
           intent_to_continue?: boolean | null
           intent_to_continue_notes?: string | null
           interested_in_advanced_ensemble?: boolean | null
+          interested_in_exec_board?: boolean | null
           interested_in_fall_tour?: boolean | null
           interested_in_private_lessons?: boolean | null
+          leadership_program_notes?: string | null
           other_campus_show_details?: string | null
           performances_other?: string | null
           performances_participated?: string[] | null
           private_lessons_instrument?: string | null
+          satisfaction_communication?: number | null
+          satisfaction_community?: number | null
+          satisfaction_leadership?: number | null
+          satisfaction_overall?: number | null
+          satisfaction_performances?: number | null
+          satisfaction_rehearsals?: number | null
           semester?: string
+          suggestions_for_next_semester?: string | null
+          understands_leadership_program?: boolean | null
           updated_at?: string
           user_id: string
+          what_could_improve?: string | null
+          what_worked_well?: string | null
+          willing_to_give_election_speech?: boolean | null
+          willing_to_submit_purpose_statement?: boolean | null
         }
         Update: {
           additional_comments?: string | null
           advanced_ensemble_notes?: string | null
+          can_attend_all_sessions?: boolean | null
           created_at?: string
+          current_gpa?: number | null
+          exec_board_position_interest?: string | null
           exec_board_work_done?: string | null
           id?: string
           in_other_campus_show?: boolean | null
           intent_to_continue?: boolean | null
           intent_to_continue_notes?: string | null
           interested_in_advanced_ensemble?: boolean | null
+          interested_in_exec_board?: boolean | null
           interested_in_fall_tour?: boolean | null
           interested_in_private_lessons?: boolean | null
+          leadership_program_notes?: string | null
           other_campus_show_details?: string | null
           performances_other?: string | null
           performances_participated?: string[] | null
           private_lessons_instrument?: string | null
+          satisfaction_communication?: number | null
+          satisfaction_community?: number | null
+          satisfaction_leadership?: number | null
+          satisfaction_overall?: number | null
+          satisfaction_performances?: number | null
+          satisfaction_rehearsals?: number | null
           semester?: string
+          suggestions_for_next_semester?: string | null
+          understands_leadership_program?: boolean | null
           updated_at?: string
           user_id?: string
+          what_could_improve?: string | null
+          what_worked_well?: string | null
+          willing_to_give_election_speech?: boolean | null
+          willing_to_submit_purpose_statement?: boolean | null
         }
         Relationships: []
       }
