@@ -293,41 +293,42 @@ export const InstructorConsole = () => {
 
             {activeTab === 'tests' && <>
               <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <ClipboardCheck className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                     Tests & Assessments
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Create and manage tests, quizzes, and midterm grading</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Create and manage tests, quizzes, and midterm grading</p>
                 </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <div className="space-y-4 sm:space-y-6">
                     <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between border-b pb-3">
-                      <div className="flex gap-2">
-                        <Button variant={testSubTab === 'tests' ? 'default' : 'ghost'} onClick={() => setTestSubTab('tests')}>
+                      <div className="flex gap-1 sm:gap-2 overflow-x-auto">
+                        <Button size="sm" variant={testSubTab === 'tests' ? 'default' : 'ghost'} onClick={() => setTestSubTab('tests')} className="text-xs sm:text-sm whitespace-nowrap">
                           All Tests
                         </Button>
-                        <Button variant={testSubTab === 'midterm' ? 'default' : 'ghost'} onClick={() => setTestSubTab('midterm')}>
+                        <Button size="sm" variant={testSubTab === 'midterm' ? 'default' : 'ghost'} onClick={() => setTestSubTab('midterm')} className="text-xs sm:text-sm whitespace-nowrap">
                           Midterm Grading
                         </Button>
                       </div>
                       
                       {testSubTab === 'tests' && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 sm:gap-2">
                           <Button 
                             variant="outline"
                             size="sm"
                             onClick={() => setShowAICreateTestDialog(true)}
-                            className="border-primary/30 hover:border-primary/50 hover:bg-primary/5"
+                            className="border-primary/30 hover:border-primary/50 hover:bg-primary/5 text-xs sm:text-sm"
                           >
-                            <Brain className="h-4 w-4 mr-2 text-primary" />
-                            AI Create Test
+                            <Brain className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 text-primary" />
+                            <span className="hidden xs:inline">AI </span>Create Test
                           </Button>
                           <Button 
                             size="sm"
                             onClick={() => setShowCreateTestDialog(true)}
+                            className="text-xs sm:text-sm"
                           >
-                            <Plus className="h-4 w-4 mr-2" />
+                            <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                             Create Test
                           </Button>
                         </div>
@@ -355,16 +356,16 @@ export const InstructorConsole = () => {
             </>}
 
             {activeTab === 'polls' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <BarChart3 className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                     Polls & Engagement
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Create polls and track student participation</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Create polls and track student participation</p>
                 </CardHeader>
-                <CardContent className="p-6 space-y-6">
+                <CardContent className="p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
                   <Mus240PollSystem />
-                  <div className="grid gap-6 md:grid-cols-2">
+                  <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
                     <PollResultsViewer />
                     <PollParticipationTracker />
                   </div>
@@ -372,27 +373,27 @@ export const InstructorConsole = () => {
               </Card>}
 
             {activeTab === 'ai-groups' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Brain className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Brain className="h-4 w-4 sm:h-5 sm:w-5" />
                     AI Group Project
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Monitor group projects and role assignments</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Monitor group projects and role assignments</p>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
                   <AIGroupProjectManager />
                 </CardContent>
               </Card>}
 
             {activeTab === 'grades' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Trophy className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Trophy className="h-4 w-4 sm:h-5 sm:w-5" />
                     Grade Management
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">View grades, calculate scores, and manage student performance</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">View grades, calculate scores, and manage student performance</p>
                 </CardHeader>
-                <CardContent className="p-6 space-y-6">
+                <CardContent className="p-2 sm:p-4 md:p-6 space-y-4 sm:space-y-6">
                   <GradesAdmin />
                   <StudentScoresViewer />
                   <GradeCalculationSystem />
@@ -400,101 +401,101 @@ export const InstructorConsole = () => {
               </Card>}
 
             {activeTab === 'communications' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Users className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                     Student Communications
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Email and text messaging system for communicating with students</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Email and text messaging system for communicating with students</p>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
                   <StudentCommunications />
                 </CardContent>
               </Card>}
 
             {activeTab === 'students' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <UserPlus className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />
                     Student Management
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Manage course enrollments and student records</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage course enrollments and student records</p>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
                   <EnrollmentManager />
                 </CardContent>
               </Card>}
 
             {activeTab === 'rubrics' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <ListChecks className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <ListChecks className="h-4 w-4 sm:h-5 sm:w-5" />
                     Grading Rubrics
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Manage grading criteria for consistent evaluation</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage grading criteria for consistent evaluation</p>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
                   <RubricManager />
                 </CardContent>
               </Card>}
 
             {activeTab === 'analytics' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <BarChart className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <BarChart className="h-4 w-4 sm:h-5 sm:w-5" />
                     Analytics Dashboard
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Track performance metrics and student engagement</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Track performance metrics and student engagement</p>
                 </CardHeader>
-                <CardContent className="p-6 space-y-8">
+                <CardContent className="p-2 sm:p-4 md:p-6 space-y-6 sm:space-y-8">
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Journal Submissions</h3>
+                    <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Journal Submissions</h3>
                     <JournalSubmissionAnalytics />
                   </div>
-                  <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold mb-4">Student Analytics</h3>
+                  <div className="pt-4 sm:pt-6 border-t">
+                    <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">Student Analytics</h3>
                     <StudentAnalyticsDashboard />
                   </div>
                 </CardContent>
               </Card>}
 
             {activeTab === 'resources' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <BookOpen className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
                     Course Resources
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Manage course materials and learning resources</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Manage course materials and learning resources</p>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
                   <ResourcesAdmin />
                 </CardContent>
               </Card>}
 
             {activeTab === 'ai-assistant' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Brain className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Brain className="h-4 w-4 sm:h-5 sm:w-5" />
                     AI Assistant
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Get AI-powered help with course management</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Get AI-powered help with course management</p>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
                   <AIAssistant />
                 </CardContent>
               </Card>}
 
             {activeTab === 'settings' && <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2 text-xl">
-                    <Settings className="h-5 w-5" />
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
                     Course Settings
                   </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">Configure course settings and preferences</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Configure course settings and preferences</p>
                 </CardHeader>
-                <CardContent className="p-6">
+                <CardContent className="p-2 sm:p-4 md:p-6">
                   <div className="space-y-4">
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground text-xs sm:text-sm">
                       Course settings and configuration options
                     </p>
                     <div className="flex gap-2">
