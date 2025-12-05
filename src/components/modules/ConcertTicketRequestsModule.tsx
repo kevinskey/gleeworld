@@ -629,19 +629,19 @@ export const ConcertTicketRequestsModule = () => {
                 <div>
                   <Label htmlFor="assigned_to">Assigned To</Label>
                   <Select 
-                    value={selectedRequest.assigned_to || ''} 
+                    value={selectedRequest.assigned_to || '__unassigned__'} 
                     onValueChange={value => setSelectedRequest({
                       ...selectedRequest,
-                      assigned_to: value
+                      assigned_to: value === '__unassigned__' ? null : value
                     })}
                   >
                     <SelectTrigger id="assigned_to">
                       <SelectValue placeholder="Select exec board member" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Unassigned</SelectItem>
+                      <SelectItem value="__unassigned__">Unassigned</SelectItem>
                       {execBoardMembers?.map(member => (
-                        <SelectItem key={member.user_id} value={member.full_name || member.email}>
+                        <SelectItem key={member.user_id} value={member.full_name || member.email || member.user_id}>
                           {member.full_name || member.email}
                         </SelectItem>
                       ))}
