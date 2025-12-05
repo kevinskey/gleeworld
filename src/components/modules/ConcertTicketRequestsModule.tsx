@@ -67,6 +67,20 @@ export const ConcertTicketRequestsModule = () => {
     }
   });
 
+  // Fetch exec board members for assignment dropdown
+  const { data: execBoardMembers } = useQuery({
+    queryKey: ['exec-board-members'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, email')
+        .eq('is_exec_board', true)
+        .order('full_name');
+      if (error) throw error;
+      return data;
+    }
+  });
+
   // Update request mutation
   const updateRequestMutation = useMutation({
     mutationFn: async ({
@@ -444,10 +458,25 @@ export const ConcertTicketRequestsModule = () => {
 
                 <div>
                   <Label htmlFor="assigned_to">Assigned To</Label>
-                  <Input id="assigned_to" value={selectedRequest.assigned_to || ''} onChange={e => setSelectedRequest({
-                ...selectedRequest,
-                assigned_to: e.target.value
-              })} placeholder="Staff member handling this request" />
+                  <Select 
+                    value={selectedRequest.assigned_to || ''} 
+                    onValueChange={value => setSelectedRequest({
+                      ...selectedRequest,
+                      assigned_to: value
+                    })}
+                  >
+                    <SelectTrigger id="assigned_to">
+                      <SelectValue placeholder="Select exec board member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Unassigned</SelectItem>
+                      {execBoardMembers?.map(member => (
+                        <SelectItem key={member.user_id} value={member.full_name || member.email}>
+                          {member.full_name || member.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
