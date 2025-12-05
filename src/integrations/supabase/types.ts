@@ -22112,6 +22112,7 @@ export type Database = {
       is_super_admin:
         | { Args: never; Returns: boolean }
         | { Args: { _user_id: string }; Returns: boolean }
+      is_urm_admin: { Args: never; Returns: boolean }
       is_user_admin: { Args: never; Returns: boolean }
       is_user_admin_or_super_admin: {
         Args: { user_id_param: string }
