@@ -33,6 +33,9 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
   const [gradingDialogOpen, setGradingDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteSubmissionDialogOpen, setDeleteSubmissionDialogOpen] = useState(false);
+  const [submissionToDelete, setSubmissionToDelete] = useState<any>(null);
+  const [deletingSubmission, setDeletingSubmission] = useState(false);
 
   useEffect(() => {
     loadScores();
@@ -190,6 +193,49 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
     }
   };
 
+  const handleDeleteSubmission = async () => {
+    if (!submissionToDelete) return;
+    
+    try {
+      setDeletingSubmission(true);
+      
+      // Delete answers for this submission
+      const { error: answersError } = await supabase
+        .from('test_answers')
+        .delete()
+        .eq('submission_id', submissionToDelete.id);
+      
+      if (answersError) console.error('Error deleting answers:', answersError);
+
+      // Delete the submission
+      const { error: submissionError } = await supabase
+        .from('test_submissions')
+        .delete()
+        .eq('id', submissionToDelete.id);
+
+      if (submissionError) throw submissionError;
+
+      toast({
+        title: 'Submission Deleted',
+        description: 'The submission has been deleted.'
+      });
+
+      // Refresh the list
+      loadScores();
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete submission',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeletingSubmission(false);
+      setDeleteSubmissionDialogOpen(false);
+      setSubmissionToDelete(null);
+    }
+  };
+
   const stats = calculateStats();
 
   if (loading) {
@@ -199,16 +245,16 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
   return (
     <div className="space-y-6">
       {/* Breadcrumb Navigation */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link to="/dashboard?module=test-builder" className="hover:text-foreground transition-colors">
+      <div className="flex items-center gap-2 text-sm text-white/70">
+        <Link to="/dashboard?module=test-builder" className="hover:text-white transition-colors">
           Test Builder
         </Link>
         <span>/</span>
-        <Link to={`/test-builder/${testId}`} className="hover:text-foreground transition-colors">
+        <Link to={`/test-builder/${testId}`} className="hover:text-white transition-colors">
           {test?.title}
         </Link>
         <span>/</span>
-        <span className="text-foreground font-medium">Scores</span>
+        <span className="text-white font-medium">Scores</span>
       </div>
 
       {/* Back Button */}
@@ -216,7 +262,7 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
         variant="ghost" 
         size="sm" 
         onClick={() => navigate(-1)}
-        className="hover:bg-accent"
+        className="text-white hover:bg-white/10 hover:text-white"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back
@@ -224,8 +270,8 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
 
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-bold mb-2">{test?.title}</h2>
-          <p className="text-muted-foreground">Test Scores and Analytics</p>
+          <h2 className="text-2xl font-bold mb-2 text-white">{test?.title}</h2>
+          <p className="text-white/70">Test Scores and Analytics</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -337,14 +383,27 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
                     {new Date(submission.created_at!).toLocaleDateString()}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleGradeSubmission(submission)}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Grade
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleGradeSubmission(submission)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Grade
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSubmissionToDelete(submission);
+                          setDeleteSubmissionDialogOpen(true);
+                        }}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               );
@@ -383,6 +442,27 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleting ? 'Deleting...' : 'Delete Test'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteSubmissionDialogOpen} onOpenChange={setDeleteSubmissionDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Submission?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the submission by {submissionToDelete?.gw_profiles?.full_name || 'this student'}. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingSubmission}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteSubmission}
+              disabled={deletingSubmission}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingSubmission ? 'Deleting...' : 'Delete Submission'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
