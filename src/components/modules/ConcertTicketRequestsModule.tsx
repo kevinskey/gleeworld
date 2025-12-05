@@ -141,8 +141,8 @@ export const ConcertTicketRequestsModule = () => {
   return <ModuleWrapper title="Concert Ticket Requests" icon={Ticket}>
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-        <Card className="text-center">
-          <CardContent className="pt-[20px] pb-[20px] pr-[20px] pl-[20px]">
+        <Card className="text-center px-[20px] py-[20px]">
+          <CardContent className="pt-6">
             <div className="text-2xl font-bold py-[10px]">{stats.total}</div>
             <Badge className="mt-2 bg-blue-100 text-blue-800">Total</Badge>
           </CardContent>
