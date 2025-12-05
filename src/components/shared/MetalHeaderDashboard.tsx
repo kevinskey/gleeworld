@@ -646,7 +646,7 @@ export const MetalHeaderDashboard = ({
       {/* Draggable Dashboard Cards */}
       <DndContext sensors={cardSensors} collisionDetection={closestCenter} onDragEnd={handleCardDragEnd}>
         <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
-          <div className="space-y-6">
+          <div className="space-y-4">
             {cardOrder.map(cardId => {
             // Favorites card using moduleFavorites
             if (cardId === 'favorites') {
