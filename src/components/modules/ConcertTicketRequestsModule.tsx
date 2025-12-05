@@ -98,6 +98,19 @@ export const ConcertTicketRequestsModule = () => {
     },
   });
 
+  // Calculate stats
+  const stats = React.useMemo(() => {
+    if (!requests) return { total: 0, pending: 0, contacted: 0, approved: 0, rejected: 0, totalTickets: 0 };
+    return {
+      total: requests.length,
+      pending: requests.filter(r => r.status === 'pending').length,
+      contacted: requests.filter(r => r.status === 'contacted').length,
+      approved: requests.filter(r => r.status === 'approved').length,
+      rejected: requests.filter(r => r.status === 'rejected').length,
+      totalTickets: requests.reduce((sum, r) => sum + r.num_tickets, 0),
+    };
+  }, [requests]);
+
   // Filter requests based on search and status
   const filteredRequests = requests?.filter((request) => {
     const matchesSearch =
@@ -134,6 +147,46 @@ export const ConcertTicketRequestsModule = () => {
 
   return (
     <ModuleWrapper title="Concert Ticket Requests" icon={Ticket}>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{stats.total}</div>
+            <Badge className="mt-2 bg-blue-100 text-blue-800">Total</Badge>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{stats.pending}</div>
+            <Badge className="mt-2 bg-yellow-100 text-yellow-800">Pending</Badge>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{stats.contacted}</div>
+            <Badge className="mt-2 bg-purple-100 text-purple-800">Contacted</Badge>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{stats.approved}</div>
+            <Badge className="mt-2 bg-green-100 text-green-800">Approved</Badge>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{stats.rejected}</div>
+            <Badge className="mt-2 bg-red-100 text-red-800">Rejected</Badge>
+          </CardContent>
+        </Card>
+        <Card className="text-center">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold">{stats.totalTickets}</div>
+            <Badge className="mt-2 bg-indigo-100 text-indigo-800">Total Tickets</Badge>
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Manage Ticket Requests</CardTitle>
