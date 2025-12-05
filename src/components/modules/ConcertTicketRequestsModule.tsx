@@ -200,15 +200,23 @@ export const ConcertTicketRequestsModule = () => {
       contacted: 0,
       approved: 0,
       rejected: 0,
-      totalTickets: 0
+      totalTickets: 0,
+      approvedTickets: 0,
+      availableTickets: 0
     };
+    const totalTickets = requests.reduce((sum, r) => sum + r.num_tickets, 0);
+    const approvedTickets = requests
+      .filter(r => r.status === 'approved')
+      .reduce((sum, r) => sum + r.num_tickets, 0);
     return {
       total: requests.length,
       pending: requests.filter(r => r.status === 'pending').length,
       contacted: requests.filter(r => r.status === 'contacted').length,
       approved: requests.filter(r => r.status === 'approved').length,
       rejected: requests.filter(r => r.status === 'rejected').length,
-      totalTickets: requests.reduce((sum, r) => sum + r.num_tickets, 0)
+      totalTickets,
+      approvedTickets,
+      availableTickets: totalTickets - approvedTickets
     };
   }, [requests]);
 
@@ -257,11 +265,11 @@ export const ConcertTicketRequestsModule = () => {
   }
   return <ModuleWrapper title="Concert Ticket Requests" icon={Ticket}>
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
         <Card className="text-center px-[20px] py-[20px]">
           <CardContent className="pt-6">
             <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.total}</div>
-            <Badge className="mt-2 bg-blue-100 text-blue-800">Total</Badge>
+            <Badge className="mt-2 bg-blue-100 text-blue-800">Requests</Badge>
           </CardContent>
         </Card>
         <Card className="text-center px-[20px] py-[20px]">
@@ -291,7 +299,19 @@ export const ConcertTicketRequestsModule = () => {
         <Card className="text-center px-[20px] py-[20px]">
           <CardContent className="pt-6">
             <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.totalTickets}</div>
-            <Badge className="mt-2 bg-indigo-100 text-indigo-800">Total Tickets</Badge>
+            <Badge className="mt-2 bg-slate-100 text-slate-800">Total Tickets</Badge>
+          </CardContent>
+        </Card>
+        <Card className="text-center px-[20px] py-[20px]">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold py-[10px] text-green-600">{stats.approvedTickets}</div>
+            <Badge className="mt-2 bg-green-100 text-green-800">Claimed</Badge>
+          </CardContent>
+        </Card>
+        <Card className="text-center px-[20px] py-[20px]">
+          <CardContent className="pt-6">
+            <div className="text-2xl font-bold py-[10px] text-card-foreground">{stats.availableTickets}</div>
+            <Badge className="mt-2 bg-indigo-100 text-indigo-800">Available</Badge>
           </CardContent>
         </Card>
       </div>
