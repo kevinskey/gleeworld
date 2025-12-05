@@ -101,7 +101,17 @@ export const InstructorConsole = () => {
     }
     return combinedTests;
   }, [tests, midtermConfig]);
+
+  console.log('InstructorConsole: Debug state', { 
+    loading, 
+    taLoading, 
+    isAdminResult: typeof isAdmin === 'function' ? isAdmin() : 'not a function',
+    isTA,
+    statsLoading
+  });
+
   if (loading || taLoading) {
+    console.log('InstructorConsole: Still loading...', { loading, taLoading });
     return <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-lg">Loading...</div>
       </div>;
@@ -109,8 +119,11 @@ export const InstructorConsole = () => {
 
   // Allow both admins and TAs to access
   if (!isAdmin() && !isTA) {
+    console.log('InstructorConsole: Not authorized, redirecting', { isAdmin: isAdmin(), isTA });
     return <Navigate to="/classes/mus240" replace />;
   }
+
+  console.log('InstructorConsole: Rendering main content');
   const navItems = [{
     value: 'assignments',
     label: 'Assignments',
