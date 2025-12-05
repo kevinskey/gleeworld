@@ -125,11 +125,11 @@ const spelmanBlueTheme: ThemeConfig = {
     accentForeground: '220 50% 20%',
     background: '0 0% 100%',          // Pure white
     foreground: '220 50% 20%',        // Navy text
-    card: '201 70% 98% / 0.7',        // Semi-transparent for glass effect
+    card: '201 70% 98%',              // Light blue tint for cards
     cardForeground: '220 50% 20%',
-    muted: '201 50% 95% / 0.6',
+    muted: '201 50% 95%',             // Muted light blue
     mutedForeground: '220 30% 40%',
-    border: '201 40% 85% / 0.5',
+    border: '201 40% 85%',            // Light border
   },
   
   // Glass effect settings
