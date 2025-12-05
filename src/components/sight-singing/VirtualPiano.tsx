@@ -5,6 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX, X, Loader2 } from 'lucide-react';
 import { SoundfontPlayer } from '@/utils/soundfontLoader';
+import { unlockAudioContext, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
 interface VirtualPianoProps {
   className?: string;
   onClose?: () => void;
@@ -712,6 +713,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Setup mobile audio unlock on mount
+  useEffect(() => {
+    const cleanup = setupMobileAudioUnlock();
+    return cleanup;
+  }, []);
+
   // Calculate scale factor based on window size
   const baseWidth = 900;
   const baseHeight = 600;
@@ -727,45 +734,25 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
   // Initialize audio context with mobile unlock
   const initAudioContext = useCallback(async () => {
-    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      console.log('🎹 Creating new AudioContext for VirtualPiano');
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-    }
-
-    // Always try to resume if suspended (required for mobile browsers)
-    if (audioContextRef.current.state === 'suspended') {
-      try {
-        console.log('🔊 Attempting to resume AudioContext...');
-        await audioContextRef.current.resume();
-        console.log('✅ AudioContext resumed, state:', audioContextRef.current.state);
-      } catch (error) {
-        console.error('❌ Failed to resume AudioContext:', error);
-        // Try creating a new context
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        await audioContextRef.current.resume();
-      }
-    }
-
-    // Play a silent buffer to unlock audio on iOS/Safari
-    if (!audioUnlocked && audioContextRef.current.state === 'running') {
-      try {
-        const silentBuffer = audioContextRef.current.createBuffer(1, 1, 22050);
-        const source = audioContextRef.current.createBufferSource();
-        source.buffer = silentBuffer;
-        source.connect(audioContextRef.current.destination);
-        source.start(0);
+    try {
+      // Use shared unlock utility for iOS compatibility
+      const ctx = await unlockAudioContext();
+      audioContextRef.current = ctx;
+      
+      if (!audioUnlocked) {
         setAudioUnlocked(true);
         console.log('✅ Audio unlocked for mobile');
-      } catch (e) {
-        console.warn('Silent buffer unlock failed:', e);
       }
-    }
 
-    // Initialize soundfont player if not already
-    if (!soundfontPlayerRef.current && audioContextRef.current) {
-      soundfontPlayerRef.current = new SoundfontPlayer(audioContextRef.current);
+      // Initialize soundfont player if not already
+      if (!soundfontPlayerRef.current && audioContextRef.current) {
+        soundfontPlayerRef.current = new SoundfontPlayer(audioContextRef.current);
+      }
+      return audioContextRef.current;
+    } catch (error) {
+      console.error('❌ Failed to initialize AudioContext:', error);
+      return null;
     }
-    return audioContextRef.current;
   }, [audioUnlocked]);
 
   // Handle touch/click to unlock audio on mobile (must be user-initiated)

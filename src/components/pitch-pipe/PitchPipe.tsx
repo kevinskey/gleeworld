@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
+import { unlockAudioContext, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
 
 interface PitchPipeProps {
   className?: string;
@@ -37,6 +38,12 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   const oscillatorRef = useRef<OscillatorNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
 
+  // Setup mobile audio unlock on mount
+  useEffect(() => {
+    const cleanup = setupMobileAudioUnlock();
+    return cleanup;
+  }, []);
+
   // Calculate frequencies for selected octave
   const octaveMultiplier = Math.pow(2, octave - 4); // 4 is the base octave
   const whiteKeys = baseWhiteKeys.map(key => ({
@@ -49,27 +56,16 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
   }));
 
   const initAudioContext = useCallback(async () => {
-    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      console.log('🎹 Creating new AudioContext for PitchPipe');
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    try {
+      // Use shared unlock utility for iOS compatibility
+      const ctx = await unlockAudioContext();
+      audioContextRef.current = ctx;
+      console.log('🎹 AudioContext ready, state:', ctx.state);
+      return ctx;
+    } catch (error) {
+      console.error('❌ Failed to initialize AudioContext:', error);
+      return null;
     }
-    
-    // Always try to resume if suspended (required for mobile browsers)
-    if (audioContextRef.current.state === 'suspended') {
-      try {
-        console.log('🔊 Attempting to resume AudioContext...');
-        await audioContextRef.current.resume();
-        console.log('✅ AudioContext resumed, state:', audioContextRef.current.state);
-      } catch (error) {
-        console.error('❌ Failed to resume AudioContext:', error);
-        // Try creating fresh context
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-        await audioContextRef.current.resume();
-      }
-    }
-    
-    console.log('🎹 AudioContext ready, state:', audioContextRef.current.state);
-    return audioContextRef.current;
   }, []);
 
   const playTone = useCallback(async (frequency: number, note: string) => {

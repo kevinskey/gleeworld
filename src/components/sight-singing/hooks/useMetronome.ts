@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { unlockAudioContext, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
 
 export type MetronomeSoundType = 'pitch' | 'click';
 
@@ -10,16 +11,22 @@ export const useMetronome = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<number | null>(null);
 
+  // Setup mobile audio unlock on mount
+  useEffect(() => {
+    const cleanup = setupMobileAudioUnlock();
+    return cleanup;
+  }, []);
+
   const getAudioContext = useCallback(async (): Promise<AudioContext | null> => {
-    if (!audioContextRef.current || audioContextRef.current.state === 'closed') {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    try {
+      // Use the shared unlock utility for iOS compatibility
+      const ctx = await unlockAudioContext();
+      audioContextRef.current = ctx;
+      return ctx;
+    } catch (error) {
+      console.error('Failed to get audio context:', error);
+      return null;
     }
-    
-    if (audioContextRef.current.state === 'suspended') {
-      await audioContextRef.current.resume();
-    }
-    
-    return audioContextRef.current;
   }, []);
 
   const playClick = useCallback(async () => {
@@ -83,7 +90,7 @@ export const useMetronome = () => {
   useEffect(() => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
-      if (audioContextRef.current) audioContextRef.current.close();
+      // Don't close the shared audio context
     };
   }, []);
 
