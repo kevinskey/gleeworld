@@ -22108,6 +22108,7 @@ export type Database = {
       is_gw_admin_safe: { Args: never; Returns: boolean }
       is_instructor_or_admin: { Args: { _uid: string }; Returns: boolean }
       is_mus240_student: { Args: { user_id_param: string }; Returns: boolean }
+      is_role_admin: { Args: never; Returns: boolean }
       is_super_admin:
         | { Args: never; Returns: boolean }
         | { Args: { _user_id: string }; Returns: boolean }
