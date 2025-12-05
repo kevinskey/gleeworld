@@ -57,7 +57,7 @@ export const ModuleWrapper = ({
         <div className="flex items-center justify-between card-spacing">
           <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
             {showBack && (
-              <Button variant="ghost" size="sm" onClick={onBack} aria-label="Go back" className="touch-target">
+              <Button variant="outline" size="sm" onClick={onBack} aria-label="Go back" className="touch-target bg-background text-foreground border-border">
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             )}
