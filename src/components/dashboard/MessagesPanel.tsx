@@ -86,7 +86,7 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
     <>
       {isMobile ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="h-[45dvh] w-[90vw] max-w-[400px] bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
+          <div className="h-[90dvh] w-[90vw] max-w-[400px] bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
             <div className="cursor-default bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between select-none">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium ml-2">Messages</span>
