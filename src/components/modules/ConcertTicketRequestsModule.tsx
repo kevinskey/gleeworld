@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Ticket, Mail, Phone, User, Calendar, MessageSquare, Search, Plus } from 'lucide-react';
+import { Ticket, Mail, Phone, User, Calendar, MessageSquare, Search, Plus, Check, X, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { ModuleWrapper } from './ModuleWrapper';
@@ -37,6 +37,9 @@ export const ConcertTicketRequestsModule = () => {
   const [selectedRequest, setSelectedRequest] = useState<TicketRequest | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [adminMessage, setAdminMessage] = useState('');
+  const [isDecisionDialogOpen, setIsDecisionDialogOpen] = useState(false);
+  const [pendingDecision, setPendingDecision] = useState<'approved' | 'rejected' | null>(null);
   const [newRecipient, setNewRecipient] = useState({
     full_name: '',
     email: '',
@@ -95,6 +98,44 @@ export const ConcertTicketRequestsModule = () => {
         variant: 'destructive'
       });
       console.error('Update error:', error);
+    }
+  });
+
+  // Send decision mutation (email + SMS)
+  const sendDecisionMutation = useMutation({
+    mutationFn: async ({ request, decision, message }: { request: TicketRequest; decision: 'approved' | 'rejected'; message: string }) => {
+      const { data, error } = await supabase.functions.invoke('send-ticket-decision', {
+        body: {
+          requestId: request.id,
+          decision,
+          adminMessage: message,
+          recipientName: request.full_name,
+          recipientEmail: request.email,
+          recipientPhone: request.phone,
+          numTickets: request.num_tickets
+        }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['concert-ticket-requests'] });
+      toast({
+        title: variables.decision === 'approved' ? '🎉 Approved!' : 'Request Denied',
+        description: `Email and SMS sent to ${variables.request.full_name}`
+      });
+      setIsDecisionDialogOpen(false);
+      setIsDialogOpen(false);
+      setAdminMessage('');
+      setPendingDecision(null);
+    },
+    onError: error => {
+      toast({
+        title: 'Error',
+        description: 'Failed to send decision notification',
+        variant: 'destructive'
+      });
+      console.error('Decision error:', error);
     }
   });
 
@@ -168,6 +209,20 @@ export const ConcertTicketRequestsModule = () => {
     updateRequestMutation.mutate({
       id: selectedRequest.id,
       updates
+    });
+  };
+
+  const handleDecision = (decision: 'approved' | 'rejected') => {
+    setPendingDecision(decision);
+    setIsDecisionDialogOpen(true);
+  };
+
+  const confirmDecision = () => {
+    if (!selectedRequest || !pendingDecision) return;
+    sendDecisionMutation.mutate({
+      request: selectedRequest,
+      decision: pendingDecision,
+      message: adminMessage
     });
   };
   const getStatusBadge = (status: string) => {
@@ -397,19 +452,94 @@ export const ConcertTicketRequestsModule = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end gap-2 border-t pt-4">
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={() => handleUpdateRequest({
-              status: selectedRequest.status,
-              notes: selectedRequest.notes,
-              assigned_to: selectedRequest.assigned_to
-            })}>
-                  Save Changes
-                </Button>
+              <div className="space-y-4 border-t pt-4">
+                {selectedRequest.status === 'pending' && (
+                  <div className="flex gap-3">
+                    <Button 
+                      className="flex-1 bg-green-600 hover:bg-green-700" 
+                      onClick={() => handleDecision('approved')}
+                    >
+                      <Check className="h-4 w-4 mr-2" />
+                      Accept Request
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      className="flex-1"
+                      onClick={() => handleDecision('rejected')}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Deny Request
+                    </Button>
+                  </div>
+                )}
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={() => handleUpdateRequest({
+                    status: selectedRequest.status,
+                    notes: selectedRequest.notes,
+                    assigned_to: selectedRequest.assigned_to
+                  })}>
+                    Save Changes
+                  </Button>
+                </div>
               </div>
             </div>}
+        </DialogContent>
+      </Dialog>
+
+      {/* Decision Confirmation Dialog */}
+      <Dialog open={isDecisionDialogOpen} onOpenChange={setIsDecisionDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {pendingDecision === 'approved' ? '🎉 Accept Ticket Request' : 'Deny Ticket Request'}
+            </DialogTitle>
+            <DialogDescription>
+              {pendingDecision === 'approved' 
+                ? `Approve ${selectedRequest?.num_tickets} ticket(s) for ${selectedRequest?.full_name}. They will receive an email and SMS notification.`
+                : `Deny the ticket request from ${selectedRequest?.full_name}. They will be notified via email and SMS.`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="admin_message">
+                {pendingDecision === 'approved' ? 'Pickup Instructions (sent via SMS)' : 'Reason / Message (sent via SMS)'}
+              </Label>
+              <Textarea
+                id="admin_message"
+                value={adminMessage}
+                onChange={e => setAdminMessage(e.target.value)}
+                placeholder={pendingDecision === 'approved' 
+                  ? "e.g., Pick up tickets at Will Call 30 minutes before showtime. Bring valid ID."
+                  : "e.g., Unfortunately, all tickets have been distributed. Please check back for future performances."}
+                rows={4}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => {
+                setIsDecisionDialogOpen(false);
+                setAdminMessage('');
+                setPendingDecision(null);
+              }}>
+                Cancel
+              </Button>
+              <Button
+                className={pendingDecision === 'approved' ? 'bg-green-600 hover:bg-green-700' : ''}
+                variant={pendingDecision === 'rejected' ? 'destructive' : 'default'}
+                onClick={confirmDecision}
+                disabled={sendDecisionMutation.isPending}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                {sendDecisionMutation.isPending 
+                  ? 'Sending...' 
+                  : pendingDecision === 'approved' ? 'Accept & Notify' : 'Deny & Notify'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
