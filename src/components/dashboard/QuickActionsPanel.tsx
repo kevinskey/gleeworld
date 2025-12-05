@@ -119,7 +119,11 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       if (typeof actionFn === 'function') {
         actionFn();
       } else if (fallbackModuleId) {
-        onModuleSelect(fallbackModuleId);
+        // Use navigate directly to prevent URL encoding issues
+        navigate({
+          pathname: '/dashboard',
+          search: `?module=${fallbackModuleId}`
+        });
       } else {
         throw new TypeError('actionFn is not a function');
       }
