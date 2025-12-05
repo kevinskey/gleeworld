@@ -24,6 +24,7 @@ import { Calendar, MapPin, ArrowRight, ChevronLeft, ChevronRight, Sparkles, X, M
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
+import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
 interface Event {
   id: string;
   title: string;
@@ -678,5 +679,6 @@ export const GleeWorldLanding = () => {
       </section>
       </PublicLayout>
       <PWAInstallPrompt />
+      <PollReminderPopup />
     </div>;
 };
