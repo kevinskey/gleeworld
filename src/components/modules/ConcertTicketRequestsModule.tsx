@@ -125,7 +125,7 @@ export const ConcertTicketRequestsModule = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['concert-ticket-requests']
+        queryKey: ['concert-ticket-requests-with-profiles']
       });
       toast({
         title: 'Success',
@@ -161,7 +161,7 @@ export const ConcertTicketRequestsModule = () => {
       return data;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['concert-ticket-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['concert-ticket-requests-with-profiles'] });
       toast({
         title: variables.decision === 'approved' ? '🎉 Approved!' : 'Request Denied',
         description: `Email and SMS sent to ${variables.request.full_name}`
@@ -195,7 +195,7 @@ export const ConcertTicketRequestsModule = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['concert-ticket-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['concert-ticket-requests-with-profiles'] });
       toast({
         title: 'Success',
         description: 'Ticket recipient added successfully'
