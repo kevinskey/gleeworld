@@ -102,7 +102,11 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
 
   const computedCustomActions = customActions.map((a) => ({
     ...a,
-    action: typeof a.action === 'function' ? a.action : () => onModuleSelect(a.moduleId || a.name || a.id),
+    action: typeof a.action === 'function' ? a.action : () => {
+      const moduleId = a.moduleId || a.name || a.id;
+      // Use direct navigation to ensure proper URL encoding
+      navigate(`/dashboard?module=${encodeURIComponent(moduleId)}`, { replace: false });
+    },
   }));
 
   const allActions = computedCustomActions;
