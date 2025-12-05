@@ -265,50 +265,50 @@ export const ConcertTicketRequestsModule = () => {
   }
   return <ModuleWrapper title="Concert Ticket Requests" icon={Ticket}>
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6">
-        <Card className="text-center px-2 py-2">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3 mb-6 items-stretch">
+        <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-card-foreground">{stats.total}</div>
             <Badge className="text-xs bg-blue-100 text-blue-800">Requests</Badge>
           </CardContent>
         </Card>
-        <Card className="text-center px-2 py-2">
+        <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-card-foreground">{stats.pending}</div>
             <Badge className="text-xs bg-yellow-100 text-yellow-800">Pending</Badge>
           </CardContent>
         </Card>
-        <Card className="text-center px-2 py-2">
+        <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-card-foreground">{stats.contacted}</div>
             <Badge className="text-xs bg-purple-100 text-purple-800">Contacted</Badge>
           </CardContent>
         </Card>
-        <Card className="text-center px-2 py-2">
+        <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-card-foreground">{stats.approved}</div>
             <Badge className="text-xs bg-green-100 text-green-800">Approved</Badge>
           </CardContent>
         </Card>
-        <Card className="text-center px-2 py-2">
+        <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-card-foreground">{stats.rejected}</div>
             <Badge className="text-xs bg-red-100 text-red-800">Rejected</Badge>
           </CardContent>
         </Card>
-        <Card className="text-center px-2 py-2">
+        <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-card-foreground">{stats.totalTickets}</div>
             <Badge className="text-xs bg-slate-100 text-slate-800">Total Tickets</Badge>
           </CardContent>
         </Card>
-        <Card className="text-center px-2 py-2">
+        <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-green-600">{stats.approvedTickets}</div>
             <Badge className="text-xs bg-green-100 text-green-800">Claimed</Badge>
           </CardContent>
         </Card>
-        <Card className="text-center px-2 py-2">
+        <Card className="text-center px-2 py-2 flex items-center justify-center">
           <CardContent className="p-2 flex flex-col items-center justify-center">
             <div className="text-lg font-bold text-card-foreground">{stats.availableTickets}</div>
             <Badge className="text-xs bg-indigo-100 text-indigo-800">Available</Badge>
