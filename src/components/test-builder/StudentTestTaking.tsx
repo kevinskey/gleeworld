@@ -130,8 +130,7 @@ export const StudentTestTaking = ({ testId }: StudentTestTakingProps) => {
           test_id: testId,
           student_id: user.user.id,
           total_score: totalScore,
-          passed: totalScore >= (test?.passing_score || 70),
-          time_taken_seconds: test?.duration_minutes ? (test.duration_minutes * 60 - (timeRemaining || 0)) : null
+          passed: totalScore >= (test?.passing_score || 70)
         })
         .select()
         .single();
