@@ -70,7 +70,7 @@ export const InstructorConsole = () => {
       const {
         data,
         error
-      } = await supabase.from('mus240_midterm_config').select('*').eq('is_active', true).single();
+      } = await supabase.from('mus240_midterm_config').select('*').eq('is_active', true).maybeSingle();
       if (error) throw error;
       return data;
     }
