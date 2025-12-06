@@ -139,8 +139,8 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       return;
     }
 
-    // If member with quickActions, use the hook
-    if (isMember && quickActions) {
+    // Use the quickActions hook if available (works for all users now)
+    if (quickActions) {
       const success = await quickActions.addQuickAction(selectedModuleToAdd);
       if (success) {
         setSelectedModuleToAdd('');
@@ -149,7 +149,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       return;
     }
 
-    // Otherwise, add to custom actions (for non-members)
+    // Fallback to localStorage if hook not available
     const selectedModule = availableModules.find(m => m.name === selectedModuleToAdd);
     if (!selectedModule) {
       toast.error('Module not found');
@@ -257,11 +257,11 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                         <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 max-h-60 overflow-y-auto">
                           {availableModules
                             .filter(module => {
-                              // For members, filter out modules already in quick actions
-                              if (isMember && quickActions) {
+                              // Use quickActions hook if available (works for all users)
+                              if (quickActions) {
                                 return !quickActions.isInQuickActions(module.name);
                               }
-                              // For non-members, filter out modules already in custom actions
+                              // Fallback to localStorage filtering
                               return !customActions.some(action => action.moduleId === module.name);
                             })
                             .sort((a, b) => a.title.localeCompare(b.title))
