@@ -99,8 +99,8 @@ export const DashboardYouTubeSection = () => {
     return (
       <div className="w-full px-4 py-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="aspect-video bg-muted animate-pulse rounded-lg" />
-          <div className="aspect-video bg-muted animate-pulse rounded-lg" />
+          <div className="aspect-video bg-muted animate-pulse rounded-xl border border-border" />
+          <div className="aspect-video bg-muted animate-pulse rounded-xl border border-border" />
         </div>
       </div>
     );
@@ -118,7 +118,7 @@ export const DashboardYouTubeSection = () => {
 
     if (!video) {
       return (
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm">
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm bg-muted/50">
           No video configured
         </div>
       );
@@ -128,15 +128,8 @@ export const DashboardYouTubeSection = () => {
       return (
         <>
           {video.title && (
-            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent p-2 sm:p-3 z-10">
-              <h3 
-                className="text-white text-xs sm:text-sm font-semibold truncate drop-shadow-md"
-                style={{ 
-                  textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5)',
-                  WebkitFontSmoothing: 'antialiased',
-                  MozOsxFontSmoothing: 'grayscale'
-                }}
-              >
+            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-background/95 via-background/60 to-transparent p-2 sm:p-3 z-10 backdrop-blur-sm">
+              <h3 className="text-foreground text-xs sm:text-sm font-semibold truncate">
                 {video.title}
               </h3>
             </div>
@@ -165,29 +158,22 @@ export const DashboardYouTubeSection = () => {
           className="absolute inset-0 w-full h-full object-cover"
         />
         
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
+        {/* Overlay - uses theme-aware colors */}
+        <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/30 transition-colors duration-300" />
         
-        {/* Title */}
+        {/* Title - theme-aware styling */}
         {video.title && (
-          <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent p-2 sm:p-3 z-10">
-            <h3 
-              className="text-white text-xs sm:text-sm font-semibold truncate text-left drop-shadow-md"
-              style={{ 
-                textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5)',
-                WebkitFontSmoothing: 'antialiased',
-                MozOsxFontSmoothing: 'grayscale'
-              }}
-            >
+          <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-background/95 via-background/60 to-transparent p-2 sm:p-3 z-10 backdrop-blur-sm">
+            <h3 className="text-foreground text-xs sm:text-sm font-semibold truncate text-left">
               {video.title}
             </h3>
           </div>
         )}
         
-        {/* Play Button */}
+        {/* Play Button - uses primary theme color */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:bg-red-700 group-hover:scale-110 transition-all shadow-lg">
-            <Play className="w-8 h-8 text-white ml-1" fill="white" />
+          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary rounded-full flex items-center justify-center group-hover:bg-primary/90 group-hover:scale-110 transition-all duration-300 shadow-lg ring-2 ring-primary-foreground/20">
+            <Play className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground ml-0.5" fill="currentColor" />
           </div>
         </div>
       </button>
@@ -198,7 +184,7 @@ export const DashboardYouTubeSection = () => {
     <div className="w-full px-4 py-4">
       <div className="grid grid-cols-2 gap-2 sm:gap-4">
         {/* Left Video */}
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+        <div className="relative aspect-video rounded-xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-md transition-shadow duration-300">
           <VideoThumbnail 
             video={leftVideo} 
             isPlaying={playingLeft} 
@@ -207,7 +193,7 @@ export const DashboardYouTubeSection = () => {
         </div>
 
         {/* Right Video */}
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+        <div className="relative aspect-video rounded-xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-md transition-shadow duration-300">
           <VideoThumbnail 
             video={rightVideo} 
             isPlaying={playingRight} 
