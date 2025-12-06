@@ -675,9 +675,10 @@ export const MetalHeaderDashboard = ({
       </div>
 
       {/* Exit Interview Call-to-Action */}
-      <a href="/member-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-white text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-white" style={{
-      backgroundColor: '#79242F'
-    }}>
+      <a href="/member-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-white" style={{
+        backgroundColor: '#79242F',
+        color: '#FFFFFF'
+      }}>
         📋 Complete Your Fall 2025 Exit Interview - Required for All Members
       </a>
 
