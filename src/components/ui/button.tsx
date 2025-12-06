@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -6,29 +5,40 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 touch-manipulation min-h-[44px] md:min-h-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 touch-manipulation select-none active:scale-[0.98]",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground md:hover:bg-primary/90 active:bg-primary/90 border border-primary transition-all duration-200",
+        default: 
+          "bg-primary text-primary-foreground shadow-button hover:bg-primary/90 hover:shadow-button-hover active:bg-primary/95",
         destructive:
-          "bg-destructive text-destructive-foreground md:hover:bg-destructive/90 active:bg-destructive/90 transition-all duration-200",
+          "bg-destructive text-destructive-foreground shadow-button hover:bg-destructive/90 hover:shadow-button-hover",
         outline:
-          "bg-transparent text-foreground border border-border md:hover:bg-muted md:hover:text-foreground active:bg-muted active:text-foreground shadow-sm transition-all duration-200",
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground hover:border-accent",
         secondary:
-          "bg-secondary text-secondary-foreground border border-secondary md:hover:bg-secondary/90 active:bg-secondary/90 transition-all duration-200",
-        ghost: "text-foreground md:hover:bg-accent md:hover:text-accent-foreground active:bg-accent active:text-accent-foreground transition-all duration-200",
-        link: "text-primary underline-offset-4 md:hover:underline transition-all duration-200",
-        glass: "glass-upload-zone text-foreground md:hover:border-primary/30 active:border-primary/30 transition-all duration-300",
-        "glass-solid": "glass-signature-panel text-foreground shadow-xl transition-all duration-300",
-        branded: "bg-brand-600 text-primary-foreground border border-brand-600 md:hover:bg-brand-700 active:bg-brand-700 shadow-lg font-medium transition-all duration-300",
-        disabled: "bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted hover:text-muted-foreground opacity-50",
+          "bg-secondary text-secondary-foreground shadow-button hover:bg-secondary/80 hover:shadow-button-hover",
+        ghost: 
+          "hover:bg-accent hover:text-accent-foreground",
+        link: 
+          "text-primary underline-offset-4 hover:underline",
+        glass: 
+          "backdrop-blur-md bg-background/80 border border-border/50 shadow-glass hover:bg-background/90 hover:border-border",
+        "glass-solid": 
+          "backdrop-blur-xl bg-card/95 border border-border shadow-elevated hover:shadow-glass-lg",
+        branded: 
+          "bg-brand-600 text-white shadow-button hover:bg-brand-700 hover:shadow-button-hover font-semibold",
+        success:
+          "bg-success text-success-foreground shadow-button hover:bg-success/90",
+        warning:
+          "bg-warning text-warning-foreground shadow-button hover:bg-warning/90",
       },
       size: {
-        default: "h-10 px-4 py-2 md:min-h-0 min-h-[44px]",
-        sm: "h-9 rounded-md px-3 md:min-h-0 min-h-[40px]",
-        lg: "h-11 rounded-md px-8 md:min-h-0 min-h-[48px]",
-        icon: "h-10 w-10 md:min-h-0 min-h-[44px]",
+        default: "h-10 px-4 py-2 min-h-[44px] md:min-h-[40px]",
+        sm: "h-9 rounded-md px-3 text-xs min-h-[40px] md:min-h-[36px]",
+        lg: "h-11 rounded-lg px-8 text-base min-h-[48px] md:min-h-[44px]",
+        xl: "h-12 rounded-lg px-10 text-base font-semibold min-h-[52px]",
+        icon: "h-10 w-10 min-h-[44px] min-w-[44px] md:min-h-[40px] md:min-w-[40px]",
+        "icon-sm": "h-8 w-8 min-h-[36px] min-w-[36px]",
       },
     },
     defaultVariants: {
