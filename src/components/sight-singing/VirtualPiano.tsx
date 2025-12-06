@@ -1010,15 +1010,16 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
               return <button key={keyName} style={{
                 width: `${whiteKeyWidth}px`,
                 minWidth: `${whiteKeyWidth}px`,
-                boxShadow: isActive ? 'inset 0 6px 12px rgba(0,0,0,0.35)' : '0 6px 12px rgba(0,0,0,0.2), inset 0 3px 0 rgba(255,255,255,0.9)'
-              }} className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none border-r border-gray-300/50 last:border-r-0 touch-manipulation ${isActive ? 'bg-primary/30 shadow-inner scale-[0.98]' : 'bg-white hover:bg-gray-50 shadow-lg active:bg-primary/20 active:scale-[0.98]'} ${index === 0 ? 'rounded-l-lg sm:rounded-l-xl' : ''} ${index === whiteKeys.length - 1 ? 'rounded-r-lg sm:rounded-r-xl' : ''}`} onMouseDown={() => playNote(key.frequency, keyName)} onMouseUp={() => stopNote(keyName)} onMouseLeave={() => stopNote(keyName)} onTouchStart={e => {
+                boxShadow: isActive ? 'inset 0 6px 12px rgba(0,0,0,0.35)' : '0 6px 12px rgba(0,0,0,0.2), inset 0 3px 0 rgba(255,255,255,0.9)',
+                backgroundColor: isActive ? '#e0e7ff' : '#FFFFFF',
+              }} className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none border-r border-gray-300/50 last:border-r-0 touch-manipulation ${isActive ? 'shadow-inner scale-[0.98]' : 'hover:bg-gray-50 shadow-lg active:scale-[0.98]'} ${index === 0 ? 'rounded-l-lg sm:rounded-l-xl' : ''} ${index === whiteKeys.length - 1 ? 'rounded-r-lg sm:rounded-r-xl' : ''}`} onMouseDown={() => playNote(key.frequency, keyName)} onMouseUp={() => stopNote(keyName)} onMouseLeave={() => stopNote(keyName)} onTouchStart={e => {
                 e.preventDefault();
                 playNote(key.frequency, keyName);
               }} onTouchEnd={e => {
                 e.preventDefault();
                 stopNote(keyName);
               }}>
-                    <span className="text-gray-700 font-bold">
+                    <span style={{ color: '#374151' }} className="font-bold">
                       {key.note}
                       <sub className="text-[0.6em]">{key.octave}</sub>
                     </span>
@@ -1035,13 +1036,14 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 const whiteKeyWidth = isMobile ? 50 : 69; // Smaller on mobile
                 const blackKeyWidth = isMobile ? 34 : 46;
                 const leftPosition = key.position * whiteKeyWidth - blackKeyWidth / 2;
-                return <button key={keyName} className={`absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation ${isActive ? 'bg-gray-700 shadow-inner scale-[0.96]' : 'bg-gray-900 hover:bg-gray-800 active:bg-gray-700 active:scale-[0.96]'}`} style={{
+                return <button key={keyName} className={`absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation ${isActive ? 'shadow-inner scale-[0.96]' : 'hover:opacity-90 active:scale-[0.96]'}`} style={{
                   left: `${leftPosition}px`,
                   width: `${blackKeyWidth}px`,
                   minWidth: '36px',
                   maxWidth: '60px',
                   borderRadius: '0 0 8px 8px',
-                  boxShadow: isActive ? 'inset 0 5px 10px rgba(0,0,0,0.9)' : '0 5px 12px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.2)'
+                  boxShadow: isActive ? 'inset 0 5px 10px rgba(0,0,0,0.9)' : '0 5px 12px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.2)',
+                  backgroundColor: isActive ? '#374151' : '#111827',
                 }} onMouseDown={() => playNote(key.frequency, keyName)} onMouseUp={() => stopNote(keyName)} onMouseLeave={() => stopNote(keyName)} onTouchStart={e => {
                   e.preventDefault();
                   playNote(key.frequency, keyName);
@@ -1049,7 +1051,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                   e.preventDefault();
                   stopNote(keyName);
                 }}>
-                      <span className="text-white">{key.note.replace('#', '♯')}</span>
+                      <span style={{ color: '#FFFFFF' }}>{key.note.replace('#', '♯')}</span>
                     </button>;
               })}
               </div>
