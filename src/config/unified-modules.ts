@@ -98,6 +98,7 @@ import { TestBuilderModule } from '@/components/modules/TestBuilderModule';
 import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule';
 import { GradingModule } from '@/components/modules/GradingModule';
 import { ConcertTicketRequestsModule } from '@/components/modules/ConcertTicketRequestsModule';
+import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -959,6 +960,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: AlumnaeManagementModule,
     fullPageComponent: AlumnaeManagementModule,
     dbFunctionName: "alumnae-management",
+    requiredRoles: ["admin", "super-admin"]
+  },
+  {
+    id: "exit-interviews",
+    name: "exit-interviews",
+    title: "Exit Interviews",
+    description: "View and manage member end-of-semester exit interview submissions",
+    icon: ClipboardCheck,
+    iconColor: "emerald",
+    category: "member-management",
+    isActive: true,
+    component: ExitInterviewsModule,
+    dbFunctionName: "exit-interviews",
     requiredRoles: ["admin", "super-admin"]
   }
 ];
