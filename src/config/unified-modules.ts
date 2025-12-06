@@ -37,7 +37,8 @@ import {
   Radio,
   Mic2,
   QrCode,
-  Layout
+  Layout,
+  Crown
 } from 'lucide-react';
 
 // Import core module components
@@ -99,6 +100,7 @@ import { GleeLedgerModule } from '@/components/admin/financial/GleeLedgerModule'
 import { GradingModule } from '@/components/modules/GradingModule';
 import { ConcertTicketRequestsModule } from '@/components/modules/ConcertTicketRequestsModule';
 import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
+import ExecBoardInterviewsModule from '@/components/modules/ExecBoardInterviewsModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -973,6 +975,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: ExitInterviewsModule,
     dbFunctionName: "exit-interviews",
+    requiredRoles: ["admin", "super-admin"]
+  },
+  {
+    id: "exec-board-interviews",
+    name: "exec-board-interviews",
+    title: "Exec Board Interviews",
+    description: "View and manage executive board end-of-semester interview submissions",
+    icon: Crown,
+    iconColor: "amber",
+    category: "member-management",
+    isActive: true,
+    component: ExecBoardInterviewsModule,
+    dbFunctionName: "exec-board-interviews",
     requiredRoles: ["admin", "super-admin"]
   }
 ];
