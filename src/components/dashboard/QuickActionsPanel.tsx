@@ -211,6 +211,14 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
 
   return (
     <>
+      {/* Clear backdrop - must be first/behind the panel */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/10 z-40 transition-opacity duration-300"
+          onClick={onClose}
+        />
+      )}
+      
       {/* Steel Dropdown Panel - slides out from underneath header */}
       <div 
         className={`absolute top-16 left-0 right-0 z-50 transition-all duration-300 ease-out ${
@@ -370,14 +378,6 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
           </div>
         </div>
       </div>
-
-      {/* Clear backdrop */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/10 z-30 transition-opacity duration-300"
-          onClick={onClose}
-        />
-      )}
     </>
   );
 };
