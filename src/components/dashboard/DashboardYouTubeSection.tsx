@@ -181,9 +181,9 @@ export const DashboardYouTubeSection = () => {
   };
 
   return (
-    <div className="w-full px-4 py-4">
+    <div className="w-full">
       {/* Unified card container with double red border like other cards */}
-      <div className="relative rounded-xl border-2 border-destructive/60 p-3 sm:p-4 bg-card/50 backdrop-blur-sm shadow-sm">
+      <div className="relative rounded-xl border-2 border-destructive/60 p-3 sm:p-4 bg-card/50 backdrop-blur-sm shadow-sm mx-4">
         {/* Inner border for double-line effect */}
         <div className="absolute inset-1 rounded-lg border border-destructive/30 pointer-events-none" />
         
