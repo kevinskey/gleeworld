@@ -23,12 +23,23 @@ interface HeroSlide {
   link_url: string | null;
   link_target: string | null;
 }
+interface YouTubeVideo {
+  id?: string;
+  video_id: string;
+  title: string;
+  position: 'left' | 'right';
+  is_active: boolean;
+  autoplay: boolean;
+  muted: boolean;
+}
+
 export const DashboardHeroManagerModule = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
+  const [savingYouTube, setSavingYouTube] = useState(false);
   const {
     toast
   } = useToast();
@@ -37,6 +48,22 @@ export const DashboardHeroManagerModule = () => {
     scroll_speed_seconds: 5
   });
   const [settingsId, setSettingsId] = useState<string | null>(null);
+  const [leftVideo, setLeftVideo] = useState<YouTubeVideo>({
+    video_id: '',
+    title: '',
+    position: 'left',
+    is_active: true,
+    autoplay: false,
+    muted: true
+  });
+  const [rightVideo, setRightVideo] = useState<YouTubeVideo>({
+    video_id: '',
+    title: '',
+    position: 'right',
+    is_active: true,
+    autoplay: false,
+    muted: true
+  });
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -51,6 +78,7 @@ export const DashboardHeroManagerModule = () => {
   useEffect(() => {
     fetchHeroSlides();
     fetchScrollSettings();
+    fetchYouTubeVideos();
     setupGleeCamTag();
   }, []);
   const setupGleeCamTag = async () => {
@@ -123,6 +151,91 @@ export const DashboardHeroManagerModule = () => {
       }
     } catch (error) {
       console.error('Error fetching scroll settings:', error);
+    }
+  };
+
+  const fetchYouTubeVideos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dashboard_youtube_videos')
+        .select('*')
+        .order('position');
+      
+      if (error) throw error;
+      
+      if (data) {
+        const left = data.find(v => v.position === 'left');
+        const right = data.find(v => v.position === 'right');
+        
+        if (left) {
+          setLeftVideo({
+            id: left.id,
+            video_id: left.video_id,
+            title: left.title || '',
+            position: 'left',
+            is_active: left.is_active,
+            autoplay: left.autoplay,
+            muted: left.muted
+          });
+        }
+        
+        if (right) {
+          setRightVideo({
+            id: right.id,
+            video_id: right.video_id,
+            title: right.title || '',
+            position: 'right',
+            is_active: right.is_active,
+            autoplay: right.autoplay,
+            muted: right.muted
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching YouTube videos:', error);
+    }
+  };
+
+  const saveYouTubeVideo = async (video: YouTubeVideo) => {
+    setSavingYouTube(true);
+    try {
+      const videoData = {
+        video_id: video.video_id,
+        title: video.title || null,
+        position: video.position,
+        is_active: video.is_active,
+        autoplay: video.autoplay,
+        muted: video.muted
+      };
+
+      if (video.id) {
+        const { error } = await supabase
+          .from('dashboard_youtube_videos')
+          .update(videoData)
+          .eq('id', video.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('dashboard_youtube_videos')
+          .insert(videoData);
+        if (error) throw error;
+      }
+
+      toast({
+        title: "Success",
+        description: `${video.position === 'left' ? 'Left' : 'Right'} video saved successfully`
+      });
+      
+      fetchYouTubeVideos();
+    } catch (error) {
+      console.error('Error saving YouTube video:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save YouTube video",
+        variant: "destructive"
+      });
+    } finally {
+      setSavingYouTube(false);
     }
   };
   const updateScrollSettings = async () => {
@@ -382,6 +495,145 @@ export const DashboardHeroManagerModule = () => {
             <Save className="h-4 w-4 mr-2" />
             Save Settings
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* YouTube Videos Section */}
+      <Card className="border-2 border-red-200">
+        <CardHeader className="bg-gradient-to-r from-red-50 to-red-100">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <div className="p-2 rounded-lg bg-red-100 text-red-700">📺</div>
+            Dashboard YouTube Videos
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6 pt-4">
+          <p className="text-sm text-muted-foreground">
+            Configure two YouTube videos to display at the top of the dashboard in a two-column layout.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Video */}
+            <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h4 className="font-medium text-blue-800 flex items-center gap-2">
+                <span className="p-1 rounded bg-blue-500 text-white text-xs">1</span>
+                Left Video
+              </h4>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">YouTube Video ID</Label>
+                  <Input
+                    value={leftVideo.video_id}
+                    onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: e.target.value }))}
+                    placeholder="e.g. dQw4w9WgXcQ"
+                    className="h-8 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Title (optional)</Label>
+                  <Input
+                    value={leftVideo.title}
+                    onChange={(e) => setLeftVideo(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Video title"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Active</Label>
+                  <Switch
+                    checked={leftVideo.is_active}
+                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, is_active: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Autoplay</Label>
+                  <Switch
+                    checked={leftVideo.autoplay}
+                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, autoplay: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Muted</Label>
+                  <Switch
+                    checked={leftVideo.muted}
+                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, muted: checked }))}
+                  />
+                </div>
+                <Button 
+                  onClick={() => saveYouTubeVideo(leftVideo)} 
+                  disabled={!leftVideo.video_id || savingYouTube}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Save className="h-3 w-3 mr-1" />
+                  {leftVideo.id ? 'Update' : 'Save'} Left Video
+                </Button>
+              </div>
+            </div>
+
+            {/* Right Video */}
+            <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
+              <h4 className="font-medium text-green-800 flex items-center gap-2">
+                <span className="p-1 rounded bg-green-500 text-white text-xs">2</span>
+                Right Video
+              </h4>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">YouTube Video ID</Label>
+                  <Input
+                    value={rightVideo.video_id}
+                    onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: e.target.value }))}
+                    placeholder="e.g. dQw4w9WgXcQ"
+                    className="h-8 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Title (optional)</Label>
+                  <Input
+                    value={rightVideo.title}
+                    onChange={(e) => setRightVideo(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="Video title"
+                    className="h-8 text-sm"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Active</Label>
+                  <Switch
+                    checked={rightVideo.is_active}
+                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, is_active: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Autoplay</Label>
+                  <Switch
+                    checked={rightVideo.autoplay}
+                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, autoplay: checked }))}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Muted</Label>
+                  <Switch
+                    checked={rightVideo.muted}
+                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, muted: checked }))}
+                  />
+                </div>
+                <Button 
+                  onClick={() => saveYouTubeVideo(rightVideo)} 
+                  disabled={!rightVideo.video_id || savingYouTube}
+                  size="sm"
+                  className="w-full"
+                >
+                  <Save className="h-3 w-3 mr-1" />
+                  {rightVideo.id ? 'Update' : 'Save'} Right Video
+                </Button>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
