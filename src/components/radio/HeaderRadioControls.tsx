@@ -6,11 +6,17 @@ import { Badge } from '@/components/ui/badge';
 import { Radio, Play, Pause, Volume2, VolumeX, Users } from 'lucide-react';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export const HeaderRadioControls = () => {
   try {
     const [isExpanded, setIsExpanded] = useState(false);
     const radioData = useRadioPlayer();
+    const { themeName } = useTheme();
+    
+    // HBCU theme colors
+    const isHbcuTheme = themeName === 'hbcu';
+    const hbcuGold = '#FFDF00';
     
     const { 
       isPlaying, 
@@ -42,7 +48,8 @@ export const HeaderRadioControls = () => {
                 togglePlayPause();
               }}
               disabled={isLoading}
-              className="relative h-8 w-8 p-0 rounded-full hover:bg-accent/20 text-slate-800"
+              className="relative h-8 w-8 p-0 rounded-full hover:bg-white/10"
+              style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}
               type="button"
             >
               {isLoading ? (
@@ -65,7 +72,8 @@ export const HeaderRadioControls = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 hover:bg-accent/20 hidden sm:flex text-slate-800"
+                className="h-8 px-2 hover:bg-white/10 hidden sm:flex"
+                style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}
               >
                 <Radio className="h-4 w-4 mr-1" />
                 <span className="text-xs font-medium">Radio</span>

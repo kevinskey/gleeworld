@@ -47,10 +47,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
   
-  // Theme-specific styling - HBCU uses bright gold (#FFD700) for better readability
+  // HBCU Theme - Unified color palette
   const isHbcuTheme = themeName === 'hbcu';
-  const hbcuGold = '#FFD700'; // Bright gold for HBCU theme
-  const hbcuGoldHover = '#FFEC8B'; // Lighter gold for hover states
+  const hbcuColors = {
+    gold: '#FFDF00',        // Primary gold - all text and icons
+    red: '#8B0000',         // Dark red accent - borders
+    background: '#000000',  // Pure black background
+  };
   
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true || userProfile?.is_exec_board === true;
@@ -85,8 +88,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
         <header 
           className={`border-b sticky top-0 z-50 shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''}`}
           style={{ 
-            backgroundColor: isHbcuTheme ? '#000000' : '#ffffff',
-            borderColor: isHbcuTheme ? 'hsl(0 72% 42%)' : undefined
+            backgroundColor: isHbcuTheme ? hbcuColors.background : '#ffffff',
+            borderColor: isHbcuTheme ? hbcuColors.red : undefined
           }}
         >
           <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
@@ -106,15 +109,14 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       alt="Spelman College Glee Club" 
                       className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0 drop-shadow-md"
                       style={isHbcuTheme ? { 
-                        filter: 'brightness(0) saturate(100%) invert(85%) sepia(62%) saturate(1000%) hue-rotate(2deg) brightness(104%) contrast(104%)'
+                        filter: 'brightness(0) saturate(100%) invert(88%) sepia(44%) saturate(1000%) hue-rotate(357deg) brightness(103%) contrast(106%)'
                       } : undefined}
                     />
                   </div>
                   <span 
                     className="font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap relative" 
                     style={{ 
-                      color: isHbcuTheme ? '#FFDF00' : '#0f172a',
-                      textShadow: isHbcuTheme ? '0 0 10px rgba(255, 223, 0, 0.5)' : 'none'
+                      color: isHbcuTheme ? hbcuColors.gold : '#0f172a'
                     }}
                   >
                     GleeWorld
@@ -146,8 +148,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-md hover:bg-accent/20"
-                        style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}
+                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-md hover:bg-white/10"
+                        style={{ color: isHbcuTheme ? hbcuColors.gold : '#1e293b' }}
                         type="button"
                       >
                         <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
@@ -251,8 +253,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         console.log('Camera button clicked - showing category selector');
                         setShowCategorySelector(true);
                       }}
-                      className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-full hover:bg-accent/20"
-                      style={{ color: isHbcuTheme ? hbcuGold : undefined }}
+                      className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-full hover:bg-white/10"
+                      style={{ color: isHbcuTheme ? hbcuColors.gold : undefined }}
                       type="button"
                     >
                       <img 
@@ -261,7 +263,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 filter"
                         style={{ 
                           filter: isHbcuTheme 
-                            ? 'brightness(0) saturate(100%) invert(76%) sepia(52%) saturate(506%) hue-rotate(9deg) brightness(98%) contrast(87%)'
+                            ? 'brightness(0) saturate(100%) invert(88%) sepia(44%) saturate(1000%) hue-rotate(357deg) brightness(103%) contrast(106%)'
                             : 'brightness(0) saturate(100%) invert(21%) sepia(100%) saturate(4274%) hue-rotate(220deg) brightness(91%) contrast(91%)' 
                         }}
                       />
@@ -272,8 +274,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-full p-0" style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }} type="button">
-                           <Avatar className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 border-2 ${isHbcuTheme ? 'border-[hsl(0,72%,42%)]' : 'border-border/30'}`}>
+                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-full p-0 hover:bg-white/10" style={{ color: isHbcuTheme ? hbcuColors.gold : '#1e293b' }} type="button">
+                           <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 border-2" style={{ borderColor: isHbcuTheme ? hbcuColors.red : undefined }}>
                              <AvatarImage
                                src={userProfile?.avatar_url || undefined} 
                                alt={userProfile?.full_name || user?.email || "Your Profile"}

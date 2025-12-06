@@ -7,6 +7,7 @@ import { Metronome } from '@/components/sight-singing/Metronome';
 import { PitchPipe } from '@/components/pitch-pipe/PitchPipe';
 import { VirtualPiano } from '@/components/sight-singing/VirtualPiano';
 import { Tuner } from '@/components/tuner/Tuner';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // Static chromatic ranges
 const FULL_PIANO_RANGE = [
@@ -26,6 +27,11 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
 
   const [tempo, setTempo] = useState(96);
   const [isMetroPlaying, setIsMetroPlaying] = useState(false);
+  const { themeName } = useTheme();
+  
+  // HBCU theme colors
+  const isHbcuTheme = themeName === 'hbcu';
+  const hbcuGold = '#FFDF00';
 
   return (
     <div className={className}>
@@ -33,7 +39,12 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         <DropdownMenuTrigger asChild>
           <button
             aria-label="Musical Toolkit"
-            className="inline-flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full border border-border bg-white hover:bg-accent text-slate-800 shadow-sm transition-colors"
+            className="inline-flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full border shadow-sm transition-colors hover:bg-white/10"
+            style={{ 
+              borderColor: isHbcuTheme ? hbcuGold : undefined,
+              backgroundColor: isHbcuTheme ? 'transparent' : 'white',
+              color: isHbcuTheme ? hbcuGold : '#1e293b'
+            }}
           >
             <TuningForkIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
           </button>
