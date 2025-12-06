@@ -132,34 +132,23 @@ const handler = async (req: Request): Promise<Response> => {
     let targetPhoneNumbers: string[] = [];
     
     if (isAllMembersGroup) {
-      // Fetch all profiles with is_member = true OR who have 'member' role in user_roles
+      // Fetch all profiles with role = 'member' who have phone numbers
       const { data: allMembers, error: allMembersError } = await supabase
         .from('gw_profiles')
-        .select('phone_number, user_id')
+        .select('phone_number, user_id, role')
         .neq('user_id', senderUserId)
-        .not('phone_number', 'is', null);
+        .not('phone_number', 'is', null)
+        .neq('phone_number', '')
+        .eq('role', 'member');
       
       if (allMembersError) {
         console.error('Error fetching all members:', allMembersError);
         throw new Error('Failed to get all members');
       }
       
-      // Also check user_roles for members
-      const { data: memberRoles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id')
-        .eq('role', 'member');
+      console.log(`All Members group: Found ${allMembers?.length || 0} members with phone numbers`);
       
-      const memberUserIds = new Set(memberRoles?.map(r => r.user_id) || []);
-      
-      // Filter to only include users who are members (either by is_member flag or user_roles)
-      const memberProfiles = allMembers?.filter(profile => 
-        memberUserIds.has(profile.user_id)
-      ) || [];
-      
-      console.log(`All Members group: Found ${memberProfiles.length} members with phone numbers`);
-      
-      targetPhoneNumbers = memberProfiles
+      targetPhoneNumbers = (allMembers || [])
         .map(profile => profile.phone_number)
         .filter(phone => phone)
         .map(phone => formatPhoneNumber(phone as string));
