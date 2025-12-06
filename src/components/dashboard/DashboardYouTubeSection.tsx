@@ -128,8 +128,17 @@ export const DashboardYouTubeSection = () => {
       return (
         <>
           {video.title && (
-            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-3 z-10">
-              <h3 className="text-white text-sm font-medium truncate">{video.title}</h3>
+            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent p-2 sm:p-3 z-10">
+              <h3 
+                className="text-white text-xs sm:text-sm font-semibold truncate drop-shadow-md"
+                style={{ 
+                  textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5)',
+                  WebkitFontSmoothing: 'antialiased',
+                  MozOsxFontSmoothing: 'grayscale'
+                }}
+              >
+                {video.title}
+              </h3>
             </div>
           )}
           <iframe
@@ -161,8 +170,17 @@ export const DashboardYouTubeSection = () => {
         
         {/* Title */}
         {video.title && (
-          <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-3 z-10">
-            <h3 className="text-white text-sm font-medium truncate text-left">{video.title}</h3>
+          <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent p-2 sm:p-3 z-10">
+            <h3 
+              className="text-white text-xs sm:text-sm font-semibold truncate text-left drop-shadow-md"
+              style={{ 
+                textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5)',
+                WebkitFontSmoothing: 'antialiased',
+                MozOsxFontSmoothing: 'grayscale'
+              }}
+            >
+              {video.title}
+            </h3>
           </div>
         )}
         
