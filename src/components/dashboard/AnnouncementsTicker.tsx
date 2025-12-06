@@ -66,7 +66,34 @@ export const AnnouncementsTicker = ({
   };
 
   if (announcements.length === 0) {
-    return <span className="text-xs sm:text-sm text-muted-foreground">No announcements</span>;
+    return (
+      <>
+        {/* Mobile - Empty state with background */}
+        <div className={`lg:hidden ${className || ''}`}>
+          <div className="flex items-center gap-2 p-2">
+            <div 
+              className="shrink-0 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide shadow-sm bg-muted"
+              style={{
+                background: isHbcuTheme ? hbcuGold : undefined,
+                color: isHbcuTheme ? '#000000' : undefined
+              }}
+            >
+              📢 News
+            </div>
+            <div className="flex-1 text-xs text-muted-foreground">
+              No announcements
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop - Empty state with background */}
+        <div className={`hidden lg:block overflow-hidden whitespace-nowrap w-full min-w-0 ${className || ''}`}>
+          <div className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-[40px]">
+            No announcements
+          </div>
+        </div>
+      </>
+    );
   }
 
   return (
