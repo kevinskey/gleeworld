@@ -9,15 +9,16 @@ export interface QuickAction {
   is_visible: boolean;
 }
 
-export const useMemberQuickActions = (userId: string, userRole: string) => {
+export const useMemberQuickActions = (userId: string | undefined, userRole: string) => {
   const [quickActions, setQuickActions] = useState<QuickAction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isMember = userRole === 'member';
+  // All authenticated users can use quick actions (not just members)
+  const canUseQuickActions = !!userId;
 
-  // Load quick actions for members
+  // Load quick actions for all users
   const loadQuickActions = useCallback(async () => {
-    if (!userId || !isMember) {
+    if (!userId || !canUseQuickActions) {
       setQuickActions([]);
       setLoading(false);
       return;
@@ -45,11 +46,11 @@ export const useMemberQuickActions = (userId: string, userRole: string) => {
     } finally {
       setLoading(false);
     }
-  }, [userId, isMember]);
+  }, [userId, canUseQuickActions]);
 
-  // Initialize default quick actions for new members
+  // Initialize default quick actions for new users
   const initializeDefaultQuickActions = async () => {
-    if (!userId || !isMember) return;
+    if (!userId || !canUseQuickActions) return;
 
     const defaultModules = ['music-library', 'glee-academy', 'calendar'];
     
@@ -81,8 +82,8 @@ export const useMemberQuickActions = (userId: string, userRole: string) => {
 
   // Add a module to quick actions
   const addQuickAction = async (moduleId: string) => {
-    if (!userId || !isMember) {
-      toast.error('Only members can customize quick actions');
+    if (!userId || !canUseQuickActions) {
+      toast.error('Unable to customize quick actions');
       return false;
     }
 
@@ -121,8 +122,8 @@ export const useMemberQuickActions = (userId: string, userRole: string) => {
 
   // Remove a module from quick actions
   const removeQuickAction = async (moduleId: string) => {
-    if (!userId || !isMember) {
-      toast.error('Only members can customize quick actions');
+    if (!userId || !canUseQuickActions) {
+      toast.error('Unable to customize quick actions');
       return false;
     }
 
@@ -147,7 +148,7 @@ export const useMemberQuickActions = (userId: string, userRole: string) => {
 
   // Toggle visibility of a quick action
   const toggleVisibility = async (moduleId: string) => {
-    if (!userId || !isMember) return;
+    if (!userId || !canUseQuickActions) return;
 
     try {
       const action = quickActions.find(qa => qa.module_id === moduleId);
@@ -170,7 +171,7 @@ export const useMemberQuickActions = (userId: string, userRole: string) => {
 
   // Reorder quick actions
   const reorderQuickActions = async (moduleIds: string[]) => {
-    if (!userId || !isMember) return;
+    if (!userId || !canUseQuickActions) return;
 
     try {
       const updates = moduleIds.map((moduleId, index) => ({
@@ -205,7 +206,7 @@ export const useMemberQuickActions = (userId: string, userRole: string) => {
   return {
     quickActions,
     loading,
-    isMember,
+    canUseQuickActions,
     addQuickAction,
     removeQuickAction,
     toggleVisibility,

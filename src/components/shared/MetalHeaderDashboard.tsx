@@ -230,7 +230,7 @@ export const MetalHeaderDashboard = ({
   const {
     quickActions: memberQuickActions,
     loading: quickActionsLoading,
-    isMember,
+    canUseQuickActions,
     addQuickAction,
     removeQuickAction,
     isInQuickActions,
@@ -239,13 +239,13 @@ export const MetalHeaderDashboard = ({
 
   // Memoize quickActions prop to prevent re-renders in QuickActionsPanel
   const memoizedQuickActions = useMemo(() => {
-    if (!isMember) return undefined;
+    if (!canUseQuickActions) return undefined;
     return {
       addQuickAction,
       removeQuickAction,
       isInQuickActions
     };
-  }, [isMember, addQuickAction, removeQuickAction, isInQuickActions]);
+  }, [canUseQuickActions, addQuickAction, removeQuickAction, isInQuickActions]);
 
   // Navigation hooks
   const location = useLocation();
@@ -359,9 +359,9 @@ export const MetalHeaderDashboard = ({
     }
   }, [categories, getAccessibleModules]);
 
-  // Group modules for members: Show ALL accessible modules from permissions
+  // Group modules for users with quick actions enabled: Show ALL accessible modules from permissions
   const groupedModules = useMemo(() => {
-    if (!isMember) return null;
+    if (!canUseQuickActions) return null;
     const accessibleModules = getAccessibleModules();
     const visibleQuickActionModuleIds = getVisibleQuickActions().map(qa => qa.module_id);
 
@@ -420,7 +420,7 @@ export const MetalHeaderDashboard = ({
       remaining: remainingModules,
       allModules: [...favoritesGroup, ...communicationsGroup, ...otherGroup, ...remainingModules]
     };
-  }, [isMember, getAccessibleModules, getVisibleQuickActions, isFavorite]);
+  }, [canUseQuickActions, getAccessibleModules, getVisibleQuickActions, isFavorite]);
 
   // Sort and filter modules (for non-members or search/filter)
   const filteredAndSortedModules = useMemo(() => {
