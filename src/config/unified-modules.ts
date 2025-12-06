@@ -38,7 +38,7 @@ import {
   Mic2,
   QrCode,
   Layout,
-  Crown
+  Crown,
 } from 'lucide-react';
 
 // Import core module components
