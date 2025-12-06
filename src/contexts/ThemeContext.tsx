@@ -130,11 +130,17 @@ function applyThemeToDocument(themeName: ThemeName, isDarkMode: boolean) {
   const theme = getTheme(themeName);
   const root = document.documentElement;
 
-  // Apply dark mode class
-  if (isDarkMode || themeName === 'music' || themeName === 'hbcu') {
+  // Apply dark mode class - isDarkMode toggle takes priority
+  if (isDarkMode) {
     root.classList.add('dark');
   } else {
     root.classList.remove('dark');
+  }
+  
+  // Some themes are always dark mode
+  const alwaysDarkThemes = ['music', 'hbcu'];
+  if (alwaysDarkThemes.includes(themeName)) {
+    root.classList.add('dark');
   }
 
   // Apply color variables
