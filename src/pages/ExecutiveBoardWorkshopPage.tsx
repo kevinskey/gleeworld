@@ -99,6 +99,28 @@ const ExecutiveBoardWorkshopPage = () => {
           </div>
         </div>
 
+        {/* End of Semester Interview Card - Priority */}
+        <Card 
+          className="border-2 border-amber-500/30 hover:border-amber-500/50 cursor-pointer transition-all hover:shadow-lg mb-6 md:mb-8"
+          onClick={() => navigate('/exec-board-exit-interview')}
+        >
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
+              <ClipboardList className="h-5 w-5 text-amber-600" />
+              End of Semester Interview
+            </CardTitle>
+            <CardDescription className="text-sm">
+              Share your progress, experiences, and ideas from this semester. Your feedback helps strengthen future leadership.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 md:p-6 pt-0">
+            <Button className="w-full bg-amber-600 hover:bg-amber-700">
+              Complete Interview
+              <ChevronRight className="h-4 w-4 ml-2" />
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Training Modules Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 lg:gap-6 mb-6 md:mb-8">
           {trainingModules.map((module) => {
@@ -215,27 +237,6 @@ const ExecutiveBoardWorkshopPage = () => {
           </CardContent>
         </Card>
 
-        {/* End of Semester Interview Card */}
-        <Card 
-          className="border-2 border-amber-500/30 hover:border-amber-500/50 cursor-pointer transition-all hover:shadow-lg"
-          onClick={() => navigate('/exec-board-exit-interview')}
-        >
-          <CardHeader className="p-4 md:p-6">
-            <CardTitle className="flex items-center gap-2 text-lg md:text-xl">
-              <ClipboardList className="h-5 w-5 text-amber-600" />
-              End of Semester Interview
-            </CardTitle>
-            <CardDescription className="text-sm">
-              Share your progress, experiences, and ideas from this semester. Your feedback helps strengthen future leadership.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 md:p-6 pt-0">
-            <Button className="w-full bg-amber-600 hover:bg-amber-700">
-              Complete Interview
-              <ChevronRight className="h-4 w-4 ml-2" />
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </UniversalLayout>
   );
