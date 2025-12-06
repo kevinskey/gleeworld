@@ -133,13 +133,14 @@ export const ConcertTicketRequestsModule = () => {
       });
       setIsDialogOpen(false);
     },
-    onError: error => {
+    onError: (error: any) => {
+      const errorMessage = error?.message || error?.error?.message || 'Failed to update ticket request';
       toast({
-        title: 'Error',
-        description: 'Failed to update ticket request',
+        title: 'Error updating request',
+        description: errorMessage,
         variant: 'destructive'
       });
-      console.error('Update error:', error);
+      console.error('Update error details:', JSON.stringify(error, null, 2));
     }
   });
 
@@ -210,13 +211,14 @@ export const ConcertTicketRequestsModule = () => {
         status: 'pending'
       });
     },
-    onError: error => {
+    onError: (error: any) => {
+      const errorMessage = error?.message || error?.error?.message || 'Failed to add ticket recipient';
       toast({
-        title: 'Error',
-        description: 'Failed to add ticket recipient',
+        title: 'Error adding recipient',
+        description: errorMessage,
         variant: 'destructive'
       });
-      console.error('Add error:', error);
+      console.error('Add error details:', JSON.stringify(error, null, 2));
     }
   });
 
