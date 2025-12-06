@@ -585,9 +585,20 @@ export const ConcertTicketRequestsModule = () => {
                   <Label>Phone</Label>
                   <p className="text-sm mt-1">{selectedRequest.phone}</p>
                 </div>
-                <div>
-                  <Label>Number of Tickets</Label>
-                  <p className="text-sm mt-1">{selectedRequest.num_tickets}</p>
+              <div>
+                  <Label htmlFor="edit_num_tickets">Number of Tickets</Label>
+                  <Input
+                    id="edit_num_tickets"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={selectedRequest.num_tickets}
+                    onChange={e => setSelectedRequest({
+                      ...selectedRequest,
+                      num_tickets: parseInt(e.target.value) || 1
+                    })}
+                    className="mt-1"
+                  />
                 </div>
               </div>
 
@@ -678,7 +689,8 @@ export const ConcertTicketRequestsModule = () => {
                   <Button onClick={() => handleUpdateRequest({
                     status: selectedRequest.status,
                     notes: selectedRequest.notes,
-                    assigned_to: selectedRequest.assigned_to
+                    assigned_to: selectedRequest.assigned_to,
+                    num_tickets: selectedRequest.num_tickets
                   })}>
                     Save Changes
                   </Button>
