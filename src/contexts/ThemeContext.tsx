@@ -145,11 +145,25 @@ function applyThemeToDocument(themeName: ThemeName) {
   // Store theme name as data attribute for CSS targeting
   root.setAttribute('data-theme', themeName);
   
-  // Apply dark mode class for music theme
-  if (themeName === 'music') {
+  // Apply dark mode class for dark themes
+  if (themeName === 'music' || themeName === 'hbcu') {
     root.classList.add('dark');
   } else {
     root.classList.remove('dark');
+  }
+  
+  // Apply HBCU theme class for special styling
+  if (themeName === 'hbcu') {
+    root.classList.add('hbcu-theme');
+  } else {
+    root.classList.remove('hbcu-theme');
+  }
+  
+  // Apply heading shadow if defined
+  if (theme.typography.headingShadow) {
+    root.style.setProperty('--heading-shadow', theme.typography.headingShadow);
+  } else {
+    root.style.removeProperty('--heading-shadow');
   }
   
   // Apply glass effect class
