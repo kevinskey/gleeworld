@@ -38,11 +38,14 @@ const handler = async (req: Request): Promise<Response> => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Map decision to valid database status (rejected -> cancelled)
+    const dbStatus = decision === 'rejected' ? 'cancelled' : decision;
+
     // Update the ticket request status
     const { error: updateError } = await supabase
       .from('concert_ticket_requests')
       .update({ 
-        status: decision,
+        status: dbStatus,
         notes: adminMessage,
         updated_at: new Date().toISOString()
       })
