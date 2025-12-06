@@ -57,7 +57,7 @@ export const QuickActions: React.FC = () => {
     },
     variant: 'outline' as const
   }];
-  return <Card className="w-full overflow-hidden">
+  return <Card className="w-full overflow-hidden bg-card/80 backdrop-blur-sm border-border">
       <CardContent className="p-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {actions.map((action, index) => (
