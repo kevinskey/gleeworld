@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Music2, Piano, Timer, AudioLines, Gauge } from 'lucide-react';
@@ -8,6 +8,7 @@ import { PitchPipe } from '@/components/pitch-pipe/PitchPipe';
 import { VirtualPiano } from '@/components/sight-singing/VirtualPiano';
 import { Tuner } from '@/components/tuner/Tuner';
 import { useTheme } from '@/contexts/ThemeContext';
+import { forceUnlockAudio, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
 
 // Static chromatic ranges
 const FULL_PIANO_RANGE = [
@@ -33,12 +34,25 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   const isHbcuTheme = themeName === 'hbcu';
   const hbcuGold = '#FFDF00';
 
+  // Setup mobile audio unlock on mount
+  useEffect(() => {
+    const cleanup = setupMobileAudioUnlock();
+    return cleanup;
+  }, []);
+
+  // Pre-unlock audio when dropdown is opened (user gesture)
+  const handleDropdownClick = async () => {
+    await forceUnlockAudio();
+  };
+
   return (
     <div className={className}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             aria-label="Musical Toolkit"
+            onClick={handleDropdownClick}
+            onTouchStart={handleDropdownClick}
             className="inline-flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full border shadow-sm transition-colors hover:bg-white/10"
             style={{ 
               borderColor: isHbcuTheme ? hbcuGold : undefined,
