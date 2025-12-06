@@ -160,13 +160,13 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
               >
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
 
-                  {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+                  {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
                       {slide.title && <h3 
-                        className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg"
+                        className="text-sm sm:text-base font-serif font-bold mb-0.5 drop-shadow-lg line-clamp-1"
                         style={{ color: isHbcuTheme ? hbcuGold : '#ffffff' }}
                       >{slide.title}</h3>}
                       {slide.description && <p 
-                        className="text-xs sm:text-sm line-clamp-2 drop-shadow-md"
+                        className="text-[10px] sm:text-xs line-clamp-1 drop-shadow-md"
                         style={{ color: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.95)', opacity: isHbcuTheme ? 0.9 : 1 }}
                       >{slide.description}</p>}
                     </div>}
@@ -205,13 +205,13 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
                 <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`} />
 
                 {/* Content Overlay */}
-                {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 py-[20px] px-[10px]">
+                {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
                     {slide.title && <h3 
-                      className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg"
+                      className="text-sm sm:text-base font-serif font-bold mb-0.5 drop-shadow-lg line-clamp-1"
                       style={{ color: isHbcuTheme ? hbcuGold : '#ffffff' }}
                     >{slide.title}</h3>}
                     {slide.description && <p 
-                      className="text-xs sm:text-sm line-clamp-2 drop-shadow-md"
+                      className="text-[10px] sm:text-xs line-clamp-1 drop-shadow-md"
                       style={{ color: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.95)', opacity: isHbcuTheme ? 0.9 : 1 }}
                     >{slide.description}</p>}
                   </div>}
