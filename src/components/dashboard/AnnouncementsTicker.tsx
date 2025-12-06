@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeName } from '@/themes/themeConfig';
 
 interface Announcement {
   id: string;
@@ -15,15 +16,56 @@ interface AnnouncementsTickerProps {
   className?: string;
 }
 
+// Theme-specific styling for announcement cards
+const getThemeStyles = (themeName: ThemeName) => {
+  switch (themeName) {
+    case 'hbcu':
+      return {
+        background: 'linear-gradient(135deg, #8B0000 0%, #a52a2a 100%)',
+        borderColor: '#FFDF00',
+        textColor: '#FFFFFF',
+        desktopTextColor: '#FFDF00',
+      };
+    case 'spelman-blue':
+      return {
+        background: 'linear-gradient(135deg, hsl(201 52% 50%) 0%, hsl(201 52% 66%) 100%)',
+        borderColor: 'hsl(201 52% 80%)',
+        textColor: '#FFFFFF',
+        desktopTextColor: 'hsl(220 50% 20%)',
+      };
+    case 'spelhouse':
+      return {
+        background: 'linear-gradient(135deg, hsl(210 65% 45%) 0%, hsl(352 65% 35%) 100%)',
+        borderColor: 'hsl(210 50% 60%)',
+        textColor: '#FFFFFF',
+        desktopTextColor: 'hsl(352 65% 25%)',
+      };
+    case 'music':
+      return {
+        background: 'linear-gradient(135deg, hsl(210 100% 35%) 0%, hsl(180 80% 30%) 100%)',
+        borderColor: 'hsl(180 100% 50%)',
+        textColor: '#FFFFFF',
+        desktopTextColor: 'hsl(0 0% 95%)',
+      };
+    case 'glee-world':
+    default:
+      return {
+        background: 'linear-gradient(135deg, hsl(203 85% 50%) 0%, hsl(219 78% 31%) 100%)',
+        borderColor: 'hsl(203 85% 70%)',
+        textColor: '#FFFFFF',
+        desktopTextColor: 'hsl(0 0% 100%)',
+      };
+  }
+};
+
 export const AnnouncementsTicker = ({
   className
 }: AnnouncementsTickerProps) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const { themeName } = useTheme();
   
-  // HBCU theme colors
-  const isHbcuTheme = themeName === 'hbcu';
-  const hbcuGold = '#FFDF00';
+  const themeStyles = getThemeStyles(themeName);
+
   useEffect(() => {
     fetchAnnouncements();
   }, []);
@@ -41,7 +83,6 @@ export const AnnouncementsTicker = ({
         .limit(20);
 
       if (!error && data) {
-        // Filter recurring announcements based on time of day
         const filtered = data.filter((announcement) => {
           if (announcement.is_recurring && announcement.recurrence_start_date) {
             const recurrenceDate = new Date(announcement.recurrence_start_date);
@@ -51,7 +92,6 @@ export const AnnouncementsTicker = ({
             const currentHour = now.getUTCHours();
             const currentMinute = now.getUTCMinutes();
             
-            // Check if current time is past the recurrence start time
             if (currentHour < recurrenceHour) return false;
             if (currentHour === recurrenceHour && currentMinute < recurrenceMinute) return false;
           }
@@ -84,7 +124,7 @@ export const AnnouncementsTicker = ({
           </div>
         </div>
 
-        {/* Desktop - Empty state with background */}
+        {/* Desktop - Empty state */}
         <div className={`hidden lg:block overflow-hidden whitespace-nowrap w-full min-w-0 ${className || ''}`}>
           <div className="text-xs sm:text-sm text-muted-foreground px-2 sm:px-[40px]">
             No announcements
@@ -94,25 +134,24 @@ export const AnnouncementsTicker = ({
     );
   }
 
-  const hbcuRed = '#8B0000';
-
   return (
     <>
-      {/* Mobile - Modern card style */}
+      {/* Mobile - Theme-aware card style */}
       <div className={`lg:hidden ${className || ''}`}>
         <div 
           className="w-full rounded-xl px-4 py-3 shadow-lg border backdrop-blur-sm"
           style={{
-            background: isHbcuTheme 
-              ? `linear-gradient(135deg, ${hbcuRed} 0%, #a52a2a 100%)`
-              : 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)',
-            borderColor: isHbcuTheme ? hbcuGold : 'hsl(var(--primary)/0.3)',
+            background: themeStyles.background,
+            borderColor: themeStyles.borderColor,
           }}
         >
           <div className="flex items-start gap-2">
             <span className="text-lg shrink-0">📢</span>
             <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
-              <p className="text-sm font-medium whitespace-nowrap leading-snug" style={{ color: '#FFFFFF' }}>
+              <p 
+                className="text-sm font-medium whitespace-nowrap leading-snug"
+                style={{ color: themeStyles.textColor }}
+              >
                 {announcements.map((a, i) => (
                   <span key={a.id}>
                     <span className="font-bold">{a.title}:</span>{' '}
@@ -130,7 +169,7 @@ export const AnnouncementsTicker = ({
       <div className={`hidden lg:block overflow-hidden whitespace-nowrap w-full min-w-0 ${className || ''}`}>
         <div 
           className="animate-marquee inline-block text-xs sm:text-sm pl-[100%] my-0 py-0 px-2 sm:px-[40px]"
-          style={{ color: isHbcuTheme ? hbcuGold : undefined }}
+          style={{ color: themeStyles.desktopTextColor }}
         >
           {announcements.map((a, i) => (
             <span key={a.id}>
