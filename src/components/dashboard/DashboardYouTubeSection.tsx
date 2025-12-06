@@ -190,19 +190,19 @@ export const DashboardYouTubeSection = () => {
         {/* Overlay */}
         <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/30 transition-colors duration-300" />
         
-        {/* Title */}
+        {/* Title - Bottom Left */}
         {video.title && (
-          <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-background/95 via-background/60 to-transparent p-2 sm:p-3 z-10 backdrop-blur-sm">
-            <h3 className="text-foreground text-[10px] sm:text-xs md:text-sm font-semibold truncate text-left">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-2 z-10">
+            <h3 className="text-white text-[10px] sm:text-xs font-medium truncate text-left">
               {video.title}
             </h3>
           </div>
         )}
         
-        {/* Play Button */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary rounded-full flex items-center justify-center group-hover:bg-primary/90 group-hover:scale-110 transition-all duration-300 shadow-lg ring-2 ring-primary-foreground/20">
-            <Play className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground ml-0.5" fill="currentColor" />
+        {/* Play Button - Bottom Right, Small */}
+        <div className="absolute bottom-2 right-2 z-10">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-md">
+            <Play className="w-4 h-4 sm:w-5 sm:h-5 text-primary ml-0.5" fill="currentColor" />
           </div>
         </div>
       </button>
