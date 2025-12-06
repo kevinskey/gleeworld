@@ -48,57 +48,58 @@ serve(async (req) => {
 
     console.log(`Found ${gleeCamImages.length} Glee Cam images`);
 
-    // Get the public URL for each image
+    // Get the public URL for each image and create hero slides
     const heroSlides = await Promise.all(gleeCamImages.map(async (image, index) => {
       const { data: urlData } = supabase.storage
         .from('pr-images')
         .getPublicUrl(image.file_path);
 
       return {
-        usage_context: 'homepage',
         title: image.caption || 'Glee Cam',
-        description: '',
+        description: 'GW Cam!',
         image_url: urlData.publicUrl,
         mobile_image_url: urlData.publicUrl,
         ipad_image_url: urlData.publicUrl,
-        cta_text: '',
-        cta_link: '',
-        display_order: index,
+        display_order: 100 + index, // High display order to not interfere with manual slides
         is_active: true,
-        source: 'glee_cam',
-        source_id: image.id,
       };
     }));
 
-    // Delete existing Glee Cam hero slides
-    const { error: deleteError } = await supabase
-      .from('gw_hero_slides')
-      .delete()
-      .eq('source', 'glee_cam');
-
-    if (deleteError) {
-      console.error('Error deleting old slides:', deleteError);
-    } else {
-      console.log('Deleted old Glee Cam hero slides');
+    // Note: We're adding new slides, not replacing. 
+    // To avoid duplicates, we skip if the image URL already exists
+    let slidesCreated = 0;
+    
+    for (const slide of heroSlides) {
+      // Check if this image already exists in hero slides
+      const { data: existing } = await supabase
+        .from('dashboard_hero_slides')
+        .select('id')
+        .eq('image_url', slide.image_url)
+        .limit(1);
+      
+      if (!existing || existing.length === 0) {
+        const { error: insertError } = await supabase
+          .from('dashboard_hero_slides')
+          .insert(slide);
+        
+        if (insertError) {
+          console.error('Error inserting slide:', insertError);
+        } else {
+          slidesCreated++;
+        }
+      } else {
+        console.log(`Slide already exists for: ${slide.title}`);
+      }
     }
 
-    // Insert new hero slides
-    if (heroSlides.length > 0) {
-      const { data: insertedSlides, error: insertError } = await supabase
-        .from('gw_hero_slides')
-        .insert(heroSlides)
-        .select();
-
-      if (insertError) throw insertError;
-
-      console.log(`Created ${insertedSlides?.length || 0} new hero slides`);
-    }
+    console.log(`Created ${slidesCreated} new hero slides from Glee Cam`);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Synced ${gleeCamImages.length} Glee Cam images to hero slides`,
-        slides_created: heroSlides.length
+        message: `Synced ${gleeCamImages.length} Glee Cam images, created ${slidesCreated} new slides`,
+        glee_cam_images: gleeCamImages.length,
+        slides_created: slidesCreated
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
