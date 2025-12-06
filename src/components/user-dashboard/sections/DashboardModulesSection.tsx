@@ -180,7 +180,7 @@ export const DashboardModulesSection = () => {
     {
       title: "Administrative Functions",
       icon: Settings,
-      iconColor: "text-gray-600",
+      iconColor: "text-muted-foreground",
       modules: [
         { name: "Dashboard Settings", description: "Configure dashboard", icon: Settings, route: "/dashboard-settings", requiresAdmin: true },
         { name: "System Settings", description: "Global settings", icon: Settings, route: "/settings" },
@@ -232,10 +232,10 @@ export const DashboardModulesSection = () => {
   };
 
   return (
-    <Card>
+    <Card className="bg-card/80 backdrop-blur-sm border-border">
       <CardHeader>
-        <CardTitle>Dashboard Modules</CardTitle>
-        <CardDescription>Access all your Glee Club features organized by function</CardDescription>
+        <CardTitle className="text-card-foreground">Dashboard Modules</CardTitle>
+        <CardDescription className="text-muted-foreground">Access all your Glee Club features organized by function</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -256,36 +256,36 @@ export const DashboardModulesSection = () => {
                 <CollapsibleTrigger asChild>
                   <Button 
                     variant="outline" 
-                    className="w-full justify-between p-4 h-auto hover:bg-muted/50"
+                    className="w-full justify-between p-4 h-auto hover:bg-muted/50 text-foreground border-border"
                   >
                     <div className="flex items-center">
                       <CategoryIcon className={`h-5 w-5 mr-3 ${category.iconColor}`} />
-                      <span className="font-semibold">{category.title}</span>
+                      <span className="font-semibold text-foreground">{category.title}</span>
                       <span className="ml-2 text-sm text-muted-foreground">
                         ({visibleModules.length} {visibleModules.length === 1 ? 'item' : 'items'})
                       </span>
                     </div>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`h-4 w-4 text-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                   </Button>
                 </CollapsibleTrigger>
                 
                 <CollapsibleContent>
-                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-2 border rounded-lg bg-muted/20">
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 p-2 border border-border rounded-lg bg-card/50">
                     {visibleModules.map((module) => {
                       const ModuleIcon = module.icon;
                       return (
                         <Button 
                           key={module.route}
                           variant="ghost" 
-                          className="justify-start h-auto p-3 hover:bg-background border hover:border-border/50"
+                          className="justify-start h-auto p-3 hover:bg-muted border border-transparent hover:border-border/50 text-foreground"
                           onClick={() => {
                             console.log('DashboardModulesSection: Navigating to:', module.route, 'Module name:', module.name);
                             navigate(module.route);
                           }}
                         >
-                          <ModuleIcon className="h-4 w-4 mr-2" />
+                          <ModuleIcon className="h-4 w-4 mr-2 text-primary" />
                           <div className="text-left">
-                            <div className="font-medium">{module.name}</div>
+                            <div className="font-medium text-foreground">{module.name}</div>
                             <div className="text-xs text-muted-foreground">{module.description}</div>
                           </div>
                         </Button>
