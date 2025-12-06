@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/contexts/ThemeContext";
+
 interface HeroSlide {
   id: string;
   title?: string;
@@ -27,6 +28,13 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
   const [loading, setLoading] = useState(true);
   const [scrollSpeed, setScrollSpeed] = useState(5000);
   const isMobile = useIsMobile();
+  const { themeName } = useTheme();
+  
+  // HBCU theme colors
+  const isHbcuTheme = themeName === 'hbcu';
+  const hbcuGold = '#FFDF00';
+  const hbcuRed = '#8B0000';
+
   useEffect(() => {
     fetchHeroSlides();
     fetchScrollSettings();
@@ -153,8 +161,14 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
 
                   {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                      {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 text-white drop-shadow-lg">{slide.title}</h3>}
-                      {slide.description && <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>}
+                      {slide.title && <h3 
+                        className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg"
+                        style={{ color: isHbcuTheme ? hbcuGold : '#ffffff' }}
+                      >{slide.title}</h3>}
+                      {slide.description && <p 
+                        className="text-xs sm:text-sm line-clamp-2 drop-shadow-md"
+                        style={{ color: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.95)', opacity: isHbcuTheme ? 0.9 : 1 }}
+                      >{slide.description}</p>}
                     </div>}
                 </div>)}
             </div>
@@ -171,7 +185,13 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
     return visible;
   };
   const visibleSlides = getVisibleSlides();
-  return <div className={`mb-4 rounded-xl border-2 border-slate-400/50 dark:border-slate-500 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 shadow-lg p-3 ${className || ''}`}>
+  return <div 
+    className={`mb-4 rounded-xl border-2 shadow-lg p-3 ${className || ''}`}
+    style={{
+      borderColor: isHbcuTheme ? hbcuRed : undefined,
+      background: isHbcuTheme ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' : undefined
+    }}
+  >
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
@@ -186,8 +206,14 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
 
                 {/* Content Overlay */}
                 {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 py-[20px] px-[10px]">
-                    {slide.title && <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg text-white">{slide.title}</h3>}
-                    {slide.description && <p className="text-xs sm:text-sm text-white/95 line-clamp-2 drop-shadow-md">{slide.description}</p>}
+                    {slide.title && <h3 
+                      className="text-xl sm:text-2xl font-serif font-bold mb-1 sm:mb-2 drop-shadow-lg"
+                      style={{ color: isHbcuTheme ? hbcuGold : '#ffffff' }}
+                    >{slide.title}</h3>}
+                    {slide.description && <p 
+                      className="text-xs sm:text-sm line-clamp-2 drop-shadow-md"
+                      style={{ color: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.95)', opacity: isHbcuTheme ? 0.9 : 1 }}
+                    >{slide.description}</p>}
                   </div>}
               </div>)}
           </div>
