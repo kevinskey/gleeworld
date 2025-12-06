@@ -95,6 +95,7 @@ export const DashboardModulesSection = () => {
         { name: "User Management", description: "Manage member roles & permissions", icon: Users, route: "/user-management", requiresAdmin: true },
         { name: "Executive Board", description: "Manage executive positions", icon: ShieldCheck, route: "/dashboard", requiresExecutive: true },
         { name: "Member Directory", description: "View all members", icon: User, route: "/member-directory" },
+        { name: "Exit Interviews", description: "View member exit interview submissions", icon: CheckCircle, route: "/exit-interviews", requiresAdmin: true },
         { name: "Activity Logs", description: "Track member activities", icon: BarChart3, route: "/activity-logs", requiresAdmin: true },
         { name: "Profile", description: "Manage your profile", icon: User, route: "/profile" }
       ]

@@ -139,6 +139,7 @@ const SharedAnnotation = lazy(() => import("./pages/SharedAnnotation").then(m =>
 import MobileScoring from "./pages/MobileScoring";
 import MemberDirectory from "./pages/MemberDirectory";
 import UserManagement from "./pages/UserManagement";
+import ExitInterviewsPage from "./pages/ExitInterviewsPage";
 import { AmazonShoppingModule } from "./components/shopping/AmazonShoppingModule";
 import { RadioStationPage } from "./components/radio/RadioStationPage";
 import { AuditionsManagement } from "./components/admin/AuditionsManagement";
@@ -1301,6 +1302,14 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <UserManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/exit-interviews" 
+                element={
+                  <ProtectedRoute>
+                    <ExitInterviewsPage />
                   </ProtectedRoute>
                 } 
               />
