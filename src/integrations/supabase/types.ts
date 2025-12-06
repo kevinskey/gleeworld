@@ -20800,6 +20800,53 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_recipients: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          recipient_email: string | null
+          recipient_name: string
+          recipient_phone: string | null
+          status: string
+          ticket_request_id: string
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          recipient_email?: string | null
+          recipient_name: string
+          recipient_phone?: string | null
+          status?: string
+          ticket_request_id: string
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          recipient_email?: string | null
+          recipient_name?: string
+          recipient_phone?: string | null
+          status?: string
+          ticket_request_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_recipients_ticket_request_id_fkey"
+            columns: ["ticket_request_id"]
+            isOneToOne: false
+            referencedRelation: "concert_ticket_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       track_likes: {
         Row: {
           created_at: string
