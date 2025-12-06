@@ -32,21 +32,36 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     const now = new Date();
     const currentYear = now.getFullYear();
     
-    // Christmas Carol performance is typically mid-December
-    let christmasCarol = new Date(currentYear, 11, 15); // December 15th
+    // Christmas Carol 2025: December 6-8, 2025
+    // Show countdown to first day, then during event show "Christmas Carol is happening now!"
+    const eventStart = new Date(currentYear, 11, 6); // December 6th
+    const eventEnd = new Date(currentYear, 11, 8, 23, 59, 59); // December 8th end of day
     
-    // If we've passed this year's date, use next year
-    if (now > christmasCarol) {
-      christmasCarol = new Date(currentYear + 1, 11, 15);
+    // If we're past this year's event, use next year
+    if (now > eventEnd) {
+      return new Date(currentYear + 1, 11, 6);
     }
     
-    return christmasCarol;
+    return { start: eventStart, end: eventEnd, isHappening: now >= eventStart && now <= eventEnd };
   };
 
   const getCountdownText = () => {
     const now = new Date();
-    const christmasCarol = getChristmasCarolDate();
-    const diff = christmasCarol.getTime() - now.getTime();
+    const eventInfo = getChristmasCarolDate();
+    
+    // Handle legacy return type
+    if (eventInfo instanceof Date) {
+      const diff = eventInfo.getTime() - now.getTime();
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      return `${days} days to Christmas Carol`;
+    }
+    
+    // Event is currently happening
+    if (eventInfo.isHappening) {
+      return "Christmas Carol is happening now! 🎄";
+    }
+    
+    const diff = eventInfo.start.getTime() - now.getTime();
     
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -56,8 +71,10 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
       return `${days} days to Christmas Carol`;
     } else if (hours > 0) {
       return `${hours}h ${minutes}m to Christmas Carol`;
-    } else {
+    } else if (minutes > 0) {
       return `${minutes} minutes to Christmas Carol`;
+    } else {
+      return "Christmas Carol starts soon!";
     }
   };
 
