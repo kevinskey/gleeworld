@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { unlockAudioContext, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
+import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 
 export type MetronomeSoundType = 'pitch' | 'click';
 
@@ -10,6 +10,7 @@ export const useMetronome = () => {
   const [soundType, setSoundType] = useState<MetronomeSoundType>('click');
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<number | null>(null);
+  const isUnlockingRef = useRef(false);
 
   // Setup mobile audio unlock on mount
   useEffect(() => {
@@ -19,19 +20,53 @@ export const useMetronome = () => {
 
   const getAudioContext = useCallback(async (): Promise<AudioContext | null> => {
     try {
+      // Prevent multiple simultaneous unlock attempts
+      if (isUnlockingRef.current) {
+        // Wait a bit and check again
+        await new Promise(resolve => setTimeout(resolve, 100));
+        return audioContextRef.current;
+      }
+      
+      isUnlockingRef.current = true;
+      
       // Use the shared unlock utility for iOS compatibility
       const ctx = await unlockAudioContext();
       audioContextRef.current = ctx;
+      
+      // Extra check for mobile - ensure it's really running
+      if (ctx.state !== 'running') {
+        console.log('🎵 Metronome: Context not running, attempting resume...');
+        await ctx.resume();
+        // Give iOS a moment
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      
+      isUnlockingRef.current = false;
       return ctx;
     } catch (error) {
       console.error('Failed to get audio context:', error);
+      isUnlockingRef.current = false;
       return null;
     }
   }, []);
 
   const playClick = useCallback(async () => {
     const ctx = await getAudioContext();
-    if (!ctx || ctx.state !== 'running') return;
+    if (!ctx) {
+      console.warn('🎵 Metronome: No audio context available');
+      return;
+    }
+    
+    // On mobile, context might go back to suspended
+    if (ctx.state === 'suspended') {
+      console.log('🎵 Metronome: Context suspended, resuming...');
+      await ctx.resume();
+    }
+    
+    if (ctx.state !== 'running') {
+      console.warn('🎵 Metronome: Context not in running state:', ctx.state);
+      return;
+    }
     
     const now = ctx.currentTime;
     const osc = ctx.createOscillator();
