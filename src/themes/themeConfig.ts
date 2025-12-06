@@ -12,7 +12,7 @@
  * 5. Add background images to src/assets/themes/ if needed
  */
 
-export type ThemeName = 'glee-world' | 'spelman-blue' | 'spelhouse' | 'music';
+export type ThemeName = 'glee-world' | 'spelman-blue' | 'spelhouse' | 'music' | 'hbcu';
 
 export interface ThemeConfig {
   id: ThemeName;
@@ -40,6 +40,7 @@ export interface ThemeConfig {
   typography: {
     fontFamily: string;
     headingFamily?: string;
+    headingShadow?: string;
     style: 'bold-friendly' | 'academic-serif' | 'collegiate' | 'modern-performance';
   };
   
@@ -233,6 +234,50 @@ const musicTheme: ThemeConfig = {
 };
 
 /**
+ * HBCU THEME
+ * Bold Pan-African celebration with collegiate energy
+ */
+const hbcuTheme: ThemeConfig = {
+  id: 'hbcu',
+  name: 'HBCU Pride',
+  description: 'Bold Pan-African celebration - Red, Gold, Green & Black',
+  
+  colors: {
+    primary: '45 65% 55%',              // African Gold #D9B84B
+    primaryForeground: '0 0% 0%',       // Black text on gold
+    secondary: '0 72% 42%',             // Pan-African Red #BA1E1E
+    secondaryForeground: '45 65% 75%',  // Light gold on red
+    accent: '135 38% 27%',              // Deep Collegiate Green #2C5E32
+    accentForeground: '45 65% 85%',     // Light gold on green
+    background: '0 0% 0%',              // Pure black background
+    foreground: '45 65% 75%',           // Gold text for dark bg
+    card: '0 0% 8%',                    // Near-black cards
+    cardForeground: '45 65% 75%',       // Gold text on cards
+    muted: '0 0% 12%',                  // Dark muted bg
+    mutedForeground: '135 30% 55%',     // Green muted text
+    border: '0 72% 42%',                // Red borders
+  },
+  
+  typography: {
+    fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+    headingFamily: "'Oswald', 'Impact', sans-serif",
+    headingShadow: '2px 2px 0px hsl(0 0% 0%), 3px 3px 0px hsl(0 72% 42%)',
+    style: 'collegiate',
+  },
+  
+  background: {
+    type: 'gradient',
+    value: 'linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 8%) 50%, hsl(135 20% 8%) 100%)',
+    overlay: 'none',
+  },
+  
+  decorations: {
+    floatingElements: 'watermark',
+    animations: true,
+  },
+};
+
+/**
  * THEMES REGISTRY
  * All available themes indexed by their ID
  */
@@ -241,6 +286,7 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
   'spelman-blue': spelmanBlueTheme,
   'spelhouse': spelhouseTheme,
   'music': musicTheme,
+  'hbcu': hbcuTheme,
 };
 
 /**
