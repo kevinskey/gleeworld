@@ -827,13 +827,27 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       return;
     }
 
-    // Ensure context is running
+    // Ensure context is running - critical for mobile
     if (audioContext.state !== 'running') {
       try {
         await audioContext.resume();
-        console.log('🔊 AudioContext resumed for playNote');
+        // Wait a bit for mobile browsers to actually start the context
+        await new Promise(resolve => setTimeout(resolve, 50));
+        console.log('🔊 AudioContext resumed for playNote, state:', audioContext.state);
       } catch (err) {
         console.error('🎹 Failed to resume AudioContext:', err);
+        return;
+      }
+    }
+
+    // Double-check state after resume attempt
+    if (audioContext.state !== 'running') {
+      console.warn('🎹 AudioContext still not running after resume, state:', audioContext.state);
+      // Try one more time
+      try {
+        await audioContext.resume();
+      } catch (e) {
+        console.error('🎹 Second resume attempt failed');
         return;
       }
     }
@@ -872,8 +886,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     gainNode.gain.setValueAtTime(currentVolume * 0.8, now);
     gainNode.gain.exponentialRampToValueAtTime(currentVolume * 0.3, now + 0.5);
     gainNode.gain.exponentialRampToValueAtTime(0.01, now + 2);
-    oscillator.start();
-    console.log('🎵 Playing note (synthesis):', noteName, 'at', frequency, 'Hz');
+    oscillator.start(now);
+    console.log('🎵 Playing note (synthesis):', noteName, 'at', frequency, 'Hz', 'context state:', audioContext.state);
     activeOscillatorsRef.current.set(noteName, {
       oscillators: [oscillator],
       gainNode

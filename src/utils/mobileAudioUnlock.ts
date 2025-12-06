@@ -51,17 +51,18 @@ export const unlockAudioContext = async (): Promise<AudioContext> => {
       // Also create and play an oscillator briefly (helps with some iOS versions)
       const oscillator = ctx.createOscillator();
       const gainNode = ctx.createGain();
-      gainNode.gain.value = 0; // Silent
+      gainNode.gain.value = 0.001; // Very quiet but not zero
       oscillator.connect(gainNode);
       gainNode.connect(ctx.destination);
       oscillator.start(0);
-      oscillator.stop(ctx.currentTime + 0.001);
+      oscillator.stop(ctx.currentTime + 0.01);
       
       // Wait for iOS to process
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Double-check the state
+      // Double-check the state and try resume again if needed
       if (ctx.state === 'suspended') {
+        console.log('🔊 Context still suspended, trying resume again...');
         await ctx.resume();
       }
       
@@ -93,6 +94,20 @@ export const getAudioContextState = (): string => {
 export const forceUnlockAudio = async (): Promise<boolean> => {
   try {
     const ctx = await unlockAudioContext();
+    
+    // Extra step for stubborn mobile browsers: play an audible tone briefly
+    if (ctx.state === 'running' && !isUnlocked) {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.05);
+      isUnlocked = true;
+    }
+    
     return ctx.state === 'running';
   } catch (e) {
     console.error('Force unlock failed:', e);
@@ -106,7 +121,7 @@ export const setupMobileAudioUnlock = () => {
     if (!isUnlocked) {
       console.log('🔊 User interaction detected, attempting audio unlock via', e.type);
       try {
-        await unlockAudioContext();
+        await forceUnlockAudio();
       } catch (err) {
         // Ignore errors during auto-unlock, will retry on next interaction
         console.log('🔊 Auto-unlock attempt did not complete, will retry');
