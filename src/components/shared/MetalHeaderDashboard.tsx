@@ -658,17 +658,40 @@ export const MetalHeaderDashboard = ({
           <AnnouncementsDisplay className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md w-full" />
         </div>
         
-        {/* Messages Button - Steel with rivets style */}
-        <button onClick={() => onToggleMessages?.()} className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10
-            bg-gradient-to-b from-slate-400 via-slate-500 to-slate-600
-            text-slate-100 shadow-md border border-slate-600/50 flex items-center gap-2 justify-center
-            hover:from-slate-500 hover:via-slate-600 hover:to-slate-700 transition-all" style={{
-        textShadow: '0 1px 2px rgba(0,0,0,0.3)'
-      }}>
-          {/* Left rivet */}
-          <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
-          {/* Right rivet */}
-          <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+        {/* Messages Button - Theme-aware styling */}
+        <button 
+          onClick={() => onToggleMessages?.()} 
+          className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10 shadow-md border flex items-center gap-2 justify-center hover:opacity-90 transition-all"
+          style={{
+            background: isHbcuTheme 
+              ? hbcuGold
+              : themeName === 'spelman-blue'
+              ? 'linear-gradient(to bottom, hsl(201 52% 66%), hsl(201 52% 50%))'
+              : themeName === 'spelhouse'
+              ? 'linear-gradient(to bottom, hsl(210 65% 55%), hsl(210 65% 45%))'
+              : themeName === 'music'
+              ? 'linear-gradient(to bottom, hsl(210 100% 50%), hsl(210 100% 35%))'
+              : 'linear-gradient(to bottom, #94a3b8, #64748b, #475569)',
+            color: isHbcuTheme ? '#000000' : '#FFFFFF',
+            borderColor: isHbcuTheme 
+              ? hbcuRed 
+              : themeName === 'spelman-blue'
+              ? 'hsl(201 40% 40%)'
+              : themeName === 'spelhouse'
+              ? 'hsl(352 65% 28%)'
+              : themeName === 'music'
+              ? 'hsl(180 100% 40%)'
+              : 'rgba(71, 85, 105, 0.5)',
+            textShadow: isHbcuTheme ? 'none' : '0 1px 2px rgba(0,0,0,0.3)'
+          }}
+        >
+          {/* Rivets - only show for default/glee-world theme */}
+          {themeName === 'glee-world' && (
+            <>
+              <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+              <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+            </>
+          )}
           <MessageSquare className="h-4 w-4" />
           <span>Messages</span>
         </button>
