@@ -709,6 +709,16 @@ export const MetalHeaderDashboard = ({
         📋 Complete Your Fall 2025 Exit Interview - Required for All Members
       </a>
 
+      {/* Exec Board Exit Interview Card */}
+      {(user.is_exec_board || isAdmin || isSuperAdmin()) && (
+        <a href="/exec-board-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-amber-500/50" style={{
+          backgroundColor: '#D97706',
+          color: '#FFFFFF'
+        }}>
+          👑 Complete Exec Board Exit Interview - Required for Board Members
+        </a>
+      )}
+
       {/* Super Admin Layout Controls */}
       {isSuperAdmin() && isEditingLayout && <div className="flex items-center gap-2 justify-end mb-2">
           <Button variant="ghost" size="sm" onClick={() => resetCardOrder()} disabled={isSaving}>

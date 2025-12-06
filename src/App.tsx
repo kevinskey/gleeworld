@@ -191,6 +191,7 @@ import TimesheetPage from "./pages/TimesheetPage";
 import BownaScholarLanding from "./pages/BownaScholarLanding";
 import SMSTest from "./pages/SMSTest";
 import MemberExitInterview from "./pages/MemberExitInterview";
+import ExecBoardExitInterview from "./pages/ExecBoardExitInterview";
 
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
@@ -1500,6 +1501,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <MemberExitInterview />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/exec-board-exit-interview" 
+                  element={
+                    <ProtectedRoute>
+                      <ExecBoardExitInterview />
                     </ProtectedRoute>
                   } 
                 />
