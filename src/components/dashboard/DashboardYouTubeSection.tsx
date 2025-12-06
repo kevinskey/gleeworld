@@ -154,7 +154,7 @@ export const DashboardYouTubeSection = () => {
 
   return (
     <div className="w-full px-4 py-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-2 sm:gap-4">
         {/* Left Video */}
         <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
           <VideoThumbnail 
