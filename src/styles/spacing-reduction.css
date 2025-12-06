@@ -1,91 +1,273 @@
-/* Update all CardHeaders globally to use reduced spacing */
-.card-header-reduced {
-  @apply pb-1 pt-3;
-}
+/* =========================================
+   GLOBAL SPACING & LAYOUT UTILITIES
+   Enhanced responsive design system
+   ========================================= */
 
-/* Card header compact variant - apply intentionally */
-.card-header-compact {
-  @apply pb-1 pt-2;
-}
-
-/* Update page container spacing globally */
+/* Page container variations */
 .page-container {
-  @apply py-1 sm:py-2 md:py-3 space-y-1 sm:space-y-2 md:space-y-3;
+  @apply py-4 sm:py-6 md:py-8 space-y-4 sm:space-y-6 animate-fade-in;
 }
 
+.page-container-compact {
+  @apply py-2 sm:py-4 md:py-6 space-y-3 sm:space-y-4;
+}
+
+.page-container-loose {
+  @apply py-6 sm:py-8 md:py-12 space-y-6 sm:space-y-8;
+}
+
+/* Page headers */
 .page-header {
-  @apply text-sm sm:text-base md:text-lg font-bebas mb-1 sm:mb-2 tracking-wide;
+  @apply text-lg sm:text-xl md:text-2xl font-semibold mb-2 sm:mb-4 tracking-tight text-foreground;
 }
 
 .page-title-large {
-  @apply text-base sm:text-lg md:text-xl lg:text-2xl font-bebas mb-1 sm:mb-2 tracking-wide;
+  @apply text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 tracking-tight text-foreground;
 }
 
+.page-subtitle {
+  @apply text-sm sm:text-base text-muted-foreground mt-1 max-w-2xl;
+}
+
+/* Section spacing */
 .section-spacing {
-  @apply space-y-1 sm:space-y-2 md:space-y-3;
+  @apply space-y-4 sm:space-y-6 md:space-y-8;
 }
 
+.section-spacing-tight {
+  @apply space-y-2 sm:space-y-3 md:space-y-4;
+}
+
+/* Card spacing utilities */
 .card-spacing {
-  @apply gap-1 sm:gap-2 md:gap-3;
-}
-
-/* Responsive grid utilities */
-.responsive-grid-2 {
-  @apply grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-3 md:gap-4;
-}
-
-.responsive-grid-3 {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 md:gap-4;
-}
-
-.responsive-grid-4 {
-  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4;
-}
-
-/* Compact card utilities */
-.card-compact {
-  @apply p-2 sm:p-3 md:p-4 space-y-2 sm:space-y-3;
+  @apply gap-3 sm:gap-4 md:gap-6;
 }
 
 .card-header-compact {
-  @apply pb-1 sm:pb-2 pt-2 sm:pt-3;
+  @apply pb-2 pt-4;
 }
 
-/* Dropdown and popover compact utilities */
-.dropdown-compact {
-  @apply py-0.5 px-1;
+.card-header-reduced {
+  @apply pb-2 pt-3;
 }
 
-.dropdown-item-compact {
-  @apply py-1 px-2 text-sm leading-tight;
+/* Card compact utilities */
+.card-compact {
+  @apply p-3 sm:p-4 space-y-2 sm:space-y-3;
 }
 
-/* Touch-friendly mobile utilities */
+/* =========================================
+   RESPONSIVE GRID UTILITIES
+   ========================================= */
+
+.responsive-grid-2 {
+  @apply grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6;
+}
+
+.responsive-grid-3 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6;
+}
+
+.responsive-grid-4 {
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5 md:gap-6;
+}
+
+.responsive-grid-auto {
+  @apply grid gap-4 sm:gap-5 md:gap-6;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* =========================================
+   TOUCH-FRIENDLY MOBILE UTILITIES
+   ========================================= */
+
 .touch-target {
-  @apply min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0 transition-all duration-200;
+  @apply min-h-[44px] min-w-[44px] transition-all duration-200;
+}
+
+.touch-target-sm {
+  @apply min-h-[36px] min-w-[36px];
+}
+
+.touch-hover {
+  @apply transition-transform duration-200 active:scale-[0.98];
 }
 
 .touch-hover:hover {
-  @apply scale-105 md:scale-100;
+  @apply md:scale-[1.02];
+}
+
+/* =========================================
+   TYPOGRAPHY UTILITIES
+   ========================================= */
+
+.mobile-text-base {
+  @apply text-sm sm:text-base;
 }
 
 .mobile-text-lg {
-  @apply text-sm sm:text-base md:text-lg;
+  @apply text-base sm:text-lg;
 }
 
 .mobile-text-xl {
-  @apply text-base sm:text-lg md:text-xl;
-}
-
-.mobile-text-2xl {
   @apply text-lg sm:text-xl md:text-2xl;
 }
 
-/* Overflow handling utilities */
-.text-overflow-fade {
-  @apply relative after:absolute after:right-0 after:top-0 after:h-full after:w-8 after:bg-gradient-to-l after:from-background after:to-transparent;
+.mobile-text-2xl {
+  @apply text-xl sm:text-2xl md:text-3xl;
 }
 
-.scrollbar-thin-mobile {
-  /* plugin not available; noop to avoid build error */
+.text-balance {
+  text-wrap: balance;
+}
+
+.text-pretty {
+  text-wrap: pretty;
+}
+
+/* =========================================
+   DROPDOWN & POPOVER UTILITIES
+   ========================================= */
+
+.dropdown-compact {
+  @apply py-1 px-1.5;
+}
+
+.dropdown-item-compact {
+  @apply py-2 px-3 text-sm leading-tight rounded-md;
+}
+
+/* =========================================
+   OVERFLOW & SCROLLING
+   ========================================= */
+
+.text-overflow-fade {
+  @apply relative overflow-hidden;
+}
+
+.text-overflow-fade::after {
+  content: '';
+  @apply absolute right-0 top-0 h-full w-12 bg-gradient-to-l from-background to-transparent pointer-events-none;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted)) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted));
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* =========================================
+   INTERACTION STATES
+   ========================================= */
+
+.interactive-card {
+  @apply cursor-pointer transition-all duration-300 hover:shadow-card-hover hover:-translate-y-0.5 active:translate-y-0 active:shadow-card;
+}
+
+.interactive-list-item {
+  @apply cursor-pointer transition-colors duration-200 hover:bg-accent/50 active:bg-accent rounded-md;
+}
+
+/* Focus ring utility */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+}
+
+/* =========================================
+   LOADING STATES
+   ========================================= */
+
+.skeleton {
+  @apply bg-muted animate-pulse rounded;
+}
+
+.skeleton-text {
+  @apply h-4 bg-muted animate-pulse rounded w-full;
+}
+
+.skeleton-avatar {
+  @apply h-10 w-10 bg-muted animate-pulse rounded-full;
+}
+
+.skeleton-button {
+  @apply h-10 w-24 bg-muted animate-pulse rounded-lg;
+}
+
+/* =========================================
+   ANIMATION UTILITIES
+   ========================================= */
+
+.animate-stagger > * {
+  animation: fade-in 0.4s ease-out backwards;
+}
+
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 50ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 100ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 150ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 200ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 250ms; }
+.animate-stagger > *:nth-child(n+7) { animation-delay: 300ms; }
+
+/* Hover lift effect */
+.hover-lift {
+  @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-elevated;
+}
+
+/* Subtle pulse for attention */
+.attention-pulse {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* =========================================
+   GLASS MORPHISM
+   ========================================= */
+
+.glass {
+  @apply backdrop-blur-md bg-background/80 border border-border/40;
+}
+
+.glass-strong {
+  @apply backdrop-blur-xl bg-background/90 border border-border/60;
+}
+
+/* =========================================
+   ACCESSIBLE FOCUS STATES
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

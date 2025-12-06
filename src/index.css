@@ -487,11 +487,19 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     @apply bg-background text-foreground min-h-screen;
-    font-family: var(--font-family, 'Roboto', sans-serif);
+    font-family: 'Inter', 'Roboto', system-ui, sans-serif;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
+    font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
   
   @media (min-width: 640px) {
@@ -506,120 +514,125 @@
     }
   }
 
-  /* GleeWorld Typography System - Responsive & Consistent */
+  /* GleeWorld Typography System - Refined & Elegant */
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', system-ui, sans-serif;
     font-weight: 400;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.02em;
     color: inherit;
     line-height: 1.2;
+    text-wrap: balance;
   }
 
   h1 {
-    font-size: 1.75rem; /* 28px */
-  }
-  
-  @media (min-width: 640px) {
-    h1 {
-      font-size: 2rem; /* 32px */
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    h1 {
-      font-size: 2.5rem; /* 40px */
-    }
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    letter-spacing: 0.01em;
   }
 
   h2 {
-    font-size: 1.5rem; /* 24px */
-  }
-  
-  @media (min-width: 640px) {
-    h2 {
-      font-size: 1.75rem; /* 28px */
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    h2 {
-      font-size: 2rem; /* 32px */
-    }
+    font-size: clamp(1.5rem, 3vw, 2rem);
   }
 
   h3 {
-    font-size: 1.25rem; /* 20px */
-  }
-  
-  @media (min-width: 640px) {
-    h3 {
-      font-size: 1.375rem; /* 22px */
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    h3 {
-      font-size: 1.5rem; /* 24px */
-    }
+    font-size: clamp(1.25rem, 2.5vw, 1.5rem);
   }
 
   h4 {
-    font-size: 1.125rem; /* 18px */
-  }
-  
-  @media (min-width: 1024px) {
-    h4 {
-      font-size: 1.25rem; /* 20px */
-    }
+    font-size: clamp(1.125rem, 2vw, 1.25rem);
   }
 
   h5 {
-    font-size: 1rem; /* 16px */
-  }
-  
-  @media (min-width: 1024px) {
-    h5 {
-      font-size: 1.125rem; /* 18px */
-    }
+    font-size: clamp(1rem, 1.5vw, 1.125rem);
   }
 
   h6 {
-    font-size: 0.875rem; /* 14px */
-  }
-  
-  @media (min-width: 1024px) {
-    h6 {
-      font-size: 1rem; /* 16px */
-    }
+    font-size: clamp(0.875rem, 1.25vw, 1rem);
   }
 
-  /* Body text - consistent across app */
+  /* Body text - optimized for readability */
   p {
-    font-size: 0.875rem; /* 14px mobile */
-    line-height: 1.6;
+    font-size: inherit;
+    line-height: 1.7;
+    max-width: 70ch;
   }
-  
-  @media (min-width: 640px) {
-    p {
-      font-size: 0.9375rem; /* 15px tablet */
-    }
-  }
-  
-  @media (min-width: 1024px) {
-    p {
-      font-size: 1rem; /* 16px desktop */
-    }
-  }
-  
+
   /* Small text */
   small, .text-small {
-    font-size: 0.75rem; /* 12px mobile */
+    font-size: 0.8125rem;
+    line-height: 1.5;
   }
   
   @media (min-width: 1024px) {
     small, .text-small {
-      font-size: 0.875rem; /* 14px desktop */
+      font-size: 0.875rem;
     }
+  }
+
+  /* Links */
+  a:not([class]) {
+    @apply text-primary underline-offset-2 transition-colors duration-200;
+  }
+  
+  a:not([class]):hover {
+    @apply text-primary/80;
+  }
+
+  /* Selection */
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
+  }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Smooth scrolling for reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Better image defaults */
+  img, video {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Table improvements */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    @apply text-left p-3;
+  }
+
+  th {
+    @apply font-semibold text-muted-foreground text-sm uppercase tracking-wider;
+  }
+
+  /* Form element improvements */
+  button, input, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  /* List improvements */
+  ul:not([class]), ol:not([class]) {
+    @apply pl-5 space-y-1;
+  }
+
+  ul:not([class]) {
+    list-style-type: disc;
+  }
+
+  ol:not([class]) {
+    list-style-type: decimal;
   }
 }
 
