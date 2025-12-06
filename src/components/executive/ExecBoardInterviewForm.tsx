@@ -25,6 +25,7 @@ const getCurrentSemester = () => {
 export const ExecBoardInterviewForm = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [submitted, setSubmitted] = useState(false);
   const [existingInterview, setExistingInterview] = useState<any>(null);
   const [userName, setUserName] = useState<string>("");
@@ -64,33 +65,39 @@ export const ExecBoardInterviewForm = () => {
   useEffect(() => {
     if (user) {
       checkExistingInterview();
+    } else {
+      setInitialLoading(false);
     }
   }, [user, formData.semester]);
 
   const checkExistingInterview = async () => {
-    const { data } = await supabase
-      .from("exec_board_interviews")
-      .select("*")
-      .eq("user_id", user?.id)
-      .eq("semester", formData.semester)
-      .maybeSingle();
+    try {
+      const { data } = await supabase
+        .from("exec_board_interviews")
+        .select("*")
+        .eq("user_id", user?.id)
+        .eq("semester", formData.semester)
+        .maybeSingle();
 
-    if (data) {
-      setExistingInterview(data);
-      setFormData({
-        semester: data.semester,
-        position: data.position,
-        full_name: data.full_name || userName,
-        progress_summary: data.progress_summary || "",
-        challenges_faced: data.challenges_faced || "",
-        projects_created: data.projects_created || "",
-        projects_participated: data.projects_participated || "",
-        projects_completed: data.projects_completed || "",
-        new_ideas: data.new_ideas || "",
-        lessons_learned: data.lessons_learned || "",
-        recommendations_for_successor: data.recommendations_for_successor || "",
-        additional_comments: data.additional_comments || ""
-      });
+      if (data) {
+        setExistingInterview(data);
+        setFormData({
+          semester: data.semester,
+          position: data.position,
+          full_name: data.full_name || userName,
+          progress_summary: data.progress_summary || "",
+          challenges_faced: data.challenges_faced || "",
+          projects_created: data.projects_created || "",
+          projects_participated: data.projects_participated || "",
+          projects_completed: data.projects_completed || "",
+          new_ideas: data.new_ideas || "",
+          lessons_learned: data.lessons_learned || "",
+          recommendations_for_successor: data.recommendations_for_successor || "",
+          additional_comments: data.additional_comments || ""
+        });
+      }
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -146,6 +153,23 @@ export const ExecBoardInterviewForm = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
     setSubmitted(false);
   };
+
+  if (initialLoading) {
+    return (
+      <Card className="border-2 border-amber-500/30">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-amber-600" />
+            End of Semester Interview
+          </CardTitle>
+          <CardDescription>Loading your interview data...</CardDescription>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (submitted && !existingInterview) {
     return (
