@@ -160,8 +160,8 @@ ModuleRegistry.registerModule({
 
 // Import and register additional modules
 import { EnhancedContractManager } from '@/components/contracts/EnhancedContractManager';
-import { FileText, GraduationCap, QrCode, ClipboardList, ClipboardCheck } from 'lucide-react';
-import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
+import { FileText, GraduationCap, QrCode, ClipboardList } from 'lucide-react';
+
 import GleeAcademy from '@/pages/GleeAcademy';
 import { QRCodeManagementModule } from '@/components/modules/QRCodeManagementModule';
 import { TestBuilder } from '@/components/test-builder/TestBuilder';
@@ -210,17 +210,5 @@ ModuleRegistry.registerModule({
   iconColor: 'indigo',
   category: 'education',
   component: TestBuilder,
-  requiredPermissions: ['admin', 'super-admin']
-});
-
-// Register Exit Interviews Module
-ModuleRegistry.registerModule({
-  id: 'exit-interviews',
-  title: 'Exit Interviews',
-  description: 'View and manage member end-of-semester exit interview submissions',
-  icon: ClipboardCheck,
-  iconColor: 'emerald',
-  category: 'administration',
-  component: ExitInterviewsModule,
   requiredPermissions: ['admin', 'super-admin']
 });
