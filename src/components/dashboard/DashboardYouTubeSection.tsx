@@ -108,7 +108,7 @@ export const DashboardYouTubeSection = () => {
     if (isPlaying) {
       return <>
           {video.title && <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-background/95 via-background/60 to-transparent p-2 sm:p-3 z-10 backdrop-blur-sm">
-              <h3 className="text-foreground text-xs sm:text-sm font-semibold truncate">
+              <h3 className="text-foreground text-[10px] sm:text-xs md:text-sm font-semibold truncate">
                 {video.title}
               </h3>
             </div>}
@@ -124,7 +124,7 @@ export const DashboardYouTubeSection = () => {
         
         {/* Title - theme-aware styling */}
         {video.title && <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-background/95 via-background/60 to-transparent p-2 sm:p-3 z-10 backdrop-blur-sm">
-            <h3 className="text-foreground text-xs sm:text-sm font-semibold truncate text-left">
+            <h3 className="text-foreground text-[10px] sm:text-xs md:text-sm font-semibold truncate text-left">
               {video.title}
             </h3>
           </div>}
