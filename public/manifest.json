@@ -1,9 +1,10 @@
 {
   "name": "GleeWorld - Spelman College Glee Club",
   "short_name": "GleeWorld",
-  "description": "Official digital platform of the Spelman College Glee Club - celebrating 100+ years of musical excellence",
-  "theme_color": "#1e3a8a",
-  "background_color": "#ffffff",
+  "description": "Official digital platform of the Spelman College Glee Club - To Amaze and Inspire. Celebrating 100+ years of musical excellence.",
+  "theme_color": "#BA1E1E",
+  "background_color": "#0a0a0a",
+  "version": "2.1.0",
   "display": "standalone",
   "orientation": "portrait",
   "scope": "/",

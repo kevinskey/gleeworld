@@ -1,5 +1,6 @@
 // Service Worker for Push Notifications
-const CACHE_NAME = 'gleeworld-v2-no-cache';
+// Updated: December 2024
+const CACHE_NAME = 'gleeworld-v3-dec2024';
 
 // Install event
 self.addEventListener('install', (event) => {
