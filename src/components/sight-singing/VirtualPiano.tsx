@@ -679,7 +679,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
-  const [startOctave, setStartOctave] = useState<number>(3); // Default starts at C3
+  const [startOctave, setStartOctave] = useState<number>(4); // Default starts at C4 (middle C)
   const [pianoSize, setPianoSize] = useState({
     width: 900,
     height: 600
@@ -791,24 +791,29 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }
   }, [volume, isMuted]);
 
-  // Scroll to selected octave range when dropdown changes
+  // Scroll to selected octave range when dropdown changes or on mount
   useEffect(() => {
-    if (keysContainerRef.current) {
-      const whiteKeyWidth = window.innerWidth >= 640 ? 69 : 60;
-      let scrollPosition = 0;
-      if (startOctave === 0) {
-        scrollPosition = 0;
-      } else if (startOctave === 1) {
-        scrollPosition = whiteKeyWidth * 9;
-      } else {
-        scrollPosition = whiteKeyWidth * (2 + (startOctave - 1) * 7);
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      if (keysContainerRef.current) {
+        const whiteKeyWidth = isMobile ? 50 : 69;
+        let scrollPosition = 0;
+        if (startOctave === 0) {
+          scrollPosition = 0;
+        } else if (startOctave === 1) {
+          scrollPosition = whiteKeyWidth * 9;
+        } else {
+          // Calculate position: octave 4 (middle C) should be centered
+          scrollPosition = whiteKeyWidth * (2 + (startOctave - 1) * 7);
+        }
+        keysContainerRef.current.scrollTo({
+          left: scrollPosition,
+          behavior: 'smooth'
+        });
       }
-      keysContainerRef.current.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth'
-      });
-    }
-  }, [startOctave]);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [startOctave, isMobile]);
   const playNote = useCallback(async (frequency: number, noteName: string) => {
     // Always ensure audio context is initialized and unlocked (mobile requirement)
     const audioContext = await initAudioContext();
