@@ -104,12 +104,11 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <img 
                       src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                       alt="Spelman College Glee Club" 
-                      className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0 drop-shadow-md relative"
+                      className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0 drop-shadow-md"
+                      style={isHbcuTheme ? { 
+                        filter: 'brightness(0) saturate(100%) invert(89%) sepia(54%) saturate(1029%) hue-rotate(359deg) brightness(103%) contrast(106%)'
+                      } : undefined}
                     />
-                    {isHbcuTheme && (
-                      <div className="absolute inset-0 rounded-full" style={{ boxShadow: '0 0 8px 2px rgba(255, 223, 0, 0.4)' }}></div>
-                    )}
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 pointer-events-none"></div>
                   </div>
                   <span 
                     className="font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap relative" 
