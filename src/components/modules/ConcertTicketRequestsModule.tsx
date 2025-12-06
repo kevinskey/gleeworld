@@ -75,7 +75,7 @@ export const ConcertTicketRequestsModule = () => {
       // Fetch all profiles to match by email or name
       const { data: profiles, error: profileError } = await supabase
         .from('gw_profiles')
-        .select('email, full_name, class_year, role');
+        .select('email, full_name, graduation_year, role');
       if (profileError) throw profileError;
 
       // Match requests with profile data
@@ -86,7 +86,7 @@ export const ConcertTicketRequestsModule = () => {
         );
         return {
           ...request,
-          class_year: matchedProfile?.class_year || null,
+          class_year: matchedProfile?.graduation_year || null,
           user_role: matchedProfile?.role || null
         };
       });
