@@ -59,16 +59,18 @@ export const AnnouncementsFlip = ({
     return (
       <div className={`overflow-hidden ${className || ''}`}>
         {/* Mobile Layout - Empty state */}
-        <div className="flex lg:hidden flex-col gap-2 p-3 rounded-lg" style={{
-          backgroundColor: isHbcuTheme ? 'transparent' : 'hsl(220,50%,15%)'
-        }}>
-          <div className="backdrop-blur-sm rounded-lg p-3 border shadow-sm" style={{
-            backgroundColor: isHbcuTheme ? 'rgba(139, 0, 0, 0.3)' : 'rgba(255,255,255,0.1)',
-            borderColor: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.2)'
-          }}>
-            <p className="text-xs" style={{ color: isHbcuTheme ? hbcuGold : '#ffffff', opacity: 0.7 }}>
-              No announcements
-            </p>
+        <div className="flex lg:hidden">
+          <div 
+            className="w-full rounded-xl px-4 py-3 shadow-lg border backdrop-blur-sm"
+            style={{
+              background: 'hsl(var(--muted))',
+              borderColor: 'hsl(var(--border))',
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg opacity-50">📢</span>
+              <p className="text-sm text-muted-foreground">No announcements</p>
+            </div>
           </div>
         </div>
 
@@ -112,24 +114,26 @@ export const AnnouncementsFlip = ({
   return <div className={`overflow-hidden ${className || ''}`} style={{
     perspective: '400px'
   }}>
-      {/* Mobile Layout - Stacked card design */}
-      <div className="flex lg:hidden flex-col gap-2 p-3 rounded-lg" style={{
-      backgroundColor: isHbcuTheme ? 'transparent' : 'hsl(220,50%,15%)'
-    }}>
-        {/* Mobile announcement card */}
-        <div key={current.id} className={`backdrop-blur-sm rounded-lg p-3 border shadow-sm overflow-x-auto scrollbar-hide ${getAnimationClass()}`} style={{
-        transformOrigin: 'center center',
-        backgroundColor: isHbcuTheme ? 'rgba(139, 0, 0, 0.3)' : 'rgba(255,255,255,0.1)',
-        borderColor: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.2)'
-      }}>
-          <p className="text-xs whitespace-nowrap" style={{
-          color: isHbcuTheme ? hbcuGold : '#ffffff'
-        }}>
-            <span className="font-semibold">{current.title}:</span>{' '}
-            <span style={{
-            opacity: 0.9
-          }}>{current.content}</span>
-          </p>
+      {/* Mobile Layout - Modern card design */}
+      <div className="flex lg:hidden">
+        <div 
+          key={current.id} 
+          className={`w-full rounded-xl px-4 py-3 shadow-lg border backdrop-blur-sm ${getAnimationClass()}`}
+          style={{
+            transformOrigin: 'center center',
+            background: isHbcuTheme 
+              ? `linear-gradient(135deg, ${hbcuRed} 0%, #a52a2a 100%)`
+              : 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)',
+            borderColor: isHbcuTheme ? hbcuGold : 'hsl(var(--primary)/0.3)',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📢</span>
+            <p className="text-sm font-medium text-white leading-snug">
+              <span className="font-bold">{current.title}:</span>{' '}
+              <span className="opacity-95">{current.content}</span>
+            </p>
+          </div>
         </div>
       </div>
 
