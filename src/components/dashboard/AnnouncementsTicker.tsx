@@ -68,20 +68,18 @@ export const AnnouncementsTicker = ({
   if (announcements.length === 0) {
     return (
       <>
-        {/* Mobile - Empty state with background */}
+        {/* Mobile - Empty state */}
         <div className={`lg:hidden ${className || ''}`}>
-          <div className="flex items-center gap-2 p-2">
-            <div 
-              className="shrink-0 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide shadow-sm bg-muted"
-              style={{
-                background: isHbcuTheme ? hbcuGold : undefined,
-                color: isHbcuTheme ? '#000000' : undefined
-              }}
-            >
-              📢 News
-            </div>
-            <div className="flex-1 text-xs text-muted-foreground">
-              No announcements
+          <div 
+            className="w-full rounded-xl px-4 py-3 shadow-lg border backdrop-blur-sm"
+            style={{
+              background: 'hsl(var(--muted))',
+              borderColor: 'hsl(var(--border))',
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-lg opacity-50">📢</span>
+              <p className="text-sm text-muted-foreground">No announcements</p>
             </div>
           </div>
         </div>
@@ -96,31 +94,33 @@ export const AnnouncementsTicker = ({
     );
   }
 
+  const hbcuRed = '#8B0000';
+
   return (
     <>
-      {/* Mobile - Compact card style */}
+      {/* Mobile - Modern card style */}
       <div className={`lg:hidden ${className || ''}`}>
-        <div className="flex items-center gap-2 p-2">
-          <div 
-            className="shrink-0 px-3 py-1.5 rounded text-[10px] font-bold uppercase tracking-wide shadow-sm"
-            style={{
-              background: isHbcuTheme ? hbcuGold : undefined,
-              color: isHbcuTheme ? '#000000' : undefined
-            }}
-          >
-            📢 News
-          </div>
-          <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
-            <div 
-              className="text-xs whitespace-nowrap"
-              style={{ color: isHbcuTheme ? hbcuGold : undefined }}
-            >
-              {announcements.map((a, i) => (
-                <span key={a.id}>
-                  <span className="font-semibold">{a.title}:</span> {a.content}
-                  {i < announcements.length - 1 && '  •  '}
-                </span>
-              ))}
+        <div 
+          className="w-full rounded-xl px-4 py-3 shadow-lg border backdrop-blur-sm"
+          style={{
+            background: isHbcuTheme 
+              ? `linear-gradient(135deg, ${hbcuRed} 0%, #a52a2a 100%)`
+              : 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.8) 100%)',
+            borderColor: isHbcuTheme ? hbcuGold : 'hsl(var(--primary)/0.3)',
+          }}
+        >
+          <div className="flex items-start gap-2">
+            <span className="text-lg shrink-0">📢</span>
+            <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
+              <p className="text-sm font-medium text-white whitespace-nowrap leading-snug">
+                {announcements.map((a, i) => (
+                  <span key={a.id}>
+                    <span className="font-bold">{a.title}:</span>{' '}
+                    <span className="opacity-95">{a.content}</span>
+                    {i < announcements.length - 1 && <span className="mx-2 opacity-60">•</span>}
+                  </span>
+                ))}
+              </p>
             </div>
           </div>
         </div>
