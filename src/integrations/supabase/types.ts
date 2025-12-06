@@ -2923,6 +2923,42 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_youtube_videos: {
+        Row: {
+          autoplay: boolean | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          muted: boolean | null
+          position: string
+          title: string | null
+          updated_at: string
+          video_id: string
+        }
+        Insert: {
+          autoplay?: boolean | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          muted?: boolean | null
+          position: string
+          title?: string | null
+          updated_at?: string
+          video_id: string
+        }
+        Update: {
+          autoplay?: boolean | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          muted?: boolean | null
+          position?: string
+          title?: string | null
+          updated_at?: string
+          video_id?: string
+        }
+        Relationships: []
+      }
       direct_messages: {
         Row: {
           created_at: string | null

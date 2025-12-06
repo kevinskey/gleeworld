@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
 import { DashboardHeroCarousel } from "@/components/dashboard/DashboardHeroCarousel";
+import { DashboardYouTubeSection } from "@/components/dashboard/DashboardYouTubeSection";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
 import { useModuleFavorites } from "@/hooks/useModuleFavorites";
@@ -647,6 +648,9 @@ export const MetalHeaderDashboard = ({
         <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
       </div>
 
+
+      {/* YouTube Videos Section - Two Column Layout */}
+      <DashboardYouTubeSection />
 
       {/* Dashboard Hero Carousel */}
       <DashboardHeroCarousel className="px-[111px] pt-[5px] pl-[5px] pr-[5px] pb-[5px] mx-0" />
