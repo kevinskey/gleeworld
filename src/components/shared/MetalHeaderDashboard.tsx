@@ -548,27 +548,60 @@ export const MetalHeaderDashboard = ({
     }
     if (moduleConfig?.component) {
       const ModuleComponent = moduleConfig.component;
-      return <div className="space-y-6 relative min-h-screen">
-          
-          <div className="relative z-10 space-y-4">
-            {/* Module Header with Back Button */}
-            <div className="flex items-center justify-between gap-2 py-3 px-2">
-              <h1 className="text-xl sm:text-2xl font-bold text-foreground truncate">
-                {moduleConfig.title}
-              </h1>
-              <Button variant="outline" size="sm" onClick={handleBackToModules} className="flex items-center gap-1 bg-background text-foreground border-border hover:bg-accent shrink-0">
-                <span className="hidden sm:inline">← Back to Dashboard</span>
-                <span className="sm:hidden">← Back</span>
+      const IconComponent = moduleConfig.icon;
+      return <div className="relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* Module Metal Header */}
+          <div 
+            className="relative z-10 rounded-lg border-2 shadow-lg py-3 px-4 sm:px-6 mb-6"
+            style={{
+              background: isHbcuTheme 
+                ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' 
+                : 'linear-gradient(to bottom, #cbd5e1, #94a3b8, #64748b)',
+              borderColor: isHbcuTheme ? hbcuRed : '#64748b'
+            }}
+          >
+            <div className="flex items-center justify-between gap-3">
+              {/* Back Button */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleBackToModules} 
+                className="flex items-center gap-1 shrink-0"
+                style={{ 
+                  color: isHbcuTheme ? hbcuGold : '#1e293b',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                <span>← Back to Dashboard</span>
               </Button>
+              
+              {/* Module Title */}
+              <div className="flex items-center gap-2 flex-1 justify-center">
+                {IconComponent && (
+                  <IconComponent 
+                    className="h-5 w-5 shrink-0" 
+                    style={{ color: isHbcuTheme ? hbcuGold : '#dc2626' }}
+                  />
+                )}
+                <h1 
+                  className="text-sm sm:text-base lg:text-lg font-bold tracking-wide font-mono uppercase"
+                  style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}
+                >
+                  {moduleConfig.title}
+                </h1>
+              </div>
+              
+              {/* Spacer for balance */}
+              <div className="w-24 sm:w-32 shrink-0"></div>
             </div>
-            
-            {/* Module Content */}
-            <ModuleComponent user={{
+          </div>
+          
+          {/* Module Content */}
+          <ModuleComponent user={{
             ...user,
             is_admin: isAdmin,
             is_super_admin: user.role === 'super-admin'
           }} isFullPage={true} onNavigate={handleModuleSelect} />
-          </div>
         </div>;
     }
   }
