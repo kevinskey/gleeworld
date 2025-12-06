@@ -112,12 +112,12 @@ export const AnnouncementsTicker = ({
           <div className="flex items-start gap-2">
             <span className="text-lg shrink-0">📢</span>
             <div className="flex-1 overflow-x-auto overflow-y-hidden scrollbar-hide">
-              <p className="text-sm font-medium text-white whitespace-nowrap leading-snug">
+              <p className="text-sm font-medium whitespace-nowrap leading-snug" style={{ color: '#FFFFFF' }}>
                 {announcements.map((a, i) => (
                   <span key={a.id}>
                     <span className="font-bold">{a.title}:</span>{' '}
-                    <span className="opacity-95">{a.content}</span>
-                    {i < announcements.length - 1 && <span className="mx-2 opacity-60">•</span>}
+                    <span style={{ opacity: 0.95 }}>{a.content}</span>
+                    {i < announcements.length - 1 && <span className="mx-2" style={{ opacity: 0.6 }}>•</span>}
                   </span>
                 ))}
               </p>

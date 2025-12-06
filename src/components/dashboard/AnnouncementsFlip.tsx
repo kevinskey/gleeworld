@@ -129,9 +129,9 @@ export const AnnouncementsFlip = ({
         >
           <div className="flex items-center gap-2">
             <span className="text-lg">📢</span>
-            <p className="text-sm font-medium text-white leading-snug">
+            <p className="text-sm font-medium leading-snug" style={{ color: '#FFFFFF' }}>
               <span className="font-bold">{current.title}:</span>{' '}
-              <span className="opacity-95">{current.content}</span>
+              <span style={{ opacity: 0.95 }}>{current.content}</span>
             </p>
           </div>
         </div>
