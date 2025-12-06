@@ -43,20 +43,43 @@ export const DashboardYouTubeSection = () => {
     }
   };
 
+  // Extract video ID from various YouTube URL formats or return as-is if already an ID
+  const extractVideoId = (input: string): string => {
+    if (!input) return '';
+    
+    // Already a plain video ID (no slashes or dots)
+    if (/^[\w-]{11}$/.test(input)) return input;
+    
+    // youtu.be/VIDEO_ID format
+    const shortMatch = input.match(/youtu\.be\/([^?&]+)/);
+    if (shortMatch) return shortMatch[1];
+    
+    // youtube.com/watch?v=VIDEO_ID format
+    const watchMatch = input.match(/[?&]v=([^&]+)/);
+    if (watchMatch) return watchMatch[1];
+    
+    // youtube.com/embed/VIDEO_ID format
+    const embedMatch = input.match(/embed\/([^?&]+)/);
+    if (embedMatch) return embedMatch[1];
+    
+    return input;
+  };
+
   const getEmbedUrl = (videoId: string, autoplay: boolean, muted: boolean) => {
+    const id = extractVideoId(videoId);
     const params = new URLSearchParams({
-      autoplay: '1', // Always autoplay when clicked
+      autoplay: '1',
       mute: muted ? '1' : '0',
       rel: '0',
       modestbranding: '1',
       controls: '1'
     });
-    return `https://www.youtube.com/embed/${videoId}?${params.toString()}`;
+    return `https://www.youtube.com/embed/${id}?${params.toString()}`;
   };
 
   const getThumbnailUrl = (videoId: string) => {
-    // Use maxresdefault for high quality, fallback handled by img onError
-    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    const id = extractVideoId(videoId);
+    return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
   };
 
   const leftVideo = videos.find(v => v.position === 'left');
@@ -124,7 +147,7 @@ export const DashboardYouTubeSection = () => {
         {/* Thumbnail Image */}
         <img
           src={imgError 
-            ? `https://img.youtube.com/vi/${video.video_id}/hqdefault.jpg`
+            ? `https://img.youtube.com/vi/${extractVideoId(video.video_id)}/hqdefault.jpg`
             : getThumbnailUrl(video.video_id)
           }
           alt={video.title || 'Video thumbnail'}
