@@ -378,7 +378,7 @@ export const DashboardHeroManagerModule = () => {
           }))} min={2} max={30} step={1} className="w-full" />
           </div>
 
-          <Button onClick={updateScrollSettings} className="w-full bg-zinc-200 hover:bg-zinc-100">
+          <Button onClick={updateScrollSettings} className="w-full bg-zinc-200 hover:bg-zinc-100 p-[10px]">
             <Save className="h-4 w-4 mr-2" />
             Save Settings
           </Button>
