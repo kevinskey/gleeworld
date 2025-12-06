@@ -105,12 +105,10 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
                       alt="Spelman College Glee Club" 
                       className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0 drop-shadow-md relative"
-                      style={isHbcuTheme ? { 
-                        filter: 'brightness(1.3) contrast(1.1)',
-                        background: 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)',
-                        borderRadius: '50%'
-                      } : undefined}
                     />
+                    {isHbcuTheme && (
+                      <div className="absolute inset-0 rounded-full" style={{ boxShadow: '0 0 8px 2px rgba(255, 223, 0, 0.4)' }}></div>
+                    )}
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 pointer-events-none"></div>
                   </div>
                   <span 
