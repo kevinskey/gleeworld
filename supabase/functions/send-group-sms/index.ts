@@ -132,23 +132,22 @@ const handler = async (req: Request): Promise<Response> => {
     let targetPhoneNumbers: string[] = [];
     
     if (isAllMembersGroup) {
-      // Fetch all profiles with role = 'member' who have phone numbers
-      const { data: allMembers, error: allMembersError } = await supabase
+      // Fetch ALL users with phone numbers (regardless of role)
+      const { data: allUsers, error: allUsersError } = await supabase
         .from('gw_profiles')
         .select('phone_number, user_id, role')
         .neq('user_id', senderUserId)
         .not('phone_number', 'is', null)
-        .neq('phone_number', '')
-        .eq('role', 'member');
+        .neq('phone_number', '');
       
-      if (allMembersError) {
-        console.error('Error fetching all members:', allMembersError);
-        throw new Error('Failed to get all members');
+      if (allUsersError) {
+        console.error('Error fetching all users:', allUsersError);
+        throw new Error('Failed to get all users');
       }
       
-      console.log(`All Members group: Found ${allMembers?.length || 0} members with phone numbers`);
+      console.log(`All Members group: Found ${allUsers?.length || 0} users with phone numbers (all roles)`);
       
-      targetPhoneNumbers = (allMembers || [])
+      targetPhoneNumbers = (allUsers || [])
         .map(profile => profile.phone_number)
         .filter(phone => phone)
         .map(phone => formatPhoneNumber(phone as string));
