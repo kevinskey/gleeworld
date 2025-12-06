@@ -292,7 +292,7 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'default') {
     return <div className="min-h-screen">
         <ConcertTicketBanner />
-        <div className="sm:py-4 sm:px-4 md:py-6 md:px-6 lg:py-4 lg:px-4 max-w-7xl mx-auto px-0 py-px">
+        <div className="sm:py-4 sm:px-4 md:py-6 lg:py-4 lg:px-4 max-w-7xl mx-auto px-0 py-px md:px-0">
           <MetalHeaderDashboard user={{
           id: profile.user_id,
           email: profile.email || '',
