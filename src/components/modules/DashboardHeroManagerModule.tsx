@@ -334,7 +334,7 @@ export const DashboardHeroManagerModule = () => {
       <Alert className="border-blue-200 bg-blue-50">
         <Camera className="h-4 w-4" />
         <AlertDescription className="flex items-center justify-between">
-          <span>Photos tagged with "Glee Cam" in PR Hub automatically sync to landing page heroes</span>
+          <span className="text-primary-foreground">Photos tagged with "Glee Cam" in PR Hub automatically sync to landing page heroes</span>
           <Button onClick={syncGleeCamPhotos} disabled={syncing} size="sm" variant="outline">
             {syncing ? <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
