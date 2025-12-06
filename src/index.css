@@ -338,7 +338,7 @@
 .hbcu-theme .btn-secondary {
   background: hsl(45 65% 55%) !important; /* Gold background */
   border: 2px solid hsl(0 72% 42%) !important; /* Red border */
-  color: hsl(135 38% 27%) !important; /* Green text */
+  color: hsl(0 0% 0%) !important; /* Black text for readability */
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -346,6 +346,16 @@
 .hbcu-theme .btn-secondary:hover {
   background: hsl(45 65% 65%) !important;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* HBCU Primary button override - gold background must have dark text */
+.hbcu-theme button.bg-primary,
+.hbcu-theme .bg-primary {
+  color: hsl(0 0% 0%) !important; /* Force black text on gold */
+}
+
+.hbcu-theme .text-primary-foreground {
+  color: hsl(0 0% 0%) !important; /* Force black text */
 }
 
 /* HBCU Card Styling */
