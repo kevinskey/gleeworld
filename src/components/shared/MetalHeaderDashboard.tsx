@@ -584,7 +584,7 @@ export const MetalHeaderDashboard = ({
                   />
                 )}
                 <h1 
-                  className="text-sm sm:text-base lg:text-lg font-bold tracking-wide font-mono uppercase"
+                  className="text-base sm:text-xl lg:text-2xl font-bold tracking-wide font-mono uppercase"
                   style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}
                 >
                   {moduleConfig.title}
