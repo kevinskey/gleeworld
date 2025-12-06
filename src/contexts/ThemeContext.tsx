@@ -15,6 +15,8 @@ interface ThemeContextType {
   themeName: ThemeName;
   setTheme: (theme: ThemeName) => Promise<void>;
   loading: boolean;
+  isDarkMode: boolean;
+  toggleDarkMode: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -23,6 +25,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [themeName, setThemeName] = useState<ThemeName>(DEFAULT_THEME);
   const [loading, setLoading] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    // Check localStorage for saved preference
+    const saved = localStorage.getItem('gw-dark-mode');
+    if (saved !== null) return saved === 'true';
+    // Default to system preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
 
   // Load user's theme preference from Supabase
   useEffect(() => {
@@ -56,9 +65,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Apply theme to document root whenever it changes
   useEffect(() => {
-    console.log('🎨 Applying theme to document:', themeName);
-    applyThemeToDocument(themeName);
-  }, [themeName]);
+    applyThemeToDocument(themeName, isDarkMode);
+  }, [themeName, isDarkMode]);
+
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setIsDarkMode(prev => {
+      const newValue = !prev;
+      localStorage.setItem('gw-dark-mode', String(newValue));
+      return newValue;
+    });
+  };
 
   // Save theme preference to Supabase and update state
   const setTheme = async (newTheme: ThemeName) => {
@@ -88,7 +105,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const currentTheme = getTheme(themeName);
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, themeName, setTheme, loading }}>
+    <ThemeContext.Provider value={{ currentTheme, themeName, setTheme, loading, isDarkMode, toggleDarkMode }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -109,15 +126,16 @@ export function useTheme() {
  * Apply theme colors to CSS custom properties on document root
  * This allows all components to use the theme colors via CSS variables
  */
-function applyThemeToDocument(themeName: ThemeName) {
+function applyThemeToDocument(themeName: ThemeName, isDarkMode: boolean) {
   const theme = getTheme(themeName);
   const root = document.documentElement;
 
-  console.log('🎨 Theme being applied:', {
-    themeName,
-    background: theme.background,
-    colors: theme.colors
-  });
+  // Apply dark mode class
+  if (isDarkMode || themeName === 'music' || themeName === 'hbcu') {
+    root.classList.add('dark');
+  } else {
+    root.classList.remove('dark');
+  }
 
   // Apply color variables
   Object.entries(theme.colors).forEach(([key, value]) => {
@@ -136,21 +154,12 @@ function applyThemeToDocument(themeName: ThemeName) {
     const bgSize = theme.background.size || 'cover';
     const bgValue = `${theme.background.value} no-repeat ${theme.background.position || 'center center'} / ${bgSize}`;
     root.style.setProperty('--theme-background', bgValue);
-    console.log('🎨 Set --theme-background (image) to:', bgValue);
   } else if (theme.background.type === 'gradient' || theme.background.type === 'solid') {
     root.style.setProperty('--theme-background', theme.background.value);
-    console.log('🎨 Set --theme-background to:', theme.background.value);
   }
 
   // Store theme name as data attribute for CSS targeting
   root.setAttribute('data-theme', themeName);
-  
-  // Apply dark mode class for dark themes
-  if (themeName === 'music' || themeName === 'hbcu') {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
   
   // Apply HBCU theme class for special styling
   if (themeName === 'hbcu') {
