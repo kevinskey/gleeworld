@@ -72,94 +72,47 @@ export const FastPDFViewer: React.FC<FastPDFViewerProps> = ({
         setError(null);
         clearCache();
 
-        console.log('FastPDFViewer: Loading PDF document:', signedUrl);
-        console.log('FastPDFViewer: Original pdfUrl:', pdfUrl);
-        console.log('FastPDFViewer: URL timestamp check:', {
-          isSignedUrl: signedUrl.includes('token='),
-          urlLength: signedUrl.length,
-          containsExp: signedUrl.includes('exp')
-        });
-
-        let doc;
-        try {
-          // Method 1: Direct URL load
-          doc = await pdfjsLib.getDocument({ 
-            url: signedUrl,
-            withCredentials: false,
+        const doc = await pdfjsLib.getDocument({ 
+          url: signedUrl,
+          withCredentials: false,
+          cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.3.31/cmaps/',
+          cMapPacked: true,
+          disableAutoFetch: false,
+          disableStream: false
+        }).promise;
+        if (doc) {
+          if (cancelled) return;
+          setPdf(doc);
+          setTotalPages(doc.numPages);
+          setCurrentPage(1);
+        } else {
+          // Fallback: Fetch as ArrayBuffer
+          const resp = await fetch(signedUrl, {
+            method: 'GET',
+            headers: { 'Accept': 'application/pdf,*/*' },
+            mode: 'cors'
+          });
+          
+          if (!resp.ok) {
+            throw new Error(`Fetch failed: ${resp.status}`);
+          }
+          
+          const ab = await resp.arrayBuffer();
+          if (ab.byteLength === 0) {
+            throw new Error('PDF file is empty');
+          }
+          
+          const fallbackDoc = await pdfjsLib.getDocument({ 
+            data: ab,
             cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.3.31/cmaps/',
             cMapPacked: true
           }).promise;
-          console.log('FastPDFViewer: PDF loaded with direct method, pages:', doc.numPages);
-        } catch (primaryErr) {
-          console.error('Primary PDF load failed with details:', {
-            error: primaryErr,
-            message: primaryErr.message,
-            name: primaryErr.name,
-            url: signedUrl,
-            originalPdfUrl: pdfUrl
-          });
-          try {
-            // Method 2: ArrayBuffer with better headers and token refresh on auth errors
-            let fetchUrl = signedUrl;
-            
-            // Check if this is a token expiration error and try to refresh the URL
-            if (primaryErr.message && (primaryErr.message.includes('400') || primaryErr.message.includes('InvalidJWT') || primaryErr.message.includes('exp'))) {
-              console.log('FastPDFViewer: Detected expired token, attempting to refresh...');
-              // For signed URLs that are expired, we need to get a fresh one
-              // This is a limitation - we can't refresh from here without the original path
-              // The useSheetMusicUrl hook should handle this case
-            }
-            
-            const resp = await fetch(fetchUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/pdf,*/*',
-                'Cache-Control': 'no-cache'
-              },
-              mode: 'cors'
-            });
-            
-            if (!resp.ok) {
-              const errorText = await resp.text();
-              console.error('FastPDFViewer: Fetch response details:', {
-                status: resp.status,
-                statusText: resp.statusText,
-                errorText: errorText
-              });
-              
-              if (resp.status === 400 && errorText.includes('InvalidJWT')) {
-                throw new Error(`PDF access token has expired. Please refresh the page and try again. (${resp.status})`);
-              }
-              
-              throw new Error(`Fetch failed: ${resp.status} ${resp.statusText}`);
-            }
-            
-            const ab = await resp.arrayBuffer();
-            console.log('FastPDFViewer: Fetched ArrayBuffer, size:', ab.byteLength);
-            
-            if (ab.byteLength === 0) {
-              throw new Error('PDF file is empty or corrupted');
-            }
-            
-            doc = await pdfjsLib.getDocument({ 
-              data: ab,
-              cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@5.3.31/cmaps/',
-              cMapPacked: true
-            }).promise;
-            console.log('FastPDFViewer: PDF loaded with ArrayBuffer method, pages:', doc.numPages);
-          } catch (secondaryErr) {
-            console.error('Secondary PDF load also failed:', secondaryErr);
-            throw new Error(`Failed to load PDF: ${primaryErr.message}. Secondary attempt: ${secondaryErr.message}`);
-          }
+
+          if (cancelled) return;
+          setPdf(fallbackDoc);
+          setTotalPages(fallbackDoc.numPages);
+          setCurrentPage(1);
         }
-
-        if (cancelled) return;
-
-        setPdf(doc);
-        setTotalPages(doc.numPages);
-        setCurrentPage(1);
-        
-        console.log(`FastPDFViewer: PDF loaded successfully with ${doc.numPages} pages`);
       } catch (err) {
         console.error('Error loading PDF:', err);
         setError('Failed to load PDF document');

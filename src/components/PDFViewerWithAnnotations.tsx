@@ -95,9 +95,6 @@ const scrollModePluginInstance = scrollModePlugin();
 
   const suppressClickUntilRef = useRef<number>(0);
 
-  console.log('PDFViewerWithAnnotations: Props received:', { pdfUrl, musicTitle });
-  console.log('PDFViewerWithAnnotations: URL processing result:', { signedUrl, urlLoading, urlError });
-  console.log('PDFViewerWithAnnotations: Component state:', { isLoading, error, annotationMode, hasAnnotations });
   const [currentMarkedScoreId, setCurrentMarkedScoreId] = useState<string | null>(null);
   
   // Save prompt state and imperative handle
@@ -132,21 +129,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState(1);
 
-  // Page navigation helpers (annotation mode)
   const goToPage = useCallback((page: number) => {
     const total = totalPages || (pdf?.numPages ?? 0) || 1;
     const clamped = Math.max(1, Math.min(page, total));
-    console.log('PDFViewerWithAnnotations: goToPage called', { page, clamped, currentPage, totalPages });
     if (clamped !== currentPage) {
-      console.log('PDFViewerWithAnnotations: Setting page to', clamped);
       setCurrentPage(clamped);
-    } else {
-      console.log('PDFViewerWithAnnotations: Page unchanged, staying at', currentPage);
     }
   }, [currentPage, totalPages, pdf]);
 
   const nextPage = useCallback(() => {
-    console.log('PDFViewerWithAnnotations: nextPage called', { currentPage, totalPages });
     if (isLoading) return;
     if (currentPage < (totalPages || (pdf?.numPages ?? 0) || 1)) {
       goToPage(currentPage + 1);
@@ -154,7 +145,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   }, [currentPage, totalPages, pdf, isLoading, goToPage]);
 
   const prevPage = useCallback(() => {
-    console.log('PDFViewerWithAnnotations: prevPage called', { currentPage, totalPages });
     if (isLoading) return;
     if (currentPage > 1) {
       goToPage(currentPage - 1);
@@ -377,7 +367,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
   // Handle iframe load
   const handleIframeLoad = () => {
-    console.log('PDFViewerWithAnnotations: Google Docs viewer loaded successfully');
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -387,7 +376,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
   };
 
   const handleIframeError = () => {
-    console.error('PDFViewerWithAnnotations: Google viewer failed to load', { provider: googleProvider });
     if (useGoogle && googleProvider === 'gview') {
       setGoogleProvider('viewerng');
       setIsLoading(true);
@@ -650,27 +638,21 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     const loadPdf = async () => {
       try {
         setIsLoading(true);
-        console.log('PDFViewerWithAnnotations: Loading PDF for viewing:', signedUrl);
 
         // Ensure canvas exists
         const ready = await waitForCanvas();
-        if (!ready) {
-          console.error('PDFViewerWithAnnotations: Canvas not ready after waiting');
-          return;
-        }
+        if (!ready) return;
 
         let doc;
         try {
-          // Try loading by URL first
-          console.log('PDFViewerWithAnnotations: Attempting to load PDF from URL');
           doc = await pdfjsLib.getDocument({ 
             url: signedUrl,
             cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
-            cMapPacked: true
+            cMapPacked: true,
+            disableAutoFetch: false,
+            disableStream: false
           }).promise;
-          console.log('PDFViewerWithAnnotations: PDF loaded successfully, pages:', doc.numPages);
         } catch (primaryErr) {
-          console.warn('PDFViewerWithAnnotations: Primary PDF load failed, retrying with ArrayBuffer', primaryErr);
           const resp = await fetch(signedUrl);
           if (!resp.ok) throw new Error(`Fetch failed: ${resp.status}`);
           const ab = await resp.arrayBuffer();
@@ -679,7 +661,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/cmaps/',
             cMapPacked: true
           }).promise;
-          console.log('PDFViewerWithAnnotations: PDF loaded with ArrayBuffer method, pages:', doc.numPages);
         }
 
         if (cancelled) return;
@@ -687,38 +668,25 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         setTotalPages(doc.numPages);
 
         // Render current page
-        console.log('PDFViewerWithAnnotations: Rendering page', currentPage);
         const page = await doc.getPage(currentPage);
         const canvas = canvasRef.current;
-        if (!canvas) {
-          console.error('PDFViewerWithAnnotations: Canvas ref lost during render');
-          return;
-        }
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          console.error('PDFViewerWithAnnotations: Could not get canvas context');
-          return;
-        }
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+        if (!ctx) return;
 
-        // Render at full scale to show complete score length
+        // Render at optimal scale
         const baseViewport = page.getViewport({ scale: 1 });
         const containerWidth = containerRef.current?.clientWidth || baseViewport.width;
-        
-        // Use a scale that maintains readability while showing full height
         const fitScale = Math.max(0.8, Math.min(2.0, containerWidth / baseViewport.width));
         const viewport = page.getViewport({ scale: fitScale });
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
-        console.log('PDFViewerWithAnnotations: Canvas dimensions set:', { width: canvas.width, height: canvas.height, scale: fitScale });
-
-        const renderContext = { canvasContext: ctx, viewport } as const;
-        await page.render(renderContext).promise;
+        await page.render({ canvasContext: ctx, viewport }).promise;
         setScale(fitScale);
-        console.log('PDFViewerWithAnnotations: PDF page rendered successfully');
         setError(null);
       } catch (err) {
-        console.error('PDFViewerWithAnnotations: Error loading PDF:', err);
         toast.error('Failed to load PDF');
         setError('Failed to load PDF');
       } finally {
