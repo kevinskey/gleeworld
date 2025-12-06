@@ -7,6 +7,7 @@ import { useModuleFavorites } from "@/hooks/useModuleFavorites";
 import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 import { useDashboardCardOrder } from "@/hooks/useDashboardCardOrder";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useTheme } from "@/contexts/ThemeContext";
 import { ModuleRegistry } from '@/utils/moduleRegistry';
 import { STANDARD_MEMBER_MODULE_IDS } from '@/config/executive-modules';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
@@ -179,6 +180,12 @@ export const MetalHeaderDashboard = ({
   const {
     isSuperAdmin
   } = useUserRole();
+  const { themeName } = useTheme();
+  
+  // HBCU theme colors
+  const isHbcuTheme = themeName === 'hbcu';
+  const hbcuGold = '#FFDF00';
+  const hbcuRed = '#8B0000';
   const {
     cardOrder,
     saveCardOrder,
@@ -568,22 +575,66 @@ export const MetalHeaderDashboard = ({
   // All users get the full metal header dashboard experience
   return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Metal Plate Header */}
-      <div className="relative z-10 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg border-2 border-slate-400 dark:border-slate-500 shadow-lg py-4 px-3 sm:px-5 text-slate-800 dark:text-slate-100 flex items-center justify-between min-h-[56px]">
+      <div 
+        className="relative z-10 rounded-lg border-2 shadow-lg py-4 px-3 sm:px-5 flex items-center justify-between min-h-[56px]"
+        style={{
+          background: isHbcuTheme 
+            ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' 
+            : undefined,
+          borderColor: isHbcuTheme ? hbcuRed : undefined
+        }}
+      >
+        {!isHbcuTheme && <div className="absolute inset-0 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg -z-10" />}
+        
         {/* Left Rivet */}
-        <div className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+        <div 
+          className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 rounded-full border shadow-inner"
+          style={{
+            background: isHbcuTheme 
+              ? `linear-gradient(to bottom right, ${hbcuGold}, #B8860B)` 
+              : undefined,
+            borderColor: isHbcuTheme ? '#B8860B' : undefined
+          }}
+        >
+          {!isHbcuTheme && <div className="absolute inset-0 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full" />}
+          <div 
+            className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            style={{ backgroundColor: isHbcuTheme ? '#8B6914' : undefined }}
+          >
+            {!isHbcuTheme && <div className="absolute inset-0 bg-slate-600 dark:bg-slate-300 rounded-full" />}
+          </div>
         </div>
         
         {/* Right Rivet */}
-        <div className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full border border-slate-500 dark:border-slate-400 shadow-inner">
-          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-slate-600 dark:bg-slate-300 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+        <div 
+          className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 rounded-full border shadow-inner"
+          style={{
+            background: isHbcuTheme 
+              ? `linear-gradient(to bottom right, ${hbcuGold}, #B8860B)` 
+              : undefined,
+            borderColor: isHbcuTheme ? '#B8860B' : undefined
+          }}
+        >
+          {!isHbcuTheme && <div className="absolute inset-0 bg-gradient-to-br from-slate-400 via-slate-300 to-slate-500 dark:from-slate-500 dark:via-slate-400 dark:to-slate-600 rounded-full" />}
+          <div 
+            className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            style={{ backgroundColor: isHbcuTheme ? '#8B6914' : undefined }}
+          >
+            {!isHbcuTheme && <div className="absolute inset-0 bg-slate-600 dark:bg-slate-300 rounded-full" />}
+          </div>
         </div>
 
         {/* Empty spacer to balance layout */}
         <div className="w-8 h-8 sm:w-10 sm:h-10 shrink-0 ml-4 sm:ml-8"></div>
 
         {/* Personalized Title - Centered */}
-        <h1 className="text-base sm:text-xl lg:text-2xl font-bold tracking-wide font-mono uppercase text-black truncate flex-1 text-center px-2">
+        <h1 
+          className="text-sm sm:text-lg lg:text-xl font-bold tracking-wide font-mono uppercase flex-1 text-center px-2"
+          style={{ 
+            color: isHbcuTheme ? hbcuGold : '#000000',
+            textShadow: isHbcuTheme ? 'none' : undefined
+          }}
+        >
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
