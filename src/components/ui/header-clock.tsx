@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface ClockProps {
   className?: string;
@@ -10,6 +11,11 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showCountdown, setShowCountdown] = useState(false);
   const isMobile = useIsMobile();
+  const { themeName } = useTheme();
+  
+  // Theme-specific styling
+  const isHbcuTheme = themeName === 'hbcu';
+  const clockColor = isHbcuTheme ? '#FFD700' : undefined; // Bright gold for HBCU
 
   useEffect(() => {
     // Initialize with current time
@@ -91,7 +97,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           onClick={() => setShowCountdown(!showCountdown)}
         >
           {/* SVG Clock with spinning globe - smaller on mobile */}
-          <svg width="28" height="28" viewBox="0 0 40 40" className="text-slate-800">
+          <svg width="28" height="28" viewBox="0 0 40 40" style={{ color: clockColor || '#1e293b' }}>
             <defs>
               {/* Gradient for 3D effect */}
               <radialGradient id="headerGlobeGradient" cx="40%" cy="40%">
@@ -232,7 +238,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           onClick={() => setShowCountdown(!showCountdown)}
         >
           {/* SVG Clock with spinning globe */}
-          <svg width="36" height="36" viewBox="0 0 40 40" className="text-slate-800">
+          <svg width="36" height="36" viewBox="0 0 40 40" style={{ color: clockColor || '#1e293b' }}>
             <defs>
               {/* Gradient for 3D effect */}
               <radialGradient id="desktopGlobeGradient" cx="40%" cy="40%">
@@ -341,7 +347,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
         
         {/* Countdown Text - Visible on desktop */}
         <div className="hidden lg:block">
-          <span className="text-sm text-slate-700 font-medium whitespace-nowrap">
+          <span className="text-sm font-medium whitespace-nowrap" style={{ color: isHbcuTheme ? '#FFD700' : '#334155' }}>
             🎄 {getCountdownText()}
           </span>
         </div>
