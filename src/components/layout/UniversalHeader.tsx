@@ -106,7 +106,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       alt="Spelman College Glee Club" 
                       className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0 drop-shadow-md"
                       style={isHbcuTheme ? { 
-                        filter: 'brightness(0) saturate(100%) invert(89%) sepia(54%) saturate(1029%) hue-rotate(359deg) brightness(103%) contrast(106%)'
+                        filter: 'brightness(0) saturate(100%) invert(85%) sepia(62%) saturate(1000%) hue-rotate(2deg) brightness(104%) contrast(104%)'
                       } : undefined}
                     />
                   </div>
