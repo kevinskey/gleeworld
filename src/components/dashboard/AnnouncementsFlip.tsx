@@ -56,7 +56,46 @@ export const AnnouncementsFlip = ({
     }
   };
   if (announcements.length === 0) {
-    return <span className="text-xs sm:text-sm text-muted-foreground">No announcements</span>;
+    return (
+      <div className={`overflow-hidden ${className || ''}`}>
+        {/* Mobile Layout - Empty state */}
+        <div className="flex lg:hidden flex-col gap-2 p-3 rounded-lg" style={{
+          backgroundColor: isHbcuTheme ? 'transparent' : 'hsl(220,50%,15%)'
+        }}>
+          <div className="backdrop-blur-sm rounded-lg p-3 border shadow-sm" style={{
+            backgroundColor: isHbcuTheme ? 'rgba(139, 0, 0, 0.3)' : 'rgba(255,255,255,0.1)',
+            borderColor: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.2)'
+          }}>
+            <p className="text-xs" style={{ color: isHbcuTheme ? hbcuGold : '#ffffff', opacity: 0.7 }}>
+              No announcements
+            </p>
+          </div>
+        </div>
+
+        {/* Desktop Layout - Empty state */}
+        <div className="hidden lg:flex items-center gap-3 px-3 h-12">
+          <div className="shrink-0 relative px-6 rounded-sm text-xs font-bold uppercase tracking-wider h-10 flex items-center shadow-md border py-[20px]" style={{
+            background: isHbcuTheme ? hbcuGold : 'linear-gradient(to bottom, #94a3b8, #64748b, #475569)',
+            color: isHbcuTheme ? '#000000' : '#f1f5f9',
+            borderColor: isHbcuTheme ? hbcuRed : 'rgba(71, 85, 105, 0.5)',
+            textShadow: isHbcuTheme ? 'none' : '0 1px 2px rgba(0,0,0,0.3)'
+          }}>
+            {!isHbcuTheme && <>
+              <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+              <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
+            </>}
+            <span className="relative px-1">Announcements</span>
+          </div>
+          <div className="flex-1 overflow-hidden flex items-center justify-center py-0 bg-muted rounded-md" style={{
+            backgroundColor: isHbcuTheme ? 'transparent' : undefined
+          }}>
+            <div className="text-sm text-muted-foreground px-4 py-2">
+              No announcements
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
   const current = announcements[currentIndex];
 
