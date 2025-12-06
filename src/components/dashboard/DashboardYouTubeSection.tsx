@@ -57,14 +57,17 @@ export const DashboardYouTubeSection = () => {
     if (embedMatch) return embedMatch[1];
     return input;
   };
-  const getEmbedUrl = (videoId: string, autoplay: boolean, muted: boolean) => {
+  // When user clicks play, we DON'T mute - they initiated the interaction
+  // Mobile browsers allow unmuted playback when triggered by user gesture
+  const getEmbedUrl = (videoId: string) => {
     const id = extractVideoId(videoId);
     const params = new URLSearchParams({
       autoplay: '1',
-      mute: muted ? '1' : '0',
+      mute: '0', // User clicked play, so we can play with sound
       rel: '0',
       modestbranding: '1',
-      controls: '1'
+      controls: '1',
+      playsinline: '1' // Important for iOS
     });
     return `https://www.youtube.com/embed/${id}?${params.toString()}`;
   };
@@ -112,7 +115,7 @@ export const DashboardYouTubeSection = () => {
                 {video.title}
               </h3>
             </div>}
-          <iframe src={getEmbedUrl(video.video_id, video.autoplay, video.muted)} title={video.title || 'Video'} className="absolute inset-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
+          <iframe src={getEmbedUrl(video.video_id)} title={video.title || 'Video'} className="absolute inset-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
         </>;
     }
     return <button onClick={onPlay} className="absolute inset-0 w-full h-full group cursor-pointer" aria-label={`Play ${video.title || 'video'}`}>
