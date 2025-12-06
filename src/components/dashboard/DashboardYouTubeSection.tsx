@@ -77,9 +77,15 @@ export const DashboardYouTubeSection = () => {
     return `https://www.youtube.com/embed/${id}?${params.toString()}`;
   };
 
-  const getThumbnailUrl = (videoId: string) => {
+  const getThumbnailUrl = (videoId: string, quality: 'maxres' | 'sd' | 'hq' | 'mq' = 'hq') => {
     const id = extractVideoId(videoId);
-    return `https://img.youtube.com/vi/${id}/maxresdefault.jpg`;
+    const qualityMap = {
+      maxres: 'maxresdefault',
+      sd: 'sddefault', 
+      hq: 'hqdefault',
+      mq: 'mqdefault'
+    };
+    return `https://img.youtube.com/vi/${id}/${qualityMap[quality]}.jpg`;
   };
 
   const leftVideo = videos.find(v => v.position === 'left');
@@ -109,7 +115,6 @@ export const DashboardYouTubeSection = () => {
     isPlaying: boolean; 
     onPlay: () => void;
   }) => {
-    const [imgError, setImgError] = useState(false);
 
     if (!video) {
       return (
@@ -146,13 +151,9 @@ export const DashboardYouTubeSection = () => {
       >
         {/* Thumbnail Image */}
         <img
-          src={imgError 
-            ? `https://img.youtube.com/vi/${extractVideoId(video.video_id)}/hqdefault.jpg`
-            : getThumbnailUrl(video.video_id)
-          }
+          src={getThumbnailUrl(video.video_id, 'hq')}
           alt={video.title || 'Video thumbnail'}
           className="absolute inset-0 w-full h-full object-cover"
-          onError={() => setImgError(true)}
         />
         
         {/* Overlay */}
