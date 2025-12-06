@@ -182,23 +182,29 @@ export const DashboardYouTubeSection = () => {
 
   return (
     <div className="w-full px-4 py-4">
-      <div className="grid grid-cols-2 gap-2 sm:gap-4">
-        {/* Left Video */}
-        <div className="relative aspect-video rounded-xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-md transition-shadow duration-300">
-          <VideoThumbnail 
-            video={leftVideo} 
-            isPlaying={playingLeft} 
-            onPlay={() => setPlayingLeft(true)} 
-          />
-        </div>
+      {/* Unified card container with double red border like other cards */}
+      <div className="relative rounded-xl border-2 border-destructive/60 p-3 sm:p-4 bg-card/50 backdrop-blur-sm shadow-sm">
+        {/* Inner border for double-line effect */}
+        <div className="absolute inset-1 rounded-lg border border-destructive/30 pointer-events-none" />
+        
+        <div className="relative grid grid-cols-2 gap-2 sm:gap-4">
+          {/* Left Video */}
+          <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
+            <VideoThumbnail 
+              video={leftVideo} 
+              isPlaying={playingLeft} 
+              onPlay={() => setPlayingLeft(true)} 
+            />
+          </div>
 
-        {/* Right Video */}
-        <div className="relative aspect-video rounded-xl overflow-hidden bg-card border border-border shadow-sm hover:shadow-md transition-shadow duration-300">
-          <VideoThumbnail 
-            video={rightVideo} 
-            isPlaying={playingRight} 
-            onPlay={() => setPlayingRight(true)} 
-          />
+          {/* Right Video */}
+          <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
+            <VideoThumbnail 
+              video={rightVideo} 
+              isPlaying={playingRight} 
+              onPlay={() => setPlayingRight(true)} 
+            />
+          </div>
         </div>
       </div>
     </div>
