@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
+import { useTheme } from "@/contexts/ThemeContext";
 
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -40,10 +41,14 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   const location = useLocation();
   const { userProfile } = useUserProfile(user);
   const { pageName } = usePageTitle();
+  const { themeName } = useTheme();
   
   // Quick Capture state
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
+  
+  // Theme-specific styling
+  const isHbcuTheme = themeName === 'hbcu';
   
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true || userProfile?.is_exec_board === true;
@@ -75,7 +80,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
   return (
     <>
-        <header className="border-b border-border sticky top-0 z-50 shadow-lg" style={{ backgroundColor: '#ffffff' }}>
+        <header 
+          className={`border-b sticky top-0 z-50 shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''}`}
+          style={{ 
+            backgroundColor: isHbcuTheme ? '#000000' : '#ffffff',
+            borderColor: isHbcuTheme ? 'hsl(0 72% 42%)' : undefined
+          }}
+        >
           <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
             <div className="flex items-center justify-between w-full min-h-11 sm:min-h-12 md:min-h-14 lg:min-h-16 py-1.5 sm:py-2 md:py-2.5 lg:py-3">
           {/* Logo and Navigation */}
@@ -95,7 +106,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     />
                     <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 to-secondary/20 rounded-full blur opacity-50 pointer-events-none"></div>
                   </div>
-                  <span className="text-slate-900 font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap drop-shadow-sm relative">
+                  <span className={`font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap drop-shadow-sm relative ${isHbcuTheme ? 'text-[hsl(45,65%,55%)]' : 'text-slate-900'}`}>
                     GleeWorld
                   </span>
                 </Link>
@@ -125,7 +136,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-md hover:bg-accent/20 text-slate-800"
+                        className={`h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-md hover:bg-accent/20 ${isHbcuTheme ? 'text-[hsl(45,65%,55%)] hover:text-[hsl(45,65%,70%)]' : 'text-slate-800'}`}
                         type="button"
                       >
                         <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
@@ -229,14 +240,18 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         console.log('Camera button clicked - showing category selector');
                         setShowCategorySelector(true);
                       }}
-                      className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-full hover:bg-accent/20"
+                      className={`h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-full hover:bg-accent/20 ${isHbcuTheme ? 'text-[hsl(45,65%,55%)]' : ''}`}
                       type="button"
                     >
                       <img 
                         src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
                         alt="Camera" 
                         className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 filter"
-                        style={{ filter: 'brightness(0) saturate(100%) invert(21%) sepia(100%) saturate(4274%) hue-rotate(220deg) brightness(91%) contrast(91%)' }}
+                        style={{ 
+                          filter: isHbcuTheme 
+                            ? 'brightness(0) saturate(100%) invert(76%) sepia(52%) saturate(506%) hue-rotate(9deg) brightness(98%) contrast(87%)'
+                            : 'brightness(0) saturate(100%) invert(21%) sepia(100%) saturate(4274%) hue-rotate(220deg) brightness(91%) contrast(91%)' 
+                        }}
                       />
                     </Button>
                   </EnhancedTooltip>
@@ -245,8 +260,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-full p-0 text-slate-800" type="button">
-                           <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 border-2 border-border/30">
+                         <Button variant="ghost" className={`relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-full p-0 ${isHbcuTheme ? 'text-[hsl(45,65%,55%)]' : 'text-slate-800'}`} type="button">
+                           <Avatar className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 border-2 ${isHbcuTheme ? 'border-[hsl(0,72%,42%)]' : 'border-border/30'}`}>
                              <AvatarImage
                                src={userProfile?.avatar_url || undefined} 
                                alt={userProfile?.full_name || user?.email || "Your Profile"}
