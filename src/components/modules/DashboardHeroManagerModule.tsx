@@ -26,6 +26,8 @@ interface HeroSlide {
 interface YouTubeVideo {
   id?: string;
   video_id: string;
+  video_url: string | null;
+  video_type: 'youtube' | 'uploaded';
   title: string;
   position: 'left' | 'right';
   is_active: boolean;
@@ -77,6 +79,8 @@ export const DashboardHeroManagerModule = () => {
   const [settingsId, setSettingsId] = useState<string | null>(null);
   const [leftVideo, setLeftVideo] = useState<YouTubeVideo>({
     video_id: '',
+    video_url: null,
+    video_type: 'youtube',
     title: '',
     position: 'left',
     is_active: true,
@@ -85,12 +89,15 @@ export const DashboardHeroManagerModule = () => {
   });
   const [rightVideo, setRightVideo] = useState<YouTubeVideo>({
     video_id: '',
+    video_url: null,
+    video_type: 'youtube',
     title: '',
     position: 'right',
     is_active: true,
     autoplay: false,
     muted: true
   });
+  const [uploadingVideo, setUploadingVideo] = useState<'left' | 'right' | null>(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -198,6 +205,8 @@ export const DashboardHeroManagerModule = () => {
           setLeftVideo({
             id: left.id,
             video_id: left.video_id,
+            video_url: left.video_url || null,
+            video_type: (left.video_type || 'youtube') as 'youtube' | 'uploaded',
             title: left.title || '',
             position: 'left',
             is_active: left.is_active,
@@ -210,6 +219,8 @@ export const DashboardHeroManagerModule = () => {
           setRightVideo({
             id: right.id,
             video_id: right.video_id,
+            video_url: right.video_url || null,
+            video_type: (right.video_type || 'youtube') as 'youtube' | 'uploaded',
             title: right.title || '',
             position: 'right',
             is_active: right.is_active,
@@ -227,7 +238,9 @@ export const DashboardHeroManagerModule = () => {
     setSavingYouTube(true);
     try {
       const videoData = {
-        video_id: video.video_id,
+        video_id: video.video_id || '',
+        video_url: video.video_url,
+        video_type: video.video_type,
         title: video.title || null,
         position: video.position,
         is_active: video.is_active,
@@ -255,14 +268,57 @@ export const DashboardHeroManagerModule = () => {
       
       fetchYouTubeVideos();
     } catch (error) {
-      console.error('Error saving YouTube video:', error);
+      console.error('Error saving video:', error);
       toast({
         title: "Error",
-        description: "Failed to save YouTube video",
+        description: "Failed to save video",
         variant: "destructive"
       });
     } finally {
       setSavingYouTube(false);
+    }
+  };
+
+  const handleVideoUpload = async (file: File, position: 'left' | 'right') => {
+    setUploadingVideo(position);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `dashboard-video-${position}-${Date.now()}.${fileExt}`;
+      const filePath = `dashboard-videos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('gw-media')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('gw-media')
+        .getPublicUrl(filePath);
+
+      const videoUrl = urlData.publicUrl;
+      
+      const setVideo = position === 'left' ? setLeftVideo : setRightVideo;
+      setVideo(prev => ({
+        ...prev,
+        video_type: 'uploaded',
+        video_url: videoUrl,
+        video_id: ''
+      }));
+
+      toast({
+        title: "Success",
+        description: "Video uploaded successfully. Click Save to confirm."
+      });
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      toast({
+        title: "Error",
+        description: "Failed to upload video",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingVideo(null);
     }
   };
   const updateScrollSettings = async () => {
@@ -525,17 +581,17 @@ export const DashboardHeroManagerModule = () => {
         </CardContent>
       </Card>
 
-      {/* YouTube Videos Section */}
+      {/* Dashboard Videos Section */}
       <Card className="border-2 border-border bg-card">
         <CardHeader className="bg-muted/30">
           <CardTitle className="text-lg flex items-center gap-2 text-foreground">
             <div className="p-2 rounded-lg bg-destructive/10 text-destructive">📺</div>
-            Dashboard YouTube Videos
+            Dashboard Videos
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6 pt-4">
           <p className="text-sm text-muted-foreground">
-            Configure two YouTube videos to display at the top of the dashboard in a two-column layout.
+            Configure two videos (YouTube or uploaded) to display at the top of the dashboard.
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -545,8 +601,31 @@ export const DashboardHeroManagerModule = () => {
                 <span className="p-1 rounded bg-primary text-primary-foreground text-xs">1</span>
                 Left Video
               </h4>
+              
+              {/* Video Type Selector */}
+              <div className="space-y-1">
+                <Label className="text-xs text-foreground">Video Source</Label>
+                <Select 
+                  value={leftVideo.video_type} 
+                  onValueChange={(value: 'youtube' | 'uploaded') => setLeftVideo(prev => ({ 
+                    ...prev, 
+                    video_type: value,
+                    video_id: value === 'uploaded' ? '' : prev.video_id,
+                    video_url: value === 'youtube' ? null : prev.video_url
+                  }))}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="youtube">YouTube Video</SelectItem>
+                    <SelectItem value="uploaded">Upload Video</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Preview */}
-              {leftVideo.video_id && (
+              {leftVideo.video_type === 'youtube' && leftVideo.video_id && (
                 <div className="aspect-video rounded overflow-hidden bg-muted">
                   <img 
                     src={`https://img.youtube.com/vi/${extractYouTubeId(leftVideo.video_id)}/mqdefault.jpg`}
@@ -555,19 +634,55 @@ export const DashboardHeroManagerModule = () => {
                   />
                 </div>
               )}
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
-                  <Input
-                    value={leftVideo.video_id}
-                    onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
-                    placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
-                    className="h-8 text-sm"
+              {leftVideo.video_type === 'uploaded' && leftVideo.video_url && (
+                <div className="aspect-video rounded overflow-hidden bg-muted">
+                  <video 
+                    src={leftVideo.video_url}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Paste full URL or just the video ID
-                  </p>
                 </div>
+              )}
+
+              <div className="space-y-3">
+                {leftVideo.video_type === 'youtube' ? (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
+                    <Input
+                      value={leftVideo.video_id}
+                      onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
+                      placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
+                      className="h-8 text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Paste full URL or just the video ID
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-foreground">Upload Video File</Label>
+                    <Input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleVideoUpload(file, 'left');
+                      }}
+                      className="h-8 text-sm"
+                      disabled={uploadingVideo === 'left'}
+                    />
+                    {uploadingVideo === 'left' && (
+                      <p className="text-xs text-primary animate-pulse">Uploading video...</p>
+                    )}
+                    {leftVideo.video_url && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        Current: {leftVideo.video_url.split('/').pop()}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
                 <div className="space-y-1">
                   <Label className="text-xs text-foreground">Title (optional)</Label>
                   <Input
@@ -600,7 +715,7 @@ export const DashboardHeroManagerModule = () => {
                 </div>
                 <Button 
                   onClick={() => saveYouTubeVideo(leftVideo)} 
-                  disabled={!leftVideo.video_id || savingYouTube}
+                  disabled={(!leftVideo.video_id && !leftVideo.video_url) || savingYouTube || uploadingVideo === 'left'}
                   size="sm"
                   className="w-full"
                 >
@@ -616,8 +731,31 @@ export const DashboardHeroManagerModule = () => {
                 <span className="p-1 rounded bg-accent text-accent-foreground text-xs">2</span>
                 Right Video
               </h4>
+              
+              {/* Video Type Selector */}
+              <div className="space-y-1">
+                <Label className="text-xs text-foreground">Video Source</Label>
+                <Select 
+                  value={rightVideo.video_type} 
+                  onValueChange={(value: 'youtube' | 'uploaded') => setRightVideo(prev => ({ 
+                    ...prev, 
+                    video_type: value,
+                    video_id: value === 'uploaded' ? '' : prev.video_id,
+                    video_url: value === 'youtube' ? null : prev.video_url
+                  }))}
+                >
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="youtube">YouTube Video</SelectItem>
+                    <SelectItem value="uploaded">Upload Video</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Preview */}
-              {rightVideo.video_id && (
+              {rightVideo.video_type === 'youtube' && rightVideo.video_id && (
                 <div className="aspect-video rounded overflow-hidden bg-muted">
                   <img 
                     src={`https://img.youtube.com/vi/${extractYouTubeId(rightVideo.video_id)}/mqdefault.jpg`}
@@ -626,19 +764,55 @@ export const DashboardHeroManagerModule = () => {
                   />
                 </div>
               )}
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
-                  <Input
-                    value={rightVideo.video_id}
-                    onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
-                    placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
-                    className="h-8 text-sm"
+              {rightVideo.video_type === 'uploaded' && rightVideo.video_url && (
+                <div className="aspect-video rounded overflow-hidden bg-muted">
+                  <video 
+                    src={rightVideo.video_url}
+                    className="w-full h-full object-cover"
+                    muted
+                    playsInline
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Paste full URL or just the video ID
-                  </p>
                 </div>
+              )}
+
+              <div className="space-y-3">
+                {rightVideo.video_type === 'youtube' ? (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
+                    <Input
+                      value={rightVideo.video_id}
+                      onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
+                      placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
+                      className="h-8 text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Paste full URL or just the video ID
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1">
+                    <Label className="text-xs text-foreground">Upload Video File</Label>
+                    <Input
+                      type="file"
+                      accept="video/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleVideoUpload(file, 'right');
+                      }}
+                      className="h-8 text-sm"
+                      disabled={uploadingVideo === 'right'}
+                    />
+                    {uploadingVideo === 'right' && (
+                      <p className="text-xs text-primary animate-pulse">Uploading video...</p>
+                    )}
+                    {rightVideo.video_url && (
+                      <p className="text-xs text-muted-foreground truncate">
+                        Current: {rightVideo.video_url.split('/').pop()}
+                      </p>
+                    )}
+                  </div>
+                )}
+                
                 <div className="space-y-1">
                   <Label className="text-xs text-foreground">Title (optional)</Label>
                   <Input
@@ -671,7 +845,7 @@ export const DashboardHeroManagerModule = () => {
                 </div>
                 <Button 
                   onClick={() => saveYouTubeVideo(rightVideo)} 
-                  disabled={!rightVideo.video_id || savingYouTube}
+                  disabled={(!rightVideo.video_id && !rightVideo.video_url) || savingYouTube || uploadingVideo === 'right'}
                   size="sm"
                   className="w-full"
                 >

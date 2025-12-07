@@ -7,6 +7,8 @@ interface DashboardVideo {
   id: string;
   position: 'left' | 'right';
   video_id: string;
+  video_url: string | null;
+  video_type: 'youtube' | 'uploaded';
   title: string | null;
   is_active: boolean;
   autoplay: boolean;
@@ -31,7 +33,9 @@ export const DashboardYouTubeSection = () => {
       if (error) throw error;
       const typedData = (data || []).map(v => ({
         ...v,
-        position: v.position as 'left' | 'right'
+        position: v.position as 'left' | 'right',
+        video_type: (v.video_type || 'youtube') as 'youtube' | 'uploaded',
+        video_url: v.video_url || null
       }));
       setVideos(typedData);
     } catch (error) {
@@ -80,8 +84,14 @@ export const DashboardYouTubeSection = () => {
     return `https://www.youtube.com/embed/${id}?${params.toString()}`;
   };
 
-  const getThumbnailUrl = (videoId: string, quality: 'maxres' | 'sd' | 'hq' | 'mq' = 'hq') => {
-    const id = extractVideoId(videoId);
+  const getThumbnailUrl = (video: DashboardVideo, quality: 'maxres' | 'sd' | 'hq' | 'mq' = 'hq') => {
+    // For uploaded videos, we can't generate a thumbnail, so use a placeholder or first frame
+    if (video.video_type === 'uploaded' && video.video_url) {
+      // Return empty string - we'll show the video element instead
+      return '';
+    }
+    
+    const id = extractVideoId(video.video_id);
     const qualityMap = {
       maxres: 'maxresdefault',
       sd: 'sddefault',
@@ -119,6 +129,31 @@ export const DashboardYouTubeSection = () => {
 
   const expandedVideoData = expandedVideo === 'left' ? leftVideo : expandedVideo === 'right' ? rightVideo : null;
 
+  // Render video player based on type
+  const renderVideoPlayer = (video: DashboardVideo) => {
+    if (video.video_type === 'uploaded' && video.video_url) {
+      return (
+        <video
+          src={video.video_url}
+          title={video.title || 'Video'}
+          className="absolute inset-0 w-full h-full"
+          controls
+          autoPlay
+          playsInline
+        />
+      );
+    }
+    return (
+      <iframe
+        src={getEmbedUrl(video.video_id)}
+        title={video.title || 'Video'}
+        className="absolute inset-0 w-full h-full"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  };
+
   // Expanded full-width view
   if (expandedVideo && expandedVideoData) {
     return (
@@ -149,13 +184,7 @@ export const DashboardYouTubeSection = () => {
 
             {/* Full-width video player */}
             <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-md">
-              <iframe
-                src={getEmbedUrl(expandedVideoData.video_id)}
-                title={expandedVideoData.title || 'Video'}
-                className="absolute inset-0 w-full h-full"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
+              {renderVideoPlayer(expandedVideoData)}
             </div>
           </div>
         </div>
@@ -179,18 +208,31 @@ export const DashboardYouTubeSection = () => {
       );
     }
 
+    const isUploaded = video.video_type === 'uploaded' && video.video_url;
+    const thumbnailUrl = getThumbnailUrl(video, 'hq');
+
     return (
       <button
         onClick={() => handlePlay(position)}
         className="absolute inset-0 w-full h-full group cursor-pointer"
         aria-label={`Play ${video.title || 'video'}`}
       >
-        {/* Thumbnail Image */}
-        <img
-          src={getThumbnailUrl(video.video_id, 'hq')}
-          alt={video.title || 'Video thumbnail'}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        {/* Thumbnail Image or Video Preview */}
+        {isUploaded ? (
+          <video
+            src={video.video_url!}
+            className="absolute inset-0 w-full h-full object-cover"
+            muted
+            playsInline
+            preload="metadata"
+          />
+        ) : (
+          <img
+            src={thumbnailUrl}
+            alt={video.title || 'Video thumbnail'}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
         
         {/* Overlay */}
         <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/30 transition-colors duration-300" />
