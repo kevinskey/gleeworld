@@ -1091,24 +1091,31 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           {pianoContent}
         </div>;
     }
-    return <Rnd size={{
-      width: pianoSize.width,
-      height: pianoSize.height
-    }} position={{
-      x: pianoPosition.x,
-      y: pianoPosition.y
-    }} onDragStop={(e, d) => {
-      setPianoPosition({
-        x: d.x,
-        y: d.y
-      });
-    }} onResizeStop={(e, direction, ref, delta, position) => {
-      setPianoSize({
-        width: parseInt(ref.style.width),
-        height: parseInt(ref.style.height)
-      });
-      setPianoPosition(position);
-    }} minWidth={600} minHeight={400} maxWidth={1400} maxHeight={900} dragHandleClassName="cursor-move" className="z-[2147483647]" bounds="window">
+    // Calculate centered position for Rnd default
+    const centerX = Math.max(0, (window.innerWidth - pianoSize.width) / 2);
+    const centerY = Math.max(0, (window.innerHeight - pianoSize.height) / 2);
+    
+    return <Rnd 
+      default={{
+        x: centerX,
+        y: centerY,
+        width: pianoSize.width,
+        height: pianoSize.height
+      }}
+      onResizeStop={(e, direction, ref, delta, position) => {
+        setPianoSize({
+          width: parseInt(ref.style.width),
+          height: parseInt(ref.style.height)
+        });
+      }} 
+      minWidth={600} 
+      minHeight={400} 
+      maxWidth={1400} 
+      maxHeight={900} 
+      dragHandleClassName="cursor-move" 
+      className="z-[2147483647]" 
+      bounds="window"
+    >
         {pianoContent}
       </Rnd>;
   }
