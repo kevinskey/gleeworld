@@ -382,15 +382,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           {synthReady && <span className="text-xs text-green-500 hidden sm:inline">✓ Ready</span>}
         </div>
 
-        <div className="flex items-center gap-2 justify-end">
-          <Button variant="ghost" size="sm" onClick={toggleMute} className="h-8 w-8 sm:h-9 sm:w-9">
-            {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+        <div className="flex items-center gap-1 sm:gap-2 justify-end">
+          <Button variant="ghost" size="sm" onClick={toggleMute} className="h-7 w-7 sm:h-9 sm:w-9 p-0">
+            {isMuted ? <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
           </Button>
-          <div className="w-20 sm:w-24">
+          <div className="w-14 sm:w-24">
             <Slider value={volume} onValueChange={setVolume} max={1} min={0} step={0.1} className="w-full" />
           </div>
-          {onClose && <Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 sm:h-9 sm:w-9" aria-label="Close piano">
-              <X className="h-5 w-5" />
+          {onClose && <Button variant="ghost" size="sm" onClick={onClose} className="h-7 w-7 sm:h-9 sm:w-9 p-0 ml-1" aria-label="Close piano">
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>}
         </div>
       </div>
