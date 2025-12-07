@@ -219,13 +219,22 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }
   }, [audioUnlocked, initAudioContext]);
 
-  // Update synth when instrument changes
+  // Update synth when instrument changes - also create synth if audio context exists
   useEffect(() => {
+    // If synth exists, update instrument
     if (synthRef.current) {
       synthRef.current.setInstrument(selectedInstrument);
       console.log('🎹 Instrument changed to:', SYNTH_INSTRUMENTS.find(i => i.id === selectedInstrument)?.name || 'Unknown');
+    } 
+    // If audio context exists but synth doesn't, create it with correct instrument
+    else if (audioContextRef.current) {
+      synthRef.current = new WebAudioSynth(audioContextRef.current);
+      synthRef.current.setInstrument(selectedInstrument);
+      synthRef.current.setVolume(isMuted ? 0 : volume[0]);
+      setSynthReady(true);
+      console.log('🎹 WebAudioSynth created with instrument:', SYNTH_INSTRUMENTS.find(i => i.id === selectedInstrument)?.name || 'Unknown');
     }
-  }, [selectedInstrument]);
+  }, [selectedInstrument, isMuted, volume]);
 
   // Update synth volume when volume changes
   useEffect(() => {
