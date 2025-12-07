@@ -101,11 +101,15 @@ export const DashboardYouTubeSection = () => {
     return `https://img.youtube.com/vi/${id}/${qualityMap[quality]}.jpg`;
   };
 
+  const [videoKey, setVideoKey] = useState(0);
+
   const handlePlay = (position: 'left' | 'right') => {
+    setVideoKey(prev => prev + 1);
     setExpandedVideo(position);
   };
 
   const handleClose = () => {
+    setVideoKey(prev => prev + 1); // Force remount to stop playback
     setExpandedVideo(null);
   };
 
@@ -134,6 +138,7 @@ export const DashboardYouTubeSection = () => {
     if (video.video_type === 'uploaded' && video.video_url) {
       return (
         <video
+          key={`video-${videoKey}`}
           src={video.video_url}
           title={video.title || 'Video'}
           className="absolute inset-0 w-full h-full"
@@ -145,6 +150,7 @@ export const DashboardYouTubeSection = () => {
     }
     return (
       <iframe
+        key={`iframe-${videoKey}`}
         src={getEmbedUrl(video.video_id)}
         title={video.title || 'Video'}
         className="absolute inset-0 w-full h-full"
