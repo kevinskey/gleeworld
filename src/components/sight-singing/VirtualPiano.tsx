@@ -679,7 +679,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
-  const [startOctave, setStartOctave] = useState<number>(4); // Default starts at C4 (middle C)
+  const [startOctave, setStartOctave] = useState<number>(3); // Default starts at C3-B4 (shows A4)
   const [pianoSize, setPianoSize] = useState({
     width: 900,
     height: 600
