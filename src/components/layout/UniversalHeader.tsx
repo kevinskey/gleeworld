@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -86,12 +86,23 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   return (
     <>
         <header 
-          className={`border-b sticky top-0 z-50 shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''}`}
+          className={`border-b sticky top-0 z-50 shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} relative overflow-hidden`}
           style={{ 
             backgroundColor: isHbcuTheme ? hbcuColors.background : '#ffffff',
-            borderColor: isHbcuTheme ? hbcuColors.red : undefined
+            borderColor: isHbcuTheme ? hbcuColors.red : undefined,
+            background: isHbcuTheme ? hbcuColors.background : 'linear-gradient(90deg, rgba(220,38,38,0.05) 0%, #ffffff 20%, #ffffff 80%, rgba(22,163,74,0.05) 100%)'
           }}
         >
+          {/* Holiday sparkle accents */}
+          {!isHbcuTheme && (
+            <div className="absolute inset-0 pointer-events-none">
+              <Sparkles className="absolute top-1.5 left-[8%] w-3 h-3 text-amber-400/50 animate-pulse" />
+              <Sparkles className="absolute top-2 left-[25%] w-2 h-2 text-red-500/30 animate-pulse" style={{ animationDelay: '0.3s' }} />
+              <Sparkles className="absolute bottom-2 right-[15%] w-3 h-3 text-emerald-500/40 animate-pulse" style={{ animationDelay: '0.5s' }} />
+              <Sparkles className="absolute top-1.5 right-[35%] w-2 h-2 text-amber-400/40 animate-pulse" style={{ animationDelay: '0.7s' }} />
+            </div>
+          )}
+
           <div className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
             <div className="flex items-center justify-between w-full min-h-11 sm:min-h-12 md:min-h-14 lg:min-h-16 py-1.5 sm:py-2 md:py-2.5 lg:py-3">
           {/* Logo and Navigation */}
@@ -116,10 +127,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                   <span 
                     className="font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap relative" 
                     style={{ 
-                      color: isHbcuTheme ? hbcuColors.gold : '#0f172a'
+                      color: isHbcuTheme ? hbcuColors.gold : '#0f172a',
+                      fontFamily: "'Cinzel', serif",
+                      letterSpacing: '0.02em'
                     }}
                   >
                     GleeWorld
+                    <span className="text-amber-500 ml-1 text-xs sm:text-sm">✨</span>
                   </span>
                 </Link>
                 <div className="flex items-center">
