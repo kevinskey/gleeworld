@@ -18,7 +18,56 @@ serve(async (req) => {
 
     console.log('Starting Glee Cam to Heroes sync...');
 
-    // Fetch all PR images with their tags
+    // Fetch approved Glee Cam pics from quick_capture_media
+    const { data: gleeCamPics, error: picsError } = await supabase
+      .from('quick_capture_media')
+      .select('*')
+      .eq('category', 'glee_cam_pic')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false });
+
+    if (picsError) throw picsError;
+
+    console.log(`Found ${gleeCamPics?.length || 0} approved Glee Cam pics`);
+
+    // Create hero slides from Glee Cam pics
+    let slidesCreated = 0;
+    
+    for (const pic of gleeCamPics || []) {
+      // Check if this image already exists in hero slides
+      const { data: existing } = await supabase
+        .from('dashboard_hero_slides')
+        .select('id')
+        .eq('image_url', pic.file_url)
+        .limit(1);
+      
+      if (!existing || existing.length === 0) {
+        const slide = {
+          title: pic.title || 'Glee Cam',
+          description: pic.description || 'GW Cam!',
+          image_url: pic.file_url,
+          mobile_image_url: pic.file_url,
+          ipad_image_url: pic.file_url,
+          display_order: 100 + slidesCreated, // High display order to not interfere with manual slides
+          is_active: true,
+        };
+
+        const { error: insertError } = await supabase
+          .from('dashboard_hero_slides')
+          .insert(slide);
+        
+        if (insertError) {
+          console.error('Error inserting slide:', insertError);
+        } else {
+          slidesCreated++;
+          console.log(`Created slide for: ${pic.title}`);
+        }
+      } else {
+        console.log(`Slide already exists for: ${pic.title}`);
+      }
+    }
+
+    // Also sync from PR images tagged with "Glee Cam" for backwards compatibility
     const { data: prImages, error: imagesError } = await supabase
       .from('pr_images')
       .select(`
@@ -34,71 +83,60 @@ serve(async (req) => {
       `)
       .order('uploaded_at', { ascending: false });
 
-    if (imagesError) throw imagesError;
+    if (!imagesError && prImages) {
+      // Filter images tagged with "Glee Cam" (case insensitive)
+      const gleeCamImages = prImages.filter(image => {
+        const associations = image.pr_image_tag_associations as any[];
+        return associations?.some(association => 
+          association.pr_image_tags?.name?.toLowerCase() === 'glee cam'
+        );
+      });
 
-    console.log(`Found ${prImages?.length || 0} PR images`);
+      console.log(`Found ${gleeCamImages.length} PR images tagged Glee Cam`);
 
-    // Filter images tagged with "Glee Cam" (case insensitive)
-    const gleeCamImages = prImages?.filter(image => {
-      const associations = image.pr_image_tag_associations as any[];
-      return associations?.some(association => 
-        association.pr_image_tags?.name?.toLowerCase() === 'glee cam'
-      );
-    }) || [];
+      for (const image of gleeCamImages) {
+        const { data: urlData } = supabase.storage
+          .from('pr-images')
+          .getPublicUrl(image.file_path);
 
-    console.log(`Found ${gleeCamImages.length} Glee Cam images`);
-
-    // Get the public URL for each image and create hero slides
-    const heroSlides = await Promise.all(gleeCamImages.map(async (image, index) => {
-      const { data: urlData } = supabase.storage
-        .from('pr-images')
-        .getPublicUrl(image.file_path);
-
-      return {
-        title: image.caption || 'Glee Cam',
-        description: 'GW Cam!',
-        image_url: urlData.publicUrl,
-        mobile_image_url: urlData.publicUrl,
-        ipad_image_url: urlData.publicUrl,
-        display_order: 100 + index, // High display order to not interfere with manual slides
-        is_active: true,
-      };
-    }));
-
-    // Note: We're adding new slides, not replacing. 
-    // To avoid duplicates, we skip if the image URL already exists
-    let slidesCreated = 0;
-    
-    for (const slide of heroSlides) {
-      // Check if this image already exists in hero slides
-      const { data: existing } = await supabase
-        .from('dashboard_hero_slides')
-        .select('id')
-        .eq('image_url', slide.image_url)
-        .limit(1);
-      
-      if (!existing || existing.length === 0) {
-        const { error: insertError } = await supabase
+        // Check if this image already exists in hero slides
+        const { data: existing } = await supabase
           .from('dashboard_hero_slides')
-          .insert(slide);
+          .select('id')
+          .eq('image_url', urlData.publicUrl)
+          .limit(1);
         
-        if (insertError) {
-          console.error('Error inserting slide:', insertError);
-        } else {
-          slidesCreated++;
+        if (!existing || existing.length === 0) {
+          const slide = {
+            title: image.caption || 'Glee Cam',
+            description: 'GW Cam!',
+            image_url: urlData.publicUrl,
+            mobile_image_url: urlData.publicUrl,
+            ipad_image_url: urlData.publicUrl,
+            display_order: 100 + slidesCreated,
+            is_active: true,
+          };
+
+          const { error: insertError } = await supabase
+            .from('dashboard_hero_slides')
+            .insert(slide);
+          
+          if (insertError) {
+            console.error('Error inserting PR slide:', insertError);
+          } else {
+            slidesCreated++;
+          }
         }
-      } else {
-        console.log(`Slide already exists for: ${slide.title}`);
       }
     }
 
-    console.log(`Created ${slidesCreated} new hero slides from Glee Cam`);
+    console.log(`Created ${slidesCreated} new hero slides total`);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Synced ${gleeCamImages.length} Glee Cam images, created ${slidesCreated} new slides`,
-        glee_cam_images: gleeCamImages.length,
+        message: `Synced Glee Cam images, created ${slidesCreated} new slides`,
+        quick_capture_pics: gleeCamPics?.length || 0,
         slides_created: slidesCreated
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
