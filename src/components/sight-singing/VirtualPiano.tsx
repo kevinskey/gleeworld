@@ -1095,29 +1095,39 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     const centerX = Math.max(0, (window.innerWidth - pianoSize.width) / 2);
     const centerY = Math.max(0, (window.innerHeight - pianoSize.height) / 2);
     
-    return <Rnd 
-      default={{
-        x: centerX,
-        y: centerY,
-        width: pianoSize.width,
-        height: pianoSize.height
-      }}
-      onResizeStop={(e, direction, ref, delta, position) => {
-        setPianoSize({
-          width: parseInt(ref.style.width),
-          height: parseInt(ref.style.height)
-        });
-      }} 
-      minWidth={600} 
-      minHeight={400} 
-      maxWidth={1400} 
-      maxHeight={900} 
-      dragHandleClassName="cursor-move" 
-      className="z-[2147483647]" 
-      bounds="window"
-    >
-        {pianoContent}
-      </Rnd>;
+    // Wrap Rnd in a fixed overlay to ensure proper viewport positioning
+    return (
+      <div className="fixed inset-0 z-[2147483646]" onClick={(e) => {
+        // Close when clicking overlay background
+        if (e.target === e.currentTarget && onClose) {
+          onClose();
+        }
+      }}>
+        <Rnd 
+          default={{
+            x: centerX,
+            y: centerY,
+            width: pianoSize.width,
+            height: pianoSize.height
+          }}
+          onResizeStop={(e, direction, ref, delta, position) => {
+            setPianoSize({
+              width: parseInt(ref.style.width),
+              height: parseInt(ref.style.height)
+            });
+          }} 
+          minWidth={600} 
+          minHeight={400} 
+          maxWidth={1400} 
+          maxHeight={900} 
+          dragHandleClassName="cursor-move" 
+          className="z-[2147483647]" 
+          bounds="parent"
+        >
+          {pianoContent}
+        </Rnd>
+      </div>
+    );
   }
   return pianoContent;
 };
