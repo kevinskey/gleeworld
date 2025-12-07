@@ -34,27 +34,29 @@ interface YouTubeVideo {
 }
 // Helper to extract YouTube video ID from URL or return as-is if already an ID
 const extractYouTubeId = (input: string): string => {
+  if (!input) return '';
   const trimmed = input.trim();
   
-  // If it's already just an ID (no URL patterns), return as-is
-  if (!trimmed.includes('/') && !trimmed.includes('.') && trimmed.length <= 20) {
-    return trimmed;
-  }
+  // Already a plain video ID (11 chars, alphanumeric with dashes/underscores)
+  if (/^[\w-]{11}$/.test(trimmed)) return trimmed;
   
-  // Try to extract from various YouTube URL formats
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
-    /^([a-zA-Z0-9_-]{11})$/
-  ];
+  // youtube.com/live/VIDEO_ID format
+  const liveMatch = trimmed.match(/youtube\.com\/live\/([^?&]+)/);
+  if (liveMatch) return liveMatch[1];
   
-  for (const pattern of patterns) {
-    const match = trimmed.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
+  // youtu.be/VIDEO_ID format
+  const shortMatch = trimmed.match(/youtu\.be\/([^?&]+)/);
+  if (shortMatch) return shortMatch[1];
   
-  // If no match found, return first 11 chars or the original (will fail validation on backend)
+  // youtube.com/watch?v=VIDEO_ID format
+  const watchMatch = trimmed.match(/[?&]v=([^&]+)/);
+  if (watchMatch) return watchMatch[1];
+  
+  // youtube.com/embed/VIDEO_ID format
+  const embedMatch = trimmed.match(/embed\/([^?&]+)/);
+  if (embedMatch) return embedMatch[1];
+  
+  // Return trimmed if nothing matched
   return trimmed.slice(0, 50);
 };
 
@@ -547,7 +549,7 @@ export const DashboardHeroManagerModule = () => {
               {leftVideo.video_id && (
                 <div className="aspect-video rounded overflow-hidden bg-muted">
                   <img 
-                    src={`https://img.youtube.com/vi/${leftVideo.video_id}/mqdefault.jpg`}
+                    src={`https://img.youtube.com/vi/${extractYouTubeId(leftVideo.video_id)}/mqdefault.jpg`}
                     alt="Left video preview"
                     className="w-full h-full object-cover"
                   />
@@ -618,7 +620,7 @@ export const DashboardHeroManagerModule = () => {
               {rightVideo.video_id && (
                 <div className="aspect-video rounded overflow-hidden bg-muted">
                   <img 
-                    src={`https://img.youtube.com/vi/${rightVideo.video_id}/mqdefault.jpg`}
+                    src={`https://img.youtube.com/vi/${extractYouTubeId(rightVideo.video_id)}/mqdefault.jpg`}
                     alt="Right video preview"
                     className="w-full h-full object-cover"
                   />
