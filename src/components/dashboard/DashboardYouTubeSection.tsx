@@ -197,8 +197,8 @@ export const DashboardYouTubeSection = () => {
         
         {/* Title - Bottom Left */}
         {video.title && (
-          <div className="absolute bottom-0 left-0 right-8 sm:right-12 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-1.5 sm:p-2 z-10">
-            <h3 className="text-white text-[8px] sm:text-[10px] font-medium truncate text-left">
+          <div className="absolute bottom-0 left-0 right-8 sm:right-12 bg-gradient-to-t from-foreground/80 via-foreground/40 to-transparent p-1.5 sm:p-2 z-10">
+            <h3 className="text-background text-[8px] sm:text-[10px] font-medium truncate text-left">
               {video.title}
             </h3>
           </div>
@@ -206,7 +206,7 @@ export const DashboardYouTubeSection = () => {
         
         {/* Play Button - Bottom Right, Small */}
         <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
-          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-md">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-background/90 rounded-full flex items-center justify-center group-hover:bg-background group-hover:scale-110 transition-all duration-300 shadow-md">
             <Play className="w-3 h-3 sm:w-4 sm:h-4 text-primary ml-0.5" fill="currentColor" />
           </div>
         </div>

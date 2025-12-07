@@ -222,24 +222,24 @@ const Index = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <Music className="h-8 w-8 text-white" />
+                      <div className="w-16 h-16 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <Music className="h-8 w-8 text-primary-foreground" />
                       </div>
-                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <BookOpen className="h-8 w-8 text-white" />
+                      <div className="w-16 h-16 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <BookOpen className="h-8 w-8 text-primary-foreground" />
                       </div>
-                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                        <GraduationCap className="h-8 w-8 text-white" />
+                      <div className="w-16 h-16 bg-primary-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <GraduationCap className="h-8 w-8 text-primary-foreground" />
                       </div>
                     </div>
-                    <div className="text-white">
+                    <div className="text-primary-foreground">
                       <h2 className="text-4xl font-bold mb-2 drop-shadow-lg">
                         Survey of African American Music
                       </h2>
-                      <p className="text-xl text-white/90 mb-3 drop-shadow-md">
+                      <p className="text-xl text-primary-foreground/90 mb-3 drop-shadow-md">
                         Spring 2024 Class Registration Now Open
                       </p>
-                      <p className="text-lg text-white/80 drop-shadow-md">
+                      <p className="text-lg text-primary-foreground/80 drop-shadow-md">
                         Explore the rich heritage and cultural impact of African American musical traditions
                       </p>
                     </div>
@@ -247,7 +247,7 @@ const Index = () => {
                   <div className="flex items-center gap-4">
                     <Button 
                       size="lg" 
-                      className="bg-white text-orange-600 hover:bg-white/90 font-bold text-lg px-8 py-4 shadow-xl"
+                      className="bg-background text-orange-600 hover:bg-background/90 font-bold text-lg px-8 py-4 shadow-xl"
                     >
                       REGISTER NOW
                       <ArrowRight className="ml-2 h-6 w-6" />
@@ -271,7 +271,7 @@ const Index = () => {
                   </p>
                 </div>
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">GW</span>
+                  <span className="text-primary-foreground font-bold text-xl">GW</span>
                 </div>
               </div>
             </div>

@@ -215,10 +215,10 @@ export const AttendanceDashboard = () => {
   return (
     <div className="space-y-4 px-2 sm:px-4 lg:px-6">
       {/* User Sections with Admin Collapse Toggle */}
-      <div className="bg-white/50 backdrop-blur-sm rounded-xl border">
+      <div className="bg-background/50 backdrop-blur-sm rounded-xl border">
         {/* Collapsible Header - Only for Admins */}
         {isAdmin && (
-          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200/50">
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border/50">
             <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
               <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="truncate">Personal Attendance</span>
@@ -260,8 +260,8 @@ export const AttendanceDashboard = () => {
       </div>
 
       {/* Class Schedule Manager - Separate Collapsible Section */}
-      <div className="bg-white/50 backdrop-blur-sm rounded-xl border">
-        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200/50">
+      <div className="bg-background/50 backdrop-blur-sm rounded-xl border">
+        <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border/50">
           <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
             <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="truncate">Class Schedule Manager</span>
@@ -277,14 +277,14 @@ export const AttendanceDashboard = () => {
         <div className="space-y-4">
           {/* QR Code Generator */}
           <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 rounded-xl p-4 sm:p-6 border shadow-lg">
-            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-white">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-primary-foreground">
               <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
               <span className="truncate">QR Attendance Generator</span>
-              <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
+              <Badge variant="secondary" className="ml-2 bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30">
                 {isAdmin ? 'Admin' : 'Secretary'}
               </Badge>
             </h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
+            <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
               <QRAttendanceGenerator />
             </div>
           </div>
@@ -292,10 +292,10 @@ export const AttendanceDashboard = () => {
           {/* Manual Attendance */}
           <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl p-4 sm:p-6 border shadow-lg">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 text-white">
+              <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 text-primary-foreground">
                 <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
                 <span className="truncate">Manual Attendance</span>
-                <Badge variant="secondary" className="ml-2 bg-white/20 text-white border-white/30">
+                <Badge variant="secondary" className="ml-2 bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30">
                   {isAdmin ? 'Admin' : 'Secretary'}
                 </Badge>
               </h2>
@@ -307,7 +307,7 @@ export const AttendanceDashboard = () => {
                 }}
               />
             </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
+            <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
               <TakeAttendance />
             </div>
           </div>
@@ -326,7 +326,7 @@ export const AttendanceDashboard = () => {
 
       {/* Admin Reports Section */}
       {isAdmin && (
-        <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
+        <div className="bg-background/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
           <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
             <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
             <span className="truncate">Attendance Reports</span>
@@ -340,7 +340,7 @@ export const AttendanceDashboard = () => {
 
       {/* Schedule Analytics Section - Admin Only */}
       {isAdmin && (
-        <div className="bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
+        <div className="bg-background/50 backdrop-blur-sm rounded-xl p-3 sm:p-6 border">
           <ScheduleAnalytics />
         </div>
       )}
