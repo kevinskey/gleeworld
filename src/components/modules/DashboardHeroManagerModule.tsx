@@ -543,6 +543,16 @@ export const DashboardHeroManagerModule = () => {
                 <span className="p-1 rounded bg-primary text-primary-foreground text-xs">1</span>
                 Left Video
               </h4>
+              {/* Preview */}
+              {leftVideo.video_id && (
+                <div className="aspect-video rounded overflow-hidden bg-muted">
+                  <img 
+                    src={`https://img.youtube.com/vi/${leftVideo.video_id}/mqdefault.jpg`}
+                    alt="Left video preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
               <div className="space-y-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
@@ -604,6 +614,16 @@ export const DashboardHeroManagerModule = () => {
                 <span className="p-1 rounded bg-accent text-accent-foreground text-xs">2</span>
                 Right Video
               </h4>
+              {/* Preview */}
+              {rightVideo.video_id && (
+                <div className="aspect-video rounded overflow-hidden bg-muted">
+                  <img 
+                    src={`https://img.youtube.com/vi/${rightVideo.video_id}/mqdefault.jpg`}
+                    alt="Right video preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
               <div className="space-y-3">
                 <div className="space-y-1">
                   <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
