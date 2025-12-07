@@ -32,6 +32,31 @@ interface YouTubeVideo {
   autoplay: boolean;
   muted: boolean;
 }
+// Helper to extract YouTube video ID from URL or return as-is if already an ID
+const extractYouTubeId = (input: string): string => {
+  const trimmed = input.trim();
+  
+  // If it's already just an ID (no URL patterns), return as-is
+  if (!trimmed.includes('/') && !trimmed.includes('.') && trimmed.length <= 20) {
+    return trimmed;
+  }
+  
+  // Try to extract from various YouTube URL formats
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = trimmed.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  
+  // If no match found, return first 11 chars or the original (will fail validation on backend)
+  return trimmed.slice(0, 50);
+};
 
 export const DashboardHeroManagerModule = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
@@ -520,15 +545,15 @@ export const DashboardHeroManagerModule = () => {
               </h4>
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-foreground">YouTube Video ID</Label>
+                  <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
                   <Input
                     value={leftVideo.video_id}
-                    onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: e.target.value }))}
-                    placeholder="e.g. dQw4w9WgXcQ"
+                    onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
+                    placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
                     className="h-8 text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
+                    Paste full URL or just the video ID
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -581,15 +606,15 @@ export const DashboardHeroManagerModule = () => {
               </h4>
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-foreground">YouTube Video ID</Label>
+                  <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
                   <Input
                     value={rightVideo.video_id}
-                    onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: e.target.value }))}
-                    placeholder="e.g. dQw4w9WgXcQ"
+                    onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
+                    placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
                     className="h-8 text-sm"
                   />
                   <p className="text-xs text-muted-foreground">
-                    The ID from youtube.com/watch?v=<strong>VIDEO_ID</strong>
+                    Paste full URL or just the video ID
                   </p>
                 </div>
                 <div className="space-y-1">
