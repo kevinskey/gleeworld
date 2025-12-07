@@ -444,10 +444,10 @@ export const DashboardHeroManagerModule = () => {
   }
   return <div className="space-y-6">
       {/* Glee Cam Sync Alert */}
-      <Alert className="border-blue-200 bg-blue-50">
-        <Camera className="h-4 w-4" />
+      <Alert className="border-primary/30 bg-primary/10">
+        <Camera className="h-4 w-4 text-foreground" />
         <AlertDescription className="flex items-center justify-between">
-          <span className="text-primary-foreground">Photos tagged with "Glee Cam" in PR Hub automatically sync to landing page heroes</span>
+          <span className="text-foreground">Photos tagged with "Glee Cam" in PR Hub automatically sync to landing page heroes</span>
           <Button onClick={syncGleeCamPhotos} disabled={syncing} size="sm" variant="outline">
             {syncing ? <>
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -461,17 +461,17 @@ export const DashboardHeroManagerModule = () => {
       </Alert>
 
       {/* Scroll Settings Card */}
-      <Card className="border-2 border-accent/20">
-        <CardHeader className="bg-gradient-to-r from-accent/5 to-accent/10">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-purple-100 text-purple-700">⚙️</div>
+      <Card className="border-2 border-border bg-card">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="text-lg flex items-center gap-2 text-foreground">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">⚙️</div>
             Carousel Settings
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="auto-scroll">Auto Scroll</Label>
+              <Label htmlFor="auto-scroll" className="text-foreground">Auto Scroll</Label>
               <p className="text-sm text-muted-foreground">Automatically advance slides</p>
             </div>
             <Switch id="auto-scroll" checked={scrollSettings.auto_scroll_enabled} onCheckedChange={checked => setScrollSettings(prev => ({
@@ -482,7 +482,7 @@ export const DashboardHeroManagerModule = () => {
           
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <Label>Scroll Speed: {scrollSettings.scroll_speed_seconds}s</Label>
+              <Label className="text-foreground">Scroll Speed: {scrollSettings.scroll_speed_seconds}s</Label>
               <span className="text-sm text-muted-foreground">(2-30 seconds)</span>
             </div>
             <Slider value={[scrollSettings.scroll_speed_seconds]} onValueChange={value => setScrollSettings(prev => ({
@@ -491,7 +491,7 @@ export const DashboardHeroManagerModule = () => {
           }))} min={2} max={30} step={1} className="w-full" />
           </div>
 
-          <Button onClick={updateScrollSettings} className="w-full bg-zinc-200 hover:bg-zinc-100 p-[10px]">
+          <Button onClick={updateScrollSettings} className="w-full" variant="secondary">
             <Save className="h-4 w-4 mr-2" />
             Save Settings
           </Button>
@@ -499,10 +499,10 @@ export const DashboardHeroManagerModule = () => {
       </Card>
 
       {/* YouTube Videos Section */}
-      <Card className="border-2 border-red-200">
-        <CardHeader className="bg-gradient-to-r from-red-50 to-red-100">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-red-100 text-red-700">📺</div>
+      <Card className="border-2 border-border bg-card">
+        <CardHeader className="bg-muted/30">
+          <CardTitle className="text-lg flex items-center gap-2 text-foreground">
+            <div className="p-2 rounded-lg bg-destructive/10 text-destructive">📺</div>
             Dashboard YouTube Videos
           </CardTitle>
         </CardHeader>
@@ -513,14 +513,14 @@ export const DashboardHeroManagerModule = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left Video */}
-            <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h4 className="font-medium text-blue-800 flex items-center gap-2">
-                <span className="p-1 rounded bg-blue-500 text-white text-xs">1</span>
+            <div className="space-y-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <h4 className="font-medium text-foreground flex items-center gap-2">
+                <span className="p-1 rounded bg-primary text-primary-foreground text-xs">1</span>
                 Left Video
               </h4>
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">YouTube Video ID</Label>
+                  <Label className="text-xs text-foreground">YouTube Video ID</Label>
                   <Input
                     value={leftVideo.video_id}
                     onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: e.target.value }))}
@@ -532,7 +532,7 @@ export const DashboardHeroManagerModule = () => {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Title (optional)</Label>
+                  <Label className="text-xs text-foreground">Title (optional)</Label>
                   <Input
                     value={leftVideo.title}
                     onChange={(e) => setLeftVideo(prev => ({ ...prev, title: e.target.value }))}
@@ -541,21 +541,21 @@ export const DashboardHeroManagerModule = () => {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Active</Label>
+                  <Label className="text-xs text-foreground">Active</Label>
                   <Switch
                     checked={leftVideo.is_active}
                     onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, is_active: checked }))}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Autoplay</Label>
+                  <Label className="text-xs text-foreground">Autoplay</Label>
                   <Switch
                     checked={leftVideo.autoplay}
                     onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, autoplay: checked }))}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Muted</Label>
+                  <Label className="text-xs text-foreground">Muted</Label>
                   <Switch
                     checked={leftVideo.muted}
                     onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, muted: checked }))}
@@ -574,14 +574,14 @@ export const DashboardHeroManagerModule = () => {
             </div>
 
             {/* Right Video */}
-            <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
-              <h4 className="font-medium text-green-800 flex items-center gap-2">
-                <span className="p-1 rounded bg-green-500 text-white text-xs">2</span>
+            <div className="space-y-4 p-4 bg-accent/5 rounded-lg border border-accent/20">
+              <h4 className="font-medium text-foreground flex items-center gap-2">
+                <span className="p-1 rounded bg-accent text-accent-foreground text-xs">2</span>
                 Right Video
               </h4>
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs">YouTube Video ID</Label>
+                  <Label className="text-xs text-foreground">YouTube Video ID</Label>
                   <Input
                     value={rightVideo.video_id}
                     onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: e.target.value }))}
@@ -593,7 +593,7 @@ export const DashboardHeroManagerModule = () => {
                   </p>
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs">Title (optional)</Label>
+                  <Label className="text-xs text-foreground">Title (optional)</Label>
                   <Input
                     value={rightVideo.title}
                     onChange={(e) => setRightVideo(prev => ({ ...prev, title: e.target.value }))}
@@ -602,21 +602,21 @@ export const DashboardHeroManagerModule = () => {
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Active</Label>
+                  <Label className="text-xs text-foreground">Active</Label>
                   <Switch
                     checked={rightVideo.is_active}
                     onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, is_active: checked }))}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Autoplay</Label>
+                  <Label className="text-xs text-foreground">Autoplay</Label>
                   <Switch
                     checked={rightVideo.autoplay}
                     onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, autoplay: checked }))}
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Muted</Label>
+                  <Label className="text-xs text-foreground">Muted</Label>
                   <Switch
                     checked={rightVideo.muted}
                     onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, muted: checked }))}
@@ -638,13 +638,13 @@ export const DashboardHeroManagerModule = () => {
       </Card>
 
       {/* Create/Edit Form */}
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle>{editingId ? "Edit" : "Create"} Dashboard Hero Slide</CardTitle>
+          <CardTitle className="text-foreground">{editingId ? "Edit" : "Create"} Dashboard Hero Slide</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Title</Label>
+            <Label className="text-foreground">Title</Label>
             <Input value={formData.title} onChange={e => setFormData(prev => ({
             ...prev,
             title: e.target.value
@@ -652,7 +652,7 @@ export const DashboardHeroManagerModule = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Description</Label>
+            <Label className="text-foreground">Description</Label>
             <Textarea value={formData.description} onChange={e => setFormData(prev => ({
             ...prev,
             description: e.target.value
@@ -662,17 +662,17 @@ export const DashboardHeroManagerModule = () => {
           {/* Image Uploads */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Desktop Image *</Label>
+              <Label className="text-foreground">Desktop Image *</Label>
               <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'desktop')} />
               {formData.image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
             </div>
             <div className="space-y-2">
-              <Label>iPad Image</Label>
+              <Label className="text-foreground">iPad Image</Label>
               <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'ipad')} />
               {formData.ipad_image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
             </div>
             <div className="space-y-2">
-              <Label>Mobile Image</Label>
+              <Label className="text-foreground">Mobile Image</Label>
               <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'mobile')} />
               {formData.mobile_image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
             </div>
@@ -680,7 +680,7 @@ export const DashboardHeroManagerModule = () => {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Display Order</Label>
+              <Label className="text-foreground">Display Order</Label>
               <Input type="number" value={formData.display_order} onChange={e => setFormData(prev => ({
               ...prev,
               display_order: parseInt(e.target.value) || 0
@@ -691,18 +691,18 @@ export const DashboardHeroManagerModule = () => {
               ...prev,
               is_active: checked
             }))} />
-              <Label>Active</Label>
+              <Label className="text-foreground">Active</Label>
             </div>
           </div>
 
           {/* Link Settings */}
-          <div className="border-t pt-4 space-y-4">
-            <h3 className="font-medium flex items-center gap-2">
+          <div className="border-t border-border pt-4 space-y-4">
+            <h3 className="font-medium flex items-center gap-2 text-foreground">
               <ExternalLink className="h-4 w-4" />
               Link Settings (Optional)
             </h3>
             <div className="space-y-2">
-              <Label>Link URL</Label>
+              <Label className="text-foreground">Link URL</Label>
               <Input value={formData.link_url} onChange={e => setFormData(prev => ({
               ...prev,
               link_url: e.target.value
@@ -710,7 +710,7 @@ export const DashboardHeroManagerModule = () => {
               <p className="text-xs text-muted-foreground">Internal links: /page-name, External: https://...</p>
             </div>
             <div className="space-y-2">
-              <Label>Link Type</Label>
+              <Label className="text-foreground">Link Type</Label>
               <Select value={formData.link_target} onValueChange={value => setFormData(prev => ({
               ...prev,
               link_target: value
@@ -739,13 +739,13 @@ export const DashboardHeroManagerModule = () => {
       </Card>
 
       {/* Slides List */}
-      <Card>
+      <Card className="bg-card border-border">
         <CardHeader>
-          <CardTitle>Existing Slides</CardTitle>
+          <CardTitle className="text-foreground">Existing Slides</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {heroSlides.map(slide => <div key={slide.id} className="flex items-center gap-4 p-4 border rounded-lg">
+            {heroSlides.map(slide => <div key={slide.id} className="flex items-center gap-4 p-4 border border-border rounded-lg bg-card">
                 {/* Thumbnail */}
                 <div className="flex-shrink-0 w-32 h-20 rounded-md overflow-hidden bg-muted">
                   <img src={slide.image_url} alt={slide.title || 'Hero slide'} className="w-full h-full object-cover" />
@@ -753,7 +753,7 @@ export const DashboardHeroManagerModule = () => {
                 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-medium">{slide.title || 'Untitled'}</h4>
+                  <h4 className="font-medium text-foreground">{slide.title || 'Untitled'}</h4>
                   <p className="text-sm text-muted-foreground truncate">{slide.description || 'No description'}</p>
                   <p className="text-xs text-muted-foreground mt-1">Order: {slide.display_order}</p>
                 </div>
