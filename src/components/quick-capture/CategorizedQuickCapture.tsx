@@ -105,29 +105,57 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
   const isVideoFile = capturedMedia?.type.startsWith('video/');
 
   const handleUpload = async () => {
-    if (!capturedMedia) return;
+    if (!capturedMedia) {
+      console.error('No captured media to upload');
+      return;
+    }
+
+    console.log('Starting upload:', {
+      fileName: capturedMedia.name,
+      fileSize: capturedMedia.size,
+      fileType: capturedMedia.type,
+      category
+    });
 
     setIsUploading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw new Error('Authentication error: ' + authError.message);
+      }
       if (!user) {
         throw new Error('Please sign in to upload media');
       }
+
+      console.log('User authenticated:', user.id);
 
       // Upload file to storage
       const fileExt = capturedMedia.name.split('.').pop() || (isVideoFile ? 'webm' : 'jpg');
       const fileName = `${user.id}/${config.folder}/${Date.now()}.${fileExt}`;
       
-      const { error: uploadError } = await supabase.storage
+      console.log('Uploading to storage:', fileName);
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('quick-capture-media')
-        .upload(fileName, capturedMedia);
+        .upload(fileName, capturedMedia, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw new Error('Storage upload failed: ' + uploadError.message);
+      }
+
+      console.log('Storage upload success:', uploadData);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('quick-capture-media')
         .getPublicUrl(fileName);
+
+      console.log('Public URL:', publicUrl);
 
       // Generate thumbnail for videos
       let thumbnailUrl = null;
@@ -136,25 +164,40 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
       }
 
       // Save to database
-      const { error: dbError } = await supabase
+      const insertData = {
+        user_id: user.id,
+        category: category,
+        title: title.trim() || `${config.title} - ${new Date().toLocaleDateString()}`,
+        description: description.trim() || null,
+        file_url: publicUrl,
+        thumbnail_url: thumbnailUrl,
+        file_type: capturedMedia.type,
+        file_size: capturedMedia.size,
+        is_approved: category === 'glee_cam_pic' || category === 'christmas_carol_selfie',
+      };
+      
+      console.log('Inserting to database:', insertData);
+      
+      const { data: dbData, error: dbError } = await supabase
         .from('quick_capture_media')
-        .insert({
-          user_id: user.id,
-          category: category,
-          title: title.trim() || `${config.title} - ${new Date().toLocaleDateString()}`,
-          description: description.trim() || null,
-          file_url: publicUrl,
-          thumbnail_url: thumbnailUrl,
-          file_type: capturedMedia.type,
-          file_size: capturedMedia.size,
-          is_approved: category === 'glee_cam_pic' || category === 'christmas_carol_selfie', // Auto-approve glee cam pics and christmas selfies
-        });
+        .insert(insertData)
+        .select()
+        .single();
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database insert error:', dbError);
+        throw new Error('Database insert failed: ' + dbError.message);
+      }
+
+      console.log('Database insert success:', dbData);
 
       // If glee cam pic or christmas selfie, sync to heroes
       if (category === 'glee_cam_pic' || category === 'christmas_carol_selfie') {
-        await supabase.functions.invoke('sync-glee-cam-to-heroes');
+        console.log('Syncing to heroes...');
+        const { error: syncError } = await supabase.functions.invoke('sync-glee-cam-to-heroes');
+        if (syncError) {
+          console.warn('Hero sync warning:', syncError);
+        }
       }
 
       toast({
