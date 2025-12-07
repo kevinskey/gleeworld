@@ -6,13 +6,53 @@ let isUnlocked = false;
 let unlockPromise: Promise<void> | null = null;
 let unlockAttempts = 0;
 
+// Create AudioContext with iOS compatibility
+const createAudioContext = (): AudioContext => {
+  const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+  if (!AudioContextClass) {
+    throw new Error('Web Audio API not supported');
+  }
+  return new AudioContextClass();
+};
+
 export const getSharedAudioContext = (): AudioContext => {
   if (!globalAudioContext || globalAudioContext.state === 'closed') {
-    globalAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    globalAudioContext = createAudioContext();
     isUnlocked = false;
     console.log('🔊 Created new AudioContext, state:', globalAudioContext.state);
   }
   return globalAudioContext;
+};
+
+// iOS-specific: Play a silent buffer immediately during user gesture
+const playSilentBuffer = (ctx: AudioContext): void => {
+  try {
+    const buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+  } catch (e) {
+    console.log('🔊 Silent buffer failed:', e);
+  }
+};
+
+// iOS-specific: Play a very quiet oscillator to fully unlock
+const playUnlockTone = (ctx: AudioContext): void => {
+  try {
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 1;
+    gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.1);
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    oscillator.start(ctx.currentTime);
+    oscillator.stop(ctx.currentTime + 0.1);
+  } catch (e) {
+    console.log('🔊 Unlock tone failed:', e);
+  }
 };
 
 export const unlockAudioContext = async (): Promise<AudioContext> => {
@@ -33,37 +73,26 @@ export const unlockAudioContext = async (): Promise<AudioContext> => {
       unlockAttempts++;
       console.log(`🔊 Attempting to unlock AudioContext (attempt ${unlockAttempts}), current state:`, ctx.state);
       
-      // Resume the context first
+      // Step 1: Play silent buffer immediately (must be during user gesture)
+      playSilentBuffer(ctx);
+      
+      // Step 2: Resume the context
       if (ctx.state === 'suspended') {
         await ctx.resume();
         console.log('🔊 Context resumed, state:', ctx.state);
       }
       
-      // Play a silent buffer to fully unlock on iOS
-      // This must happen during a user gesture on iOS
-      const buffer = ctx.createBuffer(1, 1, 22050);
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start(0);
-      source.stop(0.001);
+      // Step 3: Play unlock tone
+      playUnlockTone(ctx);
       
-      // Also create and play an oscillator briefly (helps with some iOS versions)
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      gainNode.gain.value = 0.001; // Very quiet but not zero
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      oscillator.start(0);
-      oscillator.stop(ctx.currentTime + 0.01);
+      // Step 4: Wait for iOS to process
+      await new Promise(resolve => setTimeout(resolve, 50));
       
-      // Wait for iOS to process
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Double-check the state and try resume again if needed
+      // Step 5: Double-check and retry resume if needed
       if (ctx.state === 'suspended') {
         console.log('🔊 Context still suspended, trying resume again...');
         await ctx.resume();
+        await new Promise(resolve => setTimeout(resolve, 50));
       }
       
       if (ctx.state === 'running') {
@@ -74,7 +103,6 @@ export const unlockAudioContext = async (): Promise<AudioContext> => {
       }
     } catch (error) {
       console.error('❌ Failed to unlock AudioContext:', error);
-      throw error;
     } finally {
       unlockPromise = null;
     }
@@ -93,22 +121,31 @@ export const getAudioContextState = (): string => {
 // Force unlock - call this directly from a touch/click handler
 export const forceUnlockAudio = async (): Promise<boolean> => {
   try {
-    const ctx = await unlockAudioContext();
+    const ctx = getSharedAudioContext();
     
-    // Extra step for stubborn mobile browsers: play an audible tone briefly
-    if (ctx.state === 'running' && !isUnlocked) {
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      gainNode.gain.setValueAtTime(0.001, ctx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.05);
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      oscillator.start();
-      oscillator.stop(ctx.currentTime + 0.05);
-      isUnlocked = true;
+    // Immediately play silent buffer during user gesture
+    playSilentBuffer(ctx);
+    
+    // Resume context
+    if (ctx.state !== 'running') {
+      await ctx.resume();
     }
     
-    return ctx.state === 'running';
+    // Play unlock tone
+    playUnlockTone(ctx);
+    
+    // Wait briefly
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    // Final resume attempt
+    if (ctx.state !== 'running') {
+      await ctx.resume();
+    }
+    
+    isUnlocked = ctx.state === 'running';
+    console.log('🔊 Force unlock result:', ctx.state);
+    
+    return isUnlocked;
   } catch (e) {
     console.error('Force unlock failed:', e);
     return false;
@@ -117,14 +154,12 @@ export const forceUnlockAudio = async (): Promise<boolean> => {
 
 // Pre-unlock on any user interaction (for iOS)
 export const setupMobileAudioUnlock = () => {
-  const unlockOnInteraction = async (e: Event) => {
+  const unlockOnInteraction = async () => {
     if (!isUnlocked) {
-      console.log('🔊 User interaction detected, attempting audio unlock via', e.type);
       try {
         await forceUnlockAudio();
-      } catch (err) {
-        // Ignore errors during auto-unlock, will retry on next interaction
-        console.log('🔊 Auto-unlock attempt did not complete, will retry');
+      } catch {
+        // Ignore errors during auto-unlock
       }
     }
   };
