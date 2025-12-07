@@ -701,9 +701,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
   // Center piano on mount
   useEffect(() => {
-    const centerX = Math.max(0, (window.innerWidth - pianoSize.width) / 2);
-    const centerY = Math.max(0, (window.innerHeight - pianoSize.height) / 2);
-    setPianoPosition({ x: centerX, y: centerY });
+    // Use requestAnimationFrame to ensure window dimensions are ready
+    requestAnimationFrame(() => {
+      const centerX = Math.max(0, (window.innerWidth - 900) / 2);
+      const centerY = Math.max(0, (window.innerHeight - 600) / 2);
+      setPianoPosition({ x: centerX, y: centerY });
+    });
   }, []);
 
   // Detect mobile on mount and resize
