@@ -329,6 +329,25 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }
   };
 
+  // Global touchend listener to stop all notes (mobile fallback)
+  useEffect(() => {
+    const handleGlobalTouchEnd = () => {
+      // Stop all active notes when touch ends anywhere
+      if (synthRef.current && activeNotes.size > 0) {
+        synthRef.current.stopAllNotes();
+        setActiveNotes(new Set());
+      }
+    };
+
+    document.addEventListener('touchend', handleGlobalTouchEnd);
+    document.addEventListener('touchcancel', handleGlobalTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchend', handleGlobalTouchEnd);
+      document.removeEventListener('touchcancel', handleGlobalTouchEnd);
+    };
+  }, [activeNotes.size]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -419,13 +438,10 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 playNote(key.frequency, keyName);
               }} 
               onPointerUp={() => stopNote(keyName)} 
-              onPointerLeave={() => stopNote(keyName)}
-              onPointerCancel={() => stopNote(keyName)}
-              onTouchEnd={(e) => {
-                e.preventDefault();
-                stopNote(keyName);
+              onPointerLeave={() => {
+                if (isActive) stopNote(keyName);
               }}
-              onTouchCancel={() => stopNote(keyName)}>
+              onPointerCancel={() => stopNote(keyName)}>
                     <span style={{ color: '#374151' }} className="font-bold">
                       {key.note}
                       <sub className="text-[0.6em]">{key.octave}</sub>
@@ -457,13 +473,10 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                   playNote(key.frequency, keyName);
                 }} 
                 onPointerUp={() => stopNote(keyName)} 
-                onPointerLeave={() => stopNote(keyName)}
-                onPointerCancel={() => stopNote(keyName)}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  stopNote(keyName);
+                onPointerLeave={() => {
+                  if (isActive) stopNote(keyName);
                 }}
-                onTouchCancel={() => stopNote(keyName)}>
+                onPointerCancel={() => stopNote(keyName)}>
                       <span style={{ color: '#FFFFFF' }}>{key.note.replace('#', '♯')}</span>
                     </button>;
               })}
