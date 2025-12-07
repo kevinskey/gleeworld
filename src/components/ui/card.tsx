@@ -8,8 +8,8 @@ const Card = React.forwardRef<
   }
 >(({ className, variant = "default", ...props }, ref) => {
   const variants = {
-    default: "bg-card border border-border/60 shadow-card hover:shadow-card-hover",
-    glass: "bg-card/80 backdrop-blur-md border border-border/40 shadow-glass",
+    default: "bg-card border border-border shadow-card hover:shadow-card-hover",
+    glass: "bg-card/80 backdrop-blur-md border border-border shadow-glass",
     elevated: "bg-card border-0 shadow-elevated hover:shadow-glass-lg",
     outline: "bg-transparent border-2 border-border hover:border-primary/50",
   }
