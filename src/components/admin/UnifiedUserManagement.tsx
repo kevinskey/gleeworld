@@ -592,10 +592,75 @@ export const UnifiedUserManagement = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent 
                             align="end" 
-                            className="w-48 max-h-[400px] overflow-y-auto z-50 bg-popover"
+                            className="w-56 max-h-[400px] overflow-y-auto z-50 bg-popover"
                             sideOffset={5}
                           >
-                            <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedUser({
+                                  id: user.user_id,
+                                  email: user.email,
+                                  full_name: user.full_name,
+                                  role: user.role,
+                                  created_at: user.created_at,
+                                  exec_board_role: user.exec_board_role ?? null,
+                                  is_exec_board: !!user.is_exec_board,
+                                  avatar_url: user.avatar_url ?? null,
+                                  verified: !!user.verified,
+                                  is_admin: !!user.is_admin,
+                                  is_super_admin: !!user.is_super_admin,
+                                });
+                                setShowResetDialog(true);
+                              }}
+                            >
+                              <KeyRound className="h-4 w-4 mr-2 text-blue-500" />
+                              Reset Password
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem 
+                              onClick={() => handleVerificationToggle(user.id, user.verified || false)}
+                            >
+                              {user.verified ? (
+                                <>
+                                  <UserX className="h-4 w-4 mr-2 text-yellow-500" />
+                                  Mark Unverified
+                                </>
+                              ) : (
+                                <>
+                                  <UserCheck className="h-4 w-4 mr-2 text-green-500" />
+                                  Mark Verified
+                                </>
+                              )}
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                setSelectedUser({
+                                  id: user.user_id!,
+                                  email: user.email,
+                                  full_name: user.full_name,
+                                  role: user.role,
+                                  created_at: user.created_at,
+                                  exec_board_role: user.exec_board_role ?? null,
+                                  is_exec_board: !!user.is_exec_board,
+                                  avatar_url: user.avatar_url ?? null,
+                                  verified: !!user.verified,
+                                  is_admin: !!user.is_admin,
+                                  is_super_admin: !!user.is_super_admin,
+                                });
+                                setDeleteDialogOpen(true);
+                              }}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete User
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel>Change Role</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             
                             <DropdownMenuItem 
@@ -667,71 +732,6 @@ export const UnifiedUserManagement = () => {
                             >
                               <Calendar className="h-4 w-4 mr-2" />
                               Make Auditioner
-                            </DropdownMenuItem>
-                            
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem 
-                              onClick={() => handleVerificationToggle(user.id, user.verified || false)}
-                            >
-                              {user.verified ? (
-                                <>
-                                  <UserX className="h-4 w-4 mr-2" />
-                                  Mark Unverified
-                                </>
-                              ) : (
-                                <>
-                                  <UserCheck className="h-4 w-4 mr-2" />
-                                  Mark Verified
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                setSelectedUser({
-                                  id: user.user_id,
-                                  email: user.email,
-                                  full_name: user.full_name,
-                                  role: user.role,
-                                  created_at: user.created_at,
-                                  exec_board_role: user.exec_board_role ?? null,
-                                  is_exec_board: !!user.is_exec_board,
-                                  avatar_url: user.avatar_url ?? null,
-                                  verified: !!user.verified,
-                                  is_admin: !!user.is_admin,
-                                  is_super_admin: !!user.is_super_admin,
-                                });
-                                setShowResetDialog(true);
-                              }}
-                            >
-                              <KeyRound className="h-4 w-4 mr-2" />
-                              Reset Password
-                            </DropdownMenuItem>
-                            
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                setSelectedUser({
-                                  id: user.user_id!,
-                                  email: user.email,
-                                  full_name: user.full_name,
-                                  role: user.role,
-                                  created_at: user.created_at,
-                                  exec_board_role: user.exec_board_role ?? null,
-                                  is_exec_board: !!user.is_exec_board,
-                                  avatar_url: user.avatar_url ?? null,
-                                  verified: !!user.verified,
-                                  is_admin: !!user.is_admin,
-                                  is_super_admin: !!user.is_super_admin,
-                                });
-                                setDeleteDialogOpen(true);
-                              }}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete User
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
