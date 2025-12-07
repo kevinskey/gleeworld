@@ -465,8 +465,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     // On mobile, use a compact modal instead of full screen
     if (isMobile) {
       return (
-        <div className="fixed inset-0 z-[2147483647] bg-black/50 flex items-end justify-center p-2">
-          <div className="bg-background rounded-t-xl w-full max-h-[70vh] overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-[2147483647] bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl">
             {pianoContent}
           </div>
         </div>
