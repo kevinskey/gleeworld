@@ -253,11 +253,12 @@ export const MetalHeaderDashboard = ({
   const memoizedQuickActions = useMemo(() => {
     if (!canUseQuickActions) return undefined;
     return {
+      quickActions: memberQuickActions,
       addQuickAction,
       removeQuickAction,
       isInQuickActions
     };
-  }, [canUseQuickActions, addQuickAction, removeQuickAction, isInQuickActions]);
+  }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, isInQuickActions]);
 
   // Navigation hooks
   const location = useLocation();

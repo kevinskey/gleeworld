@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +33,13 @@ import {
   MessageSquare
 } from "lucide-react";
 
+interface QuickAction {
+  id: string;
+  module_id: string;
+  display_order: number;
+  is_visible: boolean;
+}
+
 interface QuickActionsPanelProps {
   user: {
     id: string;
@@ -46,6 +53,7 @@ interface QuickActionsPanelProps {
   isOpen: boolean;
   onClose: () => void;
   quickActions?: {
+    quickActions: QuickAction[];
     addQuickAction: (moduleId: string) => Promise<boolean>;
     removeQuickAction: (moduleId: string) => Promise<boolean>;
     isInQuickActions: (moduleId: string) => boolean;
@@ -57,11 +65,8 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
   const isAdmin = user.role === 'super-admin' || user.role === 'admin';
   const isMember = user.role === 'member';
   const [isManaging, setIsManaging] = useState(false);
-  const [customActions, setCustomActions] = useState<any[]>([]);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedModuleToAdd, setSelectedModuleToAdd] = useState('');
-  
-  // Debug logging removed for performance
 
   // Available modules for selection
   const availableModules = UNIFIED_MODULES.filter(module => module.isActive).map(module => ({
@@ -79,58 +84,31 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
     Camera, Mic, BookOpen, Heart, Star, Globe, Home, MessageSquare, Settings
   };
 
-  // Load custom actions from localStorage
-  useEffect(() => {
-    const storageKey = `quickActions_${user.id}`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setCustomActions(parsed);
-      } catch (error) {
-        // Silent error handling in production
-      }
-    }
-  }, [user.id]);
-
-  // Save custom actions to localStorage (strip runtime functions)
-  const saveCustomActions = (actions: any[]) => {
-    const serialized = actions.map(({ action, ...rest }) => rest);
-    localStorage.setItem(`quickActions_${user.id}`, JSON.stringify(serialized));
-    setCustomActions(serialized);
-  };
-
-  const computedCustomActions = customActions.map((a) => ({
-    ...a,
-    action: typeof a.action === 'function' ? a.action : () => {
-      const moduleId = a.moduleId || a.name || a.id;
-      // Use react-router object syntax to prevent URL encoding issues
-      navigate({
-        pathname: '/dashboard',
-        search: `?module=${moduleId}`
+  // Build display actions from database-backed quickActions
+  const allActions = useMemo(() => {
+    if (!quickActions?.quickActions) return [];
+    
+    return quickActions.quickActions
+      .filter(qa => qa.is_visible)
+      .sort((a, b) => a.display_order - b.display_order)
+      .map(qa => {
+        const moduleConfig = UNIFIED_MODULES.find(m => m.name === qa.module_id);
+        return {
+          id: qa.id,
+          moduleId: qa.module_id,
+          title: moduleConfig?.title || qa.module_id,
+          description: moduleConfig?.description || '',
+          icon: moduleConfig?.icon?.name || 'Zap',
+        };
       });
-    },
-  }));
+  }, [quickActions?.quickActions]);
 
-  const allActions = computedCustomActions;
-
-  const handleActionClick = (actionFn?: () => void, fallbackModuleId?: string) => {
-    try {
-      if (typeof actionFn === 'function') {
-        actionFn();
-      } else if (fallbackModuleId) {
-        // Use navigate directly to prevent URL encoding issues
-        navigate({
-          pathname: '/dashboard',
-          search: `?module=${fallbackModuleId}`
-        });
-      } else {
-        throw new TypeError('actionFn is not a function');
-      }
-      onClose();
-    } catch (error) {
-      // Silent error handling
-    }
+  const handleActionClick = (moduleId: string) => {
+    navigate({
+      pathname: '/dashboard',
+      search: `?module=${moduleId}`
+    });
+    onClose();
   };
 
   const handleAddAction = async () => {
@@ -139,70 +117,19 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
       return;
     }
 
-    // Use the quickActions hook if available (works for all users now)
     if (quickActions) {
       const success = await quickActions.addQuickAction(selectedModuleToAdd);
       if (success) {
         setSelectedModuleToAdd('');
         setShowAddDialog(false);
       }
-      return;
-    }
-
-    // Fallback to localStorage if hook not available
-    const selectedModule = availableModules.find(m => m.name === selectedModuleToAdd);
-    if (!selectedModule) {
-      toast.error('Module not found');
-      return;
-    }
-    
-    const newAction = {
-      id: `custom_${Date.now()}`,
-      title: selectedModule.title,
-      description: selectedModule.description,
-      icon: 'Zap',
-      color: 'blue',
-      action: () => onModuleSelect(selectedModuleToAdd),
-      isDefault: false,
-      moduleId: selectedModuleToAdd
-    };
-
-    const updatedActions = [...customActions, newAction];
-    saveCustomActions(updatedActions);
-    
-    setSelectedModuleToAdd('');
-    setShowAddDialog(false);
-    
-    toast.success(`Quick action "${selectedModule.title}" added successfully!`);
-  };
-
-  const handleDeleteAction = (actionId: string) => {
-    const updatedActions = customActions.filter(action => action.id !== actionId);
-    saveCustomActions(updatedActions);
-    toast.success('Quick action removed successfully!');
-  };
-
-  // Handle adding module to member quick actions
-  const handleAddToQuickActions = async (moduleId: string) => {
-    if (!quickActions) {
-      toast.error('Quick actions not available');
-      return;
-    }
-
-    const success = await quickActions.addQuickAction(moduleId);
-    if (success) {
-      onClose();
     }
   };
 
-  // Handle removing module from member quick actions
-  const handleRemoveFromQuickActions = async (moduleId: string) => {
-    if (!quickActions) {
-      toast.error('Quick actions not available');
-      return;
+  const handleDeleteAction = async (moduleId: string) => {
+    if (quickActions) {
+      await quickActions.removeQuickAction(moduleId);
     }
-
-    const success = await quickActions.removeQuickAction(moduleId);
   };
 
   const getIconComponent = (iconName: string) => {
@@ -265,12 +192,10 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                         <SelectContent className="bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 max-h-60 overflow-y-auto">
                           {availableModules
                             .filter(module => {
-                              // Use quickActions hook if available (works for all users)
                               if (quickActions) {
                                 return !quickActions.isInQuickActions(module.name);
                               }
-                              // Fallback to localStorage filtering
-                              return !customActions.some(action => action.moduleId === module.name);
+                              return true;
                             })
                             .sort((a, b) => a.title.localeCompare(b.title))
                             .map((module) => (
@@ -319,7 +244,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                   <Button
                     variant="ghost"
                     className="flex-1 justify-start h-auto p-3 hover:bg-slate-400/20 dark:hover:bg-slate-600/20 group border border-transparent hover:border-slate-500 dark:hover:border-slate-400 rounded-lg transition-all duration-200"
-                    onClick={() => handleActionClick(action.action, (action as any).moduleId || action.id)}
+                    onClick={() => handleActionClick(action.moduleId)}
                   >
                     <div className="flex items-center gap-3 w-full">
                       <div 
@@ -339,7 +264,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                       variant="ghost"
                       size="sm"
                       className="h-10 w-10 p-0 hover:bg-red-500/20 text-red-600 hover:text-red-700"
-                      onClick={() => handleDeleteAction(action.id)}
+                      onClick={() => handleDeleteAction(action.moduleId)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
