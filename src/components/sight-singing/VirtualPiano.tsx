@@ -1018,12 +1018,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         </div>
       </div>
 
-      {/* Piano Keyboard Area */}
+      {/* Piano Keyboard Area - Scrollable */}
       <div ref={keysContainerRef} style={{
       scrollbarWidth: 'thin',
       scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))'
-    }} className="">
-        <div className="relative inline-block px-2 min-w-full mx-0 sm:px-0 py-0">
+    }} className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="relative inline-block px-2 min-w-max mx-0 sm:px-0 py-0">
           {/* White Keys */}
           <div className="relative">
             <div className={isFullScreen ? "flex gap-0.5 h-[200px] sm:h-[320px] md:h-[400px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
