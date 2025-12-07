@@ -5,7 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX, X } from 'lucide-react';
 import { WebAudioSynth, SYNTH_INSTRUMENTS } from '@/utils/webAudioSynth';
-import { unlockAudioContext, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
+import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 interface VirtualPianoProps {
   className?: string;
   onClose?: () => void;
@@ -268,6 +268,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   }, [startOctave, isMobile]);
 
   const playNote = useCallback(async (frequency: number, noteName: string) => {
+    console.log('🎹 playNote called:', noteName, frequency);
+    
+    // Force unlock audio on first interaction (critical for mobile)
+    try {
+      await forceUnlockAudio();
+    } catch (e) {
+      console.log('🔊 Force unlock during playNote:', e);
+    }
+    
     // Always ensure audio context is initialized and unlocked (mobile requirement)
     const audioContext = await initAudioContext();
     if (!audioContext) {
@@ -287,17 +296,6 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       }
     }
 
-    // Double-check state after resume attempt
-    if (audioContext.state !== 'running') {
-      console.warn('🎹 AudioContext still not running after resume, state:', audioContext.state);
-      try {
-        await audioContext.resume();
-      } catch (e) {
-        console.error('🎹 Second resume attempt failed');
-        return;
-      }
-    }
-
     // Use the WebAudioSynth to play the note
     if (synthRef.current) {
       try {
@@ -307,6 +305,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       } catch (error) {
         console.warn('🎹 Synth playNote failed:', error);
       }
+    } else {
+      console.warn('🎹 No synth available');
     }
   }, [initAudioContext]);
 
@@ -465,8 +465,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     // On mobile, use a compact modal instead of full screen
     if (isMobile) {
       return (
-        <div className="fixed inset-0 z-[2147483647] bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-background rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl">
+        <div 
+          className="fixed inset-0 z-[2147483647] bg-black/50 flex items-center justify-center p-4"
+          onTouchStart={handleUserInteraction}
+          onClick={handleUserInteraction}
+        >
+          <div 
+            className="bg-background rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             {pianoContent}
           </div>
         </div>
