@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Camera, Mic, Video, UserCheck } from 'lucide-react';
+import { Camera, Mic, Video, UserCheck, Sparkles } from 'lucide-react';
 
-export type QuickCaptureCategory = 'glee_cam_pic' | 'voice_part_recording' | 'exec_board_video' | 'member_audition_video';
+export type QuickCaptureCategory = 'christmas_carol_selfie' | 'glee_cam_pic' | 'voice_part_recording' | 'exec_board_video' | 'member_audition_video';
 
 interface CategoryOption {
   id: QuickCaptureCategory;
@@ -14,6 +14,13 @@ interface CategoryOption {
 }
 
 const categories: CategoryOption[] = [
+  {
+    id: 'christmas_carol_selfie',
+    title: 'Christmas Carol Selfie',
+    description: 'Festive selfie for the holiday hero carousel',
+    icon: <Sparkles className="h-8 w-8" />,
+    color: 'from-red-500 to-green-500'
+  },
   {
     id: 'glee_cam_pic',
     title: 'Glee Cam Pic',
