@@ -148,15 +148,15 @@ export const DashboardHeroCarousel: React.FC = () => {
                 />
 
                 {/* Subtle overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/20 to-transparent" />
 
                 {/* Title overlay */}
                 {slide.title && (
                   <div
                     className={`absolute inset-0 flex ${getVerticalAlignment(slide.title_position_vertical)} ${getHorizontalAlignment(slide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
                   >
-                    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-white/20 pointer-events-auto">
-                      <h1 className={`${getTitleSize(slide.title_size)} font-bold text-white drop-shadow-lg`}>{slide.title}</h1>
+                    <div className="bg-foreground/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-background/20 pointer-events-auto">
+                      <h1 className={`${getTitleSize(slide.title_size)} font-bold text-background drop-shadow-lg`}>{slide.title}</h1>
                     </div>
                   </div>
                 )}
@@ -166,8 +166,8 @@ export const DashboardHeroCarousel: React.FC = () => {
                   <div
                     className={`absolute inset-0 flex ${getVerticalAlignment(slide.description_position_vertical)} ${getHorizontalAlignment(slide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
                   >
-                    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-white/20 pointer-events-auto max-w-2xl">
-                      <p className={`${getDescriptionSize(slide.description_size)} text-white drop-shadow-md`}>{slide.description}</p>
+                    <div className="bg-foreground/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-background/20 pointer-events-auto max-w-2xl">
+                      <p className={`${getDescriptionSize(slide.description_size)} text-background drop-shadow-md`}>{slide.description}</p>
                     </div>
                   </div>
                 )}
@@ -175,7 +175,7 @@ export const DashboardHeroCarousel: React.FC = () => {
                 {/* Action button (mirrors landing) */}
                 {slide.action_button_enabled && slide.action_button_text && slide.action_button_url && (
                   <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 px-4 pointer-events-none">
-                    <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-white/20 shadow-xl">
+                    <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-background/20 shadow-xl">
                       <a href={slide.action_button_url} target="_blank" rel="noopener noreferrer">
                         {slide.action_button_text}
                       </a>

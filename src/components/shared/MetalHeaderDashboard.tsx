@@ -679,7 +679,7 @@ export const MetalHeaderDashboard = ({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-2 gap-2 sm:gap-3">
         {/* Announcements Ticker - All screen sizes */}
         <div className="flex items-center flex-1 min-w-0 overflow-hidden order-2 sm:order-1 py-0">
-          <AnnouncementsDisplay className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-md w-full" />
+          <AnnouncementsDisplay className="bg-background/80 backdrop-blur-sm rounded-2xl shadow-md w-full" />
         </div>
         
         {/* Messages Button - Theme-aware styling */}

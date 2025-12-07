@@ -271,15 +271,15 @@ export const GleeWorldLanding = () => {
             {/* Content */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 md:px-8">
               <div className="text-4xl sm:text-5xl md:text-6xl mb-4">🎄</div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 drop-shadow-lg">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-3 drop-shadow-lg">
                 Christmas Concert Ticket Request
               </h1>
-              <p className="text-white/90 text-base sm:text-lg md:text-xl max-w-2xl mb-6 drop-shadow">
+              <p className="text-primary-foreground/90 text-base sm:text-lg md:text-xl max-w-2xl mb-6 drop-shadow">
                 Request your complimentary tickets to the Spelman College Glee Club's annual Christmas concert!
               </p>
               <Button 
                 size="lg" 
-                className="bg-white text-red-700 hover:bg-white/90 font-bold shadow-xl text-lg px-8 py-6"
+                className="bg-background text-destructive hover:bg-background/90 font-bold shadow-xl text-lg px-8 py-6"
                 onClick={() => navigate('/concert-ticket-request')}
               >
                 Request Tickets Now
@@ -325,21 +325,21 @@ export const GleeWorldLanding = () => {
                   <div className="absolute inset-0">
                     {/* Title Section */}
                     {currentHeroSlide?.title && <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.title_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none`}>
-                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-white max-w-5xl pointer-events-auto drop-shadow-2xl text-center sm:text-left leading-tight`}>
+                        <h1 className={`${getTitleSize(currentHeroSlide.title_size)} font-bold text-primary-foreground max-w-5xl pointer-events-auto drop-shadow-2xl text-center sm:text-left leading-tight`}>
                           {currentHeroSlide.title}
                         </h1>
                       </div>}
                     
                     {/* Description Section */}
                      {currentHeroSlide?.description && <div className={`absolute inset-0 flex ${getVerticalAlignment(currentHeroSlide.description_position_vertical)} ${getHorizontalAlignment(currentHeroSlide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none`}>
-                         <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-white/90 max-w-3xl pointer-events-auto drop-shadow-lg text-center sm:text-left leading-relaxed`}>
+                         <p className={`${getDescriptionSize(currentHeroSlide.description_size)} text-primary-foreground/90 max-w-3xl pointer-events-auto drop-shadow-lg text-center sm:text-left leading-relaxed`}>
                            {currentHeroSlide.description}
                          </p>
                        </div>}
                     
                      {/* Action Button Section */}
                      {currentHeroSlide?.action_button_enabled && currentHeroSlide?.action_button_text && currentHeroSlide?.action_button_url && <div className="absolute inset-0 flex justify-center items-end pb-6 sm:pb-8 md:pb-10 lg:pb-12 xl:pb-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none">
-                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
+                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-primary-foreground/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
                            <a href={currentHeroSlide.action_button_url} target="_blank" rel="noopener noreferrer">
                              {currentHeroSlide.action_button_text}
                            </a>
@@ -348,7 +348,7 @@ export const GleeWorldLanding = () => {
                      
                      {/* Legacy button support */}
                      {!currentHeroSlide?.action_button_enabled && currentHeroSlide?.button_text && currentHeroSlide?.link_url && <div className="absolute inset-0 flex justify-center items-end pb-6 sm:pb-8 md:pb-10 lg:pb-12 xl:pb-16 px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pointer-events-none">
-                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-white/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
+                         <Button size="lg" className="pointer-events-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl font-semibold border-2 border-primary-foreground/20 text-sm sm:text-base md:text-lg px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-5" asChild>
                            <a href={currentHeroSlide.link_url} target="_blank" rel="noopener noreferrer">
                              {currentHeroSlide.button_text}
                            </a>
@@ -395,7 +395,7 @@ export const GleeWorldLanding = () => {
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-foreground mb-2">
                   Upcoming Events
                 </h2>
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
@@ -405,11 +405,11 @@ export const GleeWorldLanding = () => {
               
               {loading ? <div className="flex space-x-4 overflow-hidden">
                   {[...Array(6)].map((_, i) => <Card key={i} className="animate-pulse flex-shrink-0 w-80 bg-card border-2 border-border">
-                      <div className="h-64 bg-gray-200/50 rounded-t-lg"></div>
+                      <div className="h-64 bg-muted/50 rounded-t-lg"></div>
                       <CardContent className="p-6">
-                        <div className="h-4 bg-gray-200/50 rounded mb-4"></div>
-                        <div className="h-3 bg-gray-200/50 rounded mb-2"></div>
-                        <div className="h-3 bg-gray-200/50 rounded w-3/4"></div>
+                        <div className="h-4 bg-muted/50 rounded mb-4"></div>
+                        <div className="h-3 bg-muted/50 rounded mb-2"></div>
+                        <div className="h-3 bg-muted/50 rounded w-3/4"></div>
                       </CardContent>
                     </Card>)}
                 </div> : events.length > 0 ? <>
@@ -460,25 +460,25 @@ export const GleeWorldLanding = () => {
                     <Carousel className="w-full">
                       <CarouselContent className="-ml-2 sm:-ml-4 h-[600px] sm:h-[650px]">
                         {events.map(event => <CarouselItem key={event.id} className="pl-2 sm:pl-4 basis-full h-full">
-                            <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 flex flex-col">
+                            <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30 flex flex-col">
                               {/* Hover overlay button */}
                               <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
+                                <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-border/30" asChild>
                                   <Link to="/public-calendar">
                                     View All <ArrowRight className="ml-1 h-4 w-4" />
                                   </Link>
                                 </Button>
                               </div>
                               
-                              <div className="h-56 sm:h-64 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
+                              <div className="h-56 sm:h-64 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
                                 <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-contain p-4 rounded-t-lg brightness-95 contrast-100" onError={e => {
                             console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                             e.currentTarget.src = getDefaultEventImage(event.id);
                           }} />
                               </div>
                               <CardContent className="p-4 sm:p-6 flex-1 flex flex-col">
-                                <h3 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-3 sm:mb-4 line-clamp-2">{event.title}</h3>
-                                <div className="space-y-2 text-gray-600">
+                                <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-3 sm:mb-4 line-clamp-2">{event.title}</h3>
+                                <div className="space-y-2 text-muted-foreground">
                                   <div className="flex items-center">
                                     <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 flex-shrink-0" />
                                     <span className="text-sm sm:text-base lg:text-lg">{formatDate(event.start_date)}</span>
@@ -489,7 +489,7 @@ export const GleeWorldLanding = () => {
                                     </div>}
                                 </div>
                                 <div className="flex-1">
-                                  {event.description && <p className="text-gray-600 mt-3 sm:mt-4 line-clamp-3 text-sm sm:text-base lg:text-lg">{event.description}</p>}
+                                  {event.description && <p className="text-muted-foreground mt-3 sm:mt-4 line-clamp-3 text-sm sm:text-base lg:text-lg">{event.description}</p>}
                                 </div>
                               </CardContent>
                             </Card>
@@ -500,22 +500,22 @@ export const GleeWorldLanding = () => {
                 </> : <Carousel className="w-full">
                   <CarouselContent className="-ml-1 sm:-ml-2 md:-ml-4">
                     {[...Array(6)].map((_, i) => <CarouselItem key={i} className="pl-1 sm:pl-2 md:pl-4 basis-full">
-                        <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30">
+                        <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30">
                           {/* Hover overlay button */}
                           <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-white/30" asChild>
+                            <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-border/30" asChild>
                               <Link to="/public-calendar">
                                 View All <ArrowRight className="ml-1 h-4 w-4" />
                               </Link>
                             </Button>
                           </div>
                           
-                          <div className="h-64 sm:h-80 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
-                            <Calendar className="h-12 w-12 text-blue-600" />
+                          <div className="h-64 sm:h-80 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center backdrop-blur-sm">
+                            <Calendar className="h-12 w-12 text-primary" />
                           </div>
                           <CardContent className="p-6 sm:p-8">
-                            <h3 className="text-2xl sm:text-2xl font-semibold text-gray-900 mb-4">Glee Club Rehearsal</h3>
-                            <div className="space-y-2 text-gray-600">
+                            <h3 className="text-2xl sm:text-2xl font-semibold text-foreground mb-4">Glee Club Rehearsal</h3>
+                            <div className="space-y-2 text-muted-foreground">
                               <div className="flex items-center">
                                 <Calendar className="h-5 w-5 mr-3 flex-shrink-0" />
                                 <span className="text-base sm:text-lg">Aug {19 + i * 2}, 2025</span>
@@ -542,7 +542,7 @@ export const GleeWorldLanding = () => {
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-foreground mb-2">
                   The Glee Store
                 </h2>
                 <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
@@ -562,7 +562,7 @@ export const GleeWorldLanding = () => {
                 <div className="text-center mb-4 sm:mb-6 md:mb-8">
                   <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
                     <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-foreground mb-2">
                       Our Music
                     </h2>
                     <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
@@ -582,7 +582,7 @@ export const GleeWorldLanding = () => {
                         }} /> : <div className="flex items-center justify-center w-full h-full">
                                 <Music className="h-16 w-16 text-muted-foreground" />
                               </div>}
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/20 transition-colors duration-300 flex items-center justify-center">
                               <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <div className="bg-card border-2 border-primary rounded-full p-3">
                                   <Music className="h-6 w-6 text-primary" />
@@ -591,9 +591,9 @@ export const GleeWorldLanding = () => {
                             </div>
                           </div>
                           <CardContent className="p-3 sm:p-4">
-                            <h3 className="font-semibold text-gray-900 mb-1 line-clamp-1 text-sm sm:text-base">{album.title}</h3>
+                            <h3 className="font-semibold text-foreground mb-1 line-clamp-1 text-sm sm:text-base">{album.title}</h3>
                             
-                            {album.tracks && album.tracks.length > 0 && <p className="text-xs text-gray-500 mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>}
+                            {album.tracks && album.tracks.length > 0 && <p className="text-xs text-muted-foreground mt-1">{album.tracks.length} track{album.tracks.length !== 1 ? 's' : ''}</p>}
                             {album.release_date && <p className="text-xs text-muted-foreground mt-1">{new Date(album.release_date).getFullYear()}</p>}
                           </CardContent>
                         </Card>
@@ -618,11 +618,11 @@ export const GleeWorldLanding = () => {
           <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <div className="text-center mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-red-500 animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-gray-900 mb-2">
+                <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-destructive animate-pulse" />
+                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-foreground mb-2">
                   YouTube Channel
                 </h2>
-                <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-red-600 animate-pulse" />
+                <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-destructive animate-pulse" />
               </div>
               <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Experience our performances and behind-the-scenes moments</p>
             </div>
@@ -640,38 +640,38 @@ export const GleeWorldLanding = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="text-base sm:text-lg font-semibold">Spelman College Glee Club</h3>
-                <p className="text-gray-400 text-sm">
+                <p className="text-primary-foreground/60 text-sm">
                   Building a legacy of musical excellence and sisterhood since 1881.
                 </p>
               </div>
               <div className="space-y-3 sm:space-y-4">
                 <h4 className="text-base sm:text-lg font-semibold">Quick Links</h4>
                 <div className="space-y-2 text-sm">
-                  <div><Link to="/about" className="text-gray-400 hover:text-white transition-colors">About</Link></div>
-                  <div><a href="#events" className="text-gray-400 hover:text-white transition-colors">Events</a></div>
-                  <div><Link to="/music-library" className="text-gray-400 hover:text-white transition-colors">Music</Link></div>
-                  <div><Link to="/press-kit" className="text-gray-400 hover:text-white transition-colors">Contact</Link></div>
+                  <div><Link to="/about" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">About</Link></div>
+                  <div><a href="#events" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">Events</a></div>
+                  <div><Link to="/music-library" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">Music</Link></div>
+                  <div><Link to="/press-kit" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">Contact</Link></div>
                 </div>
               </div>
               <div className="space-y-3 sm:space-y-4">
                 <h4 className="text-base sm:text-lg font-semibold">Connect</h4>
                 <div className="space-y-2 text-sm">
-                  <div><a href="https://www.facebook.com/SpelmanGlee" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Facebook</a></div>
-                  <div><a href="https://www.instagram.com/spelmanglee" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">Instagram</a></div>
-                  <div><a href="https://x.com/spelmanglee" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">X</a></div>
-                  <div><a href="https://www.youtube.com/@spelmancollegegleeclub" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">YouTube</a></div>
+                  <div><a href="https://www.facebook.com/SpelmanGlee" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">Facebook</a></div>
+                  <div><a href="https://www.instagram.com/spelmanglee" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">Instagram</a></div>
+                  <div><a href="https://x.com/spelmanglee" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">X</a></div>
+                  <div><a href="https://www.youtube.com/@spelmancollegegleeclub" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">YouTube</a></div>
                 </div>
               </div>
               <div className="space-y-3 sm:space-y-4">
                 <h4 className="text-base sm:text-lg font-semibold">Contact</h4>
-                <div className="space-y-2 text-sm text-gray-400">
+                <div className="space-y-2 text-sm text-primary-foreground/60">
                   <div>Spelman College</div>
                   <div>350 Spelman Lane SW</div>
                   <div>Atlanta, GA 30314</div>
                 </div>
               </div>
             </div>
-            <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-sm text-gray-400">
+            <div className="border-t border-primary-foreground/20 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-sm text-primary-foreground/60">
               <p>&copy; 2024 Spelman College Glee Club. All rights reserved.</p>
             </div>
           </Card>
