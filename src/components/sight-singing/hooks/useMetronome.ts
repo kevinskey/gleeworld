@@ -100,14 +100,37 @@ export const useMetronome = () => {
       stopMetronome();
     }
     
+    // Force unlock audio on iOS - must happen during user gesture
+    await forceUnlockAudio();
+    
     const ctx = await getAudioContext();
-    if (!ctx) return;
+    if (!ctx) {
+      console.warn('🎵 Metronome: Failed to get audio context');
+      return;
+    }
+    
+    // Extra iOS workaround: ensure context is running
+    if (ctx.state !== 'running') {
+      try {
+        await ctx.resume();
+        // Give iOS time to actually start the context
+        await new Promise(resolve => setTimeout(resolve, 150));
+      } catch (e) {
+        console.warn('🎵 Metronome: Failed to resume context', e);
+      }
+    }
+    
+    if (ctx.state !== 'running') {
+      console.warn('🎵 Metronome: Context still not running after resume:', ctx.state);
+      return;
+    }
     
     setIsPlaying(true);
     setTempo(bpm);
     
     const intervalMs = 60000 / bpm;
     
+    // Play first click immediately
     playClick();
     
     intervalRef.current = window.setInterval(() => {
