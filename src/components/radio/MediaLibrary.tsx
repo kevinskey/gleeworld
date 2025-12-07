@@ -39,7 +39,8 @@ import {
   Loader2,
   Camera,
   Mic,
-  UserCheck
+  UserCheck,
+  Sparkles
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -916,6 +917,7 @@ export const MediaLibrary = ({
             {!quickCaptureCategory ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
+                  { id: 'christmas_carol_selfie', title: 'Christmas Carol Selfies', icon: Sparkles, color: 'from-red-500 to-green-500' },
                   { id: 'glee_cam_pic', title: 'Glee Cam Pics', icon: Camera, color: 'from-amber-500 to-orange-500' },
                   { id: 'voice_part_recording', title: 'Voice Recordings', icon: Mic, color: 'from-blue-500 to-cyan-500' },
                   { id: 'exec_board_video', title: 'ExecBoard Videos', icon: Video, color: 'from-purple-500 to-pink-500' },

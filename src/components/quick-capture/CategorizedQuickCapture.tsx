@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCameraImport } from '@/hooks/useCameraImport';
-import { Camera, Upload, X, SwitchCamera, Video, Circle, Square, Mic, ArrowLeft } from 'lucide-react';
+import { Camera, Upload, X, SwitchCamera, Video, Circle, Square, Mic, ArrowLeft, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { QuickCaptureCategory } from './QuickCaptureCategorySelector';
@@ -17,6 +17,12 @@ interface CategorizedQuickCaptureProps {
 }
 
 const categoryConfig = {
+  christmas_carol_selfie: {
+    title: 'Christmas Carol Selfie',
+    icon: Sparkles,
+    mode: 'photo' as const,
+    folder: 'christmas-carol-selfies',
+  },
   glee_cam_pic: {
     title: 'Glee Cam Pic',
     icon: Camera,
@@ -141,13 +147,13 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
           thumbnail_url: thumbnailUrl,
           file_type: capturedMedia.type,
           file_size: capturedMedia.size,
-          is_approved: category === 'glee_cam_pic', // Auto-approve glee cam pics
+          is_approved: category === 'glee_cam_pic' || category === 'christmas_carol_selfie', // Auto-approve glee cam pics and christmas selfies
         });
 
       if (dbError) throw dbError;
 
-      // If glee cam pic, sync to heroes
-      if (category === 'glee_cam_pic') {
+      // If glee cam pic or christmas selfie, sync to heroes
+      if (category === 'glee_cam_pic' || category === 'christmas_carol_selfie') {
         await supabase.functions.invoke('sync-glee-cam-to-heroes');
       }
 
