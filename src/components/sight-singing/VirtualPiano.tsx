@@ -685,7 +685,18 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     height: 600
   });
   
-  const [pianoPosition, setPianoPosition] = useState({ x: 0, y: 0 });
+  // Compute initial centered position (runs once on first render)
+  const getInitialPosition = () => {
+    if (typeof window !== 'undefined') {
+      return {
+        x: Math.max(0, (window.innerWidth - 900) / 2),
+        y: Math.max(0, (window.innerHeight - 600) / 2)
+      };
+    }
+    return { x: 100, y: 100 };
+  };
+  
+  const [pianoPosition, setPianoPosition] = useState(getInitialPosition);
   const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isLoadingSoundfont, setIsLoadingSoundfont] = useState(false);
@@ -698,16 +709,6 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     oscillators: OscillatorNode[];
     gainNode: GainNode;
   }>>(new Map());
-
-  // Center piano on mount
-  useEffect(() => {
-    // Use requestAnimationFrame to ensure window dimensions are ready
-    requestAnimationFrame(() => {
-      const centerX = Math.max(0, (window.innerWidth - 900) / 2);
-      const centerY = Math.max(0, (window.innerHeight - 600) / 2);
-      setPianoPosition({ x: centerX, y: centerY });
-    });
-  }, []);
 
   // Detect mobile on mount and resize
   useEffect(() => {
