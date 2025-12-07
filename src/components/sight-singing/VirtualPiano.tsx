@@ -420,7 +420,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
               }} 
               onPointerUp={() => stopNote(keyName)} 
               onPointerLeave={() => stopNote(keyName)}
-              onPointerCancel={() => stopNote(keyName)}>
+              onPointerCancel={() => stopNote(keyName)}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                stopNote(keyName);
+              }}
+              onTouchCancel={() => stopNote(keyName)}>
                     <span style={{ color: '#374151' }} className="font-bold">
                       {key.note}
                       <sub className="text-[0.6em]">{key.octave}</sub>
@@ -453,7 +458,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 }} 
                 onPointerUp={() => stopNote(keyName)} 
                 onPointerLeave={() => stopNote(keyName)}
-                onPointerCancel={() => stopNote(keyName)}>
+                onPointerCancel={() => stopNote(keyName)}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  stopNote(keyName);
+                }}
+                onTouchCancel={() => stopNote(keyName)}>
                       <span style={{ color: '#FFFFFF' }}>{key.note.replace('#', '♯')}</span>
                     </button>;
               })}
