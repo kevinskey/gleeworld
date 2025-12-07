@@ -3,8 +3,8 @@ import { Rnd } from 'react-rnd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Volume2, VolumeX, X, Loader2 } from 'lucide-react';
-import { SoundfontPlayer } from '@/utils/soundfontLoader';
+import { Volume2, VolumeX, X } from 'lucide-react';
+import { WebAudioSynth, SYNTH_INSTRUMENTS } from '@/utils/webAudioSynth';
 import { unlockAudioContext, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
 interface VirtualPianoProps {
   className?: string;
@@ -54,553 +54,6 @@ const baseBlackKeysPerOctave = [{
   note: 'A#',
   baseFrequency: 466.16,
   positionInOctave: 5.5
-}];
-
-// General MIDI Instrument List (128 instruments)
-const GM_INSTRUMENTS = [
-// Piano (1-8)
-{
-  id: 0,
-  name: 'Acoustic Grand Piano',
-  category: 'Piano'
-}, {
-  id: 1,
-  name: 'Bright Acoustic Piano',
-  category: 'Piano'
-}, {
-  id: 2,
-  name: 'Electric Grand Piano',
-  category: 'Piano'
-}, {
-  id: 3,
-  name: 'Honky-tonk Piano',
-  category: 'Piano'
-}, {
-  id: 4,
-  name: 'Electric Piano 1',
-  category: 'Piano'
-}, {
-  id: 5,
-  name: 'Electric Piano 2',
-  category: 'Piano'
-}, {
-  id: 6,
-  name: 'Harpsichord',
-  category: 'Piano'
-}, {
-  id: 7,
-  name: 'Clavinet',
-  category: 'Piano'
-},
-// Chromatic Percussion (9-16)
-{
-  id: 8,
-  name: 'Celesta',
-  category: 'Chromatic Percussion'
-}, {
-  id: 9,
-  name: 'Glockenspiel',
-  category: 'Chromatic Percussion'
-}, {
-  id: 10,
-  name: 'Music Box',
-  category: 'Chromatic Percussion'
-}, {
-  id: 11,
-  name: 'Vibraphone',
-  category: 'Chromatic Percussion'
-}, {
-  id: 12,
-  name: 'Marimba',
-  category: 'Chromatic Percussion'
-}, {
-  id: 13,
-  name: 'Xylophone',
-  category: 'Chromatic Percussion'
-}, {
-  id: 14,
-  name: 'Tubular Bells',
-  category: 'Chromatic Percussion'
-}, {
-  id: 15,
-  name: 'Dulcimer',
-  category: 'Chromatic Percussion'
-},
-// Organ (17-24)
-{
-  id: 16,
-  name: 'Drawbar Organ',
-  category: 'Organ'
-}, {
-  id: 17,
-  name: 'Percussive Organ',
-  category: 'Organ'
-}, {
-  id: 18,
-  name: 'Rock Organ',
-  category: 'Organ'
-}, {
-  id: 19,
-  name: 'Church Organ',
-  category: 'Organ'
-}, {
-  id: 20,
-  name: 'Reed Organ',
-  category: 'Organ'
-}, {
-  id: 21,
-  name: 'Accordion',
-  category: 'Organ'
-}, {
-  id: 22,
-  name: 'Harmonica',
-  category: 'Organ'
-}, {
-  id: 23,
-  name: 'Tango Accordion',
-  category: 'Organ'
-},
-// Guitar (25-32)
-{
-  id: 24,
-  name: 'Acoustic Guitar (nylon)',
-  category: 'Guitar'
-}, {
-  id: 25,
-  name: 'Acoustic Guitar (steel)',
-  category: 'Guitar'
-}, {
-  id: 26,
-  name: 'Electric Guitar (jazz)',
-  category: 'Guitar'
-}, {
-  id: 27,
-  name: 'Electric Guitar (clean)',
-  category: 'Guitar'
-}, {
-  id: 28,
-  name: 'Electric Guitar (muted)',
-  category: 'Guitar'
-}, {
-  id: 29,
-  name: 'Overdriven Guitar',
-  category: 'Guitar'
-}, {
-  id: 30,
-  name: 'Distortion Guitar',
-  category: 'Guitar'
-}, {
-  id: 31,
-  name: 'Guitar Harmonics',
-  category: 'Guitar'
-},
-// Bass (33-40)
-{
-  id: 32,
-  name: 'Acoustic Bass',
-  category: 'Bass'
-}, {
-  id: 33,
-  name: 'Electric Bass (finger)',
-  category: 'Bass'
-}, {
-  id: 34,
-  name: 'Electric Bass (pick)',
-  category: 'Bass'
-}, {
-  id: 35,
-  name: 'Fretless Bass',
-  category: 'Bass'
-}, {
-  id: 36,
-  name: 'Slap Bass 1',
-  category: 'Bass'
-}, {
-  id: 37,
-  name: 'Slap Bass 2',
-  category: 'Bass'
-}, {
-  id: 38,
-  name: 'Synth Bass 1',
-  category: 'Bass'
-}, {
-  id: 39,
-  name: 'Synth Bass 2',
-  category: 'Bass'
-},
-// Strings (41-48)
-{
-  id: 40,
-  name: 'Violin',
-  category: 'Strings'
-}, {
-  id: 41,
-  name: 'Viola',
-  category: 'Strings'
-}, {
-  id: 42,
-  name: 'Cello',
-  category: 'Strings'
-}, {
-  id: 43,
-  name: 'Contrabass',
-  category: 'Strings'
-}, {
-  id: 44,
-  name: 'Tremolo Strings',
-  category: 'Strings'
-}, {
-  id: 45,
-  name: 'Pizzicato Strings',
-  category: 'Strings'
-}, {
-  id: 46,
-  name: 'Orchestral Harp',
-  category: 'Strings'
-}, {
-  id: 47,
-  name: 'Timpani',
-  category: 'Strings'
-},
-// Ensemble (49-56)
-{
-  id: 48,
-  name: 'String Ensemble 1',
-  category: 'Ensemble'
-}, {
-  id: 49,
-  name: 'String Ensemble 2',
-  category: 'Ensemble'
-}, {
-  id: 50,
-  name: 'Synth Strings 1',
-  category: 'Ensemble'
-}, {
-  id: 51,
-  name: 'Synth Strings 2',
-  category: 'Ensemble'
-}, {
-  id: 52,
-  name: 'Choir Aahs',
-  category: 'Ensemble'
-}, {
-  id: 53,
-  name: 'Voice Oohs',
-  category: 'Ensemble'
-}, {
-  id: 54,
-  name: 'Synth Voice',
-  category: 'Ensemble'
-}, {
-  id: 55,
-  name: 'Orchestra Hit',
-  category: 'Ensemble'
-},
-// Brass (57-64)
-{
-  id: 56,
-  name: 'Trumpet',
-  category: 'Brass'
-}, {
-  id: 57,
-  name: 'Trombone',
-  category: 'Brass'
-}, {
-  id: 58,
-  name: 'Tuba',
-  category: 'Brass'
-}, {
-  id: 59,
-  name: 'Muted Trumpet',
-  category: 'Brass'
-}, {
-  id: 60,
-  name: 'French Horn',
-  category: 'Brass'
-}, {
-  id: 61,
-  name: 'Brass Section',
-  category: 'Brass'
-}, {
-  id: 62,
-  name: 'Synth Brass 1',
-  category: 'Brass'
-}, {
-  id: 63,
-  name: 'Synth Brass 2',
-  category: 'Brass'
-},
-// Reed (65-72)
-{
-  id: 64,
-  name: 'Soprano Sax',
-  category: 'Reed'
-}, {
-  id: 65,
-  name: 'Alto Sax',
-  category: 'Reed'
-}, {
-  id: 66,
-  name: 'Tenor Sax',
-  category: 'Reed'
-}, {
-  id: 67,
-  name: 'Baritone Sax',
-  category: 'Reed'
-}, {
-  id: 68,
-  name: 'Oboe',
-  category: 'Reed'
-}, {
-  id: 69,
-  name: 'English Horn',
-  category: 'Reed'
-}, {
-  id: 70,
-  name: 'Bassoon',
-  category: 'Reed'
-}, {
-  id: 71,
-  name: 'Clarinet',
-  category: 'Reed'
-},
-// Pipe (73-80)
-{
-  id: 72,
-  name: 'Piccolo',
-  category: 'Pipe'
-}, {
-  id: 73,
-  name: 'Flute',
-  category: 'Pipe'
-}, {
-  id: 74,
-  name: 'Recorder',
-  category: 'Pipe'
-}, {
-  id: 75,
-  name: 'Pan Flute',
-  category: 'Pipe'
-}, {
-  id: 76,
-  name: 'Blown Bottle',
-  category: 'Pipe'
-}, {
-  id: 77,
-  name: 'Shakuhachi',
-  category: 'Pipe'
-}, {
-  id: 78,
-  name: 'Whistle',
-  category: 'Pipe'
-}, {
-  id: 79,
-  name: 'Ocarina',
-  category: 'Pipe'
-},
-// Synth Lead (81-88)
-{
-  id: 80,
-  name: 'Lead 1 (square)',
-  category: 'Synth Lead'
-}, {
-  id: 81,
-  name: 'Lead 2 (sawtooth)',
-  category: 'Synth Lead'
-}, {
-  id: 82,
-  name: 'Lead 3 (calliope)',
-  category: 'Synth Lead'
-}, {
-  id: 83,
-  name: 'Lead 4 (chiff)',
-  category: 'Synth Lead'
-}, {
-  id: 84,
-  name: 'Lead 5 (charang)',
-  category: 'Synth Lead'
-}, {
-  id: 85,
-  name: 'Lead 6 (voice)',
-  category: 'Synth Lead'
-}, {
-  id: 86,
-  name: 'Lead 7 (fifths)',
-  category: 'Synth Lead'
-}, {
-  id: 87,
-  name: 'Lead 8 (bass + lead)',
-  category: 'Synth Lead'
-},
-// Synth Pad (89-96)
-{
-  id: 88,
-  name: 'Pad 1 (new age)',
-  category: 'Synth Pad'
-}, {
-  id: 89,
-  name: 'Pad 2 (warm)',
-  category: 'Synth Pad'
-}, {
-  id: 90,
-  name: 'Pad 3 (polysynth)',
-  category: 'Synth Pad'
-}, {
-  id: 91,
-  name: 'Pad 4 (choir)',
-  category: 'Synth Pad'
-}, {
-  id: 92,
-  name: 'Pad 5 (bowed)',
-  category: 'Synth Pad'
-}, {
-  id: 93,
-  name: 'Pad 6 (metallic)',
-  category: 'Synth Pad'
-}, {
-  id: 94,
-  name: 'Pad 7 (halo)',
-  category: 'Synth Pad'
-}, {
-  id: 95,
-  name: 'Pad 8 (sweep)',
-  category: 'Synth Pad'
-},
-// Synth Effects (97-104)
-{
-  id: 96,
-  name: 'FX 1 (rain)',
-  category: 'Synth Effects'
-}, {
-  id: 97,
-  name: 'FX 2 (soundtrack)',
-  category: 'Synth Effects'
-}, {
-  id: 98,
-  name: 'FX 3 (crystal)',
-  category: 'Synth Effects'
-}, {
-  id: 99,
-  name: 'FX 4 (atmosphere)',
-  category: 'Synth Effects'
-}, {
-  id: 100,
-  name: 'FX 5 (brightness)',
-  category: 'Synth Effects'
-}, {
-  id: 101,
-  name: 'FX 6 (goblins)',
-  category: 'Synth Effects'
-}, {
-  id: 102,
-  name: 'FX 7 (echoes)',
-  category: 'Synth Effects'
-}, {
-  id: 103,
-  name: 'FX 8 (sci-fi)',
-  category: 'Synth Effects'
-},
-// Ethnic (105-112)
-{
-  id: 104,
-  name: 'Sitar',
-  category: 'Ethnic'
-}, {
-  id: 105,
-  name: 'Banjo',
-  category: 'Ethnic'
-}, {
-  id: 106,
-  name: 'Shamisen',
-  category: 'Ethnic'
-}, {
-  id: 107,
-  name: 'Koto',
-  category: 'Ethnic'
-}, {
-  id: 108,
-  name: 'Kalimba',
-  category: 'Ethnic'
-}, {
-  id: 109,
-  name: 'Bag pipe',
-  category: 'Ethnic'
-}, {
-  id: 110,
-  name: 'Fiddle',
-  category: 'Ethnic'
-}, {
-  id: 111,
-  name: 'Shanai',
-  category: 'Ethnic'
-},
-// Percussive (113-120)
-{
-  id: 112,
-  name: 'Tinkle Bell',
-  category: 'Percussive'
-}, {
-  id: 113,
-  name: 'Agogo',
-  category: 'Percussive'
-}, {
-  id: 114,
-  name: 'Steel Drums',
-  category: 'Percussive'
-}, {
-  id: 115,
-  name: 'Woodblock',
-  category: 'Percussive'
-}, {
-  id: 116,
-  name: 'Taiko Drum',
-  category: 'Percussive'
-}, {
-  id: 117,
-  name: 'Melodic Tom',
-  category: 'Percussive'
-}, {
-  id: 118,
-  name: 'Synth Drum',
-  category: 'Percussive'
-}, {
-  id: 119,
-  name: 'Reverse Cymbal',
-  category: 'Percussive'
-},
-// Sound Effects (121-128)
-{
-  id: 120,
-  name: 'Guitar Fret Noise',
-  category: 'Sound Effects'
-}, {
-  id: 121,
-  name: 'Breath Noise',
-  category: 'Sound Effects'
-}, {
-  id: 122,
-  name: 'Seashore',
-  category: 'Sound Effects'
-}, {
-  id: 123,
-  name: 'Bird Tweet',
-  category: 'Sound Effects'
-}, {
-  id: 124,
-  name: 'Telephone Ring',
-  category: 'Sound Effects'
-}, {
-  id: 125,
-  name: 'Helicopter',
-  category: 'Sound Effects'
-}, {
-  id: 126,
-  name: 'Applause',
-  category: 'Sound Effects'
-}, {
-  id: 127,
-  name: 'Gunshot',
-  category: 'Sound Effects'
 }];
 
 // Generate full piano range A0 to C8 (88 keys)
@@ -699,16 +152,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const [pianoPosition, setPianoPosition] = useState(getInitialPosition);
   const [selectedInstrument, setSelectedInstrument] = useState<number>(0);
   const [isMobile, setIsMobile] = useState(false);
-  const [isLoadingSoundfont, setIsLoadingSoundfont] = useState(false);
-  const [soundfontReady, setSoundfontReady] = useState(false);
+  const [synthReady, setSynthReady] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
   const keysContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const soundfontPlayerRef = useRef<SoundfontPlayer | null>(null);
-  const activeOscillatorsRef = useRef<Map<string, {
-    oscillators: OscillatorNode[];
-    gainNode: GainNode;
-  }>>(new Map());
+  const synthRef = useRef<WebAudioSynth | null>(null);
 
   // Detect mobile on mount and resize
   useEffect(() => {
@@ -749,16 +197,20 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         console.log('✅ Audio unlocked for mobile');
       }
 
-      // Initialize soundfont player if not already
-      if (!soundfontPlayerRef.current && audioContextRef.current) {
-        soundfontPlayerRef.current = new SoundfontPlayer(audioContextRef.current);
+      // Initialize synth if not already
+      if (!synthRef.current && audioContextRef.current) {
+        synthRef.current = new WebAudioSynth(audioContextRef.current);
+        synthRef.current.setInstrument(selectedInstrument);
+        synthRef.current.setVolume(isMuted ? 0 : volume[0]);
+        setSynthReady(true);
+        console.log('🎹 WebAudioSynth initialized');
       }
       return audioContextRef.current;
     } catch (error) {
       console.error('❌ Failed to initialize AudioContext:', error);
       return null;
     }
-  }, [audioUnlocked]);
+  }, [audioUnlocked, selectedInstrument, isMuted, volume]);
 
   // Handle touch/click to unlock audio on mobile (must be user-initiated)
   const handleUserInteraction = useCallback(async () => {
@@ -767,32 +219,18 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }
   }, [audioUnlocked, initAudioContext]);
 
-  // Load soundfont when instrument changes
+  // Update synth when instrument changes
   useEffect(() => {
-    const loadSoundfont = async () => {
-      const audioContext = await initAudioContext();
-      if (!audioContext || !soundfontPlayerRef.current) return;
-      setIsLoadingSoundfont(true);
-      setSoundfontReady(false);
-      try {
-        const success = await soundfontPlayerRef.current.loadInstrument(selectedInstrument);
-        setSoundfontReady(success);
-        if (success) {
-          soundfontPlayerRef.current.setVolume(isMuted ? 0 : volume[0]);
-        }
-      } catch (error) {
-        console.warn('🎹 Soundfont loading failed, using fallback synthesis:', error);
-        setSoundfontReady(false);
-      }
-      setIsLoadingSoundfont(false);
-    };
-    loadSoundfont();
-  }, [selectedInstrument, initAudioContext, isMuted, volume]);
+    if (synthRef.current) {
+      synthRef.current.setInstrument(selectedInstrument);
+      console.log('🎹 Instrument changed to:', SYNTH_INSTRUMENTS.find(i => i.id === selectedInstrument)?.name || 'Unknown');
+    }
+  }, [selectedInstrument]);
 
-  // Update soundfont volume when volume changes
+  // Update synth volume when volume changes
   useEffect(() => {
-    if (soundfontPlayerRef.current) {
-      soundfontPlayerRef.current.setVolume(isMuted ? 0 : volume[0]);
+    if (synthRef.current) {
+      synthRef.current.setVolume(isMuted ? 0 : volume[0]);
     }
   }, [volume, isMuted]);
 
@@ -819,6 +257,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }, 100);
     return () => clearTimeout(timer);
   }, [startOctave, isMobile]);
+
   const playNote = useCallback(async (frequency: number, noteName: string) => {
     // Always ensure audio context is initialized and unlocked (mobile requirement)
     const audioContext = await initAudioContext();
@@ -831,7 +270,6 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     if (audioContext.state !== 'running') {
       try {
         await audioContext.resume();
-        // Wait a bit for mobile browsers to actually start the context
         await new Promise(resolve => setTimeout(resolve, 50));
         console.log('🔊 AudioContext resumed for playNote, state:', audioContext.state);
       } catch (err) {
@@ -843,7 +281,6 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     // Double-check state after resume attempt
     if (audioContext.state !== 'running') {
       console.warn('🎹 AudioContext still not running after resume, state:', audioContext.state);
-      // Try one more time
       try {
         await audioContext.resume();
       } catch (e) {
@@ -852,73 +289,22 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       }
     }
 
-    // Try soundfont first if ready and has buffers loaded
-    let soundfontPlayed = false;
-    if (soundfontReady && soundfontPlayerRef.current && soundfontPlayerRef.current.isReady()) {
+    // Use the WebAudioSynth to play the note
+    if (synthRef.current) {
       try {
-        await soundfontPlayerRef.current.playNote(noteName);
+        await synthRef.current.playNote(noteName, frequency);
         setActiveNotes(prev => new Set(prev).add(noteName));
-        soundfontPlayed = true;
-        console.log('🎹 Soundfont played:', noteName);
+        console.log('🎹 Synth played:', noteName, 'at', frequency, 'Hz');
       } catch (error) {
-        console.warn('🎹 Soundfont playNote failed, using fallback:', error);
-        soundfontPlayed = false;
+        console.warn('🎹 Synth playNote failed:', error);
       }
     }
+  }, [initAudioContext]);
 
-    // If soundfont didn't play, use oscillator synthesis (always works)
-    if (soundfontPlayed) return;
-    if (activeOscillatorsRef.current.has(noteName)) return;
-
-    // Clean oscillator synthesis - simple and reliable
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // Use sine wave for cleaner sound
-    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-    oscillator.type = 'sine';
-    const currentVolume = isMuted ? 0 : volume[0];
-    const now = audioContext.currentTime;
-
-    // Simple envelope - immediate attack, gradual decay
-    gainNode.gain.setValueAtTime(currentVolume * 0.8, now);
-    gainNode.gain.exponentialRampToValueAtTime(currentVolume * 0.3, now + 0.5);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 2);
-    oscillator.start(now);
-    console.log('🎵 Playing note (synthesis):', noteName, 'at', frequency, 'Hz', 'context state:', audioContext.state);
-    activeOscillatorsRef.current.set(noteName, {
-      oscillators: [oscillator],
-      gainNode
-    });
-    setActiveNotes(prev => new Set(prev).add(noteName));
-  }, [volume, isMuted, initAudioContext, soundfontReady]);
   const stopNote = useCallback((noteName: string) => {
-    // Stop soundfont note if player exists
-    if (soundfontPlayerRef.current) {
-      soundfontPlayerRef.current.stopNote(noteName);
-    }
-
-    // Also stop oscillator if it exists (fallback mode)
-    const nodes = activeOscillatorsRef.current.get(noteName);
-    if (nodes && audioContextRef.current) {
-      try {
-        const now = audioContextRef.current.currentTime;
-        nodes.gainNode.gain.cancelScheduledValues(now);
-        nodes.gainNode.gain.setValueAtTime(nodes.gainNode.gain.value, now);
-        nodes.gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-        setTimeout(() => {
-          nodes.oscillators.forEach(osc => {
-            try {
-              osc.stop();
-            } catch (e) {}
-          });
-          activeOscillatorsRef.current.delete(noteName);
-        }, 150);
-      } catch (error) {
-        activeOscillatorsRef.current.delete(noteName);
-      }
+    // Stop synth note
+    if (synthRef.current) {
+      synthRef.current.stopNote(noteName);
     }
     setActiveNotes(prev => {
       const next = new Set(prev);
@@ -926,37 +312,20 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       return next;
     });
   }, []);
+
   const toggleMute = () => {
     setIsMuted(!isMuted);
-    if (audioContextRef.current) {
-      const newVolume = !isMuted ? 0 : volume[0];
-      activeOscillatorsRef.current.forEach(({
-        gainNode
-      }) => {
-        gainNode.gain.setValueAtTime(newVolume, audioContextRef.current!.currentTime);
-      });
-    }
-    if (soundfontPlayerRef.current) {
-      soundfontPlayerRef.current.setVolume(!isMuted ? 0 : volume[0]);
+    if (synthRef.current) {
+      synthRef.current.setVolume(!isMuted ? 0 : volume[0]);
     }
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Stop all oscillators
-      activeOscillatorsRef.current.forEach(nodes => {
-        nodes.oscillators.forEach(osc => {
-          try {
-            osc.stop();
-          } catch (e) {}
-        });
-      });
-      activeOscillatorsRef.current.clear();
-
-      // Stop all soundfont notes
-      if (soundfontPlayerRef.current) {
-        soundfontPlayerRef.current.stopAllNotes();
+      // Stop all synth notes
+      if (synthRef.current) {
+        synthRef.current.stopAllNotes();
       }
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close();
@@ -991,18 +360,17 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
               <SelectItem value="7">C7-C8</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={selectedInstrument.toString()} onValueChange={value => setSelectedInstrument(parseInt(value, 10))} disabled={isLoadingSoundfont}>
+          <Select value={selectedInstrument.toString()} onValueChange={value => setSelectedInstrument(parseInt(value, 10))}>
             <SelectTrigger className="w-32 sm:w-48 h-8 sm:h-9 text-xs sm:text-sm">
               <SelectValue placeholder="Instrument" />
             </SelectTrigger>
             <SelectContent className="z-[2147483648] max-h-[300px] bg-popover">
-              {GM_INSTRUMENTS.map(instrument => <SelectItem key={instrument.id} value={instrument.id.toString()}>
+              {SYNTH_INSTRUMENTS.map(instrument => <SelectItem key={instrument.id} value={instrument.id.toString()}>
                   {instrument.name}
                 </SelectItem>)}
             </SelectContent>
           </Select>
-          {isLoadingSoundfont && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-          {soundfontReady && !isLoadingSoundfont && <span className="text-xs text-green-500 hidden sm:inline">✓</span>}
+          {synthReady && <span className="text-xs text-green-500 hidden sm:inline">✓ Ready</span>}
         </div>
 
         <div className="flex items-center gap-2 justify-end">
