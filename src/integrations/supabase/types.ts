@@ -2934,6 +2934,8 @@ export type Database = {
           title: string | null
           updated_at: string
           video_id: string
+          video_type: string | null
+          video_url: string | null
         }
         Insert: {
           autoplay?: boolean | null
@@ -2945,6 +2947,8 @@ export type Database = {
           title?: string | null
           updated_at?: string
           video_id: string
+          video_type?: string | null
+          video_url?: string | null
         }
         Update: {
           autoplay?: boolean | null
@@ -2956,6 +2960,8 @@ export type Database = {
           title?: string | null
           updated_at?: string
           video_id?: string
+          video_type?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
