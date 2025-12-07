@@ -462,11 +462,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       </div>
     </div>;
   if (isFullScreen) {
-    // On mobile, use a full-screen fixed overlay instead of Rnd
+    // On mobile, use a compact modal instead of full screen
     if (isMobile) {
-      return <div className="fixed inset-0 z-[2147483647] bg-background flex flex-col">
-          {pianoContent}
-        </div>;
+      return (
+        <div className="fixed inset-0 z-[2147483647] bg-black/50 flex items-end justify-center p-2">
+          <div className="bg-background rounded-t-xl w-full max-h-[70vh] overflow-hidden shadow-2xl">
+            {pianoContent}
+          </div>
+        </div>
+      );
     }
     // Calculate centered position for Rnd default
     const centerX = Math.max(0, (window.innerWidth - pianoSize.width) / 2);
