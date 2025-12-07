@@ -45,8 +45,12 @@ export const DashboardYouTubeSection = () => {
   const extractVideoId = (input: string): string => {
     if (!input) return '';
 
-    // Already a plain video ID (no slashes or dots)
+    // Already a plain video ID (11 chars)
     if (/^[\w-]{11}$/.test(input)) return input;
+
+    // youtube.com/live/VIDEO_ID format
+    const liveMatch = input.match(/youtube\.com\/live\/([^?&]+)/);
+    if (liveMatch) return liveMatch[1];
 
     // youtu.be/VIDEO_ID format
     const shortMatch = input.match(/youtu\.be\/([^?&]+)/);
@@ -59,6 +63,7 @@ export const DashboardYouTubeSection = () => {
     // youtube.com/embed/VIDEO_ID format
     const embedMatch = input.match(/embed\/([^?&]+)/);
     if (embedMatch) return embedMatch[1];
+
     return input;
   };
 
