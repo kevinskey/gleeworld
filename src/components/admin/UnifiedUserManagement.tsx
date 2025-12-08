@@ -315,7 +315,7 @@ export const UnifiedUserManagement = () => {
       if (error) throw error;
 
       setUsers(users.map(user => 
-        user.id === userId ? { ...user, role: newRole } : user
+        user.user_id === userId ? { ...user, role: newRole } : user
       ));
 
       toast({
@@ -343,7 +343,7 @@ export const UnifiedUserManagement = () => {
       if (error) throw error;
 
       setUsers(users.map(user => 
-        user.id === userId ? { ...user, verified: newStatus } : user
+        user.user_id === userId ? { ...user, verified: newStatus } : user
       ));
 
       toast({
@@ -621,7 +621,7 @@ export const UnifiedUserManagement = () => {
                             </DropdownMenuItem>
                             
                             <DropdownMenuItem 
-                              onClick={() => handleVerificationToggle(user.id, user.verified || false)}
+                              onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}
                             >
                               {user.verified ? (
                                 <>
@@ -664,70 +664,70 @@ export const UnifiedUserManagement = () => {
                             <DropdownMenuSeparator />
                             
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'vip')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'vip')}
                               disabled={user.role === 'vip'}
                             >
                               <Star className="h-4 w-4 mr-2 text-yellow-500" />
                               Make VIP
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'guest')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'guest')}
                               disabled={user.role === 'guest'}
                             >
                               <User className="h-4 w-4 mr-2" />
                               Make Guest
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'fan')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'fan')}
                               disabled={user.role === 'fan'}
                             >
                               <UserX className="h-4 w-4 mr-2" />
                               Make Fan
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'student')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'student')}
                               disabled={user.role === 'student'}
                             >
                               <User className="h-4 w-4 mr-2" />
                               Make Student
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'member')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'member')}
                               disabled={user.role === 'member'}
                             >
                               <User className="h-4 w-4 mr-2" />
                               Make Member
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'alumna')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'alumna')}
                               disabled={user.role === 'alumna'}
                             >
                               <UserCheck className="h-4 w-4 mr-2" />
                               Make Alumna
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'executive')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'executive')}
                               disabled={user.role === 'executive'}
                             >
                               <UserCog className="h-4 w-4 mr-2" />
                               Make Executive
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'admin')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'admin')}
                               disabled={user.role === 'admin'}
                             >
                               <Shield className="h-4 w-4 mr-2" />
                               Make Admin
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'super-admin')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'super-admin')}
                               disabled={user.role === 'super-admin'}
                             >
                               <Crown className="h-4 w-4 mr-2" />
                               Make Super Admin
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.id, 'auditioner')}
+                              onClick={() => handleQuickRoleChange(user.user_id!, 'auditioner')}
                               disabled={user.role === 'auditioner'}
                             >
                               <Calendar className="h-4 w-4 mr-2" />
