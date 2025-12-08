@@ -37,8 +37,8 @@ const categories: CategoryOption[] = [
   },
   {
     id: 'exec_board_video',
-    title: 'ExecBoard Video',
-    description: 'Training videos for executive board',
+    title: 'ExecBoard Training Video',
+    description: 'Record leadership training videos for the team',
     icon: <Video className="h-8 w-8" />,
     color: 'from-purple-500 to-pink-500'
   },
