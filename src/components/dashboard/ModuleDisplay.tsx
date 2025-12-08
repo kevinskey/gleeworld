@@ -41,6 +41,7 @@ import { GradingModule } from '../modules/GradingModule';
 import { ConcertTicketRequestsModule } from '../modules/ConcertTicketRequestsModule';
 import { AnnouncementsModule } from '../modules/AnnouncementsModule';
 import { TourManagerDashboard } from '../tour-manager/TourManagerDashboard';
+import TreeLightingSurveyModule from '../modules/TreeLightingSurveyModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -144,6 +145,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <AnnouncementsModule />;
       case 'tour-management':
         return <TourManagerDashboard />;
+      case 'survey-module':
+        return <TreeLightingSurveyModule />;
       default:
         return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
     }
