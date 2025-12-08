@@ -68,6 +68,26 @@ export const AnnouncementsTicker = ({
 
   useEffect(() => {
     fetchAnnouncements();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('announcements-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gw_announcements'
+        },
+        () => {
+          fetchAnnouncements();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchAnnouncements = async () => {
