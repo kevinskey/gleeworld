@@ -145,40 +145,55 @@ export const TreeLightingSurvey = () => {
         </div>
 
         {attended === "yes" && (
-          <div className="space-y-2">
-            <Label htmlFor="enjoyed-most" className="text-sm font-medium">
-              What did you enjoy most during the visit?
-            </Label>
-            <Textarea
-              id="enjoyed-most"
-              value={enjoyedMost}
-              onChange={(e) => setEnjoyedMost(e.target.value)}
-              placeholder="Share what you enjoyed most..."
-              className="min-h-[80px]"
-            />
-          </div>
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="enjoyed-most" className="text-sm font-medium">
+                What did you enjoy most during the visit?
+              </Label>
+              <Textarea
+                id="enjoyed-most"
+                value={enjoyedMost}
+                onChange={(e) => setEnjoyedMost(e.target.value)}
+                placeholder="Share what you enjoyed most..."
+                className="min-h-[80px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="song-order" className="text-sm font-medium">
+                Please list the song order (as performed):
+              </Label>
+              <Textarea
+                id="song-order"
+                value={songOrder}
+                onChange={(e) => setSongOrder(e.target.value)}
+                placeholder="1. Song name&#10;2. Song name&#10;3. Song name&#10;..."
+                className="min-h-[100px]"
+              />
+            </div>
+
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isSubmitting}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              {isSubmitting ? "Submitting..." : "Submit Survey"}
+            </Button>
+          </>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="song-order" className="text-sm font-medium">
-            Please list the song order (as performed):
-          </Label>
-          <Textarea
-            id="song-order"
-            value={songOrder}
-            onChange={(e) => setSongOrder(e.target.value)}
-            placeholder="1. Song name&#10;2. Song name&#10;3. Song name&#10;..."
-            className="min-h-[100px]"
-          />
-        </div>
-
-        <Button 
-          onClick={handleSubmit} 
-          disabled={isSubmitting || attended === null}
-          className="w-full bg-green-600 hover:bg-green-700"
-        >
-          {isSubmitting ? "Submitting..." : "Submit Survey"}
-        </Button>
+        {attended === "no" && (
+          <div className="text-center py-4">
+            <p className="text-muted-foreground mb-4">Thank you for letting us know!</p>
+            <Button 
+              onClick={handleSubmit} 
+              disabled={isSubmitting}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
