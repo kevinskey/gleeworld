@@ -761,7 +761,7 @@ export const MetalHeaderDashboard = ({
       )}
 
       {/* Tree Lighting Participation Survey */}
-      <div className="mb-4">
+      <div className="mb-4 relative z-10">
         <TreeLightingSurvey />
       </div>
 
