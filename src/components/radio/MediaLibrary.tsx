@@ -919,6 +919,7 @@ export const MediaLibrary = ({
                 {[
                   { id: 'christmas_carol_selfie', title: 'Christmas Carol Selfies', icon: Sparkles, color: 'from-red-500 to-green-500' },
                   { id: 'glee_cam_pic', title: 'Glee Cam Pics', icon: Camera, color: 'from-amber-500 to-orange-500' },
+                  { id: 'glee_cam_video', title: 'Glee Cam Videos', icon: Video, color: 'from-rose-500 to-amber-500' },
                   { id: 'voice_part_recording', title: 'Voice Recordings', icon: Mic, color: 'from-blue-500 to-cyan-500' },
                   { id: 'exec_board_video', title: 'ExecBoard Videos', icon: Video, color: 'from-purple-500 to-pink-500' },
                   { id: 'member_audition_video', title: 'Audition Videos', icon: UserCheck, color: 'from-emerald-500 to-teal-500' },

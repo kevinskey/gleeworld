@@ -29,6 +29,12 @@ const categoryConfig = {
     mode: 'photo' as const,
     folder: 'glee-cam-pics',
   },
+  glee_cam_video: {
+    title: 'Glee Cam Video',
+    icon: Video,
+    mode: 'video' as const,
+    folder: 'glee-cam-videos',
+  },
   voice_part_recording: {
     title: 'Voice Part Recording',
     icon: Mic,
@@ -186,7 +192,7 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
         thumbnail_url: thumbnailUrl,
         file_type: capturedMedia.type,
         file_size: capturedMedia.size,
-        is_approved: category === 'glee_cam_pic' || category === 'christmas_carol_selfie' || category === 'exec_board_video',
+        is_approved: category === 'glee_cam_pic' || category === 'glee_cam_video' || category === 'christmas_carol_selfie' || category === 'exec_board_video',
       };
       
       console.log('Inserting to database:', insertData);
@@ -204,8 +210,8 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
 
       console.log('Database insert success:', dbData);
 
-      // If glee cam pic or christmas selfie, sync to heroes
-      if (category === 'glee_cam_pic' || category === 'christmas_carol_selfie') {
+      // If glee cam pic/video or christmas selfie, sync to heroes
+      if (category === 'glee_cam_pic' || category === 'glee_cam_video' || category === 'christmas_carol_selfie') {
         console.log('Syncing to heroes...');
         const { error: syncError } = await supabase.functions.invoke('sync-glee-cam-to-heroes');
         if (syncError) {
