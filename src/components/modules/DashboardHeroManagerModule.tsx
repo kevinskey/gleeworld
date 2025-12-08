@@ -858,106 +858,103 @@ export const DashboardHeroManagerModule = () => {
         </CardContent>
       </Card>
 
-      {/* Create/Edit Form */}
-      <Card className="bg-card border-border">
-        <CardHeader>
-          <CardTitle className="text-foreground">{editingId ? "Edit" : "Create"} Dashboard Hero Slide</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label className="text-foreground">Title</Label>
-            <Input value={formData.title} onChange={e => setFormData(prev => ({
-            ...prev,
-            title: e.target.value
-          }))} placeholder="Concert title" />
-          </div>
+      {/* Create New Slide Form - only shows when NOT editing */}
+      {!editingId && (
+        <Card className="bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-foreground">Create New Dashboard Hero Slide</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-foreground">Title</Label>
+              <Input value={formData.title} onChange={e => setFormData(prev => ({
+                ...prev,
+                title: e.target.value
+              }))} placeholder="Concert title" />
+            </div>
 
-          <div className="space-y-2">
-            <Label className="text-foreground">Description</Label>
-            <Textarea value={formData.description} onChange={e => setFormData(prev => ({
-            ...prev,
-            description: e.target.value
-          }))} placeholder="Event details" rows={3} />
-          </div>
+            <div className="space-y-2">
+              <Label className="text-foreground">Description</Label>
+              <Textarea value={formData.description} onChange={e => setFormData(prev => ({
+                ...prev,
+                description: e.target.value
+              }))} placeholder="Event details" rows={3} />
+            </div>
 
-          {/* Image Uploads */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label className="text-foreground">Desktop Image *</Label>
-              <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'desktop')} />
-              {formData.image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
+            {/* Image Uploads */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label className="text-foreground">Desktop Image *</Label>
+                <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'desktop')} />
+                {formData.image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">iPad Image</Label>
+                <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'ipad')} />
+                {formData.ipad_image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">Mobile Image</Label>
+                <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'mobile')} />
+                {formData.mobile_image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-foreground">iPad Image</Label>
-              <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'ipad')} />
-              {formData.ipad_image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
-            </div>
-            <div className="space-y-2">
-              <Label className="text-foreground">Mobile Image</Label>
-              <Input type="file" accept="image/*" onChange={e => handleImageUpload(e, 'mobile')} />
-              {formData.mobile_image_url && <p className="text-xs text-muted-foreground">✓ Uploaded</p>}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-foreground">Display Order</Label>
-              <Input type="number" value={formData.display_order} onChange={e => setFormData(prev => ({
-              ...prev,
-              display_order: parseInt(e.target.value) || 0
-            }))} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-foreground">Display Order</Label>
+                <Input type="number" value={formData.display_order} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  display_order: parseInt(e.target.value) || 0
+                }))} />
+              </div>
+              <div className="flex items-center space-x-2 pt-8">
+                <Switch checked={formData.is_active} onCheckedChange={checked => setFormData(prev => ({
+                  ...prev,
+                  is_active: checked
+                }))} />
+                <Label className="text-foreground">Active</Label>
+              </div>
             </div>
-            <div className="flex items-center space-x-2 pt-8">
-              <Switch checked={formData.is_active} onCheckedChange={checked => setFormData(prev => ({
-              ...prev,
-              is_active: checked
-            }))} />
-              <Label className="text-foreground">Active</Label>
-            </div>
-          </div>
 
-          {/* Link Settings */}
-          <div className="border-t border-border pt-4 space-y-4">
-            <h3 className="font-medium flex items-center gap-2 text-foreground">
-              <ExternalLink className="h-4 w-4" />
-              Link Settings (Optional)
-            </h3>
-            <div className="space-y-2">
-              <Label className="text-foreground">Link URL</Label>
-              <Input value={formData.link_url} onChange={e => setFormData(prev => ({
-              ...prev,
-              link_url: e.target.value
-            }))} placeholder="/shop or https://example.com" />
-              <p className="text-xs text-muted-foreground">Internal links: /page-name, External: https://...</p>
+            {/* Link Settings */}
+            <div className="border-t border-border pt-4 space-y-4">
+              <h3 className="font-medium flex items-center gap-2 text-foreground">
+                <ExternalLink className="h-4 w-4" />
+                Link Settings (Optional)
+              </h3>
+              <div className="space-y-2">
+                <Label className="text-foreground">Link URL</Label>
+                <Input value={formData.link_url} onChange={e => setFormData(prev => ({
+                  ...prev,
+                  link_url: e.target.value
+                }))} placeholder="/shop or https://example.com" />
+                <p className="text-xs text-muted-foreground">Internal links: /page-name, External: https://...</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-foreground">Link Type</Label>
+                <Select value={formData.link_target} onValueChange={value => setFormData(prev => ({
+                  ...prev,
+                  link_target: value
+                }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="internal">Internal (same tab)</SelectItem>
+                    <SelectItem value="external">External (new tab)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-foreground">Link Type</Label>
-              <Select value={formData.link_target} onValueChange={value => setFormData(prev => ({
-              ...prev,
-              link_target: value
-            }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="internal">Internal (same tab)</SelectItem>
-                  <SelectItem value="external">External (new tab)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          <div className="flex gap-2">
             <Button onClick={handleSave} disabled={saving}>
               <Save className="h-4 w-4 mr-2" />
-              {saving ? 'Saving...' : editingId ? 'Update' : 'Create'}
+              {saving ? 'Saving...' : 'Create'}
             </Button>
-            {editingId && <Button variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>}
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Slides List */}
       <Card className="bg-card border-border">
@@ -966,32 +963,121 @@ export const DashboardHeroManagerModule = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {heroSlides.map(slide => <div key={slide.id} className="flex items-center gap-4 p-4 border border-border rounded-lg bg-card">
-                {/* Thumbnail */}
-                <div className="flex-shrink-0 w-32 h-20 rounded-md overflow-hidden bg-muted">
-                  <img src={slide.image_url} alt={slide.title || 'Hero slide'} className="w-full h-full object-cover" />
+            {heroSlides.map(slide => (
+              <div key={slide.id} className="border border-border rounded-lg bg-card overflow-hidden">
+                {/* Slide Row */}
+                <div className="flex items-center gap-4 p-4">
+                  {/* Thumbnail */}
+                  <div className="flex-shrink-0 w-32 h-20 rounded-md overflow-hidden bg-muted">
+                    <img src={slide.image_url} alt={slide.title || 'Hero slide'} className="w-full h-full object-cover" />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-foreground">{slide.title || 'Untitled'}</h4>
+                    <p className="text-sm text-muted-foreground truncate">{slide.description || 'No description'}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Order: {slide.display_order}</p>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Button variant="ghost" size="sm" onClick={() => toggleActive(slide.id, slide.is_active)}>
+                      {slide.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(slide)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(slide.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-medium text-foreground">{slide.title || 'Untitled'}</h4>
-                  <p className="text-sm text-muted-foreground truncate">{slide.description || 'No description'}</p>
-                  <p className="text-xs text-muted-foreground mt-1">Order: {slide.display_order}</p>
-                </div>
-                
-                {/* Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <Button variant="ghost" size="sm" onClick={() => toggleActive(slide.id, slide.is_active)}>
-                    {slide.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(slide)}>
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(slide.id)}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>)}
+
+                {/* Inline Edit Form - appears below the image when editing this slide */}
+                {editingId === slide.id && (
+                  <div className="border-t border-border bg-muted/30 p-4 space-y-4">
+                    {/* Large Image Preview */}
+                    <div className="w-full max-h-64 rounded-lg overflow-hidden bg-muted mb-4">
+                      <img src={slide.image_url} alt={slide.title || 'Hero slide'} className="w-full h-full object-contain" />
+                    </div>
+
+                    {/* Edit Fields */}
+                    <div className="space-y-2">
+                      <Label className="text-foreground">Title</Label>
+                      <Input value={formData.title} onChange={e => setFormData(prev => ({
+                        ...prev,
+                        title: e.target.value
+                      }))} placeholder="Concert title" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-foreground">Description</Label>
+                      <Textarea value={formData.description} onChange={e => setFormData(prev => ({
+                        ...prev,
+                        description: e.target.value
+                      }))} placeholder="Event details" rows={3} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-foreground">Display Order</Label>
+                        <Input type="number" value={formData.display_order} onChange={e => setFormData(prev => ({
+                          ...prev,
+                          display_order: parseInt(e.target.value) || 0
+                        }))} />
+                      </div>
+                      <div className="flex items-center space-x-2 pt-8">
+                        <Switch checked={formData.is_active} onCheckedChange={checked => setFormData(prev => ({
+                          ...prev,
+                          is_active: checked
+                        }))} />
+                        <Label className="text-foreground">Active</Label>
+                      </div>
+                    </div>
+
+                    {/* Link Settings */}
+                    <div className="border-t border-border pt-4 space-y-4">
+                      <h3 className="font-medium flex items-center gap-2 text-foreground text-sm">
+                        <ExternalLink className="h-4 w-4" />
+                        Link Settings (Optional)
+                      </h3>
+                      <div className="space-y-2">
+                        <Label className="text-foreground">Link URL</Label>
+                        <Input value={formData.link_url} onChange={e => setFormData(prev => ({
+                          ...prev,
+                          link_url: e.target.value
+                        }))} placeholder="/shop or https://example.com" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-foreground">Link Type</Label>
+                        <Select value={formData.link_target} onValueChange={value => setFormData(prev => ({
+                          ...prev,
+                          link_target: value
+                        }))}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="internal">Internal (same tab)</SelectItem>
+                            <SelectItem value="external">External (new tab)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <Button onClick={handleSave} disabled={saving}>
+                        <Save className="h-4 w-4 mr-2" />
+                        {saving ? 'Saving...' : 'Update'}
+                      </Button>
+                      <Button variant="outline" onClick={resetForm}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
