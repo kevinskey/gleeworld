@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Card, CardContent } from '@/components/ui/card';
 import { Camera, Mic, Video, UserCheck, Sparkles } from 'lucide-react';
 
-export type QuickCaptureCategory = 'christmas_carol_selfie' | 'glee_cam_pic' | 'voice_part_recording' | 'exec_board_video' | 'member_audition_video';
+export type QuickCaptureCategory = 'christmas_carol_selfie' | 'glee_cam_pic' | 'glee_cam_video' | 'voice_part_recording' | 'exec_board_video' | 'member_audition_video';
 
 interface CategoryOption {
   id: QuickCaptureCategory;
@@ -27,6 +27,13 @@ const categories: CategoryOption[] = [
     description: 'Capture moments for the landing page heroes',
     icon: <Camera className="h-8 w-8" />,
     color: 'from-amber-500 to-orange-500'
+  },
+  {
+    id: 'glee_cam_video',
+    title: 'Glee Cam Video',
+    description: 'Record or upload videos for heroes & media library',
+    icon: <Video className="h-8 w-8" />,
+    color: 'from-rose-500 to-amber-500'
   },
   {
     id: 'voice_part_recording',
