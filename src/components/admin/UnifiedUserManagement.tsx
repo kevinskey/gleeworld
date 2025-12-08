@@ -307,12 +307,18 @@ export const UnifiedUserManagement = () => {
 
   const handleQuickRoleChange = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
+      const { data, error, count } = await supabase
         .from('gw_profiles')
         .update({ role: newRole })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select();
 
       if (error) throw error;
+
+      // Check if the update actually affected any rows
+      if (!data || data.length === 0) {
+        throw new Error('Update failed - you may not have permission to change this user\'s role');
+      }
 
       setUsers(users.map(user => 
         user.user_id === userId ? { ...user, role: newRole } : user
@@ -322,11 +328,11 @@ export const UnifiedUserManagement = () => {
         title: "Role Updated",
         description: `User role changed to ${newRole}`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating role:', error);
       toast({
         title: "Error",
-        description: "Failed to update user role",
+        description: error.message || "Failed to update user role",
         variant: "destructive",
       });
     }
