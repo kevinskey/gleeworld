@@ -203,16 +203,16 @@ export const ExecBoardInterviewForm = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="full_name">Your Name *</Label>
-              <div className="p-3 bg-muted rounded-md text-sm font-medium">
+              <Label htmlFor="full_name" className="text-card-foreground">Your Name *</Label>
+              <div className="p-3 bg-muted rounded-md text-sm font-medium text-card-foreground">
                 {userName || "Loading..."}
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="semester">Semester *</Label>
+              <Label htmlFor="semester" className="text-card-foreground">Semester *</Label>
               <Select value={formData.semester} onValueChange={(v) => handleChange("semester", v)}>
-                <SelectTrigger>
+                <SelectTrigger className="text-card-foreground">
                   <SelectValue placeholder="Select semester" />
                 </SelectTrigger>
                 <SelectContent>
@@ -224,9 +224,9 @@ export const ExecBoardInterviewForm = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="position">Executive Position *</Label>
+              <Label htmlFor="position" className="text-card-foreground">Executive Position *</Label>
               <Select value={formData.position} onValueChange={(v) => handleChange("position", v)}>
-                <SelectTrigger>
+                <SelectTrigger className="text-card-foreground">
                   <SelectValue placeholder="Select your position" />
                 </SelectTrigger>
                 <SelectContent>
@@ -239,104 +239,104 @@ export const ExecBoardInterviewForm = () => {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="progress_summary">Progress Summary *</Label>
+            <Label htmlFor="progress_summary" className="text-card-foreground">Progress Summary *</Label>
             <Textarea
               id="progress_summary"
               placeholder="Describe your progress in your position this semester. What have you accomplished? How have you grown as a leader?"
               value={formData.progress_summary}
               onChange={(e) => handleChange("progress_summary", e.target.value)}
-              className="min-h-[120px]"
+              className="min-h-[120px] text-foreground placeholder:text-muted-foreground/70"
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="challenges_faced">Challenges Faced</Label>
+            <Label htmlFor="challenges_faced" className="text-card-foreground">Challenges Faced</Label>
             <Textarea
               id="challenges_faced"
               placeholder="What challenges or obstacles did you encounter? How did you address them?"
               value={formData.challenges_faced}
               onChange={(e) => handleChange("challenges_faced", e.target.value)}
-              className="min-h-[100px]"
+              className="min-h-[100px] text-foreground placeholder:text-muted-foreground/70"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="projects_created">Projects Created</Label>
+              <Label htmlFor="projects_created" className="text-card-foreground">Projects Created</Label>
               <Textarea
                 id="projects_created"
                 placeholder="List any new projects or initiatives you started..."
                 value={formData.projects_created}
                 onChange={(e) => handleChange("projects_created", e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[100px] text-foreground placeholder:text-muted-foreground/70"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="projects_participated">Projects Participated In</Label>
+              <Label htmlFor="projects_participated" className="text-card-foreground">Projects Participated In</Label>
               <Textarea
                 id="projects_participated"
                 placeholder="List projects you contributed to..."
                 value={formData.projects_participated}
                 onChange={(e) => handleChange("projects_participated", e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[100px] text-foreground placeholder:text-muted-foreground/70"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="projects_completed">Projects Completed</Label>
+              <Label htmlFor="projects_completed" className="text-card-foreground">Projects Completed</Label>
               <Textarea
                 id="projects_completed"
                 placeholder="List projects you helped bring to completion..."
                 value={formData.projects_completed}
                 onChange={(e) => handleChange("projects_completed", e.target.value)}
-                className="min-h-[100px]"
+                className="min-h-[100px] text-foreground placeholder:text-muted-foreground/70"
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="new_ideas">New Ideas for Moving Forward</Label>
+            <Label htmlFor="new_ideas" className="text-card-foreground">New Ideas for Moving Forward</Label>
             <Textarea
               id="new_ideas"
               placeholder="Share any new ideas, improvements, or initiatives you'd like to see implemented..."
               value={formData.new_ideas}
               onChange={(e) => handleChange("new_ideas", e.target.value)}
-              className="min-h-[100px]"
+              className="min-h-[100px] text-foreground placeholder:text-muted-foreground/70"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lessons_learned">Lessons Learned</Label>
+            <Label htmlFor="lessons_learned" className="text-card-foreground">Lessons Learned</Label>
             <Textarea
               id="lessons_learned"
               placeholder="What key lessons have you learned this semester?"
               value={formData.lessons_learned}
               onChange={(e) => handleChange("lessons_learned", e.target.value)}
-              className="min-h-[100px]"
+              className="min-h-[100px] text-foreground placeholder:text-muted-foreground/70"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="recommendations_for_successor">Recommendations for Your Successor</Label>
+            <Label htmlFor="recommendations_for_successor" className="text-card-foreground">Recommendations for Your Successor</Label>
             <Textarea
               id="recommendations_for_successor"
               placeholder="What advice would you give to the next person in your position?"
               value={formData.recommendations_for_successor}
               onChange={(e) => handleChange("recommendations_for_successor", e.target.value)}
-              className="min-h-[100px]"
+              className="min-h-[100px] text-foreground placeholder:text-muted-foreground/70"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="additional_comments">Additional Comments</Label>
+            <Label htmlFor="additional_comments" className="text-card-foreground">Additional Comments</Label>
             <Textarea
               id="additional_comments"
               placeholder="Any other thoughts, feedback, or comments you'd like to share..."
               value={formData.additional_comments}
               onChange={(e) => handleChange("additional_comments", e.target.value)}
-              className="min-h-[80px]"
+              className="min-h-[80px] text-foreground placeholder:text-muted-foreground/70"
             />
           </div>
 
