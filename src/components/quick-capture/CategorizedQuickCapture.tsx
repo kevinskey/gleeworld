@@ -56,6 +56,7 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
   const [isUploading, setIsUploading] = useState(false);
   const [capturedMedia, setCapturedMedia] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [photoCount, setPhotoCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -87,6 +88,18 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
     },
     mode: config.mode
   });
+
+  // Reset to camera mode for taking another photo
+  const resetForNextCapture = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setCapturedMedia(null);
+    setPreviewUrl('');
+    setTitle('');
+    setDescription('');
+    // Camera stays active - no need to restart
+  };
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -200,12 +213,15 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
         }
       }
 
+      setPhotoCount(prev => prev + 1);
+      
       toast({
         title: "Success",
-        description: `${config.title} uploaded successfully!`,
+        description: `${config.title} uploaded! Camera ready for next shot.`,
       });
 
-      onClose();
+      // Reset for next capture instead of closing
+      resetForNextCapture();
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
@@ -238,6 +254,11 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
             </Button>
             <Icon className="h-5 w-5" />
             {config.title}
+            {photoCount > 0 && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                ({photoCount} uploaded)
+              </span>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -387,18 +408,24 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 justify-end">
-                <Button variant="outline" onClick={handleClose}>
-                  Cancel
+              <div className="flex gap-3 justify-between">
+                <Button variant="ghost" onClick={resetForNextCapture} className="gap-2">
+                  <Camera className="h-4 w-4" />
+                  Retake
                 </Button>
-                <Button 
-                  onClick={handleUpload} 
-                  disabled={isUploading}
-                  className="gap-2"
-                >
-                  <Upload className="h-4 w-4" />
-                  {isUploading ? 'Uploading...' : 'Upload'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={handleClose}>
+                    {photoCount > 0 ? 'Done' : 'Cancel'}
+                  </Button>
+                  <Button 
+                    onClick={handleUpload} 
+                    disabled={isUploading}
+                    className="gap-2"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {isUploading ? 'Uploading...' : 'Upload & Continue'}
+                  </Button>
+                </div>
               </div>
             </div>
           )}
