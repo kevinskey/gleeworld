@@ -256,35 +256,33 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 </DropdownMenu>
 
                 
-                {/* PR Camera Quick Capture */}
-                {canAccessPR && (
-                  <EnhancedTooltip content="Quick Capture - Record media">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('Camera button clicked - showing category selector');
-                        setShowCategorySelector(true);
+                {/* Glee Cam Quick Capture - Available to all authenticated users */}
+                <EnhancedTooltip content="Glee Cam - Quick Capture">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Camera button clicked - showing category selector');
+                      setShowCategorySelector(true);
+                    }}
+                    className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-full hover:bg-white/10"
+                    style={{ color: isHbcuTheme ? hbcuColors.gold : undefined }}
+                    type="button"
+                  >
+                    <img 
+                      src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
+                      alt="Glee Cam" 
+                      className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 filter"
+                      style={{ 
+                        filter: isHbcuTheme 
+                          ? 'brightness(0) saturate(100%) invert(88%) sepia(44%) saturate(1000%) hue-rotate(357deg) brightness(103%) contrast(106%)'
+                          : 'brightness(0) saturate(100%) invert(21%) sepia(100%) saturate(4274%) hue-rotate(220deg) brightness(91%) contrast(91%)' 
                       }}
-                      className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-full hover:bg-white/10"
-                      style={{ color: isHbcuTheme ? hbcuColors.gold : undefined }}
-                      type="button"
-                    >
-                      <img 
-                        src="/lovable-uploads/a9348c2b-145b-4530-a755-80ee32c5bf6f.png" 
-                        alt="Camera" 
-                        className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 filter"
-                        style={{ 
-                          filter: isHbcuTheme 
-                            ? 'brightness(0) saturate(100%) invert(88%) sepia(44%) saturate(1000%) hue-rotate(357deg) brightness(103%) contrast(106%)'
-                            : 'brightness(0) saturate(100%) invert(21%) sepia(100%) saturate(4274%) hue-rotate(220deg) brightness(91%) contrast(91%)' 
-                        }}
-                      />
-                    </Button>
-                  </EnhancedTooltip>
-                )}
+                    />
+                  </Button>
+                </EnhancedTooltip>
                 
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
