@@ -85,7 +85,7 @@ export const TreeLightingSurvey = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <TreePine className="h-5 w-5 text-green-600" />
-            <CardTitle className="text-lg">Tree Lighting Participation Survey</CardTitle>
+            <CardTitle className="text-lg text-card-foreground">Tree Lighting Participation Survey</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
@@ -120,26 +120,26 @@ export const TreeLightingSurvey = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <TreePine className="h-5 w-5 text-green-600" />
-            <CardTitle className="text-lg">Tree Lighting Participation Survey</CardTitle>
+            <CardTitle className="text-lg text-card-foreground">Tree Lighting Participation Survey</CardTitle>
           </div>
           <div className="flex items-center gap-1 text-xs text-amber-600">
             <Clock className="h-3 w-3" />
             <span>Due: 12/12/25</span>
           </div>
         </div>
-        <CardDescription>Please complete this survey about the Tree Lighting event on 12/8/25</CardDescription>
+        <CardDescription className="text-muted-foreground">Please complete this survey about the Tree Lighting event on 12/8/25</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3">
-          <Label className="text-sm font-medium">Did you attend the Tree Lighting on 12/8/25?</Label>
+          <Label className="text-sm font-medium text-card-foreground">Did you attend the Tree Lighting on 12/8/25?</Label>
           <RadioGroup value={attended || ""} onValueChange={setAttended}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="yes" id="attended-yes" />
-              <Label htmlFor="attended-yes" className="cursor-pointer">Yes</Label>
+              <Label htmlFor="attended-yes" className="cursor-pointer text-card-foreground">Yes</Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="no" id="attended-no" />
-              <Label htmlFor="attended-no" className="cursor-pointer">No</Label>
+              <Label htmlFor="attended-no" className="cursor-pointer text-card-foreground">No</Label>
             </div>
           </RadioGroup>
         </div>
@@ -147,7 +147,7 @@ export const TreeLightingSurvey = () => {
         {attended === "yes" && (
           <>
             <div className="space-y-2">
-              <Label htmlFor="enjoyed-most" className="text-sm font-medium">
+              <Label htmlFor="enjoyed-most" className="text-sm font-medium text-card-foreground">
                 What did you enjoy most during the visit?
               </Label>
               <Textarea
@@ -155,12 +155,12 @@ export const TreeLightingSurvey = () => {
                 value={enjoyedMost}
                 onChange={(e) => setEnjoyedMost(e.target.value)}
                 placeholder="Share what you enjoyed most..."
-                className="min-h-[80px]"
+                className="min-h-[80px] text-card-foreground"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="song-order" className="text-sm font-medium">
+              <Label htmlFor="song-order" className="text-sm font-medium text-card-foreground">
                 Please list the song order (as performed):
               </Label>
               <Textarea
@@ -168,7 +168,7 @@ export const TreeLightingSurvey = () => {
                 value={songOrder}
                 onChange={(e) => setSongOrder(e.target.value)}
                 placeholder="1. Song name&#10;2. Song name&#10;3. Song name&#10;..."
-                className="min-h-[100px]"
+                className="min-h-[100px] text-card-foreground"
               />
             </div>
 
