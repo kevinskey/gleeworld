@@ -20923,6 +20923,36 @@ export type Database = {
           },
         ]
       }
+      tree_lighting_survey_responses: {
+        Row: {
+          attended: boolean
+          created_at: string
+          enjoyed_most: string | null
+          id: string
+          song_order: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attended: boolean
+          created_at?: string
+          enjoyed_most?: string | null
+          id?: string
+          song_order?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attended?: boolean
+          created_at?: string
+          enjoyed_most?: string | null
+          id?: string
+          song_order?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       upload_jobs: {
         Row: {
           bucket: string

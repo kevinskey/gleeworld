@@ -31,6 +31,7 @@ import { AnnouncementsDisplay } from "@/components/dashboard/AnnouncementsDispla
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, ChevronRight, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save, Globe, Users, Sun, Moon, Camera } from "lucide-react";
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
+import { TreeLightingSurvey } from "@/components/surveys/TreeLightingSurvey";
 
 // Sortable Dashboard Card Component
 interface SortableDashboardCardProps {
@@ -758,6 +759,11 @@ export const MetalHeaderDashboard = ({
           👑 Complete Exec Board Exit Interview - Required for Board Members
         </a>
       )}
+
+      {/* Tree Lighting Participation Survey */}
+      <div className="mb-4">
+        <TreeLightingSurvey />
+      </div>
 
       {/* Super Admin Layout Controls */}
       {isSuperAdmin() && isEditingLayout && <div className="flex items-center gap-2 justify-end mb-2">
