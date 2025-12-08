@@ -7,7 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Video, ArrowLeft, Search, Play, Clock, User, Upload, Plus } from 'lucide-react';
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Video, ArrowLeft, Search, Play, Clock, User, Upload, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -43,6 +45,8 @@ const ExecBoardTrainingVideosPage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
+  const [videoToDelete, setVideoToDelete] = useState<TrainingVideo | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -255,6 +259,49 @@ const ExecBoardTrainingVideosPage = () => {
     setUploadDescription('');
   };
 
+  const handleDeleteVideo = async () => {
+    if (!videoToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('quick_capture_media')
+        .delete()
+        .eq('id', videoToDelete.id);
+
+      if (dbError) throw dbError;
+
+      // Try to delete from storage (extract path from URL)
+      try {
+        const url = new URL(videoToDelete.file_url);
+        const pathParts = url.pathname.split('/quick-capture-media/');
+        if (pathParts[1]) {
+          await supabase.storage.from('quick-capture-media').remove([pathParts[1]]);
+        }
+        // Delete thumbnail if exists
+        if (videoToDelete.thumbnail_url) {
+          const thumbUrl = new URL(videoToDelete.thumbnail_url);
+          const thumbParts = thumbUrl.pathname.split('/quick-capture-media/');
+          if (thumbParts[1]) {
+            await supabase.storage.from('quick-capture-media').remove([thumbParts[1]]);
+          }
+        }
+      } catch (e) {
+        console.warn('Could not delete storage files:', e);
+      }
+
+      toast.success('Video deleted successfully');
+      setVideoToDelete(null);
+      fetchVideos();
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete video: ' + error.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (selectedVideo) {
     return (
       <UniversalLayout>
@@ -458,44 +505,81 @@ const ExecBoardTrainingVideosPage = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredVideos.map(video => (
-              <Card 
-                key={video.id} 
-                className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group overflow-hidden"
-                onClick={() => setSelectedVideo(video)}
-              >
-                <div className="aspect-video bg-black relative overflow-hidden">
-                  {video.thumbnail_url ? (
-                    <img 
-                      src={video.thumbnail_url} 
-                      alt={video.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-                      <Video className="h-12 w-12 text-muted-foreground" />
+              <ContextMenu key={video.id}>
+                <ContextMenuTrigger>
+                  <Card 
+                    className="cursor-pointer hover:border-primary/50 transition-all hover:shadow-lg group overflow-hidden"
+                    onClick={() => setSelectedVideo(video)}
+                  >
+                    <div className="aspect-video bg-black relative overflow-hidden">
+                      {video.thumbnail_url ? (
+                        <img 
+                          src={video.thumbnail_url} 
+                          alt={video.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500/20 to-pink-500/20">
+                          <Video className="h-12 w-12 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                          <Play className="h-8 w-8 text-white fill-white" />
+                        </div>
+                      </div>
+                      {video.duration_seconds && (
+                        <Badge className="absolute bottom-2 right-2 bg-black/70">
+                          {formatDuration(video.duration_seconds)}
+                        </Badge>
+                      )}
                     </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-                      <Play className="h-8 w-8 text-white fill-white" />
-                    </div>
-                  </div>
-                  {video.duration_seconds && (
-                    <Badge className="absolute bottom-2 right-2 bg-black/70">
-                      {formatDuration(video.duration_seconds)}
-                    </Badge>
-                  )}
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-semibold line-clamp-2 mb-1">{video.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {getCreatorName(video.user_id)} • {format(new Date(video.created_at), 'MMM d, yyyy')}
-                  </p>
-                </CardContent>
-              </Card>
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold line-clamp-2 mb-1">{video.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {getCreatorName(video.user_id)} • {format(new Date(video.created_at), 'MMM d, yyyy')}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </ContextMenuTrigger>
+                <ContextMenuContent>
+                  <ContextMenuItem 
+                    className="text-destructive focus:text-destructive gap-2"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setVideoToDelete(video);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Video
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
             ))}
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!videoToDelete} onOpenChange={(open) => !open && setVideoToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Training Video</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{videoToDelete?.title}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleDeleteVideo}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </UniversalLayout>
   );
