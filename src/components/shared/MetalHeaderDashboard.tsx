@@ -28,7 +28,9 @@ import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
 import { AnnouncementsDisplay } from "@/components/dashboard/AnnouncementsDisplay";
-import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, ChevronRight, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save, Globe, Users, Sun, Moon } from "lucide-react";
+import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, ChevronRight, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save, Globe, Users, Sun, Moon, Camera } from "lucide-react";
+import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
+import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
 
 // Sortable Dashboard Card Component
 interface SortableDashboardCardProps {
@@ -178,6 +180,10 @@ export const MetalHeaderDashboard = ({
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [isEditingLayout, setIsEditingLayout] = useState(false);
+  
+  // Glee Cam Quick Capture state
+  const [showCategorySelector, setShowCategorySelector] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
   const {
     isSuperAdmin
   } = useUserRole();
@@ -660,6 +666,21 @@ export const MetalHeaderDashboard = ({
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
+        {/* Glee Cam Quick Capture Button - Right side */}
+        <button 
+          onClick={() => setShowCategorySelector(true)} 
+          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-2"
+          style={{
+            background: isHbcuTheme 
+              ? `linear-gradient(to bottom right, ${hbcuGold}, #B8860B)` 
+              : 'linear-gradient(to bottom right, #3b82f6, #2563eb)',
+            borderColor: isHbcuTheme ? '#B8860B' : '#1d4ed8'
+          }}
+          aria-label="Glee Cam - Quick Capture"
+        >
+          <Camera className={`h-4 w-4 ${isHbcuTheme ? 'text-black' : 'text-white'} group-hover:scale-110 transition-transform duration-300`} />
+        </button>
+
         {/* Key Ignition - Quick Actions Button - Right side */}
         <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-4 sm:mr-8" aria-label="Quick Actions">
           <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
@@ -888,5 +909,27 @@ export const MetalHeaderDashboard = ({
               </CollapsibleContent>
             </Card>
           </Collapsible>}
+
+      {/* Glee Cam Quick Capture Category Selector */}
+      <QuickCaptureCategorySelector
+        open={showCategorySelector}
+        onClose={() => setShowCategorySelector(false)}
+        onSelectCategory={(category) => {
+          setShowCategorySelector(false);
+          setSelectedCategory(category);
+        }}
+      />
+
+      {/* Glee Cam Categorized Quick Capture */}
+      {selectedCategory && (
+        <CategorizedQuickCapture
+          category={selectedCategory}
+          onClose={() => setSelectedCategory(null)}
+          onBack={() => {
+            setSelectedCategory(null);
+            setShowCategorySelector(true);
+          }}
+        />
+      )}
     </div>;
 };
