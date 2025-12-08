@@ -304,6 +304,9 @@
   --muted-foreground: 135 30% 55%;
   --border: var(--pan-african-red);
   --ring: var(--african-gold);
+  --input: 0 0% 12%; /* Dark input background for contrast with gold text */
+  --popover: 0 0% 8%;
+  --popover-foreground: 45 65% 75%;
 }
 
 /* HBCU Heading Styles - Block Collegiate Lettering */
