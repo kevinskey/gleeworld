@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Video, ArrowLeft, Search, Play, Clock, User } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Video, ArrowLeft, Search, Play, Clock, User, Upload, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface TrainingVideo {
   id: string;
@@ -33,6 +37,13 @@ const ExecBoardTrainingVideosPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVideo, setSelectedVideo] = useState<TrainingVideo | null>(null);
   const [userProfiles, setUserProfiles] = useState<Record<string, UserProfile>>({});
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const [uploadTitle, setUploadTitle] = useState('');
+  const [uploadDescription, setUploadDescription] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -115,6 +126,135 @@ const ExecBoardTrainingVideosPage = () => {
     return 'Unknown';
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('video/')) {
+        toast.error('Please select a video file');
+        return;
+      }
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
+  const generateVideoThumbnail = async (videoUrl: string): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.crossOrigin = 'anonymous';
+      video.muted = true;
+      video.src = videoUrl;
+      
+      video.onloadeddata = () => {
+        video.currentTime = Math.min(1, video.duration / 2);
+      };
+      
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => resolve(blob), 'image/jpeg', 0.8);
+        } else {
+          resolve(null);
+        }
+      };
+      
+      video.onerror = () => resolve(null);
+      setTimeout(() => resolve(null), 5000);
+    });
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast.error('Please select a video file');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please sign in to upload videos');
+        return;
+      }
+
+      const timestamp = Date.now();
+      const fileExt = selectedFile.name.split('.').pop() || 'mp4';
+      const fileName = `${user.id}/exec-board-videos/${timestamp}.${fileExt}`;
+
+      // Upload video
+      const { error: uploadError } = await supabase.storage
+        .from('quick-capture-media')
+        .upload(fileName, selectedFile, { cacheControl: '3600', upsert: false });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('quick-capture-media')
+        .getPublicUrl(fileName);
+
+      // Generate thumbnail
+      let thumbnailUrl = null;
+      if (previewUrl) {
+        const thumbnailBlob = await generateVideoThumbnail(previewUrl);
+        if (thumbnailBlob) {
+          const thumbFileName = `${user.id}/exec-board-videos/thumbnails/${timestamp}.jpg`;
+          const { error: thumbError } = await supabase.storage
+            .from('quick-capture-media')
+            .upload(thumbFileName, thumbnailBlob, { cacheControl: '3600', contentType: 'image/jpeg' });
+          
+          if (!thumbError) {
+            const { data: { publicUrl: thumbUrl } } = supabase.storage
+              .from('quick-capture-media')
+              .getPublicUrl(thumbFileName);
+            thumbnailUrl = thumbUrl;
+          }
+        }
+      }
+
+      // Save to database
+      const { error: dbError } = await supabase
+        .from('quick_capture_media')
+        .insert({
+          user_id: user.id,
+          category: 'exec_board_video',
+          title: uploadTitle.trim() || `Training Video - ${new Date().toLocaleDateString()}`,
+          description: uploadDescription.trim() || null,
+          file_url: publicUrl,
+          thumbnail_url: thumbnailUrl,
+          file_type: selectedFile.type,
+          file_size: selectedFile.size,
+          is_approved: true,
+        });
+
+      if (dbError) throw dbError;
+
+      toast.success('Video uploaded successfully!');
+      setUploadDialogOpen(false);
+      setSelectedFile(null);
+      setPreviewUrl('');
+      setUploadTitle('');
+      setUploadDescription('');
+      fetchVideos();
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload video: ' + error.message);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const resetUploadDialog = () => {
+    setSelectedFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl('');
+    setUploadTitle('');
+    setUploadDescription('');
+  };
+
   if (selectedVideo) {
     return (
       <UniversalLayout>
@@ -182,9 +322,98 @@ const ExecBoardTrainingVideosPage = () => {
           <div className="relative z-10 text-white">
             <Badge className="bg-white/20 text-white border-white/30 mb-4">Training Library</Badge>
             <h1 className="text-4xl md:text-5xl font-bold mb-4">ExecBoard Training Videos</h1>
-            <p className="text-xl text-white/90 max-w-2xl">
+            <p className="text-xl text-white/90 max-w-2xl mb-6">
               Watch training videos created by executive board members to learn leadership skills and best practices.
             </p>
+            <Dialog open={uploadDialogOpen} onOpenChange={(open) => {
+              setUploadDialogOpen(open);
+              if (!open) resetUploadDialog();
+            }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2 bg-white text-purple-600 hover:bg-white/90">
+                  <Plus className="h-4 w-4" />
+                  Upload Training Video
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Upload className="h-5 w-5" />
+                    Upload Training Video
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {!selectedFile ? (
+                    <div 
+                      className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <Video className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Click to select a video file
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        MP4, MOV, WebM supported
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <video 
+                        src={previewUrl} 
+                        controls 
+                        className="w-full max-h-48 object-contain rounded-lg bg-black"
+                      />
+                      <p className="text-sm text-muted-foreground truncate">
+                        {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                      </p>
+                    </div>
+                  )}
+                  
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  <div>
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      placeholder="Enter video title..."
+                      value={uploadTitle}
+                      onChange={(e) => setUploadTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="description">Description (Optional)</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Describe what this video covers..."
+                      value={uploadDescription}
+                      onChange={(e) => setUploadDescription(e.target.value)}
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="flex gap-3 justify-end">
+                    <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleUpload} 
+                      disabled={!selectedFile || isUploading}
+                      className="gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      {isUploading ? 'Uploading...' : 'Upload Video'}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
@@ -218,8 +447,12 @@ const ExecBoardTrainingVideosPage = () => {
               <Video className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold mb-2">No Training Videos Yet</h3>
               <p className="text-muted-foreground mb-4">
-                Be the first to upload a training video using the Quick Capture feature in the header.
+                Be the first to upload a training video!
               </p>
+              <Button onClick={() => setUploadDialogOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Upload Video
+              </Button>
             </CardContent>
           </Card>
         ) : (
