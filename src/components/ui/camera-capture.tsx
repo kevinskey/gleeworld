@@ -8,28 +8,36 @@ interface CameraCaptureProps {
   onCapture: (blob: Blob) => void;
   onCancel: () => void;
   isOpen: boolean;
+  allowMultiple?: boolean;
 }
 
 export const CameraCapture: React.FC<CameraCaptureProps> = ({ 
   onCapture, 
   onCancel, 
-  isOpen 
+  isOpen,
+  allowMultiple = true
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment'); // Default to back camera
+  const [photoCount, setPhotoCount] = useState(0);
   const { toast } = useToast();
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (facing: 'user' | 'environment' = facingMode) => {
     try {
+      // Stop any existing stream first
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           width: { ideal: 1280 },
           height: { ideal: 720 },
-          facingMode: facingMode
+          facingMode: facing
         } 
       });
       
@@ -72,13 +80,16 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
     setCapturedImage(imageData);
-    stopCamera();
-  }, [stopCamera]);
+    // Don't stop camera - keep it running for multiple photos
+  }, []);
 
   const retakePhoto = useCallback(() => {
     setCapturedImage(null);
-    startCamera();
-  }, [startCamera]);
+    // Camera should still be running, but ensure it is
+    if (!isStreaming) {
+      startCamera();
+    }
+  }, [startCamera, isStreaming]);
 
   const confirmCapture = useCallback(() => {
     if (!capturedImage || !canvasRef.current) return;
@@ -86,21 +97,36 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     canvasRef.current.toBlob((blob) => {
       if (blob) {
         onCapture(blob);
-        setCapturedImage(null);
+        setPhotoCount(prev => prev + 1);
+        
+        if (allowMultiple) {
+          // Clear captured image and keep camera running for next photo
+          setCapturedImage(null);
+          toast({
+            title: "Photo saved!",
+            description: `Photo ${photoCount + 1} captured. Take another or close.`,
+          });
+        } else {
+          // Single photo mode - close after capture
+          setCapturedImage(null);
+        }
       }
     }, 'image/jpeg', 0.8);
-  }, [capturedImage, onCapture]);
+  }, [capturedImage, onCapture, allowMultiple, photoCount, toast]);
 
   const handleCancel = useCallback(() => {
     stopCamera();
     setCapturedImage(null);
+    setPhotoCount(0);
     onCancel();
   }, [stopCamera, onCancel]);
 
-  const switchCamera = useCallback(() => {
-    stopCamera();
-    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
-  }, [stopCamera]);
+  // Switch camera with single click - immediate switch
+  const switchCamera = useCallback(async () => {
+    const newFacing = facingMode === 'user' ? 'environment' : 'user';
+    setFacingMode(newFacing);
+    await startCamera(newFacing);
+  }, [facingMode, startCamera]);
 
   React.useEffect(() => {
     if (isOpen && !capturedImage) {
@@ -110,7 +136,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
     return () => {
       stopCamera();
     };
-  }, [isOpen, capturedImage, startCamera, stopCamera, facingMode]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -120,7 +146,9 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
         <CardContent className="p-6">
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Take a Selfie</h3>
+              <h3 className="text-lg font-semibold">
+                Take a Selfie {photoCount > 0 && `(${photoCount} saved)`}
+              </h3>
               <Button variant="ghost" size="sm" onClick={handleCancel}>
                 <X className="h-4 w-4" />
               </Button>
@@ -133,15 +161,17 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                     ref={videoRef}
                     autoPlay
                     playsInline
+                    muted
                     className="w-full h-full object-cover"
                   />
+                  {/* Big flip camera button - easy single tap */}
                   <Button
                     variant="secondary"
-                    size="icon"
+                    size="lg"
                     onClick={switchCamera}
-                    className="absolute top-4 right-4 bg-background/80 hover:bg-background"
+                    className="absolute top-4 right-4 bg-background/90 hover:bg-background h-12 w-12 rounded-full"
                   >
-                    <SwitchCamera className="h-4 w-4" />
+                    <SwitchCamera className="h-6 w-6" />
                   </Button>
                 </>
               ) : (
@@ -159,7 +189,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
               {!capturedImage ? (
                 <>
                   <Button variant="outline" onClick={handleCancel}>
-                    Cancel
+                    {photoCount > 0 ? 'Done' : 'Cancel'}
                   </Button>
                   <Button 
                     onClick={capturePhoto} 
@@ -178,7 +208,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
                   </Button>
                   <Button onClick={confirmCapture} className="bg-green-600 hover:bg-green-700">
                     <Download className="h-4 w-4 mr-2" />
-                    Use Photo
+                    {allowMultiple ? 'Save & Continue' : 'Use Photo'}
                   </Button>
                 </>
               )}
