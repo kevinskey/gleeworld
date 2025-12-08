@@ -37,6 +37,27 @@ const ExecBoardTrainingVideosPage = () => {
 
   useEffect(() => {
     fetchVideos();
+    
+    // Subscribe to real-time updates for new videos
+    const channel = supabase
+      .channel('exec-board-training-videos')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'quick_capture_media',
+          filter: 'category=eq.exec_board_video'
+        },
+        () => {
+          fetchVideos();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchVideos = async () => {
