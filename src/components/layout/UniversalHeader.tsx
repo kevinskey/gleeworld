@@ -267,14 +267,14 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       console.log('Camera button clicked - showing category selector');
                       setShowCategorySelector(true);
                     }}
-                    className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-full hover:bg-primary/10 flex items-center justify-center"
-                    style={{ color: isHbcuTheme ? hbcuColors.gold : undefined }}
+                    className="h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 p-0 rounded-full hover:opacity-90 flex items-center justify-center border-2 shadow-lg"
+                    style={{ 
+                      background: 'linear-gradient(to bottom right, #3b82f6, #2563eb)',
+                      borderColor: '#1d4ed8'
+                    }}
                     type="button"
                   >
-                    <Camera 
-                      className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6"
-                      style={{ color: isHbcuTheme ? hbcuColors.gold : '#2563eb' }}
-                    />
+                    <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                   </Button>
                 </EnhancedTooltip>
                 
