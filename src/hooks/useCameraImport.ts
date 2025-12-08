@@ -48,10 +48,10 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
         return;
       }
       
-      // Camera constraints with dynamic facing mode
+      // Camera constraints with dynamic facing mode - prefer exact match for back camera
       const constraints = {
         video: {
-          facingMode,
+          facingMode: { ideal: facingMode },
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }
@@ -59,10 +59,26 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
       
       let stream;
       try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        // First try with exact facing mode constraint for back camera
+        if (facingMode === 'environment') {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: { exact: 'environment' },
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            }
+          });
+        } else {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+        }
       } catch (error) {
-        console.log(`useCameraImport: ${facingMode} camera failed, trying basic camera`);
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        console.log(`useCameraImport: ${facingMode} camera failed, trying ideal constraint`);
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints);
+        } catch (error2) {
+          console.log(`useCameraImport: ideal constraint failed, trying basic camera`);
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        }
       }
 
       streamRef.current = stream;
