@@ -28,37 +28,28 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     return () => clearInterval(timer);
   }, []);
 
-  const getChristmasCarolDate = () => {
+  const getTourDate = () => {
     const now = new Date();
-    const currentYear = now.getFullYear();
     
-    // Christmas Carol 2025: December 6-8, 2025
-    // Show countdown to first day, then during event show "Christmas Carol is happening now!"
-    const eventStart = new Date(currentYear, 11, 6); // December 6th
-    const eventEnd = new Date(currentYear, 11, 8, 23, 59, 59); // December 8th end of day
-    
-    // If we're past this year's event, use next year
-    if (now > eventEnd) {
-      return new Date(currentYear + 1, 11, 6);
-    }
+    // SCGC Tour 2026: March 8, 2026
+    const eventStart = new Date(2026, 2, 8); // March 8, 2026
+    const eventEnd = new Date(2026, 2, 15, 23, 59, 59); // Assume week-long tour
     
     return { start: eventStart, end: eventEnd, isHappening: now >= eventStart && now <= eventEnd };
   };
 
   const getCountdownText = () => {
     const now = new Date();
-    const eventInfo = getChristmasCarolDate();
-    
-    // Handle legacy return type
-    if (eventInfo instanceof Date) {
-      const diff = eventInfo.getTime() - now.getTime();
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      return `${days} days to Christmas Carol`;
-    }
+    const eventInfo = getTourDate();
     
     // Event is currently happening
     if (eventInfo.isHappening) {
-      return "Christmas Carol is happening now! 🎄";
+      return "SCGC Tour 2026 is happening now! 🎵";
+    }
+    
+    // Event has passed
+    if (now > eventInfo.end) {
+      return "SCGC Tour 2026 Complete! 🎵";
     }
     
     const diff = eventInfo.start.getTime() - now.getTime();
@@ -68,13 +59,13 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
     if (days > 0) {
-      return `${days} days to Christmas Carol`;
+      return `${days} days to SCGC Tour 2026`;
     } else if (hours > 0) {
-      return `${hours}h ${minutes}m to Christmas Carol`;
+      return `${hours}h ${minutes}m to SCGC Tour 2026`;
     } else if (minutes > 0) {
-      return `${minutes} minutes to Christmas Carol`;
+      return `${minutes} minutes to SCGC Tour 2026`;
     } else {
-      return "Christmas Carol starts soon!";
+      return "SCGC Tour 2026 starts soon!";
     }
   };
 
@@ -228,7 +219,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
               variant="secondary" 
               className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
             >
-              🎄 {getCountdownText()}
+              🚌 {getCountdownText()}
             </Badge>
             <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
           </div>
@@ -365,7 +356,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
         {/* Countdown Text - Visible on desktop */}
         <div className="hidden lg:block">
           <span className="text-sm font-medium whitespace-nowrap" style={{ color: isHbcuTheme ? hbcuGold : '#334155' }}>
-            🎄 {getCountdownText()}
+            🚌 {getCountdownText()}
           </span>
         </div>
       </div>
@@ -373,12 +364,12 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
       {/* Hover Tooltip for when countdown text is hidden */}
       {showCountdown && (
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120] lg:hidden">
-          <Badge 
-            variant="secondary" 
-            className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
-          >
-            🎄 {getCountdownText()}
-          </Badge>
+            <Badge 
+              variant="secondary" 
+              className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
+            >
+              🚌 {getCountdownText()}
+            </Badge>
           <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
         </div>
       )}
