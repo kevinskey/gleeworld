@@ -84,10 +84,10 @@ const TreeLightingSurveyModule = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <TreePine className="h-5 w-5 text-green-600" />
-            <CardTitle>Tree Lighting Participation Survey</CardTitle>
+            <CardTitle>Survey Module</CardTitle>
           </div>
           <CardDescription>
-            Survey responses from the 12/8/25 Tree Lighting event
+            Manage and view survey responses
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -993,16 +993,16 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     requiredRoles: ["admin", "super-admin"]
   },
   {
-    id: "tree-lighting-survey",
-    name: "tree-lighting-survey",
-    title: "Tree Lighting Survey",
-    description: "View responses from the Tree Lighting participation survey",
+    id: "survey-module",
+    name: "survey-module",
+    title: "Survey Module",
+    description: "View and manage survey responses",
     icon: TreePine,
     iconColor: "green",
     category: "member-management",
     isActive: true,
     component: TreeLightingSurveyModule,
-    dbFunctionName: "tree-lighting-survey",
+    dbFunctionName: "survey-module",
     requiredRoles: ["admin", "super-admin"]
   }
 ];
