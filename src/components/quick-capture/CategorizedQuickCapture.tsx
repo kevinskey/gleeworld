@@ -36,7 +36,7 @@ const categoryConfig = {
     folder: 'voice-part-recordings',
   },
   exec_board_video: {
-    title: 'ExecBoard Video',
+    title: 'ExecBoard Training Video',
     icon: Video,
     mode: 'video' as const,
     folder: 'exec-board-videos',
@@ -186,7 +186,7 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
         thumbnail_url: thumbnailUrl,
         file_type: capturedMedia.type,
         file_size: capturedMedia.size,
-        is_approved: category === 'glee_cam_pic' || category === 'christmas_carol_selfie',
+        is_approved: category === 'glee_cam_pic' || category === 'christmas_carol_selfie' || category === 'exec_board_video',
       };
       
       console.log('Inserting to database:', insertData);
