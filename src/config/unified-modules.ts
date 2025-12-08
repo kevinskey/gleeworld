@@ -39,6 +39,7 @@ import {
   QrCode,
   Layout,
   Crown,
+  TreePine,
 } from 'lucide-react';
 
 // Import core module components
@@ -101,6 +102,7 @@ import { GradingModule } from '@/components/modules/GradingModule';
 import { ConcertTicketRequestsModule } from '@/components/modules/ConcertTicketRequestsModule';
 import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
 import ExecBoardInterviewsModule from '@/components/modules/ExecBoardInterviewsModule';
+import TreeLightingSurveyModule from '@/components/modules/TreeLightingSurveyModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -988,6 +990,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: ExecBoardInterviewsModule,
     dbFunctionName: "exec-board-interviews",
+    requiredRoles: ["admin", "super-admin"]
+  },
+  {
+    id: "tree-lighting-survey",
+    name: "tree-lighting-survey",
+    title: "Tree Lighting Survey",
+    description: "View responses from the Tree Lighting participation survey",
+    icon: TreePine,
+    iconColor: "green",
+    category: "member-management",
+    isActive: true,
+    component: TreeLightingSurveyModule,
+    dbFunctionName: "tree-lighting-survey",
     requiredRoles: ["admin", "super-admin"]
   }
 ];
