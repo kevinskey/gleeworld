@@ -669,7 +669,7 @@ export const MetalHeaderDashboard = ({
         {/* Glee Cam Quick Capture Button - Right side */}
         <button 
           onClick={() => setShowCategorySelector(true)} 
-          className="relative z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-2"
+          className="relative z-30 min-w-[32px] w-8 h-8 sm:min-w-[40px] sm:w-10 sm:h-10 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group flex-shrink-0 mr-2"
           style={{
             background: isHbcuTheme 
               ? `linear-gradient(to bottom right, ${hbcuGold}, #B8860B)` 
@@ -678,7 +678,7 @@ export const MetalHeaderDashboard = ({
           }}
           aria-label="Glee Cam - Quick Capture"
         >
-          <Camera className={`h-4 w-4 ${isHbcuTheme ? 'text-black' : 'text-white'} group-hover:scale-110 transition-transform duration-300`} />
+          <Camera className={`h-4 w-4 sm:h-5 sm:w-5 ${isHbcuTheme ? 'text-black' : 'text-white'} group-hover:scale-110 transition-transform duration-300`} />
         </button>
 
         {/* Key Ignition - Quick Actions Button - Right side */}
