@@ -662,14 +662,14 @@ export const MetalHeaderDashboard = ({
         <h1 style={{
         color: isHbcuTheme ? hbcuGold : '#000000',
         textShadow: isHbcuTheme ? 'none' : undefined
-      }} className="text-sm sm:text-lg font-bold tracking-wide font-mono uppercase flex-1 text-center px-2 lg:text-3xl">
+      }} className="text-sm sm:text-lg font-bold tracking-wide font-mono uppercase flex-1 text-center px-2 lg:text-3xl truncate">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
         {/* Glee Cam Quick Capture Button - Right side */}
         <button 
           onClick={() => setShowCategorySelector(true)} 
-          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-2"
+          className="relative z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-2"
           style={{
             background: isHbcuTheme 
               ? `linear-gradient(to bottom right, ${hbcuGold}, #B8860B)` 
