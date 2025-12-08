@@ -123,6 +123,44 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
 
   const isVideoFile = capturedMedia?.type.startsWith('video/');
 
+  // Generate thumbnail from video
+  const generateVideoThumbnail = async (videoUrl: string): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const video = document.createElement('video');
+      video.crossOrigin = 'anonymous';
+      video.muted = true;
+      video.src = videoUrl;
+      
+      video.onloadeddata = () => {
+        // Seek to 1 second or beginning
+        video.currentTime = Math.min(1, video.duration / 2);
+      };
+      
+      video.onseeked = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob((blob) => {
+            resolve(blob);
+          }, 'image/jpeg', 0.8);
+        } else {
+          resolve(null);
+        }
+      };
+      
+      video.onerror = () => {
+        console.error('Failed to load video for thumbnail');
+        resolve(null);
+      };
+      
+      // Timeout fallback
+      setTimeout(() => resolve(null), 5000);
+    });
+  };
+
   const handleUpload = async () => {
     if (!capturedMedia) {
       console.error('No captured media to upload');
@@ -151,7 +189,8 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
 
       // Upload file to storage
       const fileExt = capturedMedia.name.split('.').pop() || (isVideoFile ? 'webm' : 'jpg');
-      const fileName = `${user.id}/${config.folder}/${Date.now()}.${fileExt}`;
+      const timestamp = Date.now();
+      const fileName = `${user.id}/${config.folder}/${timestamp}.${fileExt}`;
       
       console.log('Uploading to storage:', fileName);
       
@@ -176,10 +215,31 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
 
       console.log('Public URL:', publicUrl);
 
-      // Generate thumbnail for videos
+      // Generate and upload thumbnail for videos
       let thumbnailUrl = null;
-      if (isVideoFile && canvasRef.current && videoRef.current) {
-        // Thumbnail generation handled elsewhere if needed
+      if (isVideoFile && previewUrl) {
+        console.log('Generating video thumbnail...');
+        const thumbnailBlob = await generateVideoThumbnail(previewUrl);
+        if (thumbnailBlob) {
+          const thumbnailFileName = `${user.id}/${config.folder}/thumbnails/${timestamp}.jpg`;
+          const { error: thumbError } = await supabase.storage
+            .from('quick-capture-media')
+            .upload(thumbnailFileName, thumbnailBlob, {
+              cacheControl: '3600',
+              upsert: false,
+              contentType: 'image/jpeg'
+            });
+          
+          if (!thumbError) {
+            const { data: { publicUrl: thumbUrl } } = supabase.storage
+              .from('quick-capture-media')
+              .getPublicUrl(thumbnailFileName);
+            thumbnailUrl = thumbUrl;
+            console.log('Thumbnail uploaded:', thumbnailUrl);
+          } else {
+            console.warn('Thumbnail upload failed:', thumbError);
+          }
+        }
       }
 
       // Save to database
