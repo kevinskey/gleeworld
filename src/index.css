@@ -510,6 +510,13 @@
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
   
+  /* HBCU Theme - Collegiate Font Override */
+  .hbcu-theme body,
+  .hbcu-theme {
+    font-family: 'Bebas Neue', 'Oswald', sans-serif !important;
+    letter-spacing: 0.04em;
+  }
+  
   @media (min-width: 640px) {
     body {
       font-size: 15px;
