@@ -1,13 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { ImagePlus, MapPin, Send, Loader2, X } from 'lucide-react';
+import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check } from 'lucide-react';
 
 interface CreatePostCardProps {
   userProfile: {
@@ -18,13 +26,66 @@ interface CreatePostCardProps {
   onPostCreated?: () => void;
 }
 
+interface GleeCamPhoto {
+  name: string;
+  url: string;
+  created_at: string;
+}
+
 export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardProps) {
   const [content, setContent] = useState('');
   const [locationTag, setLocationTag] = useState('');
   const [showLocation, setShowLocation] = useState(false);
   const [mediaUrls, setMediaUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [gleeCamPhotos, setGleeCamPhotos] = useState<GleeCamPhoto[]>([]);
+  const [loadingPhotos, setLoadingPhotos] = useState(false);
+  const [showPhotoPicker, setShowPhotoPicker] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Fetch Glee Cam photos
+  const fetchGleeCamPhotos = async () => {
+    if (!userProfile?.user_id) return;
+    
+    setLoadingPhotos(true);
+    try {
+      const { data: files, error } = await supabase.storage
+        .from('quick-capture-media')
+        .list(userProfile.user_id, {
+          limit: 50,
+          sortBy: { column: 'created_at', order: 'desc' }
+        });
+
+      if (error) throw error;
+
+      const photos: GleeCamPhoto[] = (files || [])
+        .filter(file => file.name.match(/\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i))
+        .map(file => {
+          const { data } = supabase.storage
+            .from('quick-capture-media')
+            .getPublicUrl(`${userProfile.user_id}/${file.name}`);
+          return {
+            name: file.name,
+            url: data.publicUrl,
+            created_at: file.created_at || ''
+          };
+        });
+
+      setGleeCamPhotos(photos);
+    } catch (error) {
+      console.error('Error fetching Glee Cam photos:', error);
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showPhotoPicker) {
+      fetchGleeCamPhotos();
+    }
+  }, [showPhotoPicker, userProfile?.user_id]);
 
   const handleSubmit = async () => {
     if (!content.trim()) {
@@ -72,8 +133,6 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
       setIsSubmitting(false);
     }
   };
-
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -123,6 +182,28 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
     }
   };
 
+  const togglePhotoSelection = (url: string) => {
+    setSelectedPhotos(prev => 
+      prev.includes(url) 
+        ? prev.filter(p => p !== url)
+        : [...prev, url]
+    );
+  };
+
+  const addSelectedPhotos = () => {
+    setMediaUrls(prev => [...prev, ...selectedPhotos]);
+    setSelectedPhotos([]);
+    setShowPhotoPicker(false);
+    toast({
+      title: 'Photos added',
+      description: `${selectedPhotos.length} photo(s) from Glee Cam added`,
+    });
+  };
+
+  const isVideo = (url: string) => {
+    return url.match(/\.(mp4|mov|webm|ogg)$/i);
+  };
+
   return (
     <Card className="mb-4">
       <CardContent className="pt-4">
@@ -169,11 +250,19 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
               <div className="flex gap-2 flex-wrap">
                 {mediaUrls.map((url, index) => (
                   <div key={index} className="relative">
-                    <img
-                      src={url}
-                      alt="Upload"
-                      className="h-16 w-16 object-cover rounded-md"
-                    />
+                    {isVideo(url) ? (
+                      <video
+                        src={url}
+                        className="h-16 w-16 object-cover rounded-md"
+                        muted
+                      />
+                    ) : (
+                      <img
+                        src={url}
+                        alt="Upload"
+                        className="h-16 w-16 object-cover rounded-md"
+                      />
+                    )}
                     <Button
                       variant="destructive"
                       size="icon"
@@ -213,6 +302,76 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
                     />
                   </label>
                 </Button>
+
+                {/* Glee Cam Photo Picker */}
+                <Dialog open={showPhotoPicker} onOpenChange={setShowPhotoPicker}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                    >
+                      <Camera className="h-4 w-4" />
+                      <span className="hidden sm:inline">Glee Cam</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Select from Glee Cam</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[300px]">
+                      {loadingPhotos ? (
+                        <div className="flex items-center justify-center h-full">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        </div>
+                      ) : gleeCamPhotos.length === 0 ? (
+                        <div className="text-center text-muted-foreground py-8">
+                          <Camera className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                          <p>No Glee Cam photos yet</p>
+                          <p className="text-sm">Take some photos with Glee Cam first!</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2 p-1">
+                          {gleeCamPhotos.map((photo) => (
+                            <div
+                              key={photo.name}
+                              className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-colors ${
+                                selectedPhotos.includes(photo.url)
+                                  ? 'border-primary'
+                                  : 'border-transparent hover:border-muted-foreground/30'
+                              }`}
+                              onClick={() => togglePhotoSelection(photo.url)}
+                            >
+                              {isVideo(photo.url) ? (
+                                <video
+                                  src={photo.url}
+                                  className="w-full h-24 object-cover"
+                                  muted
+                                />
+                              ) : (
+                                <img
+                                  src={photo.url}
+                                  alt={photo.name}
+                                  className="w-full h-24 object-cover"
+                                />
+                              )}
+                              {selectedPhotos.includes(photo.url) && (
+                                <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
+                                  <Check className="h-6 w-6 text-primary-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+                    {selectedPhotos.length > 0 && (
+                      <Button onClick={addSelectedPhotos} className="w-full">
+                        Add {selectedPhotos.length} photo(s)
+                      </Button>
+                    )}
+                  </DialogContent>
+                </Dialog>
                 
                 <Button
                   variant="ghost"
