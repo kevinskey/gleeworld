@@ -109,6 +109,9 @@ export const DashboardHeroCarousel: React.FC = () => {
   return (
     <section aria-label="Dashboard hero" className="animate-fade-in">
       <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg">
+        <div className="px-4 pt-3 pb-2">
+          <h4 className="text-xs sm:text-sm font-semibold tracking-wide uppercase text-foreground">Glee Cam</h4>
+        </div>
         <CardContent className="p-0">
           <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] relative overflow-hidden">
             {slide ? (
