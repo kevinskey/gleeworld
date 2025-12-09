@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { FavoritesCard } from "@/components/dashboard/FavoritesCard";
+import { CommunicationsCard } from "@/components/dashboard/CommunicationsCard";
 import { MemberModulesCard } from "@/components/dashboard/MemberModulesCard";
 import { ExecBoardModulesCard } from "@/components/dashboard/ExecBoardModulesCard";
 import { AllModulesCard } from "@/components/dashboard/AllModulesCard";
@@ -720,6 +721,15 @@ export const MetalHeaderDashboard = ({
               }).filter(Boolean) : [];
               return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
                     <FavoritesCard favorites={favoritesArray as any} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} />
+                  </SortableDashboardCard>;
+            }
+            if (cardId === 'communications') {
+              return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
+                    <CommunicationsCard 
+                      onOpenMessages={() => onToggleMessages?.()}
+                      onOpenAnnouncements={() => navigate('/announcements')}
+                      isExecBoard={user?.is_exec_board || isAdmin || isSuperAdmin()}
+                    />
                   </SortableDashboardCard>;
             }
             if (cardId === 'modules') {
