@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video } from 'lucide-react';
+import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home } from 'lucide-react';
 interface CreatePostCardProps {
   userProfile: {
     user_id: string;
@@ -282,30 +282,82 @@ export function CreatePostCard({
                   <Video className="h-5 w-5 text-red-500" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
-                <DialogHeader>
-                  <DialogTitle className="text-foreground flex items-center gap-2">
-                    <Video className="h-5 w-5 text-red-500" />
-                    Glee Cam Live
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="text-center py-8">
-                  <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
-                    <Camera className="h-16 w-16 text-muted-foreground/50" />
+              <DialogContent className="max-w-4xl p-0">
+                <div className="flex min-h-[500px]">
+                  {/* Left Sidebar */}
+                  <div className="w-80 border-r border-border p-4 bg-card">
+                    <h2 className="text-xl font-bold text-foreground mb-4">Create live video</h2>
+                    
+                    {/* Home Button */}
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                        <Video className="h-5 w-5 text-primary-foreground" />
+                      </div>
+                      <span className="font-medium text-foreground">Glee Lounge</span>
+                    </div>
+
+                    {/* User Profile */}
+                    <div className="flex items-center gap-3 p-3 mb-4">
+                      <Avatar className="h-10 w-10 border-2 border-primary">
+                        <AvatarImage src={getAvatarUrl(userProfile?.avatar_url) || undefined} />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {getInitials(userProfile?.full_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium text-foreground">{userProfile?.full_name || 'Member'}</p>
+                        <p className="text-sm text-muted-foreground">Host - Your profile</p>
+                      </div>
+                    </div>
+
+                    {/* Where to post dropdown */}
+                    <div className="border border-border rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground mb-1">Choose where to post</p>
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-foreground">Post to Glee Lounge</span>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-muted-foreground mb-4">
-                    Open Glee Cam to capture a photo or video
-                  </p>
-                  <Button 
-                    onClick={() => {
-                      setShowLiveCamera(false);
-                      window.location.href = '/glee-cam';
-                    }}
-                    className="bg-red-500 hover:bg-red-600"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    Open Glee Cam
-                  </Button>
+
+                  {/* Right Content */}
+                  <div className="flex-1 p-8 bg-muted/30">
+                    <h1 className="text-2xl font-bold text-foreground mb-2">
+                      Welcome back, {userProfile?.full_name?.split(' ')[0] || 'friend'}!
+                    </h1>
+                    <p className="text-muted-foreground mb-6">Choose how you want to go live.</p>
+
+                    {/* Go Live Card */}
+                    <div 
+                      className="bg-card rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border"
+                      onClick={() => {
+                        setShowLiveCamera(false);
+                        window.location.href = '/glee-cam?mode=live';
+                      }}
+                    >
+                      {/* Red video icon */}
+                      <div className="w-14 h-14 rounded-xl bg-red-500 flex items-center justify-center mb-4">
+                        <Video className="h-7 w-7 text-white" />
+                      </div>
+                      
+                      <h3 className="text-xl font-bold text-foreground mb-4">Go live</h3>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-foreground">
+                          <Users className="h-5 w-5 text-muted-foreground" />
+                          <span>Go live by yourself or with others</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-foreground">
+                          <FileText className="h-5 w-5 text-muted-foreground" />
+                          <span>Choose where to publish your live video</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-foreground">
+                          <Settings className="h-5 w-5 text-muted-foreground" />
+                          <span>Explore additional tools to engage your viewers</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </DialogContent>
             </Dialog>
