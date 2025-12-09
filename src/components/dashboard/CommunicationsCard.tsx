@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { MessageSquare, Megaphone, ClipboardList, ChevronDown, ChevronUp, X, Radio } from "lucide-react";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { MessageSquare, Megaphone, ClipboardList, ChevronRight, X, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MessagingInterface } from "@/components/messaging/MessagingInterface";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +13,7 @@ interface CommunicationModule {
   title: string;
   description: string;
   icon: React.ElementType;
+  iconBg: string;
   iconColor: string;
   route?: string;
   isEmbedded?: boolean;
@@ -27,25 +28,28 @@ const COMMUNICATION_MODULES: CommunicationModule[] = [
   {
     id: 'messages',
     title: 'Messages',
-    description: 'Group messaging and DMs',
+    description: 'Group messaging and direct messages',
     icon: MessageSquare,
-    iconColor: 'blue',
+    iconBg: 'bg-blue-900/50',
+    iconColor: 'text-blue-400',
     isEmbedded: true,
   },
   {
     id: 'announcements',
     title: 'Announcements',
-    description: 'View announcements',
+    description: 'View latest announcements',
     icon: Megaphone,
-    iconColor: 'amber',
+    iconBg: 'bg-amber-900/50',
+    iconColor: 'text-amber-400',
     route: '/announcements',
   },
   {
     id: 'member-exit-interview',
-    title: 'Member Exit Interview',
+    title: 'Exit Interview',
     description: 'Complete Fall 2025 exit interview',
     icon: ClipboardList,
-    iconColor: 'rose',
+    iconBg: 'bg-rose-900/50',
+    iconColor: 'text-rose-400',
     route: '/member-exit-interview',
   },
 ];
@@ -53,10 +57,11 @@ const COMMUNICATION_MODULES: CommunicationModule[] = [
 const EXEC_MODULES: CommunicationModule[] = [
   {
     id: 'exec-exit-interview',
-    title: 'Exec Board Exit Interview',
-    description: 'Complete exec board exit interview',
+    title: 'Exec Interview',
+    description: 'Board member exit interview',
     icon: ClipboardList,
-    iconColor: 'amber',
+    iconBg: 'bg-amber-800/50',
+    iconColor: 'text-amber-300',
     route: '/exec-board-exit-interview',
   },
 ];
@@ -94,55 +99,58 @@ export const CommunicationsCard = ({
         )}
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-44">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
-            {modules.map((module) => {
-              const IconComponent = module.icon;
-              const isExpanded = expandedModule === module.id;
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {modules.map((module) => {
+            const IconComponent = module.icon;
+            const isExpanded = expandedModule === module.id;
 
-              return (
+            return (
+              <div key={module.id} className={cn(
+                isExpanded && module.isEmbedded && "col-span-2 md:col-span-4"
+              )}>
                 <Collapsible
-                  key={module.id}
                   open={isExpanded && module.isEmbedded}
                   onOpenChange={() => handleModuleClick(module)}
-                  className={cn(
-                    isExpanded && module.isEmbedded && "md:col-span-2 lg:col-span-3"
-                  )}
                 >
+                  {/* Glossy Card Module */}
                   <div
-                    className={cn(
-                      "relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card text-card-foreground hover:bg-accent/50 transition-colors cursor-pointer",
-                      isExpanded && module.isEmbedded && "border-primary/50"
-                    )}
                     onClick={() => handleModuleClick(module)}
-                  >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
-                        <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate text-card-foreground">{module.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">{module.description}</p>
-                      </div>
-                    </div>
-                    {module.isEmbedded && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute top-2 right-2 p-2 h-auto rounded-md text-muted-foreground hover:text-foreground transition-all"
-                      >
-                        {isExpanded ? (
-                          <ChevronUp className="h-5 w-5" />
-                        ) : (
-                          <ChevronDown className="h-5 w-5" />
-                        )}
-                      </Button>
+                    className={cn(
+                      "group cursor-pointer rounded-xl p-4 flex flex-col items-center text-center transition-all duration-300",
+                      "bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-[#333] hover:border-[#444]",
+                      "shadow-lg hover:shadow-xl",
+                      isExpanded && "border-primary/50"
                     )}
+                  >
+                    {/* Icon Circle */}
+                    <div className={cn(
+                      "w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110",
+                      module.iconBg
+                    )}>
+                      <IconComponent className={cn("h-7 w-7", module.iconColor)} />
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="font-semibold text-sm text-foreground mb-1 tracking-wide uppercase">
+                      {module.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-xs text-muted-foreground leading-tight mb-2 line-clamp-2">
+                      {module.description}
+                    </p>
+
+                    {/* Action Link */}
+                    <span className="text-xs text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+                      {module.isEmbedded ? (isExpanded ? 'Close' : 'Open') : 'Learn More'}
+                      <ChevronRight className="h-3 w-3" />
+                    </span>
                   </div>
 
+                  {/* Embedded Content */}
                   {module.isEmbedded && (
                     <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-                      <div className="mt-2 p-4 rounded-lg border bg-card relative">
+                      <div className="mt-3 p-4 rounded-xl border border-[#333] bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] relative">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -161,10 +169,10 @@ export const CommunicationsCard = ({
                     </CollapsibleContent>
                   )}
                 </Collapsible>
-              );
-            })}
-          </div>
-        </ScrollArea>
+              </div>
+            );
+          })}
+        </div>
       </CardContent>
     </Card>
   );
