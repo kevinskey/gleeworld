@@ -663,7 +663,7 @@ export const MetalHeaderDashboard = ({
         <h1 style={{
         color: isHbcuTheme ? hbcuGold : '#000000',
         textShadow: isHbcuTheme ? 'none' : undefined
-      }} className="text-sm sm:text-lg font-bold tracking-wide font-mono uppercase flex-1 text-center px-2 lg:text-3xl truncate">
+      }} className="text-base sm:text-xl md:text-2xl lg:text-4xl font-bold tracking-wide font-mono uppercase flex-1 text-center px-2 truncate">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
