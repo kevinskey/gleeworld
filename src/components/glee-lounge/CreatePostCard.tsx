@@ -258,7 +258,7 @@ export function CreatePostCard({
           </Avatar>
           
           <div className="flex-1 space-y-3">
-            <Textarea value={content} onChange={e => setContent(e.target.value)} className="min-h-[80px] resize-none border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-1" placeholder="What's on your mind? Share updates with the glee fam about your break!" />
+            <Textarea value={content} onChange={e => setContent(e.target.value)} className="min-h-[80px] resize-none border bg-card text-card-foreground placeholder:text-muted-foreground focus-visible:ring-1" placeholder="What's on your mind? Share updates with the glee fam about your break!" />
             
             {showLocation && <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -272,8 +272,8 @@ export function CreatePostCard({
               </div>}
 
             {mediaUrls.length > 0 && <div className="flex gap-2 flex-wrap">
-                {mediaUrls.map((url, index) => <div key={index} className="relative">
-                    {isVideo(url) ? <video src={url} className="h-16 w-16 object-cover rounded-md" muted /> : <img src={url} alt="Upload" className="h-16 w-16 object-cover rounded-md" />}
+                {mediaUrls.map((url, index) => <div key={index} className="relative bg-muted rounded-md">
+                    {isVideo(url) ? <video src={url} className="h-16 w-16 object-contain rounded-md" muted /> : <img src={url} alt="Upload" className="h-16 w-16 object-contain rounded-md" />}
                     <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-5 w-5" onClick={() => setMediaUrls(prev => prev.filter((_, i) => i !== index))}>
                       <X className="h-3 w-3" />
                     </Button>
