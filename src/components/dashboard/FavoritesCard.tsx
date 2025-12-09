@@ -33,7 +33,7 @@ export const FavoritesCard = ({
   }
   return <Card className="bg-background/95 backdrop-blur-sm">
       <CardHeader className="py-3 px-3 sm:px-4">
-        <CardTitle className="flex items-center gap-2 px-[20px] text-primary-foreground">
+        <CardTitle className="flex items-center gap-2 text-primary-foreground px-[10px]">
           <Heart className="h-5 w-5 text-red-500 fill-current" />
           Favorites
           <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">scroll to choose your fav!</span>

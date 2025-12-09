@@ -76,7 +76,7 @@ export const GleeCamCard = ({
   }
   return <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
       <CardHeader className="py-3 px-3 sm:px-0">
-        <CardTitle className="flex items-center gap-2 !text-white pl-[20px]">
+        <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
           <Camera className="h-5 w-5 !text-white" />
           Glee Cam
           <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
