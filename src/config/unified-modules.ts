@@ -105,6 +105,7 @@ import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
 import ExecBoardInterviewsModule from '@/components/modules/ExecBoardInterviewsModule';
 import TreeLightingSurveyModule from '@/components/modules/TreeLightingSurveyModule';
 import { GleeLoungeAnalyticsModule } from '@/components/modules/GleeLoungeAnalyticsModule';
+import StipendPaymentModule from '@/components/modules/StipendPaymentModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -1018,6 +1019,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: GleeLoungeAnalyticsModule,
     dbFunctionName: "glee-lounge-analytics",
+    requiredRoles: ["admin", "super-admin", "exec"]
+  },
+  {
+    id: "stipend-payments",
+    name: "stipend-payments",
+    title: "Stipend Payments",
+    description: "Track and manage student stipends for performances",
+    icon: DollarSign,
+    iconColor: "green",
+    category: "financial",
+    isActive: true,
+    component: StipendPaymentModule,
+    dbFunctionName: "stipend-payments",
     requiredRoles: ["admin", "super-admin", "exec"]
   }
 ];

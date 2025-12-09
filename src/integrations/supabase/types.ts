@@ -20490,6 +20490,98 @@ export type Database = {
           },
         ]
       }
+      stipend_payments: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          budget_id: string | null
+          budget_source: string | null
+          created_at: string
+          created_by: string | null
+          event_date: string | null
+          event_name: string
+          id: string
+          notes: string | null
+          paid_at: string | null
+          paid_by: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          receipt_url: string | null
+          source_id: string | null
+          source_type: string
+          status: string
+          student_cashtag: string | null
+          student_email: string | null
+          student_name: string
+          student_phone: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          budget_id?: string | null
+          budget_source?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_date?: string | null
+          event_name: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          receipt_url?: string | null
+          source_id?: string | null
+          source_type?: string
+          status?: string
+          student_cashtag?: string | null
+          student_email?: string | null
+          student_name: string
+          student_phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          budget_id?: string | null
+          budget_source?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_date?: string | null
+          event_name?: string
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          paid_by?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          receipt_url?: string | null
+          source_id?: string | null
+          source_type?: string
+          status?: string
+          student_cashtag?: string | null
+          student_email?: string | null
+          student_name?: string
+          student_phone?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stipend_payments_budget_id_fkey"
+            columns: ["budget_id"]
+            isOneToOne: false
+            referencedRelation: "budgets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_images: {
         Row: {
           created_by: string | null
