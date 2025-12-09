@@ -58,7 +58,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   };
 
   const handleCategoryClick = (category: GleeCamCategory) => {
-    navigate(`/media-library?category=${category.slug}`);
+    navigate(`/admin/media?category=${category.slug}`);
   };
 
   const getIconComponent = (iconName: string) => {
