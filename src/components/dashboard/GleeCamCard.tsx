@@ -75,7 +75,7 @@ export const GleeCamCard = ({
     return null;
   }
   return <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
-      <CardHeader className="py-3 px-3 sm:px-4">
+      <CardHeader className="py-3 px-3 sm:px-0">
         <CardTitle className="flex items-center gap-2">
           <Camera className="h-5 w-5 text-primary" />
           Glee Cam
@@ -84,12 +84,11 @@ export const GleeCamCard = ({
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-3 sm:px-4 pb-3 pt-0">
+      <CardContent className="px-3 pb-3 pt-0 sm:px-0">
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
           {categories.map(category => {
-            const IconComponent = getIconComponent(category.icon);
-            return (
-              <div key={category.id} onClick={() => handleCategoryClick(category)} className="group cursor-pointer flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)]">
+          const IconComponent = getIconComponent(category.icon);
+          return <div key={category.id} onClick={() => handleCategoryClick(category)} className="group cursor-pointer flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)]">
                 <div className={cn("rounded-xl p-4 flex flex-col items-center text-center transition-all duration-300", "bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-[#333] hover:border-[#444]", "shadow-lg hover:shadow-xl min-h-[120px]")}>
                   <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110", category.icon_bg)}>
                     <IconComponent className={cn("h-5 w-5", category.icon_color)} />
@@ -101,9 +100,8 @@ export const GleeCamCard = ({
                     {category.description}
                   </p>
                 </div>
-              </div>
-            );
-          })}
+              </div>;
+        })}
         </div>
       </CardContent>
     </Card>;

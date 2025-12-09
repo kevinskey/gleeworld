@@ -39,7 +39,7 @@ export const FavoritesCard = ({
           <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">scroll to choose your fav!</span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-3 sm:px-4">
+      <CardContent className="px-3 sm:px-0">
         <ScrollArea className="h-44">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pr-4">
             {favorites.map(module => {
