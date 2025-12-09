@@ -22,7 +22,11 @@ export const useUserPreferences = () => {
 
   useEffect(() => {
     if (user) {
-      fetchPreferences();
+      // Add a small delay to ensure auth session is fully established
+      const timer = setTimeout(() => {
+        fetchPreferences();
+      }, 100);
+      return () => clearTimeout(timer);
     } else {
       setLoading(false);
     }
@@ -39,12 +43,9 @@ export const useUserPreferences = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching user preferences:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load user preferences",
-          variant: "destructive",
-        });
+        // Silently log the error - don't show toast for preferences loading
+        // as it's not critical and can happen during auth transitions
+        console.warn('Could not load user preferences:', error.message);
         return;
       }
 
