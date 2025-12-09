@@ -110,45 +110,42 @@ const gleeWorldTheme: ThemeConfig = {
 
 /**
  * SPELMAN BLUE THEME
- * Clean academic aesthetic with Spelman's signature blue
+ * Modern, bright, and spacious - inspired by official Spelman College portal
  */
 const spelmanBlueTheme: ThemeConfig = {
   id: 'spelman-blue',
   name: 'Spelman Blue',
-  description: 'Elegant and academic, inspired by Spelman College',
+  description: 'Clean, modern, and professional - inspired by Spelman College',
   
   colors: {
-    primary: '201 52% 66%',           // Spelman Blue #7BAFD4
-    primaryForeground: '0 0% 100%',
-    secondary: '220 50% 20%',         // Deep Navy
-    secondaryForeground: '0 0% 100%',
-    accent: '201 70% 75%',            // Light blue accent
-    accentForeground: '220 50% 20%',
-    background: '0 0% 100%',          // Pure white
-    foreground: '220 50% 20%',        // Navy text
-    card: '201 70% 98%',              // Light blue tint for cards
-    cardForeground: '220 50% 20%',
-    muted: '201 50% 95%',             // Muted light blue
-    mutedForeground: '220 30% 40%',
-    border: '201 40% 85%',            // Light border
+    primary: '208 100% 33%',            // Official Spelman Blue #0056a6
+    primaryForeground: '0 0% 100%',     // White on primary
+    secondary: '203 85% 63%',           // Bright sky blue #55BBEE
+    secondaryForeground: '0 0% 100%',   // White on secondary
+    accent: '208 100% 43%',             // Lighter Spelman Blue #0073c9
+    accentForeground: '0 0% 100%',      // White on accent
+    background: '0 0% 100%',            // Pure white background
+    foreground: '210 29% 24%',          // Dark blue-gray text #2c3e50
+    card: '0 0% 100%',                  // Pure white cards
+    cardForeground: '210 29% 24%',      // Dark text on cards
+    muted: '210 40% 96%',               // Very light blue-gray
+    mutedForeground: '215 16% 47%',     // Medium gray text
+    border: '214 32% 91%',              // Light blue-gray border
   },
   
-  // Glass effect settings
-  glassEffect: true,
-  
   typography: {
-    fontFamily: "'Georgia', serif",
-    headingFamily: "'Playfair Display', serif",
-    style: 'academic-serif',
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    headingFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    style: 'modern-performance',
   },
   
   background: {
     type: 'solid',
-    value: 'hsl(197 79% 63%)',
+    value: 'hsl(0 0% 100%)',
   },
   
   decorations: {
-    floatingElements: 'watermark',
+    animations: false,
   },
 };
 
