@@ -94,18 +94,18 @@ export const GleeLoungeStrip = () => {
   return (
     <div 
       onClick={() => navigate('/glee-lounge')}
-      className="bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-500/30 rounded-xl p-3 sm:p-4 cursor-pointer hover:border-emerald-400/50 transition-all group"
+      className="bg-card border border-border rounded-xl p-3 sm:p-4 cursor-pointer hover:border-primary/50 transition-all group"
     >
       <div className="flex items-center justify-between">
         {/* Left: Icon and Title */}
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-500/20 rounded-lg">
-            <Sofa className="h-5 w-5 text-emerald-400" />
+          <div className="p-2 bg-primary/20 rounded-lg">
+            <Sofa className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h3 className="font-semibold text-foreground flex items-center gap-2">
               Glee Lounge
-              <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full">
+              <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded-full">
                 Social Hub
               </span>
             </h3>
@@ -128,7 +128,7 @@ export const GleeLoungeStrip = () => {
               </span>
               <Users className="h-4 w-4 text-muted-foreground" />
             </div>
-            <span className="text-sm font-medium">
+            <span className="text-sm font-medium text-foreground">
               {onlineUsers.length} online
             </span>
             {onlineUsers.length > 0 && (
@@ -136,14 +136,14 @@ export const GleeLoungeStrip = () => {
                 {onlineUsers.slice(0, 3).map((u, i) => (
                   <div 
                     key={u.user_id}
-                    className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-xs font-medium"
+                    className="w-6 h-6 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center text-xs font-medium text-foreground"
                     title={u.full_name}
                   >
                     {u.full_name?.charAt(0) || '?'}
                   </div>
                 ))}
                 {onlineUsers.length > 3 && (
-                  <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs">
+                  <div className="w-6 h-6 rounded-full bg-muted border-2 border-background flex items-center justify-center text-xs text-muted-foreground">
                     +{onlineUsers.length - 3}
                   </div>
                 )}
@@ -154,7 +154,7 @@ export const GleeLoungeStrip = () => {
           {/* Posts Today */}
           <div className="flex items-center gap-2">
             <MessageCircle className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">
+            <span className="text-sm text-foreground">
               <span className="font-medium">{postCount}</span>
               <span className="text-muted-foreground"> posts today</span>
             </span>
@@ -165,7 +165,7 @@ export const GleeLoungeStrip = () => {
         <Button 
           variant="ghost" 
           size="sm"
-          className="gap-1 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10 group-hover:translate-x-1 transition-transform"
+          className="gap-1 text-primary hover:text-primary hover:bg-primary/10 group-hover:translate-x-1 transition-transform"
         >
           Enter
           <ChevronRight className="h-4 w-4" />
@@ -173,8 +173,8 @@ export const GleeLoungeStrip = () => {
       </div>
 
       {/* Mobile Stats Row */}
-      <div className="flex sm:hidden items-center gap-4 mt-2 pt-2 border-t border-emerald-500/20">
-        <div className="flex items-center gap-1 text-xs">
+      <div className="flex sm:hidden items-center gap-4 mt-2 pt-2 border-t border-border">
+        <div className="flex items-center gap-1 text-xs text-foreground">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
