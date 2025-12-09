@@ -42,7 +42,22 @@ export const useDashboardCardOrder = () => {
       if (error) throw error;
 
       if (data?.card_order && Array.isArray(data.card_order)) {
-        setCardOrder(data.card_order);
+        // Merge any new default cards that don't exist in user's saved order
+        const savedOrder = data.card_order;
+        const missingCards = DEFAULT_CARD_ORDER.filter(card => !savedOrder.includes(card));
+        if (missingCards.length > 0) {
+          // Insert missing cards after 'favorites' or at the beginning
+          const favoritesIndex = savedOrder.indexOf('favorites');
+          const insertIndex = favoritesIndex !== -1 ? favoritesIndex + 1 : 0;
+          const updatedOrder = [
+            ...savedOrder.slice(0, insertIndex),
+            ...missingCards,
+            ...savedOrder.slice(insertIndex)
+          ];
+          setCardOrder(updatedOrder);
+        } else {
+          setCardOrder(savedOrder);
+        }
       } else {
         setCardOrder(DEFAULT_CARD_ORDER);
       }
