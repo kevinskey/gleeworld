@@ -40,6 +40,7 @@ import {
   Layout,
   Crown,
   TreePine,
+  Armchair,
 } from 'lucide-react';
 
 // Import core module components
@@ -103,6 +104,7 @@ import { ConcertTicketRequestsModule } from '@/components/modules/ConcertTicketR
 import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
 import ExecBoardInterviewsModule from '@/components/modules/ExecBoardInterviewsModule';
 import TreeLightingSurveyModule from '@/components/modules/TreeLightingSurveyModule';
+import { GleeLoungeAnalyticsModule } from '@/components/modules/GleeLoungeAnalyticsModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -1004,6 +1006,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: TreeLightingSurveyModule,
     dbFunctionName: "survey-module",
     requiredRoles: ["admin", "super-admin"]
+  },
+  {
+    id: "glee-lounge-analytics",
+    name: "glee-lounge-analytics",
+    title: "Glee Lounge Analytics",
+    description: "Usage data, engagement metrics, and management tools for Glee Lounge",
+    icon: Armchair,
+    iconColor: "purple",
+    category: "member-management",
+    isActive: true,
+    component: GleeLoungeAnalyticsModule,
+    dbFunctionName: "glee-lounge-analytics",
+    requiredRoles: ["admin", "super-admin", "exec"]
   }
 ];
 
