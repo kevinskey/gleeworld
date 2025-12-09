@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/contexts/ThemeContext";
-import blueBusIcon from "@/assets/blue-bus.png";
+import whiteBusIcon from "@/assets/white-bus.png";
 
 interface ClockProps {
   className?: string;
@@ -228,7 +228,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
               variant="secondary" 
               className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20 flex items-center gap-1.5"
             >
-              <img src={blueBusIcon} alt="Bus" className="h-4 w-4 object-contain" /> {getCountdownText()}
+              <img src={whiteBusIcon} alt="Bus" className="h-5 w-6 object-contain" /> {getCountdownText()}
             </Badge>
             <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
           </div>
@@ -364,7 +364,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
         
         {/* Countdown Text - Visible on desktop */}
         <div className="hidden lg:flex items-center gap-1.5">
-          <img src={blueBusIcon} alt="Bus" className="h-5 w-5 object-contain" />
+          <img src={whiteBusIcon} alt="Bus" className="h-7 w-8 object-contain" />
           <span className="text-sm font-medium whitespace-nowrap" style={{ color: getColor() }}>
             {getCountdownText()}
           </span>
@@ -378,7 +378,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
             variant="secondary" 
             className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20 flex items-center gap-1.5"
           >
-            <img src={blueBusIcon} alt="Bus" className="h-4 w-4 object-contain" /> {getCountdownText()}
+            <img src={whiteBusIcon} alt="Bus" className="h-5 w-6 object-contain" /> {getCountdownText()}
           </Badge>
           <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
         </div>
