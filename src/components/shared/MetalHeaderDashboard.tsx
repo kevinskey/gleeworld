@@ -619,7 +619,7 @@ export const MetalHeaderDashboard = ({
       <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
 
       {/* Glee Lounge Strip - Social Hub Access */}
-      <GleeLoungeStrip className="bg-neutral-900 text-primary-foreground" />
+      <GleeLoungeStrip />
 
       {/* YouTube Videos Section - Two Column Layout */}
       <DashboardYouTubeSection />
