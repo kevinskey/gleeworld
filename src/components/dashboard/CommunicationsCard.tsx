@@ -131,9 +131,9 @@ export const CommunicationsCard = ({
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-semibold text-xs sm:text-sm text-foreground mb-1 tracking-wide uppercase leading-tight">
+                    <h4 className="font-semibold text-xs sm:text-sm text-foreground mb-1 tracking-wide uppercase leading-tight">
                       {module.title}
-                    </h3>
+                    </h4>
 
                     {/* Description */}
                     <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight mb-2 line-clamp-2">
