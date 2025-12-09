@@ -258,7 +258,7 @@ export function CreatePostCard({
           </Avatar>
           
           <div className="flex-1 space-y-3">
-            <Textarea value={content} onChange={e => setContent(e.target.value)} className="min-h-[80px] resize-none border bg-card text-card-foreground placeholder:text-muted-foreground focus-visible:ring-1" placeholder="What's on your mind? Share updates with the glee fam about your break!" />
+            <Textarea value={content} onChange={e => setContent(e.target.value)} className="min-h-[80px] resize-none border border-border bg-background text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-1" placeholder="What's on your mind? Share updates with the glee fam about your break!" />
             
             {showLocation && <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />

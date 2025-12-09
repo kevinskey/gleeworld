@@ -166,8 +166,8 @@ export function PostComments({ postId, commentCount, userProfile }: PostComments
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <span className="text-sm font-medium">{comment.author?.full_name}</span>
-                <span className="text-sm text-muted-foreground ml-1">{comment.content}</span>
+                <span className="text-sm font-medium text-foreground">{comment.author?.full_name}</span>
+                <span className="text-sm text-foreground/80 ml-1">{comment.content}</span>
               </div>
             </div>
           ))}
@@ -194,14 +194,14 @@ export function PostComments({ postId, commentCount, userProfile }: PostComments
                     {getInitials(comment.author?.full_name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 bg-muted/50 rounded-lg px-3 py-2">
+                  <div className="flex-1 bg-muted rounded-lg px-3 py-2">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-medium">{comment.author?.full_name}</span>
+                    <span className="text-sm font-medium text-foreground">{comment.author?.full_name}</span>
                     <span className="text-xs text-muted-foreground">
                       {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                     </span>
                   </div>
-                  <p className="text-sm mt-0.5">{comment.content}</p>
+                  <p className="text-sm mt-0.5 text-foreground">{comment.content}</p>
                 </div>
               </div>
             ))
@@ -222,7 +222,7 @@ export function PostComments({ postId, commentCount, userProfile }: PostComments
             placeholder="Write a comment..."
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="h-8 text-sm"
+            className="h-8 text-sm bg-background text-foreground border-border placeholder:text-muted-foreground/70"
           />
           <Button
             type="submit"
