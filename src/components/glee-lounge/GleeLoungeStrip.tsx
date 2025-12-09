@@ -94,7 +94,7 @@ export const GleeLoungeStrip = () => {
   return (
     <div 
       onClick={() => navigate('/glee-lounge')}
-      className="bg-card border border-border rounded-xl p-3 sm:p-4 cursor-pointer hover:border-primary/50 transition-all group"
+      className="bg-card border border-border p-3 sm:p-4 cursor-pointer hover:border-primary/50 transition-all group"
     >
       <div className="flex items-center justify-between">
         {/* Left: Icon and Title */}

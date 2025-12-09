@@ -97,7 +97,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
     <>
         <div className="sticky top-0 z-50 w-full m-0 p-0">
           <header 
-            className={`border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden rounded-lg`}
+            className={`border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden`}
             style={{ 
               backgroundColor: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.primary : '#ffffff',
               borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined,
