@@ -22,36 +22,42 @@ const categoryConfig = {
     icon: Sparkles,
     mode: 'photo' as const,
     folder: 'christmas-carol-selfies',
+    gleeCamSlug: 'christmas-carol-selfies',
   },
   glee_cam_pic: {
     title: 'Glee Cam Pic',
     icon: Camera,
     mode: 'photo' as const,
     folder: 'glee-cam-pics',
+    gleeCamSlug: 'glee-cam-pics',
   },
   glee_cam_video: {
     title: 'Glee Cam Video',
     icon: Video,
     mode: 'video' as const,
     folder: 'glee-cam-videos',
+    gleeCamSlug: 'glee-cam-videos',
   },
   voice_part_recording: {
     title: 'Voice Part Recording',
     icon: Mic,
     mode: 'video' as const,
     folder: 'voice-part-recordings',
+    gleeCamSlug: 'voice-part-recording',
   },
   exec_board_video: {
     title: 'ExecBoard Training Video',
     icon: Video,
     mode: 'video' as const,
     folder: 'exec-board-videos',
+    gleeCamSlug: 'execboard-video',
   },
   member_audition_video: {
     title: 'Member Audition Video',
     icon: Video,
     mode: 'video' as const,
     folder: 'member-audition-videos',
+    gleeCamSlug: null, // No glee cam category for auditions
   },
 };
 
@@ -269,6 +275,40 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
       }
 
       console.log('Database insert success:', dbData);
+
+      // Also sync to gw_media_library for unified access
+      if (config.gleeCamSlug) {
+        // Get the glee_cam_category_id
+        const { data: gleeCamCategory } = await supabase
+          .from('glee_cam_categories')
+          .select('id')
+          .eq('slug', config.gleeCamSlug)
+          .single();
+
+        if (gleeCamCategory) {
+          const { error: mediaLibraryError } = await supabase
+            .from('gw_media_library')
+            .insert({
+              title: title.trim() || `${config.title} - ${new Date().toLocaleDateString()}`,
+              description: description.trim() || null,
+              file_url: publicUrl,
+              file_path: fileName,
+              file_type: capturedMedia.type,
+              file_size: capturedMedia.size,
+              category: 'glee-cam',
+              uploaded_by: user.id,
+              is_public: true,
+              bucket_id: 'quick-capture-media',
+              glee_cam_category_id: gleeCamCategory.id,
+            });
+
+          if (mediaLibraryError) {
+            console.warn('Media library sync warning:', mediaLibraryError);
+          } else {
+            console.log('Synced to media library with glee_cam_category_id:', gleeCamCategory.id);
+          }
+        }
+      }
 
       // If glee cam pic/video or christmas selfie, sync to heroes
       if (category === 'glee_cam_pic' || category === 'glee_cam_video' || category === 'christmas_carol_selfie') {

@@ -13,6 +13,7 @@ interface MediaItem {
   thumbnail_url?: string | null;
   created_at: string;
   title?: string | null;
+  source: 'quick_capture' | 'media_library';
 }
 
 interface Category {
@@ -21,6 +22,15 @@ interface Category {
   slug: string;
   description: string | null;
 }
+
+// Map category slugs to quick_capture_media category values
+const SLUG_TO_QUICK_CAPTURE_CATEGORY: Record<string, string> = {
+  'christmas-carol-selfies': 'christmas_selfie',
+  'glee-cam-pics': 'glee_cam_pic',
+  'glee-cam-videos': 'glee_cam_video',
+  'voice-part-recording': 'voice_part_recording',
+  'execboard-video': 'exec_board_video',
+};
 
 export default function GleeCamGallery() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
@@ -34,7 +44,7 @@ export default function GleeCamGallery() {
     const fetchData = async () => {
       if (!categorySlug) return;
 
-      // Fetch category
+      // Fetch category info
       const { data: catData } = await supabase
         .from('glee_cam_categories')
         .select('*')
@@ -44,14 +54,52 @@ export default function GleeCamGallery() {
       if (catData) {
         setCategory(catData);
 
-        // Fetch media for this category
-        const { data: mediaData } = await supabase
+        const allItems: MediaItem[] = [];
+
+        // 1. Fetch from quick_capture_media using mapped category
+        const quickCaptureCategory = SLUG_TO_QUICK_CAPTURE_CATEGORY[categorySlug];
+        if (quickCaptureCategory) {
+          const { data: quickCaptureData } = await supabase
+            .from('quick_capture_media')
+            .select('*')
+            .eq('category', quickCaptureCategory)
+            .order('created_at', { ascending: false });
+
+          if (quickCaptureData) {
+            allItems.push(...quickCaptureData.map(item => ({
+              id: item.id,
+              file_url: item.file_url,
+              file_type: item.file_type || 'image/jpeg',
+              thumbnail_url: item.thumbnail_url,
+              created_at: item.created_at,
+              title: item.title,
+              source: 'quick_capture' as const,
+            })));
+          }
+        }
+
+        // 2. Also fetch from gw_media_library with glee_cam_category_id
+        const { data: mediaLibraryData } = await supabase
           .from('gw_media_library')
           .select('*')
           .eq('glee_cam_category_id', catData.id)
           .order('created_at', { ascending: false });
 
-        setItems(mediaData || []);
+        if (mediaLibraryData) {
+          allItems.push(...mediaLibraryData.map(item => ({
+            id: item.id,
+            file_url: item.file_url,
+            file_type: item.file_type || 'image/jpeg',
+            thumbnail_url: null, // gw_media_library doesn't have thumbnail_url
+            created_at: item.created_at,
+            title: item.title,
+            source: 'media_library' as const,
+          })));
+        }
+
+        // Sort by created_at descending
+        allItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setItems(allItems);
       }
       setLoading(false);
     };
@@ -88,6 +136,7 @@ export default function GleeCamGallery() {
             {category.description && (
               <p className="text-sm text-muted-foreground">{category.description}</p>
             )}
+            <p className="text-xs text-muted-foreground mt-1">{items.length} items</p>
           </div>
         </div>
 
@@ -95,6 +144,7 @@ export default function GleeCamGallery() {
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <ImageIcon className="h-16 w-16 text-muted-foreground/50 mb-4" />
             <p className="text-muted-foreground">No media in this category yet</p>
+            <p className="text-sm text-muted-foreground mt-2">Use Glee Cam to capture photos and videos</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
