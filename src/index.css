@@ -511,14 +511,21 @@
   }
   
   /* HBCU Theme - Graduate Collegiate Font for Headings Only */
-  .hbcu-theme h1,
-  .hbcu-theme h2,
-  .hbcu-theme h3,
-  .hbcu-theme h4,
-  .hbcu-theme h5,
-  .hbcu-theme h6 {
+  html.hbcu-theme h1,
+  html.hbcu-theme h2,
+  html.hbcu-theme h3,
+  html.hbcu-theme h4,
+  html.hbcu-theme h5,
+  html.hbcu-theme h6,
+  html[data-theme="hbcu"] h1,
+  html[data-theme="hbcu"] h2,
+  html[data-theme="hbcu"] h3,
+  html[data-theme="hbcu"] h4,
+  html[data-theme="hbcu"] h5,
+  html[data-theme="hbcu"] h6 {
     font-family: 'Graduate', 'Bebas Neue', sans-serif !important;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em !important;
+    text-transform: uppercase;
   }
   
   @media (min-width: 640px) {
