@@ -16,6 +16,12 @@
 /* Definition of the design system with custom brand colors */
 
 @layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
   :root {
     /* High-Contrast Design System for GleeWorld */
     

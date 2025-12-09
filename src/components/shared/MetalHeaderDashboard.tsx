@@ -564,7 +564,7 @@ export const MetalHeaderDashboard = ({
     if (moduleConfig?.component) {
       const ModuleComponent = moduleConfig.component;
       const IconComponent = moduleConfig.icon;
-      return <div className="relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      return <div className="relative min-h-screen w-full m-0 p-0">
           {/* Module Metal Header */}
           <div className="relative z-10 rounded-lg border-2 shadow-lg py-3 px-4 sm:px-6 mb-6" style={{
           background: isHbcuTheme ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' : 'linear-gradient(to bottom, #cbd5e1, #94a3b8, #64748b)',
@@ -606,7 +606,7 @@ export const MetalHeaderDashboard = ({
     }
   }
   // All users get the full metal header dashboard experience
-  return <div className="space-y-4 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
+  return <div className="space-y-4 relative min-h-screen w-full m-0 p-0">
       {/* Glee Lounge Strip - Social Hub Access - TOP OF DASHBOARD */}
       <GleeLoungeStrip />
 
