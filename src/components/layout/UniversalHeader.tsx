@@ -147,11 +147,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     {!isSpelmanBlue && <span className="text-amber-500 ml-1 text-xs sm:text-sm">✨</span>}
                   </span>
                 </Link>
-                {!isSpelmanBlue && (
-                  <div className="flex items-center">
-                    <HeaderClock className="text-xs sm:text-sm ml-0.5 sm:ml-2 md:ml-3 lg:ml-4" />
-                  </div>
-                )}
+                <div className="flex items-center">
+                  <HeaderClock className="text-xs sm:text-sm ml-0.5 sm:ml-2 md:ml-3 lg:ml-4" />
+                </div>
               </div>
             </EnhancedTooltip>
             

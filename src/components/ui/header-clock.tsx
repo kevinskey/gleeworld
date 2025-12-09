@@ -13,9 +13,17 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
   const isMobile = useIsMobile();
   const { themeName } = useTheme();
   
-  // HBCU theme - unified gold color
+  // Theme-specific colors
   const isHbcuTheme = themeName === 'hbcu';
-  const hbcuGold = '#FFDF00'; // Same gold as all other header elements
+  const isSpelmanBlue = themeName === 'spelman-blue';
+  const hbcuGold = '#FFDF00';
+  const spelmanWhite = '#ffffff';
+  
+  const getColor = () => {
+    if (isHbcuTheme) return hbcuGold;
+    if (isSpelmanBlue) return spelmanWhite;
+    return '#1e293b';
+  };
 
   useEffect(() => {
     // Initialize with current time
@@ -105,7 +113,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           onClick={() => setShowCountdown(!showCountdown)}
         >
           {/* SVG Clock with spinning globe - smaller on mobile */}
-          <svg width="28" height="28" viewBox="0 0 40 40" style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}>
+          <svg width="28" height="28" viewBox="0 0 40 40" style={{ color: getColor() }}>
             <defs>
               {/* Gradient for 3D effect */}
               <radialGradient id="headerGlobeGradient" cx="40%" cy="40%">
@@ -246,7 +254,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           onClick={() => setShowCountdown(!showCountdown)}
         >
           {/* SVG Clock with spinning globe */}
-          <svg width="36" height="36" viewBox="0 0 40 40" style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}>
+          <svg width="36" height="36" viewBox="0 0 40 40" style={{ color: getColor() }}>
             <defs>
               {/* Gradient for 3D effect */}
               <radialGradient id="desktopGlobeGradient" cx="40%" cy="40%">
@@ -355,7 +363,7 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
         
         {/* Countdown Text - Visible on desktop */}
         <div className="hidden lg:block">
-          <span className="text-sm font-medium whitespace-nowrap" style={{ color: isHbcuTheme ? hbcuGold : '#334155' }}>
+          <span className="text-sm font-medium whitespace-nowrap" style={{ color: getColor() }}>
             🚌 {getCountdownText()}
           </span>
         </div>
