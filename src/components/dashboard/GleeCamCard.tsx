@@ -75,8 +75,8 @@ export const GleeCamCard = ({
     return null;
   }
   return <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
-      <CardHeader className="py-2 px-3">
-        <CardTitle className="flex items-center gap-2 px-[20px] py-[7px]">
+      <CardHeader className="py-3 px-3 sm:px-4">
+        <CardTitle className="flex items-center gap-2">
           <Camera className="h-5 w-5 text-primary" />
           Glee Cam
           <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
@@ -84,7 +84,7 @@ export const GleeCamCard = ({
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-3 pb-3 pt-0">
+      <CardContent className="px-3 sm:px-4 pb-3 pt-0">
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
           {categories.map(category => {
             const IconComponent = getIconComponent(category.icon);

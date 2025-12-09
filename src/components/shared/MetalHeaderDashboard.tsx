@@ -635,10 +635,10 @@ export const MetalHeaderDashboard = ({
       <DashboardYouTubeSection />
 
       {/* Glee Cam Categories */}
-      <GleeCamCard className="mx-2" />
+      <GleeCamCard />
 
       {/* Tree Lighting Participation Survey - PROMINENT POSITION */}
-      <div className="mb-4 relative z-10">
+      <div className="relative z-10">
         <TreeLightingSurvey />
       </div>
 
