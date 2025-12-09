@@ -101,7 +101,7 @@ export const GleeCamCard = ({
             </>}
           
           {/* Cards grid */}
-          <div className="grid grid-cols-2 gap-3 px-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 px-2">
             {categories.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map(category => {
             const IconComponent = getIconComponent(category.icon);
             return <div key={category.id} onClick={() => handleCategoryClick(category)} className="group cursor-pointer">
