@@ -193,6 +193,7 @@ import BownaScholarLanding from "./pages/BownaScholarLanding";
 import SMSTest from "./pages/SMSTest";
 import MemberExitInterview from "./pages/MemberExitInterview";
 import ExecBoardExitInterview from "./pages/ExecBoardExitInterview";
+import GleeLounge from "./pages/GleeLounge";
 
 import ClassLanding from "./pages/mus240/ClassLanding";
 import SyllabusPage from "./pages/mus240/SyllabusPage";
@@ -519,6 +520,17 @@ const App = () => {
                 element={
                   <ProtectedRoute>
                     <PollViewPage />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* Glee Lounge - Digital Student Union */}
+              <Route 
+                path="/glee-lounge" 
+                element={
+                  <ProtectedRoute>
+                    <UniversalLayout>
+                      <GleeLounge />
+                    </UniversalLayout>
                   </ProtectedRoute>
                 } 
               />

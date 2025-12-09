@@ -21,7 +21,8 @@ import {
   ShoppingBag,
   LayoutDashboard,
   GraduationCap,
-  BookOpen
+  BookOpen,
+  Sofa
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { hasPermission } from "@/constants/permissions";
@@ -95,6 +96,12 @@ export const AppNavigation = () => {
       label: "Modules",
       href: "/modules",
       icon: LayoutDashboard,
+      permission: null
+    },
+    {
+      label: "Glee Lounge",
+      href: "/glee-lounge",
+      icon: Sofa,
       permission: null
     },
   ];
