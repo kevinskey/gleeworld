@@ -158,7 +158,7 @@ export function useSocialFeed() {
     fetchPosts(0);
   }, [fetchPosts]);
 
-  // Realtime subscription for new posts
+  // Realtime subscription for new posts - auto-insert instantly
   useEffect(() => {
     const channel = supabase
       .channel('social-feed-changes')
@@ -169,9 +169,56 @@ export function useSocialFeed() {
           schema: 'public',
           table: 'gw_social_posts',
         },
-        (payload) => {
+        async (payload) => {
           console.log('New post detected:', payload);
-          setNewPostsAvailable(true);
+          const newPost = payload.new as any;
+          
+          // Fetch author profile for the new post
+          const { data: authorProfile } = await supabase
+            .from('gw_profiles')
+            .select('user_id, full_name, avatar_url')
+            .eq('user_id', newPost.user_id)
+            .single();
+          
+          // Create the processed post object
+          const processedPost: SocialPost = {
+            id: newPost.id,
+            user_id: newPost.user_id,
+            content: newPost.content,
+            media_urls: newPost.media_urls || [],
+            location_tag: newPost.location_tag,
+            is_pinned: newPost.is_pinned || false,
+            is_hidden: newPost.is_hidden || false,
+            created_at: newPost.created_at,
+            updated_at: newPost.updated_at,
+            author: authorProfile ? {
+              full_name: authorProfile.full_name,
+              avatar_url: authorProfile.avatar_url,
+            } : null,
+            reactions: { heart: 0, music: 0, fire: 0, clap: 0, laugh: 0 },
+            user_reactions: [],
+            comment_count: 0,
+          };
+          
+          // Add to top of feed (after any pinned posts)
+          setPosts(prev => {
+            // Don't add duplicate
+            if (prev.some(p => p.id === processedPost.id)) return prev;
+            
+            // Find where pinned posts end
+            const pinnedCount = prev.filter(p => p.is_pinned).length;
+            
+            if (processedPost.is_pinned) {
+              return [processedPost, ...prev];
+            } else {
+              // Insert after pinned posts
+              return [
+                ...prev.slice(0, pinnedCount),
+                processedPost,
+                ...prev.slice(pinnedCount)
+              ];
+            }
+          });
         }
       )
       .on(
@@ -181,9 +228,13 @@ export function useSocialFeed() {
           schema: 'public',
           table: 'gw_social_posts',
         },
-        () => {
-          // Refresh to get updated post
-          refresh();
+        (payload) => {
+          const updatedPost = payload.new as any;
+          setPosts(prev => prev.map(p => 
+            p.id === updatedPost.id 
+              ? { ...p, content: updatedPost.content, media_urls: updatedPost.media_urls || [], location_tag: updatedPost.location_tag, is_pinned: updatedPost.is_pinned, is_hidden: updatedPost.is_hidden }
+              : p
+          ).filter(p => !p.is_hidden));
         }
       )
       .on(
@@ -202,7 +253,7 @@ export function useSocialFeed() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [refresh]);
+  }, []);
 
   return {
     posts,
