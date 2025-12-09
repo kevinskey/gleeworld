@@ -52,7 +52,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-base sm:text-lg font-semibold leading-tight tracking-tight text-inherit",
+      "text-base sm:text-lg font-semibold leading-tight tracking-tight [&[data-component='card-header']_&]:text-primary-foreground",
       className
     )}
     {...props}
@@ -66,7 +66,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-inherit/80 leading-relaxed", className)}
+    className={cn("text-sm text-primary-foreground/80 leading-relaxed", className)}
     {...props}
   />
 ))
