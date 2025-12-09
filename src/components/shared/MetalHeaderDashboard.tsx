@@ -607,10 +607,10 @@ export const MetalHeaderDashboard = ({
   return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Dashboard Header - Matching Card Style */}
       <div 
-        className="relative z-10 rounded-xl border border-border py-4 px-3 sm:px-5 flex items-center justify-between min-h-[56px] bg-background/95 backdrop-blur-sm shadow-card"
+        className="relative z-10 rounded-xl border border-border py-4 px-3 sm:px-5 flex items-center justify-end min-h-[56px] bg-background/95 backdrop-blur-sm shadow-card"
       >
-        {/* Personalized Title - Centered */}
-        <h1 className="text-base sm:text-xl md:text-2xl lg:text-4xl font-semibold tracking-tight flex-1 text-center px-2 truncate text-card-foreground">
+        {/* Personalized Title - Absolutely Centered */}
+        <h1 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-base sm:text-xl md:text-2xl lg:text-4xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
