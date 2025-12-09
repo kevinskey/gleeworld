@@ -30,6 +30,7 @@ interface GleeCamPhoto {
   name: string;
   url: string;
   created_at: string;
+  category?: string;
 }
 
 export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardProps) {
@@ -45,33 +46,82 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const { toast } = useToast();
 
-  // Fetch Glee Cam photos from all subfolders
+  // Fetch ALL Glee Cam photos from media library (consolidated view)
   const fetchGleeCamPhotos = async () => {
-    if (!userProfile?.user_id) return;
-    
     setLoadingPhotos(true);
     try {
-      // First list folders in user's directory
-      const { data: folders, error: foldersError } = await supabase.storage
+      // Fetch from gw_media_library where bucket_id is quick-capture-media
+      // This gives us a consolidated view of all Glee Cam photos across all users
+      const { data: mediaItems, error: mediaError } = await supabase
+        .from('gw_media_library')
+        .select(`
+          id,
+          file_url,
+          title,
+          created_at,
+          glee_cam_category_id,
+          glee_cam_categories (
+            name,
+            slug
+          )
+        `)
+        .eq('bucket_id', 'quick-capture-media')
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (mediaError) {
+        console.error('Media library error:', mediaError);
+        // Fallback to storage bucket listing for user's own photos
+        await fetchUserPhotosFromStorage();
+        return;
+      }
+
+      if (mediaItems && mediaItems.length > 0) {
+        const photos: GleeCamPhoto[] = mediaItems
+          .filter(item => item.file_url)
+          .map(item => ({
+            name: item.title || 'Glee Cam Photo',
+            url: item.file_url,
+            created_at: item.created_at || '',
+            category: (item.glee_cam_categories as any)?.name || 'Uncategorized'
+          }));
+        setGleeCamPhotos(photos);
+      } else {
+        // No items in media library, try storage directly
+        await fetchUserPhotosFromStorage();
+      }
+    } catch (error) {
+      console.error('Error fetching Glee Cam photos:', error);
+      await fetchUserPhotosFromStorage();
+    } finally {
+      setLoadingPhotos(false);
+    }
+  };
+
+  // Fallback: Fetch from storage bucket directly (user's own photos)
+  const fetchUserPhotosFromStorage = async () => {
+    if (!userProfile?.user_id) {
+      setGleeCamPhotos([]);
+      return;
+    }
+
+    try {
+      const { data: folders } = await supabase.storage
         .from('quick-capture-media')
         .list(userProfile.user_id, { limit: 100 });
 
-      if (foldersError) throw foldersError;
-
       const allPhotos: GleeCamPhoto[] = [];
       
-      // Check each folder for media files
       for (const folder of folders || []) {
-        // If it's a folder (no file extension), list its contents
         if (!folder.name.includes('.')) {
-          const { data: files, error: filesError } = await supabase.storage
+          const { data: files } = await supabase.storage
             .from('quick-capture-media')
             .list(`${userProfile.user_id}/${folder.name}`, {
               limit: 50,
               sortBy: { column: 'created_at', order: 'desc' }
             });
 
-          if (!filesError && files) {
+          if (files) {
             const mediaFiles = files
               .filter(file => file.name.match(/\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i))
               .map(file => {
@@ -79,33 +129,22 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
                   .from('quick-capture-media')
                   .getPublicUrl(`${userProfile.user_id}/${folder.name}/${file.name}`);
                 return {
-                  name: `${folder.name}/${file.name}`,
+                  name: file.name,
                   url: data.publicUrl,
-                  created_at: file.created_at || ''
+                  created_at: file.created_at || '',
+                  category: folder.name
                 };
               });
             allPhotos.push(...mediaFiles);
           }
-        } else if (folder.name.match(/\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i)) {
-          // Direct files in user's folder
-          const { data } = supabase.storage
-            .from('quick-capture-media')
-            .getPublicUrl(`${userProfile.user_id}/${folder.name}`);
-          allPhotos.push({
-            name: folder.name,
-            url: data.publicUrl,
-            created_at: folder.created_at || ''
-          });
         }
       }
 
-      // Sort by created_at descending
       allPhotos.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setGleeCamPhotos(allPhotos.slice(0, 50));
     } catch (error) {
-      console.error('Error fetching Glee Cam photos:', error);
-    } finally {
-      setLoadingPhotos(false);
+      console.error('Error fetching from storage:', error);
+      setGleeCamPhotos([]);
     }
   };
 
@@ -347,7 +386,7 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
                     <DialogHeader>
                       <DialogTitle>Select from Glee Cam</DialogTitle>
                     </DialogHeader>
-                    <ScrollArea className="h-[300px]">
+                    <ScrollArea className="h-[350px]">
                       {loadingPhotos ? (
                         <div className="flex items-center justify-center h-full">
                           <Loader2 className="h-6 w-6 animate-spin" />
@@ -359,35 +398,52 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
                           <p className="text-sm">Take some photos with Glee Cam first!</p>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-3 gap-2 p-1">
-                          {gleeCamPhotos.map((photo) => (
-                            <div
-                              key={photo.name}
-                              className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-colors ${
-                                selectedPhotos.includes(photo.url)
-                                  ? 'border-primary'
-                                  : 'border-transparent hover:border-muted-foreground/30'
-                              }`}
-                              onClick={() => togglePhotoSelection(photo.url)}
-                            >
-                              {isVideo(photo.url) ? (
-                                <video
-                                  src={photo.url}
-                                  className="w-full h-24 object-cover"
-                                  muted
-                                />
-                              ) : (
-                                <img
-                                  src={photo.url}
-                                  alt={photo.name}
-                                  className="w-full h-24 object-cover"
-                                />
-                              )}
-                              {selectedPhotos.includes(photo.url) && (
-                                <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
-                                  <Check className="h-6 w-6 text-primary-foreground" />
-                                </div>
-                              )}
+                        <div className="space-y-4 p-1">
+                          {/* Group photos by category */}
+                          {Object.entries(
+                            gleeCamPhotos.reduce((acc, photo) => {
+                              const cat = photo.category || 'Uncategorized';
+                              if (!acc[cat]) acc[cat] = [];
+                              acc[cat].push(photo);
+                              return acc;
+                            }, {} as Record<string, GleeCamPhoto[]>)
+                          ).map(([category, photos]) => (
+                            <div key={category}>
+                              <h4 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                                {category.replace(/-/g, ' ')}
+                              </h4>
+                              <div className="grid grid-cols-3 gap-2">
+                                {photos.map((photo, idx) => (
+                                  <div
+                                    key={`${photo.name}-${idx}`}
+                                    className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-colors ${
+                                      selectedPhotos.includes(photo.url)
+                                        ? 'border-primary'
+                                        : 'border-transparent hover:border-muted-foreground/30'
+                                    }`}
+                                    onClick={() => togglePhotoSelection(photo.url)}
+                                  >
+                                    {isVideo(photo.url) ? (
+                                      <video
+                                        src={photo.url}
+                                        className="w-full h-20 object-cover"
+                                        muted
+                                      />
+                                    ) : (
+                                      <img
+                                        src={photo.url}
+                                        alt={photo.name}
+                                        className="w-full h-20 object-cover"
+                                      />
+                                    )}
+                                    {selectedPhotos.includes(photo.url) && (
+                                      <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
+                                        <Check className="h-5 w-5 text-primary-foreground" />
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             </div>
                           ))}
                         </div>
