@@ -181,7 +181,7 @@ export const MetalHeaderDashboard = ({
   const navigate = useNavigate();
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const [isEditingLayout, setIsEditingLayout] = useState(false);
-  
+
   // Glee Cam Quick Capture state
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
@@ -606,20 +606,18 @@ export const MetalHeaderDashboard = ({
   // All users get the full metal header dashboard experience
   return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Dashboard Header - Matching Card Style */}
-      <div 
-        className="relative z-10 rounded-xl border border-border py-4 px-3 sm:px-5 grid grid-cols-[1fr_auto_1fr] items-center min-h-[56px] bg-background/95 backdrop-blur-sm shadow-card"
-      >
+      <div className="relative z-10 rounded-xl border border-border py-4 px-3 sm:px-5 grid grid-cols-[1fr_auto_1fr] items-center min-h-[56px] bg-background/95 backdrop-blur-sm shadow-card">
         {/* Empty left spacer */}
         <div />
         
         {/* Personalized Title - Center column */}
-        <h1 className="text-base sm:text-xl md:text-2xl lg:text-4xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap">
+        <h1 className="text-base sm:text-xl md:text-2xl lg:text-4xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap py-[10px] pt-[10px] pb-[10px]">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
         {/* Key Ignition - Quick Actions Button - Right side */}
         <div className="flex justify-end">
-          <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="w-8 h-8 sm:w-10 sm:h-10 bg-primary hover:bg-primary/90 rounded-full border border-border shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0" aria-label="Quick Actions">
+          <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} aria-label="Quick Actions" className="w-8 h-8 sm:w-10 sm:h-10 bg-primary hover:bg-primary/90 rounded-full border border-border shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mx-[10px]">
             <Key className={`h-4 w-4 text-primary-foreground transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
           </button>
         </div>
@@ -643,39 +641,17 @@ export const MetalHeaderDashboard = ({
         </div>
         
         {/* Messages Button - Theme-aware styling */}
-        <button 
-          onClick={() => onToggleMessages?.()} 
-          className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10 shadow-md border flex items-center gap-2 justify-center hover:opacity-90 transition-all"
-          style={{
-            background: isHbcuTheme 
-              ? hbcuGold
-              : themeName === 'spelman-blue'
-              ? 'linear-gradient(to bottom, hsl(201 52% 66%), hsl(201 52% 50%))'
-              : themeName === 'spelhouse'
-              ? 'linear-gradient(to bottom, hsl(210 65% 55%), hsl(210 65% 45%))'
-              : themeName === 'music'
-              ? 'linear-gradient(to bottom, hsl(210 100% 50%), hsl(210 100% 35%))'
-              : 'linear-gradient(to bottom, #94a3b8, #64748b, #475569)',
-            color: isHbcuTheme ? '#000000' : '#FFFFFF',
-            borderColor: isHbcuTheme 
-              ? hbcuRed 
-              : themeName === 'spelman-blue'
-              ? 'hsl(201 40% 40%)'
-              : themeName === 'spelhouse'
-              ? 'hsl(352 65% 28%)'
-              : themeName === 'music'
-              ? 'hsl(180 100% 40%)'
-              : 'rgba(71, 85, 105, 0.5)',
-            textShadow: isHbcuTheme ? 'none' : '0 1px 2px rgba(0,0,0,0.3)'
-          }}
-        >
+        <button onClick={() => onToggleMessages?.()} className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10 shadow-md border flex items-center gap-2 justify-center hover:opacity-90 transition-all" style={{
+        background: isHbcuTheme ? hbcuGold : themeName === 'spelman-blue' ? 'linear-gradient(to bottom, hsl(201 52% 66%), hsl(201 52% 50%))' : themeName === 'spelhouse' ? 'linear-gradient(to bottom, hsl(210 65% 55%), hsl(210 65% 45%))' : themeName === 'music' ? 'linear-gradient(to bottom, hsl(210 100% 50%), hsl(210 100% 35%))' : 'linear-gradient(to bottom, #94a3b8, #64748b, #475569)',
+        color: isHbcuTheme ? '#000000' : '#FFFFFF',
+        borderColor: isHbcuTheme ? hbcuRed : themeName === 'spelman-blue' ? 'hsl(201 40% 40%)' : themeName === 'spelhouse' ? 'hsl(352 65% 28%)' : themeName === 'music' ? 'hsl(180 100% 40%)' : 'rgba(71, 85, 105, 0.5)',
+        textShadow: isHbcuTheme ? 'none' : '0 1px 2px rgba(0,0,0,0.3)'
+      }}>
           {/* Rivets - only show for default/glee-world theme */}
-          {themeName === 'glee-world' && (
-            <>
+          {themeName === 'glee-world' && <>
               <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
               <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
-            </>
-          )}
+            </>}
           <MessageSquare className="h-4 w-4" />
           <span>Messages</span>
         </button>
@@ -688,21 +664,19 @@ export const MetalHeaderDashboard = ({
 
       {/* Exit Interview Call-to-Action */}
       <a href="/member-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-white" style={{
-        backgroundColor: '#79242F',
-        color: '#FFFFFF'
-      }}>
+      backgroundColor: '#79242F',
+      color: '#FFFFFF'
+    }}>
         📋 Complete Your Fall 2025 Exit Interview - Required for All Members
       </a>
 
       {/* Exec Board Exit Interview Card */}
-      {(user.is_exec_board || isAdmin || isSuperAdmin()) && (
-        <a href="/exec-board-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-amber-500/50" style={{
-          backgroundColor: '#D97706',
-          color: '#FFFFFF'
-        }}>
+      {(user.is_exec_board || isAdmin || isSuperAdmin()) && <a href="/exec-board-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-amber-500/50" style={{
+      backgroundColor: '#D97706',
+      color: '#FFFFFF'
+    }}>
           👑 Complete Exec Board Exit Interview - Required for Board Members
-        </a>
-      )}
+        </a>}
 
       {/* Super Admin Layout Controls */}
       {isSuperAdmin() && isEditingLayout && <div className="flex items-center gap-2 justify-end mb-2">
@@ -854,25 +828,15 @@ export const MetalHeaderDashboard = ({
           </Collapsible>}
 
       {/* Glee Cam Quick Capture Category Selector */}
-      <QuickCaptureCategorySelector
-        open={showCategorySelector}
-        onClose={() => setShowCategorySelector(false)}
-        onSelectCategory={(category) => {
-          setShowCategorySelector(false);
-          setSelectedCategory(category);
-        }}
-      />
+      <QuickCaptureCategorySelector open={showCategorySelector} onClose={() => setShowCategorySelector(false)} onSelectCategory={category => {
+      setShowCategorySelector(false);
+      setSelectedCategory(category);
+    }} />
 
       {/* Glee Cam Categorized Quick Capture */}
-      {selectedCategory && (
-        <CategorizedQuickCapture
-          category={selectedCategory}
-          onClose={() => setSelectedCategory(null)}
-          onBack={() => {
-            setSelectedCategory(null);
-            setShowCategorySelector(true);
-          }}
-        />
-      )}
+      {selectedCategory && <CategorizedQuickCapture category={selectedCategory} onClose={() => setSelectedCategory(null)} onBack={() => {
+      setSelectedCategory(null);
+      setShowCategorySelector(true);
+    }} />}
     </div>;
 };

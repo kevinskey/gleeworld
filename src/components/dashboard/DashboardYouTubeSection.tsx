@@ -190,7 +190,7 @@ export const DashboardYouTubeSection = () => {
       </button>;
   };
   return <div className="w-full">
-      <div className="relative rounded-xl border-2 border-destructive/60 p-3 sm:p-4 bg-card/50 backdrop-blur-sm shadow-sm px-[20px] mx-0">
+      <div className="relative rounded-xl border-2 border-destructive/60 p-3 sm:p-4 bg-card/50 backdrop-blur-sm shadow-sm px-[20px] mx-0 py-[25px]">
         <div className="absolute inset-1 rounded-lg border border-destructive/30 pointer-events-none" />
         
         <div className="relative grid grid-cols-2 gap-2 sm:gap-4">
