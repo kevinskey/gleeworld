@@ -114,7 +114,7 @@ export function PostCard({
               </Avatar>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">{post.author?.full_name || 'Member'}</span>
+                  <span className="font-medium text-foreground">{post.author?.full_name || 'Member'}</span>
                   {post.is_pinned && <Badge variant="secondary" className="gap-1 text-xs">
                       <Pin className="h-3 w-3" />
                       Pinned

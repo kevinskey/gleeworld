@@ -55,7 +55,7 @@ export function OnlineSidebar({ users, onWave, onMessage }: OnlineSidebarProps) 
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user.full_name}</p>
+                    <p className="text-sm font-medium truncate text-foreground">{user.full_name}</p>
                     <p className="text-xs text-muted-foreground">
                       {user.joined_at ? (
                         `Joined ${formatDistanceToNow(new Date(user.joined_at), { addSuffix: true })}`
