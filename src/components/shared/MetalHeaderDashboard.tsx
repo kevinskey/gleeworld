@@ -605,12 +605,22 @@ export const MetalHeaderDashboard = ({
   }
   // All users get the full metal header dashboard experience
   return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Metal Plate Header */}
-      <div className="relative z-10 rounded-lg border-2 shadow-lg py-4 px-3 sm:px-5 flex items-center justify-between min-h-[56px]" style={{
-      background: isHbcuTheme ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' : undefined,
-      borderColor: isHbcuTheme ? hbcuRed : undefined
-    }}>
-        {!isHbcuTheme && <div className="absolute inset-0 bg-gradient-to-b from-slate-300 via-slate-200 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg -z-10" />}
+      {/* Metal Plate Header - 3D Effect */}
+      <div 
+        className="relative z-10 rounded-lg border-2 py-4 px-3 sm:px-5 flex items-center justify-between min-h-[56px]" 
+        style={{
+          background: isHbcuTheme ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' : undefined,
+          borderColor: isHbcuTheme ? hbcuRed : undefined,
+          boxShadow: isHbcuTheme 
+            ? `0 1px 0 ${hbcuGold}40 inset, 0 -1px 0 rgba(0,0,0,0.5) inset, 0 8px 16px -4px rgba(0,0,0,0.5), 0 4px 6px -2px rgba(0,0,0,0.3), 0 2px 0 ${hbcuRed}80`
+            : '0 1px 0 rgba(255,255,255,0.8) inset, 0 -1px 0 rgba(0,0,0,0.2) inset, 0 8px 16px -4px rgba(0,0,0,0.15), 0 4px 6px -2px rgba(0,0,0,0.1), 0 2px 0 rgba(100,116,139,0.5)',
+          transform: 'perspective(1000px) rotateX(2deg)',
+          transformStyle: 'preserve-3d'
+        }}
+      >
+        {!isHbcuTheme && <div className="absolute inset-0 bg-gradient-to-b from-slate-200 via-slate-300 to-slate-400 dark:from-slate-600 dark:via-slate-500 dark:to-slate-700 rounded-lg -z-10" style={{
+          background: 'linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 40%, #94a3b8 100%)'
+        }} />}
         
         {/* Left Rivet */}
         <div className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 rounded-full border shadow-inner" style={{
