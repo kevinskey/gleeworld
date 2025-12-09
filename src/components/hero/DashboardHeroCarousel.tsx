@@ -52,11 +52,11 @@ const getVerticalAlignment = (position: string | null) => {
 const getTitleSize = (size: string | null) => {
   switch ((size || 'large').toLowerCase()) {
     case 'small':
-      return 'text-2xl sm:text-3xl md:text-4xl';
+      return 'text-[10px] sm:text-xs';
     case 'medium':
-      return 'text-3xl sm:text-4xl md:text-5xl';
+      return 'text-xs sm:text-sm';
     default:
-      return 'text-4xl sm:text-5xl md:text-6xl';
+      return 'text-sm sm:text-base';
   }
 };
 
