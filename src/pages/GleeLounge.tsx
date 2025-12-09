@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useGleeLoungePresence } from '@/hooks/useGleeLoungePresence';
 import { CreatePostCard } from '@/components/glee-lounge/CreatePostCard';
+import { MobileCreatePost } from '@/components/glee-lounge/MobileCreatePost';
 import { SocialFeed, SocialFeedRef } from '@/components/glee-lounge/SocialFeed';
 import { OnlineNowWidget } from '@/components/glee-lounge/OnlineNowWidget';
 import { OnlineSidebar } from '@/components/glee-lounge/OnlineSidebar';
@@ -153,16 +154,16 @@ export default function GleeLounge() {
             {/* Mobile: Create post sheet */}
             <div className="lg:hidden">
               <Sheet open={showMobileCreate} onOpenChange={setShowMobileCreate}>
-                <SheetContent side="bottom" className="h-auto max-h-[80vh]">
-                  <SheetHeader>
-                    <SheetTitle>Create Post</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-4">
-                    <CreatePostCard
-                      userProfile={userProfile}
-                      onPostCreated={handlePostCreated}
-                    />
-                  </div>
+                <SheetContent 
+                  side="bottom" 
+                  className="h-auto max-h-[85vh] rounded-t-2xl px-4 pb-safe"
+                >
+                  <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto mt-2 mb-4" />
+                  <MobileCreatePost
+                    userProfile={userProfile}
+                    onPostCreated={handlePostCreated}
+                    onClose={() => setShowMobileCreate(false)}
+                  />
                 </SheetContent>
               </Sheet>
             </div>
