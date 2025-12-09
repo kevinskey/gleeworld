@@ -90,7 +90,7 @@ export const CommunicationsCard = ({
           return <div key={module.id} className={cn(isExpanded && module.isEmbedded && "col-span-2 md:col-span-4")}>
                 <Collapsible open={isExpanded && module.isEmbedded} onOpenChange={() => handleModuleClick(module)}>
                   {/* Glossy Card Module */}
-                  <div onClick={() => handleModuleClick(module)} className={cn("group cursor-pointer rounded-xl p-3 sm:p-4 flex flex-col items-center text-center transition-all duration-300", "bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-[#333] hover:border-[#444]", "shadow-lg hover:shadow-xl min-h-[120px] sm:min-h-[140px]", isExpanded && "border-primary/50")}>
+                  <div onClick={() => handleModuleClick(module)} className={cn("group cursor-pointer rounded-xl p-3 sm:p-4 flex flex-col items-center text-center transition-all duration-300", "bg-gradient-to-b from-primary/80 to-primary border border-primary/50 hover:border-primary", "shadow-lg hover:shadow-xl min-h-[120px] sm:min-h-[140px]", isExpanded && "border-primary")}>
                     {/* Icon Circle */}
                     <div className={cn("w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center mb-2 sm:mb-3 transition-transform group-hover:scale-110", module.iconBg)}>
                       <IconComponent className={cn("h-5 w-5 sm:h-6 sm:h-6 md:h-7 md:w-7", module.iconColor)} />
