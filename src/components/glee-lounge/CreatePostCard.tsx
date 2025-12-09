@@ -73,15 +73,54 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
     }
   };
 
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    // For now, just show a placeholder - will integrate with existing media pipeline
-    toast({
-      title: 'Media upload coming soon',
-      description: 'Media attachment will be integrated with the existing media library',
-    });
+    setIsUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const uploadedUrls: string[] = [];
+      
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        
+        const { data, error } = await supabase.storage
+          .from('gw-media')
+          .upload(`social-posts/${fileName}`, file, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+        
+        if (error) throw error;
+        
+        const { data: urlData } = supabase.storage
+          .from('gw-media')
+          .getPublicUrl(`social-posts/${fileName}`);
+        
+        uploadedUrls.push(urlData.publicUrl);
+      }
+      
+      setMediaUrls(prev => [...prev, ...uploadedUrls]);
+      toast({
+        title: 'Media uploaded',
+        description: `${files.length} file(s) added`,
+      });
+    } catch (error) {
+      console.error('Error uploading media:', error);
+      toast({
+        title: 'Upload failed',
+        description: 'Please try again',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -154,17 +193,23 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
                   variant="ghost"
                   size="sm"
                   className="h-8 gap-1.5 text-muted-foreground hover:text-foreground"
+                  disabled={isUploading}
                   asChild
                 >
                   <label>
-                    <ImagePlus className="h-4 w-4" />
-                    <span className="hidden sm:inline">Photo</span>
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <ImagePlus className="h-4 w-4" />
+                    )}
+                    <span className="hidden sm:inline">{isUploading ? 'Uploading...' : 'Photo'}</span>
                     <input
                       type="file"
                       accept="image/*,video/*"
                       multiple
                       className="hidden"
                       onChange={handleMediaUpload}
+                      disabled={isUploading}
                     />
                   </label>
                 </Button>
