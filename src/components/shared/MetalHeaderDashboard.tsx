@@ -607,12 +607,12 @@ export const MetalHeaderDashboard = ({
   // All users get the full metal header dashboard experience
   return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Dashboard Header - Matching Card Style */}
-      <div className="relative z-10 rounded-xl border border-border px-3 sm:px-5 grid grid-cols-[1fr_auto_1fr] items-center min-h-[56px] bg-background/95 backdrop-blur-sm shadow-card py-[10px] mx-0">
+      <div className="relative z-10 rounded-xl border border-border px-3 sm:px-5 grid grid-cols-[1fr_auto_1fr] items-center min-h-[44px] sm:min-h-[52px] bg-background/95 backdrop-blur-sm shadow-card py-2 mx-0">
         {/* Empty left spacer */}
         <div />
         
         {/* Personalized Title - Center column */}
-        <h1 className="text-base sm:text-xl md:text-2xl lg:text-4xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap py-[10px] pt-[10px] pb-[10px]">
+        <h1 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
