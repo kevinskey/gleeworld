@@ -10,7 +10,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home } from 'lucide-react';
+import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home, Mic, Monitor, Smile, MapPinIcon, BarChart3, MessageSquare, Flag, Expand } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 interface CreatePostCardProps {
   userProfile: {
     user_id: string;
@@ -41,6 +44,16 @@ export function CreatePostCard({
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [showLiveCamera, setShowLiveCamera] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
+  const [liveStep, setLiveStep] = useState<'setup' | 'details' | 'live'>('setup');
+  const [videoSource, setVideoSource] = useState<'webcam' | 'streaming'>('webcam');
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraPermission, setCameraPermission] = useState<'pending' | 'granted' | 'denied'>('pending');
+  const [selectedCamera, setSelectedCamera] = useState('');
+  const [selectedMic, setSelectedMic] = useState('');
+  const [availableDevices, setAvailableDevices] = useState<MediaDeviceInfo[]>([]);
+  const [liveTitle, setLiveTitle] = useState('');
+  const [liveDescription, setLiveDescription] = useState('');
+  const [shareToStory, setShareToStory] = useState(true);
   const {
     toast
   } = useToast();
@@ -140,11 +153,73 @@ export function CreatePostCard({
       setGleeCamPhotos([]);
     }
   };
+  // Get available media devices
+  const getMediaDevices = async () => {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      setAvailableDevices(devices);
+      
+      const cameras = devices.filter(d => d.kind === 'videoinput');
+      const mics = devices.filter(d => d.kind === 'audioinput');
+      
+      if (cameras.length > 0 && !selectedCamera) {
+        setSelectedCamera(cameras[0].deviceId);
+      }
+      if (mics.length > 0 && !selectedMic) {
+        setSelectedMic(mics[0].deviceId);
+      }
+    } catch (error) {
+      console.error('Error getting devices:', error);
+    }
+  };
+
+  // Request camera access
+  const requestCameraAccess = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: selectedCamera ? { deviceId: selectedCamera } : true,
+        audio: selectedMic ? { deviceId: selectedMic } : true
+      });
+      setCameraStream(stream);
+      setCameraPermission('granted');
+      await getMediaDevices();
+    } catch (error) {
+      console.error('Camera access denied:', error);
+      setCameraPermission('denied');
+    }
+  };
+
+  // Stop camera stream
+  const stopCameraStream = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+  };
+
+  // Handle dialog close
+  const handleLiveDialogClose = (open: boolean) => {
+    if (!open) {
+      stopCameraStream();
+      setLiveStep('setup');
+      setCameraPermission('pending');
+      setLiveTitle('');
+      setLiveDescription('');
+    }
+    setShowLiveCamera(open);
+  };
+
   useEffect(() => {
     if (showPhotoPicker) {
       fetchGleeCamPhotos();
     }
   }, [showPhotoPicker, userProfile?.user_id]);
+
+  useEffect(() => {
+    if (showLiveCamera && liveStep === 'setup') {
+      getMediaDevices();
+    }
+  }, [showLiveCamera, liveStep]);
   const handleSubmit = async () => {
     if (!content.trim()) {
       toast({
@@ -274,7 +349,7 @@ export function CreatePostCard({
           {/* Colorful action buttons */}
           <div className="flex items-center gap-1 shrink-0">
             {/* Live Camera/Video - Red */}
-            <Dialog open={showLiveCamera} onOpenChange={setShowLiveCamera}>
+            <Dialog open={showLiveCamera} onOpenChange={handleLiveDialogClose}>
               <DialogTrigger asChild>
                 <Button 
                   variant="ghost" 
@@ -284,18 +359,44 @@ export function CreatePostCard({
                   <Video className="h-5 w-5 text-red-500" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl p-0">
-                <div className="flex min-h-[500px]">
+              <DialogContent className="max-w-6xl p-0 overflow-hidden">
+                <div className="flex min-h-[600px]">
                   {/* Left Sidebar */}
-                  <div className="w-80 border-r border-border p-4 bg-card">
-                    <h2 className="text-xl font-bold text-foreground mb-4">Create live video</h2>
+                  <div className="w-72 border-r border-border p-4 bg-card flex flex-col">
+                    <h2 className="text-lg font-bold text-foreground mb-4">Create live video</h2>
                     
-                    {/* Home Button */}
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
-                        <Video className="h-5 w-5 text-primary-foreground" />
+                    {/* Progress indicator */}
+                    <div className="mb-4">
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden mb-2">
+                        <div 
+                          className="h-full bg-primary transition-all duration-300"
+                          style={{ width: liveStep === 'setup' ? '33%' : liveStep === 'details' ? '66%' : '100%' }}
+                        />
                       </div>
-                      <span className="font-medium text-foreground">Glee Lounge</span>
+                      <p className="text-xs text-muted-foreground text-right">
+                        {liveStep === 'setup' ? '1' : liveStep === 'details' ? '2' : '3'} / 3
+                      </p>
+                    </div>
+
+                    {/* Steps */}
+                    <div className="space-y-3 mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${liveStep === 'setup' ? 'border-primary bg-primary' : cameraPermission === 'granted' ? 'border-green-500 bg-green-500' : 'border-muted-foreground'}`}>
+                          {cameraPermission === 'granted' && <Check className="h-3 w-3 text-white" />}
+                        </div>
+                        <span className={`text-sm ${liveStep === 'setup' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>Connect video source</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${liveStep === 'details' ? 'border-primary bg-primary' : liveStep === 'live' ? 'border-green-500 bg-green-500' : 'border-muted-foreground'}`}>
+                          {liveStep === 'live' && <Check className="h-3 w-3 text-white" />}
+                        </div>
+                        <span className={`text-sm ${liveStep === 'details' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>Complete post details</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${liveStep === 'live' ? 'border-primary bg-primary' : 'border-muted-foreground'}`}>
+                        </div>
+                        <span className={`text-sm ${liveStep === 'live' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>Go live</span>
+                      </div>
                     </div>
 
                     {/* User Profile */}
@@ -307,58 +408,265 @@ export function CreatePostCard({
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium text-foreground">{userProfile?.full_name || 'Member'}</p>
-                        <p className="text-sm text-muted-foreground">Host - Your profile</p>
+                        <p className="font-medium text-foreground text-sm">{userProfile?.full_name || 'Member'}</p>
+                        <p className="text-xs text-muted-foreground">Host · Your profile</p>
                       </div>
                     </div>
 
                     {/* Where to post dropdown */}
-                    <div className="border border-border rounded-lg p-3">
+                    <div className="border border-border rounded-lg p-3 mb-3">
                       <p className="text-xs text-muted-foreground mb-1">Choose where to post</p>
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-foreground">Post to Glee Lounge</span>
+                      <div className="flex items-center justify-between cursor-pointer">
+                        <span className="font-medium text-foreground text-sm">Post on profile</span>
                         <ChevronDown className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
+
+                    {/* When going live */}
+                    <div className="border border-border rounded-lg p-3 mb-4">
+                      <p className="text-xs text-muted-foreground mb-1">When are you going live?</p>
+                      <div className="flex items-center justify-between cursor-pointer">
+                        <span className="font-medium text-foreground text-sm">Now</span>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+
+                    {/* Friends button */}
+                    <Button variant="outline" size="sm" className="w-fit mb-4">
+                      <Users className="h-4 w-4 mr-2" />
+                      Friends
+                    </Button>
+
+                    {/* Navigation Menu */}
+                    <div className="flex-1 space-y-1">
+                      <Button 
+                        variant={liveStep === 'setup' ? 'secondary' : 'ghost'} 
+                        className="w-full justify-start"
+                        onClick={() => setLiveStep('setup')}
+                      >
+                        <Video className="h-4 w-4 mr-3 text-red-500" />
+                        Stream setup
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <BarChart3 className="h-4 w-4 mr-3" />
+                        Dashboard
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Settings className="h-4 w-4 mr-3" />
+                        Settings
+                        <ChevronDown className="h-4 w-4 ml-auto" />
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Smile className="h-4 w-4 mr-3" />
+                        Interactivity
+                        <ChevronDown className="h-4 w-4 ml-auto" />
+                      </Button>
+                      <Button variant="ghost" className="w-full justify-start">
+                        <Flag className="h-4 w-4 mr-3" />
+                        Give feedback
+                      </Button>
+                    </div>
                   </div>
 
-                  {/* Right Content */}
-                  <div className="flex-1 p-8 bg-muted/30">
-                    <h1 className="text-2xl font-bold text-foreground mb-2">
-                      Welcome back, {userProfile?.full_name?.split(' ')[0] || 'friend'}!
-                    </h1>
-                    <p className="text-muted-foreground mb-6">Choose how you want to go live.</p>
-
-                    {/* Go Live Card */}
-                    <div 
-                      className="bg-card rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border"
-                      onClick={() => {
-                        setShowLiveCamera(false);
-                        navigate('/glee-cam/glee-cam-videos');
-                      }}
-                    >
-                      {/* Red video icon */}
-                      <div className="w-14 h-14 rounded-xl bg-red-500 flex items-center justify-center mb-4">
-                        <Video className="h-7 w-7 text-white" />
+                  {/* Center Content */}
+                  <div className="flex-1 p-6 bg-muted/30 overflow-y-auto">
+                    {/* Video Source Selection */}
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-4">
+                        <h3 className="font-semibold text-foreground">Select a video source</h3>
+                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground cursor-help">?</div>
                       </div>
-                      
-                      <h3 className="text-xl font-bold text-foreground mb-4">Go live</h3>
-                      
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3 text-foreground">
-                          <Users className="h-5 w-5 text-muted-foreground" />
-                          <span>Go live by yourself or with others</span>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div 
+                          className={`p-6 rounded-xl border-2 cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 ${videoSource === 'webcam' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'}`}
+                          onClick={() => setVideoSource('webcam')}
+                        >
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${videoSource === 'webcam' ? 'bg-primary' : 'bg-muted'}`}>
+                            <Camera className={`h-6 w-6 ${videoSource === 'webcam' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                          </div>
+                          <span className="font-medium text-foreground">Webcam</span>
                         </div>
-                        <div className="flex items-center gap-3 text-foreground">
-                          <FileText className="h-5 w-5 text-muted-foreground" />
-                          <span>Choose where to publish your live video</span>
-                        </div>
-                        <div className="flex items-center gap-3 text-foreground">
-                          <Settings className="h-5 w-5 text-muted-foreground" />
-                          <span>Explore additional tools to engage your viewers</span>
+                        <div 
+                          className={`p-6 rounded-xl border-2 cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 ${videoSource === 'streaming' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'}`}
+                          onClick={() => setVideoSource('streaming')}
+                        >
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${videoSource === 'streaming' ? 'bg-primary' : 'bg-muted'}`}>
+                            <Monitor className={`h-6 w-6 ${videoSource === 'streaming' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                          </div>
+                          <span className="font-medium text-foreground">Streaming software</span>
                         </div>
                       </div>
                     </div>
+
+                    {/* Camera Controls */}
+                    <div className="bg-card rounded-xl p-4 mb-6 border border-border">
+                      <h4 className="font-semibold text-foreground mb-2">Camera controls</h4>
+                      <p className="text-sm text-muted-foreground mb-4">Check that your camera and microphone inputs are properly working before going live.</p>
+                      
+                      <div className="space-y-3">
+                        {/* Camera dropdown */}
+                        <div className="flex items-center gap-3">
+                          <Camera className="h-5 w-5 text-muted-foreground" />
+                          <Select value={selectedCamera} onValueChange={setSelectedCamera}>
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Select a media source" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableDevices.filter(d => d.kind === 'videoinput').map((device) => (
+                                <SelectItem key={device.deviceId} value={device.deviceId}>
+                                  {device.label || `Camera ${device.deviceId.slice(0, 8)}`}
+                                </SelectItem>
+                              ))}
+                              {availableDevices.filter(d => d.kind === 'videoinput').length === 0 && (
+                                <SelectItem value="none" disabled>No cameras found</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Microphone dropdown */}
+                        <div className="flex items-center gap-3">
+                          <Mic className="h-5 w-5 text-muted-foreground" />
+                          <Select value={selectedMic} onValueChange={setSelectedMic}>
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Select a media source" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {availableDevices.filter(d => d.kind === 'audioinput').map((device) => (
+                                <SelectItem key={device.deviceId} value={device.deviceId}>
+                                  {device.label || `Microphone ${device.deviceId.slice(0, 8)}`}
+                                </SelectItem>
+                              ))}
+                              {availableDevices.filter(d => d.kind === 'audioinput').length === 0 && (
+                                <SelectItem value="none" disabled>No microphones found</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {/* Screen share button */}
+                        <div className="flex items-center gap-3">
+                          <Monitor className="h-5 w-5 text-muted-foreground" />
+                          <Button variant="outline" className="flex-1">
+                            Start screen share
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Video Preview */}
+                    <div className="bg-card rounded-xl border border-border overflow-hidden mb-4">
+                      <h4 className="font-semibold text-foreground p-4 pb-2">Video</h4>
+                      <div className="aspect-video bg-black relative flex items-center justify-center">
+                        {cameraStream ? (
+                          <video 
+                            autoPlay 
+                            muted 
+                            playsInline
+                            ref={(video) => {
+                              if (video && cameraStream) {
+                                video.srcObject = cameraStream;
+                              }
+                            }}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : cameraPermission === 'denied' ? (
+                          <div className="text-center text-white p-6">
+                            <Camera className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p className="font-medium mb-2">Allow access to camera</p>
+                            <p className="text-sm text-gray-400 mb-4">Your browser is not allowing Live Producer access to your camera. Go to your browser settings and allow Camera permission.</p>
+                            <Button onClick={requestCameraAccess} variant="secondary">
+                              Retry
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="text-center text-white p-6">
+                            <Camera className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                            <p className="font-medium mb-2">Allow access to camera</p>
+                            <p className="text-sm text-gray-400 mb-4">Click below to enable your camera and microphone</p>
+                            <Button onClick={requestCameraAccess} variant="secondary">
+                              Enable Camera
+                            </Button>
+                          </div>
+                        )}
+                        {/* Toggle switch */}
+                        <div className="absolute top-3 left-3">
+                          <div className="w-10 h-6 bg-muted rounded-full p-0.5">
+                            <div className="w-5 h-5 bg-foreground rounded-full" />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-3 flex items-center justify-between border-t border-border">
+                        <span className="text-sm text-foreground">Expand video</span>
+                        <Expand className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+
+                    {/* Event logs */}
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <MessageSquare className="h-5 w-5" />
+                      <span className="text-sm">Event logs</span>
+                    </div>
+                  </div>
+
+                  {/* Right Sidebar - Post Details */}
+                  <div className="w-80 border-l border-border p-4 bg-card">
+                    <h3 className="font-semibold text-foreground mb-4">Add post details</h3>
+                    
+                    {/* Share to story checkbox */}
+                    <div className="flex items-start gap-3 mb-6 p-3 bg-muted/50 rounded-lg">
+                      <Checkbox 
+                        id="share-story" 
+                        checked={shareToStory}
+                        onCheckedChange={(checked) => setShareToStory(checked as boolean)}
+                      />
+                      <div>
+                        <Label htmlFor="share-story" className="font-medium text-foreground cursor-pointer">Share to story</Label>
+                        <p className="text-xs text-muted-foreground">Your live video will also be added to your story.</p>
+                      </div>
+                    </div>
+
+                    {/* Title input */}
+                    <Input 
+                      placeholder="Title (optional)"
+                      value={liveTitle}
+                      onChange={(e) => setLiveTitle(e.target.value)}
+                      className="mb-4"
+                    />
+
+                    {/* Description input */}
+                    <div className="relative mb-6">
+                      <Textarea 
+                        placeholder="Description"
+                        value={liveDescription}
+                        onChange={(e) => setLiveDescription(e.target.value)}
+                        className="min-h-[120px] resize-none"
+                      />
+                      <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                        <Users className="h-5 w-5 text-orange-400 cursor-pointer" />
+                        <MapPinIcon className="h-5 w-5 text-red-400 cursor-pointer" />
+                        <Smile className="h-5 w-5 text-yellow-400 cursor-pointer" />
+                        <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center cursor-pointer">
+                          <span className="text-xs text-white">😠</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Go Live Button */}
+                    <Button 
+                      className="w-full bg-red-500 hover:bg-red-600 text-white"
+                      disabled={!cameraStream}
+                      onClick={() => {
+                        toast({
+                          title: "Going Live!",
+                          description: "Your live video is starting..."
+                        });
+                        // TODO: Implement actual live streaming
+                      }}
+                    >
+                      <Video className="h-4 w-4 mr-2" />
+                      Go Live
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
