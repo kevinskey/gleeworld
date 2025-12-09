@@ -39,7 +39,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
             <span className="font-['Cinzel'] text-xl">G</span>
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground font-['Cinzel'] tracking-wide flex items-center gap-2">
+            <h1 className="text-2xl lg:text-4xl font-bold text-foreground font-['Cinzel'] tracking-wide flex items-center gap-2">
               <span className="bg-gradient-to-r from-primary via-destructive to-emerald-600 bg-clip-text text-transparent">
                 GleeWorld
               </span>
