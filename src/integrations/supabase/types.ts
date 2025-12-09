@@ -21964,19 +21964,19 @@ export type Database = {
       check_rate_limit:
         | {
             Args: {
-              p_action_type: string
-              p_max_requests?: number
-              p_user_id: string
-              p_window_minutes?: number
+              action_type_param: string
+              identifier_param: string
+              max_attempts?: number
+              window_minutes?: number
             }
             Returns: boolean
           }
         | {
             Args: {
-              action_type_param: string
-              identifier_param: string
-              max_attempts?: number
-              window_minutes?: number
+              p_action_type: string
+              p_max_requests?: number
+              p_user_id: string
+              p_window_minutes?: number
             }
             Returns: boolean
           }
@@ -22184,14 +22184,14 @@ export type Database = {
       }
       get_booked_audition_slots:
         | {
-            Args: { selected_date: string }
+            Args: { p_end: string; p_start: string }
             Returns: {
               audition_time_slot: string
               auditioner_name: string
             }[]
           }
         | {
-            Args: { p_end: string; p_start: string }
+            Args: { selected_date: string }
             Returns: {
               audition_time_slot: string
               auditioner_name: string
@@ -22262,8 +22262,8 @@ export type Database = {
         }[]
       }
       get_user_admin_status:
-        | { Args: { user_id_param: string }; Returns: Json }
         | { Args: never; Returns: boolean }
+        | { Args: { user_id_param: string }; Returns: Json }
       get_user_executive_position: {
         Args: { user_id_param: string }
         Returns: Database["public"]["Enums"]["executive_position"]
@@ -22318,7 +22318,6 @@ export type Database = {
         Returns: boolean
       }
       has_role:
-        | { Args: { target: string }; Returns: boolean }
         | {
             Args: {
               _role: Database["public"]["Enums"]["app_role"]
@@ -22326,6 +22325,7 @@ export type Database = {
             }
             Returns: boolean
           }
+        | { Args: { target: string }; Returns: boolean }
       has_username_permission: {
         Args: { module_name_param: string; user_email_param: string }
         Returns: boolean

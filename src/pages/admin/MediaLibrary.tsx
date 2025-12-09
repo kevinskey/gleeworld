@@ -26,6 +26,8 @@ interface MediaItem {
   created_at?: string | null;
   file_path?: string | null;
   folder_path?: string | null;
+  thumbnail_url?: string | null;
+  source?: string;
 }
 
 const MIME_TO_KIND = (mime?: string | null, fallback?: string | null) => {
@@ -88,6 +90,15 @@ const MediaLibrary = () => {
     }
   }, [categoryFilter]);
 
+  // Map category slugs to quick_capture_media category values
+  const SLUG_TO_QUICK_CAPTURE_CATEGORY: Record<string, string> = {
+    'execboard-video': 'exec_board_video',
+    'glee-cam-pics': 'glee_cam_pic',
+    'glee-cam-videos': 'glee_cam_video',
+    'voice-part-recording': 'voice_part_recording',
+    'christmas-carol-selfies': 'christmas_selfie',
+  };
+
   const fetchItems = async () => {
     setLoading(true);
     try {
@@ -110,11 +121,14 @@ const MediaLibrary = () => {
         
         const { data: mediaLibraryData } = await mediaLibraryQuery;
         
-        // Also search quick_capture_media by category
+        // Map slug to quick_capture_media category value
+        const quickCaptureCategory = SLUG_TO_QUICK_CAPTURE_CATEGORY[categoryFilter] || categoryFilter;
+        
+        // Also search quick_capture_media by mapped category
         const { data: quickCaptureData } = await supabase
           .from('quick_capture_media')
           .select('*')
-          .eq('category', categoryFilter)
+          .eq('category', quickCaptureCategory)
           .order('created_at', { ascending: false })
           .limit(200);
         
@@ -631,9 +645,23 @@ const MediaLibrary = () => {
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
-                      ) : kind === 'video' && m.file_url ? (
-                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
-                          <Video className="h-8 w-8 text-primary" />
+                      ) : kind === 'video' ? (
+                        <div className="relative w-full h-full">
+                          {m.thumbnail_url ? (
+                            <img 
+                              src={m.thumbnail_url} 
+                              alt={m.title || 'video thumbnail'} 
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+                          )}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="bg-black/50 rounded-full p-2">
+                              <Video className="h-6 w-6 text-white" />
+                            </div>
+                          </div>
                         </div>
                       ) : kind === 'audio' ? (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary/20 to-secondary/5">
