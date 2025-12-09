@@ -9,13 +9,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog';
 import { SocialPost } from '@/hooks/useSocialFeed';
 import { PostReactions } from './PostReactions';
 import { PostComments } from './PostComments';
 import { ReportPostDialog } from './ReportPostDialog';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
 import { formatDistanceToNow } from 'date-fns';
-import { MapPin, Pin, MoreHorizontal, Flag, Trash2 } from 'lucide-react';
+import { MapPin, Pin, MoreHorizontal, Flag, Trash2, X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,9 +33,17 @@ interface PostCardProps {
   onRefresh?: () => void;
 }
 
+const isVideoUrl = (url: string): boolean => {
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+  const lowerUrl = url.toLowerCase();
+  return videoExtensions.some(ext => lowerUrl.includes(ext));
+};
+
 export function PostCard({ post, userProfile, onRefresh }: PostCardProps) {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const { toast } = useToast();
   
   const isOwnPost = userProfile?.user_id === post.user_id;
@@ -63,6 +75,81 @@ export function PostCard({ post, userProfile, onRefresh }: PostCardProps) {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
+  const nextMedia = () => {
+    if (post.media_urls && lightboxIndex < post.media_urls.length - 1) {
+      setLightboxIndex(lightboxIndex + 1);
+    }
+  };
+
+  const prevMedia = () => {
+    if (lightboxIndex > 0) {
+      setLightboxIndex(lightboxIndex - 1);
+    }
+  };
+
+  const renderMediaItem = (url: string, index: number, inLightbox = false) => {
+    const isVideo = isVideoUrl(url);
+    
+    if (isVideo) {
+      if (inLightbox) {
+        return (
+          <video
+            key={index}
+            src={url}
+            controls
+            autoPlay
+            className="max-h-[80vh] max-w-full rounded-lg"
+          />
+        );
+      }
+      return (
+        <div
+          key={index}
+          className="relative cursor-pointer group"
+          onClick={() => openLightbox(index)}
+        >
+          <video
+            src={url}
+            className="w-full h-48 object-cover rounded-lg"
+            muted
+            playsInline
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg group-hover:bg-black/40 transition-colors">
+            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
+              <Play className="h-6 w-6 text-foreground fill-current ml-1" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (inLightbox) {
+      return (
+        <img
+          key={index}
+          src={url}
+          alt={`Post media ${index + 1}`}
+          className="max-h-[80vh] max-w-full object-contain rounded-lg"
+        />
+      );
+    }
+    
+    return (
+      <img
+        key={index}
+        src={url}
+        alt={`Post media ${index + 1}`}
+        className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+        onClick={() => openLightbox(index)}
+      />
+    );
   };
 
   return (
@@ -142,15 +229,7 @@ export function PostCard({ post, userProfile, onRefresh }: PostCardProps) {
               post.media_urls.length === 3 ? 'grid-cols-3' :
               'grid-cols-2'
             }`}>
-              {post.media_urls.map((url, index) => (
-                <img
-                  key={index}
-                  src={url}
-                  alt={`Post media ${index + 1}`}
-                  className="w-full h-48 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => window.open(url, '_blank')}
-                />
-              ))}
+              {post.media_urls.map((url, index) => renderMediaItem(url, index))}
             </div>
           )}
 
@@ -170,6 +249,55 @@ export function PostCard({ post, userProfile, onRefresh }: PostCardProps) {
           />
         </CardContent>
       </Card>
+
+      {/* Media Lightbox */}
+      <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+        <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
+          <div className="relative flex items-center justify-center min-h-[50vh]">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 text-white hover:bg-white/20"
+              onClick={() => setLightboxOpen(false)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            
+            {post.media_urls && post.media_urls.length > 1 && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute left-2 z-10 text-white hover:bg-white/20 disabled:opacity-30"
+                  onClick={prevMedia}
+                  disabled={lightboxIndex === 0}
+                >
+                  <ChevronLeft className="h-8 w-8" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-2 z-10 text-white hover:bg-white/20 disabled:opacity-30"
+                  onClick={nextMedia}
+                  disabled={lightboxIndex === post.media_urls.length - 1}
+                >
+                  <ChevronRight className="h-8 w-8" />
+                </Button>
+              </>
+            )}
+            
+            <div className="p-4">
+              {post.media_urls && renderMediaItem(post.media_urls[lightboxIndex], lightboxIndex, true)}
+            </div>
+            
+            {post.media_urls && post.media_urls.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm">
+                {lightboxIndex + 1} / {post.media_urls.length}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <ReportPostDialog
         open={showReportDialog}
