@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/contexts/ThemeContext";
+import blueBusIcon from "@/assets/blue-bus.png";
 
 interface ClockProps {
   className?: string;
@@ -225,9 +226,9 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120]">
             <Badge 
               variant="secondary" 
-              className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
+              className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20 flex items-center gap-1.5"
             >
-              🚌 {getCountdownText()}
+              <img src={blueBusIcon} alt="Bus" className="h-4 w-4 object-contain" /> {getCountdownText()}
             </Badge>
             <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
           </div>
@@ -362,9 +363,10 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
         </div>
         
         {/* Countdown Text - Visible on desktop */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:flex items-center gap-1.5">
+          <img src={blueBusIcon} alt="Bus" className="h-5 w-5 object-contain" />
           <span className="text-sm font-medium whitespace-nowrap" style={{ color: getColor() }}>
-            🚌 {getCountdownText()}
+            {getCountdownText()}
           </span>
         </div>
       </div>
@@ -372,12 +374,12 @@ export const HeaderClock = ({ className = "" }: ClockProps) => {
       {/* Hover Tooltip for when countdown text is hidden */}
       {showCountdown && (
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120] lg:hidden">
-            <Badge 
-              variant="secondary" 
-              className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20"
-            >
-              🚌 {getCountdownText()}
-            </Badge>
+          <Badge 
+            variant="secondary" 
+            className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20 flex items-center gap-1.5"
+          >
+            <img src={blueBusIcon} alt="Bus" className="h-4 w-4 object-contain" /> {getCountdownText()}
+          </Badge>
           <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
         </div>
       )}
