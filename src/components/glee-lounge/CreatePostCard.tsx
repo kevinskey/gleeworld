@@ -9,7 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check } from 'lucide-react';
+import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video } from 'lucide-react';
 interface CreatePostCardProps {
   userProfile: {
     user_id: string;
@@ -37,6 +37,7 @@ export function CreatePostCard({
   const [gleeCamPhotos, setGleeCamPhotos] = useState<GleeCamPhoto[]>([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
+  const [showLiveCamera, setShowLiveCamera] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const {
     toast
@@ -270,34 +271,55 @@ export function CreatePostCard({
 
           {/* Colorful action buttons */}
           <div className="flex items-center gap-1 shrink-0">
-            {/* Camera/Video - Red */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-10 w-10 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
-              disabled={isUploading}
-              asChild
-            >
-              <label className="cursor-pointer">
-                {isUploading ? (
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                ) : (
-                  <ImagePlus className="h-5 w-5 text-red-500" />
-                )}
-                <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaUpload} disabled={isUploading} />
-              </label>
-            </Button>
+            {/* Live Camera/Video - Red */}
+            <Dialog open={showLiveCamera} onOpenChange={setShowLiveCamera}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-10 w-10 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
+                >
+                  <Video className="h-5 w-5 text-red-500" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground flex items-center gap-2">
+                    <Video className="h-5 w-5 text-red-500" />
+                    Glee Cam Live
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="text-center py-8">
+                  <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center mb-4">
+                    <Camera className="h-16 w-16 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-muted-foreground mb-4">
+                    Open Glee Cam to capture a photo or video
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setShowLiveCamera(false);
+                      window.location.href = '/glee-cam';
+                    }}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    <Camera className="h-4 w-4 mr-2" />
+                    Open Glee Cam
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
-            {/* Glee Cam - Green */}
+            {/* Photo Gallery - Green */}
             <Dialog open={showPhotoPicker} onOpenChange={setShowPhotoPicker}>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-green-100 dark:hover:bg-green-900/30">
-                  <Camera className="h-5 w-5 text-green-500" />
+                  <ImagePlus className="h-5 w-5 text-green-500" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle className="text-foreground">Select from Glee Cam</DialogTitle>
+                  <DialogTitle className="text-foreground">Select from Glee Cam Gallery</DialogTitle>
                 </DialogHeader>
                 <ScrollArea className="h-[350px]">
                   {loadingPhotos ? <div className="flex items-center justify-center h-full">
