@@ -36,7 +36,7 @@ const CardHeader = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "flex flex-col space-y-1 px-4 py-3 relative z-10",
+      "flex flex-col space-y-1 px-4 py-3 relative z-10 bg-primary text-primary-foreground",
       className
     )}
     data-component="card-header"
