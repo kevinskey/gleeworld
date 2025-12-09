@@ -73,7 +73,7 @@
     --input: 0 0% 98%; /* Very light gray input backgrounds for contrast */
     --ring: var(--spelman-blue-light); /* Blue focus rings */
 
-    --radius: 0.75rem;
+    --radius: 0rem;
 
     /* Enhanced Color Tokens */
     --text-secondary: 0 0% 30%; /* Readable secondary text */
