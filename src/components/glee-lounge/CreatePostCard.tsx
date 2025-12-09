@@ -192,22 +192,41 @@ export function CreatePostCard({
   // Stop camera stream
   const stopCameraStream = () => {
     if (cameraStream) {
-      cameraStream.getTracks().forEach(track => track.stop());
+      cameraStream.getTracks().forEach(track => {
+        track.stop();
+        console.log('Stopped track:', track.kind);
+      });
       setCameraStream(null);
+      setCameraPermission('pending');
     }
   };
 
   // Handle dialog close
   const handleLiveDialogClose = (open: boolean) => {
     if (!open) {
-      stopCameraStream();
+      // Force stop all tracks
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+      setCameraStream(null);
       setLiveStep('setup');
       setCameraPermission('pending');
       setLiveTitle('');
       setLiveDescription('');
+      setSelectedCamera('');
+      setSelectedMic('');
     }
     setShowLiveCamera(open);
   };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraStream]);
 
   useEffect(() => {
     if (showPhotoPicker) {
@@ -218,6 +237,11 @@ export function CreatePostCard({
   useEffect(() => {
     if (showLiveCamera && liveStep === 'setup') {
       getMediaDevices();
+    }
+    // Cleanup when dialog closes
+    if (!showLiveCamera && cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
     }
   }, [showLiveCamera, liveStep]);
   const handleSubmit = async () => {
