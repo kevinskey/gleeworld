@@ -33,7 +33,8 @@ interface PostCardProps {
   onRefresh?: () => void;
 }
 
-const isVideoUrl = (url: string): boolean => {
+const isVideoUrl = (url: string | undefined | null): boolean => {
+  if (!url) return false;
   const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
   const lowerUrl = url.toLowerCase();
   return videoExtensions.some(ext => lowerUrl.includes(ext));
