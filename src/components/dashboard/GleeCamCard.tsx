@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio, ChevronLeft, ChevronRight } from "lucide-react";
+import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,8 +33,6 @@ export const GleeCamCard = ({
   const navigate = useNavigate();
   const [categories, setCategories] = useState<GleeCamCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = 2;
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -88,50 +85,25 @@ export const GleeCamCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent className="px-3 pb-3 pt-0">
-        {/* Paginated categories - show 2 at a time */}
-        <div className="relative">
-          {/* Navigation arrows */}
-          {categories.length > itemsPerPage && <>
-              <Button variant="ghost" size="icon" onClick={() => setCurrentPage(p => Math.max(0, p - 1))} disabled={currentPage === 0} className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm shadow-md hover:bg-background px-0">
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="absolute -right-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm shadow-md hover:bg-background" onClick={() => setCurrentPage(p => Math.min(Math.ceil(categories.length / itemsPerPage) - 1, p + 1))} disabled={currentPage >= Math.ceil(categories.length / itemsPerPage) - 1}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </>}
-          
-          {/* Cards grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3 px-2">
-            {categories.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map(category => {
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {categories.map(category => {
             const IconComponent = getIconComponent(category.icon);
-            return <div key={category.id} onClick={() => handleCategoryClick(category)} className="group cursor-pointer">
-                  {/* Category Card */}
-                  <div className={cn("rounded-xl p-4 flex flex-col items-center text-center transition-all duration-300", "bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-[#333] hover:border-[#444]", "shadow-lg hover:shadow-xl min-h-[120px]")}>
-                    {/* Icon Circle */}
-                    <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110", category.icon_bg)}>
-                      <IconComponent className={cn("h-5 w-5", category.icon_color)} />
-                    </div>
-
-                    {/* Title */}
-                    <h4 className="font-semibold text-[10px] sm:text-xs text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
-                      {category.name}
-                    </h4>
-
-                    {/* Description */}
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight line-clamp-2">
-                      {category.description}
-                    </p>
+            return (
+              <div key={category.id} onClick={() => handleCategoryClick(category)} className="group cursor-pointer">
+                <div className={cn("rounded-xl p-4 flex flex-col items-center text-center transition-all duration-300", "bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-[#333] hover:border-[#444]", "shadow-lg hover:shadow-xl min-h-[120px]")}>
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110", category.icon_bg)}>
+                    <IconComponent className={cn("h-5 w-5", category.icon_color)} />
                   </div>
-                </div>;
+                  <h4 className="font-semibold text-[10px] sm:text-xs text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
+                    {category.name}
+                  </h4>
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight line-clamp-2">
+                    {category.description}
+                  </p>
+                </div>
+              </div>
+            );
           })}
-          </div>
-          
-          {/* Page dots */}
-          {categories.length > itemsPerPage && <div className="flex justify-center gap-1.5 mt-3">
-              {Array.from({
-            length: Math.ceil(categories.length / itemsPerPage)
-          }).map((_, i) => <button key={i} onClick={() => setCurrentPage(i)} className={cn("w-2 h-2 rounded-full transition-all", currentPage === i ? "bg-primary w-4" : "bg-muted-foreground/30 hover:bg-muted-foreground/50")} />)}
-            </div>}
         </div>
       </CardContent>
     </Card>;
