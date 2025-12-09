@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -74,6 +74,11 @@ export function CreatePostCard({
   // Video/Audio on/off state
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
+  
+  // Video element refs to prevent re-render loops
+  const cameraVideoRef = useRef<HTMLVideoElement>(null);
+  const screenVideoRef = useRef<HTMLVideoElement>(null);
+  
   const {
     toast
   } = useToast();
@@ -327,6 +332,20 @@ export function CreatePostCard({
   };
 
   // Cleanup on unmount
+  // Attach camera stream to video element
+  useEffect(() => {
+    if (cameraVideoRef.current && cameraStream) {
+      cameraVideoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraStream]);
+
+  // Attach screen stream to video element
+  useEffect(() => {
+    if (screenVideoRef.current && screenStream) {
+      screenVideoRef.current.srcObject = screenStream;
+    }
+  }, [screenStream]);
+
   useEffect(() => {
     return () => {
       if (cameraStream) {
@@ -840,26 +859,18 @@ export function CreatePostCard({
                       <div className="aspect-video bg-black relative flex items-center justify-center">
                         {screenStream ? (
                           <video 
+                            ref={screenVideoRef}
                             autoPlay 
                             muted 
                             playsInline
-                            ref={(video) => {
-                              if (video && screenStream) {
-                                video.srcObject = screenStream;
-                              }
-                            }}
                             className="w-full h-full object-contain"
                           />
                         ) : cameraStream ? (
                           <video 
+                            ref={cameraVideoRef}
                             autoPlay 
                             muted 
                             playsInline
-                            ref={(video) => {
-                              if (video && cameraStream) {
-                                video.srcObject = cameraStream;
-                              }
-                            }}
                             className="w-full h-full object-cover"
                           />
                         ) : cameraPermission === 'denied' ? (
