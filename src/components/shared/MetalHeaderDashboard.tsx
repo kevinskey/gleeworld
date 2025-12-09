@@ -607,26 +607,25 @@ export const MetalHeaderDashboard = ({
   }
   // All users get the full metal header dashboard experience
   return <div className="space-y-4 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-      {/* Dashboard Header - Matching Card Style */}
-      <div className="relative z-10 rounded-xl border border-border px-3 sm:px-5 grid grid-cols-[1fr_auto_1fr] items-center min-h-[44px] sm:min-h-[52px] bg-background/95 backdrop-blur-sm shadow-card py-2 mx-0">
-        {/* Empty left spacer */}
-        <div />
-        
-        {/* Personalized Title - Center column */}
-        <h2 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap">
+      {/* Dashboard Header - Simple Clean Style */}
+      <div className="relative z-10 flex items-center justify-center min-h-[44px] sm:min-h-[52px] py-2">
+        {/* Personalized Title - Centered */}
+        <h2 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-semibold tracking-tight text-center text-foreground whitespace-nowrap">
           {getFirstName(user.full_name)}'s Dashboard
         </h2>
-
-        {/* Key Ignition - Quick Actions Button - Right side */}
-        <div className="flex justify-end">
-          <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} aria-label="Quick Actions" className="w-8 h-8 sm:w-10 sm:h-10 bg-primary hover:bg-primary/90 rounded-full border border-border shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mx-[10px]">
-            <Key className={`h-4 w-4 text-primary-foreground transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
-          </button>
-        </div>
-
-        {/* Quick Actions Panel - slides out from underneath */}
-        <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
       </div>
+
+      {/* Floating Quick Actions Button - Bottom Right */}
+      <button 
+        onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} 
+        aria-label="Quick Actions" 
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary hover:bg-primary/90 rounded-full border-2 border-primary-foreground/20 shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center justify-center group"
+      >
+        <Key className={`h-6 w-6 text-primary-foreground transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
+      </button>
+
+      {/* Quick Actions Panel */}
+      <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
 
       {/* Glee Lounge Strip - Social Hub Access */}
       <GleeLoungeStrip />
