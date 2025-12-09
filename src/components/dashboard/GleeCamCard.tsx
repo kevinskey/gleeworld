@@ -90,8 +90,8 @@ export const GleeCamCard = ({
           const IconComponent = getIconComponent(category.icon);
           return <div key={category.id} onClick={() => handleCategoryClick(category)} className="group cursor-pointer flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)]">
                 <div className={cn("p-4 flex flex-col items-center text-center transition-all duration-300", "bg-card border border-border hover:border-primary/50", "shadow-lg hover:shadow-xl min-h-[120px]")}>
-                  <div className={cn("w-10 h-10 flex items-center justify-center mb-2 transition-transform group-hover:scale-110", category.icon_bg)}>
-                    <IconComponent className={cn("h-5 w-5", category.icon_color)} />
+                  <div className="w-10 h-10 flex items-center justify-center mb-2 transition-transform group-hover:scale-110 bg-primary/20">
+                    <IconComponent className="h-5 w-5 text-primary" />
                   </div>
                   <h4 className="font-semibold text-[10px] sm:text-xs text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
                     {category.name}
