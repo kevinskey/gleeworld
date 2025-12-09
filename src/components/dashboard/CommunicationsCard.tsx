@@ -116,32 +116,32 @@ export const CommunicationsCard = ({
                   <div
                     onClick={() => handleModuleClick(module)}
                     className={cn(
-                      "group cursor-pointer rounded-xl p-4 flex flex-col items-center text-center transition-all duration-300",
+                      "group cursor-pointer rounded-xl p-3 sm:p-4 flex flex-col items-center text-center transition-all duration-300",
                       "bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-[#333] hover:border-[#444]",
-                      "shadow-lg hover:shadow-xl",
+                      "shadow-lg hover:shadow-xl min-h-[120px] sm:min-h-[140px]",
                       isExpanded && "border-primary/50"
                     )}
                   >
                     {/* Icon Circle */}
                     <div className={cn(
-                      "w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-transform group-hover:scale-110",
+                      "w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center mb-2 sm:mb-3 transition-transform group-hover:scale-110",
                       module.iconBg
                     )}>
-                      <IconComponent className={cn("h-7 w-7", module.iconColor)} />
+                      <IconComponent className={cn("h-5 w-5 sm:h-6 sm:h-6 md:h-7 md:w-7", module.iconColor)} />
                     </div>
 
                     {/* Title */}
-                    <h3 className="font-semibold text-sm text-foreground mb-1 tracking-wide uppercase">
+                    <h3 className="font-semibold text-xs sm:text-sm text-foreground mb-1 tracking-wide uppercase leading-tight">
                       {module.title}
                     </h3>
 
                     {/* Description */}
-                    <p className="text-xs text-muted-foreground leading-tight mb-2 line-clamp-2">
+                    <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight mb-2 line-clamp-2">
                       {module.description}
                     </p>
 
                     {/* Action Link */}
-                    <span className="text-xs text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
+                    <span className="text-[10px] sm:text-xs text-primary flex items-center gap-1 group-hover:gap-2 transition-all mt-auto">
                       {module.isEmbedded ? (isExpanded ? 'Close' : 'Open') : 'Learn More'}
                       <ChevronRight className="h-3 w-3" />
                     </span>

@@ -42,7 +42,7 @@ export const FavoritesCard = ({
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-44">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pr-4">
             {favorites.map(module => {
           const IconComponent = module.icon;
           return <div key={module.id} className="relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card text-card-foreground hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => {
@@ -52,20 +52,20 @@ export const FavoritesCard = ({
               onModuleClick(module.id);
             }
           }}>
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {IconComponent && <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                  {IconComponent && <div className={`p-1.5 sm:p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
                       <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
                     </div>}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate text-card-foreground">{module.title}</p>
-                    <p className="text-xs text-muted-foreground truncate">{module.description}</p>
+                    <p className="text-xs sm:text-sm font-medium truncate text-card-foreground">{module.title}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{module.description}</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={e => {
               e.stopPropagation();
               onToggleFavorite(module.id);
-            }} className="absolute top-2 right-2 p-2 h-auto rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all" title="Remove from favorites">
-                  <Heart className="h-5 w-5 fill-current" />
+            }} className="absolute top-2 right-2 p-1.5 sm:p-2 h-auto rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all" title="Remove from favorites">
+                  <Heart className="h-4 w-4 sm:h-5 sm:w-5 fill-current" />
                 </Button>
               </div>;
          })}
