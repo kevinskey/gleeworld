@@ -155,6 +155,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
     }];
     const visibleFallback = fallbackSlides.slice(0, slidesToShow);
     return <div className="mb-4 rounded-xl border-2 border-slate-400/50 dark:border-slate-500 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 shadow-lg p-3">
+          <h4 className="text-xs sm:text-sm font-semibold tracking-wide uppercase text-foreground mb-2">Glee Cam</h4>
           <div className="relative w-full rounded-lg overflow-hidden group">
             <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
               {visibleFallback.map((slide, idx) => <div 
@@ -198,6 +199,10 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
       background: isHbcuTheme ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' : undefined
     }}
   >
+    <h4 
+      className="text-xs sm:text-sm font-semibold tracking-wide uppercase mb-2"
+      style={{ color: isHbcuTheme ? hbcuGold : undefined }}
+    >Glee Cam</h4>
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
