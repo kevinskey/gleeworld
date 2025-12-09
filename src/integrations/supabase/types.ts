@@ -16314,6 +16314,7 @@ export type Database = {
           interested_in_exec_board: boolean | null
           interested_in_fall_tour: boolean | null
           interested_in_private_lessons: boolean | null
+          is_draft: boolean | null
           leadership_program_notes: string | null
           other_campus_show_details: string | null
           performances_other: string | null
@@ -16351,6 +16352,7 @@ export type Database = {
           interested_in_exec_board?: boolean | null
           interested_in_fall_tour?: boolean | null
           interested_in_private_lessons?: boolean | null
+          is_draft?: boolean | null
           leadership_program_notes?: string | null
           other_campus_show_details?: string | null
           performances_other?: string | null
@@ -16388,6 +16390,7 @@ export type Database = {
           interested_in_exec_board?: boolean | null
           interested_in_fall_tour?: boolean | null
           interested_in_private_lessons?: boolean | null
+          is_draft?: boolean | null
           leadership_program_notes?: string | null
           other_campus_show_details?: string | null
           performances_other?: string | null
