@@ -638,26 +638,6 @@ export const MetalHeaderDashboard = ({
           </div>
         </div>
 
-        {/* Dark Mode Toggle - Left side */}
-        <button 
-          onClick={toggleDarkMode} 
-          className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 ml-4 sm:ml-8"
-          style={{
-            background: isHbcuTheme 
-              ? `linear-gradient(to bottom right, ${hbcuGold}, #B8860B)` 
-              : isDarkMode 
-                ? 'linear-gradient(to bottom right, #1e293b, #334155)' 
-                : 'linear-gradient(to bottom right, #fef3c7, #fde68a)',
-            borderColor: isHbcuTheme ? '#B8860B' : isDarkMode ? '#475569' : '#f59e0b'
-          }}
-          aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {isDarkMode ? (
-            <Sun className="h-4 w-4 text-amber-300 group-hover:rotate-45 transition-transform duration-300" />
-          ) : (
-            <Moon className="h-4 w-4 text-amber-700 group-hover:-rotate-12 transition-transform duration-300" />
-          )}
-        </button>
 
         {/* Personalized Title - Centered */}
         <h1 style={{
