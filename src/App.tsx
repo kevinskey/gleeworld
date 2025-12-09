@@ -15,6 +15,7 @@ import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
+import { SplashWrapper } from "@/components/splash/SplashWrapper";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -315,6 +316,7 @@ const App = () => {
             <TooltipProvider>
               <CustomTooltipProvider>
                 <MusicPlayerProvider>
+                  <SplashWrapper>
                   <div>
                   <Toaster />
                   <Sonner />
@@ -2283,6 +2285,7 @@ const App = () => {
                     <GlobalMusicPlayer />
                     <PWAInstallPrompt />
                    </div>
+                   </SplashWrapper>
                   </MusicPlayerProvider>
                 </CustomTooltipProvider>
               </TooltipProvider>

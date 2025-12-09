@@ -243,6 +243,34 @@ export default {
 					'0%, 100%': { transform: 'rotate(-2deg)' },
 					'50%': { transform: 'rotate(2deg)' }
 				},
+				'spin-reverse': {
+					'0%': { transform: 'rotate(360deg)' },
+					'100%': { transform: 'rotate(0deg)' }
+				},
+				'note-float': {
+					'0%': { 
+						transform: 'translate(var(--start-x), var(--start-y)) scale(0.5)',
+						opacity: '1'
+					},
+					'100%': { 
+						transform: 'translate(var(--end-x), var(--end-y)) scale(1) rotate(20deg)',
+						opacity: '0'
+					}
+				},
+				'sparkle': {
+					'0%': { 
+						transform: 'translate(-50%, -50%) rotate(var(--sparkle-angle)) translateX(40px) scale(0)',
+						opacity: '0'
+					},
+					'50%': { 
+						transform: 'translate(-50%, -50%) rotate(var(--sparkle-angle)) translateX(80px) scale(1)',
+						opacity: '1'
+					},
+					'100%': { 
+						transform: 'translate(-50%, -50%) rotate(var(--sparkle-angle)) translateX(120px) scale(0)',
+						opacity: '0'
+					}
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -263,9 +291,12 @@ export default {
 				'pulse-soft': 'pulse-soft 2s ease-in-out infinite',
 				'bounce-soft': 'bounce-soft 1s ease-in-out infinite',
 				'spin-slow': 'spin-slow 3s linear infinite',
+				'spin-reverse': 'spin-reverse 8s linear infinite',
 				'wiggle': 'wiggle 0.3s ease-in-out',
 				'enter': 'fade-in 0.3s ease-out, scale-in 0.2s ease-out',
 				'exit': 'fade-out 0.3s ease-out, scale-out 0.2s ease-out',
+				'note-float': 'note-float 1.5s ease-out forwards',
+				'sparkle': 'sparkle 2s ease-out infinite',
 			},
 			backdropBlur: {
 				xs: '2px',
