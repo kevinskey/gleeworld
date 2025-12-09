@@ -314,14 +314,22 @@
   font-family: 'Bebas Neue', 'Oswald', sans-serif !important;
 }
 
-.hbcu-theme h1,
-.hbcu-theme h2,
-.hbcu-theme h3,
-.hbcu-theme h4 {
-  font-family: 'Oswald', 'Impact', sans-serif !important;
-  font-weight: 700;
+html.hbcu-theme h1,
+html.hbcu-theme h2,
+html.hbcu-theme h3,
+html.hbcu-theme h4,
+html.hbcu-theme h5,
+html.hbcu-theme h6,
+html[data-theme="hbcu"] h1,
+html[data-theme="hbcu"] h2,
+html[data-theme="hbcu"] h3,
+html[data-theme="hbcu"] h4,
+html[data-theme="hbcu"] h5,
+html[data-theme="hbcu"] h6 {
+  font-family: 'Graduate', 'Bebas Neue', sans-serif !important;
+  font-weight: 400 !important;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.05em !important;
   text-shadow: var(--heading-shadow, 2px 2px 0px hsl(0 0% 0%), 3px 3px 0px hsl(0 72% 42%));
 }
 
