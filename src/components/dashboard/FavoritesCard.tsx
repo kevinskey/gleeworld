@@ -16,7 +16,7 @@ export const FavoritesCard = ({
   const navigate = useNavigate();
   if (favorites.length === 0) {
     return <Card className="bg-background/95 backdrop-blur-sm mt-0">
-        <CardHeader className="pt-4 pb-3">
+        <CardHeader className="py-3 px-3 sm:px-4">
           <CardTitle className="flex items-center gap-2">
             <Heart className="h-5 w-5 text-red-500" />
             Favorites
@@ -24,7 +24,7 @@ export const FavoritesCard = ({
           </CardTitle>
           <CardDescription>Your favorite modules will appear here</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-3 sm:px-4">
           <p className="text-sm text-muted-foreground">
             Touch a heart to add a fave module.
           </p>
@@ -32,15 +32,14 @@ export const FavoritesCard = ({
       </Card>;
   }
   return <Card className="bg-background/95 backdrop-blur-sm">
-      <CardHeader>
+      <CardHeader className="py-3 px-3 sm:px-4">
         <CardTitle className="flex items-center gap-2">
           <Heart className="h-5 w-5 text-red-500 fill-current" />
           Favorites
-          <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase pt-[10px] pb-[10px]">scroll to choose your fav!</span>
+          <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">scroll to choose your fav!</span>
         </CardTitle>
-        
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 sm:px-4">
         <ScrollArea className="h-44">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pr-4">
             {favorites.map(module => {

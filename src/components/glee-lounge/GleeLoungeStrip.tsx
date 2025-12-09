@@ -103,7 +103,7 @@ export const GleeLoungeStrip = () => {
   return (
     <div 
       onClick={() => navigate('/glee-lounge')}
-      className="mx-4 mb-4 bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-500/30 rounded-xl p-3 cursor-pointer hover:border-emerald-400/50 transition-all group"
+      className="bg-gradient-to-r from-emerald-900/30 to-teal-900/30 border border-emerald-500/30 rounded-xl p-3 sm:p-4 cursor-pointer hover:border-emerald-400/50 transition-all group"
     >
       <div className="flex items-center justify-between">
         {/* Left: Icon and Title */}

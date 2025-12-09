@@ -28,12 +28,12 @@ export const AllModulesCard = ({
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="py-4 hover:bg-muted/50 transition-colors cursor-pointer">
+          <CardHeader className="py-3 px-3 sm:px-4 hover:bg-muted/50 transition-colors cursor-pointer">
             <div className="flex items-center justify-between min-h-[48px]">
               <div className="gap-3 flex items-start justify-start">
-                <Grid3x3 className="text-primary flex-shrink-0 pt-[10px] w-[20px] h-[20px]" />
+                <Grid3x3 className="text-primary flex-shrink-0 w-5 h-5 mt-0.5" />
                 <div className="text-left">
-                  <CardTitle className="text-lg leading-tight pt-[10px] pb-[10px] py-[5px]">My Modules</CardTitle>
+                  <CardTitle className="text-lg leading-tight">My Modules</CardTitle>
                   <CardDescription className="leading-tight">All modules assigned to you</CardDescription>
                 </div>
               </div>
@@ -48,7 +48,7 @@ export const AllModulesCard = ({
         </CollapsibleTrigger>
         
         <CollapsibleContent>
-          <CardContent className="pt-0 space-y-4">
+          <CardContent className="pt-0 px-3 sm:px-4 space-y-4">
             {/* Search Field */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />

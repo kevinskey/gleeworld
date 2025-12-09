@@ -72,8 +72,8 @@ export const CommunicationsCard = ({
     }
   };
   return <Card className="bg-background/95 backdrop-blur-sm">
-      <CardHeader className="pt-4 pb-3">
-        <CardTitle className="flex items-center gap-2 pb-[10px]">
+      <CardHeader className="py-3 px-3 sm:px-4">
+        <CardTitle className="flex items-center gap-2">
           <Radio className="h-5 w-5 text-primary" />
           Communications
           <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
@@ -82,7 +82,7 @@ export const CommunicationsCard = ({
         </CardTitle>
         {modules.length === 0 && <CardDescription>Communication modules will appear here</CardDescription>}
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-3 sm:px-4">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {modules.map(module => {
           const IconComponent = module.icon;
