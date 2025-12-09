@@ -85,9 +85,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
   return (
     <>
-        <div className="sticky top-0 z-50 w-full px-4 sm:px-6 lg:px-8 py-2">
+        <div className="sticky top-0 z-50 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <header 
-            className={`border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} relative overflow-hidden max-w-6xl mx-auto rounded-lg`}
+            className={`border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} relative overflow-hidden rounded-lg`}
             style={{ 
               backgroundColor: isHbcuTheme ? hbcuColors.background : '#ffffff',
               borderColor: isHbcuTheme ? hbcuColors.red : undefined,
