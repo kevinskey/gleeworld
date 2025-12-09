@@ -287,7 +287,7 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
               placeholder="What's on your mind? Share updates from your holiday spot..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[80px] resize-none border-0 bg-muted/50 focus-visible:ring-1"
+              className="min-h-[80px] resize-none border bg-background text-foreground placeholder:text-muted-foreground focus-visible:ring-1"
             />
             
             {showLocation && (
