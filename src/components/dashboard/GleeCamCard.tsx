@@ -97,9 +97,8 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-3 pb-3 pt-0">
-        {/* Horizontal scrollable categories */}
-        <div className="overflow-x-auto scrollbar-hide -mx-1">
-          <div className="flex gap-3 px-1 pb-1">
+        {/* Two-column grid categories */}
+        <div className="grid grid-cols-2 gap-3">
             {categories.map((category) => {
               const IconComponent = getIconComponent(category.icon);
               
@@ -107,13 +106,13 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
                 <div
                   key={category.id}
                   onClick={() => handleCategoryClick(category)}
-                  className="group cursor-pointer flex-shrink-0 w-28 sm:w-32"
+                  className="group cursor-pointer"
                 >
                   {/* Category Card */}
                   <div className={cn(
-                    "rounded-xl p-3 flex flex-col items-center text-center transition-all duration-300",
+                    "rounded-xl p-4 flex flex-col items-center text-center transition-all duration-300",
                     "bg-gradient-to-b from-[#1a1a1a] to-[#0d0d0d] border border-[#333] hover:border-[#444]",
-                    "shadow-lg hover:shadow-xl min-h-[100px]"
+                    "shadow-lg hover:shadow-xl min-h-[120px]"
                   )}>
                     {/* Icon Circle */}
                     <div className={cn(
@@ -136,7 +135,6 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
                 </div>
               );
             })}
-          </div>
         </div>
       </CardContent>
     </Card>
