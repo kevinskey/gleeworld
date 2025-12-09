@@ -256,38 +256,7 @@ export const GleeWorldLanding = () => {
       
       <PublicLayout>
 
-      {/* Concert Ticket Request Hero Banner - TOP OF PAGE */}
-      <section className="relative z-30 w-full">
-        <div className="w-full">
-          <div className="relative overflow-hidden">
-            {/* Background Image */}
-            <img 
-              src="https://images.unsplash.com/photo-1482517967863-00e15c9b44be?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80" 
-              alt="Christmas Concert" 
-              className="w-full h-[300px] sm:h-[400px] md:h-[500px] object-cover"
-            />
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-red-900/80 via-red-800/70 to-green-900/80" />
-            {/* Content */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 sm:px-6 md:px-8">
-              <div className="text-4xl sm:text-5xl md:text-6xl mb-4">🎄</div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-3 drop-shadow-lg">
-                Christmas Concert Ticket Request
-              </h1>
-              <p className="text-primary-foreground/90 text-base sm:text-lg md:text-xl max-w-2xl mb-6 drop-shadow">
-                Request your complimentary tickets to the Spelman College Glee Club's annual Christmas concert!
-              </p>
-              <Button 
-                size="lg" 
-                className="bg-background text-destructive hover:bg-background/90 font-bold shadow-xl text-lg px-8 py-6"
-                onClick={() => navigate('/concert-ticket-request')}
-              >
-                Request Tickets Now
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Concert Ticket Request Hero Banner - REMOVED: Concerts are over */}
 
       {/* Hero Section */}
       <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
