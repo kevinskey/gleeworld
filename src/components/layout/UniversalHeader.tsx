@@ -167,7 +167,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             
             {user && (
               <>
-                {/* Keep dashboard switcher as secondary navigation */}
+                {/* Keep dashboard switcher as secondary navigation - Admin only */}
+                {hasExecBoardPerms && (
                   <DropdownMenu>
                    <DropdownMenuTrigger asChild>
                       <Button 
@@ -264,6 +265,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     {hasExecBoardPerms && <ExecutiveBoardDropdown />}
                   </DropdownMenuContent>
                 </DropdownMenu>
+                )}
 
                 
                 {/* Glee Cam Quick Capture - Available to all authenticated users */}
