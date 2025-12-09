@@ -36,7 +36,7 @@ export const FavoritesCard = ({
         <CardTitle className="flex items-center gap-2">
           <Heart className="h-5 w-5 text-red-500 fill-current" />
           Favorites
-          <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">scroll to choose your fav!</span>
+          <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase pt-[10px] pb-[10px]">scroll to choose your fav!</span>
         </CardTitle>
         
       </CardHeader>
@@ -44,14 +44,14 @@ export const FavoritesCard = ({
         <ScrollArea className="h-44">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pr-4">
             {favorites.map(module => {
-          const IconComponent = module.icon;
-          return <div key={module.id} className="relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card text-card-foreground hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => {
-            if (module.id === 'librarian') {
-              navigate('/librarian-dashboard');
-            } else {
-              onModuleClick(module.id);
-            }
-          }}>
+            const IconComponent = module.icon;
+            return <div key={module.id} className="relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card text-card-foreground hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => {
+              if (module.id === 'librarian') {
+                navigate('/librarian-dashboard');
+              } else {
+                onModuleClick(module.id);
+              }
+            }}>
                 <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                   {IconComponent && <div className={`p-1.5 sm:p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
                       <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
@@ -62,13 +62,13 @@ export const FavoritesCard = ({
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={e => {
-              e.stopPropagation();
-              onToggleFavorite(module.id);
-            }} className="absolute top-2 right-2 p-1.5 sm:p-2 h-auto rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all" title="Remove from favorites">
+                e.stopPropagation();
+                onToggleFavorite(module.id);
+              }} className="absolute top-2 right-2 p-1.5 sm:p-2 h-auto rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all" title="Remove from favorites">
                   <Heart className="h-4 w-4 sm:h-5 sm:w-5 fill-current" />
                 </Button>
               </div>;
-         })}
+          })}
           </div>
         </ScrollArea>
       </CardContent>
