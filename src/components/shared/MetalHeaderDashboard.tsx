@@ -667,19 +667,6 @@ export const MetalHeaderDashboard = ({
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
-        {/* Glee Cam Quick Capture Button - Right side */}
-        <button 
-          onClick={() => setShowCategorySelector(true)} 
-          className="relative z-30 min-w-[40px] w-10 h-10 sm:min-w-[48px] sm:w-12 sm:h-12 rounded-full border-2 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group flex-shrink-0 mr-2"
-          style={{
-            background: 'linear-gradient(to bottom right, #3b82f6, #2563eb)',
-            borderColor: '#1d4ed8'
-          }}
-          aria-label="Glee Cam - Quick Capture"
-        >
-          <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white group-hover:scale-110 transition-transform duration-300" />
-        </button>
-
         {/* Key Ignition - Quick Actions Button - Right side */}
         <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 dark:from-amber-500 dark:via-yellow-600 dark:to-amber-700 rounded-full border-2 border-amber-600 dark:border-amber-700 shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-4 sm:mr-8" aria-label="Quick Actions">
           <Key className={`h-4 w-4 text-amber-900 dark:text-amber-100 transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
