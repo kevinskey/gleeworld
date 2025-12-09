@@ -43,21 +43,27 @@ export const useDashboardCardOrder = () => {
 
       if (data?.card_order && Array.isArray(data.card_order)) {
         // Merge any new default cards that don't exist in user's saved order
-        const savedOrder = data.card_order;
-        const missingCards = DEFAULT_CARD_ORDER.filter(card => !savedOrder.includes(card));
-        if (missingCards.length > 0) {
-          // Insert missing cards after 'favorites' or at the beginning
+        let savedOrder = [...data.card_order];
+        
+        // Ensure 'communications' exists and is before 'favorites'
+        if (!savedOrder.includes('communications')) {
           const favoritesIndex = savedOrder.indexOf('favorites');
-          const insertIndex = favoritesIndex !== -1 ? favoritesIndex + 1 : 0;
-          const updatedOrder = [
-            ...savedOrder.slice(0, insertIndex),
-            ...missingCards,
-            ...savedOrder.slice(insertIndex)
-          ];
-          setCardOrder(updatedOrder);
+          if (favoritesIndex !== -1) {
+            savedOrder.splice(favoritesIndex, 0, 'communications');
+          } else {
+            savedOrder.unshift('communications');
+          }
         } else {
-          setCardOrder(savedOrder);
+          // If communications exists but is after favorites, move it before
+          const commIndex = savedOrder.indexOf('communications');
+          const favIndex = savedOrder.indexOf('favorites');
+          if (commIndex > favIndex && favIndex !== -1) {
+            savedOrder.splice(commIndex, 1);
+            savedOrder.splice(favIndex, 0, 'communications');
+          }
         }
+        
+        setCardOrder(savedOrder);
       } else {
         setCardOrder(DEFAULT_CARD_ORDER);
       }
