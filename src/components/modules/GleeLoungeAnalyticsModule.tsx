@@ -272,6 +272,34 @@ export function GleeLoungeAnalyticsModule() {
       setIsLoading(false);
     };
     loadData();
+
+    // Set up realtime subscriptions for live updates
+    const postsChannel = supabase
+      .channel('lounge-analytics-posts')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_social_posts' }, () => {
+        fetchAnalytics();
+      })
+      .subscribe();
+
+    const commentsChannel = supabase
+      .channel('lounge-analytics-comments')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_social_comments' }, () => {
+        fetchAnalytics();
+      })
+      .subscribe();
+
+    const reactionsChannel = supabase
+      .channel('lounge-analytics-reactions')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'gw_social_reactions' }, () => {
+        fetchAnalytics();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(postsChannel);
+      supabase.removeChannel(commentsChannel);
+      supabase.removeChannel(reactionsChannel);
+    };
   }, []);
 
   const handleRefresh = async () => {
