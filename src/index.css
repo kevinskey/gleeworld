@@ -510,18 +510,13 @@
     font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
   }
   
-  /* HBCU Theme - Graduate Collegiate Font Override */
-  .hbcu-theme body,
-  .hbcu-theme,
+  /* HBCU Theme - Graduate Collegiate Font for Headings Only */
   .hbcu-theme h1,
   .hbcu-theme h2,
   .hbcu-theme h3,
   .hbcu-theme h4,
   .hbcu-theme h5,
-  .hbcu-theme h6,
-  .hbcu-theme p,
-  .hbcu-theme span,
-  .hbcu-theme div {
+  .hbcu-theme h6 {
     font-family: 'Graduate', 'Bebas Neue', sans-serif !important;
     letter-spacing: 0.02em;
   }
