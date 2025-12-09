@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Music, Image, Video, Upload, FileText, ArrowLeft, Loader2, ExternalLink, Camera, Album, Plus, X, Folder, FolderOpen, Home, ChevronRight, ChevronDown } from "lucide-react";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +54,10 @@ const MediaLibrary = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const categoryFilter = searchParams.get('category');
+  const [gleeCamCategory, setGleeCamCategory] = useState<{ id: string; name: string; slug: string } | null>(null);
+  
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeKind, setActiveKind] = useState<'all'|'image'|'audio'|'video'|'pdf'|'documents'|'other'>('all');
@@ -67,36 +71,117 @@ const MediaLibrary = () => {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set([''])); // Root expanded by default
   const [navigationPath, setNavigationPath] = useState<string[]>(['']); // Breadcrumb path
 
+  // Fetch Glee Cam category info if filtering by category
+  useEffect(() => {
+    if (categoryFilter) {
+      const fetchCategory = async () => {
+        const { data } = await supabase
+          .from('glee_cam_categories')
+          .select('id, name, slug')
+          .eq('slug', categoryFilter)
+          .single();
+        setGleeCamCategory(data);
+      };
+      fetchCategory();
+    } else {
+      setGleeCamCategory(null);
+    }
+  }, [categoryFilter]);
+
   const fetchItems = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('gw_media_library')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(200);
-      const mapped = (data || []).map((r: any) => ({
-        id: r.id,
-        file_url: r.file_url ?? null,
-        title: r.title ?? null,
-        original_filename: r.title ?? null,
-        mime_type: r.file_type ?? null, // This is actually the MIME type from the database
-        file_type: r.file_type ?? null,
-        category: r.category ?? null,
-        created_at: r.created_at ?? null,
-        file_path: r.file_path ?? null,
-        folder_path: r.file_path ? r.file_path.includes('/') ? r.file_path.split('/').slice(1, -1).join('/') : '' : '',
-      }));
+      let allItems: any[] = [];
+      
+      // If filtering by Glee Cam category, search both tables
+      if (categoryFilter) {
+        // First, search gw_media_library by category slug or glee_cam_category_id
+        let mediaLibraryQuery = supabase
+          .from('gw_media_library')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(200);
+        
+        if (gleeCamCategory?.id) {
+          mediaLibraryQuery = mediaLibraryQuery.eq('glee_cam_category_id', gleeCamCategory.id);
+        } else {
+          mediaLibraryQuery = mediaLibraryQuery.eq('category', categoryFilter);
+        }
+        
+        const { data: mediaLibraryData } = await mediaLibraryQuery;
+        
+        // Also search quick_capture_media by category
+        const { data: quickCaptureData } = await supabase
+          .from('quick_capture_media')
+          .select('*')
+          .eq('category', categoryFilter)
+          .order('created_at', { ascending: false })
+          .limit(200);
+        
+        // Combine results
+        allItems = [
+          ...(mediaLibraryData || []).map((r: any) => ({
+            id: r.id,
+            file_url: r.file_url ?? null,
+            title: r.title ?? null,
+            original_filename: r.title ?? null,
+            mime_type: r.file_type ?? null,
+            file_type: r.file_type ?? null,
+            category: r.category ?? null,
+            created_at: r.created_at ?? null,
+            file_path: r.file_path ?? null,
+            folder_path: r.file_path ? r.file_path.includes('/') ? r.file_path.split('/').slice(1, -1).join('/') : '' : '',
+            source: 'media_library',
+          })),
+          ...(quickCaptureData || []).map((r: any) => ({
+            id: r.id,
+            file_url: r.file_url ?? r.thumbnail_url ?? null,
+            title: r.title ?? r.description ?? 'Quick Capture',
+            original_filename: r.title ?? null,
+            mime_type: r.file_type ?? null,
+            file_type: r.file_type ?? null,
+            category: r.category ?? null,
+            created_at: r.created_at ?? null,
+            file_path: null,
+            folder_path: '',
+            source: 'quick_capture',
+            thumbnail_url: r.thumbnail_url,
+          })),
+        ];
+        
+        // Sort by created_at
+        allItems.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      } else {
+        // No category filter - just load from gw_media_library
+        const { data } = await supabase
+          .from('gw_media_library')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(200);
+        
+        allItems = (data || []).map((r: any) => ({
+          id: r.id,
+          file_url: r.file_url ?? null,
+          title: r.title ?? null,
+          original_filename: r.title ?? null,
+          mime_type: r.file_type ?? null,
+          file_type: r.file_type ?? null,
+          category: r.category ?? null,
+          created_at: r.created_at ?? null,
+          file_path: r.file_path ?? null,
+          folder_path: r.file_path ? r.file_path.includes('/') ? r.file_path.split('/').slice(1, -1).join('/') : '' : '',
+        }));
+      }
       
       // Build folder structure
       const folders: Record<string, MediaItem[]> = {};
-      mapped.forEach(item => {
+      allItems.forEach(item => {
         const folderPath = item.folder_path || '';
         if (!folders[folderPath]) folders[folderPath] = [];
         folders[folderPath].push(item);
       });
       setFolderStructure(folders);
-      setItems(mapped);
+      setItems(allItems);
     } catch (e) {
       console.error('Failed to load media:', e);
     } finally {
@@ -106,7 +191,8 @@ const MediaLibrary = () => {
 
   useEffect(() => {
     fetchItems();
-  }, []);
+  }, [categoryFilter, gleeCamCategory]);
+
 
   const currentFolderItems = currentFolder 
     ? folderStructure[currentFolder] || []
@@ -426,14 +512,18 @@ const MediaLibrary = () => {
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
-                  Media Library
+                  {gleeCamCategory ? gleeCamCategory.name : 'Media Library'}
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">Manage images, audio, videos, and documents with advanced parallel uploading</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {gleeCamCategory 
+                    ? `Viewing ${items.length} items in ${gleeCamCategory.name}` 
+                    : 'Manage images, audio, videos, and documents with advanced parallel uploading'}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => navigate('/admin')} className="hover:bg-secondary/80">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back to Admin
+              <Button variant="outline" onClick={() => categoryFilter ? navigate('/dashboard') : navigate('/admin')} className="hover:bg-secondary/80">
+                <ArrowLeft className="mr-2 h-4 w-4" /> {categoryFilter ? 'Back to Dashboard' : 'Back to Admin'}
               </Button>
               <Button onClick={() => setShowBulkUpload(true)} className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md">
                 <Album className="h-4 w-4" />
