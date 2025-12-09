@@ -33,6 +33,7 @@ import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, Ch
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
 import { TreeLightingSurvey } from "@/components/surveys/TreeLightingSurvey";
+import { GleeLoungeStrip } from "@/components/glee-lounge/GleeLoungeStrip";
 
 // Sortable Dashboard Card Component
 interface SortableDashboardCardProps {
@@ -627,6 +628,8 @@ export const MetalHeaderDashboard = ({
         <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
       </div>
 
+      {/* Glee Lounge Strip - Social Hub Access */}
+      <GleeLoungeStrip />
 
       {/* YouTube Videos Section - Two Column Layout */}
       <DashboardYouTubeSection />

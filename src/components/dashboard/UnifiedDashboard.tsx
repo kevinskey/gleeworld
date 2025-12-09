@@ -18,7 +18,6 @@ import { DashboardNavigation } from './DashboardNavigation';
 import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
 import { ConcertTicketBanner } from '@/components/shared/ConcertTicketBanner';
 import { PollReminderPopup } from '@/components/polls/PollReminderPopup';
-import { GleeLoungeStrip } from '@/components/glee-lounge/GleeLoungeStrip';
 import { supabase } from '@/integrations/supabase/client';
 // Lazy load heavy components to improve initial load time
 const CommunityHubModule = lazy(() => import('./modules/CommunityHubModule').then(m => ({
@@ -303,11 +302,6 @@ export const UnifiedDashboard = () => {
           is_exec_board: profile.is_exec_board || false,
           created_at: new Date().toISOString()
         }} onToggleMessages={() => setShowMessages(prev => !prev)} className="mx-0 px-0" />
-        </div>
-        
-        {/* Glee Lounge Strip - Social Hub Access */}
-        <div className="max-w-7xl mx-auto">
-          <GleeLoungeStrip />
         </div>
         
         {/* Messages Panel Overlay */}
