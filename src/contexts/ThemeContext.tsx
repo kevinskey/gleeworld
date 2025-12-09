@@ -131,16 +131,30 @@ function applyThemeToDocument(themeName: ThemeName, isDarkMode: boolean) {
   const root = document.documentElement;
 
   // Some themes are always dark mode
-  const alwaysDarkThemes = ['music', 'hbcu'];
+  const alwaysDarkThemes = ['music', 'hbcu', 'glee-world'];
+  // Some themes are always light mode (bright themes)
+  const alwaysLightThemes = ['spelman-blue'];
+  
   const forceDark = alwaysDarkThemes.includes(themeName);
+  const forceLight = alwaysLightThemes.includes(themeName);
 
   // Apply dark/light mode class
-  if (isDarkMode || forceDark) {
+  if (forceLight) {
+    root.classList.remove('dark');
+    root.classList.add('light');
+  } else if (isDarkMode || forceDark) {
     root.classList.add('dark');
     root.classList.remove('light');
   } else {
     root.classList.remove('dark');
     root.classList.add('light');
+  }
+  
+  // Apply Spelman Blue theme class for special styling
+  if (themeName === 'spelman-blue') {
+    root.classList.add('spelman-blue-theme');
+  } else {
+    root.classList.remove('spelman-blue-theme');
   }
 
   // Apply color variables
