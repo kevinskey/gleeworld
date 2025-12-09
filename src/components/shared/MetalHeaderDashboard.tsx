@@ -607,8 +607,8 @@ export const MetalHeaderDashboard = ({
   }
   // All users get the full metal header dashboard experience
   return <div className="space-y-4 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-      {/* Dashboard Header - Simple Clean Style */}
-      
+      {/* Glee Lounge Strip - Social Hub Access - TOP OF DASHBOARD */}
+      <GleeLoungeStrip />
 
       {/* Floating Quick Actions Button - Bottom Right */}
       <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} aria-label="Quick Actions" className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary hover:bg-primary/90 rounded-full border-2 border-primary-foreground/20 shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center justify-center group">
@@ -617,9 +617,6 @@ export const MetalHeaderDashboard = ({
 
       {/* Quick Actions Panel */}
       <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
-
-      {/* Glee Lounge Strip - Social Hub Access */}
-      <GleeLoungeStrip />
 
       {/* YouTube Videos Section - Two Column Layout */}
       <DashboardYouTubeSection />
