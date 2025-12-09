@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
-import { MessageSquare, Megaphone, ClipboardList, ChevronRight, X, Radio, Sofa } from "lucide-react";
+import { MessageSquare, Megaphone, ClipboardList, ChevronRight, X, Radio } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MessagingInterface } from "@/components/messaging/MessagingInterface";
 import { useNavigate } from "react-router-dom";
@@ -38,14 +38,6 @@ const COMMUNICATION_MODULES: CommunicationModule[] = [{
   iconBg: 'bg-amber-900/50',
   iconColor: 'text-amber-400',
   route: '/announcements'
-}, {
-  id: 'glee-lounge',
-  title: 'Glee Lounge',
-  description: 'Social feed & online members',
-  icon: Sofa,
-  iconBg: 'bg-emerald-900/50',
-  iconColor: 'text-emerald-400',
-  route: '/glee-lounge'
 }, {
   id: 'member-exit-interview',
   title: 'Exit Interview',
