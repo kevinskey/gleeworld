@@ -502,315 +502,298 @@ const MediaLibrary = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <header className="sticky top-0 z-30 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b shadow-sm">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-4">
-              <div className="inline-flex items-center justify-center p-3 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full border border-primary/20">
-                <Camera className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/50 flex flex-col">
+      {/* Fixed Mobile Header */}
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b shadow-sm flex-shrink-0">
+        <div className="px-3 sm:px-6 py-3 sm:py-4">
+          {/* Mobile Header - Compact */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => categoryFilter ? navigate('/dashboard') : navigate('/admin')} 
+                className="flex-shrink-0 h-9 w-9"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold truncate text-foreground">
                   {gleeCamCategory ? gleeCamCategory.name : 'Media Library'}
                 </h1>
-                <p className="text-sm text-muted-foreground mt-1">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate hidden sm:block">
                   {gleeCamCategory 
-                    ? `Viewing ${items.length} items in ${gleeCamCategory.name}` 
-                    : 'Manage images, audio, videos, and documents with advanced parallel uploading'}
+                    ? `${items.length} items` 
+                    : 'Manage media files'}
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={() => categoryFilter ? navigate('/dashboard') : navigate('/admin')} className="hover:bg-secondary/80">
-                <ArrowLeft className="mr-2 h-4 w-4" /> {categoryFilter ? 'Back to Dashboard' : 'Back to Admin'}
-              </Button>
-              <Button onClick={() => setShowBulkUpload(true)} className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-md">
+            
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-2">
+              <Button onClick={() => setShowBulkUpload(true)} size="sm" className="gap-2">
                 <Album className="h-4 w-4" />
                 Bulk Upload
               </Button>
-              <input ref={fileInputRef} type="file" className="hidden" onChange={handleSingleUpload} multiple />
-              <input 
-                ref={folderInputRef} 
-                type="file" 
-                className="hidden" 
-                {...({ webkitdirectory: '' } as any)}
-                onChange={handleFolderUpload} 
-                multiple 
-              />
-              <Button onClick={() => folderInputRef.current?.click()} disabled={uploading} variant="outline" className="hover:bg-secondary/80">
-                <Folder className="mr-2 h-4 w-4" />
-                Upload Folder
+              <Button onClick={() => folderInputRef.current?.click()} disabled={uploading} variant="outline" size="sm">
+                <Folder className="h-4 w-4" />
               </Button>
-              <Button onClick={onUploadClick} disabled={uploading} variant="outline" className="hover:bg-secondary/80">
-                {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                {uploading ? 'Uploading...' : 'Quick Upload'}
+              <Button onClick={onUploadClick} disabled={uploading} variant="outline" size="sm">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              </Button>
+            </div>
+            
+            {/* Mobile Upload Button */}
+            <Button 
+              onClick={onUploadClick} 
+              disabled={uploading} 
+              size="icon"
+              className="md:hidden flex-shrink-0 h-9 w-9"
+            >
+              {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
+            </Button>
+          </div>
+          
+          {/* Mobile item count */}
+          <p className="text-xs text-muted-foreground mt-1 sm:hidden">
+            {items.length} items
+          </p>
+        </div>
+        
+        {/* Hidden file inputs */}
+        <input ref={fileInputRef} type="file" className="hidden" onChange={handleSingleUpload} multiple />
+        <input 
+          ref={folderInputRef} 
+          type="file" 
+          className="hidden" 
+          {...({ webkitdirectory: '' } as any)}
+          onChange={handleFolderUpload} 
+          multiple 
+        />
+      </header>
+
+      {/* Main Content - Scrollable */}
+      <main className="flex-1 overflow-hidden flex flex-col">
+        {/* Filter Tabs - Fixed below header on mobile */}
+        <div className="flex-shrink-0 px-3 sm:px-6 py-2 sm:py-4 bg-background/80 backdrop-blur-sm border-b border-border/30">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-center sm:justify-between">
+            <div className="overflow-x-auto scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
+              <Tabs value={activeKind} onValueChange={(v) => setActiveKind(v as any)}>
+                <TabsList className="bg-muted/60 h-8 sm:h-9 w-max">
+                  <TabsTrigger value="all" className="text-xs sm:text-sm px-2 sm:px-3 h-6 sm:h-7">All</TabsTrigger>
+                  <TabsTrigger value="image" className="text-xs sm:text-sm px-2 sm:px-3 h-6 sm:h-7">Images</TabsTrigger>
+                  <TabsTrigger value="audio" className="text-xs sm:text-sm px-2 sm:px-3 h-6 sm:h-7">Audio</TabsTrigger>
+                  <TabsTrigger value="video" className="text-xs sm:text-sm px-2 sm:px-3 h-6 sm:h-7">Video</TabsTrigger>
+                  <TabsTrigger value="pdf" className="text-xs sm:text-sm px-2 sm:px-3 h-6 sm:h-7">PDF</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+            <Input 
+              placeholder="Search..." 
+              value={query} 
+              onChange={(e) => setQuery(e.target.value)} 
+              className="h-8 sm:h-9 text-sm sm:max-w-xs bg-background/80" 
+            />
+          </div>
+        </div>
+
+        {/* Content Grid - Scrollable */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-3 sm:px-6 py-3 sm:py-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 text-primary mx-auto mb-2 animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading media...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Mobile: Grid of media items */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
+                {filtered.map((m) => {
+                  const kind = MIME_TO_KIND(m.mime_type, m.file_type);
+                  const active = m.id === selectedId;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setSelectedId(m.id)}
+                      className={`relative aspect-square rounded-lg overflow-hidden bg-muted/30 border transition-all active:scale-95
+                        ${active 
+                          ? 'ring-2 ring-primary border-primary shadow-lg' 
+                          : 'border-border/30 hover:border-primary/50'
+                        }`}
+                    >
+                      {/* Thumbnail */}
+                      {kind === 'image' && m.file_url ? (
+                        <img 
+                          src={m.file_url} 
+                          alt={m.title || 'media'} 
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : kind === 'video' && m.file_url ? (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                          <Video className="h-8 w-8 text-primary" />
+                        </div>
+                      ) : kind === 'audio' ? (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-secondary/20 to-secondary/5">
+                          <Music className="h-8 w-8 text-secondary" />
+                        </div>
+                      ) : kind === 'pdf' ? (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-destructive/20 to-destructive/5">
+                          <FileText className="h-8 w-8 text-destructive" />
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      
+                      {/* Title overlay */}
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-1.5 sm:p-2">
+                        <p className="text-[10px] sm:text-xs text-white truncate font-medium">
+                          {m.title || m.original_filename || 'Untitled'}
+                        </p>
+                      </div>
+                      
+                      {/* Type badge */}
+                      <div className="absolute top-1 right-1">
+                        <Badge variant="secondary" className="text-[8px] sm:text-[10px] px-1 py-0 h-4 bg-background/80">
+                          {(kind || 'file').toUpperCase()}
+                        </Badge>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {filtered.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <Folder className="h-12 w-12 text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground">No media found</p>
+                  <p className="text-sm text-muted-foreground/70">Try adjusting your filters</p>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </main>
+
+      {/* Media Preview Dialog - Mobile Optimized */}
+      <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedId(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-hidden p-0">
+          <DialogHeader className="p-3 sm:p-4 border-b flex-shrink-0">
+            <DialogTitle className="text-sm sm:text-base truncate pr-8">
+              {selectedItem?.title || selectedItem?.original_filename || 'Media Preview'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto overscroll-contain p-3 sm:p-4">
+            {selectedItem && (() => {
+              const kind = MIME_TO_KIND(selectedItem.mime_type, selectedItem.file_type);
+              const isPdf = (selectedItem.mime_type || '').toLowerCase().includes('pdf');
+              return (
+                <div className="space-y-4">
+                  <div className="w-full">
+                    {kind === 'image' && selectedItem.file_url ? (
+                      <img 
+                        src={selectedItem.file_url} 
+                        alt={selectedItem.title || 'media'} 
+                        className="w-full max-h-[60vh] object-contain rounded-lg" 
+                      />
+                    ) : kind === 'audio' && selectedItem.file_url ? (
+                      <div className="space-y-4">
+                        <div className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg text-center">
+                          <Music className="h-12 w-12 text-primary mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">Audio file</p>
+                        </div>
+                        <audio controls className="w-full">
+                          <source src={selectedItem.file_url} />
+                        </audio>
+                      </div>
+                    ) : kind === 'video' && selectedItem.file_url ? (
+                      <video controls className="w-full max-h-[60vh] rounded-lg">
+                        <source src={selectedItem.file_url} />
+                      </video>
+                    ) : (kind === 'pdf' || isPdf) && selectedItem.file_url ? (
+                      <div className="text-center p-6 bg-muted/20 rounded-lg space-y-4">
+                        <FileText className="h-12 w-12 text-destructive mx-auto" />
+                        <p className="text-muted-foreground">PDF Document</p>
+                        <Button variant="outline" asChild>
+                          <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                            <ExternalLink className="h-4 w-4" />
+                            Open PDF
+                          </a>
+                        </Button>
+                      </div>
+                    ) : selectedItem.file_url ? (
+                      <div className="text-center p-6 bg-muted/20 rounded-lg space-y-4">
+                        <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
+                        <p className="text-muted-foreground">Preview not available</p>
+                        <Button variant="outline" asChild>
+                          <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                            <ExternalLink className="h-4 w-4" />
+                            Open File
+                          </a>
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 bg-muted/20 rounded-lg">
+                        <p className="text-muted-foreground">No file available</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* File actions */}
+                  {selectedItem.file_url && (
+                    <div className="flex gap-2 pt-2 border-t">
+                      <Button variant="outline" asChild className="flex-1">
+                        <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="gap-2">
+                          <ExternalLink className="h-4 w-4" />
+                          Open
+                        </a>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Upload Dialog */}
+      <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[80vh] overflow-hidden p-0">
+          <DialogHeader className="p-4 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <Album className="h-5 w-5" />
+              Bulk Upload
+            </DialogTitle>
+          </DialogHeader>
+          <div className="p-4 space-y-4">
+            <div 
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-lg p-6 sm:p-8 text-center transition-all cursor-pointer
+                ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
+              `}
+            >
+              <input {...getInputProps()} />
+              <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-sm sm:text-base font-medium mb-1">
+                {isDragActive ? 'Drop files here' : 'Drag & drop files'}
+              </p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                or tap to browse
+              </p>
+            </div>
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setShowBulkUpload(false)}>
+                Close
               </Button>
             </div>
           </div>
-        </header>
-
-        <main className="pt-8 space-y-8">
-          {/* Enhanced Drag & Drop Zone */}
-          <Card 
-            {...getRootProps()}
-            className={`group transition-all duration-300 cursor-pointer backdrop-blur-md border-2 border-dashed
-              ${isDragActive 
-                ? 'border-primary bg-primary/10 shadow-xl shadow-primary/20 scale-105' 
-                : 'border-border/50 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 bg-gradient-to-br from-card/90 to-card/50'
-              }
-              ${uploading ? 'pointer-events-none opacity-50' : ''}
-            `}
-          >
-            <input {...getInputProps()} />
-            <CardContent className="p-8 text-center space-y-6">
-              <div className="inline-flex items-center justify-center p-6 bg-gradient-to-br from-secondary/20 to-secondary/10 rounded-full border border-secondary/20 group-hover:border-secondary/40 transition-all">
-                {uploading ? (
-                  <Loader2 className="h-12 w-12 text-secondary animate-spin" />
-                ) : isDragActive ? (
-                  <Upload className="h-12 w-12 text-primary animate-pulse" />
-                ) : (
-                  <Upload className="h-12 w-12 text-secondary" />
-                )}
-              </div>
-              <div>
-                {uploading ? (
-                  <>
-                    <h3 className="text-2xl font-semibold text-foreground mb-2">Processing Upload...</h3>
-                    <p className="text-muted-foreground">Please wait while we upload your files in parallel</p>
-                  </>
-                ) : isDragActive ? (
-                  <>
-                    <h3 className="text-2xl font-semibold text-primary mb-2">Drop Files Here</h3>
-                    <p className="text-muted-foreground">Release to start parallel uploading</p>
-                  </>
-                ) : (
-                  <>
-                    <h3 className="text-2xl font-semibold text-foreground group-hover:text-secondary transition-colors mb-2">
-                      Drag & Drop Media Files
-                    </h3>
-                    <p className="text-muted-foreground mb-4">Upload multiple files simultaneously with our parallel processing system</p>
-                    <div className="text-sm text-muted-foreground space-y-1">
-                      <p>Supports: Images, Audio, Video, PDFs, Documents</p>
-                      <p>• Multiple files uploaded in parallel for maximum speed</p>
-                      <p>• Drag entire folders to preserve structure</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-card/90 to-card/50 backdrop-blur-md border-border/30 shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg">
-                  <FileText className="h-5 w-5 text-primary" />
-                </div>
-                Browse Media Collection
-              </CardTitle>
-              <CardDescription>Filter by type or search by filename/category</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between mb-6">
-              <Tabs value={activeKind} onValueChange={(v) => setActiveKind(v as any)}>
-                <TabsList className="bg-gradient-to-r from-muted/80 to-muted/60 backdrop-blur-md border border-border/30">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="image">Images</TabsTrigger>
-                  <TabsTrigger value="audio">Audio</TabsTrigger>
-                  <TabsTrigger value="video">Video</TabsTrigger>
-                  <TabsTrigger value="pdf">PDF</TabsTrigger>
-                  <TabsTrigger value="documents">Documents</TabsTrigger>
-                  <TabsTrigger value="other">Other</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <Input 
-                placeholder="Search media files..." 
-                value={query} 
-                onChange={(e) => setQuery(e.target.value)} 
-                className="md:max-w-sm bg-background/80 border-border/50" 
-              />
-            </div>
-
-            {loading ? (
-              <div className="flex items-center justify-center py-12 space-y-4">
-                <div className="text-center">
-                  <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
-                  <p className="text-muted-foreground">Loading media collection...</p>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-1 border border-border/30 rounded-lg bg-gradient-to-br from-background/90 to-background/50 backdrop-blur-md max-h-[70vh] overflow-y-auto">
-                  {/* Breadcrumb Navigation */}
-                  {navigationPath.length > 1 && (
-                    <div className="sticky top-0 bg-background/95 backdrop-blur-sm border-b border-border/30 p-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const newPath = navigationPath.slice(0, -1);
-                            setNavigationPath(newPath);
-                            setCurrentFolder(newPath[newPath.length - 1]);
-                          }}
-                          className="p-1 h-6 w-6"
-                        >
-                          <ArrowLeft className="h-3 w-3" />
-                        </Button>
-                        <span className="truncate">
-                          {navigationPath.slice(1).join(' / ') || 'Root'}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Vertical Folder Tree */}
-                  {renderFolderTree()}
-                </div>
-                <div className="lg:col-span-2 border border-border/30 rounded-lg bg-gradient-to-br from-background/90 to-background/50 backdrop-blur-md min-h-[50vh] p-6">
-                  {!selectedItem ? (
-                    <div className="flex items-center justify-center h-full">
-                      <div className="text-center space-y-4">
-                        <div className="p-4 bg-muted/20 rounded-full inline-flex">
-                          <FileText className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <p className="text-muted-foreground">Select an item from the list to preview</p>
-                      </div>
-                    </div>
-                  ) : (
-                    (() => {
-                      const kind = MIME_TO_KIND(selectedItem.mime_type, selectedItem.file_type);
-                      const isPdf = (selectedItem.mime_type || '').toLowerCase().includes('pdf');
-                      return (
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between gap-4 pb-4 border-b border-border/20">
-                            <div className="font-semibold text-lg truncate" title={selectedItem.original_filename || selectedItem.title || ''}>
-                              {selectedItem.original_filename || selectedItem.title}
-                            </div>
-                            {selectedItem.file_url && (
-                              <Button variant="outline" asChild className="gap-2">
-                                <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer">
-                                  <ExternalLink className="h-4 w-4" />
-                                  Open
-                                </a>
-                              </Button>
-                            )}
-                          </div>
-                          <div className="w-full">
-                            {kind === 'image' && selectedItem.file_url ? (
-                              <img src={selectedItem.file_url} alt={selectedItem.title || 'media'} className="w-full max-h-[70vh] object-contain rounded-lg shadow-lg" />
-                            ) : kind === 'audio' && selectedItem.file_url ? (
-                              <div className="space-y-4">
-                                <div className="p-4 bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg">
-                                  <Music className="h-8 w-8 text-primary mb-2" />
-                                  <p className="text-sm text-muted-foreground">Audio file ready to play</p>
-                                </div>
-                                <audio controls className="w-full">
-                                  <source src={selectedItem.file_url} />
-                                  Your browser does not support the audio element.
-                                </audio>
-                              </div>
-                            ) : kind === 'video' && selectedItem.file_url ? (
-                              <video controls className="w-full max-h-[70vh] rounded-lg shadow-lg">
-                                <source src={selectedItem.file_url} />
-                                Your browser does not support the video tag.
-                              </video>
-                            ) : (kind === 'pdf' || isPdf) && selectedItem.file_url ? (
-                              <div className="w-full">
-                                <PdfDocument 
-                                  file={selectedItem.file_url} 
-                                  loading={<div className="text-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" /><p className="text-muted-foreground">Loading PDF...</p></div>}
-                                  error={
-                                    <div className="text-center p-8 space-y-4 bg-muted/20 rounded-lg">
-                                      <div className="text-destructive">Failed to load PDF preview</div>
-                                      <Button variant="outline" asChild>
-                                        <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="gap-2">
-                                          <ExternalLink className="h-4 w-4" />
-                                          Open PDF in new tab
-                                        </a>
-                                      </Button>
-                                    </div>
-                                  }
-                                  onLoadError={(error) => {
-                                    console.error('PDF load error:', error);
-                                  }}
-                                >
-                                  <PdfPage 
-                                    pageNumber={1} 
-                                    width={Math.min(800, window.innerWidth - 100)}
-                                    renderTextLayer={false}
-                                    renderAnnotationLayer={false}
-                                  />
-                                </PdfDocument>
-                              </div>
-                            ) : selectedItem.file_url ? (
-                              <div className="text-center py-8 space-y-4 bg-muted/20 rounded-lg">
-                                <FileText className="h-12 w-12 text-muted-foreground mx-auto" />
-                                <p className="text-muted-foreground">Preview not available for this file type</p>
-                                <Button variant="outline" asChild>
-                                  <a href={selectedItem.file_url} target="_blank" rel="noopener noreferrer" className="gap-2">
-                                    <ExternalLink className="h-4 w-4" />
-                                    Open or Download
-                                  </a>
-                                </Button>
-                              </div>
-                            ) : (
-                              <div className="text-center py-8 bg-muted/20 rounded-lg">
-                                <p className="text-muted-foreground">No file URL available</p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })()
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        </main>
-
-        {/* Bulk Upload Dialog */}
-        <Dialog open={showBulkUpload} onOpenChange={setShowBulkUpload}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Album className="h-5 w-5" />
-                Bulk Media Upload
-              </DialogTitle>
-            </DialogHeader>
-            <div className="overflow-y-auto">
-              <div className="space-y-6 p-4">
-                <div 
-                  {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer
-                    ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}
-                  `}
-                >
-                  <input {...getInputProps()} />
-                  <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-lg font-medium mb-2">
-                      {isDragActive ? 'Drop files here' : 'Drag & drop files for bulk upload'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      or click to browse • Multiple files supported • Parallel processing
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button variant="outline" onClick={() => setShowBulkUpload(false)}>
-                    Close
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
