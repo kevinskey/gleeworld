@@ -47,12 +47,22 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
   
-  // HBCU Theme - Unified color palette
+  // Theme-specific styling
   const isHbcuTheme = themeName === 'hbcu';
+  const isSpelmanBlue = themeName === 'spelman-blue';
+  
   const hbcuColors = {
     gold: '#FFDF00',        // Primary gold - all text and icons
     red: '#8B0000',         // Dark red accent - borders
     background: '#000000',  // Pure black background
+  };
+  
+  // Spelman Blue portal-style colors
+  const spelmanBlueColors = {
+    primary: '#0056a6',      // Official Spelman Blue
+    accent: '#55BBEE',       // Bright sky blue  
+    text: '#ffffff',         // White text
+    background: 'linear-gradient(180deg, #0056a6 0%, #003d75 100%)',
   };
   
   // Check if user has PR access (PR coordinator or admin)
@@ -87,15 +97,15 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
     <>
         <div className="sticky top-0 z-50 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
           <header 
-            className={`border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} relative overflow-hidden rounded-lg`}
+            className={`border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden rounded-lg`}
             style={{ 
-              backgroundColor: isHbcuTheme ? hbcuColors.background : '#ffffff',
-              borderColor: isHbcuTheme ? hbcuColors.red : undefined,
-              background: isHbcuTheme ? hbcuColors.background : 'linear-gradient(90deg, rgba(220,38,38,0.05) 0%, #ffffff 20%, #ffffff 80%, rgba(22,163,74,0.05) 100%)'
+              backgroundColor: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.primary : '#ffffff',
+              borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined,
+              background: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.background : 'linear-gradient(90deg, rgba(220,38,38,0.05) 0%, #ffffff 20%, #ffffff 80%, rgba(22,163,74,0.05) 100%)'
             }}
           >
-            {/* Holiday sparkle accents */}
-            {!isHbcuTheme && (
+            {/* Holiday sparkle accents - hide for HBCU and Spelman Blue themes */}
+            {!isHbcuTheme && !isSpelmanBlue && (
               <div className="absolute inset-0 pointer-events-none">
                 <Sparkles className="absolute top-1.5 left-[8%] w-3 h-3 text-amber-400/50 animate-pulse" />
                 <Sparkles className="absolute top-2 left-[25%] w-2 h-2 text-red-500/30 animate-pulse" style={{ animationDelay: '0.3s' }} />
@@ -128,18 +138,20 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                   <span 
                     className="font-bold text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap relative" 
                     style={{ 
-                      color: isHbcuTheme ? hbcuColors.gold : '#0f172a',
-                      fontFamily: "'Cinzel', serif",
-                      letterSpacing: '0.02em'
+                      color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#0f172a',
+                      fontFamily: isSpelmanBlue ? "'Inter', system-ui, sans-serif" : "'Cinzel', serif",
+                      letterSpacing: isSpelmanBlue ? '-0.01em' : '0.02em'
                     }}
                   >
-                    GleeWorld
-                    <span className="text-amber-500 ml-1 text-xs sm:text-sm">✨</span>
+                    {isSpelmanBlue ? 'Portal' : 'GleeWorld'}
+                    {!isSpelmanBlue && <span className="text-amber-500 ml-1 text-xs sm:text-sm">✨</span>}
                   </span>
                 </Link>
-                <div className="flex items-center">
-                  <HeaderClock className="text-xs sm:text-sm ml-0.5 sm:ml-2 md:ml-3 lg:ml-4" />
-                </div>
+                {!isSpelmanBlue && (
+                  <div className="flex items-center">
+                    <HeaderClock className="text-xs sm:text-sm ml-0.5 sm:ml-2 md:ml-3 lg:ml-4" />
+                  </div>
+                )}
               </div>
             </EnhancedTooltip>
             
@@ -164,7 +176,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         variant="ghost" 
                         size="sm" 
                         className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-md hover:bg-white/10"
-                        style={{ color: isHbcuTheme ? hbcuColors.gold : '#1e293b' }}
+                        style={{ color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b' }}
                         type="button"
                       >
                         <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
@@ -281,8 +293,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                  <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-full p-0 hover:bg-white/10" style={{ color: isHbcuTheme ? hbcuColors.gold : '#1e293b' }} type="button">
-                           <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 border-2" style={{ borderColor: isHbcuTheme ? hbcuColors.red : undefined }}>
+                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-full p-0 hover:bg-white/10" style={{ color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b' }} type="button">
+                           <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 border-2" style={{ borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined }}>
                              <AvatarImage
                                src={userProfile?.avatar_url || undefined} 
                                alt={userProfile?.full_name || user?.email || "Your Profile"}
