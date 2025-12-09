@@ -3,8 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, Play, Image as ImageIcon } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ArrowLeft, Play, Image as ImageIcon, Trash2, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface MediaItem {
   id: string;
@@ -35,77 +36,155 @@ const SLUG_TO_QUICK_CAPTURE_CATEGORY: Record<string, string> = {
 export default function GleeCamGallery() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [category, setCategory] = useState<Category | null>(null);
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+  const [deleteItem, setDeleteItem] = useState<MediaItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!categorySlug) return;
+  const fetchData = async () => {
+    if (!categorySlug) return;
 
-      // Fetch category info
-      const { data: catData } = await supabase
-        .from('glee_cam_categories')
-        .select('*')
-        .eq('slug', categorySlug)
-        .single();
+    // Fetch category info
+    const { data: catData } = await supabase
+      .from('glee_cam_categories')
+      .select('*')
+      .eq('slug', categorySlug)
+      .single();
 
-      if (catData) {
-        setCategory(catData);
+    if (catData) {
+      setCategory(catData);
 
-        const allItems: MediaItem[] = [];
+      const allItems: MediaItem[] = [];
 
-        // 1. Fetch from quick_capture_media using mapped category
-        const quickCaptureCategory = SLUG_TO_QUICK_CAPTURE_CATEGORY[categorySlug];
-        if (quickCaptureCategory) {
-          const { data: quickCaptureData } = await supabase
-            .from('quick_capture_media')
-            .select('*')
-            .eq('category', quickCaptureCategory)
-            .order('created_at', { ascending: false });
-
-          if (quickCaptureData) {
-            allItems.push(...quickCaptureData.map(item => ({
-              id: item.id,
-              file_url: item.file_url,
-              file_type: item.file_type || 'image/jpeg',
-              thumbnail_url: item.thumbnail_url,
-              created_at: item.created_at,
-              title: item.title,
-              source: 'quick_capture' as const,
-            })));
-          }
-        }
-
-        // 2. Also fetch from gw_media_library with glee_cam_category_id
-        const { data: mediaLibraryData } = await supabase
-          .from('gw_media_library')
+      // 1. Fetch from quick_capture_media using mapped category
+      const quickCaptureCategory = SLUG_TO_QUICK_CAPTURE_CATEGORY[categorySlug];
+      if (quickCaptureCategory) {
+        const { data: quickCaptureData } = await supabase
+          .from('quick_capture_media')
           .select('*')
-          .eq('glee_cam_category_id', catData.id)
+          .eq('category', quickCaptureCategory)
           .order('created_at', { ascending: false });
 
-        if (mediaLibraryData) {
-          allItems.push(...mediaLibraryData.map(item => ({
+        if (quickCaptureData) {
+          allItems.push(...quickCaptureData.map(item => ({
             id: item.id,
             file_url: item.file_url,
             file_type: item.file_type || 'image/jpeg',
-            thumbnail_url: null, // gw_media_library doesn't have thumbnail_url
+            thumbnail_url: item.thumbnail_url,
             created_at: item.created_at,
             title: item.title,
-            source: 'media_library' as const,
+            source: 'quick_capture' as const,
           })));
         }
-
-        // Sort by created_at descending
-        allItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        setItems(allItems);
       }
-      setLoading(false);
-    };
 
+      // 2. Also fetch from gw_media_library with glee_cam_category_id
+      const { data: mediaLibraryData } = await supabase
+        .from('gw_media_library')
+        .select('*')
+        .eq('glee_cam_category_id', catData.id)
+        .order('created_at', { ascending: false });
+
+      if (mediaLibraryData) {
+        allItems.push(...mediaLibraryData.map(item => ({
+          id: item.id,
+          file_url: item.file_url,
+          file_type: item.file_type || 'image/jpeg',
+          thumbnail_url: null,
+          created_at: item.created_at,
+          title: item.title,
+          source: 'media_library' as const,
+        })));
+      }
+
+      // Sort by created_at descending and dedupe by file_url
+      const uniqueItems = allItems.reduce((acc, item) => {
+        if (!acc.find(i => i.file_url === item.file_url)) {
+          acc.push(item);
+        }
+        return acc;
+      }, [] as MediaItem[]);
+      
+      uniqueItems.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setItems(uniqueItems);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchData();
   }, [categorySlug]);
+
+  const handleDelete = async () => {
+    if (!deleteItem) return;
+    
+    setIsDeleting(true);
+    try {
+      // Delete from appropriate table based on source
+      if (deleteItem.source === 'quick_capture') {
+        const { error } = await supabase
+          .from('quick_capture_media')
+          .delete()
+          .eq('id', deleteItem.id);
+        
+        if (error) throw error;
+
+        // Also try to delete from media library if synced there
+        await supabase
+          .from('gw_media_library')
+          .delete()
+          .eq('file_url', deleteItem.file_url);
+      } else {
+        const { error } = await supabase
+          .from('gw_media_library')
+          .delete()
+          .eq('id', deleteItem.id);
+        
+        if (error) throw error;
+      }
+
+      // Try to delete from storage
+      try {
+        const url = new URL(deleteItem.file_url);
+        const pathParts = url.pathname.split('/quick-capture-media/');
+        if (pathParts[1]) {
+          await supabase.storage.from('quick-capture-media').remove([pathParts[1]]);
+        }
+        // Delete thumbnail if exists
+        if (deleteItem.thumbnail_url) {
+          const thumbUrl = new URL(deleteItem.thumbnail_url);
+          const thumbParts = thumbUrl.pathname.split('/quick-capture-media/');
+          if (thumbParts[1]) {
+            await supabase.storage.from('quick-capture-media').remove([thumbParts[1]]);
+          }
+        }
+      } catch (storageError) {
+        console.warn('Storage cleanup warning:', storageError);
+      }
+
+      // Update UI
+      setItems(prev => prev.filter(item => item.id !== deleteItem.id));
+      setDeleteItem(null);
+      setSelectedItem(null);
+      
+      toast({
+        title: "Deleted",
+        description: "Media has been removed",
+      });
+    } catch (error: any) {
+      console.error('Delete error:', error);
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete media",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -153,7 +232,7 @@ export default function GleeCamGallery() {
               return (
                 <Card
                   key={item.id}
-                  className="aspect-square overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+                  className="aspect-square overflow-hidden cursor-pointer hover:ring-2 hover:ring-primary transition-all relative group"
                   onClick={() => setSelectedItem(item)}
                 >
                   {isVideo ? (
@@ -180,6 +259,18 @@ export default function GleeCamGallery() {
                       className="w-full h-full object-cover"
                     />
                   )}
+                  {/* Delete button on hover */}
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteItem(item);
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </Card>
               );
             })}
@@ -187,24 +278,64 @@ export default function GleeCamGallery() {
         )}
       </div>
 
+      {/* View Media Dialog */}
       <Dialog open={!!selectedItem} onOpenChange={() => setSelectedItem(null)}>
         <DialogContent className="max-w-4xl p-0 overflow-hidden">
           {selectedItem && (
-            selectedItem.file_type?.startsWith('video') ? (
-              <video
-                src={selectedItem.file_url}
-                controls
-                autoPlay
-                className="w-full max-h-[80vh]"
-              />
-            ) : (
-              <img
-                src={selectedItem.file_url}
-                alt={selectedItem.title || 'Image'}
-                className="w-full max-h-[80vh] object-contain"
-              />
-            )
+            <div className="relative">
+              {selectedItem.file_type?.startsWith('video') ? (
+                <video
+                  src={selectedItem.file_url}
+                  controls
+                  autoPlay
+                  className="w-full max-h-[80vh]"
+                />
+              ) : (
+                <img
+                  src={selectedItem.file_url}
+                  alt={selectedItem.title || 'Image'}
+                  className="w-full max-h-[80vh] object-contain"
+                />
+              )}
+              <div className="absolute top-2 right-2 flex gap-2">
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => {
+                    setDeleteItem(selectedItem);
+                  }}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+              {selectedItem.title && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white p-3">
+                  <p className="font-medium">{selectedItem.title}</p>
+                </div>
+              )}
+            </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Media</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this {deleteItem?.file_type?.startsWith('video') ? 'video' : 'image'}? 
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteItem(null)} disabled={isDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
