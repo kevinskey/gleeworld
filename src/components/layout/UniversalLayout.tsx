@@ -36,7 +36,7 @@ export const UniversalLayout = ({
           {shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />}
         </>}
       <main className={`flex-1 w-full overflow-x-hidden ${className}`}>
-        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="px-0">
+        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-[5px]">
             {children}
           </ResponsiveContainer> : children}
       </main>

@@ -292,7 +292,7 @@ export const UnifiedDashboard = () => {
   if (viewMode === 'default') {
     return <div className="min-h-screen">
         <ConcertTicketBanner />
-        <div className="sm:py-4 sm:px-4 md:py-6 lg:py-4 max-w-7xl mx-auto px-0 py-px md:px-0 lg:px-0">
+        <div className="md:py-6 lg:py-4 max-w-7xl mx-auto px-0 py-px md:px-0 lg:px-0 sm:py-0 sm:px-0">
           <MetalHeaderDashboard user={{
           id: profile.user_id,
           email: profile.email || '',
@@ -301,7 +301,7 @@ export const UnifiedDashboard = () => {
           exec_board_role: profile.exec_board_role,
           is_exec_board: profile.is_exec_board || false,
           created_at: new Date().toISOString()
-        }} onToggleMessages={() => setShowMessages(prev => !prev)} className="mx-0 px-0" />
+        }} onToggleMessages={() => setShowMessages(prev => !prev)} className="mx-0 px-0 py-0" />
         </div>
         
         {/* Messages Panel Overlay */}
