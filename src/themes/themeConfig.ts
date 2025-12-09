@@ -259,8 +259,8 @@ const hbcuTheme: ThemeConfig = {
   },
   
   typography: {
-    fontFamily: "'Bebas Neue', 'Oswald', sans-serif",
-    headingFamily: "'Oswald', 'Impact', sans-serif",
+    fontFamily: "'Graduate', 'Bebas Neue', sans-serif",
+    headingFamily: "'Graduate', 'Oswald', sans-serif",
     headingShadow: '2px 2px 0px hsl(0 0% 0%), 3px 3px 0px hsl(0 72% 42%)',
     style: 'collegiate',
   },
