@@ -24,6 +24,7 @@ import Mus210 from "./pages/Mus210";
 import Mus210Page from "./pages/Mus210Page";
 import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
+import GleeCamGallery from "./pages/GleeCamGallery";
 import InstructorAdmin from "./pages/InstructorAdmin";
 
 import Index from "./pages/Index";
@@ -408,6 +409,11 @@ const App = () => {
                     <GleeAcademy />
                   </PublicRoute>
                 } 
+              />
+              {/* Glee Cam Gallery */}
+              <Route 
+                path="/glee-cam/:categorySlug" 
+                element={<GleeCamGallery />} 
               />
               {/* MUS 100 - Music Theory Fundamentals */}
               <Route 
