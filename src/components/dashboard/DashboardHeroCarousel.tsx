@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -154,8 +155,17 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
       display_order: 3
     }];
     const visibleFallback = fallbackSlides.slice(0, slidesToShow);
-    return <div className="mb-4 rounded-xl border-2 border-slate-400/50 dark:border-slate-500 bg-gradient-to-b from-slate-200 via-slate-100 to-slate-300 dark:from-slate-700 dark:via-slate-600 dark:to-slate-800 shadow-lg p-3">
-          <h4 className="text-xs sm:text-sm font-semibold tracking-wide uppercase text-foreground mb-2">Glee Cam</h4>
+    return <Card className="bg-background/95 backdrop-blur-sm">
+          <CardHeader className="pt-4 pb-3">
+            <CardTitle className="flex items-center gap-2">
+              <Camera className="h-5 w-5 text-primary" />
+              Glee Cam
+              <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
+                member moments
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
           <div className="relative w-full rounded-lg overflow-hidden group">
             <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
               {visibleFallback.map((slide, idx) => <div 
@@ -180,7 +190,8 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
                 </div>)}
             </div>
           </div>
-        </div>;
+          </CardContent>
+        </Card>;
   }
 
   // Get visible slides for the carousel
@@ -192,17 +203,17 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
     return visible;
   };
   const visibleSlides = getVisibleSlides();
-  return <div 
-    className={`mb-4 rounded-xl border-2 shadow-lg p-3 ${className || ''}`}
-    style={{
-      borderColor: isHbcuTheme ? hbcuRed : undefined,
-      background: isHbcuTheme ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' : undefined
-    }}
-  >
-    <h4 
-      className="text-xs sm:text-sm font-semibold tracking-wide uppercase mb-2"
-      style={{ color: isHbcuTheme ? hbcuGold : undefined }}
-    >Glee Cam</h4>
+  return <Card className={`bg-background/95 backdrop-blur-sm ${className || ''}`}>
+    <CardHeader className="pt-4 pb-3">
+      <CardTitle className="flex items-center gap-2">
+        <Camera className="h-5 w-5 text-primary" />
+        Glee Cam
+        <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
+          member moments
+        </span>
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="pt-0">
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
@@ -275,5 +286,6 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
           </div>
         </DialogContent>
       </Dialog>
-    </div>;
+    </CardContent>
+  </Card>;
 };
