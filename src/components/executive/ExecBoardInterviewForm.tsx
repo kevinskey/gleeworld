@@ -158,14 +158,21 @@ export const ExecBoardInterviewForm = () => {
     return (
       <Card className="border-2 border-amber-500/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ClipboardList className="h-5 w-5 text-amber-600" />
-            End of Semester Interview
-          </CardTitle>
-          <CardDescription>Loading your interview data...</CardDescription>
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 bg-amber-200 dark:bg-amber-800 rounded animate-pulse" />
+            <div className="h-6 w-48 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="h-4 w-64 bg-muted animate-pulse rounded mt-2" />
         </CardHeader>
-        <CardContent className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-amber-600" />
+        <CardContent className="space-y-6">
+          {/* Form field skeletons */}
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="space-y-2">
+              <div className="h-4 w-32 bg-muted animate-pulse rounded" />
+              <div className="h-24 w-full bg-muted animate-pulse rounded" />
+            </div>
+          ))}
+          <div className="h-12 w-full bg-amber-200/50 dark:bg-amber-800/30 animate-pulse rounded" />
         </CardContent>
       </Card>
     );

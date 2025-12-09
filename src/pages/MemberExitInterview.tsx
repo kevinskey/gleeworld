@@ -339,28 +339,63 @@ const MemberExitInterview = () => {
 
   if (!session) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <p className="text-center text-muted-foreground">
-              Please sign in to complete your exit interview.
-            </p>
-            <Button 
-              className="w-full mt-4" 
-              onClick={() => navigate('/auth?redirect=/member-exit-interview')}
-            >
-              Sign In
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-md mx-auto">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center mb-4">
+                <Music className="h-12 w-12 text-primary mx-auto mb-4" />
+                <h2 className="text-xl font-semibold mb-2">Sign In Required</h2>
+              </div>
+              <p className="text-center text-muted-foreground mb-4">
+                Please sign in to complete your exit interview.
+              </p>
+              <Button 
+                className="w-full" 
+                onClick={() => navigate('/auth?redirect=/member-exit-interview')}
+              >
+                Sign In
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background py-8 px-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Back button skeleton */}
+          <div className="h-10 w-40 mb-4 bg-muted animate-pulse rounded" />
+          
+          <Card>
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+              </div>
+              <div className="h-8 w-64 mx-auto mb-2 bg-muted animate-pulse rounded" />
+              <div className="h-4 w-48 mx-auto bg-muted animate-pulse rounded" />
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Form sections skeleton */}
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="space-y-4">
+                  <div className="h-6 w-48 bg-muted animate-pulse rounded" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-full bg-muted animate-pulse rounded" />
+                    <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+                  </div>
+                  <div className="h-24 w-full bg-muted animate-pulse rounded" />
+                </div>
+              ))}
+              
+              {/* Submit button skeleton */}
+              <div className="h-12 w-full bg-muted animate-pulse rounded" />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
