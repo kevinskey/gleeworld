@@ -615,14 +615,6 @@ export function CreatePostCard({
                           </div>
                         )}
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start"
-                        onClick={handleGiveFeedback}
-                      >
-                        <Flag className="h-4 w-4 mr-3" />
-                        Give feedback
-                      </Button>
                     </div>
                   </div>
 
