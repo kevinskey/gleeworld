@@ -582,7 +582,7 @@ export const MetalHeaderDashboard = ({
                 {IconComponent && <IconComponent className="h-5 w-5 shrink-0" style={{
                 color: isHbcuTheme ? hbcuGold : '#dc2626'
               }} />}
-                <h1 className="text-base sm:text-xl lg:text-2xl font-bold tracking-wide font-mono uppercase" style={{
+                <h1 className="text-base sm:text-xl lg:text-2xl font-bold tracking-wide uppercase" style={{
                 color: isHbcuTheme ? hbcuGold : '#1e293b'
               }}>
                   {moduleConfig.title}
