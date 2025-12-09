@@ -6,30 +6,28 @@ interface SplashWrapperProps {
 }
 
 export const SplashWrapper = ({ children }: SplashWrapperProps) => {
-  const [showSplash, setShowSplash] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    // Check if we should show splash (only once per session)
-    const hasSeenSplash = sessionStorage.getItem("gleeworld-splash-seen");
-    
-    if (!hasSeenSplash) {
-      setShowSplash(true);
-    } else {
-      setIsReady(true);
+  const [showSplash, setShowSplash] = useState(() => {
+    // Check on initial render if we should show splash
+    if (typeof window !== 'undefined') {
+      return !sessionStorage.getItem("gleeworld-splash-seen");
     }
-  }, []);
+    return false;
+  });
 
   const handleSplashComplete = () => {
     sessionStorage.setItem("gleeworld-splash-seen", "true");
     setShowSplash(false);
-    setIsReady(true);
   };
+
+  // If not showing splash, render children immediately
+  if (!showSplash) {
+    return <>{children}</>;
+  }
 
   return (
     <>
-      {showSplash && <SplashScreen onComplete={handleSplashComplete} duration={4000} />}
-      <div className={`transition-opacity duration-500 ${isReady ? "opacity-100" : "opacity-0"}`}>
+      <SplashScreen onComplete={handleSplashComplete} duration={4000} />
+      <div className="opacity-0 pointer-events-none absolute">
         {children}
       </div>
     </>
