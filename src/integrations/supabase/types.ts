@@ -4420,6 +4420,51 @@ export type Database = {
         }
         Relationships: []
       }
+      glee_cam_categories: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          icon: string | null
+          icon_bg: string | null
+          icon_color: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          icon_bg?: string | null
+          icon_color?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          icon?: string | null
+          icon_bg?: string | null
+          icon_color?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       glee_club_contacts: {
         Row: {
           address: string | null
@@ -8725,6 +8770,7 @@ export type Database = {
           file_size: number
           file_type: string
           file_url: string
+          glee_cam_category_id: string | null
           id: string
           is_featured: boolean
           is_public: boolean
@@ -8745,6 +8791,7 @@ export type Database = {
           file_size: number
           file_type: string
           file_url: string
+          glee_cam_category_id?: string | null
           id?: string
           is_featured?: boolean
           is_public?: boolean
@@ -8765,6 +8812,7 @@ export type Database = {
           file_size?: number
           file_type?: string
           file_url?: string
+          glee_cam_category_id?: string | null
           id?: string
           is_featured?: boolean
           is_public?: boolean
@@ -8774,7 +8822,15 @@ export type Database = {
           uploaded_by?: string | null
           view_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "gw_media_library_glee_cam_category_id_fkey"
+            columns: ["glee_cam_category_id"]
+            isOneToOne: false
+            referencedRelation: "glee_cam_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_meeting_minutes: {
         Row: {

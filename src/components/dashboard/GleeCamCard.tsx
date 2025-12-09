@@ -1,65 +1,31 @@
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Camera, Mic, Video, Users, Sparkles } from "lucide-react";
+import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GleeCamCategory {
   id: string;
-  title: string;
-  description: string;
-  icon: React.ElementType;
-  iconBg: string;
-  iconColor: string;
-  route: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  icon: string;
+  icon_bg: string;
+  icon_color: string;
+  display_order: number;
+  is_active: boolean;
 }
 
-const GLEE_CAM_CATEGORIES: GleeCamCategory[] = [
-  {
-    id: 'christmas-selfies',
-    title: 'Christmas Selfies',
-    description: 'Holiday spirit moments',
-    icon: Sparkles,
-    iconBg: 'bg-rose-900/50',
-    iconColor: 'text-rose-400',
-    route: '/media-library?category=christmas-carol-selfies',
-  },
-  {
-    id: 'glee-cam-pics',
-    title: 'Glee Cam Pics',
-    description: 'Candid member photos',
-    icon: Camera,
-    iconBg: 'bg-blue-900/50',
-    iconColor: 'text-blue-400',
-    route: '/media-library?category=glee-cam-pics',
-  },
-  {
-    id: 'glee-cam-videos',
-    title: 'Glee Cam Videos',
-    description: 'Member video moments',
-    icon: Video,
-    iconBg: 'bg-purple-900/50',
-    iconColor: 'text-purple-400',
-    route: '/media-library?category=glee-cam-videos',
-  },
-  {
-    id: 'voice-recordings',
-    title: 'Voice Parts',
-    description: 'Voice part recordings',
-    icon: Mic,
-    iconBg: 'bg-emerald-900/50',
-    iconColor: 'text-emerald-400',
-    route: '/media-library?category=voice-part-recording',
-  },
-  {
-    id: 'exec-videos',
-    title: 'ExecBoard Videos',
-    description: 'Executive board content',
-    icon: Users,
-    iconBg: 'bg-amber-900/50',
-    iconColor: 'text-amber-400',
-    route: '/media-library?category=execboard-video',
-  },
-];
+const ICON_MAP: Record<string, React.ElementType> = {
+  Camera,
+  Video,
+  Mic,
+  Users,
+  Sparkles,
+  Image,
+  FileAudio,
+};
 
 interface GleeCamCardProps {
   className?: string;
@@ -67,10 +33,57 @@ interface GleeCamCardProps {
 
 export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
+  const [categories, setCategories] = useState<GleeCamCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('glee_cam_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      
+      if (error) throw error;
+      setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching glee cam categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCategoryClick = (category: GleeCamCategory) => {
-    navigate(category.route);
+    navigate(`/media-library?category=${category.slug}`);
   };
+
+  const getIconComponent = (iconName: string) => {
+    return ICON_MAP[iconName] || Camera;
+  };
+
+  if (loading) {
+    return (
+      <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="flex items-center gap-2">
+            <Camera className="h-5 w-5 text-primary" />
+            Glee Cam
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3 pt-0">
+          <div className="h-24 animate-pulse bg-muted rounded-lg" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (categories.length === 0) {
+    return null;
+  }
 
   return (
     <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
@@ -87,8 +100,8 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         {/* Horizontal scrollable categories */}
         <div className="overflow-x-auto scrollbar-hide -mx-1">
           <div className="flex gap-3 px-1 pb-1">
-            {GLEE_CAM_CATEGORIES.map((category) => {
-              const IconComponent = category.icon;
+            {categories.map((category) => {
+              const IconComponent = getIconComponent(category.icon);
               
               return (
                 <div
@@ -105,14 +118,14 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
                     {/* Icon Circle */}
                     <div className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-110",
-                      category.iconBg
+                      category.icon_bg
                     )}>
-                      <IconComponent className={cn("h-5 w-5", category.iconColor)} />
+                      <IconComponent className={cn("h-5 w-5", category.icon_color)} />
                     </div>
 
                     {/* Title */}
                     <h4 className="font-semibold text-[10px] sm:text-xs text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
-                      {category.title}
+                      {category.name}
                     </h4>
 
                     {/* Description */}

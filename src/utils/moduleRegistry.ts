@@ -212,3 +212,18 @@ ModuleRegistry.registerModule({
   component: TestBuilder,
   requiredPermissions: ['admin', 'super-admin']
 });
+
+// Register Glee Cam Manager
+import { GleeCamManagerModule } from '@/components/dashboard/modules/GleeCamManagerModule';
+import { Camera } from 'lucide-react';
+
+ModuleRegistry.registerModule({
+  id: 'glee-cam-manager',
+  title: 'Glee Cam Manager',
+  description: 'Manage Glee Cam categories and media content',
+  icon: Camera,
+  iconColor: 'blue',
+  category: 'media',
+  component: GleeCamManagerModule,
+  requiredPermissions: ['admin', 'super-admin']
+});
