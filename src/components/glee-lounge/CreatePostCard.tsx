@@ -91,8 +91,8 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
         const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
         
         const { data, error } = await supabase.storage
-          .from('gw-media')
-          .upload(`social-posts/${fileName}`, file, {
+          .from('social-posts')
+          .upload(`${fileName}`, file, {
             cacheControl: '3600',
             upsert: false,
           });
@@ -100,8 +100,8 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
         if (error) throw error;
         
         const { data: urlData } = supabase.storage
-          .from('gw-media')
-          .getPublicUrl(`social-posts/${fileName}`);
+          .from('social-posts')
+          .getPublicUrl(`${fileName}`);
         
         uploadedUrls.push(urlData.publicUrl);
       }
