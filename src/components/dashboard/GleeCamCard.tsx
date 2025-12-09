@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio, ChevronLeft, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +36,8 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<GleeCamCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 2;
 
   useEffect(() => {
     fetchCategories();
@@ -97,9 +100,35 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent className="px-3 pb-3 pt-0">
-        {/* Two-column grid categories */}
-        <div className="grid grid-cols-2 gap-3">
-            {categories.map((category) => {
+        {/* Paginated categories - show 2 at a time */}
+        <div className="relative">
+          {/* Navigation arrows */}
+          {categories.length > itemsPerPage && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute -left-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm shadow-md hover:bg-background"
+                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute -right-1 top-1/2 -translate-y-1/2 z-10 h-8 w-8 bg-background/80 backdrop-blur-sm shadow-md hover:bg-background"
+                onClick={() => setCurrentPage(p => Math.min(Math.ceil(categories.length / itemsPerPage) - 1, p + 1))}
+                disabled={currentPage >= Math.ceil(categories.length / itemsPerPage) - 1}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </>
+          )}
+          
+          {/* Cards grid */}
+          <div className="grid grid-cols-2 gap-3 px-2">
+            {categories.slice(currentPage * itemsPerPage, (currentPage + 1) * itemsPerPage).map((category) => {
               const IconComponent = getIconComponent(category.icon);
               
               return (
@@ -135,6 +164,23 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
                 </div>
               );
             })}
+          </div>
+          
+          {/* Page dots */}
+          {categories.length > itemsPerPage && (
+            <div className="flex justify-center gap-1.5 mt-3">
+              {Array.from({ length: Math.ceil(categories.length / itemsPerPage) }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i)}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all",
+                    currentPage === i ? "bg-primary w-4" : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  )}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
