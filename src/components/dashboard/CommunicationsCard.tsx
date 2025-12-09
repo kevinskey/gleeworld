@@ -97,17 +97,17 @@ export const CommunicationsCard = ({
                     </div>
 
                     {/* Title */}
-                    <h4 className="font-semibold text-xs sm:text-sm text-foreground mb-1 tracking-wide uppercase leading-tight">
+                    <h4 className="font-semibold text-xs sm:text-sm text-primary-foreground mb-1 tracking-wide uppercase leading-tight">
                       {module.title}
                     </h4>
 
                     {/* Description */}
-                    <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight mb-2 line-clamp-2">
+                    <p className="text-[10px] sm:text-xs text-primary-foreground/80 leading-tight mb-2 line-clamp-2">
                       {module.description}
                     </p>
 
                     {/* Action Link */}
-                    <span className="text-[10px] sm:text-xs text-primary flex items-center gap-1 group-hover:gap-2 transition-all mt-auto">
+                    <span className="text-[10px] sm:text-xs text-primary-foreground flex items-center gap-1 group-hover:gap-2 transition-all mt-auto">
                       {module.isEmbedded ? isExpanded ? 'Close' : 'Open' : 'Learn More'}
                       <ChevronRight className="h-3 w-3" />
                     </span>
