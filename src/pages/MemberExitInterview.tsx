@@ -93,7 +93,9 @@ const MemberExitInterview = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [isDraft, setIsDraft] = useState(true);
   const [existingInterview, setExistingInterview] = useState<any>(null);
   const [performanceEvents, setPerformanceEvents] = useState<PerformanceEvent[]>([]);
 
@@ -174,6 +176,7 @@ const MemberExitInterview = () => {
 
       if (data) {
         setExistingInterview(data);
+        setIsDraft(data.is_draft !== false); // Default to draft if not explicitly false
         // Populate form with existing data
         setPerformancesParticipated(data.performances_participated || []);
         setPerformancesOther(data.performances_other || '');
@@ -225,6 +228,81 @@ const MemberExitInterview = () => {
     );
   };
 
+  const getInterviewData = (isDraftSave: boolean) => ({
+    user_id: user!.id,
+    semester: 'Fall 2025',
+    performances_participated: performancesParticipated,
+    performances_other: performancesOther || null,
+    exec_board_work_done: execBoardWorkDone || null,
+    intent_to_continue: intentToContinue,
+    intent_to_continue_notes: intentToContinueNotes || null,
+    interested_in_fall_tour: interestedInFallTour,
+    interested_in_advanced_ensemble: interestedInAdvancedEnsemble,
+    advanced_ensemble_notes: advancedEnsembleNotes || null,
+    in_other_campus_show: inOtherCampusShow,
+    other_campus_show_details: otherCampusShowDetails || null,
+    interested_in_private_lessons: interestedInPrivateLessons,
+    private_lessons_instrument: privateLessonsInstrument || null,
+    additional_comments: additionalComments || null,
+    // Satisfaction fields
+    satisfaction_overall: satisfactionOverall,
+    satisfaction_rehearsals: satisfactionRehearsals,
+    satisfaction_performances: satisfactionPerformances,
+    satisfaction_leadership: satisfactionLeadership,
+    satisfaction_communication: satisfactionCommunication,
+    satisfaction_community: satisfactionCommunity,
+    what_worked_well: whatWorkedWell || null,
+    what_could_improve: whatCouldImprove || null,
+    suggestions_for_next_semester: suggestionsForNextSemester || null,
+    // Exec board candidacy fields
+    interested_in_exec_board: interestedInExecBoard,
+    exec_board_position_interest: execBoardPositionInterest || null,
+    understands_leadership_program: understandsLeadershipProgram,
+    current_gpa: currentGpa ? parseFloat(currentGpa) : null,
+    willing_to_submit_purpose_statement: willingToSubmitPurposeStatement,
+    can_attend_all_sessions: canAttendAllSessions,
+    willing_to_give_election_speech: willingToGiveElectionSpeech,
+    leadership_program_notes: leadershipProgramNotes || null,
+    updated_at: new Date().toISOString(),
+    is_draft: isDraftSave,
+  });
+
+  const handleSaveDraft = async () => {
+    if (!user) return;
+
+    setSavingDraft(true);
+
+    try {
+      const interviewData = getInterviewData(true);
+
+      if (existingInterview) {
+        const { error } = await supabase
+          .from('member_exit_interviews')
+          .update(interviewData)
+          .eq('id', existingInterview.id);
+
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('member_exit_interviews')
+          .insert(interviewData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        setExistingInterview(data);
+      }
+
+      setIsDraft(true);
+      toast.success('Draft saved! You can continue later.');
+    } catch (error: any) {
+      console.error('Error saving draft:', error);
+      toast.error('Failed to save draft. Please try again.');
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -232,43 +310,7 @@ const MemberExitInterview = () => {
     setSubmitting(true);
 
     try {
-      const interviewData = {
-        user_id: user.id,
-        semester: 'Fall 2025',
-        performances_participated: performancesParticipated,
-        performances_other: performancesOther || null,
-        exec_board_work_done: execBoardWorkDone || null,
-        intent_to_continue: intentToContinue,
-        intent_to_continue_notes: intentToContinueNotes || null,
-        interested_in_fall_tour: interestedInFallTour,
-        interested_in_advanced_ensemble: interestedInAdvancedEnsemble,
-        advanced_ensemble_notes: advancedEnsembleNotes || null,
-        in_other_campus_show: inOtherCampusShow,
-        other_campus_show_details: otherCampusShowDetails || null,
-        interested_in_private_lessons: interestedInPrivateLessons,
-        private_lessons_instrument: privateLessonsInstrument || null,
-        additional_comments: additionalComments || null,
-        // Satisfaction fields
-        satisfaction_overall: satisfactionOverall,
-        satisfaction_rehearsals: satisfactionRehearsals,
-        satisfaction_performances: satisfactionPerformances,
-        satisfaction_leadership: satisfactionLeadership,
-        satisfaction_communication: satisfactionCommunication,
-        satisfaction_community: satisfactionCommunity,
-        what_worked_well: whatWorkedWell || null,
-        what_could_improve: whatCouldImprove || null,
-        suggestions_for_next_semester: suggestionsForNextSemester || null,
-        // Exec board candidacy fields
-        interested_in_exec_board: interestedInExecBoard,
-        exec_board_position_interest: execBoardPositionInterest || null,
-        understands_leadership_program: understandsLeadershipProgram,
-        current_gpa: currentGpa ? parseFloat(currentGpa) : null,
-        willing_to_submit_purpose_statement: willingToSubmitPurposeStatement,
-        can_attend_all_sessions: canAttendAllSessions,
-        willing_to_give_election_speech: willingToGiveElectionSpeech,
-        leadership_program_notes: leadershipProgramNotes || null,
-        updated_at: new Date().toISOString(),
-      };
+      const interviewData = getInterviewData(false);
 
       if (existingInterview) {
         const { error } = await supabase
@@ -853,27 +895,48 @@ const MemberExitInterview = () => {
                 />
               </div>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={submitting}
-              >
-                {submitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Submitting...
-                  </>
-                ) : existingInterview ? (
-                  'Update Interview'
-                ) : (
-                  'Submit Interview'
-                )}
-              </Button>
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleSaveDraft}
+                  disabled={savingDraft || submitting}
+                >
+                  {savingDraft ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Draft'
+                  )}
+                </Button>
+                <Button
+                  type="submit"
+                  className="flex-1"
+                  disabled={submitting || savingDraft}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : existingInterview && !isDraft ? (
+                    'Update Interview'
+                  ) : (
+                    'Submit Interview'
+                  )}
+                </Button>
+              </div>
 
               {existingInterview && (
                 <p className="text-sm text-center text-muted-foreground">
-                  You previously submitted this interview. Your changes will update your existing response.
+                  {isDraft 
+                    ? 'You have a saved draft. Complete and submit when ready.'
+                    : 'You previously submitted this interview. Your changes will update your existing response.'
+                  }
                 </p>
               )}
             </form>
