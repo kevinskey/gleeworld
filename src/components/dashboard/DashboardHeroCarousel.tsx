@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/contexts/ThemeContext";
-
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 interface HeroSlide {
   id: string;
   title?: string;
@@ -27,6 +27,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [scrollSpeed, setScrollSpeed] = useState(5000);
+  const [expandedSlide, setExpandedSlide] = useState<HeroSlide | null>(null);
   const isMobile = useIsMobile();
   const { themeName } = useTheme();
   
@@ -114,12 +115,17 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
     if (width >= 768 && width < 1024) return 3;
     return 4;
   };
-  const handleSlideClick = (slide: HeroSlide) => {
-    if (!slide.link_url) return;
-    if (slide.link_target === 'external') {
-      window.open(slide.link_url, '_blank', 'noopener,noreferrer');
+  const handleSlideClick = (slide: HeroSlide, e: React.MouseEvent) => {
+    // If it's a link, navigate; otherwise expand the image
+    if (slide.link_url) {
+      if (slide.link_target === 'external') {
+        window.open(slide.link_url, '_blank', 'noopener,noreferrer');
+      } else {
+        navigate(slide.link_url);
+      }
     } else {
-      navigate(slide.link_url);
+      // Expand the image
+      setExpandedSlide(slide);
     }
   };
   const slidesToShow = getSlidesToShow();
@@ -196,8 +202,8 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
               key={`${slide.id}-${idx}`} 
-              className={`relative w-full h-40 rounded-lg overflow-hidden hero-carousel-bg ${slide.link_url ? 'cursor-pointer group' : ''}`}
-              onClick={() => handleSlideClick(slide)}
+              className={`relative w-full h-40 rounded-lg overflow-hidden hero-carousel-bg cursor-pointer ${slide.link_url ? 'group' : ''}`}
+              onClick={(e) => handleSlideClick(slide, e)}
               style={{
                 backgroundImage: `url(${getImageUrl(slide)})`
               }}
@@ -233,5 +239,36 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
               </div>
             </>}
         </div>
+
+      {/* Expanded Image Modal */}
+      <Dialog open={!!expandedSlide} onOpenChange={(open) => !open && setExpandedSlide(null)}>
+        <DialogContent className="p-0 border-0 bg-transparent shadow-none w-full max-w-[100vw] md:max-w-[85vw] lg:max-w-[70vw]">
+          <div className="relative w-full">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full"
+              onClick={() => setExpandedSlide(null)}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+            {expandedSlide && (
+              <img
+                src={getImageUrl(expandedSlide)}
+                alt={expandedSlide.title || 'Hero image'}
+                className="w-full h-auto rounded-lg object-contain max-h-[90vh]"
+              />
+            )}
+            {expandedSlide?.title && (
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent rounded-b-lg">
+                <h3 className="text-white text-lg md:text-xl font-bold">{expandedSlide.title}</h3>
+                {expandedSlide.description && (
+                  <p className="text-white/90 text-sm md:text-base mt-1">{expandedSlide.description}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>;
 };
