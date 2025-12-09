@@ -69,6 +69,7 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
   const [capturedMedia, setCapturedMedia] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [photoCount, setPhotoCount] = useState(0);
+  const [selectedFacingMode, setSelectedFacingMode] = useState<'user' | 'environment' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -98,7 +99,8 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
         variant: "destructive",
       });
     },
-    mode: config.mode
+    mode: config.mode,
+    initialFacingMode: selectedFacingMode || 'environment'
   });
 
   // Reset to camera mode for taking another photo
@@ -378,21 +380,72 @@ export const CategorizedQuickCapture = ({ category, onClose, onBack }: Categoriz
                 </div>
               )}
               
-              <div className="flex gap-3 justify-center">
-                <Button onClick={startCamera} disabled={isCameraReady || isCapturing} className="gap-2">
-                  {config.mode === 'photo' ? <Camera className="h-4 w-4" /> : <Video className="h-4 w-4" />}
-                  {isCapturing ? 'Starting...' : isCameraReady ? 'Camera Active' : `Start ${config.mode === 'photo' ? 'Camera' : 'Recording'}`}
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  onClick={() => fileInputRef.current?.click()}
-                  className="gap-2"
-                >
-                  <Upload className="h-4 w-4" />
-                  Upload File
-                </Button>
-              </div>
+              {/* Camera Direction Selection - show before camera starts */}
+              {!selectedFacingMode && !isCameraReady && !isCapturing && (
+                <div className="space-y-4">
+                  <p className="text-center text-muted-foreground text-sm">Select camera direction</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      variant="outline"
+                      className="h-24 flex flex-col gap-2 hover:border-primary"
+                      onClick={() => {
+                        setSelectedFacingMode('environment');
+                      }}
+                    >
+                      <Camera className="h-8 w-8" />
+                      <span>Back Camera</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-24 flex flex-col gap-2 hover:border-primary"
+                      onClick={() => {
+                        setSelectedFacingMode('user');
+                      }}
+                    >
+                      <SwitchCamera className="h-8 w-8" />
+                      <span>Front Camera</span>
+                    </Button>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Upload File Instead
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Start Camera Button - show after direction selected */}
+              {selectedFacingMode && !isCameraReady && !isCapturing && (
+                <div className="flex gap-3 justify-center">
+                  <Button onClick={startCamera} className="gap-2">
+                    {config.mode === 'photo' ? <Camera className="h-4 w-4" /> : <Video className="h-4 w-4" />}
+                    Start {selectedFacingMode === 'user' ? 'Front' : 'Back'} Camera
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setSelectedFacingMode(null)}
+                  >
+                    Change Direction
+                  </Button>
+                </div>
+              )}
+
+              {/* Starting Camera Indicator */}
+              {isCapturing && !isCameraReady && (
+                <div className="flex justify-center py-8">
+                  <div className="text-center space-y-2">
+                    <div className="animate-pulse">
+                      <Camera className="h-12 w-12 mx-auto text-muted-foreground" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">Starting camera...</p>
+                  </div>
+                </div>
+              )}
 
               <input
                 ref={fileInputRef}

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -7,13 +7,22 @@ interface CameraImportOptions {
   onError?: (error: string) => void;
   acceptedTypes?: string[];
   mode?: 'photo' | 'video';
+  initialFacingMode?: 'user' | 'environment';
 }
 
 export const useCameraImport = (options: CameraImportOptions = {}) => {
+  const { 
+    onSuccess, 
+    onError, 
+    acceptedTypes = ['image/*', 'application/pdf'],
+    mode = 'photo',
+    initialFacingMode = 'environment'
+  } = options;
+
   const [isCapturing, setIsCapturing] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>(initialFacingMode);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -24,12 +33,10 @@ export const useCameraImport = (options: CameraImportOptions = {}) => {
   const recordingTimerRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
-  const { 
-    onSuccess, 
-    onError, 
-    acceptedTypes = ['image/*', 'application/pdf'],
-    mode = 'photo'
-  } = options;
+  // Update facing mode when initialFacingMode changes
+  useEffect(() => {
+    setFacingMode(initialFacingMode);
+  }, [initialFacingMode]);
 
   const startCamera = useCallback(async () => {
     try {
