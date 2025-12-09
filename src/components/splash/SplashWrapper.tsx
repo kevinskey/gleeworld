@@ -1,4 +1,4 @@
-import { useState, useEffect, ReactNode } from "react";
+import { useState, ReactNode } from "react";
 import { SplashScreen } from "./SplashScreen";
 
 interface SplashWrapperProps {
@@ -6,20 +6,13 @@ interface SplashWrapperProps {
 }
 
 export const SplashWrapper = ({ children }: SplashWrapperProps) => {
-  const [showSplash, setShowSplash] = useState(() => {
-    // Check on initial render if we should show splash
-    if (typeof window !== 'undefined') {
-      return !sessionStorage.getItem("gleeworld-splash-seen");
-    }
-    return false;
-  });
+  // Show splash on every page load
+  const [showSplash, setShowSplash] = useState(true);
 
   const handleSplashComplete = () => {
-    sessionStorage.setItem("gleeworld-splash-seen", "true");
     setShowSplash(false);
   };
 
-  // If not showing splash, render children immediately
   if (!showSplash) {
     return <>{children}</>;
   }
