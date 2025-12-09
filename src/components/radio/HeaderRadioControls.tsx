@@ -14,9 +14,18 @@ export const HeaderRadioControls = () => {
     const radioData = useRadioPlayer();
     const { themeName } = useTheme();
     
-    // HBCU theme colors
+    // Theme-specific colors
     const isHbcuTheme = themeName === 'hbcu';
+    const isSpelmanBlue = themeName === 'spelman-blue';
     const hbcuGold = '#FFDF00';
+    const spelmanWhite = '#ffffff';
+    
+    // Get the appropriate text color
+    const getTextColor = () => {
+      if (isHbcuTheme) return hbcuGold;
+      if (isSpelmanBlue) return spelmanWhite;
+      return '#1e293b';
+    };
     
     const { 
       isPlaying, 
@@ -49,7 +58,7 @@ export const HeaderRadioControls = () => {
               }}
               disabled={isLoading}
               className="relative h-8 w-8 p-0 rounded-full hover:bg-white/10"
-              style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}
+              style={{ color: getTextColor() }}
               type="button"
             >
               {isLoading ? (
@@ -73,7 +82,7 @@ export const HeaderRadioControls = () => {
                 variant="ghost"
                 size="sm"
                 className="h-8 px-2 hover:bg-white/10 hidden sm:flex"
-                style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}
+                style={{ color: getTextColor() }}
               >
                 <Radio className="h-4 w-4 mr-1" />
                 <span className="text-xs font-medium">Radio</span>
