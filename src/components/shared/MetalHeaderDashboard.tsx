@@ -607,17 +607,22 @@ export const MetalHeaderDashboard = ({
   return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Dashboard Header - Matching Card Style */}
       <div 
-        className="relative z-10 rounded-xl border border-border py-4 px-3 sm:px-5 flex items-center justify-end min-h-[56px] bg-background/95 backdrop-blur-sm shadow-card"
+        className="relative z-10 rounded-xl border border-border py-4 px-3 sm:px-5 grid grid-cols-[1fr_auto_1fr] items-center min-h-[56px] bg-background/95 backdrop-blur-sm shadow-card"
       >
-        {/* Personalized Title - Absolutely Centered */}
-        <h1 className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-base sm:text-xl md:text-2xl lg:text-4xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap">
+        {/* Empty left spacer */}
+        <div />
+        
+        {/* Personalized Title - Center column */}
+        <h1 className="text-base sm:text-xl md:text-2xl lg:text-4xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap">
           {getFirstName(user.full_name)}'s Dashboard
         </h1>
 
         {/* Key Ignition - Quick Actions Button - Right side */}
-        <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="w-8 h-8 sm:w-10 sm:h-10 bg-primary hover:bg-primary/90 rounded-full border border-border shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0 mr-4 sm:mr-8" aria-label="Quick Actions">
-          <Key className={`h-4 w-4 text-primary-foreground transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
-        </button>
+        <div className="flex justify-end">
+          <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} className="w-8 h-8 sm:w-10 sm:h-10 bg-primary hover:bg-primary/90 rounded-full border border-border shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group shrink-0" aria-label="Quick Actions">
+            <Key className={`h-4 w-4 text-primary-foreground transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
+          </button>
+        </div>
 
         {/* Quick Actions Panel - slides out from underneath */}
         <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
