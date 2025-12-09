@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -28,6 +29,7 @@ export function CreatePostCard({
   userProfile,
   onPostCreated
 }: CreatePostCardProps) {
+  const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [locationTag, setLocationTag] = useState('');
   const [showLocation, setShowLocation] = useState(false);
@@ -332,7 +334,7 @@ export function CreatePostCard({
                       className="bg-card rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer border border-border"
                       onClick={() => {
                         setShowLiveCamera(false);
-                        window.location.href = '/glee-cam?mode=live';
+                        navigate('/glee-cam/glee-cam-videos');
                       }}
                     >
                       {/* Red video icon */}
