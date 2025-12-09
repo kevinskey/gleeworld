@@ -56,47 +56,65 @@ export const GleeLoungeStrip = () => {
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase.channel('glee-lounge-presence');
+    const setupPresence = async () => {
+      // Get user profile for presence data
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('full_name, avatar_url')
+        .eq('user_id', user.id)
+        .single();
 
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const users: OnlineUser[] = [];
-        
-        Object.values(state).forEach((presences: any) => {
-          presences.forEach((presence: any) => {
-            if (!users.find(u => u.user_id === presence.user_id)) {
-              users.push({
-                user_id: presence.user_id,
-                full_name: presence.full_name,
-                avatar_url: presence.avatar_url,
-              });
-            }
-          });
-        });
-        
-        setOnlineUsers(users);
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          // Track current user's presence
-          const { data: profile } = await supabase
-            .from('gw_profiles')
-            .select('full_name, avatar_url')
-            .eq('user_id', user.id)
-            .single();
-
-          await channel.track({
-            user_id: user.id,
-            full_name: profile?.full_name || 'Anonymous',
-            avatar_url: profile?.avatar_url,
-            online_at: new Date().toISOString(),
-          });
-        }
+      const channel = supabase.channel('glee-lounge-presence', {
+        config: {
+          presence: {
+            key: user.id,
+          },
+        },
       });
 
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          const users: OnlineUser[] = [];
+          
+          Object.values(state).forEach((presences: any) => {
+            presences.forEach((presence: any) => {
+              if (!users.find(u => u.user_id === presence.user_id)) {
+                users.push({
+                  user_id: presence.user_id,
+                  full_name: presence.full_name,
+                  avatar_url: presence.avatar_url,
+                });
+              }
+            });
+          });
+          
+          setOnlineUsers(users);
+        })
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            // Track current user's presence
+            await channel.track({
+              user_id: user.id,
+              full_name: profile?.full_name || 'Anonymous',
+              avatar_url: profile?.avatar_url,
+              online_at: new Date().toISOString(),
+            });
+          }
+        });
+
+      return channel;
+    };
+
+    let channelInstance: any = null;
+    setupPresence().then(ch => {
+      channelInstance = ch;
+    });
+
     return () => {
-      supabase.removeChannel(channel);
+      if (channelInstance) {
+        supabase.removeChannel(channelInstance);
+      }
     };
   }, [user]);
 
