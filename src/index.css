@@ -309,7 +309,11 @@
   --popover-foreground: 45 65% 75%;
 }
 
-/* HBCU Heading Styles - Block Collegiate Lettering */
+/* HBCU Theme Typography - Collegiate Styling */
+.hbcu-theme {
+  font-family: 'Bebas Neue', 'Oswald', sans-serif !important;
+}
+
 .hbcu-theme h1,
 .hbcu-theme h2,
 .hbcu-theme h3,
@@ -319,6 +323,17 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   text-shadow: var(--heading-shadow, 2px 2px 0px hsl(0 0% 0%), 3px 3px 0px hsl(0 72% 42%));
+}
+
+.hbcu-theme p,
+.hbcu-theme span,
+.hbcu-theme div,
+.hbcu-theme button,
+.hbcu-theme a,
+.hbcu-theme label,
+.hbcu-theme input {
+  font-family: 'Bebas Neue', 'Oswald', sans-serif;
+  letter-spacing: 0.03em;
 }
 
 /* HBCU Button Variants - Uses theme tokens */
