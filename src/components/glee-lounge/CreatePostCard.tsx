@@ -45,35 +45,63 @@ export function CreatePostCard({ userProfile, onPostCreated }: CreatePostCardPro
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const { toast } = useToast();
 
-  // Fetch Glee Cam photos
+  // Fetch Glee Cam photos from all subfolders
   const fetchGleeCamPhotos = async () => {
     if (!userProfile?.user_id) return;
     
     setLoadingPhotos(true);
     try {
-      const { data: files, error } = await supabase.storage
+      // First list folders in user's directory
+      const { data: folders, error: foldersError } = await supabase.storage
         .from('quick-capture-media')
-        .list(userProfile.user_id, {
-          limit: 50,
-          sortBy: { column: 'created_at', order: 'desc' }
-        });
+        .list(userProfile.user_id, { limit: 100 });
 
-      if (error) throw error;
+      if (foldersError) throw foldersError;
 
-      const photos: GleeCamPhoto[] = (files || [])
-        .filter(file => file.name.match(/\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i))
-        .map(file => {
+      const allPhotos: GleeCamPhoto[] = [];
+      
+      // Check each folder for media files
+      for (const folder of folders || []) {
+        // If it's a folder (no file extension), list its contents
+        if (!folder.name.includes('.')) {
+          const { data: files, error: filesError } = await supabase.storage
+            .from('quick-capture-media')
+            .list(`${userProfile.user_id}/${folder.name}`, {
+              limit: 50,
+              sortBy: { column: 'created_at', order: 'desc' }
+            });
+
+          if (!filesError && files) {
+            const mediaFiles = files
+              .filter(file => file.name.match(/\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i))
+              .map(file => {
+                const { data } = supabase.storage
+                  .from('quick-capture-media')
+                  .getPublicUrl(`${userProfile.user_id}/${folder.name}/${file.name}`);
+                return {
+                  name: `${folder.name}/${file.name}`,
+                  url: data.publicUrl,
+                  created_at: file.created_at || ''
+                };
+              });
+            allPhotos.push(...mediaFiles);
+          }
+        } else if (folder.name.match(/\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i)) {
+          // Direct files in user's folder
           const { data } = supabase.storage
             .from('quick-capture-media')
-            .getPublicUrl(`${userProfile.user_id}/${file.name}`);
-          return {
-            name: file.name,
+            .getPublicUrl(`${userProfile.user_id}/${folder.name}`);
+          allPhotos.push({
+            name: folder.name,
             url: data.publicUrl,
-            created_at: file.created_at || ''
-          };
-        });
+            created_at: folder.created_at || ''
+          });
+        }
+      }
 
-      setGleeCamPhotos(photos);
+      // Sort by created_at descending
+      allPhotos.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setGleeCamPhotos(allPhotos.slice(0, 50));
     } catch (error) {
       console.error('Error fetching Glee Cam photos:', error);
     } finally {
