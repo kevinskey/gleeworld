@@ -156,7 +156,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
     }];
     const visibleFallback = fallbackSlides.slice(0, slidesToShow);
     return <Card className="bg-background/95 backdrop-blur-sm">
-          <CardHeader className="pt-4 pb-3">
+          <CardHeader className="py-2 px-3">
             <CardTitle className="flex items-center gap-2">
               <Camera className="h-5 w-5 text-primary" />
               Glee Cam
@@ -165,7 +165,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
               </span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-0">
+          <CardContent className="px-3 pb-3 pt-0">
           <div className="relative w-full rounded-lg overflow-hidden group">
             <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
               {visibleFallback.map((slide, idx) => <div 
@@ -204,7 +204,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
   };
   const visibleSlides = getVisibleSlides();
   return <Card className={`bg-background/95 backdrop-blur-sm ${className || ''}`}>
-    <CardHeader className="pt-4 pb-3">
+    <CardHeader className="py-2 px-3">
       <CardTitle className="flex items-center gap-2">
         <Camera className="h-5 w-5 text-primary" />
         Glee Cam
@@ -213,7 +213,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
         </span>
       </CardTitle>
     </CardHeader>
-    <CardContent className="pt-0">
+    <CardContent className="px-3 pb-3 pt-0">
         <div className="relative w-full rounded-lg overflow-hidden group">
           <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
             {visibleSlides.map((slide, idx) => <div 
