@@ -261,7 +261,7 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
             )}
             {expandedSlide?.title && (
               <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent rounded-b-lg">
-                <h3 className="text-white text-lg md:text-xl font-bold">{expandedSlide.title}</h3>
+                <h4 className="text-white text-lg md:text-xl font-bold">{expandedSlide.title}</h4>
                 {expandedSlide.description && (
                   <p className="text-white/90 text-sm md:text-base mt-1">{expandedSlide.description}</p>
                 )}
