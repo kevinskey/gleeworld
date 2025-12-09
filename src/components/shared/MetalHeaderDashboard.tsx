@@ -612,9 +612,9 @@ export const MetalHeaderDashboard = ({
         <div />
         
         {/* Personalized Title - Center column */}
-        <h1 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap">
+        <h2 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-semibold tracking-tight text-center text-card-foreground whitespace-nowrap">
           {getFirstName(user.full_name)}'s Dashboard
-        </h1>
+        </h2>
 
         {/* Key Ignition - Quick Actions Button - Right side */}
         <div className="flex justify-end">
