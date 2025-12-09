@@ -1,5 +1,6 @@
+import { forwardRef, useImperativeHandle } from 'react';
 import { Button } from '@/components/ui/button';
-import { useSocialFeed, SocialPost } from '@/hooks/useSocialFeed';
+import { useSocialFeed } from '@/hooks/useSocialFeed';
 import { PostCard } from './PostCard';
 import { Loader2, RefreshCw, Sparkles } from 'lucide-react';
 
@@ -11,8 +12,17 @@ interface SocialFeedProps {
   } | null;
 }
 
-export function SocialFeed({ userProfile }: SocialFeedProps) {
+export interface SocialFeedRef {
+  refresh: () => void;
+}
+
+export const SocialFeed = forwardRef<SocialFeedRef, SocialFeedProps>(function SocialFeed({ userProfile }, ref) {
   const { posts, isLoading, hasMore, loadMore, refresh, newPostsAvailable } = useSocialFeed();
+
+  // Expose refresh method to parent via ref
+  useImperativeHandle(ref, () => ({
+    refresh
+  }), [refresh]);
 
   if (isLoading && posts.length === 0) {
     return (
@@ -81,4 +91,4 @@ export function SocialFeed({ userProfile }: SocialFeedProps) {
       )}
     </div>
   );
-}
+});

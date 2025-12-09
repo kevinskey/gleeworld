@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useGleeLoungePresence } from '@/hooks/useGleeLoungePresence';
 import { CreatePostCard } from '@/components/glee-lounge/CreatePostCard';
-import { SocialFeed } from '@/components/glee-lounge/SocialFeed';
+import { SocialFeed, SocialFeedRef } from '@/components/glee-lounge/SocialFeed';
 import { OnlineNowWidget } from '@/components/glee-lounge/OnlineNowWidget';
 import { OnlineSidebar } from '@/components/glee-lounge/OnlineSidebar';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,13 @@ export default function GleeLounge() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { onlineUsers, isConnected } = useGleeLoungePresence();
+  const feedRef = useRef<SocialFeedRef>(null);
+
+  const handlePostCreated = () => {
+    // Refresh the feed immediately when user creates a post
+    feedRef.current?.refresh();
+    setShowMobileCreate(false);
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -140,7 +147,7 @@ export default function GleeLounge() {
           <div className="flex-1 max-w-2xl mx-auto lg:mx-0">
             {/* Desktop: Create post card */}
             <div className="hidden lg:block">
-              <CreatePostCard userProfile={userProfile} />
+              <CreatePostCard userProfile={userProfile} onPostCreated={handlePostCreated} />
             </div>
 
             {/* Mobile: Create post sheet */}
@@ -153,7 +160,7 @@ export default function GleeLounge() {
                   <div className="mt-4">
                     <CreatePostCard
                       userProfile={userProfile}
-                      onPostCreated={() => setShowMobileCreate(false)}
+                      onPostCreated={handlePostCreated}
                     />
                   </div>
                 </SheetContent>
@@ -161,7 +168,7 @@ export default function GleeLounge() {
             </div>
 
             {/* Feed */}
-            <SocialFeed userProfile={userProfile} />
+            <SocialFeed ref={feedRef} userProfile={userProfile} />
           </div>
 
           {/* Desktop: Online sidebar */}
