@@ -892,17 +892,24 @@ export function CreatePostCard({
                             </Button>
                           </div>
                         )}
-                        {/* Toggle switch */}
-                        <div className="absolute top-3 left-3">
-                          <div className="w-10 h-6 bg-muted rounded-full p-0.5">
-                            <div className="w-5 h-5 bg-foreground rounded-full" />
-                          </div>
-                        </div>
                       </div>
-                      <div className="p-3 flex items-center justify-between border-t border-border">
+                      <button 
+                        className="p-3 flex items-center justify-between border-t border-border w-full hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          const videoEl = screenStream ? screenVideoRef.current : cameraVideoRef.current;
+                          if (videoEl) {
+                            if (videoEl.requestFullscreen) {
+                              videoEl.requestFullscreen();
+                            } else if ((videoEl as any).webkitRequestFullscreen) {
+                              (videoEl as any).webkitRequestFullscreen();
+                            }
+                          }
+                        }}
+                        disabled={!cameraStream && !screenStream}
+                      >
                         <span className="text-sm text-foreground">Expand video</span>
                         <Expand className="h-4 w-4 text-muted-foreground" />
-                      </div>
+                      </button>
                     </div>
 
                     {/* Event logs */}
