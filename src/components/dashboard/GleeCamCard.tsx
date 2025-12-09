@@ -53,7 +53,7 @@ export const GleeCamCard = ({
     }
   };
   const handleCategoryClick = (category: GleeCamCategory) => {
-    navigate(`/admin/media?category=${category.slug}`);
+    navigate(`/dashboard?gleeCamCategory=${category.slug}`);
   };
   const getIconComponent = (iconName: string) => {
     return ICON_MAP[iconName] || Camera;
