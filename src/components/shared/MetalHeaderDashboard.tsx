@@ -605,7 +605,7 @@ export const MetalHeaderDashboard = ({
     }
   }
   // All users get the full metal header dashboard experience
-  return <div className="space-y-6 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  return <div className="space-y-4 relative min-h-screen max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
       {/* Dashboard Header - Matching Card Style */}
       <div className="relative z-10 rounded-xl border border-border px-3 sm:px-5 grid grid-cols-[1fr_auto_1fr] items-center min-h-[44px] sm:min-h-[52px] bg-background/95 backdrop-blur-sm shadow-card py-2 mx-0">
         {/* Empty left spacer */}
