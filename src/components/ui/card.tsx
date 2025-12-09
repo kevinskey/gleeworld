@@ -6,9 +6,9 @@ const Card = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & {
     variant?: "default" | "glass" | "elevated" | "outline" | "glossy"
   }
->(({ className, variant = "glossy", ...props }, ref) => {
+>(({ className, variant = "default", ...props }, ref) => {
   const variants = {
-    default: "bg-card border border-border shadow-card hover:shadow-card-hover",
+    default: "bg-background/95 backdrop-blur-sm border border-border shadow-card hover:shadow-card-hover",
     glass: "bg-card/80 backdrop-blur-md border border-border shadow-glass",
     elevated: "bg-card border-0 shadow-elevated hover:shadow-glass-lg",
     outline: "bg-transparent border-2 border-border hover:border-primary/50",
@@ -19,8 +19,7 @@ const Card = React.forwardRef<
     <div
       ref={ref}
       className={cn(
-        "rounded-xl transition-all duration-300 relative overflow-hidden",
-        variant === "glossy" ? "text-white" : "text-card-foreground",
+        "rounded-xl text-card-foreground transition-all duration-300 relative overflow-hidden",
         variants[variant],
         className
       )}
