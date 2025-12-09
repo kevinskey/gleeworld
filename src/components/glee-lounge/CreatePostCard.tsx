@@ -54,6 +54,14 @@ export function CreatePostCard({
   const [liveTitle, setLiveTitle] = useState('');
   const [liveDescription, setLiveDescription] = useState('');
   const [shareToStory, setShareToStory] = useState(true);
+  const [postDestination, setPostDestination] = useState<'profile' | 'timeline'>('profile');
+  const [goLiveWhen, setGoLiveWhen] = useState<'now' | 'scheduled'>('now');
+  const [audienceType, setAudienceType] = useState<'friends' | 'public' | 'private'>('friends');
+  const [activeSection, setActiveSection] = useState<'setup' | 'dashboard' | 'settings' | 'interactivity'>('setup');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showInteractivity, setShowInteractivity] = useState(false);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
   const {
     toast
   } = useToast();
@@ -201,6 +209,52 @@ export function CreatePostCard({
     }
   };
 
+  // Stop screen share
+  const stopScreenShare = () => {
+    if (screenStream) {
+      screenStream.getTracks().forEach(track => track.stop());
+      setScreenStream(null);
+      setIsScreenSharing(false);
+    }
+  };
+
+  // Start screen share
+  const startScreenShare = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({
+        video: true,
+        audio: true
+      });
+      setScreenStream(stream);
+      setIsScreenSharing(true);
+      
+      // Listen for when user stops sharing via browser UI
+      stream.getVideoTracks()[0].onended = () => {
+        stopScreenShare();
+      };
+      
+      toast({
+        title: "Screen sharing started",
+        description: "Your screen is now being shared"
+      });
+    } catch (error) {
+      console.error('Screen share error:', error);
+      toast({
+        title: "Screen share failed",
+        description: "Could not start screen sharing",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle give feedback
+  const handleGiveFeedback = () => {
+    toast({
+      title: "Feedback",
+      description: "Thank you for your interest! Feedback feature coming soon."
+    });
+  };
+
   // Handle dialog close
   const handleLiveDialogClose = (open: boolean) => {
     if (!open) {
@@ -208,13 +262,21 @@ export function CreatePostCard({
       if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
       }
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+      }
       setCameraStream(null);
+      setScreenStream(null);
+      setIsScreenSharing(false);
       setLiveStep('setup');
       setCameraPermission('pending');
       setLiveTitle('');
       setLiveDescription('');
       setSelectedCamera('');
       setSelectedMic('');
+      setActiveSection('setup');
+      setShowSettings(false);
+      setShowInteractivity(false);
     }
     setShowLiveCamera(open);
   };
@@ -438,54 +500,126 @@ export function CreatePostCard({
                     </div>
 
                     {/* Where to post dropdown */}
-                    <div className="border border-border rounded-lg p-3 mb-3">
-                      <p className="text-xs text-muted-foreground mb-1">Choose where to post</p>
-                      <div className="flex items-center justify-between cursor-pointer">
-                        <span className="font-medium text-foreground text-sm">Post on profile</span>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </div>
+                    <Select value={postDestination} onValueChange={(value: 'profile' | 'timeline') => setPostDestination(value)}>
+                      <SelectTrigger className="border border-border rounded-lg p-3 mb-3 h-auto">
+                        <div className="text-left">
+                          <p className="text-xs text-muted-foreground mb-1">Choose where to post</p>
+                          <SelectValue />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="profile">Post on profile</SelectItem>
+                        <SelectItem value="timeline">Post on timeline</SelectItem>
+                      </SelectContent>
+                    </Select>
 
                     {/* When going live */}
-                    <div className="border border-border rounded-lg p-3 mb-4">
-                      <p className="text-xs text-muted-foreground mb-1">When are you going live?</p>
-                      <div className="flex items-center justify-between cursor-pointer">
-                        <span className="font-medium text-foreground text-sm">Now</span>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </div>
+                    <Select value={goLiveWhen} onValueChange={(value: 'now' | 'scheduled') => setGoLiveWhen(value)}>
+                      <SelectTrigger className="border border-border rounded-lg p-3 mb-4 h-auto">
+                        <div className="text-left">
+                          <p className="text-xs text-muted-foreground mb-1">When are you going live?</p>
+                          <SelectValue />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="now">Now</SelectItem>
+                        <SelectItem value="scheduled">Schedule for later</SelectItem>
+                      </SelectContent>
+                    </Select>
 
-                    {/* Friends button */}
-                    <Button variant="outline" size="sm" className="w-fit mb-4">
-                      <Users className="h-4 w-4 mr-2" />
-                      Friends
-                    </Button>
+                    {/* Audience selector */}
+                    <Select value={audienceType} onValueChange={(value: 'friends' | 'public' | 'private') => setAudienceType(value)}>
+                      <SelectTrigger className="w-fit mb-4">
+                        <Users className="h-4 w-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="friends">Friends</SelectItem>
+                        <SelectItem value="public">Public</SelectItem>
+                        <SelectItem value="private">Only me</SelectItem>
+                      </SelectContent>
+                    </Select>
 
                     {/* Navigation Menu */}
                     <div className="flex-1 space-y-1">
                       <Button 
-                        variant={liveStep === 'setup' ? 'secondary' : 'ghost'} 
+                        variant={activeSection === 'setup' ? 'secondary' : 'ghost'} 
                         className="w-full justify-start"
-                        onClick={() => setLiveStep('setup')}
+                        onClick={() => setActiveSection('setup')}
                       >
                         <Video className="h-4 w-4 mr-3 text-red-500" />
                         Stream setup
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start">
+                      <Button 
+                        variant={activeSection === 'dashboard' ? 'secondary' : 'ghost'} 
+                        className="w-full justify-start"
+                        onClick={() => {
+                          setActiveSection('dashboard');
+                          toast({
+                            title: "Dashboard",
+                            description: "Live streaming analytics will appear here during broadcast"
+                          });
+                        }}
+                      >
                         <BarChart3 className="h-4 w-4 mr-3" />
                         Dashboard
                       </Button>
-                      <Button variant="ghost" className="w-full justify-start">
-                        <Settings className="h-4 w-4 mr-3" />
-                        Settings
-                        <ChevronDown className="h-4 w-4 ml-auto" />
-                      </Button>
-                      <Button variant="ghost" className="w-full justify-start">
-                        <Smile className="h-4 w-4 mr-3" />
-                        Interactivity
-                        <ChevronDown className="h-4 w-4 ml-auto" />
-                      </Button>
-                      <Button variant="ghost" className="w-full justify-start">
+                      <div>
+                        <Button 
+                          variant={activeSection === 'settings' ? 'secondary' : 'ghost'} 
+                          className="w-full justify-start"
+                          onClick={() => setShowSettings(!showSettings)}
+                        >
+                          <Settings className="h-4 w-4 mr-3" />
+                          Settings
+                          <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${showSettings ? 'rotate-180' : ''}`} />
+                        </Button>
+                        {showSettings && (
+                          <div className="ml-7 mt-1 space-y-1">
+                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                              Video quality
+                            </Button>
+                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                              Audio settings
+                            </Button>
+                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                              Privacy
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <Button 
+                          variant={activeSection === 'interactivity' ? 'secondary' : 'ghost'} 
+                          className="w-full justify-start"
+                          onClick={() => setShowInteractivity(!showInteractivity)}
+                        >
+                          <Smile className="h-4 w-4 mr-3" />
+                          Interactivity
+                          <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${showInteractivity ? 'rotate-180' : ''}`} />
+                        </Button>
+                        {showInteractivity && (
+                          <div className="ml-7 mt-1 space-y-1">
+                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                              Comments
+                            </Button>
+                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                              Reactions
+                            </Button>
+                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                              Q&A
+                            </Button>
+                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
+                              Polls
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        className="w-full justify-start"
+                        onClick={handleGiveFeedback}
+                      >
                         <Flag className="h-4 w-4 mr-3" />
                         Give feedback
                       </Button>
@@ -571,8 +705,12 @@ export function CreatePostCard({
                         {/* Screen share button */}
                         <div className="flex items-center gap-3">
                           <Monitor className="h-5 w-5 text-muted-foreground" />
-                          <Button variant="outline" className="flex-1">
-                            Start screen share
+                          <Button 
+                            variant={isScreenSharing ? "default" : "outline"} 
+                            className={`flex-1 ${isScreenSharing ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                            onClick={isScreenSharing ? stopScreenShare : startScreenShare}
+                          >
+                            {isScreenSharing ? 'Stop screen share' : 'Start screen share'}
                           </Button>
                         </div>
                       </div>
@@ -582,7 +720,19 @@ export function CreatePostCard({
                     <div className="bg-card rounded-xl border border-border overflow-hidden mb-4">
                       <h4 className="font-semibold text-foreground p-4 pb-2">Video</h4>
                       <div className="aspect-video bg-black relative flex items-center justify-center">
-                        {cameraStream ? (
+                        {screenStream ? (
+                          <video 
+                            autoPlay 
+                            muted 
+                            playsInline
+                            ref={(video) => {
+                              if (video && screenStream) {
+                                video.srcObject = screenStream;
+                              }
+                            }}
+                            className="w-full h-full object-contain"
+                          />
+                        ) : cameraStream ? (
                           <video 
                             autoPlay 
                             muted 
