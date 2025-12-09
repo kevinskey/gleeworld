@@ -223,6 +223,11 @@ export function PostComments({ postId, commentCount, userProfile }: PostComments
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             className="h-8 text-sm bg-background text-foreground border-border placeholder:text-muted-foreground/70"
+            inputMode="text"
+            enterKeyHint="send"
+            autoComplete="off"
+            autoCorrect="off"
+            data-form-type="other"
           />
           <Button
             type="submit"
