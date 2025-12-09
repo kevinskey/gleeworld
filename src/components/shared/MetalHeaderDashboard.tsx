@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from "react-router-dom";
-import { DashboardHeroCarousel } from "@/components/dashboard/DashboardHeroCarousel";
+import { GleeCamCard } from "@/components/dashboard/GleeCamCard";
 import { DashboardYouTubeSection } from "@/components/dashboard/DashboardYouTubeSection";
 import { useUnifiedModules } from "@/hooks/useUnifiedModules";
 import { useModuleOrdering } from "@/hooks/useModuleOrdering";
@@ -631,8 +631,8 @@ export const MetalHeaderDashboard = ({
       {/* YouTube Videos Section - Two Column Layout */}
       <DashboardYouTubeSection />
 
-      {/* Dashboard Hero Carousel */}
-      <DashboardHeroCarousel className="pl-[5px] pr-[5px] mx-0 px-[10px] pt-[20px] pb-[20px]" />
+      {/* Glee Cam Categories */}
+      <GleeCamCard className="mx-2" />
 
       {/* Tree Lighting Participation Survey - PROMINENT POSITION */}
       <div className="mb-4 relative z-10">
