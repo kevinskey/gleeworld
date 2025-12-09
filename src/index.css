@@ -297,24 +297,24 @@ html[data-theme="spelman-blue"] {
   --spelman-accent: 203 85% 63%;        /* #55BBEE - Bright sky blue */
   --spelman-highlight: 208 100% 43%;    /* #0073c9 - Lighter Spelman Blue */
   
-  /* Override core colors for bright light theme */
+  /* Override core colors - MORE BLUE throughout */
   --primary: 208 100% 33%;
   --primary-foreground: 0 0% 100%;
   --secondary: 203 85% 63%;
   --secondary-foreground: 0 0% 100%;
   --accent: 208 100% 43%;
   --accent-foreground: 0 0% 100%;
-  --background: 0 0% 100%;
-  --foreground: 210 29% 24%;
-  --card: 0 0% 100%;
-  --card-foreground: 210 29% 24%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --border: 214 32% 91%;
+  --background: 208 60% 96%;            /* Light blue tint background */
+  --foreground: 208 80% 20%;            /* Dark blue text */
+  --card: 208 50% 98%;                  /* Very light blue cards */
+  --card-foreground: 208 80% 20%;       /* Dark blue text on cards */
+  --muted: 208 40% 92%;                 /* Blue-tinted muted */
+  --muted-foreground: 208 30% 40%;      /* Medium blue muted text */
+  --border: 208 50% 80%;                /* Blue-tinted borders */
   --ring: 203 85% 63%;
-  --input: 0 0% 100%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 210 29% 24%;
+  --input: 208 40% 98%;                 /* Light blue inputs */
+  --popover: 208 50% 98%;               /* Light blue popovers */
+  --popover-foreground: 208 80% 20%;
 }
 
 /* Spelman Blue Theme Typography - Clean sans-serif */
