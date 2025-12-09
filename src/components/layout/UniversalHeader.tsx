@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles, Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -268,6 +268,25 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 )}
 
                 
+                {/* Add Module Quick Action - For members without admin access */}
+                {!hasExecBoardPerms && (
+                  <EnhancedTooltip content="Add Module to Dashboard">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => navigate('/dashboard/member?addModule=true')}
+                      className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hover:opacity-90 flex items-center justify-center border-2 shadow-md"
+                      style={{ 
+                        background: 'linear-gradient(to bottom right, #10b981, #059669)',
+                        borderColor: '#047857'
+                      }}
+                      type="button"
+                    >
+                      <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    </Button>
+                  </EnhancedTooltip>
+                )}
+
                 {/* Glee Cam Quick Capture - Available to all authenticated users */}
                 <EnhancedTooltip content="Glee Cam - Quick Capture">
                   <Button 
@@ -279,14 +298,14 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       console.log('Camera button clicked - showing category selector');
                       setShowCategorySelector(true);
                     }}
-                    className="h-10 w-10 sm:h-11 sm:w-11 md:h-12 md:w-12 p-0 rounded-full hover:opacity-90 flex items-center justify-center border-2 shadow-lg"
+                    className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hover:opacity-90 flex items-center justify-center border-2 shadow-md"
                     style={{ 
                       background: 'linear-gradient(to bottom right, #3b82f6, #2563eb)',
                       borderColor: '#1d4ed8'
                     }}
                     type="button"
                   >
-                    <Camera className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <Camera className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </Button>
                 </EnhancedTooltip>
                 
