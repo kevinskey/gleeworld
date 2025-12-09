@@ -324,7 +324,7 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-muted/30 overflow-hidden max-w-5xl mx-auto">
+    <div className="h-full flex flex-col bg-muted/30 overflow-hidden max-w-5xl mx-auto safe-area-inset">
       {/* Mobile: Single column with groups at top */}
       {isMobile ? (
         <>
@@ -464,8 +464,8 @@ export const GroupMessageInterface: React.FC = () => {
                   />
                 </div>
                 
-                {/* Messages Area */}
-                <ScrollArea className="flex-1 px-2 bg-muted/20 overflow-y-auto">
+                {/* Messages Area - scrollable */}
+                <div className="flex-1 overflow-y-auto px-2 bg-muted/20">
                   {conversationMessages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-center py-6 px-3">
                       <div className="w-12 h-12 rounded-full bg-[hsl(var(--message-header))]/10 flex items-center justify-center mb-2">
@@ -487,10 +487,10 @@ export const GroupMessageInterface: React.FC = () => {
                       <div ref={messagesEndRef} />
                     </div>
                   )}
-                </ScrollArea>
+                </div>
 
-                {/* Message Input - Fixed at bottom */}
-                <div className="border-t border-border p-2 bg-background flex-shrink-0 safe-bottom">
+                {/* Message Input - Fixed at bottom with safe area */}
+                <div className="flex-shrink-0 border-t border-border p-2 bg-background pb-safe">
                   <MessageInput 
                     onSendMessage={handleSendMessage} 
                     groupId={conversationType === 'group' ? selectedConversationId || undefined : undefined}

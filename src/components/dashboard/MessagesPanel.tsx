@@ -85,25 +85,28 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
   return (
     <>
       {isMobile ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="h-[90dvh] w-[90vw] max-w-[400px] bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden">
-            <div className="cursor-default bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between select-none">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium ml-2">Messages</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                className="h-8 w-8 rounded-full text-white hover:bg-white/20 pointer-events-auto"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+        <div 
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+          style={{ height: '100dvh' }}
+        >
+          {/* Mobile header with close button */}
+          <div className="flex-shrink-0 bg-[hsl(var(--message-header))] text-white px-3 py-3 flex items-center justify-between safe-top">
+            <div className="flex items-center gap-2">
+              <span className="text-base font-semibold">Messages</span>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleClose}
+              className="h-10 w-10 rounded-full text-white hover:bg-white/20 active:bg-white/30 touch-manipulation"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
 
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <GroupMessageInterface />
-            </div>
+          {/* Content area - takes remaining space */}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <GroupMessageInterface />
           </div>
         </div>
       ) : (
