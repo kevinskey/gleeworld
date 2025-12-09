@@ -726,7 +726,6 @@ export const MetalHeaderDashboard = ({
             if (cardId === 'communications') {
               return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
                     <CommunicationsCard 
-                      onOpenMessages={() => onToggleMessages?.()}
                       onOpenAnnouncements={() => navigate('/announcements')}
                       isExecBoard={user?.is_exec_board || isAdmin || isSuperAdmin()}
                     />

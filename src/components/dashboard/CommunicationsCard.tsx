@@ -5,6 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { MessageSquare, Megaphone, ClipboardList, ChevronDown, ChevronUp, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MessagingInterface } from "@/components/messaging/MessagingInterface";
 
 interface CommunicationModule {
   id: string;
@@ -13,10 +14,10 @@ interface CommunicationModule {
   icon: React.ElementType;
   iconColor: string;
   component?: React.ReactNode;
+  isEmbedded?: boolean;
 }
 
 interface CommunicationsCardProps {
-  onOpenMessages?: () => void;
   onOpenAnnouncements?: () => void;
   memberExitInterviewComponent?: React.ReactNode;
   execExitInterviewComponent?: React.ReactNode;
@@ -24,7 +25,6 @@ interface CommunicationsCardProps {
 }
 
 export const CommunicationsCard = ({
-  onOpenMessages,
   onOpenAnnouncements,
   memberExitInterviewComponent,
   execExitInterviewComponent,
@@ -46,6 +46,7 @@ export const CommunicationsCard = ({
       description: 'Group messaging and DMs',
       icon: MessageSquare,
       iconColor: 'blue',
+      isEmbedded: true,
     },
     {
       id: 'member-exit-interview',
@@ -70,11 +71,7 @@ export const CommunicationsCard = ({
       onOpenAnnouncements();
       return;
     }
-    if (moduleId === 'messages' && onOpenMessages) {
-      onOpenMessages();
-      return;
-    }
-    // Toggle expandable modules
+    // Toggle expandable modules (including messages now)
     setExpandedModule(expandedModule === moduleId ? null : moduleId);
   };
 
@@ -86,6 +83,17 @@ export const CommunicationsCard = ({
       green: { bg: 'bg-green-100 dark:bg-green-900/20', text: 'text-green-600 dark:text-green-400' },
     };
     return colorMap[color] || colorMap.blue;
+  };
+
+  const renderModuleContent = (module: CommunicationModule) => {
+    if (module.id === 'messages') {
+      return (
+        <div className="h-[500px]">
+          <MessagingInterface embedded />
+        </div>
+      );
+    }
+    return module.component;
   };
 
   return (
@@ -100,13 +108,13 @@ export const CommunicationsCard = ({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-auto max-h-[500px]">
+        <ScrollArea className="h-auto max-h-[600px]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
             {modules.map((module) => {
               const IconComponent = module.icon;
               const colorClasses = getIconColorClasses(module.iconColor);
               const isExpanded = expandedModule === module.id;
-              const hasExpandableContent = module.component;
+              const hasExpandableContent = module.component || module.isEmbedded;
 
               return (
                 <Collapsible
@@ -174,11 +182,11 @@ export const CommunicationsCard = ({
                               e.stopPropagation();
                               setExpandedModule(null);
                             }}
-                            className="absolute top-2 right-2 p-1 h-auto rounded-full text-muted-foreground hover:text-foreground"
+                            className="absolute top-2 right-2 p-1 h-auto rounded-full text-muted-foreground hover:text-foreground z-10"
                           >
                             <X className="h-4 w-4" />
                           </Button>
-                          {module.component}
+                          {renderModuleContent(module)}
                         </div>
                       </CollapsibleContent>
                     )}
