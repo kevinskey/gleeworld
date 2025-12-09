@@ -283,9 +283,8 @@
    HBCU THEME - Pan-African Celebration
    ======================================== */
 
-/* HBCU Theme Color Variables - Dark Mode (default) */
-.hbcu-theme.dark,
-.hbcu-theme:not(.light) {
+/* HBCU Theme Color Variables */
+.hbcu-theme {
   --pan-african-red: 0 72% 42%;       /* #BA1E1E */
   --african-gold: 45 65% 55%;          /* #D9B84B */
   --collegiate-green: 135 38% 27%;     /* #2C5E32 */
@@ -309,32 +308,6 @@
   --input: 0 0% 12%;
   --popover: 0 0% 8%;
   --popover-foreground: 45 65% 75%;
-}
-
-/* HBCU Theme Color Variables - Light Mode */
-.hbcu-theme.light {
-  --pan-african-red: 0 72% 42%;       /* #BA1E1E */
-  --african-gold: 45 65% 45%;          /* Darker gold for contrast */
-  --collegiate-green: 135 38% 27%;     /* #2C5E32 */
-  
-  /* Light mode colors */
-  --primary: 0 72% 42%; /* Red as primary in light mode */
-  --primary-foreground: 0 0% 100%;
-  --secondary: 45 65% 45%;
-  --secondary-foreground: 0 0% 0%;
-  --accent: var(--collegiate-green);
-  --accent-foreground: 0 0% 100%;
-  --background: 45 30% 95%; /* Warm cream background */
-  --foreground: 0 0% 8%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 8%;
-  --muted: 45 20% 90%;
-  --muted-foreground: 0 0% 35%;
-  --border: 0 72% 42%;
-  --ring: 45 65% 45%;
-  --input: 0 0% 100%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 8%;
 }
 
 /* HBCU Theme Typography - Collegiate Styling */
