@@ -73,14 +73,14 @@ export const CommunicationsCard = ({
   };
   return <Card className="bg-background/95 backdrop-blur-sm">
       <CardHeader className="py-3 px-3 sm:px-0">
-        <CardTitle className="flex items-center gap-2 text-primary-foreground">
-          <Radio className="h-5 w-5 text-primary-foreground" />
+        <CardTitle className="flex items-center gap-2 !text-white">
+          <Radio className="h-5 w-5 !text-white" />
           Communications
-          <span className="text-[10px] md:text-xs font-normal text-primary-foreground/70 ml-2 uppercase">
+          <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
             stay connected!
           </span>
         </CardTitle>
-        {modules.length === 0 && <CardDescription className="text-primary-foreground/80">Communication modules will appear here</CardDescription>}
+        {modules.length === 0 && <CardDescription className="!text-white/80">Communication modules will appear here</CardDescription>}
       </CardHeader>
       <CardContent className="px-3 sm:px-0">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
