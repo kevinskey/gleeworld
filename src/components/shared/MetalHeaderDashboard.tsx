@@ -631,7 +631,7 @@ export const MetalHeaderDashboard = ({
       <DashboardYouTubeSection />
 
       {/* Dashboard Hero Carousel */}
-      <DashboardHeroCarousel className="px-[111px] pt-8 pl-[5px] pr-[5px] pb-8 mx-0" />
+      <DashboardHeroCarousel className="pl-[5px] pr-[5px] mx-0 px-[10px] pt-[20px] pb-[20px]" />
 
       {/* Message Center Button with Announcements Ticker */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-2 gap-2 sm:gap-3">
