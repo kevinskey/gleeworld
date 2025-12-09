@@ -70,6 +70,10 @@ export function CreatePostCard({
   const [pollsEnabled, setPollsEnabled] = useState(false);
   const [showLivePollCreator, setShowLivePollCreator] = useState(false);
   const [livePolls, setLivePolls] = useState<{question: string, id: string}[]>([]);
+  
+  // Video/Audio on/off state
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(true);
   const {
     toast
   } = useToast();
@@ -255,6 +259,36 @@ export function CreatePostCard({
     }
   };
 
+  // Toggle video track on/off
+  const toggleVideo = () => {
+    if (cameraStream) {
+      const videoTracks = cameraStream.getVideoTracks();
+      videoTracks.forEach(track => {
+        track.enabled = !videoEnabled;
+      });
+      setVideoEnabled(!videoEnabled);
+      toast({
+        title: videoEnabled ? "Video off" : "Video on",
+        description: videoEnabled ? "Your camera is now disabled" : "Your camera is now enabled"
+      });
+    }
+  };
+
+  // Toggle audio track on/off
+  const toggleAudio = () => {
+    if (cameraStream) {
+      const audioTracks = cameraStream.getAudioTracks();
+      audioTracks.forEach(track => {
+        track.enabled = !audioEnabled;
+      });
+      setAudioEnabled(!audioEnabled);
+      toast({
+        title: audioEnabled ? "Mic off" : "Mic on",
+        description: audioEnabled ? "Your microphone is muted" : "Your microphone is unmuted"
+      });
+    }
+  };
+
   // Handle give feedback
   const handleGiveFeedback = () => {
     toast({
@@ -285,6 +319,9 @@ export function CreatePostCard({
       setActiveSection('setup');
       setShowSettings(false);
       setShowInteractivity(false);
+      // Reset video/audio states
+      setVideoEnabled(true);
+      setAudioEnabled(true);
     }
     setShowLiveCamera(open);
   };
@@ -583,16 +620,42 @@ export function CreatePostCard({
                           <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${showSettings ? 'rotate-180' : ''}`} />
                         </Button>
                         {showSettings && (
-                          <div className="ml-7 mt-1 space-y-1">
-                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                              Video quality
-                            </Button>
-                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                              Audio settings
-                            </Button>
-                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                              Privacy
-                            </Button>
+                          <div className="ml-4 mt-2 space-y-3 p-3 bg-muted/30 rounded-lg">
+                            {/* Video Toggle */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Video className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-foreground">Video</span>
+                              </div>
+                              <button
+                                onClick={toggleVideo}
+                                disabled={!cameraStream}
+                                className={`w-10 h-6 rounded-full transition-colors ${videoEnabled && cameraStream ? 'bg-primary' : 'bg-muted'} ${!cameraStream ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              >
+                                <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${videoEnabled && cameraStream ? 'translate-x-4' : ''}`} />
+                              </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-6">
+                              {!cameraStream ? 'Enable camera first' : videoEnabled ? 'Your camera is on' : 'Your camera is off'}
+                            </p>
+
+                            {/* Audio Toggle */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Mic className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-foreground">Microphone</span>
+                              </div>
+                              <button
+                                onClick={toggleAudio}
+                                disabled={!cameraStream}
+                                className={`w-10 h-6 rounded-full transition-colors ${audioEnabled && cameraStream ? 'bg-primary' : 'bg-muted'} ${!cameraStream ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              >
+                                <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${audioEnabled && cameraStream ? 'translate-x-4' : ''}`} />
+                              </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-6">
+                              {!cameraStream ? 'Enable camera first' : audioEnabled ? 'Your mic is on' : 'Your mic is muted'}
+                            </p>
                           </div>
                         )}
                       </div>
