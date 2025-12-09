@@ -634,50 +634,10 @@ export const MetalHeaderDashboard = ({
       {/* Dashboard Hero Carousel */}
       <DashboardHeroCarousel className="pl-[5px] pr-[5px] mx-0 px-[10px] pt-[20px] pb-[20px]" />
 
-      {/* Message Center Button with Announcements Ticker */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center mb-2 gap-2 sm:gap-3">
-        {/* Announcements Ticker - All screen sizes */}
-        <div className="flex items-center flex-1 min-w-0 overflow-hidden order-2 sm:order-1 py-0">
-          <AnnouncementsDisplay className="bg-background/80 backdrop-blur-sm rounded-2xl shadow-md w-full" />
-        </div>
-        
-        {/* Messages Button - Theme-aware styling */}
-        <button onClick={() => onToggleMessages?.()} className="relative shrink-0 order-1 sm:order-2 px-6 py-2.5 rounded-sm text-xs font-bold uppercase tracking-wider h-10 shadow-md border flex items-center gap-2 justify-center hover:opacity-90 transition-all" style={{
-        background: isHbcuTheme ? hbcuGold : themeName === 'spelman-blue' ? 'linear-gradient(to bottom, hsl(201 52% 66%), hsl(201 52% 50%))' : themeName === 'spelhouse' ? 'linear-gradient(to bottom, hsl(210 65% 55%), hsl(210 65% 45%))' : themeName === 'music' ? 'linear-gradient(to bottom, hsl(210 100% 50%), hsl(210 100% 35%))' : 'linear-gradient(to bottom, #94a3b8, #64748b, #475569)',
-        color: isHbcuTheme ? '#000000' : '#FFFFFF',
-        borderColor: isHbcuTheme ? hbcuRed : themeName === 'spelman-blue' ? 'hsl(201 40% 40%)' : themeName === 'spelhouse' ? 'hsl(352 65% 28%)' : themeName === 'music' ? 'hsl(180 100% 40%)' : 'rgba(71, 85, 105, 0.5)',
-        textShadow: isHbcuTheme ? 'none' : '0 1px 2px rgba(0,0,0,0.3)'
-      }}>
-          {/* Rivets - only show for default/glee-world theme */}
-          {themeName === 'glee-world' && <>
-              <span className="absolute top-1/2 -translate-y-1/2 left-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
-              <span className="absolute top-1/2 -translate-y-1/2 right-2 w-2 h-2 rounded-full bg-gradient-to-br from-slate-500 to-slate-700 shadow-inner border border-slate-700/50" />
-            </>}
-          <MessageSquare className="h-4 w-4" />
-          <span>Messages</span>
-        </button>
-      </div>
-
       {/* Tree Lighting Participation Survey - PROMINENT POSITION */}
       <div className="mb-4 relative z-10">
         <TreeLightingSurvey />
       </div>
-
-      {/* Exit Interview Call-to-Action */}
-      <a href="/member-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-white" style={{
-      backgroundColor: '#79242F',
-      color: '#FFFFFF'
-    }}>
-        📋 Complete Your Fall 2025 Exit Interview - Required for All Members
-      </a>
-
-      {/* Exec Board Exit Interview Card */}
-      {(user.is_exec_board || isAdmin || isSuperAdmin()) && <a href="/exec-board-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-amber-500/50" style={{
-      backgroundColor: '#D97706',
-      color: '#FFFFFF'
-    }}>
-          👑 Complete Exec Board Exit Interview - Required for Board Members
-        </a>}
 
       {/* Super Admin Layout Controls */}
       {isSuperAdmin() && isEditingLayout && <div className="flex items-center gap-2 justify-end mb-2">
