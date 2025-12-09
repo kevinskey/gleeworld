@@ -36,8 +36,8 @@ const COMMUNICATION_MODULES: CommunicationModule[] = [
   },
   {
     id: 'announcements',
-    title: 'Announcements',
-    description: 'View latest announcements',
+    title: 'News',
+    description: 'View announcements',
     icon: Megaphone,
     iconBg: 'bg-amber-900/50',
     iconColor: 'text-amber-400',
