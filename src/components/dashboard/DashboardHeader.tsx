@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { AnnouncementsDisplay } from './AnnouncementsDisplay';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface DashboardHeaderProps {
   user: any;
@@ -16,6 +17,9 @@ interface DashboardHeaderProps {
 export const DashboardHeader = ({ user, onToggleMessages, showMessages }: DashboardHeaderProps) => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const { themeName } = useTheme();
+  
+  const isSpelmanBlue = themeName === 'spelman-blue';
 
   const handleSignOut = async () => {
     await signOut();
@@ -23,30 +27,40 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
   };
 
   return (
-    <header className="h-20 bg-gradient-to-r from-primary/10 via-background to-destructive/10 backdrop-blur-sm border-b border-border px-6 flex items-center justify-between relative overflow-hidden">
-      {/* Holiday sparkle accents */}
-      <div className="absolute inset-0 pointer-events-none">
-        <Sparkles className="absolute top-2 left-[10%] w-4 h-4 text-amber-400/60 animate-pulse" />
-        <Sparkles className="absolute top-4 left-[30%] w-3 h-3 text-destructive/40 animate-pulse delay-300" />
-        <Sparkles className="absolute bottom-3 right-[20%] w-4 h-4 text-emerald-500/50 animate-pulse delay-500" />
-        <Sparkles className="absolute top-3 right-[40%] w-3 h-3 text-amber-400/50 animate-pulse delay-700" />
-      </div>
+    <header className={`h-20 backdrop-blur-sm border-b border-border px-6 flex items-center justify-between relative overflow-hidden ${
+      isSpelmanBlue 
+        ? 'bg-gradient-to-r from-[#0066CC] via-[#0077DD] to-[#0088EE]' 
+        : 'bg-gradient-to-r from-primary/10 via-background to-destructive/10'
+    }`}>
+      {/* Holiday sparkle accents - hide for Spelman Blue */}
+      {!isSpelmanBlue && (
+        <div className="absolute inset-0 pointer-events-none">
+          <Sparkles className="absolute top-2 left-[10%] w-4 h-4 text-amber-400/60 animate-pulse" />
+          <Sparkles className="absolute top-4 left-[30%] w-3 h-3 text-destructive/40 animate-pulse delay-300" />
+          <Sparkles className="absolute bottom-3 right-[20%] w-4 h-4 text-emerald-500/50 animate-pulse delay-500" />
+          <Sparkles className="absolute top-3 right-[40%] w-3 h-3 text-amber-400/50 animate-pulse delay-700" />
+        </div>
+      )}
 
       {/* Left side - Logo and branding */}
       <div className="flex items-center gap-6 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 bg-gradient-to-br from-destructive via-primary to-emerald-600 rounded-xl flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg ring-2 ring-amber-400/30">
+          <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg ${
+            isSpelmanBlue 
+              ? 'bg-white/20 text-white ring-2 ring-white/30' 
+              : 'bg-gradient-to-br from-destructive via-primary to-emerald-600 text-primary-foreground ring-2 ring-amber-400/30'
+          }`}>
             <span className="font-['Cinzel'] text-xl">G</span>
           </div>
           <div>
-            <h1 className="text-2xl lg:text-4xl font-bold text-foreground font-['Cinzel'] tracking-wide flex items-center gap-2">
-              <span className="bg-gradient-to-r from-primary via-destructive to-emerald-600 bg-clip-text text-transparent">
-                GleeWorld
+            <h1 className="text-2xl lg:text-4xl font-bold font-['Cinzel'] tracking-wide flex items-center gap-2">
+              <span className={isSpelmanBlue ? 'text-white' : 'bg-gradient-to-r from-primary via-destructive to-emerald-600 bg-clip-text text-transparent'}>
+                {isSpelmanBlue ? 'Portal' : 'GleeWorld'}
               </span>
-              <span className="text-amber-500 text-sm">✨</span>
+              {!isSpelmanBlue && <span className="text-amber-500 text-sm">✨</span>}
             </h1>
-            <p className="text-xs text-muted-foreground font-['Dancing_Script'] text-base italic">
-              Season of Joy & Song
+            <p className={`text-xs font-['Dancing_Script'] text-base italic ${isSpelmanBlue ? 'text-white/80' : 'text-muted-foreground'}`}>
+              {isSpelmanBlue ? 'Spelman College Glee Club' : 'Season of Joy & Song'}
             </p>
           </div>
         </div>
