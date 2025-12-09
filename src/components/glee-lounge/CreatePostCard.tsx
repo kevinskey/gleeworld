@@ -10,10 +10,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home, Mic, Monitor, Smile, MapPinIcon, BarChart3, MessageSquare, Flag, Expand } from 'lucide-react';
+import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home, Mic, Monitor, Smile, MapPinIcon, BarChart3, MessageSquare, Expand, Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { PollCreator } from '@/components/messaging/PollCreator';
 interface CreatePostCardProps {
   userProfile: {
     user_id: string;
@@ -67,6 +68,8 @@ export function CreatePostCard({
   const [reactionsEnabled, setReactionsEnabled] = useState(true);
   const [qnaEnabled, setQnaEnabled] = useState(false);
   const [pollsEnabled, setPollsEnabled] = useState(false);
+  const [showLivePollCreator, setShowLivePollCreator] = useState(false);
+  const [livePolls, setLivePolls] = useState<{question: string, id: string}[]>([]);
   const {
     toast
   } = useToast();
@@ -836,7 +839,7 @@ export function CreatePostCard({
                   </div>
 
                   {/* Right Sidebar - Post Details */}
-                  <div className="w-80 border-l border-border p-4 bg-card">
+                  <div className="w-80 border-l border-border p-4 bg-card overflow-y-auto">
                     <h3 className="font-semibold text-foreground mb-4">Add post details</h3>
                     
                     {/* Share to story checkbox */}
@@ -872,16 +875,87 @@ export function CreatePostCard({
                         <Users className="h-5 w-5 text-orange-400 cursor-pointer" />
                         <MapPinIcon className="h-5 w-5 text-red-400 cursor-pointer" />
                         <Smile className="h-5 w-5 text-yellow-400 cursor-pointer" />
-                        <div className="w-5 h-5 rounded-full bg-red-500 flex items-center justify-center cursor-pointer">
-                          <span className="text-xs text-white">😠</span>
+                      </div>
+                    </div>
+
+                    {/* Live Polls Section - Only shows when polls are enabled */}
+                    {pollsEnabled && (
+                      <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-medium text-foreground flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4" />
+                            Live Polls
+                          </h4>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setShowLivePollCreator(!showLivePollCreator)}
+                          >
+                            <Plus className="h-4 w-4 mr-1" />
+                            Create Poll
+                          </Button>
                         </div>
+                        
+                        {showLivePollCreator && (
+                          <div className="mb-4 p-3 bg-card rounded-lg border border-border">
+                            <PollCreator 
+                              groupId="live-stream" 
+                              inline={true}
+                              onPollCreated={() => {
+                                setShowLivePollCreator(false);
+                                toast({
+                                  title: "Poll Created",
+                                  description: "Your poll will appear to viewers during the live stream"
+                                });
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {livePolls.length === 0 && !showLivePollCreator && (
+                          <p className="text-sm text-muted-foreground text-center py-2">
+                            No polls created yet. Create a poll to engage your viewers!
+                          </p>
+                        )}
+
+                        {livePolls.length > 0 && (
+                          <div className="space-y-2">
+                            {livePolls.map((poll) => (
+                              <div key={poll.id} className="p-2 bg-card rounded border border-border text-sm">
+                                {poll.question}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Interactivity Summary */}
+                    <div className="mb-6 p-3 bg-muted/30 rounded-lg">
+                      <p className="text-xs text-muted-foreground mb-2">Enabled features:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {commentsEnabled && (
+                          <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">Comments</span>
+                        )}
+                        {reactionsEnabled && (
+                          <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">Reactions</span>
+                        )}
+                        {qnaEnabled && (
+                          <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">Q&A</span>
+                        )}
+                        {pollsEnabled && (
+                          <span className="text-xs px-2 py-1 bg-primary/20 text-primary rounded-full">Polls</span>
+                        )}
+                        {!commentsEnabled && !reactionsEnabled && !qnaEnabled && !pollsEnabled && (
+                          <span className="text-xs text-muted-foreground">No interactivity enabled</span>
+                        )}
                       </div>
                     </div>
 
                     {/* Go Live Button */}
                     <Button 
                       className="w-full bg-red-500 hover:bg-red-600 text-white"
-                      disabled={!cameraStream}
+                      disabled={!cameraStream && !screenStream}
                       onClick={() => {
                         toast({
                           title: "Going Live!",
