@@ -73,7 +73,7 @@ export const CommunicationsCard = ({
   };
   return <Card className="bg-background/95 backdrop-blur-sm">
       <CardHeader className="py-3 px-3 sm:px-0">
-        <CardTitle className="flex items-center gap-2 !text-white">
+        <CardTitle className="flex items-center gap-2 !text-white pl-[20px]">
           <Radio className="h-5 w-5 !text-white" />
           Communications
           <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
