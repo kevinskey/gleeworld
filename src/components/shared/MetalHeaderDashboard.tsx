@@ -742,6 +742,11 @@ export const MetalHeaderDashboard = ({
         </button>
       </div>
 
+      {/* Tree Lighting Participation Survey - PROMINENT POSITION */}
+      <div className="mb-4 relative z-10">
+        <TreeLightingSurvey />
+      </div>
+
       {/* Exit Interview Call-to-Action */}
       <a href="/member-exit-interview" className="block w-full px-4 py-3 mb-2 rounded-lg text-center font-semibold text-sm hover:opacity-90 transition-opacity border-2 border-white" style={{
         backgroundColor: '#79242F',
@@ -759,11 +764,6 @@ export const MetalHeaderDashboard = ({
           👑 Complete Exec Board Exit Interview - Required for Board Members
         </a>
       )}
-
-      {/* Tree Lighting Participation Survey */}
-      <div className="mb-4 relative z-10">
-        <TreeLightingSurvey />
-      </div>
 
       {/* Super Admin Layout Controls */}
       {isSuperAdmin() && isEditingLayout && <div className="flex items-center gap-2 justify-end mb-2">
