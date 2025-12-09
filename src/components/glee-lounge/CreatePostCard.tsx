@@ -598,9 +598,9 @@ export function CreatePostCard({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="friends">Friends</SelectItem>
-                        <SelectItem value="public">Public</SelectItem>
-                        <SelectItem value="private">Only me</SelectItem>
+                        <SelectItem value="friends">Members</SelectItem>
+                        <SelectItem value="public">Exec-Board</SelectItem>
+                        <SelectItem value="private">Selected Group</SelectItem>
                       </SelectContent>
                     </Select>
 
