@@ -247,109 +247,180 @@ export function CreatePostCard({
   const isVideo = (url: string) => {
     return url.match(/\.(mp4|mov|webm|ogg)$/i);
   };
-  return <Card className="mb-4">
-      <CardContent className="pt-4">
-        <div className="flex gap-3">
-          <Avatar className="h-10 w-10">
+  return <Card className="mb-4 border-0 shadow-sm bg-card">
+      <CardContent className="p-3">
+        {/* Compact horizontal layout */}
+        <div className="flex items-center gap-3">
+          <Avatar className="h-12 w-12 shrink-0">
             <AvatarImage src={getAvatarUrl(userProfile?.avatar_url) || undefined} />
             <AvatarFallback className="bg-primary text-primary-foreground">
               {getInitials(userProfile?.full_name)}
             </AvatarFallback>
           </Avatar>
           
-          <div className="flex-1 space-y-3">
-            <Textarea value={content} onChange={e => setContent(e.target.value)} className="min-h-[80px] resize-none border border-border bg-background text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-1" placeholder="What's on your mind? Share updates with the glee fam about your break!" />
+          {/* Pill-shaped input area */}
+          <div 
+            className="flex-1 flex items-center bg-muted/50 hover:bg-muted/70 rounded-full px-4 py-3 cursor-pointer transition-colors"
+            onClick={() => document.getElementById('post-textarea')?.focus()}
+          >
+            <span className="text-muted-foreground text-sm">
+              What's on your mind, {userProfile?.full_name?.split(' ')[0] || 'friend'}?
+            </span>
+          </div>
+
+          {/* Colorful action buttons */}
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Camera/Video - Red */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
+              disabled={isUploading}
+              asChild
+            >
+              <label className="cursor-pointer">
+                {isUploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <ImagePlus className="h-5 w-5 text-red-500" />
+                )}
+                <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaUpload} disabled={isUploading} />
+              </label>
+            </Button>
+
+            {/* Glee Cam - Green */}
+            <Dialog open={showPhotoPicker} onOpenChange={setShowPhotoPicker}>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-green-100 dark:hover:bg-green-900/30">
+                  <Camera className="h-5 w-5 text-green-500" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Select from Glee Cam</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="h-[350px]">
+                  {loadingPhotos ? <div className="flex items-center justify-center h-full">
+                      <Loader2 className="h-6 w-6 animate-spin" />
+                    </div> : gleeCamPhotos.length === 0 ? <div className="text-center text-muted-foreground py-8">
+                      <Camera className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>No Glee Cam photos yet</p>
+                      <p className="text-sm">Take some photos with Glee Cam first!</p>
+                    </div> : <div className="space-y-4 p-1">
+                      {Object.entries(gleeCamPhotos.reduce((acc, photo) => {
+                    const cat = photo.category || 'Uncategorized';
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(photo);
+                    return acc;
+                  }, {} as Record<string, GleeCamPhoto[]>)).map(([category, photos]) => <div key={category}>
+                          <h4 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
+                            {category.replace(/-/g, ' ')}
+                          </h4>
+                          <div className="grid grid-cols-3 gap-2">
+                            {photos.map((photo, idx) => <div key={`${photo.name}-${idx}`} className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-colors ${selectedPhotos.includes(photo.url) ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30'}`} onClick={() => togglePhotoSelection(photo.url)}>
+                                {isVideo(photo.url) ? <video src={photo.url} className="w-full h-20 object-cover" muted /> : <img src={photo.url} alt={photo.name} className="w-full h-20 object-cover" />}
+                                {selectedPhotos.includes(photo.url) && <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
+                                    <Check className="h-5 w-5 text-primary-foreground" />
+                                  </div>}
+                              </div>)}
+                          </div>
+                        </div>)}
+                    </div>}
+                </ScrollArea>
+                {selectedPhotos.length > 0 && <Button onClick={addSelectedPhotos} className="w-full">
+                    Add {selectedPhotos.length} photo(s)
+                  </Button>}
+              </DialogContent>
+            </Dialog>
+
+            {/* Location/Emoji - Yellow */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+              onClick={() => setShowLocation(!showLocation)}
+            >
+              <MapPin className="h-5 w-5 text-yellow-600" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Expanded compose area (hidden by default, shown when typing) */}
+        {(content || showLocation || mediaUrls.length > 0) && (
+          <div className="mt-3 space-y-3 pt-3 border-t border-border">
+            <Textarea 
+              id="post-textarea"
+              value={content} 
+              onChange={e => setContent(e.target.value)} 
+              className="min-h-[80px] resize-none border border-border bg-background text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-1" 
+              placeholder="Share what's happening..." 
+              autoFocus
+            />
             
-            {showLocation && <div className="flex items-center gap-2">
+            {showLocation && (
+              <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Add location (e.g., Miami Beach 🌴)" value={locationTag} onChange={e => setLocationTag(e.target.value)} className="h-8 text-sm" />
+                <Input 
+                  placeholder="Add location (e.g., Miami Beach 🌴)" 
+                  value={locationTag} 
+                  onChange={e => setLocationTag(e.target.value)} 
+                  className="h-8 text-sm bg-background text-foreground" 
+                />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-              setShowLocation(false);
-              setLocationTag('');
-            }}>
+                  setShowLocation(false);
+                  setLocationTag('');
+                }}>
                   <X className="h-4 w-4" />
                 </Button>
-              </div>}
+              </div>
+            )}
 
-            {mediaUrls.length > 0 && <div className="flex gap-2 flex-wrap">
-                {mediaUrls.map((url, index) => <div key={index} className="relative bg-muted rounded-md">
-                    {isVideo(url) ? <video src={url} className="h-16 w-16 object-contain rounded-md" muted /> : <img src={url} alt="Upload" className="h-16 w-16 object-contain rounded-md" />}
-                    <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-5 w-5" onClick={() => setMediaUrls(prev => prev.filter((_, i) => i !== index))}>
+            {mediaUrls.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {mediaUrls.map((url, index) => (
+                  <div key={index} className="relative bg-muted rounded-md">
+                    {isVideo(url) ? (
+                      <video src={url} className="h-16 w-16 object-contain rounded-md" muted />
+                    ) : (
+                      <img src={url} alt="Upload" className="h-16 w-16 object-contain rounded-md" />
+                    )}
+                    <Button 
+                      variant="destructive" 
+                      size="icon" 
+                      className="absolute -top-2 -right-2 h-5 w-5" 
+                      onClick={() => setMediaUrls(prev => prev.filter((_, i) => i !== index))}
+                    >
                       <X className="h-3 w-3" />
                     </Button>
-                  </div>)}
-              </div>}
-            
-            <div className="flex items-center justify-between pt-2 border-t border-border">
-              <div className="flex gap-1">
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground hover:text-foreground" disabled={isUploading} asChild>
-                  <label>
-                    {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
-                    <span className="hidden sm:inline">{isUploading ? 'Uploading...' : 'Photo'}</span>
-                    <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleMediaUpload} disabled={isUploading} />
-                  </label>
-                </Button>
-
-                {/* Glee Cam Photo Picker */}
-                <Dialog open={showPhotoPicker} onOpenChange={setShowPhotoPicker}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground hover:text-foreground">
-                      <Camera className="h-4 w-4" />
-                      <span className="hidden sm:inline">Glee Cam</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Select from Glee Cam</DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="h-[350px]">
-                      {loadingPhotos ? <div className="flex items-center justify-center h-full">
-                          <Loader2 className="h-6 w-6 animate-spin" />
-                        </div> : gleeCamPhotos.length === 0 ? <div className="text-center text-muted-foreground py-8">
-                          <Camera className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                          <p>No Glee Cam photos yet</p>
-                          <p className="text-sm">Take some photos with Glee Cam first!</p>
-                        </div> : <div className="space-y-4 p-1">
-                          {/* Group photos by category */}
-                          {Object.entries(gleeCamPhotos.reduce((acc, photo) => {
-                        const cat = photo.category || 'Uncategorized';
-                        if (!acc[cat]) acc[cat] = [];
-                        acc[cat].push(photo);
-                        return acc;
-                      }, {} as Record<string, GleeCamPhoto[]>)).map(([category, photos]) => <div key={category}>
-                              <h4 className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-                                {category.replace(/-/g, ' ')}
-                              </h4>
-                              <div className="grid grid-cols-3 gap-2">
-                                {photos.map((photo, idx) => <div key={`${photo.name}-${idx}`} className={`relative cursor-pointer rounded-md overflow-hidden border-2 transition-colors ${selectedPhotos.includes(photo.url) ? 'border-primary' : 'border-transparent hover:border-muted-foreground/30'}`} onClick={() => togglePhotoSelection(photo.url)}>
-                                    {isVideo(photo.url) ? <video src={photo.url} className="w-full h-20 object-cover" muted /> : <img src={photo.url} alt={photo.name} className="w-full h-20 object-cover" />}
-                                    {selectedPhotos.includes(photo.url) && <div className="absolute inset-0 bg-primary/30 flex items-center justify-center">
-                                        <Check className="h-5 w-5 text-primary-foreground" />
-                                      </div>}
-                                  </div>)}
-                              </div>
-                            </div>)}
-                        </div>}
-                    </ScrollArea>
-                    {selectedPhotos.length > 0 && <Button onClick={addSelectedPhotos} className="w-full">
-                        Add {selectedPhotos.length} photo(s)
-                      </Button>}
-                  </DialogContent>
-                </Dialog>
-                
-                <Button variant="ghost" size="sm" className="h-8 gap-1.5 text-muted-foreground hover:text-foreground" onClick={() => setShowLocation(!showLocation)}>
-                  <MapPin className="h-4 w-4" />
-                  <span className="hidden sm:inline">Location</span>
-                </Button>
+                  </div>
+                ))}
               </div>
-              
-              <Button size="sm" onClick={handleSubmit} disabled={isSubmitting || !content.trim()} className="gap-1.5">
+            )}
+            
+            <div className="flex justify-end">
+              <Button 
+                size="sm" 
+                onClick={handleSubmit} 
+                disabled={isSubmitting || !content.trim()} 
+                className="gap-1.5"
+              >
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 Post
               </Button>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Click-to-expand trigger when collapsed */}
+        {!content && !showLocation && mediaUrls.length === 0 && (
+          <Textarea 
+            id="post-textarea"
+            value={content} 
+            onChange={e => setContent(e.target.value)} 
+            className="sr-only" 
+            placeholder="Share what's happening..." 
+          />
+        )}
       </CardContent>
     </Card>;
 }
