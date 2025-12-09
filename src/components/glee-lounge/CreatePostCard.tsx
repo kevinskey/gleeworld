@@ -62,6 +62,11 @@ export function CreatePostCard({
   const [showInteractivity, setShowInteractivity] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
+  // Interactivity settings (Facebook Live style)
+  const [commentsEnabled, setCommentsEnabled] = useState(true);
+  const [reactionsEnabled, setReactionsEnabled] = useState(true);
+  const [qnaEnabled, setQnaEnabled] = useState(false);
+  const [pollsEnabled, setPollsEnabled] = useState(false);
   const {
     toast
   } = useToast();
@@ -599,19 +604,74 @@ export function CreatePostCard({
                           <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${showInteractivity ? 'rotate-180' : ''}`} />
                         </Button>
                         {showInteractivity && (
-                          <div className="ml-7 mt-1 space-y-1">
-                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                              Comments
-                            </Button>
-                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                              Reactions
-                            </Button>
-                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                              Q&A
-                            </Button>
-                            <Button variant="ghost" size="sm" className="w-full justify-start text-xs">
-                              Polls
-                            </Button>
+                          <div className="ml-4 mt-2 space-y-3 p-3 bg-muted/30 rounded-lg">
+                            {/* Comments Toggle */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-foreground">Comments</span>
+                              </div>
+                              <button
+                                onClick={() => setCommentsEnabled(!commentsEnabled)}
+                                className={`w-10 h-6 rounded-full transition-colors ${commentsEnabled ? 'bg-primary' : 'bg-muted'}`}
+                              >
+                                <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${commentsEnabled ? 'translate-x-4' : ''}`} />
+                              </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-6">
+                              {commentsEnabled ? 'Viewers can comment during your live' : 'Comments are disabled'}
+                            </p>
+
+                            {/* Reactions Toggle */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Smile className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-foreground">Reactions</span>
+                              </div>
+                              <button
+                                onClick={() => setReactionsEnabled(!reactionsEnabled)}
+                                className={`w-10 h-6 rounded-full transition-colors ${reactionsEnabled ? 'bg-primary' : 'bg-muted'}`}
+                              >
+                                <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${reactionsEnabled ? 'translate-x-4' : ''}`} />
+                              </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-6">
+                              {reactionsEnabled ? 'Floating emoji reactions appear on screen' : 'Reactions are disabled'}
+                            </p>
+
+                            {/* Q&A Toggle */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-foreground">Q&A</span>
+                              </div>
+                              <button
+                                onClick={() => setQnaEnabled(!qnaEnabled)}
+                                className={`w-10 h-6 rounded-full transition-colors ${qnaEnabled ? 'bg-primary' : 'bg-muted'}`}
+                              >
+                                <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${qnaEnabled ? 'translate-x-4' : ''}`} />
+                              </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-6">
+                              {qnaEnabled ? 'Viewers can submit questions for you to answer' : 'Q&A is disabled'}
+                            </p>
+
+                            {/* Polls Toggle */}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-foreground">Polls</span>
+                              </div>
+                              <button
+                                onClick={() => setPollsEnabled(!pollsEnabled)}
+                                className={`w-10 h-6 rounded-full transition-colors ${pollsEnabled ? 'bg-primary' : 'bg-muted'}`}
+                              >
+                                <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${pollsEnabled ? 'translate-x-4' : ''}`} />
+                              </button>
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-6">
+                              {pollsEnabled ? 'Create live polls for viewer voting' : 'Polls are disabled'}
+                            </p>
                           </div>
                         )}
                       </div>
