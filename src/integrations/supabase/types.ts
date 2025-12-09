@@ -6821,6 +6821,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_content_reports: {
+        Row: {
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          reason: string | null
+          reported_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reported_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          reported_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       gw_courses: {
         Row: {
           code: string | null
@@ -9319,6 +9355,36 @@ export type Database = {
           status?: string
           subject?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      gw_moderation_log: {
+        Row: {
+          action_type: string
+          content_id: string
+          content_type: string
+          created_at: string
+          id: string
+          moderator_id: string
+          reason: string | null
+        }
+        Insert: {
+          action_type: string
+          content_id: string
+          content_type: string
+          created_at?: string
+          id?: string
+          moderator_id: string
+          reason?: string | null
+        }
+        Update: {
+          action_type?: string
+          content_id?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          moderator_id?: string
+          reason?: string | null
         }
         Relationships: []
       }
@@ -13837,6 +13903,41 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_social_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_hidden: boolean
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_social_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "gw_social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_social_media_posts: {
         Row: {
           approved_by: string | null
@@ -13902,6 +14003,74 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      gw_social_posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_hidden: boolean
+          is_pinned: boolean
+          location_tag: string | null
+          media_urls: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          is_pinned?: boolean
+          location_tag?: string | null
+          media_urls?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_hidden?: boolean
+          is_pinned?: boolean
+          location_tag?: string | null
+          media_urls?: string[] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gw_social_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_social_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "gw_social_posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_spiritual_reflections: {
         Row: {
@@ -22396,6 +22565,7 @@ export type Database = {
       is_executive_board_or_admin: { Args: never; Returns: boolean }
       is_fy_coordinator: { Args: never; Returns: boolean }
       is_fy_staff: { Args: never; Returns: boolean }
+      is_glee_admin: { Args: never; Returns: boolean }
       is_gw_admin: { Args: never; Returns: boolean }
       is_gw_admin_safe: { Args: never; Returns: boolean }
       is_gw_admin_v2: { Args: never; Returns: boolean }
