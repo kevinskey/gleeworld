@@ -25,6 +25,7 @@ interface PostCardProps {
     avatar_url: string | null;
   } | null;
   onRefresh?: () => void;
+  compact?: boolean;
 }
 const isVideoUrl = (url: string | undefined | null): boolean => {
   if (!url) return false;
@@ -35,7 +36,8 @@ const isVideoUrl = (url: string | undefined | null): boolean => {
 export function PostCard({
   post,
   userProfile,
-  onRefresh
+  onRefresh,
+  compact = false
 }: PostCardProps) {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
@@ -137,6 +139,111 @@ export function PostCard({
       </div>
     );
   };
+  // Compact mode styling
+  const renderCompactMediaItem = (url: string, index: number) => {
+    const isVideo = isVideoUrl(url);
+    if (isVideo) {
+      return (
+        <div key={index} className="relative cursor-pointer group h-16 rounded overflow-hidden" onClick={() => openLightbox(index)}>
+          <video src={url} className="w-full h-full object-cover" muted playsInline />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <Play className="h-4 w-4 text-white fill-current" />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <img 
+        key={index} 
+        src={url} 
+        alt={`Post media ${index + 1}`} 
+        className="h-16 w-16 object-cover rounded cursor-pointer hover:opacity-80" 
+        onClick={() => openLightbox(index)}
+      />
+    );
+  };
+
+  if (compact) {
+    return (
+      <>
+        <Card className="mb-2">
+          <CardContent className="p-2">
+            {/* Compact Header */}
+            <div className="flex items-center gap-2 mb-1">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={getAvatarUrl(post.author?.avatar_url) || undefined} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                  {getInitials(post.author?.full_name)}
+                </AvatarFallback>
+              </Avatar>
+              <span className="text-xs font-medium text-foreground truncate flex-1">
+                {post.author?.full_name || 'Member'}
+              </span>
+              <span className="text-[10px] text-muted-foreground">
+                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+              </span>
+              {post.is_pinned && <Pin className="h-3 w-3 text-primary" />}
+            </div>
+
+            {/* Compact Content */}
+            <p className="text-xs text-foreground line-clamp-2 mb-1">{post.content}</p>
+
+            {/* Compact Media thumbnails */}
+            {post.media_urls && post.media_urls.length > 0 && (
+              <div className="flex gap-1 mb-1 overflow-hidden">
+                {post.media_urls.slice(0, 3).map((url, index) => renderCompactMediaItem(url, index))}
+                {post.media_urls.length > 3 && (
+                  <div className="h-16 w-16 rounded bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                    +{post.media_urls.length - 3}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Compact Reactions - simplified */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {post.reactions && Object.keys(post.reactions).length > 0 && (
+                <span>{Object.values(post.reactions).reduce((a, b) => a + b, 0)} reactions</span>
+              )}
+              {post.comment_count > 0 && (
+                <span>{post.comment_count} comments</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Media Lightbox */}
+        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+          <DialogContent className="max-w-4xl p-0 bg-black/95 border-none">
+            <div className="relative flex items-center justify-center min-h-[50vh]">
+              <Button variant="ghost" size="icon" className="absolute top-2 right-2 z-10 text-white hover:bg-white/20" onClick={() => setLightboxOpen(false)}>
+                <X className="h-6 w-6" />
+              </Button>
+              {post.media_urls && post.media_urls.length > 1 && (
+                <>
+                  <Button variant="ghost" size="icon" className="absolute left-2 z-10 text-white hover:bg-white/20 disabled:opacity-30" onClick={prevMedia} disabled={lightboxIndex === 0}>
+                    <ChevronLeft className="h-8 w-8" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="absolute right-2 z-10 text-white hover:bg-white/20 disabled:opacity-30" onClick={nextMedia} disabled={lightboxIndex === post.media_urls.length - 1}>
+                    <ChevronRight className="h-8 w-8" />
+                  </Button>
+                </>
+              )}
+              <div className="p-4">
+                {post.media_urls && renderMediaItem(post.media_urls[lightboxIndex], lightboxIndex, true)}
+              </div>
+              {post.media_urls && post.media_urls.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white text-sm">
+                  {lightboxIndex + 1} / {post.media_urls.length}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
   return <>
       <Card className="mb-4">
         <CardContent className="pt-4">
