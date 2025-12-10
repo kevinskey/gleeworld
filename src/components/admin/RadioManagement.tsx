@@ -362,7 +362,7 @@ export const RadioManagement = () => {
                       </Button>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-medium truncate">{track.title}</span>
+                          <span className="text-xs font-medium truncate text-foreground">{track.title}</span>
                           <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4 shrink-0", getCategoryBadge(track.category))}>
                             {track.category}
                           </Badge>
