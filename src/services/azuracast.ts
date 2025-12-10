@@ -230,7 +230,7 @@ class AzuraCastService {
 
   // PLAYLIST MANAGEMENT
   async getPlaylists(): Promise<any[]> {
-    return await this.makeProxyRequest(`/station/{stationId}/playlists`);
+    return await this.makeProxyRequest(`/station/{stationId}/playlists`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   async createPlaylist(playlistData: {
@@ -286,7 +286,7 @@ class AzuraCastService {
 
   // SCHEDULE CONTROL
   async getSchedule(): Promise<any[]> {
-    return await this.makeProxyRequest(`/station/{stationId}/schedule`);
+    return await this.makeProxyRequest(`/station/{stationId}/schedule`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   async createScheduleEntry(scheduleData: {
@@ -382,7 +382,7 @@ class AzuraCastService {
   // QUEUE MANAGEMENT
   async getQueue(): Promise<any[]> {
     console.log('AzuraCast: Fetching queue...');
-    return await this.makeProxyRequest(`/station/{stationId}/queue`);
+    return await this.makeProxyRequest(`/station/{stationId}/queue`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   async clearQueue(): Promise<void> {
@@ -471,7 +471,7 @@ class AzuraCastService {
 
   // MOUNT POINTS
   async getMounts(): Promise<any[]> {
-    return await this.makeProxyRequest(`/station/{stationId}/mounts`);
+    return await this.makeProxyRequest(`/station/{stationId}/mounts`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   async createMount(mountData: {
@@ -506,7 +506,7 @@ class AzuraCastService {
 
   // SONG HISTORY
   async getSongHistory(): Promise<any[]> {
-    return await this.makeProxyRequest(`/station/{stationId}/history`);
+    return await this.makeProxyRequest(`/station/{stationId}/history`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   // REPORTS
@@ -529,7 +529,7 @@ class AzuraCastService {
 
   // WEBHOOKS
   async getWebhooks(): Promise<any[]> {
-    return await this.makeProxyRequest(`/station/{stationId}/webhooks`);
+    return await this.makeProxyRequest(`/station/{stationId}/webhooks`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   async createWebhook(webhookData: {
