@@ -172,7 +172,7 @@ export const HeaderRadioControls = () => {
 
                     {/* Scrolling Now Playing Ticker */}
                     {currentTrack && isOnline && (
-                      <div className="relative overflow-hidden flex-1 max-w-[200px] sm:max-w-[300px] lg:max-w-[400px] h-6 bg-muted/30 px-2">
+                      <div className="relative overflow-hidden w-[50%] h-6 bg-muted/30 px-2">
                         <div className="absolute whitespace-nowrap animate-marquee flex items-center h-full gap-8">
                           <span className="text-xs">
                             <span className="text-primary font-semibold">Now Playing:</span>{' '}
