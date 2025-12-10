@@ -124,13 +124,13 @@ const spelmanBlueTheme: ThemeConfig = {
     secondaryForeground: '0 0% 100%',   // White on secondary
     accent: '208 100% 43%',             // Lighter Spelman Blue #0073c9
     accentForeground: '0 0% 100%',      // White on accent
-    background: '0 0% 100%',            // Pure white background
-    foreground: '210 29% 24%',          // Dark blue-gray text #2c3e50
-    card: '0 0% 100%',                  // Pure white cards
-    cardForeground: '210 29% 24%',      // Dark text on cards
-    muted: '210 40% 96%',               // Very light blue-gray
-    mutedForeground: '215 16% 47%',     // Medium gray text
-    border: '214 32% 91%',              // Light blue-gray border
+    background: '208 100% 33%',         // Spelman Blue background
+    foreground: '0 0% 100%',            // White text for dark background
+    card: '208 80% 25%',                // Darker blue for cards
+    cardForeground: '0 0% 100%',        // White text on cards
+    muted: '208 60% 30%',               // Muted blue backgrounds
+    mutedForeground: '0 0% 90%',        // Light muted text
+    border: '208 50% 40%',              // Blue border
   },
   
   typography: {
@@ -140,8 +140,9 @@ const spelmanBlueTheme: ThemeConfig = {
   },
   
   background: {
-    type: 'solid',
-    value: 'hsl(0 0% 100%)',
+    type: 'gradient',
+    value: 'linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)',
+    overlay: 'none',
   },
   
   decorations: {
