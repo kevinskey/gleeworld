@@ -99,11 +99,14 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
   };
 
   const handleDirectMessage = async (userId: string) => {
+    console.log('handleDirectMessage called with userId:', userId);
     try {
       const conversation = await createDirectMessage.mutateAsync(userId);
+      console.log('Direct message conversation created:', conversation);
       onSelectUser?.(conversation.id);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to create direct message:', error);
+      console.error('Error details:', error?.message, error?.code, error?.details);
     }
   };
 
