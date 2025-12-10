@@ -96,8 +96,8 @@ export const useMetronome = () => {
       stopMetronome();
     }
     
-    // Force unlock audio on iOS - must happen during user gesture
-    await forceUnlockAudio();
+    // Force unlock audio on iOS - synchronous call within user gesture
+    forceUnlockAudio();
     
     const ctx = await getAudioContext();
     if (!ctx) {
@@ -108,7 +108,7 @@ export const useMetronome = () => {
     // Store reference for playClick to use synchronously
     audioContextRef.current = ctx;
     
-    // Single resume attempt (no loops/delays)
+    // Single resume attempt
     if (ctx.state !== 'running') {
       await ctx.resume();
     }
