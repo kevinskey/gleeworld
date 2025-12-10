@@ -27,8 +27,8 @@ export const FavoritesCard = ({
           <CollapsibleTrigger asChild>
             <CardHeader className="py-3 px-3 sm:px-0 cursor-pointer hover:bg-primary/5 transition-colors">
               <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
-                <Heart className="h-5 w-5 !text-red-500" />
-                Favorites
+              <Heart className="h-5 w-5 !text-red-500" />
+              My Fav Apps
                 <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
                   scroll to choose your fav!
                 </span>
@@ -61,7 +61,7 @@ export const FavoritesCard = ({
           <CardHeader className="py-3 px-3 sm:px-0 cursor-pointer hover:bg-primary/5 transition-colors">
             <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
               <Heart className="h-5 w-5 !text-red-500 fill-current" />
-              Favorites
+              My Fav Apps
               <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
                 scroll to choose your fav!
               </span>
