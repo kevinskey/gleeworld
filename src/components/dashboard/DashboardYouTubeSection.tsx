@@ -69,7 +69,8 @@ export const DashboardYouTubeSection = () => {
     const id = extractVideoId(videoId);
     const params = new URLSearchParams({
       autoplay: '1',
-      mute: '1', // Start muted to allow autoplay on mobile
+      mute: '1',
+      // Start muted to allow autoplay on mobile
       rel: '0',
       modestbranding: '1',
       controls: '1',
@@ -175,7 +176,7 @@ export const DashboardYouTubeSection = () => {
         {isUploaded ? <video src={video.video_url!} className="absolute inset-0 w-full h-full object-cover" muted playsInline preload="metadata" /> : <img src={thumbnailUrl} alt={video.title || 'Video thumbnail'} className="absolute inset-0 w-full h-full object-cover" />}
         
         {/* Overlay */}
-        <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/30 transition-colors duration-300" />
+        <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/30 transition-colors duration-300 opacity-100" />
         
         {/* Title - Bottom Left */}
         {video.title && <div className="absolute bottom-0 left-0 right-8 sm:right-12 bg-gradient-to-t from-foreground/80 via-foreground/40 to-transparent p-1.5 sm:p-2 z-10">
