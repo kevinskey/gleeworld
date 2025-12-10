@@ -91,23 +91,14 @@ export default function GleeLounge() {
         showMusicLibrary={showMusicLibrary}
         onToggleMusicLibrary={() => setShowMusicLibrary(false)}
       >
-        <div className="h-full flex flex-col bg-background">
+        <div className="h-full flex flex-col bg-background relative">
           {/* Compact Header */}
-          <header className="sticky top-0 z-40 bg-background border-b border-border px-3 py-2">
+          <header className="sticky top-0 z-40 bg-card border-b border-border px-3 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sofa className="h-5 w-5 text-primary" />
-                <span className="font-semibold text-sm">Lounge</span>
+                <Sofa className="h-4 w-4 text-primary" />
+                <span className="font-semibold text-xs">Lounge</span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowMusicLibrary(false)}
-                className="h-7 text-xs"
-              >
-                <Music className="h-3 w-3 mr-1" />
-                Close
-              </Button>
             </div>
           </header>
 
@@ -115,6 +106,17 @@ export default function GleeLounge() {
           <div className="flex-1 overflow-auto p-2">
             <SocialFeed ref={feedRef} userProfile={userProfile} compact={true} />
           </div>
+
+          {/* Floating Exit Button */}
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowMusicLibrary(false)}
+            className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 shadow-lg gap-1 text-xs"
+          >
+            <ArrowLeft className="h-3 w-3" />
+            Exit Split View
+          </Button>
         </div>
       </GleeLoungeWithMusicLibrary>
     );
