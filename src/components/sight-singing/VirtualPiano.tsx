@@ -11,115 +11,63 @@ interface VirtualPianoProps {
   onClose?: () => void;
 }
 
-// Base frequencies for one octave starting at C4 (middle C)
-const baseWhiteKeysPerOctave = [{
-  note: 'C',
-  baseFrequency: 261.63
-}, {
-  note: 'D',
-  baseFrequency: 293.66
-}, {
-  note: 'E',
-  baseFrequency: 329.63
-}, {
-  note: 'F',
-  baseFrequency: 349.23
-}, {
-  note: 'G',
-  baseFrequency: 392.0
-}, {
-  note: 'A',
-  baseFrequency: 440.0
-}, {
-  note: 'B',
-  baseFrequency: 493.88
-}];
-const baseBlackKeysPerOctave = [{
-  note: 'C#',
-  baseFrequency: 277.18,
-  positionInOctave: 0.5
-}, {
-  note: 'D#',
-  baseFrequency: 311.13,
-  positionInOctave: 1.5
-}, {
-  note: 'F#',
-  baseFrequency: 369.99,
-  positionInOctave: 3.5
-}, {
-  note: 'G#',
-  baseFrequency: 415.3,
-  positionInOctave: 4.5
-}, {
-  note: 'A#',
-  baseFrequency: 466.16,
-  positionInOctave: 5.5
-}];
+// Calculate frequency using equal temperament (A4 = 440Hz)
+const getFrequency = (note: string, octave: number): number => {
+  const noteOffsets: Record<string, number> = {
+    'C': -9, 'C#': -8, 'D': -7, 'D#': -6, 'E': -5, 'F': -4,
+    'F#': -3, 'G': -2, 'G#': -1, 'A': 0, 'A#': 1, 'B': 2
+  };
+  const semitones = noteOffsets[note] + (octave - 4) * 12;
+  return 440 * Math.pow(2, semitones / 12);
+};
 
 // Generate full piano range A0 to C8 (88 keys)
 const generateFullPianoKeys = () => {
-  const whiteKeys: {
-    note: string;
-    octave: number;
-    frequency: number;
-  }[] = [];
-  const blackKeys: {
-    note: string;
-    octave: number;
-    frequency: number;
-    position: number;
-  }[] = [];
+  const whiteKeys: { note: string; octave: number; frequency: number }[] = [];
+  const blackKeys: { note: string; octave: number; frequency: number; position: number }[] = [];
+  
+  const whiteNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+  const blackNotes = [
+    { note: 'C#', posAfter: 'C' },
+    { note: 'D#', posAfter: 'D' },
+    { note: 'F#', posAfter: 'F' },
+    { note: 'G#', posAfter: 'G' },
+    { note: 'A#', posAfter: 'A' }
+  ];
 
-  // Start with A0 and B0
-  const a0Freq = 27.5; // A0 base frequency
-  whiteKeys.push({
-    note: 'A',
-    octave: 0,
-    frequency: a0Freq
-  });
-  whiteKeys.push({
-    note: 'B',
-    octave: 0,
-    frequency: a0Freq * Math.pow(2, 2 / 12)
-  });
-  blackKeys.push({
-    note: 'A#',
-    octave: 0,
-    frequency: a0Freq * Math.pow(2, 1 / 12),
-    position: 0.5
-  });
+  // A0 and A#0 and B0 first
+  whiteKeys.push({ note: 'A', octave: 0, frequency: getFrequency('A', 0) });
+  whiteKeys.push({ note: 'B', octave: 0, frequency: getFrequency('B', 0) });
+  blackKeys.push({ note: 'A#', octave: 0, frequency: getFrequency('A#', 0), position: 0.5 });
 
-  // Generate C1 through C8
+  // C1 through B7, then C8
   for (let octave = 1; octave <= 8; octave++) {
-    const octaveMultiplier = Math.pow(2, octave - 4); // 4 is base (C4 = middle C)
+    const notesToAdd = octave === 8 ? ['C'] : whiteNotes;
     const whiteKeyOffset = (octave - 1) * 7 + 2; // +2 for A0, B0
-
-    // Add white keys for this octave (or just C for octave 8)
-    const keysToAdd = octave === 8 ? [baseWhiteKeysPerOctave[0]] : baseWhiteKeysPerOctave;
-    keysToAdd.forEach(key => {
+    
+    notesToAdd.forEach((note, idx) => {
       whiteKeys.push({
-        note: key.note,
-        octave: octave,
-        frequency: key.baseFrequency * octaveMultiplier
+        note,
+        octave,
+        frequency: getFrequency(note, octave)
       });
     });
 
-    // Add black keys for this octave (skip for octave 8)
+    // Black keys (skip for octave 8)
     if (octave < 8) {
-      baseBlackKeysPerOctave.forEach(key => {
+      blackNotes.forEach(({ note, posAfter }) => {
+        const whiteIdx = whiteNotes.indexOf(posAfter);
         blackKeys.push({
-          note: key.note,
-          octave: octave,
-          frequency: key.baseFrequency * octaveMultiplier,
-          position: whiteKeyOffset + key.positionInOctave
+          note,
+          octave,
+          frequency: getFrequency(note, octave),
+          position: whiteKeyOffset + whiteIdx + 0.5
         });
       });
     }
   }
-  return {
-    whiteKeys,
-    blackKeys
-  };
+
+  return { whiteKeys, blackKeys };
 };
 export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   className = '',
