@@ -655,7 +655,7 @@ export const AzuraCastAdminPanel = () => {
                       <p className="font-medium">{entry.name}</p>
                       <p className="text-sm text-muted-foreground">
                         {entry.start_time} - {entry.end_time}
-                        {entry.days.length > 0 && (
+                        {entry.days && entry.days.length > 0 && (
                           <span> • {entry.days.map(d => dayNames[d]).join(', ')}</span>
                         )}
                       </p>
