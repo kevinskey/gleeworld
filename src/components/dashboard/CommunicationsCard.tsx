@@ -87,72 +87,56 @@ export const CommunicationsCard = ({
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
           {modules.map(module => {
             const IconComponent = module.icon;
-            const isExpanded = expandedModule === module.id;
             
             return (
               <div 
                 key={module.id} 
-                className={cn(
-                  "flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)]",
-                  isExpanded && module.isEmbedded && "w-full flex-shrink"
-                )}
+                onClick={() => handleModuleClick(module)}
+                className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)] group cursor-pointer"
               >
-                <Collapsible 
-                  open={isExpanded && module.isEmbedded} 
-                  onOpenChange={() => handleModuleClick(module)}
+                <div 
+                  className={cn(
+                    "p-4 flex flex-col items-center text-center transition-all duration-300",
+                    "bg-card border border-border hover:border-primary/50",
+                    "shadow-lg hover:shadow-xl min-h-[120px]"
+                  )}
                 >
-                  {/* Card matching GleeCamCard style */}
-                  <div 
-                    onClick={() => handleModuleClick(module)} 
-                    className={cn(
-                      "group cursor-pointer p-4 flex flex-col items-center text-center transition-all duration-300",
-                      "bg-card border border-border hover:border-primary/50",
-                      "shadow-lg hover:shadow-xl min-h-[120px]",
-                      isExpanded && "border-primary"
-                    )}
-                  >
-                    {/* Icon */}
-                    <div className="w-10 h-10 flex items-center justify-center mb-2 transition-transform group-hover:scale-110 bg-primary/20">
-                      <IconComponent className="h-5 w-5 text-primary" />
-                    </div>
-
-                    {/* Title */}
-                    <h4 className="font-semibold text-[10px] sm:text-xs text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
-                      {module.title}
-                    </h4>
-
-                    {/* Description */}
-                    <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight line-clamp-2">
-                      {module.description}
-                    </p>
+                  {/* Icon */}
+                  <div className="w-10 h-10 flex items-center justify-center mb-2 transition-transform group-hover:scale-110 bg-primary/20">
+                    <IconComponent className="h-5 w-5 text-primary" />
                   </div>
 
-                  {/* Embedded Content for Messages */}
-                  {module.isEmbedded && (
-                    <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-                      <div className="mt-3 p-4 border border-border bg-card relative">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={e => {
-                            e.stopPropagation();
-                            setExpandedModule(null);
-                          }} 
-                          className="absolute top-2 right-2 p-1 h-auto text-muted-foreground hover:text-foreground z-10"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                        <div className="h-[400px]">
-                          <MessagingInterface embedded />
-                        </div>
-                      </div>
-                    </CollapsibleContent>
-                  )}
-                </Collapsible>
+                  {/* Title */}
+                  <h4 className="font-semibold text-[10px] sm:text-xs text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
+                    {module.title}
+                  </h4>
+
+                  {/* Description */}
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight line-clamp-2">
+                    {module.description}
+                  </p>
+                </div>
               </div>
             );
           })}
         </div>
+
+        {/* Embedded Messages Panel - Full width below the cards */}
+        {expandedModule === 'messages' && (
+          <div className="mt-3 p-4 border border-border bg-card relative">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setExpandedModule(null)} 
+              className="absolute top-2 right-2 p-1 h-auto text-muted-foreground hover:text-foreground z-10"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <div className="h-[400px]">
+              <MessagingInterface embedded />
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
