@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,9 @@ import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
+
+// CSS class added to body when radio bar is open - used by other components to add padding
+const RADIO_OPEN_CLASS = 'radio-bar-open';
 
 export const HeaderRadioControls = () => {
   try {
@@ -58,6 +61,18 @@ export const HeaderRadioControls = () => {
         switchStream(channel.stream_url);
       }
     };
+
+    // Add/remove body class when radio bar opens/closes
+    useEffect(() => {
+      if (isOpen) {
+        document.body.classList.add(RADIO_OPEN_CLASS);
+      } else {
+        document.body.classList.remove(RADIO_OPEN_CLASS);
+      }
+      return () => {
+        document.body.classList.remove(RADIO_OPEN_CLASS);
+      };
+    }, [isOpen]);
 
     return (
       <>
