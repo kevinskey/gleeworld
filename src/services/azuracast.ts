@@ -418,7 +418,7 @@ class AzuraCastService {
 
   // STREAMERS (Live DJs)
   async getStreamers(): Promise<any[]> {
-    return await this.makeProxyRequest(`/station/{stationId}/streamers`);
+    return await this.makeProxyRequest(`/station/{stationId}/streamers`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   async createStreamer(streamerData: {
