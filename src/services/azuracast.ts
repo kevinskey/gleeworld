@@ -167,16 +167,26 @@ class AzuraCastService {
       }
     });
 
+    // Handle supabase invoke error
     if (error) {
       console.error('AzuraCast: Proxy request error:', error);
       throw new Error(`Proxy request failed: ${error.message}`);
     }
 
-    // Check if the response contains an error (e.g., from AzuraCast API returning 500)
-    if (data && typeof data === 'object' && data.error) {
-      console.error('AzuraCast: API error in response:', data);
-      const errorMessage = data.details || data.error;
-      throw new Error(errorMessage);
+    // Check if the response contains an error from the edge function/AzuraCast API
+    if (data && typeof data === 'object') {
+      // Check for error property (returned by our edge function on error)
+      if (data.error) {
+        console.error('AzuraCast: API error in response:', data);
+        // Combine error and details for better error message detection
+        const errorMessage = `${data.error} ${data.details || ''}`;
+        throw new Error(errorMessage);
+      }
+      // Check if data itself indicates an error response from AzuraCast
+      if (data.code && data.type && data.message) {
+        console.error('AzuraCast: Direct API error:', data);
+        throw new Error(`${data.type}: ${data.message}`);
+      }
     }
 
     console.log('AzuraCast: Proxy request successful');
