@@ -98,7 +98,7 @@ export const CommunicationsCard = ({
                   className={cn(
                     "p-2 flex flex-col items-center text-center transition-all duration-300",
                     "bg-card border border-border hover:border-primary/50",
-                    "shadow-lg hover:shadow-xl min-h-[120px] justify-center"
+                    "shadow-lg hover:shadow-xl min-h-[140px] justify-center"
                   )}
                 >
                   {/* Icon */}
