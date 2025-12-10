@@ -90,7 +90,7 @@ export const MobileMusicLibrary = ({
   return (
     <div className="w-full flex flex-col overflow-hidden">
       {/* Mobile Header */}
-      <div className="flex-shrink-0 bg-background border-b p-2 space-y-2">{/* Reduced padding from p-3 to p-2 and space-y-3 to space-y-2 */}
+      <div className="flex-shrink-0 bg-background border-b px-1 py-2 space-y-2">
         {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -156,7 +156,7 @@ export const MobileMusicLibrary = ({
 
       {/* Tab Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 w-full">
-        <TabsList className="flex-shrink-0 grid w-full grid-cols-4 mx-2 my-1 gap-1">{/* Reduced margins from mx-3 my-2 to mx-2 my-1 */}
+        <TabsList className="flex-shrink-0 grid w-full grid-cols-4 px-1 my-1 gap-1">
           <TabsTrigger value="library" className="text-xs px-1 py-1">
             <Music className="h-4 w-4 mr-1" />
             Library
@@ -177,7 +177,7 @@ export const MobileMusicLibrary = ({
 
         {/* Tab Content */}
         <div ref={scrollContainerRef as any} className="flex-1 overflow-y-auto min-h-0 w-full">
-          <TabsContent value="library" className="h-full px-2 py-1 space-y-2 mt-0 w-full">{/* Reduced padding from px-3 py-2 to px-2 py-1, space-y-3 to space-y-2 */}
+          <TabsContent value="library" className="h-full px-1 py-1 space-y-2 mt-0 w-full">
             <SheetMusicLibrary 
               searchQuery={searchQuery}
               selectedCategory={selectedCategory}
@@ -188,21 +188,21 @@ export const MobileMusicLibrary = ({
             />
           </TabsContent>
 
-          <TabsContent value="study" className="h-full px-2 py-1 mt-0 w-full">{/* Reduced padding */}
+          <TabsContent value="study" className="h-full px-1 py-1 mt-0 w-full">
             <StudyScoresPanel 
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="collections" className="h-full px-2 py-1 mt-0 w-full">{/* Reduced padding */}
+          <TabsContent value="collections" className="h-full px-1 py-1 mt-0 w-full">
             <MyCollectionsPanel
               currentSelected={selectedPdf}
               onOpenScore={onPdfSelect}
             />
           </TabsContent>
 
-          <TabsContent value="setlists" className="h-full px-2 py-1 mt-0 w-full">{/* Reduced padding */}
+          <TabsContent value="setlists" className="h-full px-1 py-1 mt-0 w-full">
             <SetlistBuilder 
               onPdfSelect={onPdfSelect} 
               onOpenPlayer={onOpenSetlistPlayer}
