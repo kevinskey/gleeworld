@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw } from "lucide-react";
+import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 interface ExitInterview {
   id: string;
@@ -53,10 +54,111 @@ interface ExitInterview {
   };
 }
 
+// Swipeable Interview Card Component
+const SwipeableInterviewCard: React.FC<{
+  interview: ExitInterview;
+  onSelect: () => void;
+  onDelete: () => void;
+}> = ({ interview, onSelect, onDelete }) => {
+  const [translateX, setTranslateX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const startXRef = useRef(0);
+  const currentXRef = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    startXRef.current = e.touches[0].clientX;
+    currentXRef.current = e.touches[0].clientX;
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isSwiping) return;
+    currentXRef.current = e.touches[0].clientX;
+    const diff = currentXRef.current - startXRef.current;
+    // Only allow left swipe (negative values)
+    if (diff < 0) {
+      setTranslateX(Math.max(diff, -100));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsSwiping(false);
+    // If swiped more than 60px, show delete button
+    if (translateX < -60) {
+      setTranslateX(-80);
+    } else {
+      setTranslateX(0);
+    }
+  };
+
+  const handleClick = () => {
+    if (translateX < -30) {
+      // Reset swipe if delete area is showing
+      setTranslateX(0);
+    } else {
+      onSelect();
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden rounded-lg">
+      {/* Delete button background */}
+      <div 
+        className="absolute right-0 top-0 bottom-0 w-20 bg-destructive flex items-center justify-center"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
+      >
+        <Trash2 className="h-5 w-5 text-destructive-foreground" />
+      </div>
+      
+      {/* Card content */}
+      <div
+        className="flex items-center justify-between p-3 border bg-card cursor-pointer transition-transform"
+        style={{ 
+          transform: `translateX(${translateX}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.2s ease-out'
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleClick}
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <User className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="font-medium">{interview.profile?.full_name || "Unknown"}</p>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>{interview.profile?.voice_part || "—"}</span>
+              <span>•</span>
+              <span>{interview.semester}</span>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="text-right">
+            <Badge variant={interview.intent_to_continue ? "default" : "secondary"}>
+              {interview.intent_to_continue ? "Returning" : "Not Returning"}
+            </Badge>
+            <p className="text-xs text-muted-foreground mt-1">
+              {format(new Date(interview.created_at), "MMM d, yyyy")}
+            </p>
+          </div>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ExitInterviewsModule: React.FC = () => {
   const [interviews, setInterviews] = useState<ExitInterview[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInterview, setSelectedInterview] = useState<ExitInterview | null>(null);
+
 
   const fetchInterviews = async () => {
     setLoading(true);
@@ -90,6 +192,25 @@ const ExitInterviewsModule: React.FC = () => {
       console.error("Error fetching exit interviews:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Delete exit interview from ${name}? This cannot be undone.`)) return;
+    
+    try {
+      const { error } = await supabase
+        .from("member_exit_interviews")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+      
+      setInterviews(prev => prev.filter(i => i.id !== id));
+      toast.success("Exit interview deleted");
+    } catch (error) {
+      console.error("Error deleting interview:", error);
+      toast.error("Failed to delete interview");
     }
   };
 
@@ -190,36 +311,12 @@ const ExitInterviewsModule: React.FC = () => {
             ) : (
               <div className="space-y-2">
                 {interviews.map((interview) => (
-                  <div
+                  <SwipeableInterviewCard
                     key={interview.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-accent/50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedInterview(interview)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium">{interview.profile?.full_name || "Unknown"}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{interview.profile?.voice_part || "—"}</span>
-                          <span>•</span>
-                          <span>{interview.semester}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <Badge variant={interview.intent_to_continue ? "default" : "secondary"}>
-                          {interview.intent_to_continue ? "Returning" : "Not Returning"}
-                        </Badge>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {format(new Date(interview.created_at), "MMM d, yyyy")}
-                        </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
+                    interview={interview}
+                    onSelect={() => setSelectedInterview(interview)}
+                    onDelete={() => handleDelete(interview.id, interview.profile?.full_name || "Unknown")}
+                  />
                 ))}
               </div>
             )}
