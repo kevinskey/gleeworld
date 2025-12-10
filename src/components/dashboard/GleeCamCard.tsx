@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+
 interface GleeCamCategory {
   id: string;
   name: string;
@@ -15,6 +17,7 @@ interface GleeCamCategory {
   display_order: number;
   is_active: boolean;
 }
+
 const ICON_MAP: Record<string, React.ElementType> = {
   Camera,
   Video,
@@ -24,26 +27,28 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Image,
   FileAudio
 };
+
 interface GleeCamCardProps {
   className?: string;
 }
-export const GleeCamCard = ({
-  className
-}: GleeCamCardProps) => {
+
+export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<GleeCamCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
+
   useEffect(() => {
     fetchCategories();
   }, []);
+
   const fetchCategories = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('glee_cam_categories').select('*').eq('is_active', true).order('display_order', {
-        ascending: true
-      });
+      const { data, error } = await supabase
+        .from('glee_cam_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
       if (error) throw error;
       setCategories(data || []);
     } catch (error) {
@@ -52,14 +57,18 @@ export const GleeCamCard = ({
       setLoading(false);
     }
   };
+
   const handleCategoryClick = (category: GleeCamCategory) => {
     navigate(`/glee-cam/${category.slug}`);
   };
+
   const getIconComponent = (iconName: string) => {
     return ICON_MAP[iconName] || Camera;
   };
+
   if (loading) {
-    return <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
+    return (
+      <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
         <CardHeader className="py-2 px-3">
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5 text-primary" />
@@ -69,40 +78,65 @@ export const GleeCamCard = ({
         <CardContent className="px-3 pb-3 pt-0">
           <div className="h-24 animate-pulse bg-muted" />
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
+
   if (categories.length === 0) {
     return null;
   }
-  return <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
-      <CardHeader className="py-3 px-3 sm:px-0">
-        <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
-          <Camera className="h-5 w-5 !text-white" />
-          Glee Cam
-          <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
-            member moments
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-3 pb-3 pt-0 sm:px-[20px] text-secondary-foreground">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-          {categories.map(category => {
-          const IconComponent = getIconComponent(category.icon);
-          return <div key={category.id} onClick={() => handleCategoryClick(category)} className="group cursor-pointer flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)]">
-                <div className={cn("p-2 flex flex-col items-center text-center transition-all duration-300", "bg-card border border-border hover:border-primary/50", "shadow-lg hover:shadow-xl min-h-[140px] justify-center")}>
-                  <div className="w-12 h-12 flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110 bg-primary/20">
-                    <IconComponent className="h-7 w-7 text-primary" />
+
+  return (
+    <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="py-3 px-3 sm:px-0 cursor-pointer hover:bg-primary/5 transition-colors">
+            <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
+              <Camera className="h-5 w-5 !text-white" />
+              Glee Cam
+              <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
+                member moments
+              </span>
+              <ChevronDown className={cn(
+                "h-4 w-4 ml-auto mr-2 transition-transform duration-200 !text-white/70",
+                isOpen && "rotate-180"
+              )} />
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="px-3 pb-3 pt-0 sm:px-[20px] text-secondary-foreground">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+              {categories.map(category => {
+                const IconComponent = getIconComponent(category.icon);
+                return (
+                  <div
+                    key={category.id}
+                    onClick={() => handleCategoryClick(category)}
+                    className="group cursor-pointer flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)]"
+                  >
+                    <div className={cn(
+                      "p-2 flex flex-col items-center text-center transition-all duration-300",
+                      "bg-card border border-border hover:border-primary/50",
+                      "shadow-lg hover:shadow-xl min-h-[140px] justify-center"
+                    )}>
+                      <div className="w-12 h-12 flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110 bg-primary/20">
+                        <IconComponent className="h-7 w-7 text-primary" />
+                      </div>
+                      <h4 className="font-semibold text-xs sm:text-sm text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
+                        {category.name}
+                      </h4>
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">
+                        {category.description}
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="font-semibold text-xs sm:text-sm text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
-                    {category.name}
-                  </h4>
-                  <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">
-                    {category.description}
-                  </p>
-                </div>
-              </div>;
-        })}
-        </div>
-      </CardContent>
-    </Card>;
+                );
+              })}
+            </div>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
+  );
 };
