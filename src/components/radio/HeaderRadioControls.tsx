@@ -104,12 +104,6 @@ export const HeaderRadioControls = () => {
         {/* Full-Width Radio Bar - Rendered in Portal */}
         {isOpen && createPortal(
           <>
-            {/* Backdrop - only below the header, doesn't cover header */}
-            <div 
-              className="fixed inset-x-0 bottom-0 z-[9998] bg-black/30"
-              style={{ top: '60px' }}
-              onClick={() => setIsOpen(false)}
-            />
             
             {/* Horizontal Radio Bar - Connected directly to header */}
             <div 
