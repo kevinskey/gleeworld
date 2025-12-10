@@ -205,15 +205,23 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     const timer = setTimeout(() => {
       if (keysContainerRef.current) {
         const whiteKeyWidth = isMobile ? 50 : 69;
+        const gap = 2; // 0.5 gap in Tailwind = ~2px
+        const keyWithGap = whiteKeyWidth + gap;
+        
+        // Calculate scroll position based on startOctave
+        // Piano layout: A0, B0, then C1-B1, C2-B2, ... C7-B7, C8
+        // Index 0 = A0, Index 1 = B0, Index 2 = C1, etc.
         let scrollPosition = 0;
         if (startOctave === 0) {
+          // A0-B1: start at beginning
           scrollPosition = 0;
-        } else if (startOctave === 1) {
-          scrollPosition = whiteKeyWidth * 9;
         } else {
-          // Calculate position: octave 4 (middle C) should be centered
-          scrollPosition = whiteKeyWidth * (2 + (startOctave - 1) * 7);
+          // For octave N, C[N] is at index: 2 + (N-1)*7
+          // e.g., C1 at index 2, C2 at index 9, C3 at index 16, C4 at index 23
+          const cIndex = 2 + (startOctave - 1) * 7;
+          scrollPosition = cIndex * keyWithGap;
         }
+        
         keysContainerRef.current.scrollTo({
           left: scrollPosition,
           behavior: 'smooth'
@@ -224,6 +232,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   }, [startOctave, isMobile]);
 
   const playNote = useCallback(async (noteName: string, frequency: number) => {
+    console.log('🎹 Playing note:', noteName, 'at frequency:', frequency.toFixed(2), 'Hz');
+    
     // Always force unlock on user interaction (synchronous for iOS)
     forceUnlockAudio();
     
