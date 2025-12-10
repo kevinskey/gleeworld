@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { azuraCastService } from '@/services/azuracast';
 import { cn } from '@/lib/utils';
 import {
   Clock,
@@ -10,17 +12,32 @@ import {
   Plus,
   GripVertical,
   Upload,
-  X
+  X,
+  RefreshCw,
+  Loader2,
+  Radio
 } from 'lucide-react';
 
-interface ScheduledTrack {
-  id: string;
+interface QueueItem {
+  id: number;
+  cued_at: number;
+  played_at: number;
+  duration: number;
+  song: {
+    id: string;
+    title: string;
+    artist: string;
+    art: string;
+  };
+}
+
+interface AzuraCastMedia {
+  id: number;
   title: string;
-  artist?: string;
-  startTime: Date;
-  duration: number; // in seconds
-  category?: string;
-  audioUrl?: string;
+  artist: string;
+  duration: number;
+  art?: string;
+  path: string;
 }
 
 interface RadioScheduleTimelineProps {
@@ -36,58 +53,52 @@ export const RadioScheduleTimeline = ({
   currentSongDuration = 0,
   currentSongTitle = ''
 }: RadioScheduleTimelineProps) => {
-  const [scheduledTracks, setScheduledTracks] = useState<ScheduledTrack[]>([]);
+  const [queueItems, setQueueItems] = useState<QueueItem[]>([]);
+  const [availableMedia, setAvailableMedia] = useState<AzuraCastMedia[]>([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
   const { toast } = useToast();
 
-  // Load saved tracks on mount
+  // Load queue and available media on mount
   useEffect(() => {
-    const saved = localStorage.getItem('gw_radio_timeline_schedule');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setScheduledTracks(parsed.map((item: any) => ({
-          ...item,
-          startTime: new Date(item.startTime)
-        })));
-      } catch (e) {
-        console.error('Error loading schedule:', e);
-      }
-    }
+    loadQueue();
+    loadAvailableMedia();
   }, []);
 
-  // Save tracks whenever they change
-  const saveScheduledTracks = (tracks: ScheduledTrack[]) => {
-    localStorage.setItem('gw_radio_timeline_schedule', JSON.stringify(tracks));
-  };
-
-  // Get the next available time (end of current song or end of last queued track)
-  const getNextAvailableTime = (): Date => {
-    const now = new Date();
-    const elapsed = currentSongElapsed || 0;
-    const duration = currentSongDuration || 0;
-    const remainingSeconds = Math.max(0, duration - elapsed);
-    
-    // Start with end of current song
-    let nextTime = new Date(now.getTime() + (remainingSeconds * 1000));
-    
-    // If we have queued tracks, find the end of the last one
-    if (scheduledTracks.length > 0) {
-      const sortedTracks = [...scheduledTracks].sort((a, b) => 
-        new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-      );
-      const lastTrack = sortedTracks[sortedTracks.length - 1];
-      const lastTrackEnd = new Date(new Date(lastTrack.startTime).getTime() + (lastTrack.duration * 1000));
-      
-      if (lastTrackEnd > nextTime) {
-        nextTime = lastTrackEnd;
+  const loadQueue = async () => {
+    try {
+      setIsLoading(true);
+      const queue = await azuraCastService.getQueue();
+      if (Array.isArray(queue)) {
+        setQueueItems(queue);
       }
+    } catch (error) {
+      console.error('Error loading queue:', error);
+    } finally {
+      setIsLoading(false);
     }
-    
-    return nextTime;
   };
 
-  const formatTime = (date: Date): string => {
+  const loadAvailableMedia = async () => {
+    try {
+      const media = await azuraCastService.getAllMedia();
+      const formatted = media.map((file: any) => ({
+        id: file.media?.id || 0,
+        title: file.media?.title || file.path_short || 'Unknown',
+        artist: file.media?.artist || '',
+        duration: file.media?.length || 0,
+        art: file.media?.art,
+        path: file.path
+      })).filter((m: AzuraCastMedia) => m.id > 0);
+      setAvailableMedia(formatted);
+    } catch (error) {
+      console.error('Error loading media:', error);
+    }
+  };
+
+  const formatTime = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
     return date.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit',
@@ -99,19 +110,6 @@ export const RadioScheduleTimeline = ({
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getAudioDuration = (file: File): Promise<number> => {
-    return new Promise((resolve) => {
-      const audio = new Audio();
-      audio.addEventListener('loadedmetadata', () => {
-        resolve(audio.duration || 180);
-      });
-      audio.addEventListener('error', () => {
-        resolve(180); // Default 3 minutes
-      });
-      audio.src = URL.createObjectURL(file);
-    });
   };
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -127,125 +125,60 @@ export const RadioScheduleTimeline = ({
     e.preventDefault();
     setIsDraggingOver(false);
 
-    const files = Array.from(e.dataTransfer.files).filter(f => 
-      f.type.startsWith('audio/')
-    );
-
-    if (files.length > 0) {
-      // Process audio files - add them sequentially with no gaps
-      let nextStartTime = getNextAvailableTime();
-      const newTracks: ScheduledTrack[] = [];
-      
-      for (const file of files) {
-        const duration = await getAudioDuration(file);
-        
-        // Upload to storage
-        try {
-          const fileName = `radio-schedule/${Date.now()}-${file.name}`;
-          const { error: uploadError } = await supabase.storage
-            .from('audio-files')
-            .upload(fileName, file);
-
-          if (uploadError) throw uploadError;
-
-          const { data: urlData } = supabase.storage
-            .from('audio-files')
-            .getPublicUrl(fileName);
-
-          const newTrack: ScheduledTrack = {
-            id: crypto.randomUUID(),
-            title: file.name.replace(/\.[^/.]+$/, ''),
-            startTime: new Date(nextStartTime),
-            duration,
-            audioUrl: urlData.publicUrl,
-            category: 'scheduled'
-          };
-          
-          newTracks.push(newTrack);
-          
-          // Next track starts exactly when this one ends - no gap
-          nextStartTime = new Date(nextStartTime.getTime() + (duration * 1000));
-        } catch (error) {
-          console.error('Error uploading track:', error);
-          toast({ title: "Error", description: `Failed to upload ${file.name}`, variant: "destructive" });
-        }
-      }
-
-      if (newTracks.length > 0) {
-        const updatedTracks = [...scheduledTracks, ...newTracks];
-        setScheduledTracks(updatedTracks);
-        saveScheduledTracks(updatedTracks);
-        toast({ 
-          title: "Queued", 
-          description: `${newTracks.length} track${newTracks.length > 1 ? 's' : ''} added to queue` 
-        });
-        onRefresh?.();
-      }
-      return;
-    }
-
-    // Handle JSON track data
+    // Handle JSON track data from internal drag
     try {
       const trackData = e.dataTransfer.getData('application/json');
       if (trackData) {
         const track = JSON.parse(trackData);
-        const startTime = getNextAvailableTime();
-        
-        const newTrack: ScheduledTrack = {
-          id: crypto.randomUUID(),
-          title: track.title || 'Unknown Track',
-          artist: track.artist,
-          startTime,
-          duration: track.duration || 180,
-          audioUrl: track.audioUrl,
-          category: track.category || 'scheduled'
-        };
-        
-        const updatedTracks = [...scheduledTracks, newTrack];
-        setScheduledTracks(updatedTracks);
-        saveScheduledTracks(updatedTracks);
-        toast({ title: "Queued", description: `${track.title} added to queue` });
-        onRefresh?.();
+        if (track.mediaId) {
+          await requestSong(track.mediaId, track.title);
+        }
       }
     } catch (err) {
       console.error('Failed to parse track data:', err);
     }
   };
 
-  const removeTrack = (id: string) => {
-    const trackIndex = scheduledTracks.findIndex(t => t.id === id);
-    if (trackIndex === -1) return;
-
-    // Remove the track and recalculate all following track times
-    const newTracks = [...scheduledTracks];
-    newTracks.splice(trackIndex, 1);
-    
-    // Recalculate start times to close the gap
-    const recalculated = recalculateStartTimes(newTracks);
-    setScheduledTracks(recalculated);
-    saveScheduledTracks(recalculated);
-    toast({ title: "Removed", description: "Track removed from queue" });
+  const requestSong = async (mediaId: number, title: string) => {
+    try {
+      setIsRequesting(true);
+      await azuraCastService.requestSong(mediaId);
+      toast({ 
+        title: "Queued", 
+        description: `"${title}" added to AzuraCast queue` 
+      });
+      // Refresh queue after request
+      await loadQueue();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error requesting song:', error);
+      toast({ 
+        title: "Error", 
+        description: "Failed to queue track in AzuraCast", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsRequesting(false);
+    }
   };
 
-  const recalculateStartTimes = (tracks: ScheduledTrack[]): ScheduledTrack[] => {
-    if (tracks.length === 0) return [];
-    
-    const now = new Date();
-    const elapsed = currentSongElapsed || 0;
-    const duration = currentSongDuration || 0;
-    const remainingSeconds = Math.max(0, duration - elapsed);
-    let nextTime = new Date(now.getTime() + (remainingSeconds * 1000));
-    
-    return tracks.map((track, index) => {
-      const newTrack = { ...track, startTime: new Date(nextTime) };
-      nextTime = new Date(nextTime.getTime() + (track.duration * 1000));
-      return newTrack;
-    });
+  const removeFromQueue = async (queueItemId: number) => {
+    try {
+      await azuraCastService.removeFromQueue(queueItemId);
+      toast({ title: "Removed", description: "Track removed from queue" });
+      await loadQueue();
+    } catch (error) {
+      console.error('Error removing from queue:', error);
+      toast({ 
+        title: "Error", 
+        description: "Failed to remove track from queue", 
+        variant: "destructive" 
+      });
+    }
   };
 
-  // Calculate total queue duration
-  const totalQueueDuration = scheduledTracks.reduce((acc, t) => acc + t.duration, 0);
   const remainingCurrentSong = Math.max(0, (currentSongDuration || 0) - (currentSongElapsed || 0));
+  const totalQueueDuration = queueItems.reduce((acc, item) => acc + (item.duration || 0), 0);
 
   return (
     <Card className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700">
@@ -253,18 +186,29 @@ export const RadioScheduleTimeline = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-amber-500/20">
-              <Clock className="h-5 w-5 text-amber-400" />
+              <Radio className="h-5 w-5 text-amber-400" />
             </div>
             <div>
-              <CardTitle className="text-base font-bold text-white">Up Next Queue</CardTitle>
-              <p className="text-xs text-slate-400">Tracks play back-to-back with no gaps</p>
+              <CardTitle className="text-base font-bold text-white">AzuraCast Queue</CardTitle>
+              <p className="text-xs text-slate-400">Drag tracks to queue on server</p>
             </div>
           </div>
-          {scheduledTracks.length > 0 && (
-            <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
-              {scheduledTracks.length} tracks • {formatDuration(totalQueueDuration)}
-            </Badge>
-          )}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={loadQueue}
+              disabled={isLoading}
+              className="text-slate-400 hover:text-white"
+            >
+              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            </Button>
+            {queueItems.length > 0 && (
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                {queueItems.length} tracks • {formatDuration(totalQueueDuration)}
+              </Badge>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -276,47 +220,55 @@ export const RadioScheduleTimeline = ({
             <span className="font-medium text-white text-sm">Now Playing:</span>
             <span className="truncate flex-1 text-slate-300 text-sm">{currentSongTitle}</span>
             <span className="text-xs text-slate-400">
-              ends {formatTime(new Date(Date.now() + remainingCurrentSong * 1000))}
+              {formatDuration(remainingCurrentSong)} left
             </span>
           </div>
         )}
 
-        {/* Queued Tracks */}
-        <div className="space-y-1">
-          {scheduledTracks.map((track, index) => {
-            const trackEnd = new Date(new Date(track.startTime).getTime() + (track.duration * 1000));
-            return (
+        {/* AzuraCast Queue */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 text-slate-400 animate-spin" />
+          </div>
+        ) : queueItems.length > 0 ? (
+          <div className="space-y-1">
+            {queueItems.map((item, index) => (
               <div 
-                key={track.id}
+                key={item.id}
                 className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg group hover:bg-slate-800 transition-colors"
               >
                 <GripVertical className="h-4 w-4 text-slate-500" />
                 <span className="text-xs text-slate-400 w-20 flex-shrink-0">
-                  {formatTime(new Date(track.startTime))}
+                  {formatTime(item.played_at)}
                 </span>
                 <Music className="h-4 w-4 text-slate-500" />
                 <div className="flex-1 min-w-0">
-                  <span className="text-sm text-white truncate block">{track.title}</span>
-                  {track.artist && (
-                    <span className="text-xs text-slate-500 truncate block">{track.artist}</span>
+                  <span className="text-sm text-white truncate block">
+                    {item.song?.title || 'Unknown'}
+                  </span>
+                  {item.song?.artist && (
+                    <span className="text-xs text-slate-500 truncate block">
+                      {item.song.artist}
+                    </span>
                   )}
                 </div>
                 <span className="text-xs text-slate-500">
-                  {formatDuration(track.duration)}
-                </span>
-                <span className="text-xs text-slate-600">
-                  → {formatTime(trackEnd)}
+                  {formatDuration(item.duration)}
                 </span>
                 <button
-                  onClick={() => removeTrack(track.id)}
+                  onClick={() => removeFromQueue(item.id)}
                   className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/20 rounded transition-all"
                 >
                   <X className="h-3 w-3 text-destructive" />
                 </button>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-4 text-slate-500 text-sm">
+            Queue is empty - drag tracks below to add
+          </div>
+        )}
 
         {/* Drop Zone */}
         <div
@@ -324,39 +276,74 @@ export const RadioScheduleTimeline = ({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={cn(
-            "border-2 border-dashed rounded-lg p-6 text-center transition-all",
+            "border-2 border-dashed rounded-lg p-4 text-center transition-all",
             isDraggingOver 
               ? "border-emerald-500 bg-emerald-500/10" 
-              : "border-slate-600 hover:border-slate-500 bg-slate-800/30"
+              : "border-slate-600 hover:border-slate-500 bg-slate-800/30",
+            isRequesting && "opacity-50 pointer-events-none"
           )}
         >
           <div className="flex flex-col items-center gap-2">
             <div className={cn(
-              "p-3 rounded-full transition-colors",
+              "p-2 rounded-full transition-colors",
               isDraggingOver ? "bg-emerald-500/20" : "bg-slate-700"
             )}>
-              {isDraggingOver ? (
-                <Plus className="h-6 w-6 text-emerald-400" />
+              {isRequesting ? (
+                <Loader2 className="h-5 w-5 text-slate-400 animate-spin" />
+              ) : isDraggingOver ? (
+                <Plus className="h-5 w-5 text-emerald-400" />
               ) : (
-                <Upload className="h-6 w-6 text-slate-400" />
+                <Upload className="h-5 w-5 text-slate-400" />
               )}
             </div>
-            <div>
-              <p className={cn(
-                "text-sm font-medium",
-                isDraggingOver ? "text-emerald-400" : "text-slate-300"
-              )}>
-                {isDraggingOver ? "Drop to add to queue" : "Drop audio files here"}
-              </p>
-              <p className="text-xs text-slate-500 mt-1">
-                {scheduledTracks.length === 0 
-                  ? `Starts immediately after current song`
-                  : `Next track starts at ${formatTime(getNextAvailableTime())}`
-                }
-              </p>
-            </div>
+            <p className={cn(
+              "text-sm font-medium",
+              isDraggingOver ? "text-emerald-400" : "text-slate-300"
+            )}>
+              {isRequesting ? "Queueing..." : isDraggingOver ? "Drop to queue" : "Drop tracks here to queue"}
+            </p>
           </div>
         </div>
+
+        {/* Available Media from AzuraCast */}
+        {availableMedia.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-xs text-slate-500 font-medium">Available Tracks (drag to queue):</p>
+            <ScrollArea className="h-[200px]">
+              <div className="space-y-1 pr-4">
+                {availableMedia.slice(0, 50).map((media) => (
+                  <div
+                    key={media.id}
+                    draggable
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('application/json', JSON.stringify({
+                        mediaId: media.id,
+                        title: media.title,
+                        artist: media.artist,
+                        duration: media.duration
+                      }));
+                    }}
+                    className="flex items-center gap-2 p-2 bg-slate-800/30 rounded cursor-grab hover:bg-slate-700/50 transition-colors"
+                  >
+                    <GripVertical className="h-3 w-3 text-slate-600" />
+                    <Music className="h-3 w-3 text-slate-500" />
+                    <span className="text-sm text-slate-300 truncate flex-1">
+                      {media.title}
+                    </span>
+                    {media.artist && (
+                      <span className="text-xs text-slate-500 truncate max-w-[100px]">
+                        {media.artist}
+                      </span>
+                    )}
+                    <span className="text-xs text-slate-600">
+                      {formatDuration(media.duration)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

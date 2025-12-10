@@ -318,6 +318,63 @@ class AzuraCastService {
     await this.makeProxyRequest(`/station/{stationId}/backend/skip`, 'POST');
   }
 
+  // QUEUE MANAGEMENT
+  async getQueue(): Promise<any[]> {
+    console.log('AzuraCast: Fetching queue...');
+    return await this.makeProxyRequest(`/station/{stationId}/queue`);
+  }
+
+  async clearQueue(): Promise<void> {
+    console.log('AzuraCast: Clearing queue...');
+    const queue = await this.getQueue();
+    for (const item of queue) {
+      if (item.id) {
+        await this.removeFromQueue(item.id);
+      }
+    }
+  }
+
+  async removeFromQueue(queueItemId: number): Promise<void> {
+    console.log('AzuraCast: Removing item from queue:', queueItemId);
+    await this.makeProxyRequest(`/station/{stationId}/queue/${queueItemId}`, 'DELETE');
+  }
+
+  // Request a song to be queued (uses song_id from media library)
+  async requestSong(mediaId: number): Promise<any> {
+    console.log('AzuraCast: Requesting song with media ID:', mediaId);
+    return await this.makeProxyRequest(`/station/{stationId}/requests/${mediaId}`, 'POST');
+  }
+
+  // Get requestable songs list
+  async getRequestableSongs(): Promise<any[]> {
+    console.log('AzuraCast: Fetching requestable songs...');
+    return await this.makeProxyRequest(`/station/{stationId}/requests`);
+  }
+
+  // Search for a song in the media library by title
+  async searchMedia(query: string): Promise<any[]> {
+    console.log('AzuraCast: Searching media for:', query);
+    const files = await this.makeProxyRequest(`/station/{stationId}/files/list`);
+    if (!Array.isArray(files)) return [];
+    
+    const searchLower = query.toLowerCase();
+    return files.filter((file: any) => {
+      if (file.type !== 'media') return false;
+      const title = file.media?.title?.toLowerCase() || '';
+      const artist = file.media?.artist?.toLowerCase() || '';
+      const path = file.path?.toLowerCase() || '';
+      return title.includes(searchLower) || artist.includes(searchLower) || path.includes(searchLower);
+    });
+  }
+
+  // Get all media files from AzuraCast
+  async getAllMedia(): Promise<any[]> {
+    console.log('AzuraCast: Fetching all media...');
+    const files = await this.makeProxyRequest(`/station/{stationId}/files/list`);
+    if (!Array.isArray(files)) return [];
+    return files.filter((file: any) => file.type === 'media');
+  }
+
   // MEDIA MANAGEMENT  
   async addToPlaylist(playlistId: number, fileIds: number[]): Promise<any> {
     return await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}/media`, 'POST', { media: fileIds });
