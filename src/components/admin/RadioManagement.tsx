@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { azuraCastService } from '@/services/azuracast';
@@ -81,6 +82,10 @@ export const RadioManagement = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<AudioTrack | null>(null);
   const [formData, setFormData] = useState({ title: '', artist_info: '', category: 'performance', is_public: true });
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingTrack, setEditingTrack] = useState<AudioTrack | null>(null);
+  const [editFormData, setEditFormData] = useState({ title: '', artist_info: '' });
+  const [isSaving, setIsSaving] = useState(false);
 
   // AzuraCast data
   const [playlists, setPlaylists] = useState<any[]>([]);
@@ -259,6 +264,44 @@ export const RadioManagement = () => {
     toast({ title: "Synced" });
   };
 
+  const handleEditTrack = (track: AudioTrack) => {
+    setEditingTrack(track);
+    setEditFormData({ title: track.title, artist_info: track.artist_info || '' });
+    setShowEditDialog(true);
+  };
+
+  const handleSaveTrackEdit = async () => {
+    if (!editingTrack) return;
+    setIsSaving(true);
+    try {
+      // Determine source and update accordingly
+      if (editingTrack.source === 'Archive' || editingTrack.source === 'archive') {
+        await supabase.from('audio_archive').update({ title: editFormData.title, artist_info: editFormData.artist_info || null }).eq('id', editingTrack.id);
+      } else if (editingTrack.source === 'Music' || editingTrack.id.startsWith('music_')) {
+        const actualId = editingTrack.id.replace('music_', '');
+        await supabase.from('music_tracks').update({ title: editFormData.title, artist: editFormData.artist_info || null }).eq('id', actualId);
+      } else if (editingTrack.source === 'Alumni' || editingTrack.id.startsWith('alumni_')) {
+        const actualId = editingTrack.id.replace('alumni_', '');
+        await supabase.from('alumnae_audio_stories').update({ title: editFormData.title }).eq('id', actualId);
+      } else if (editingTrack.source === 'AzuraCast' && editingTrack.id) {
+        // For AzuraCast tracks, update via API
+        const numericId = parseInt(editingTrack.id.replace('azura_', ''));
+        if (!isNaN(numericId)) {
+          await azuraCastService.updateMedia(numericId, { title: editFormData.title, artist: editFormData.artist_info || undefined });
+        }
+      }
+      toast({ title: "Track updated", description: `"${editFormData.title}" saved` });
+      setShowEditDialog(false);
+      setEditingTrack(null);
+      await fetchTracks();
+    } catch (error) {
+      console.error('Error updating track:', error);
+      toast({ title: "Error", description: "Failed to update track", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '--:--';
     const mins = Math.floor(seconds / 60);
@@ -435,7 +478,12 @@ export const RadioManagement = () => {
                         <p className="text-sm font-medium text-white truncate">{track.title}</p>
                         <p className="text-xs text-slate-400">{track.artist_info || 'Unknown'} • {formatDuration(track.duration_seconds)}</p>
                       </div>
-                      <Badge variant="outline" className="text-[10px]">{track.source}</Badge>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditTrack(track)} className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-white">
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        <Badge variant="outline" className="text-[10px]">{track.source}</Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -742,6 +790,45 @@ export const RadioManagement = () => {
 
       {/* Media Library Dialog */}
       <MediaLibraryDialog open={showMediaLibrary} onOpenChange={setShowMediaLibrary} onAddToPlaylist={(track) => { toast({ title: "Added", description: `"${track.title}" added` }); fetchTracks(); setShowMediaLibrary(false); }} />
+
+      {/* Edit Track Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="bg-slate-900 border-slate-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Edit Track</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-title" className="text-slate-300">Title</Label>
+              <Input
+                id="edit-title"
+                value={editFormData.title}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, title: e.target.value }))}
+                className="bg-slate-800 border-slate-600 text-white"
+                placeholder="Song title"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-artist" className="text-slate-300">Artist</Label>
+              <Input
+                id="edit-artist"
+                value={editFormData.artist_info}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, artist_info: e.target.value }))}
+                className="bg-slate-800 border-slate-600 text-white"
+                placeholder="Artist name"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)} className="border-slate-600 text-white">
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTrackEdit} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
