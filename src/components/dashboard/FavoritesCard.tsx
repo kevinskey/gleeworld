@@ -18,7 +18,7 @@ export const FavoritesCard = ({
   onToggleFavorite
 }: FavoritesCardProps) => {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
 
   if (favorites.length === 0) {
     return (

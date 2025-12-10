@@ -621,6 +621,24 @@ export const MetalHeaderDashboard = ({
       {/* YouTube Videos Section - Two Column Layout */}
       <DashboardYouTubeSection />
 
+      {/* My Fav Apps - Right after YouTube */}
+      {(() => {
+        const hasFavorites = moduleFavorites && moduleFavorites.size > 0;
+        const favoritesArray = hasFavorites ? Array.from(moduleFavorites).map(moduleId => {
+          const module = allModules.find(m => m.id === moduleId);
+          if (!module) return null;
+          const moduleConfig = ModuleRegistry.getModule(moduleId);
+          return {
+            ...module,
+            icon: moduleConfig?.icon || Calendar,
+            iconColor: moduleConfig?.iconColor || 'blue',
+            component: moduleConfig?.component,
+            isNew: moduleConfig?.isNew || false
+          };
+        }).filter(Boolean) : [];
+        return <FavoritesCard favorites={favoritesArray as any} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} />;
+      })()}
+
       {/* Glee Cam Categories */}
       <GleeCamCard />
 
@@ -647,26 +665,9 @@ export const MetalHeaderDashboard = ({
         <SortableContext items={cardOrder} strategy={verticalListSortingStrategy}>
           <div className="space-y-4">
             {cardOrder.map(cardId => {
-            // Favorites card using moduleFavorites
+            // Skip favorites as it's now rendered outside DndContext
             if (cardId === 'favorites') {
-              const hasFavorites = moduleFavorites && moduleFavorites.size > 0;
-
-              // Convert moduleFavorites Set to array of enriched modules
-              const favoritesArray = hasFavorites ? Array.from(moduleFavorites).map(moduleId => {
-                const module = allModules.find(m => m.id === moduleId);
-                if (!module) return null;
-                const moduleConfig = ModuleRegistry.getModule(moduleId);
-                return {
-                  ...module,
-                  icon: moduleConfig?.icon || Calendar,
-                  iconColor: moduleConfig?.iconColor || 'blue',
-                  component: moduleConfig?.component,
-                  isNew: moduleConfig?.isNew || false
-                };
-              }).filter(Boolean) : [];
-              return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
-                    <FavoritesCard favorites={favoritesArray as any} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} />
-                  </SortableDashboardCard>;
+              return null;
             }
             if (cardId === 'communications') {
               return <SortableDashboardCard key={cardId} id={cardId} disabled={!isEditingLayout}>
