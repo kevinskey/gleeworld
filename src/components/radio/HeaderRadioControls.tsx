@@ -212,7 +212,7 @@ export const HeaderRadioControls = () => {
                     <div className="relative overflow-hidden w-[50%] h-6 bg-muted/30 px-2">
                       <div 
                         className="absolute whitespace-nowrap flex items-center h-full gap-8"
-                        style={{ animation: 'marquee 45s linear infinite' }}
+                        style={{ animation: 'marquee 90s linear infinite' }}
                       >
                         <span className="text-xs">
                           <span className="text-primary font-semibold">Now Playing:</span>{' '}
