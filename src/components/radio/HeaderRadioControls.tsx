@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -7,10 +7,13 @@ import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronDown } from 'luc
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
+import { createPortal } from 'react-dom';
 
 export const HeaderRadioControls = () => {
   try {
     const [isOpen, setIsOpen] = useState(false);
+    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
+    const triggerRef = useRef<HTMLButtonElement>(null);
     const radioData = useRadioPlayer();
     const { themeName } = useTheme();
     
@@ -40,6 +43,17 @@ export const HeaderRadioControls = () => {
     } = radioData;
 
     const isMuted = volume === 0;
+
+    // Calculate dropdown position when opening
+    useEffect(() => {
+      if (isOpen && triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right
+        });
+      }
+    }, [isOpen]);
 
     return (
       <div className="relative">
@@ -81,6 +95,7 @@ export const HeaderRadioControls = () => {
           {/* Radio Dropdown Trigger */}
           <EnhancedTooltip content="Open Radio Controls">
             <Button
+              ref={triggerRef}
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(!isOpen)}
@@ -95,17 +110,20 @@ export const HeaderRadioControls = () => {
           </EnhancedTooltip>
         </div>
 
-        {/* Dropdown Card */}
-        {isOpen && (
+        {/* Dropdown Card - Rendered in Portal */}
+        {isOpen && createPortal(
           <>
-          {/* Backdrop to close on outside click */}
+            {/* Backdrop to close on outside click */}
             <div 
-              className="fixed inset-0 z-[1050]" 
+              className="fixed inset-0 z-[9998]" 
               onClick={() => setIsOpen(false)}
             />
             
             {/* Radio Card */}
-            <Card className="absolute right-0 top-full mt-2 w-80 z-[1100] bg-card border border-border shadow-2xl">
+            <Card 
+              className="fixed w-80 z-[9999] bg-card border border-border shadow-2xl"
+              style={{ top: dropdownPosition.top, right: dropdownPosition.right }}
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -247,7 +265,8 @@ export const HeaderRadioControls = () => {
                 </div>
               </CardContent>
             </Card>
-          </>
+          </>,
+          document.body
         )}
       </div>
     );
