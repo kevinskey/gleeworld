@@ -302,6 +302,31 @@ export const RadioManagement = () => {
     }
   };
 
+  const handleDeleteTrack = async (track: AudioTrack) => {
+    if (!confirm(`Delete "${track.title}"? This cannot be undone.`)) return;
+    try {
+      if (track.source === 'Archive' || track.source === 'archive') {
+        await supabase.from('audio_archive').delete().eq('id', track.id);
+      } else if (track.source === 'Music' || track.id.startsWith('music_')) {
+        const actualId = track.id.replace('music_', '');
+        await supabase.from('music_tracks').delete().eq('id', actualId);
+      } else if (track.source === 'Alumni' || track.id.startsWith('alumni_')) {
+        const actualId = track.id.replace('alumni_', '');
+        await supabase.from('alumnae_audio_stories').delete().eq('id', actualId);
+      } else if (track.source === 'AzuraCast' && track.id) {
+        const numericId = parseInt(track.id.replace('azura_', ''));
+        if (!isNaN(numericId)) {
+          await azuraCastService.deleteMedia(numericId);
+        }
+      }
+      toast({ title: "Deleted", description: `"${track.title}" removed` });
+      await fetchTracks();
+    } catch (error) {
+      console.error('Error deleting track:', error);
+      toast({ title: "Error", description: "Failed to delete track", variant: "destructive" });
+    }
+  };
+
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '--:--';
     const mins = Math.floor(seconds / 60);
@@ -478,9 +503,12 @@ export const RadioManagement = () => {
                         <p className="text-sm font-medium text-white truncate">{track.title}</p>
                         <p className="text-xs text-slate-400">{track.artist_info || 'Unknown'} • {formatDuration(track.duration_seconds)}</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Button variant="ghost" size="sm" onClick={() => handleEditTrack(track)} className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-white">
                           <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteTrack(track)} className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-red-400">
+                          <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                         <Badge variant="outline" className="text-[10px]">{track.source}</Badge>
                       </div>

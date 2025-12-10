@@ -453,6 +453,12 @@ class AzuraCastService {
     return await this.makeProxyRequest(`/station/{stationId}/file/${fileId}`);
   }
 
+  // Delete media file
+  async deleteMedia(fileId: number): Promise<void> {
+    console.log('AzuraCast: Deleting media file:', fileId);
+    await this.makeProxyRequest(`/station/{stationId}/file/${fileId}`, 'DELETE');
+  }
+
   // STREAMERS (Live DJs)
   async getStreamers(): Promise<any[]> {
     return await this.makeProxyRequest(`/station/{stationId}/streamers`, 'GET', undefined, { returnEmptyOnError: true });
