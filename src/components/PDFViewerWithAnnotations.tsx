@@ -1052,9 +1052,8 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {/* Annotation Mode: PDF + Overlay Canvas with Zoom */}
           {annotationMode && (
             <div 
-              className="w-full overflow-auto" 
+              className="w-full overflow-auto flex-1" 
               style={{ 
-                maxHeight: 'calc(100vh - 18rem)', 
                 WebkitOverflowScrolling: 'touch',
                 touchAction: 'pan-x pan-y'
               } as React.CSSProperties} 
