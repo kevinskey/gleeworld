@@ -258,7 +258,7 @@ const ExitInterviewsModule: React.FC = () => {
           name: groupName.trim(),
           description: `Created from Exit Interviews - ${createGroupDialog.category}`,
           created_by: user.id,
-          group_type: "custom",
+          group_type: "general",
           is_private: false,
           is_archived: false,
           is_active: true
