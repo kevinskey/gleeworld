@@ -64,16 +64,16 @@ const Auth = () => {
 
   if (loading || profileLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading..." />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
+        <LoadingSpinner size="lg" text="Loading..." className="text-white" />
       </div>
     );
   }
 
   if (user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Redirecting..." />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
+        <LoadingSpinner size="lg" text="Redirecting..." className="text-white" />
       </div>
     );
   }

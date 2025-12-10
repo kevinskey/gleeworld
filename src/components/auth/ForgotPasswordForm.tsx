@@ -40,12 +40,12 @@ export const ForgotPasswordForm = ({ onSwitchToLogin }: ForgotPasswordFormProps)
   if (success) {
     return (
       <div className="space-y-4">
-        <Alert>
+        <Alert className="bg-white/20 border-white/30 text-white">
           <AlertDescription>
             Check your email for a password reset link.
           </AlertDescription>
         </Alert>
-        <Button variant="outline" onClick={onSwitchToLogin} className="w-full">
+        <Button variant="outline" onClick={onSwitchToLogin} className="w-full border-white/30 text-white hover:bg-white/10 hover:text-white">
           Back to Sign In
         </Button>
       </div>
@@ -61,7 +61,7 @@ export const ForgotPasswordForm = ({ onSwitchToLogin }: ForgotPasswordFormProps)
       )}
       
       <div className="space-y-2">
-        <Label htmlFor="reset-email">Email</Label>
+        <Label htmlFor="reset-email" className="text-white">Email</Label>
         <Input
           id="reset-email"
           type="email"
@@ -69,15 +69,16 @@ export const ForgotPasswordForm = ({ onSwitchToLogin }: ForgotPasswordFormProps)
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
         />
       </div>
       
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full bg-[#0066CC] hover:bg-[#0077DD] text-white border border-white/20" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Send Reset Link
       </Button>
       
-      <Button variant="outline" onClick={onSwitchToLogin} className="w-full">
+      <Button variant="outline" onClick={onSwitchToLogin} className="w-full border-white/30 text-white hover:bg-white/10 hover:text-white">
         Back to Sign In
       </Button>
     </form>

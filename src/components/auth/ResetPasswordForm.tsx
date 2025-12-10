@@ -91,7 +91,7 @@ export const ResetPasswordForm = () => {
   if (success) {
     return (
       <div className="space-y-4">
-        <Alert>
+        <Alert className="bg-white/20 border-white/30 text-white">
           <AlertDescription>
             Your password has been successfully updated! Redirecting to dashboard...
           </AlertDescription>
@@ -103,8 +103,8 @@ export const ResetPasswordForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Reset Your Password</h2>
-        <p className="text-muted-foreground">Enter your new password below</p>
+        <h2 className="text-2xl font-bold text-white">Reset Your Password</h2>
+        <p className="text-white/80">Enter your new password below</p>
       </div>
 
       {error && (
@@ -114,7 +114,7 @@ export const ResetPasswordForm = () => {
       )}
       
       <div className="space-y-2">
-        <Label htmlFor="new-password">New Password</Label>
+        <Label htmlFor="new-password" className="text-white">New Password</Label>
         <div className="relative">
           <Input
             id="new-password"
@@ -124,12 +124,13 @@ export const ResetPasswordForm = () => {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
+            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
           />
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/70 hover:text-white"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
@@ -142,7 +143,7 @@ export const ResetPasswordForm = () => {
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="confirm-password">Confirm New Password</Label>
+        <Label htmlFor="confirm-password" className="text-white">Confirm New Password</Label>
         <div className="relative">
           <Input
             id="confirm-password"
@@ -152,12 +153,13 @@ export const ResetPasswordForm = () => {
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
             minLength={8}
+            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
           />
           <Button
             type="button"
             variant="ghost"
             size="sm"
-            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+            className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/70 hover:text-white"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
           >
             {showConfirmPassword ? (
@@ -169,7 +171,7 @@ export const ResetPasswordForm = () => {
         </div>
       </div>
 
-      <div className="text-sm text-muted-foreground space-y-1">
+      <div className="text-sm text-white/70 space-y-1">
         <p>Password requirements:</p>
         <ul className="list-disc list-inside space-y-1">
           <li>At least 8 characters long</li>
@@ -179,7 +181,7 @@ export const ResetPasswordForm = () => {
         </ul>
       </div>
       
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button type="submit" className="w-full bg-[#0066CC] hover:bg-[#0077DD] text-white border border-white/20" disabled={loading}>
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         Update Password
       </Button>

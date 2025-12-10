@@ -119,13 +119,13 @@ export const SignupForm = () => {
   return (
     <div className="space-y-6">
       {isFanSignup && (
-        <div className="text-center p-4 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-lg border border-primary/20">
+        <div className="text-center p-4 bg-white/10 rounded border border-white/20">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Heart className="h-5 w-5 text-secondary" />
-            <Badge variant="secondary" className="text-sm">Fan Registration</Badge>
-            <Users className="h-5 w-5 text-primary" />
+            <Heart className="h-5 w-5 text-white" />
+            <Badge variant="secondary" className="text-sm bg-white/20 text-white border-white/30">Fan Registration</Badge>
+            <Users className="h-5 w-5 text-white" />
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-white/80">
             Join the GleeWorld fan community and get exclusive access to content and events!
           </p>
         </div>
@@ -140,7 +140,7 @@ export const SignupForm = () => {
       {/* Email/Password Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="fullName">Full Name</Label>
+          <Label htmlFor="fullName" className="text-white">Full Name</Label>
           <Input
             id="fullName"
             type="text"
@@ -148,11 +148,12 @@ export const SignupForm = () => {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
+            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="signup-email">Email</Label>
+          <Label htmlFor="signup-email" className="text-white">Email</Label>
           <Input
             id="signup-email"
             type="email"
@@ -160,11 +161,12 @@ export const SignupForm = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="signup-password">Password</Label>
+          <Label htmlFor="signup-password" className="text-white">Password</Label>
           <Input
             id="signup-password"
             type="password"
@@ -174,10 +176,11 @@ export const SignupForm = () => {
             required
             minLength={8}
             title="Password must be at least 8 characters long and contain uppercase, lowercase, numbers, and special characters"
+            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
           />
         </div>
         
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full bg-[#0066CC] hover:bg-[#0077DD] text-white border border-white/20" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isFanSignup ? (
             <>

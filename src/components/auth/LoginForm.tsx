@@ -46,7 +46,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
       {/* Email/Password Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="text-white">Email</Label>
           <Input
             id="email"
             type="email"
@@ -55,11 +55,12 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
             onChange={(e) => setEmail(e.target.value)}
             autoComplete="email"
             required
+            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
           />
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label htmlFor="password" className="text-white">Password</Label>
           <Input
             id="password"
             type="password"
@@ -68,10 +69,11 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
             onChange={(e) => setPassword(e.target.value)}
             autoComplete="current-password"
             required
+            className="bg-white/20 border-white/30 text-white placeholder:text-white/50 focus:border-white/50"
           />
         </div>
         
-        <Button type="submit" className="w-full" disabled={loading}>
+        <Button type="submit" className="w-full bg-[#0066CC] hover:bg-[#0077DD] text-white border border-white/20" disabled={loading}>
           {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Sign In
         </Button>
@@ -81,7 +83,7 @@ export const LoginForm = ({ onSwitchToForgot }: LoginFormProps) => {
             type="button" 
             variant="link" 
             onClick={onSwitchToForgot}
-            className="text-sm"
+            className="text-sm text-white/80 hover:text-white"
           >
             Forgot your password?
           </Button>
