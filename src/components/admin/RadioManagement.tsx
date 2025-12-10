@@ -554,7 +554,12 @@ export const RadioManagement = () => {
       />
 
       {/* Schedule Timeline - Drag & Drop */}
-      <RadioScheduleTimeline onRefresh={handleSync} />
+      <RadioScheduleTimeline 
+        onRefresh={handleSync}
+        currentSongElapsed={radioStats.currentElapsed}
+        currentSongDuration={radioStats.currentDuration}
+        currentSongTitle={radioStats.currentlyPlaying}
+      />
 
       {/* Two-Panel Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
