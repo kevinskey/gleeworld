@@ -53,17 +53,6 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
-async function requireAuth(req: Request, supabase: ReturnType<typeof createClient>) {
-  const authHeader = req.headers.get("authorization") ?? "";
-  const token = authHeader.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : null;
-  if (!token) throw new Error("Unauthorized: missing bearer token");
-
-  // Validate token using service role client
-  const { data: { user }, error } = await supabase.auth.getUser(token);
-  if (error || !user) throw new Error("Unauthorized: invalid token");
-  return user;
-}
-
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -82,8 +71,8 @@ serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Require a valid Supabase JWT to call this function
-    await requireAuth(req, supabase);
+    // JWT is already validated by Supabase (verify_jwt = true in config.toml)
+    console.log("SMS notification request received");
 
     const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
