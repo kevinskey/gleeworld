@@ -172,6 +172,13 @@ class AzuraCastService {
       throw new Error(`Proxy request failed: ${error.message}`);
     }
 
+    // Check if the response contains an error (e.g., from AzuraCast API returning 500)
+    if (data && typeof data === 'object' && data.error) {
+      console.error('AzuraCast: API error in response:', data);
+      const errorMessage = data.details || data.error;
+      throw new Error(errorMessage);
+    }
+
     console.log('AzuraCast: Proxy request successful');
     return data;
   }
