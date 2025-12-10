@@ -45,6 +45,14 @@ import {
   RotateCcw
 } from 'lucide-react';
 
+interface UpNextTrack {
+  title: string;
+  artist: string;
+  album?: string;
+  art?: string;
+  duration?: number;
+}
+
 interface DJTransportControlProps {
   stationState: {
     isOnline: boolean;
@@ -90,8 +98,38 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [streamKey, setStreamKey] = useState('');
   const [activeTab, setActiveTab] = useState('transport');
   const [serverControlLoading, setServerControlLoading] = useState<'start' | 'stop' | 'skip' | 'restart' | null>(null);
+  const [upNext, setUpNext] = useState<UpNextTrack | null>(null);
+  const [loadingUpNext, setLoadingUpNext] = useState(false);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
+
+  // Fetch up next track
+  const fetchUpNext = async () => {
+    try {
+      setLoadingUpNext(true);
+      const nowPlaying = await azuraCastService.getNowPlaying();
+      if (nowPlaying?.playing_next?.song) {
+        setUpNext({
+          title: nowPlaying.playing_next.song.title || 'Unknown Track',
+          artist: nowPlaying.playing_next.song.artist || 'Unknown Artist',
+          album: nowPlaying.playing_next.song.album,
+          art: nowPlaying.playing_next.song.art,
+          duration: nowPlaying.playing_next.duration,
+        });
+      } else {
+        setUpNext(null);
+      }
+    } catch (error) {
+      console.error('Error fetching up next:', error);
+    } finally {
+      setLoadingUpNext(false);
+    }
+  };
+
+  // Fetch up next on mount and when refresh is called
+  useEffect(() => {
+    fetchUpNext();
+  }, [stationState.currentlyPlaying]);
 
   // Sync master volume slider with radio player volume
   useEffect(() => {
@@ -470,6 +508,61 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
                   <p className="text-lg font-bold text-emerald-400">{stationState.listenerCount}</p>
                 </div>
               </div>
+            </div>
+
+            {/* Up Next Display */}
+            <div className="bg-slate-800/30 rounded-lg p-3 border border-slate-700/50">
+              <div className="flex items-center gap-2 mb-2">
+                <SkipForward className="h-4 w-4 text-amber-400" />
+                <span className="text-xs font-medium text-amber-400">Up Next</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0 ml-auto text-slate-400 hover:text-white"
+                  onClick={fetchUpNext}
+                  disabled={loadingUpNext}
+                >
+                  <RefreshCw className={cn("h-3 w-3", loadingUpNext && "animate-spin")} />
+                </Button>
+              </div>
+              {loadingUpNext ? (
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 bg-slate-700 rounded animate-pulse" />
+                  <div className="flex-1 space-y-1">
+                    <div className="h-3 bg-slate-700 rounded w-3/4 animate-pulse" />
+                    <div className="h-2 bg-slate-700 rounded w-1/2 animate-pulse" />
+                  </div>
+                </div>
+              ) : upNext ? (
+                <div className="flex items-center gap-3">
+                  {upNext.art ? (
+                    <img 
+                      src={upNext.art} 
+                      alt={upNext.title}
+                      className="h-10 w-10 rounded object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 bg-slate-700 rounded flex items-center justify-center">
+                      <Music className="h-4 w-4 text-slate-400" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-slate-200 truncate">
+                      {upNext.title}
+                    </p>
+                    <p className="text-xs text-slate-400 truncate">
+                      {upNext.artist}
+                    </p>
+                  </div>
+                  {upNext.duration && (
+                    <div className="text-xs text-slate-500">
+                      {Math.floor(upNext.duration / 60)}:{String(upNext.duration % 60).padStart(2, '0')}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic">No track queued</p>
+              )}
             </div>
 
             {/* Quick Actions */}
