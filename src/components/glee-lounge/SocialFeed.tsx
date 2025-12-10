@@ -10,13 +10,14 @@ interface SocialFeedProps {
     full_name: string;
     avatar_url: string | null;
   } | null;
+  compact?: boolean;
 }
 
 export interface SocialFeedRef {
   refresh: () => void;
 }
 
-export const SocialFeed = forwardRef<SocialFeedRef, SocialFeedProps>(function SocialFeed({ userProfile }, ref) {
+export const SocialFeed = forwardRef<SocialFeedRef, SocialFeedProps>(function SocialFeed({ userProfile, compact = false }, ref) {
   const { posts, isLoading, hasMore, loadMore, refresh, newPostsAvailable } = useSocialFeed();
 
   // Expose refresh method to parent via ref
@@ -65,6 +66,7 @@ export const SocialFeed = forwardRef<SocialFeedRef, SocialFeedProps>(function So
               post={post}
               userProfile={userProfile}
               onRefresh={refresh}
+              compact={compact}
             />
           ))}
 

@@ -180,7 +180,7 @@ export default function GleeLounge() {
             </div>
 
             {/* Feed */}
-            <SocialFeed ref={feedRef} userProfile={userProfile} />
+            <SocialFeed ref={feedRef} userProfile={userProfile} compact={showMusicLibrary} />
           </div>
 
           {/* Desktop: Online sidebar */}
