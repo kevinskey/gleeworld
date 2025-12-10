@@ -509,10 +509,35 @@ export function CreatePostCard({
                   <Video className="h-5 w-5 text-red-500" />
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-6xl p-0 overflow-hidden">
-                <div className="flex min-h-[600px]">
-                  {/* Left Sidebar */}
-                  <div className="w-72 border-r border-border p-4 bg-card flex flex-col">
+              <DialogContent className="max-w-6xl p-0 overflow-hidden max-h-[90vh]">
+                {/* Mobile Tab Navigation */}
+                <div className="lg:hidden flex border-b border-border bg-card">
+                  <button
+                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeSection === 'setup' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                    onClick={() => setActiveSection('setup')}
+                  >
+                    <Video className="h-4 w-4 mx-auto mb-1" />
+                    Setup
+                  </button>
+                  <button
+                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeSection === 'settings' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                    onClick={() => setActiveSection('settings')}
+                  >
+                    <Settings className="h-4 w-4 mx-auto mb-1" />
+                    Settings
+                  </button>
+                  <button
+                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeSection === 'interactivity' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                    onClick={() => setActiveSection('interactivity')}
+                  >
+                    <Smile className="h-4 w-4 mx-auto mb-1" />
+                    Options
+                  </button>
+                </div>
+
+                <div className="flex flex-col lg:flex-row min-h-[500px] lg:min-h-[600px] overflow-y-auto">
+                  {/* Left Sidebar - Hidden on mobile, shown on desktop */}
+                  <div className="hidden lg:flex w-72 border-r border-border p-4 bg-card flex-col">
                     <h2 className="text-lg font-bold text-foreground mb-4">Create live video</h2>
                     
                     {/* Progress indicator */}
@@ -763,48 +788,58 @@ export function CreatePostCard({
                     </div>
                   </div>
 
-                  {/* Center Content */}
-                  <div className="flex-1 p-6 bg-muted/30 overflow-y-auto">
-                    {/* Video Source Selection */}
-                    <div className="mb-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <h3 className="font-semibold text-foreground">Select a video source</h3>
-                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-xs text-muted-foreground cursor-help">?</div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
+                  {/* Center Content - Main content area */}
+                  <div className={`flex-1 p-4 lg:p-6 bg-muted/30 overflow-y-auto ${activeSection !== 'setup' && 'hidden lg:block'}`}>
+                    {/* Mobile Header */}
+                    <div className="lg:hidden mb-4">
+                      <h2 className="text-lg font-bold text-foreground">Create live video</h2>
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden mt-2">
                         <div 
-                          className={`p-6 rounded-xl border-2 cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 ${videoSource === 'webcam' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'}`}
+                          className="h-full bg-primary transition-all duration-300"
+                          style={{ width: liveStep === 'setup' ? '33%' : liveStep === 'details' ? '66%' : '100%' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Video Source Selection */}
+                    <div className="mb-4 lg:mb-6">
+                      <div className="flex items-center gap-2 mb-3 lg:mb-4">
+                        <h3 className="font-semibold text-foreground text-sm lg:text-base">Select a video source</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 lg:gap-4">
+                        <div 
+                          className={`p-4 lg:p-6 rounded-xl border-2 cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 lg:gap-3 ${videoSource === 'webcam' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'}`}
                           onClick={() => setVideoSource('webcam')}
                         >
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${videoSource === 'webcam' ? 'bg-primary' : 'bg-muted'}`}>
-                            <Camera className={`h-6 w-6 ${videoSource === 'webcam' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                          <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center ${videoSource === 'webcam' ? 'bg-primary' : 'bg-muted'}`}>
+                            <Camera className={`h-5 w-5 lg:h-6 lg:w-6 ${videoSource === 'webcam' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                           </div>
-                          <span className="font-medium text-foreground">Webcam</span>
+                          <span className="font-medium text-foreground text-sm lg:text-base">Camera</span>
                         </div>
                         <div 
-                          className={`p-6 rounded-xl border-2 cursor-pointer transition-colors flex flex-col items-center justify-center gap-3 ${videoSource === 'streaming' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'}`}
+                          className={`p-4 lg:p-6 rounded-xl border-2 cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 lg:gap-3 ${videoSource === 'streaming' ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground'}`}
                           onClick={() => setVideoSource('streaming')}
                         >
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${videoSource === 'streaming' ? 'bg-primary' : 'bg-muted'}`}>
-                            <Monitor className={`h-6 w-6 ${videoSource === 'streaming' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
+                          <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-full flex items-center justify-center ${videoSource === 'streaming' ? 'bg-primary' : 'bg-muted'}`}>
+                            <Monitor className={`h-5 w-5 lg:h-6 lg:w-6 ${videoSource === 'streaming' ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
                           </div>
-                          <span className="font-medium text-foreground">Streaming software</span>
+                          <span className="font-medium text-foreground text-sm lg:text-base">Screen</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Camera Controls */}
-                    <div className="bg-card rounded-xl p-4 mb-6 border border-border">
-                      <h4 className="font-semibold text-foreground mb-2">Camera controls</h4>
-                      <p className="text-sm text-muted-foreground mb-4">Check that your camera and microphone inputs are properly working before going live.</p>
+                    <div className="bg-card rounded-xl p-3 lg:p-4 mb-4 lg:mb-6 border border-border">
+                      <h4 className="font-semibold text-foreground mb-2 text-sm lg:text-base">Camera controls</h4>
+                      <p className="text-xs lg:text-sm text-muted-foreground mb-3 lg:mb-4">Check that your camera and microphone are working.</p>
                       
                       <div className="space-y-3">
                         {/* Camera dropdown */}
-                        <div className="flex items-center gap-3">
-                          <Camera className="h-5 w-5 text-muted-foreground" />
+                        <div className="flex items-center gap-2 lg:gap-3">
+                          <Camera className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground shrink-0" />
                           <Select value={selectedCamera} onValueChange={setSelectedCamera}>
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Select a media source" />
+                            <SelectTrigger className="flex-1 text-xs lg:text-sm">
+                              <SelectValue placeholder="Select camera" />
                             </SelectTrigger>
                             <SelectContent>
                               {availableDevices.filter(d => d.kind === 'videoinput').map((device) => (
@@ -820,11 +855,11 @@ export function CreatePostCard({
                         </div>
 
                         {/* Microphone dropdown */}
-                        <div className="flex items-center gap-3">
-                          <Mic className="h-5 w-5 text-muted-foreground" />
+                        <div className="flex items-center gap-2 lg:gap-3">
+                          <Mic className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground shrink-0" />
                           <Select value={selectedMic} onValueChange={setSelectedMic}>
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Select a media source" />
+                            <SelectTrigger className="flex-1 text-xs lg:text-sm">
+                              <SelectValue placeholder="Select microphone" />
                             </SelectTrigger>
                             <SelectContent>
                               {availableDevices.filter(d => d.kind === 'audioinput').map((device) => (
@@ -840,14 +875,15 @@ export function CreatePostCard({
                         </div>
 
                         {/* Screen share button */}
-                        <div className="flex items-center gap-3">
-                          <Monitor className="h-5 w-5 text-muted-foreground" />
+                        <div className="flex items-center gap-2 lg:gap-3">
+                          <Monitor className="h-4 w-4 lg:h-5 lg:w-5 text-muted-foreground shrink-0" />
                           <Button 
                             variant={isScreenSharing ? "default" : "outline"} 
-                            className={`flex-1 ${isScreenSharing ? 'bg-green-600 hover:bg-green-700' : ''}`}
+                            size="sm"
+                            className={`flex-1 text-xs lg:text-sm ${isScreenSharing ? 'bg-green-600 hover:bg-green-700' : ''}`}
                             onClick={isScreenSharing ? stopScreenShare : startScreenShare}
                           >
-                            {isScreenSharing ? 'Stop screen share' : 'Start screen share'}
+                            {isScreenSharing ? 'Stop share' : 'Share screen'}
                           </Button>
                         </div>
                       </div>
@@ -855,7 +891,7 @@ export function CreatePostCard({
 
                     {/* Video Preview */}
                     <div className="bg-card rounded-xl border border-border overflow-hidden mb-4">
-                      <h4 className="font-semibold text-foreground p-4 pb-2">Video</h4>
+                      <h4 className="font-semibold text-foreground p-3 lg:p-4 pb-2 text-sm lg:text-base">Video Preview</h4>
                       <div className="aspect-video bg-black relative flex items-center justify-center">
                         {screenStream ? (
                           <video 
@@ -874,27 +910,27 @@ export function CreatePostCard({
                             className="w-full h-full object-cover"
                           />
                         ) : cameraPermission === 'denied' ? (
-                          <div className="text-center text-white p-6">
-                            <Camera className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p className="font-medium mb-2">Allow access to camera</p>
-                            <p className="text-sm text-gray-400 mb-4">Your browser is not allowing Live Producer access to your camera. Go to your browser settings and allow Camera permission.</p>
-                            <Button onClick={requestCameraAccess} variant="secondary">
+                          <div className="text-center text-white p-4 lg:p-6">
+                            <Camera className="h-8 w-8 lg:h-12 lg:w-12 mx-auto mb-3 lg:mb-4 opacity-50" />
+                            <p className="font-medium mb-2 text-sm lg:text-base">Camera access denied</p>
+                            <p className="text-xs lg:text-sm text-gray-400 mb-3 lg:mb-4">Please allow camera access in your browser settings.</p>
+                            <Button onClick={requestCameraAccess} variant="secondary" size="sm">
                               Retry
                             </Button>
                           </div>
                         ) : (
-                          <div className="text-center text-white p-6">
-                            <Camera className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                            <p className="font-medium mb-2">Allow access to camera</p>
-                            <p className="text-sm text-gray-400 mb-4">Click below to enable your camera and microphone</p>
-                            <Button onClick={requestCameraAccess} variant="secondary">
+                          <div className="text-center text-white p-4 lg:p-6">
+                            <Camera className="h-8 w-8 lg:h-12 lg:w-12 mx-auto mb-3 lg:mb-4 opacity-50" />
+                            <p className="font-medium mb-2 text-sm lg:text-base">Enable camera access</p>
+                            <p className="text-xs lg:text-sm text-gray-400 mb-3 lg:mb-4">Tap below to enable your camera</p>
+                            <Button onClick={requestCameraAccess} variant="secondary" size="sm">
                               Enable Camera
                             </Button>
                           </div>
                         )}
                       </div>
                       <button 
-                        className="p-3 flex items-center justify-between border-t border-border w-full hover:bg-muted/50 transition-colors cursor-pointer"
+                        className="p-2 lg:p-3 flex items-center justify-between border-t border-border w-full hover:bg-muted/50 transition-colors cursor-pointer"
                         onClick={() => {
                           const videoEl = screenStream ? screenVideoRef.current : cameraVideoRef.current;
                           if (videoEl) {
@@ -907,20 +943,161 @@ export function CreatePostCard({
                         }}
                         disabled={!cameraStream && !screenStream}
                       >
-                        <span className="text-sm text-foreground">Expand video</span>
+                        <span className="text-xs lg:text-sm text-foreground">Expand video</span>
                         <Expand className="h-4 w-4 text-muted-foreground" />
                       </button>
                     </div>
 
-                    {/* Event logs */}
-                    <div className="flex items-center gap-3 text-muted-foreground">
-                      <MessageSquare className="h-5 w-5" />
-                      <span className="text-sm">Event logs</span>
+                    {/* Mobile: Go Live Button */}
+                    <div className="lg:hidden">
+                      <Button 
+                        className="w-full bg-red-500 hover:bg-red-600 text-white"
+                        disabled={!cameraStream && !screenStream}
+                        onClick={() => {
+                          toast({
+                            title: "Going Live!",
+                            description: "Your live video is starting..."
+                          });
+                        }}
+                      >
+                        <Video className="h-4 w-4 mr-2" />
+                        Go Live
+                      </Button>
                     </div>
                   </div>
 
-                  {/* Right Sidebar - Post Details */}
-                  <div className="w-80 border-l border-border p-4 bg-card overflow-y-auto">
+                  {/* Mobile Settings Panel */}
+                  <div className={`lg:hidden flex-1 p-4 bg-muted/30 overflow-y-auto ${activeSection !== 'settings' && 'hidden'}`}>
+                    <h3 className="font-semibold text-foreground mb-4">Settings</h3>
+                    
+                    {/* Video Toggle */}
+                    <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Video className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">Video</span>
+                        </div>
+                        <button
+                          onClick={toggleVideo}
+                          disabled={!cameraStream}
+                          className={`w-10 h-6 rounded-full transition-colors ${videoEnabled && cameraStream ? 'bg-primary' : 'bg-muted'} ${!cameraStream ? 'opacity-50' : ''}`}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${videoEnabled && cameraStream ? 'translate-x-4' : ''}`} />
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {!cameraStream ? 'Enable camera first' : videoEnabled ? 'Camera is on' : 'Camera is off'}
+                      </p>
+                    </div>
+
+                    {/* Audio Toggle */}
+                    <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Mic className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">Microphone</span>
+                        </div>
+                        <button
+                          onClick={toggleAudio}
+                          disabled={!cameraStream}
+                          className={`w-10 h-6 rounded-full transition-colors ${audioEnabled && cameraStream ? 'bg-primary' : 'bg-muted'} ${!cameraStream ? 'opacity-50' : ''}`}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${audioEnabled && cameraStream ? 'translate-x-4' : ''}`} />
+                        </button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {!cameraStream ? 'Enable camera first' : audioEnabled ? 'Mic is on' : 'Mic is muted'}
+                      </p>
+                    </div>
+
+                    {/* Audience */}
+                    <div className="bg-card rounded-lg p-4 border border-border">
+                      <h4 className="text-sm font-medium text-foreground mb-3">Audience</h4>
+                      <Select value={audienceType} onValueChange={(value: 'friends' | 'public' | 'private') => setAudienceType(value)}>
+                        <SelectTrigger className="w-full">
+                          <Users className="h-4 w-4 mr-2" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="friends">Members</SelectItem>
+                          <SelectItem value="public">Exec-Board</SelectItem>
+                          <SelectItem value="private">Selected Group</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Mobile Interactivity Panel */}
+                  <div className={`lg:hidden flex-1 p-4 bg-muted/30 overflow-y-auto ${activeSection !== 'interactivity' && 'hidden'}`}>
+                    <h3 className="font-semibold text-foreground mb-4">Interactivity Options</h3>
+                    
+                    {/* Comments */}
+                    <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">Comments</span>
+                        </div>
+                        <button
+                          onClick={() => setCommentsEnabled(!commentsEnabled)}
+                          className={`w-10 h-6 rounded-full transition-colors ${commentsEnabled ? 'bg-primary' : 'bg-muted'}`}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${commentsEnabled ? 'translate-x-4' : ''}`} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Reactions */}
+                    <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Smile className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">Reactions</span>
+                        </div>
+                        <button
+                          onClick={() => setReactionsEnabled(!reactionsEnabled)}
+                          className={`w-10 h-6 rounded-full transition-colors ${reactionsEnabled ? 'bg-primary' : 'bg-muted'}`}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${reactionsEnabled ? 'translate-x-4' : ''}`} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Q&A */}
+                    <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">Q&A</span>
+                        </div>
+                        <button
+                          onClick={() => setQnaEnabled(!qnaEnabled)}
+                          className={`w-10 h-6 rounded-full transition-colors ${qnaEnabled ? 'bg-primary' : 'bg-muted'}`}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${qnaEnabled ? 'translate-x-4' : ''}`} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Polls */}
+                    <div className="bg-card rounded-lg p-4 border border-border">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground">Polls</span>
+                        </div>
+                        <button
+                          onClick={() => setPollsEnabled(!pollsEnabled)}
+                          className={`w-10 h-6 rounded-full transition-colors ${pollsEnabled ? 'bg-primary' : 'bg-muted'}`}
+                        >
+                          <div className={`w-4 h-4 bg-white rounded-full transition-transform mx-1 ${pollsEnabled ? 'translate-x-4' : ''}`} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Sidebar - Post Details - Hidden on mobile */}
+                  <div className="hidden lg:block w-80 border-l border-border p-4 bg-card overflow-y-auto">
                     <h3 className="font-semibold text-foreground mb-4">Add post details</h3>
                     
                     {/* Share to story checkbox */}
