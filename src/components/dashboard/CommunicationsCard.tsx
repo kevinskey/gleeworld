@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
-import { MessageSquare, Megaphone, ClipboardList, X, Radio } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { MessageSquare, Megaphone, ClipboardList, X, Radio, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MessagingInterface } from "@/components/messaging/MessagingInterface";
 import { useNavigate } from "react-router-dom";
@@ -59,6 +59,7 @@ export const CommunicationsCard = ({
 }: CommunicationsCardProps) => {
   const navigate = useNavigate();
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const modules = [...COMMUNICATION_MODULES, ...(isExecBoard ? EXEC_MODULES : [])];
 
   const handleModuleClick = (module: CommunicationModule) => {
@@ -73,71 +74,81 @@ export const CommunicationsCard = ({
 
   return (
     <Card className="bg-background/95 backdrop-blur-sm">
-      <CardHeader className="py-3 px-3 sm:px-0">
-        <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
-          <Radio className="h-5 w-5 !text-white" />
-          Communications
-          <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
-            stay connected!
-          </span>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-3 pb-3 pt-0 sm:px-[20px]">
-        {/* Horizontal scrolling container like GleeCamCard */}
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
-          {modules.map(module => {
-            const IconComponent = module.icon;
-            
-            return (
-              <div 
-                key={module.id} 
-                onClick={() => handleModuleClick(module)}
-                className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)] group cursor-pointer"
-              >
-                <div 
-                  className={cn(
-                    "p-2 flex flex-col items-center text-center transition-all duration-300",
-                    "bg-card border border-border hover:border-primary/50",
-                    "shadow-lg hover:shadow-xl min-h-[140px] justify-center"
-                  )}
-                >
-                  {/* Icon */}
-                  <div className="w-12 h-12 flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110 bg-primary/20">
-                    <IconComponent className="h-7 w-7 text-primary" />
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <CardHeader className="py-3 px-3 sm:px-0 cursor-pointer hover:bg-primary/5 transition-colors">
+            <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
+              <Radio className="h-5 w-5 !text-white" />
+              Communications
+              <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
+                stay connected!
+              </span>
+              <ChevronDown className={cn(
+                "h-4 w-4 ml-auto mr-2 transition-transform duration-200 !text-white/70",
+                isOpen && "rotate-180"
+              )} />
+            </CardTitle>
+          </CardHeader>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <CardContent className="px-3 pb-3 pt-0 sm:px-[20px]">
+            {/* Horizontal scrolling container like GleeCamCard */}
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+              {modules.map(module => {
+                const IconComponent = module.icon;
+                
+                return (
+                  <div 
+                    key={module.id} 
+                    onClick={() => handleModuleClick(module)}
+                    className="flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)] group cursor-pointer"
+                  >
+                    <div 
+                      className={cn(
+                        "p-2 flex flex-col items-center text-center transition-all duration-300",
+                        "bg-card border border-border hover:border-primary/50",
+                        "shadow-lg hover:shadow-xl min-h-[140px] justify-center"
+                      )}
+                    >
+                      {/* Icon */}
+                      <div className="w-12 h-12 flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110 bg-primary/20">
+                        <IconComponent className="h-7 w-7 text-primary" />
+                      </div>
+
+                      {/* Title */}
+                      <h4 className="font-semibold text-xs sm:text-sm text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
+                        {module.title}
+                      </h4>
+
+                      {/* Description */}
+                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">
+                        {module.description}
+                      </p>
+                    </div>
                   </div>
+                );
+              })}
+            </div>
 
-                  {/* Title */}
-                  <h4 className="font-semibold text-xs sm:text-sm text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
-                    {module.title}
-                  </h4>
-
-                  {/* Description */}
-                  <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">
-                    {module.description}
-                  </p>
+            {/* Embedded Messages Panel - Full width below the cards */}
+            {expandedModule === 'messages' && (
+              <div className="mt-3 p-4 border border-border bg-card relative">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setExpandedModule(null)} 
+                  className="absolute top-2 right-2 p-1 h-auto text-muted-foreground hover:text-foreground z-10"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                <div className="h-[400px]">
+                  <MessagingInterface embedded />
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Embedded Messages Panel - Full width below the cards */}
-        {expandedModule === 'messages' && (
-          <div className="mt-3 p-4 border border-border bg-card relative">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setExpandedModule(null)} 
-              className="absolute top-2 right-2 p-1 h-auto text-muted-foreground hover:text-foreground z-10"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-            <div className="h-[400px]">
-              <MessagingInterface embedded />
-            </div>
-          </div>
-        )}
-      </CardContent>
+            )}
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
     </Card>
   );
 };
