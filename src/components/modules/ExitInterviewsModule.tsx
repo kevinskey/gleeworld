@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2 } from "lucide-react";
+import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2, Users, Music, Briefcase, Plane } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -158,7 +158,25 @@ const ExitInterviewsModule: React.FC = () => {
   const [interviews, setInterviews] = useState<ExitInterview[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInterview, setSelectedInterview] = useState<ExitInterview | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
 
+  // Group interviews by different categories
+  const groupedInterviews = useMemo(() => {
+    const returning = interviews.filter(i => i.intent_to_continue);
+    const notReturning = interviews.filter(i => !i.intent_to_continue);
+    const execInterest = interviews.filter(i => i.interested_in_exec_board);
+    const tourInterest = interviews.filter(i => i.interested_in_fall_tour);
+    
+    // Group by voice part
+    const byVoicePart: Record<string, ExitInterview[]> = {};
+    interviews.forEach(i => {
+      const part = i.profile?.voice_part || "Unknown";
+      if (!byVoicePart[part]) byVoicePart[part] = [];
+      byVoicePart[part].push(i);
+    });
+
+    return { returning, notReturning, execInterest, tourInterest, byVoicePart };
+  }, [interviews]);
 
   const fetchInterviews = async () => {
     setLoading(true);
@@ -299,28 +317,120 @@ const ExitInterviewsModule: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <div className="space-y-2 max-h-[500px] overflow-y-auto">
-            {loading ? (
-              <div className="flex items-center justify-center h-32">
-                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : interviews.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No exit interviews submitted yet
+            </div>
+          ) : (
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="flex flex-wrap h-auto gap-1 mb-4">
+                <TabsTrigger value="all" className="text-xs">
+                  <Users className="h-3 w-3 mr-1" />
+                  All ({interviews.length})
+                </TabsTrigger>
+                <TabsTrigger value="returning" className="text-xs">
+                  Returning ({groupedInterviews.returning.length})
+                </TabsTrigger>
+                <TabsTrigger value="not-returning" className="text-xs">
+                  Not Returning ({groupedInterviews.notReturning.length})
+                </TabsTrigger>
+                <TabsTrigger value="exec" className="text-xs">
+                  <Briefcase className="h-3 w-3 mr-1" />
+                  Exec Interest ({groupedInterviews.execInterest.length})
+                </TabsTrigger>
+                <TabsTrigger value="tour" className="text-xs">
+                  <Plane className="h-3 w-3 mr-1" />
+                  Tour Interest ({groupedInterviews.tourInterest.length})
+                </TabsTrigger>
+                <TabsTrigger value="voice-part" className="text-xs">
+                  <Music className="h-3 w-3 mr-1" />
+                  By Voice Part
+                </TabsTrigger>
+              </TabsList>
+
+              <div className="max-h-[400px] overflow-y-auto">
+                <TabsContent value="all" className="mt-0 space-y-2">
+                  {interviews.map((interview) => (
+                    <SwipeableInterviewCard
+                      key={interview.id}
+                      interview={interview}
+                      onSelect={() => setSelectedInterview(interview)}
+                      onDelete={() => handleDelete(interview.id, interview.profile?.full_name || "Unknown")}
+                    />
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="returning" className="mt-0 space-y-2">
+                  {groupedInterviews.returning.map((interview) => (
+                    <SwipeableInterviewCard
+                      key={interview.id}
+                      interview={interview}
+                      onSelect={() => setSelectedInterview(interview)}
+                      onDelete={() => handleDelete(interview.id, interview.profile?.full_name || "Unknown")}
+                    />
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="not-returning" className="mt-0 space-y-2">
+                  {groupedInterviews.notReturning.map((interview) => (
+                    <SwipeableInterviewCard
+                      key={interview.id}
+                      interview={interview}
+                      onSelect={() => setSelectedInterview(interview)}
+                      onDelete={() => handleDelete(interview.id, interview.profile?.full_name || "Unknown")}
+                    />
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="exec" className="mt-0 space-y-2">
+                  {groupedInterviews.execInterest.map((interview) => (
+                    <SwipeableInterviewCard
+                      key={interview.id}
+                      interview={interview}
+                      onSelect={() => setSelectedInterview(interview)}
+                      onDelete={() => handleDelete(interview.id, interview.profile?.full_name || "Unknown")}
+                    />
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="tour" className="mt-0 space-y-2">
+                  {groupedInterviews.tourInterest.map((interview) => (
+                    <SwipeableInterviewCard
+                      key={interview.id}
+                      interview={interview}
+                      onSelect={() => setSelectedInterview(interview)}
+                      onDelete={() => handleDelete(interview.id, interview.profile?.full_name || "Unknown")}
+                    />
+                  ))}
+                </TabsContent>
+
+                <TabsContent value="voice-part" className="mt-0 space-y-4">
+                  {Object.entries(groupedInterviews.byVoicePart).sort().map(([voicePart, list]) => (
+                    <div key={voicePart}>
+                      <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                        <Music className="h-4 w-4" />
+                        {voicePart} ({list.length})
+                      </h4>
+                      <div className="space-y-2">
+                        {list.map((interview) => (
+                          <SwipeableInterviewCard
+                            key={interview.id}
+                            interview={interview}
+                            onSelect={() => setSelectedInterview(interview)}
+                            onDelete={() => handleDelete(interview.id, interview.profile?.full_name || "Unknown")}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </TabsContent>
               </div>
-            ) : interviews.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                No exit interviews submitted yet
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {interviews.map((interview) => (
-                  <SwipeableInterviewCard
-                    key={interview.id}
-                    interview={interview}
-                    onSelect={() => setSelectedInterview(interview)}
-                    onDelete={() => handleDelete(interview.id, interview.profile?.full_name || "Unknown")}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
+            </Tabs>
+          )}
         </CardContent>
       </Card>
 
