@@ -69,18 +69,21 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
             </div>
             <div className="flex gap-2">
               <CreateGroupDialog onSuccess={() => setSelectedGroupId(null)} />
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setShowDirectMessages(true);
+                }}
+              >
+                <UserPlus className="h-4 w-4" />
+                DM
+              </Button>
               <Dialog open={showDirectMessages} onOpenChange={setShowDirectMessages}>
-                <DialogTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="gap-2"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    DM
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col z-[100]">
+                <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col z-[9999]">
                   <DialogHeader>
                     <DialogTitle>Send Direct Message</DialogTitle>
                   </DialogHeader>
