@@ -1471,14 +1471,9 @@ const Profile = () => {
                 disabled={loading}
                 onClick={async () => {
                   console.log("🎯 Save Profile button clicked! isEditing:", isEditing, "loading:", loading);
-                  console.log("🎯 Form errors before submit:", errors);
-                  console.log("🎯 Current form values:", watch());
-                  console.log("🎯 Form is valid:", Object.keys(errors).length === 0);
-                  console.log("🎯 All form errors:", errors);
                   
                   // Check if user is logged in
                   if (!user) {
-                    console.error("🎯 No user found!");
                     toast({
                       title: "Error",
                       description: "You must be logged in to save your profile",
@@ -1487,16 +1482,35 @@ const Profile = () => {
                     return;
                   }
                   
+                  // Show saving feedback immediately
+                  toast({
+                    title: "Saving...",
+                    description: "Updating your profile",
+                  });
+                  
                   try {
-                    console.log("🎯 About to trigger form submission...");
-                    // Trigger form submission manually
-                    const result = await handleSubmit(onSubmit)();
-                    console.log("🎯 Form submission result:", result);
-                  } catch (submitError) {
+                    // Trigger form submission with error handling
+                    await handleSubmit(
+                      // Success callback
+                      onSubmit,
+                      // Error callback - fires when validation fails
+                      (formErrors) => {
+                        console.error("🎯 Form validation errors:", formErrors);
+                        const errorMessages = Object.entries(formErrors)
+                          .map(([field, error]) => `${field}: ${error?.message}`)
+                          .join(', ');
+                        toast({
+                          title: "Validation Error",
+                          description: errorMessages || "Please check your form inputs",
+                          variant: "destructive",
+                        });
+                      }
+                    )();
+                  } catch (submitError: any) {
                     console.error("🎯 Form submission error:", submitError);
                     toast({
-                      title: "Form Error",
-                      description: `Form submission failed: ${submitError?.message || 'Unknown error'}`,
+                      title: "Error",
+                      description: `Failed to save: ${submitError?.message || 'Unknown error'}`,
                       variant: "destructive",
                     });
                   }
