@@ -22,28 +22,26 @@ export function GleeLoungeWithMusicLibrary({
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      <ResizablePanelGroup direction="horizontal" className="flex-1">
+    <div className="fixed inset-0 z-40 flex bg-background">
+      <ResizablePanelGroup direction="horizontal" className="w-full h-full">
         {/* Left: Glee Lounge */}
         <ResizablePanel 
-          defaultSize={isExpanded ? 30 : 50} 
-          minSize={20}
-          className="relative overflow-hidden"
+          defaultSize={isExpanded ? 30 : 40} 
+          minSize={25}
         >
           <div className="h-full overflow-auto">
             {children}
           </div>
         </ResizablePanel>
 
-        <ResizableHandle withHandle className="bg-border hover:bg-primary/20 transition-colors" />
+        <ResizableHandle withHandle className="bg-border hover:bg-primary/20 transition-colors data-[panel-group-direction=vertical]:h-2" />
 
         {/* Right: Music Library */}
         <ResizablePanel 
-          defaultSize={isExpanded ? 70 : 50} 
-          minSize={20}
-          className="relative overflow-hidden"
+          defaultSize={isExpanded ? 70 : 60} 
+          minSize={30}
         >
-          <div className="h-full flex flex-col bg-background border-l border-border overflow-hidden">
+          <div className="h-full flex flex-col bg-background border-l border-border">
             {/* Music Library Header */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-card border-b border-border">
               <div className="flex items-center gap-2">
@@ -75,7 +73,7 @@ export function GleeLoungeWithMusicLibrary({
             </div>
             
             {/* Music Library Content */}
-            <div className="flex-1 min-h-0 overflow-auto">
+            <div className="flex-1 min-h-0 overflow-hidden">
               <MusicLibrary />
             </div>
           </div>
