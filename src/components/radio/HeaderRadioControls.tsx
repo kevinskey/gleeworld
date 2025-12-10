@@ -170,6 +170,35 @@ export const HeaderRadioControls = () => {
                       )}
                     </Button>
 
+                    {/* Scrolling Now Playing Ticker */}
+                    {currentTrack && isOnline && (
+                      <div className="relative overflow-hidden flex-1 max-w-[200px] sm:max-w-[300px] lg:max-w-[400px] h-6 bg-muted/30 px-2">
+                        <div className="absolute whitespace-nowrap animate-marquee flex items-center h-full gap-8">
+                          <span className="text-xs">
+                            <span className="text-primary font-semibold">Now Playing:</span>{' '}
+                            <span className="text-foreground">{currentTrack.title}</span>
+                            {currentTrack.artist && <span className="text-muted-foreground"> — {currentTrack.artist}</span>}
+                          </span>
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <span className="text-xs">
+                            <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
+                            <span className="text-muted-foreground">More from {selectedChannel?.name || 'Glee World Radio'}</span>
+                          </span>
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <span className="text-xs">
+                            <span className="text-primary font-semibold">Now Playing:</span>{' '}
+                            <span className="text-foreground">{currentTrack.title}</span>
+                            {currentTrack.artist && <span className="text-muted-foreground"> — {currentTrack.artist}</span>}
+                          </span>
+                          <span className="text-xs text-muted-foreground">•</span>
+                          <span className="text-xs">
+                            <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
+                            <span className="text-muted-foreground">More from {selectedChannel?.name || 'Glee World Radio'}</span>
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
                     <span className="text-[10px] text-muted-foreground items-center gap-0.5 hidden sm:flex">
                       <Users className="h-2.5 w-2.5" />
                       {listenerCount}
@@ -237,34 +266,6 @@ export const HeaderRadioControls = () => {
                       className="w-16"
                     />
                   </div>
-                </div>
-
-                {/* Now Playing Row - Full Width */}
-                <div className="mt-1.5 pt-1.5 border-t border-border/50">
-                  {currentTrack && isOnline ? (
-                    <div className="flex items-center gap-2">
-                      {isPlaying && (
-                        <div className="flex gap-0.5 flex-shrink-0">
-                          {[1, 2, 3].map((i) => (
-                            <div 
-                              key={i}
-                              className="w-1 bg-primary rounded-full animate-pulse"
-                              style={{ 
-                                height: `${8 + i * 3}px`,
-                                animationDelay: `${i * 0.15}s`
-                              }}
-                            />
-                          ))}
-                        </div>
-                      )}
-                      <span className="text-sm font-medium truncate text-foreground">{currentTrack.title}</span>
-                      {currentTrack.artist && (
-                        <span className="text-sm text-muted-foreground truncate">— {currentTrack.artist}</span>
-                      )}
-                    </div>
-                  ) : !isOnline ? (
-                    <p className="text-sm text-muted-foreground text-center">Offline</p>
-                  ) : null}
                 </div>
               </div>
             </div>
