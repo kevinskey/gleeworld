@@ -432,7 +432,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 const gap = 2; // gap-0.5 = 0.125rem ≈ 2px
                 // Position accounts for key width + gap between keys
                 const leftPosition = key.position * (whiteKeyWidth + gap) - blackKeyWidth / 2;
-                return <button key={keyName} className={`absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation !bg-gray-900 ${isActive ? '' : 'hover:opacity-90 active:scale-[0.96]'}`} style={{
+                return <button key={keyName} className="absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation" style={{
                   left: `${leftPosition}px`,
                   width: `${blackKeyWidth}px`,
                   minWidth: '36px',
@@ -441,7 +441,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                   boxShadow: isActive 
                     ? 'inset 0 3px 6px rgba(0,0,0,0.5)' 
                     : '0 5px 12px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.2)',
-                  background: '#111827',
+                  backgroundColor: '#000000',
+                  opacity: 1,
                   transform: isActive ? 'translateY(2px)' : 'translateY(0)',
                 }}
                 onPointerDown={(e) => {
