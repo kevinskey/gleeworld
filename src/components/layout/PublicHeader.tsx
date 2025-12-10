@@ -39,7 +39,7 @@ export const PublicHeader = () => {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: overlayStyle }} />
-      <header className={`bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm ${hideForAnnotation ? 'hidden' : ''}`}>
+      <header className={`bg-[#0a2540] border-b-4 border-[#0066CC] sticky top-0 z-50 shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20 min-w-0 gap-4">
             {/* Logo */}
@@ -50,13 +50,13 @@ export const PublicHeader = () => {
                 className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 flex-shrink-0"
               />
               <div className="min-w-0">
-                <h1 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-slate-900 truncate">GleeWorld</h1>
+                <h1 className="text-lg md:text-xl lg:text-2xl xl:text-3xl font-bold text-white tracking-wide truncate">GLEEWORLD</h1>
               </div>
             </Link>
             
             {/* Center Navigation */}
             <div className="hidden lg:flex">
-              <ResponsiveNavigation />
+              <ResponsiveNavigation variant="spelman-blue" />
             </div>
 
             {/* Right side actions */}
@@ -64,10 +64,10 @@ export const PublicHeader = () => {
               {/* Fan Auth Buttons */}
               {!user && (
                 <div className="hidden md:flex items-center gap-2">
-                  <Button variant="outline" asChild className="text-sm lg:text-base px-3 lg:px-4 py-1.5 lg:py-2">
+                  <Button variant="outline" asChild className="text-sm lg:text-base px-3 lg:px-4 py-1.5 lg:py-2 border-white/30 text-white hover:bg-white/10 hover:text-white">
                     <Link to="/auth">Sign In</Link>
                   </Button>
-                  <Button asChild className="text-sm lg:text-base px-3 lg:px-4 py-1.5 lg:py-2 bg-primary hover:bg-primary/90 whitespace-nowrap">
+                  <Button asChild className="text-sm lg:text-base px-3 lg:px-4 py-1.5 lg:py-2 bg-[#0066CC] hover:bg-[#0077DD] text-white whitespace-nowrap border border-[#0088EE]">
                     <Link to="/auth?mode=signup&role=fan">Join as Fan</Link>
                   </Button>
                 </div>
@@ -79,17 +79,17 @@ export const PublicHeader = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-gray-700 hover:bg-gray-100/50 transition-all duration-200 p-2"
+                  className="text-white hover:bg-white/10 transition-all duration-200 p-2"
                   onClick={() => setIsOpen(true)}
                   aria-label="Toggle mobile menu"
                 >
                   <div className="flex flex-col justify-center items-center w-6 h-6 gap-1">
                     {/* 5 lines like music staff */}
-                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
-                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
-                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
-                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
-                    <div className="w-7 h-0.5 bg-current transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
+                    <div className="w-7 h-0.5 bg-white transition-all duration-200 hover:w-8"></div>
                   </div>
                 </Button>
               </DropdownMenuTrigger>

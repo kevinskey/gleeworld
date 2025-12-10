@@ -24,13 +24,16 @@ const infoDropdown = [
 interface ResponsiveNavigationProps {
   mobile?: boolean;
   onItemClick?: () => void;
+  variant?: 'default' | 'spelman-blue';
 }
 
-export const ResponsiveNavigation = ({ mobile = false, onItemClick }: ResponsiveNavigationProps) => {
+export const ResponsiveNavigation = ({ mobile = false, onItemClick, variant = 'default' }: ResponsiveNavigationProps) => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [bookingOpen, setBookingOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
+  
+  const isSpelmanBlue = variant === 'spelman-blue';
 
   const isActivePath = (path: string) => {
     if (path === "/") {
@@ -164,9 +167,16 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             key={item.href}
             to={item.href}
             className={cn(
-              "px-4 py-2 rounded-lg text-base font-medium transition-all duration-200",
-              "text-foreground hover:text-primary hover:bg-accent/10",
-              isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
+              "px-4 py-2 rounded text-base font-medium transition-all duration-200",
+              isSpelmanBlue 
+                ? cn(
+                    "text-white/80 hover:text-white hover:bg-white/10",
+                    isActivePath(item.href) && "text-white bg-[#0066CC] font-semibold"
+                  )
+                : cn(
+                    "text-foreground hover:text-primary hover:bg-accent/10",
+                    isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
+                  )
             )}
           >
             {item.label}
@@ -179,9 +189,16 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             onMouseEnter={() => setBookingOpen(true)}
             onMouseLeave={() => setBookingOpen(false)}
             className={cn(
-              "flex items-center gap-1 px-4 py-2 rounded-lg text-base font-medium transition-all duration-200",
-              "text-foreground hover:text-primary hover:bg-accent/10",
-              isDropdownActive(bookingDropdown) && "text-primary bg-accent/20 font-semibold"
+              "flex items-center gap-1 px-4 py-2 rounded text-base font-medium transition-all duration-200",
+              isSpelmanBlue
+                ? cn(
+                    "text-white/80 hover:text-white hover:bg-white/10",
+                    isDropdownActive(bookingDropdown) && "text-white bg-[#0066CC] font-semibold"
+                  )
+                : cn(
+                    "text-foreground hover:text-primary hover:bg-accent/10",
+                    isDropdownActive(bookingDropdown) && "text-primary bg-accent/20 font-semibold"
+                  )
             )}
           >
             Booking
@@ -216,9 +233,16 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             onMouseEnter={() => setInfoOpen(true)}
             onMouseLeave={() => setInfoOpen(false)}
             className={cn(
-              "flex items-center gap-1 px-4 py-2 rounded-lg text-base font-medium transition-all duration-200",
-              "text-foreground hover:text-primary hover:bg-accent/10",
-              isDropdownActive(infoDropdown) && "text-primary bg-accent/20 font-semibold"
+              "flex items-center gap-1 px-4 py-2 rounded text-base font-medium transition-all duration-200",
+              isSpelmanBlue
+                ? cn(
+                    "text-white/80 hover:text-white hover:bg-white/10",
+                    isDropdownActive(infoDropdown) && "text-white bg-[#0066CC] font-semibold"
+                  )
+                : cn(
+                    "text-foreground hover:text-primary hover:bg-accent/10",
+                    isDropdownActive(infoDropdown) && "text-primary bg-accent/20 font-semibold"
+                  )
             )}
           >
             Info
@@ -255,9 +279,16 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             key={item.href}
             to={item.href}
             className={cn(
-              "px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-              "text-foreground hover:text-primary hover:bg-accent/10",
-              isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
+              "px-3 py-2 rounded text-sm font-medium transition-all duration-200",
+              isSpelmanBlue
+                ? cn(
+                    "text-white/80 hover:text-white hover:bg-white/10",
+                    isActivePath(item.href) && "text-white bg-[#0066CC] font-semibold"
+                  )
+                : cn(
+                    "text-foreground hover:text-primary hover:bg-accent/10",
+                    isActivePath(item.href) && "text-primary bg-accent/20 font-semibold"
+                  )
             )}
           >
             {item.shortLabel}
@@ -270,9 +301,16 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             onMouseEnter={() => setBookingOpen(true)}
             onMouseLeave={() => setBookingOpen(false)}
             className={cn(
-              "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-              "text-foreground hover:text-primary hover:bg-accent/10",
-              isDropdownActive(bookingDropdown) && "text-primary bg-accent/20 font-semibold"
+              "flex items-center gap-1 px-3 py-2 rounded text-sm font-medium transition-all duration-200",
+              isSpelmanBlue
+                ? cn(
+                    "text-white/80 hover:text-white hover:bg-white/10",
+                    isDropdownActive(bookingDropdown) && "text-white bg-[#0066CC] font-semibold"
+                  )
+                : cn(
+                    "text-foreground hover:text-primary hover:bg-accent/10",
+                    isDropdownActive(bookingDropdown) && "text-primary bg-accent/20 font-semibold"
+                  )
             )}
           >
             Booking
@@ -307,9 +345,16 @@ export const ResponsiveNavigation = ({ mobile = false, onItemClick }: Responsive
             onMouseEnter={() => setInfoOpen(true)}
             onMouseLeave={() => setInfoOpen(false)}
             className={cn(
-              "flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-              "text-foreground hover:text-primary hover:bg-accent/10",
-              isDropdownActive(infoDropdown) && "text-primary bg-accent/20 font-semibold"
+              "flex items-center gap-1 px-3 py-2 rounded text-sm font-medium transition-all duration-200",
+              isSpelmanBlue
+                ? cn(
+                    "text-white/80 hover:text-white hover:bg-white/10",
+                    isDropdownActive(infoDropdown) && "text-white bg-[#0066CC] font-semibold"
+                  )
+                : cn(
+                    "text-foreground hover:text-primary hover:bg-accent/10",
+                    isDropdownActive(infoDropdown) && "text-primary bg-accent/20 font-semibold"
+                  )
             )}
           >
             Info
