@@ -230,22 +230,23 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     return () => clearTimeout(timer);
   }, [startOctave, isMobile]);
 
-  const playNote = useCallback(async (noteName: string, frequency: number) => {
+  const playNote = useCallback((noteName: string, frequency: number) => {
     console.log('🎹 Playing note:', noteName, 'at frequency:', frequency.toFixed(2), 'Hz');
     
-    // Always force unlock on user interaction (synchronous for iOS)
+    // CRITICAL: All audio operations must be synchronous within user gesture for iOS
+    // Force unlock first - this plays a silent buffer synchronously
     forceUnlockAudio();
     
-    // Get shared context and ensure synth exists
+    // Get shared context immediately (synchronous)
     const ctx = getSharedAudioContext();
     audioContextRef.current = ctx;
     
-    // Resume if suspended
+    // Resume synchronously - fire and forget, don't await
     if (ctx.state === 'suspended') {
-      ctx.resume();
+      ctx.resume().catch(() => {});
     }
     
-    // Initialize synth if not already
+    // Initialize synth synchronously if not already
     if (!synthRef.current) {
       synthRef.current = new WebAudioSynth(ctx);
       synthRef.current.setInstrument(selectedInstrument);
@@ -253,7 +254,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       setSynthReady(true);
     }
     
-    // Play the note
+    // Play the note immediately (synchronous)
     try {
       synthRef.current.playNote(noteName, frequency);
       setActiveNotes(prev => new Set(prev).add(noteName));
