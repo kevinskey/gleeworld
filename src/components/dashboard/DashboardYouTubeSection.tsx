@@ -143,11 +143,10 @@ export const DashboardYouTubeSection = () => {
               <X className="h-5 w-5" />
             </Button>
 
-            {/* Mute indicator for YouTube videos */}
+            {/* Mute indicator for YouTube videos - small icon only */}
             {isYouTube && (
-              <div className="absolute top-2 left-2 z-20 flex items-center gap-2 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-lg">
+              <div className="absolute bottom-2 left-2 z-20 bg-background/70 backdrop-blur-sm rounded-full p-1.5 shadow-sm">
                 <VolumeX className="h-4 w-4 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground font-medium">Tap video to unmute</span>
               </div>
             )}
 
