@@ -220,7 +220,15 @@ export const RadioManagement = () => {
   const loadListeners = async () => { try { setListeners(await azuraCastService.getListeners() || []); } catch (e) { console.error(e); } };
   const loadSongHistory = async () => { try { setSongHistory(await azuraCastService.getSongHistory() || []); } catch (e) { console.error(e); } };
   const loadWebhooks = async () => { try { setWebhooks(await azuraCastService.getWebhooks() || []); } catch (e) { console.error(e); } };
-  const loadSftpUsers = async () => { try { setSftpUsers(await azuraCastService.getSftpUsers() || []); } catch (e) { console.error(e); } };
+  const loadSftpUsers = async () => { 
+    try { 
+      setSftpUsers(await azuraCastService.getSftpUsers() || []); 
+      setUnsupportedFeatures(prev => { const next = new Set(prev); next.delete('sftp'); return next; });
+    } catch (e: any) { 
+      console.error(e); 
+      if (isUnsupportedError(e)) setUnsupportedFeatures(prev => new Set(prev).add('sftp'));
+    } 
+  };
 
   const filterTracks = () => {
     let filtered = tracks.filter(track => {
@@ -716,19 +724,31 @@ export const RadioManagement = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
-              <div className="grid grid-cols-3 gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-                <Input value={newSftpUser.username} onChange={(e) => setNewSftpUser(p => ({ ...p, username: e.target.value }))} placeholder="Username" className="bg-slate-800 border-slate-600 text-white" />
-                <Input type="password" value={newSftpUser.password} onChange={(e) => setNewSftpUser(p => ({ ...p, password: e.target.value }))} placeholder="Password" className="bg-slate-800 border-slate-600 text-white" />
-                <Button onClick={createSftpUser}><Plus className="h-4 w-4 mr-2" />Add</Button>
-              </div>
-              <ScrollArea className="h-[200px]">
-                {sftpUsers.map(u => (
-                  <div key={u.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700 mb-2">
-                    <p className="font-medium text-white font-mono">{u.username}</p>
-                    <Button variant="ghost" size="sm" onClick={() => azuraCastService.deleteSftpUser(u.id).then(loadSftpUsers)} className="text-red-400"><Trash2 className="h-4 w-4" /></Button>
+              {unsupportedFeatures.has('sftp') ? (
+                <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <HardDrive className="h-8 w-8 text-amber-400" />
+                  <div>
+                    <p className="font-medium text-amber-200">SFTP Not Available</p>
+                    <p className="text-sm text-amber-400/80">This station does not have SFTP functionality enabled. Contact your AzuraCast administrator to enable SFTP support.</p>
                   </div>
-                ))}
-              </ScrollArea>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <Input value={newSftpUser.username} onChange={(e) => setNewSftpUser(p => ({ ...p, username: e.target.value }))} placeholder="Username" className="bg-slate-800 border-slate-600 text-white" />
+                    <Input type="password" value={newSftpUser.password} onChange={(e) => setNewSftpUser(p => ({ ...p, password: e.target.value }))} placeholder="Password" className="bg-slate-800 border-slate-600 text-white" />
+                    <Button onClick={createSftpUser}><Plus className="h-4 w-4 mr-2" />Add</Button>
+                  </div>
+                  <ScrollArea className="h-[200px]">
+                    {sftpUsers.map(u => (
+                      <div key={u.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700 mb-2">
+                        <p className="font-medium text-white font-mono">{u.username}</p>
+                        <Button variant="ghost" size="sm" onClick={() => azuraCastService.deleteSftpUser(u.id).then(loadSftpUsers)} className="text-red-400"><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    ))}
+                  </ScrollArea>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
