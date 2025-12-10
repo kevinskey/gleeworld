@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Play, X } from 'lucide-react';
+import { Play, X, VolumeX, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
 interface DashboardVideo {
   id: string;
   position: 'left' | 'right';
@@ -130,6 +131,8 @@ export const DashboardYouTubeSection = () => {
 
   // Expanded full-width view
   if (expandedVideo && expandedVideoData) {
+    const isYouTube = expandedVideoData.video_type !== 'uploaded';
+    
     return <div className="w-full">
         <div className="relative rounded-xl border-2 border-destructive/60 p-3 sm:p-4 bg-card/50 backdrop-blur-sm shadow-sm">
           <div className="absolute inset-1 rounded-lg border border-destructive/30 pointer-events-none" />
@@ -140,8 +143,16 @@ export const DashboardYouTubeSection = () => {
               <X className="h-5 w-5" />
             </Button>
 
+            {/* Mute indicator for YouTube videos */}
+            {isYouTube && (
+              <div className="absolute top-2 left-2 z-20 flex items-center gap-2 bg-background/90 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-lg">
+                <VolumeX className="h-4 w-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground font-medium">Tap video to unmute</span>
+              </div>
+            )}
+
             {/* Title overlay */}
-            {expandedVideoData.title && <div className="absolute top-0 left-0 right-12 bg-gradient-to-b from-background/95 via-background/60 to-transparent p-3 sm:p-4 z-10 backdrop-blur-sm rounded-t-lg">
+            {expandedVideoData.title && <div className="absolute top-12 left-0 right-12 bg-gradient-to-b from-background/95 via-background/60 to-transparent p-3 sm:p-4 z-10 backdrop-blur-sm rounded-t-lg">
                 <h3 className="text-foreground text-sm sm:text-base md:text-lg font-semibold truncate">
                   {expandedVideoData.title}
                 </h3>
@@ -186,7 +197,13 @@ export const DashboardYouTubeSection = () => {
           </div>}
         
         {/* Play Button - Bottom Right, Small */}
-        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10">
+        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10 flex items-center gap-1.5">
+          {/* Mute indicator for YouTube */}
+          {!isUploaded && (
+            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-background/80 rounded-full flex items-center justify-center shadow-sm">
+              <VolumeX className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
+            </div>
+          )}
           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-background/90 rounded-full flex items-center justify-center group-hover:bg-background group-hover:scale-110 transition-all duration-300 shadow-md">
             <Play className="w-3 h-3 sm:w-4 sm:h-4 text-primary ml-0.5" fill="currentColor" />
           </div>
