@@ -413,9 +413,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 {blackKeys.map(key => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
-                const whiteKeyWidth = isMobile ? 50 : 69; // Smaller on mobile
+                const whiteKeyWidth = isMobile ? 50 : 69;
                 const blackKeyWidth = isMobile ? 34 : 46;
-                const leftPosition = key.position * whiteKeyWidth - blackKeyWidth / 2;
+                const gap = 2; // gap-0.5 = 0.125rem ≈ 2px
+                // Position accounts for key width + gap between keys
+                const leftPosition = key.position * (whiteKeyWidth + gap) - blackKeyWidth / 2;
                 return <button key={keyName} className={`absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation ${isActive ? 'shadow-inner scale-[0.96]' : 'hover:opacity-90 active:scale-[0.96]'}`} style={{
                   left: `${leftPosition}px`,
                   width: `${blackKeyWidth}px`,
