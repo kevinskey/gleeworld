@@ -624,11 +624,6 @@ export const MetalHeaderDashboard = ({
       {/* Glee Cam Categories */}
       <GleeCamCard />
 
-      {/* Tree Lighting Participation Survey - PROMINENT POSITION */}
-      <div className="relative z-10">
-        <TreeLightingSurvey />
-      </div>
-
       {/* Super Admin Layout Controls */}
       {isSuperAdmin() && isEditingLayout && <div className="flex items-center gap-2 justify-end mb-2">
           <Button variant="ghost" size="sm" onClick={() => resetCardOrder()} disabled={isSaving}>
