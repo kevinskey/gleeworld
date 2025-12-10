@@ -167,8 +167,8 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             
             {user && (
               <>
-                {/* Keep dashboard switcher as secondary navigation - Admin only */}
-                {hasExecBoardPerms && (
+                {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
+                {userProfile?.is_super_admin && (
                 <DropdownMenu>
                    <DropdownMenuTrigger asChild>
                       <Button 
