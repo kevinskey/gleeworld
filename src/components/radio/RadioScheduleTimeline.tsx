@@ -17,7 +17,8 @@ import {
   Loader2,
   Radio,
   SkipForward,
-  Search
+  Search,
+  Trash2
 } from 'lucide-react';
 
 interface QueueItem {
@@ -204,11 +205,22 @@ export const RadioScheduleTimeline = ({
       onRefresh?.();
     } catch (error) {
       console.error('Error skipping track:', error);
-      toast({ 
-        title: "Error", 
-        description: "Failed to skip track", 
-        variant: "destructive" 
-      });
+      toast({ title: "Error", description: "Failed to skip track", variant: "destructive" });
+    }
+  };
+
+  const clearQueue = async () => {
+    try {
+      setIsLoading(true);
+      await azuraCastService.clearQueue();
+      toast({ title: "Cleared", description: "Queue has been cleared" });
+      await loadQueue();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error clearing queue:', error);
+      toast({ title: "Error", description: "Failed to clear queue", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -229,6 +241,18 @@ export const RadioScheduleTimeline = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {queueItems.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={clearQueue}
+                disabled={isLoading}
+                className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                title="Clear entire queue"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
             <Button 
               variant="ghost" 
               size="sm" 
