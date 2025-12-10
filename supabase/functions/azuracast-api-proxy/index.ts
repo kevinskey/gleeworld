@@ -34,10 +34,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Initialize Supabase client for auth verification
+    // Initialize Supabase client with service role for admin verification
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
     // Get auth token from request
