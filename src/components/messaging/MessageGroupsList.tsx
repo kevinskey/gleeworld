@@ -18,15 +18,15 @@ export const MessageGroupsList: React.FC<MessageGroupsListProps> = ({
   const getGroupIcon = (type: MessageGroup['group_type']) => {
     switch (type) {
       case 'executive':
-        return <Users className="h-4 w-4" />;
+        return <Users className="h-3 w-3" />;
       case 'voice_section':
-        return <Music className="h-4 w-4" />;
+        return <Music className="h-3 w-3" />;
       case 'event':
-        return <Calendar className="h-4 w-4" />;
+        return <Calendar className="h-3 w-3" />;
       case 'private':
-        return <Lock className="h-4 w-4" />;
+        return <Lock className="h-3 w-3" />;
       default:
-        return <Hash className="h-4 w-4" />;
+        return <Hash className="h-3 w-3" />;
     }
   };
 
@@ -47,19 +47,19 @@ export const MessageGroupsList: React.FC<MessageGroupsListProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="p-2 space-y-1">
+      <div className="p-1 space-y-0.5">
         {groups.map((group) => (
           <button
             key={group.id}
             onClick={() => onSelectGroup(group.id)}
             className={cn(
-              "w-full p-3 rounded-lg text-left transition-all duration-200 hover:bg-accent/50",
-              "flex items-center gap-3 group",
+              "w-full px-2 py-1.5 rounded text-left transition-all duration-200 hover:bg-accent/50",
+              "flex items-center gap-2 group",
               selectedGroupId === group.id && "bg-primary/10 border border-primary/20"
             )}
           >
             <div className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
+              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-colors shrink-0",
               selectedGroupId === group.id 
                 ? "bg-primary text-primary-foreground" 
                 : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
@@ -84,17 +84,14 @@ export const MessageGroupsList: React.FC<MessageGroupsListProps> = ({
                   {getGroupIcon(group.group_type)}
                 </span>
                 <h3 className={cn(
-                  "font-medium truncate transition-colors",
+                  "text-sm font-medium truncate transition-colors",
                   selectedGroupId === group.id ? "text-foreground" : "text-foreground"
                 )}>
                   {group.name}
                 </h3>
                 {group.is_private && (
-                  <Lock className="h-3 w-3 text-muted-foreground" />
+                  <Lock className="h-2.5 w-2.5 text-muted-foreground" />
                 )}
-              </div>
-              
-              <div className="flex items-center gap-1 mt-1">
               </div>
             </div>
           </button>
