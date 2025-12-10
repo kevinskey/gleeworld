@@ -201,17 +201,16 @@ serve(async (req: Request) => {
     // Optional: persist audit log
     const LOG_TABLE = Deno.env.get("GW_SMS_LOG_TABLE") || "gw_sms_log";
     try {
-      await supabase.from(LOG_TABLE).insert(
-        results.map(r => ({
-          group_id: groupId ?? null,
-          sender_name: senderName,
-          message_preview: composed.slice(0, 160),
-          phone_number_hash: r.phoneNumber ? await crypto.subtle.digest("SHA-256", new TextEncoder().encode(r.phoneNumber)).then(buf => Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("")) : null,
-          message_sid: r.messageSid ?? null,
-          success: r.success,
-          error: r.error ?? null,
-        }))
-      );
+      const logEntries = results.map(r => ({
+        group_id: groupId ?? null,
+        sender_name: senderName,
+        message_preview: composed.slice(0, 160),
+        phone_number_hash: r.phoneNumber ? r.phoneNumber.slice(-4) : null,
+        message_sid: r.messageSid ?? null,
+        success: r.success,
+        error: r.error ?? null,
+      }));
+      await supabase.from(LOG_TABLE).insert(logEntries);
     } catch (e) {
       // Don't fail the whole request if logging fails
       if (DEBUG) console.warn("SMS log insert failed:", e);
