@@ -154,9 +154,9 @@ export const DashboardYouTubeSection = () => {
             <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-md">
               {renderVideoPlayer(expandedVideoData)}
               
-              {/* Mute indicator for YouTube videos - positioned inside video container */}
+              {/* Mute indicator for YouTube videos - top left to avoid YouTube's controls */}
               {isYouTube && (
-                <div className="absolute bottom-3 left-3 z-30 bg-black/70 backdrop-blur-sm rounded-full p-2 shadow-lg pointer-events-none">
+                <div className="absolute top-3 left-3 z-30 bg-black/70 backdrop-blur-sm rounded-full p-2 shadow-lg pointer-events-none">
                   <VolumeX className="h-5 w-5 text-white" />
                 </div>
               )}
