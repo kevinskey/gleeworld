@@ -98,14 +98,14 @@ export const HeaderRadioControls = () => {
         {/* Dropdown Card */}
         {isOpen && (
           <>
-            {/* Backdrop to close on outside click */}
+          {/* Backdrop to close on outside click */}
             <div 
-              className="fixed inset-0 z-[140]" 
+              className="fixed inset-0 z-[1050]" 
               onClick={() => setIsOpen(false)}
             />
             
             {/* Radio Card */}
-            <Card className="absolute right-0 top-full mt-2 w-80 z-[150] bg-card border border-border shadow-2xl">
+            <Card className="absolute right-0 top-full mt-2 w-80 z-[1100] bg-card border border-border shadow-2xl">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
