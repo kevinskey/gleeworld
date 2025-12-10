@@ -19,9 +19,9 @@ export const AuthTabs = () => {
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="login">Sign In</TabsTrigger>
-        <TabsTrigger value="signup">Sign Up</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-2 bg-white/20 border border-white/30">
+        <TabsTrigger value="login" className="data-[state=active]:bg-white/30 data-[state=active]:text-white text-white/80">Sign In</TabsTrigger>
+        <TabsTrigger value="signup" className="data-[state=active]:bg-white/30 data-[state=active]:text-white text-white/80">Sign Up</TabsTrigger>
       </TabsList>
       
       <TabsContent value="login" className="space-y-4">
