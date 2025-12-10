@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Save, Trash2, Eye, EyeOff, Edit, ExternalLink, RefreshCw, Camera } from "lucide-react";
+import { Upload, Save, Trash2, Eye, EyeOff, Edit, ExternalLink, RefreshCw, Camera, Plus, X, GripVertical } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 interface HeroSlide {
   id: string;
   title: string | null;
@@ -29,7 +30,7 @@ interface YouTubeVideo {
   video_url: string | null;
   video_type: 'youtube' | 'uploaded';
   title: string;
-  position: 'left' | 'right';
+  display_order: number;
   is_active: boolean;
   autoplay: boolean;
   muted: boolean;
@@ -77,27 +78,20 @@ export const DashboardHeroManagerModule = () => {
     scroll_speed_seconds: 5
   });
   const [settingsId, setSettingsId] = useState<string | null>(null);
-  const [leftVideo, setLeftVideo] = useState<YouTubeVideo>({
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  const [addVideoDialogOpen, setAddVideoDialogOpen] = useState(false);
+  const [editingVideoId, setEditingVideoId] = useState<string | null>(null);
+  const [newVideo, setNewVideo] = useState<YouTubeVideo>({
     video_id: '',
     video_url: null,
     video_type: 'youtube',
     title: '',
-    position: 'left',
+    display_order: 0,
     is_active: true,
     autoplay: false,
     muted: true
   });
-  const [rightVideo, setRightVideo] = useState<YouTubeVideo>({
-    video_id: '',
-    video_url: null,
-    video_type: 'youtube',
-    title: '',
-    position: 'right',
-    is_active: true,
-    autoplay: false,
-    muted: true
-  });
-  const [uploadingVideo, setUploadingVideo] = useState<'left' | 'right' | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -193,62 +187,44 @@ export const DashboardHeroManagerModule = () => {
       const { data, error } = await supabase
         .from('dashboard_youtube_videos')
         .select('*')
-        .order('position');
+        .order('display_order', { ascending: true });
       
       if (error) throw error;
       
       if (data) {
-        const left = data.find(v => v.position === 'left');
-        const right = data.find(v => v.position === 'right');
-        
-        if (left) {
-          setLeftVideo({
-            id: left.id,
-            video_id: left.video_id,
-            video_url: left.video_url || null,
-            video_type: (left.video_type || 'youtube') as 'youtube' | 'uploaded',
-            title: left.title || '',
-            position: 'left',
-            is_active: left.is_active,
-            autoplay: left.autoplay,
-            muted: left.muted
-          });
-        }
-        
-        if (right) {
-          setRightVideo({
-            id: right.id,
-            video_id: right.video_id,
-            video_url: right.video_url || null,
-            video_type: (right.video_type || 'youtube') as 'youtube' | 'uploaded',
-            title: right.title || '',
-            position: 'right',
-            is_active: right.is_active,
-            autoplay: right.autoplay,
-            muted: right.muted
-          });
-        }
+        setVideos(data.map((v, index) => ({
+          id: v.id,
+          video_id: v.video_id,
+          video_url: v.video_url || null,
+          video_type: (v.video_type || 'youtube') as 'youtube' | 'uploaded',
+          title: v.title || '',
+          display_order: index,
+          is_active: v.is_active,
+          autoplay: v.autoplay,
+          muted: v.muted
+        })));
       }
     } catch (error) {
       console.error('Error fetching YouTube videos:', error);
     }
   };
 
-  const saveYouTubeVideo = async (video: YouTubeVideo) => {
+  const saveVideo = async (video: YouTubeVideo, isNew: boolean = false) => {
     setSavingYouTube(true);
     try {
+      // Use position field since that's what the database has
       const videoData = {
         video_id: video.video_id || '',
         video_url: video.video_url,
         video_type: video.video_type,
         title: video.title || null,
-        position: video.position,
+        position: `slot_${isNew ? videos.length : video.display_order}`,
         is_active: video.is_active,
         autoplay: video.autoplay,
         muted: video.muted
       };
 
-      if (video.id) {
+      if (video.id && !isNew) {
         const { error } = await supabase
           .from('dashboard_youtube_videos')
           .update(videoData)
@@ -257,16 +233,21 @@ export const DashboardHeroManagerModule = () => {
       } else {
         const { error } = await supabase
           .from('dashboard_youtube_videos')
-          .insert(videoData);
+          .insert([videoData]);
         if (error) throw error;
       }
 
       toast({
         title: "Success",
-        description: `${video.position === 'left' ? 'Left' : 'Right'} video saved successfully`
+        description: isNew ? "Video added successfully" : "Video updated successfully"
       });
       
       fetchYouTubeVideos();
+      if (isNew) {
+        setAddVideoDialogOpen(false);
+        resetNewVideo();
+      }
+      setEditingVideoId(null);
     } catch (error) {
       console.error('Error saving video:', error);
       toast({
@@ -279,11 +260,34 @@ export const DashboardHeroManagerModule = () => {
     }
   };
 
-  const handleVideoUpload = async (file: File, position: 'left' | 'right') => {
-    setUploadingVideo(position);
+  const deleteVideo = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this video?')) return;
+    try {
+      const { error } = await supabase
+        .from('dashboard_youtube_videos')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      toast({
+        title: "Success",
+        description: "Video deleted successfully"
+      });
+      fetchYouTubeVideos();
+    } catch (error) {
+      console.error('Error deleting video:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete video",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleVideoUpload = async (file: File) => {
+    setUploadingVideo(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `dashboard-video-${position}-${Date.now()}.${fileExt}`;
+      const fileName = `dashboard-video-${Date.now()}.${fileExt}`;
       const filePath = `dashboard-videos/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -298,8 +302,7 @@ export const DashboardHeroManagerModule = () => {
 
       const videoUrl = urlData.publicUrl;
       
-      const setVideo = position === 'left' ? setLeftVideo : setRightVideo;
-      setVideo(prev => ({
+      setNewVideo(prev => ({
         ...prev,
         video_type: 'uploaded',
         video_url: videoUrl,
@@ -308,7 +311,7 @@ export const DashboardHeroManagerModule = () => {
 
       toast({
         title: "Success",
-        description: "Video uploaded successfully. Click Save to confirm."
+        description: "Video uploaded successfully"
       });
     } catch (error) {
       console.error('Error uploading video:', error);
@@ -318,7 +321,34 @@ export const DashboardHeroManagerModule = () => {
         variant: "destructive"
       });
     } finally {
-      setUploadingVideo(null);
+      setUploadingVideo(false);
+    }
+  };
+
+  const resetNewVideo = () => {
+    setNewVideo({
+      video_id: '',
+      video_url: null,
+      video_type: 'youtube',
+      title: '',
+      display_order: 0,
+      is_active: true,
+      autoplay: false,
+      muted: true
+    });
+  };
+
+  const toggleVideoActive = async (video: YouTubeVideo) => {
+    if (!video.id) return;
+    try {
+      const { error } = await supabase
+        .from('dashboard_youtube_videos')
+        .update({ is_active: !video.is_active })
+        .eq('id', video.id);
+      if (error) throw error;
+      fetchYouTubeVideos();
+    } catch (error) {
+      console.error('Error toggling video status:', error);
     }
   };
   const updateScrollSettings = async () => {
@@ -588,275 +618,226 @@ export const DashboardHeroManagerModule = () => {
             <div className="p-2 rounded-lg bg-destructive/10 text-destructive">📺</div>
             Dashboard Videos
           </CardTitle>
+          <Button 
+            onClick={() => setAddVideoDialogOpen(true)}
+            size="sm"
+            className="gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Add Video
+          </Button>
         </CardHeader>
-        <CardContent className="space-y-6 pt-4">
+        <CardContent className="space-y-4 pt-4">
           <p className="text-sm text-muted-foreground">
-            Configure two videos (YouTube or uploaded) to display at the top of the dashboard.
+            Add videos to display in the dashboard carousel. Users can swipe/scroll through them.
           </p>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Video */}
-            <div className="space-y-4 p-4 bg-primary/5 rounded-lg border border-primary/20">
-              <h4 className="font-medium text-foreground flex items-center gap-2">
-                <span className="p-1 rounded bg-primary text-primary-foreground text-xs">1</span>
-                Left Video
-              </h4>
-              
-              {/* Video Type Selector */}
-              <div className="space-y-1">
-                <Label className="text-xs text-foreground">Video Source</Label>
-                <Select 
-                  value={leftVideo.video_type} 
-                  onValueChange={(value: 'youtube' | 'uploaded') => setLeftVideo(prev => ({ 
-                    ...prev, 
-                    video_type: value,
-                    video_id: value === 'uploaded' ? '' : prev.video_id,
-                    video_url: value === 'youtube' ? null : prev.video_url
-                  }))}
+          {/* Video List */}
+          {videos.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg">
+              <p>No videos added yet.</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2"
+                onClick={() => setAddVideoDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Video
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {videos.map((video, index) => (
+                <div 
+                  key={video.id || index}
+                  className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg border border-border"
                 >
-                  <SelectTrigger className="h-8 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="youtube">YouTube Video</SelectItem>
-                    <SelectItem value="uploaded">Upload Video</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Preview */}
-              {leftVideo.video_type === 'youtube' && leftVideo.video_id && (
-                <div className="aspect-video rounded overflow-hidden bg-muted">
-                  <img 
-                    src={`https://img.youtube.com/vi/${extractYouTubeId(leftVideo.video_id)}/mqdefault.jpg`}
-                    alt="Left video preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              {leftVideo.video_type === 'uploaded' && leftVideo.video_url && (
-                <div className="aspect-video rounded overflow-hidden bg-muted">
-                  <video 
-                    src={leftVideo.video_url}
-                    className="w-full h-full object-cover"
-                    muted
-                    playsInline
-                  />
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {leftVideo.video_type === 'youtube' ? (
-                  <div className="space-y-1">
-                    <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
-                    <Input
-                      value={leftVideo.video_id}
-                      onChange={(e) => setLeftVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
-                      placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
-                      className="h-8 text-sm"
-                    />
+                  {/* Thumbnail */}
+                  <div className="w-24 h-16 rounded overflow-hidden bg-muted flex-shrink-0">
+                    {video.video_type === 'youtube' && video.video_id ? (
+                      <img 
+                        src={`https://img.youtube.com/vi/${extractYouTubeId(video.video_id)}/mqdefault.jpg`}
+                        alt={video.title || 'Video thumbnail'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : video.video_url ? (
+                      <video 
+                        src={video.video_url}
+                        className="w-full h-full object-cover"
+                        muted
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                        No preview
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground truncate">
+                      {video.title || `Video ${index + 1}`}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Paste full URL or just the video ID
+                      {video.video_type === 'youtube' ? 'YouTube' : 'Uploaded'} 
+                      {video.is_active ? ' • Active' : ' • Inactive'}
                     </p>
                   </div>
-                ) : (
-                  <div className="space-y-1">
-                    <Label className="text-xs text-foreground">Upload Video File</Label>
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleVideoUpload(file, 'left');
-                      }}
-                      className="h-8 text-sm"
-                      disabled={uploadingVideo === 'left'}
-                    />
-                    {uploadingVideo === 'left' && (
-                      <p className="text-xs text-primary animate-pulse">Uploading video...</p>
-                    )}
-                    {leftVideo.video_url && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        Current: {leftVideo.video_url.split('/').pop()}
-                      </p>
-                    )}
+                  
+                  {/* Actions */}
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleVideoActive(video)}
+                    >
+                      {video.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => video.id && deleteVideo(video.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
                   </div>
-                )}
-                
-                <div className="space-y-1">
-                  <Label className="text-xs text-foreground">Title (optional)</Label>
-                  <Input
-                    value={leftVideo.title}
-                    onChange={(e) => setLeftVideo(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Video title"
-                    className="h-8 text-sm"
-                  />
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-foreground">Active</Label>
-                  <Switch
-                    checked={leftVideo.is_active}
-                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, is_active: checked }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-foreground">Autoplay</Label>
-                  <Switch
-                    checked={leftVideo.autoplay}
-                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, autoplay: checked }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-foreground">Muted</Label>
-                  <Switch
-                    checked={leftVideo.muted}
-                    onCheckedChange={(checked) => setLeftVideo(prev => ({ ...prev, muted: checked }))}
-                  />
-                </div>
-                <Button 
-                  onClick={() => saveYouTubeVideo(leftVideo)} 
-                  disabled={(!leftVideo.video_id && !leftVideo.video_url) || savingYouTube || uploadingVideo === 'left'}
-                  size="sm"
-                  className="w-full"
-                >
-                  <Save className="h-3 w-3 mr-1" />
-                  {leftVideo.id ? 'Update' : 'Save'} Left Video
-                </Button>
-              </div>
+              ))}
             </div>
-
-            {/* Right Video */}
-            <div className="space-y-4 p-4 bg-accent/5 rounded-lg border border-accent/20">
-              <h4 className="font-medium text-foreground flex items-center gap-2">
-                <span className="p-1 rounded bg-accent text-accent-foreground text-xs">2</span>
-                Right Video
-              </h4>
-              
-              {/* Video Type Selector */}
-              <div className="space-y-1">
-                <Label className="text-xs text-foreground">Video Source</Label>
-                <Select 
-                  value={rightVideo.video_type} 
-                  onValueChange={(value: 'youtube' | 'uploaded') => setRightVideo(prev => ({ 
-                    ...prev, 
-                    video_type: value,
-                    video_id: value === 'uploaded' ? '' : prev.video_id,
-                    video_url: value === 'youtube' ? null : prev.video_url
-                  }))}
-                >
-                  <SelectTrigger className="h-8 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="youtube">YouTube Video</SelectItem>
-                    <SelectItem value="uploaded">Upload Video</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Preview */}
-              {rightVideo.video_type === 'youtube' && rightVideo.video_id && (
-                <div className="aspect-video rounded overflow-hidden bg-muted">
-                  <img 
-                    src={`https://img.youtube.com/vi/${extractYouTubeId(rightVideo.video_id)}/mqdefault.jpg`}
-                    alt="Right video preview"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              {rightVideo.video_type === 'uploaded' && rightVideo.video_url && (
-                <div className="aspect-video rounded overflow-hidden bg-muted">
-                  <video 
-                    src={rightVideo.video_url}
-                    className="w-full h-full object-cover"
-                    muted
-                    playsInline
-                  />
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {rightVideo.video_type === 'youtube' ? (
-                  <div className="space-y-1">
-                    <Label className="text-xs text-foreground">YouTube Video URL or ID</Label>
-                    <Input
-                      value={rightVideo.video_id}
-                      onChange={(e) => setRightVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
-                      placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
-                      className="h-8 text-sm"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Paste full URL or just the video ID
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    <Label className="text-xs text-foreground">Upload Video File</Label>
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleVideoUpload(file, 'right');
-                      }}
-                      className="h-8 text-sm"
-                      disabled={uploadingVideo === 'right'}
-                    />
-                    {uploadingVideo === 'right' && (
-                      <p className="text-xs text-primary animate-pulse">Uploading video...</p>
-                    )}
-                    {rightVideo.video_url && (
-                      <p className="text-xs text-muted-foreground truncate">
-                        Current: {rightVideo.video_url.split('/').pop()}
-                      </p>
-                    )}
-                  </div>
-                )}
-                
-                <div className="space-y-1">
-                  <Label className="text-xs text-foreground">Title (optional)</Label>
-                  <Input
-                    value={rightVideo.title}
-                    onChange={(e) => setRightVideo(prev => ({ ...prev, title: e.target.value }))}
-                    placeholder="Video title"
-                    className="h-8 text-sm"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-foreground">Active</Label>
-                  <Switch
-                    checked={rightVideo.is_active}
-                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, is_active: checked }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-foreground">Autoplay</Label>
-                  <Switch
-                    checked={rightVideo.autoplay}
-                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, autoplay: checked }))}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-foreground">Muted</Label>
-                  <Switch
-                    checked={rightVideo.muted}
-                    onCheckedChange={(checked) => setRightVideo(prev => ({ ...prev, muted: checked }))}
-                  />
-                </div>
-                <Button 
-                  onClick={() => saveYouTubeVideo(rightVideo)} 
-                  disabled={(!rightVideo.video_id && !rightVideo.video_url) || savingYouTube || uploadingVideo === 'right'}
-                  size="sm"
-                  className="w-full"
-                >
-                  <Save className="h-3 w-3 mr-1" />
-                  {rightVideo.id ? 'Update' : 'Save'} Right Video
-                </Button>
-              </div>
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Add Video Dialog */}
+      <Dialog open={addVideoDialogOpen} onOpenChange={setAddVideoDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Video</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Video Type Selector */}
+            <div className="space-y-2">
+              <Label>Video Source</Label>
+              <Select 
+                value={newVideo.video_type} 
+                onValueChange={(value: 'youtube' | 'uploaded') => setNewVideo(prev => ({ 
+                  ...prev, 
+                  video_type: value,
+                  video_id: value === 'uploaded' ? '' : prev.video_id,
+                  video_url: value === 'youtube' ? null : prev.video_url
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="youtube">YouTube Video</SelectItem>
+                  <SelectItem value="uploaded">Upload Video</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Preview */}
+            {newVideo.video_type === 'youtube' && newVideo.video_id && (
+              <div className="aspect-video rounded overflow-hidden bg-muted">
+                <img 
+                  src={`https://img.youtube.com/vi/${extractYouTubeId(newVideo.video_id)}/mqdefault.jpg`}
+                  alt="Video preview"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+            {newVideo.video_type === 'uploaded' && newVideo.video_url && (
+              <div className="aspect-video rounded overflow-hidden bg-muted">
+                <video 
+                  src={newVideo.video_url}
+                  className="w-full h-full object-cover"
+                  muted
+                  playsInline
+                />
+              </div>
+            )}
+
+            {/* YouTube Input or Upload */}
+            {newVideo.video_type === 'youtube' ? (
+              <div className="space-y-2">
+                <Label>YouTube Video URL or ID</Label>
+                <Input
+                  value={newVideo.video_id}
+                  onChange={(e) => setNewVideo(prev => ({ ...prev, video_id: extractYouTubeId(e.target.value) }))}
+                  placeholder="Paste URL or ID (e.g. dQw4w9WgXcQ)"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Paste full URL or just the video ID
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>Upload Video File</Label>
+                <Input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleVideoUpload(file);
+                  }}
+                  disabled={uploadingVideo}
+                />
+                {uploadingVideo && (
+                  <p className="text-xs text-primary animate-pulse">Uploading video...</p>
+                )}
+              </div>
+            )}
+            
+            {/* Title */}
+            <div className="space-y-2">
+              <Label>Title (optional)</Label>
+              <Input
+                value={newVideo.title}
+                onChange={(e) => setNewVideo(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Video title"
+              />
+            </div>
+
+            {/* Options */}
+            <div className="flex items-center justify-between">
+              <Label>Active</Label>
+              <Switch
+                checked={newVideo.is_active}
+                onCheckedChange={(checked) => setNewVideo(prev => ({ ...prev, is_active: checked }))}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Autoplay</Label>
+              <Switch
+                checked={newVideo.autoplay}
+                onCheckedChange={(checked) => setNewVideo(prev => ({ ...prev, autoplay: checked }))}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <Label>Muted</Label>
+              <Switch
+                checked={newVideo.muted}
+                onCheckedChange={(checked) => setNewVideo(prev => ({ ...prev, muted: checked }))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => { setAddVideoDialogOpen(false); resetNewVideo(); }}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => saveVideo(newVideo, true)}
+              disabled={(!newVideo.video_id && !newVideo.video_url) || savingYouTube || uploadingVideo}
+            >
+              {savingYouTube ? 'Adding...' : 'Add Video'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create New Slide Form - only shows when NOT editing */}
       {!editingId && (
