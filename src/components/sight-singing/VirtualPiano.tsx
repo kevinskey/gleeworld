@@ -364,7 +364,19 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           <div className="w-14 sm:w-24">
             <Slider value={volume} onValueChange={setVolume} max={1} min={0} step={0.1} className="w-full" />
           </div>
-          {onClose && <Button variant="ghost" size="sm" onClick={onClose} className="h-7 w-7 sm:h-9 sm:w-9 p-0 ml-1" aria-label="Close piano">
+          {onClose && <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onClose();
+            }} 
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="h-7 w-7 sm:h-9 sm:w-9 p-0 ml-1 no-drag" 
+            aria-label="Close piano"
+          >
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>}
         </div>
@@ -488,7 +500,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           minHeight={400} 
           maxWidth={1400} 
           maxHeight={900} 
-          dragHandleClassName="cursor-move" 
+          dragHandleClassName="cursor-move"
+          cancel=".no-drag"
           className="z-[2147483647]" 
           bounds="parent"
         >
