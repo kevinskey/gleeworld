@@ -44,7 +44,7 @@ export function GleeLoungeWithMusicLibrary({
         </div>
         
         {/* Music Library Content */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-auto">
           <MusicLibrary />
         </div>
       </div>
