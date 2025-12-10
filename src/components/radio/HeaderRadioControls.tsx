@@ -119,14 +119,24 @@ export const HeaderRadioControls = () => {
               )}
               style={{ top: '60px' }} // Directly below header, no gap
             >
-              <div className="max-w-7xl mx-auto px-3 py-1.5">
-                {/* Main Row: Logo, Channels, Now Playing, Controls */}
-                <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap">
+              <div className="max-w-7xl mx-auto px-3 py-1.5 relative">
+                {/* Close Button - Top Right */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsOpen(false)}
+                  className="absolute top-1 right-2 h-5 w-5 p-0"
+                  type="button"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+
+                {/* Main Row: Logo, Status, Play Button, Channels */}
+                <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap pr-8">
                   
-                  {/* Logo & Status */}
+                  {/* Logo & Status with Play Button */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <Radio className="h-4 w-4 text-primary" />
-                    <span className="font-medium text-xs text-foreground hidden sm:inline">Radio</span>
                     <Badge 
                       variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
                       className={cn(
@@ -137,6 +147,29 @@ export const HeaderRadioControls = () => {
                     >
                       {isLive ? 'LIVE' : isOnline ? 'ON' : 'OFF'}
                     </Badge>
+                    
+                    {/* Play/Pause - Horizontal Pill */}
+                    <Button
+                      variant={isPlaying ? "secondary" : "default"}
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        togglePlayPause();
+                      }}
+                      disabled={isLoading || !isOnline}
+                      className="h-7 px-4 rounded-full"
+                      type="button"
+                    >
+                      {isLoading ? (
+                        <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : isPlaying ? (
+                        <Pause className="h-4 w-4" />
+                      ) : (
+                        <Play className="h-4 w-4 ml-0.5" />
+                      )}
+                    </Button>
+
                     <span className="text-[10px] text-muted-foreground items-center gap-0.5 hidden sm:flex">
                       <Users className="h-2.5 w-2.5" />
                       {listenerCount}
@@ -177,101 +210,37 @@ export const HeaderRadioControls = () => {
                   {/* Divider */}
                   <div className="hidden lg:block h-5 w-px bg-border" />
 
-                  {/* Now Playing */}
-                  <div className="flex-1 min-w-0 hidden md:flex items-center gap-2">
-                    {currentTrack && isOnline ? (
-                      <>
-                        {isPlaying && (
-                          <div className="flex gap-0.5 flex-shrink-0">
-                            {[1, 2, 3].map((i) => (
-                              <div 
-                                key={i}
-                                className="w-0.5 bg-primary rounded-full animate-pulse"
-                                style={{ 
-                                  height: `${6 + i * 3}px`,
-                                  animationDelay: `${i * 0.15}s`
-                                }}
-                              />
-                            ))}
-                          </div>
-                        )}
-                        <span className="text-[10px] font-medium truncate text-foreground">{currentTrack.title}</span>
-                        {currentTrack.artist && (
-                          <span className="text-[10px] text-muted-foreground truncate">— {currentTrack.artist}</span>
-                        )}
-                      </>
-                    ) : !isOnline ? (
-                      <span className="text-[10px] text-muted-foreground">Offline</span>
-                    ) : null}
-                  </div>
-
-                  {/* Playback Controls */}
-                  <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-                    {/* Play/Pause */}
-                    <Button
-                      variant={isPlaying ? "secondary" : "default"}
-                      size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        togglePlayPause();
-                      }}
-                      disabled={isLoading || !isOnline}
-                      className="h-6 w-6 p-0 rounded-full"
-                      type="button"
-                    >
-                      {isLoading ? (
-                        <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      ) : isPlaying ? (
-                        <Pause className="h-3 w-3" />
-                      ) : (
-                        <Play className="h-3 w-3 ml-0.5" />
-                      )}
-                    </Button>
-
-                    {/* Volume Control */}
-                    <div className="items-center gap-1.5 hidden sm:flex">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setVolume(isMuted ? 0.7 : 0);
-                        }}
-                        type="button"
-                      >
-                        {isMuted ? (
-                          <VolumeX className="h-3 w-3" />
-                        ) : (
-                          <Volume2 className="h-3 w-3" />
-                        )}
-                      </Button>
-                      <Slider
-                        value={[volume]}
-                        onValueChange={([value]) => setVolume(value)}
-                        max={1}
-                        step={0.05}
-                        className="w-16"
-                      />
-                    </div>
-
-                    {/* Close Button */}
+                  {/* Volume Control */}
+                  <div className="items-center gap-1.5 hidden sm:flex ml-auto">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setIsOpen(false)}
                       className="h-6 w-6 p-0"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setVolume(isMuted ? 0.7 : 0);
+                      }}
                       type="button"
                     >
-                      <ChevronUp className="h-3 w-3" />
+                      {isMuted ? (
+                        <VolumeX className="h-3 w-3" />
+                      ) : (
+                        <Volume2 className="h-3 w-3" />
+                      )}
                     </Button>
+                    <Slider
+                      value={[volume]}
+                      onValueChange={([value]) => setVolume(value)}
+                      max={1}
+                      step={0.05}
+                      className="w-16"
+                    />
                   </div>
                 </div>
 
-                {/* Mobile: Now Playing Row */}
-                <div className="md:hidden mt-1.5 pt-1.5 border-t border-border/50">
+                {/* Now Playing Row - Full Width */}
+                <div className="mt-1.5 pt-1.5 border-t border-border/50">
                   {currentTrack && isOnline ? (
                     <div className="flex items-center gap-2">
                       {isPlaying && (
@@ -279,22 +248,22 @@ export const HeaderRadioControls = () => {
                           {[1, 2, 3].map((i) => (
                             <div 
                               key={i}
-                              className="w-0.5 bg-primary rounded-full animate-pulse"
+                              className="w-1 bg-primary rounded-full animate-pulse"
                               style={{ 
-                                height: `${5 + i * 2}px`,
+                                height: `${8 + i * 3}px`,
                                 animationDelay: `${i * 0.15}s`
                               }}
                             />
                           ))}
                         </div>
                       )}
-                      <span className="text-[10px] font-medium truncate text-foreground">{currentTrack.title}</span>
+                      <span className="text-sm font-medium truncate text-foreground">{currentTrack.title}</span>
                       {currentTrack.artist && (
-                        <span className="text-[10px] text-muted-foreground truncate">— {currentTrack.artist}</span>
+                        <span className="text-sm text-muted-foreground truncate">— {currentTrack.artist}</span>
                       )}
                     </div>
                   ) : !isOnline ? (
-                    <p className="text-[10px] text-muted-foreground text-center">Offline</p>
+                    <p className="text-sm text-muted-foreground text-center">Offline</p>
                   ) : null}
                 </div>
               </div>
