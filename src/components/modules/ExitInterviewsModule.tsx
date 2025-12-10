@@ -65,7 +65,6 @@ const ExitInterviewsModule: React.FC = () => {
       const { data, error } = await supabase
         .from("member_exit_interviews")
         .select("*")
-        .eq("is_draft", false)
         .order("created_at", { ascending: false });
 
       console.log("ExitInterviewsModule: Query result:", { data: data?.length, error });
