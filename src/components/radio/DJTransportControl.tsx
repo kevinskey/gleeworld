@@ -39,7 +39,10 @@ import {
   Signal,
   Wifi,
   WifiOff,
-  Loader2
+  Loader2,
+  Power,
+  PowerOff,
+  RotateCcw
 } from 'lucide-react';
 
 interface DJTransportControlProps {
@@ -86,6 +89,7 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [showSettings, setShowSettings] = useState(false);
   const [streamKey, setStreamKey] = useState('');
   const [activeTab, setActiveTab] = useState('transport');
+  const [serverControlLoading, setServerControlLoading] = useState<'start' | 'stop' | 'skip' | 'restart' | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
@@ -223,14 +227,70 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
     togglePlayPause();
   };
 
+  // Server-side skip track (affects all listeners)
   const handleSkipTrack = async () => {
     try {
-      toast({ title: "Skipping...", description: "Moving to next track" });
-      // This would trigger AzuraCast to skip current track
-      await azuraCastService.restartStation();
+      setServerControlLoading('skip');
+      toast({ title: "Skipping...", description: "Moving to next track on server" });
+      await azuraCastService.skipTrack();
       onRefresh();
+      toast({ title: "Skipped", description: "Track skipped on server" });
     } catch (error) {
+      console.error('Skip track error:', error);
       toast({ title: "Error", description: "Failed to skip track", variant: "destructive" });
+    } finally {
+      setServerControlLoading(null);
+    }
+  };
+
+  // Server-side station start (affects all listeners)
+  const handleStartStation = async () => {
+    try {
+      setServerControlLoading('start');
+      toast({ title: "Starting Station...", description: "Starting AutoDJ and stream" });
+      await azuraCastService.startBackend();
+      await azuraCastService.startFrontend();
+      onRefresh();
+      toast({ title: "Station Started", description: "Radio is now broadcasting to all listeners" });
+    } catch (error) {
+      console.error('Start station error:', error);
+      toast({ title: "Error", description: "Failed to start station", variant: "destructive" });
+    } finally {
+      setServerControlLoading(null);
+    }
+  };
+
+  // Server-side station stop (affects all listeners)
+  const handleStopStation = async () => {
+    try {
+      setServerControlLoading('stop');
+      toast({ title: "Stopping Station...", description: "Stopping broadcast for all listeners" });
+      await azuraCastService.stopBackend();
+      await azuraCastService.stopFrontend();
+      onRefresh();
+      toast({ title: "Station Stopped", description: "Radio broadcast has been stopped" });
+    } catch (error) {
+      console.error('Stop station error:', error);
+      toast({ title: "Error", description: "Failed to stop station", variant: "destructive" });
+    } finally {
+      setServerControlLoading(null);
+    }
+  };
+
+  // Server-side station restart
+  const handleRestartStation = async () => {
+    try {
+      setServerControlLoading('restart');
+      toast({ title: "Restarting Station...", description: "Restarting AutoDJ and stream" });
+      await azuraCastService.restartBackend();
+      await azuraCastService.restartFrontend();
+      onRefresh();
+      toast({ title: "Station Restarted", description: "Radio has been restarted" });
+    } catch (error) {
+      console.error('Restart station error:', error);
+      toast({ title: "Error", description: "Failed to restart station", variant: "destructive" });
+    } finally {
+      setServerControlLoading(null);
     }
   };
 
@@ -440,6 +500,81 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
                 <Headphones className="h-3 w-3 mr-1" />
                 Preview
               </Button>
+            </div>
+
+            {/* Server Station Control - Affects ALL Listeners */}
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-400" />
+                <span className="text-xs font-medium text-amber-400">Server Control (Affects All Listeners)</span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={handleStartStation}
+                  disabled={serverControlLoading !== null || stationState.isOnline}
+                >
+                  {serverControlLoading === 'start' ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <Power className="h-3 w-3 mr-1" />
+                      Start
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  onClick={handleStopStation}
+                  disabled={serverControlLoading !== null || !stationState.isOnline}
+                >
+                  {serverControlLoading === 'stop' ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <PowerOff className="h-3 w-3 mr-1" />
+                      Stop
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+                  onClick={handleRestartStation}
+                  disabled={serverControlLoading !== null}
+                >
+                  {serverControlLoading === 'restart' ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Restart
+                    </>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600"
+                  onClick={handleSkipTrack}
+                  disabled={serverControlLoading !== null || !stationState.isOnline}
+                >
+                  {serverControlLoading === 'skip' ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <>
+                      <SkipForward className="h-3 w-3 mr-1" />
+                      Skip
+                    </>
+                  )}
+                </Button>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                These controls affect the actual radio broadcast. Start/Stop will turn the station on/off for everyone.
+              </p>
             </div>
           </TabsContent>
 

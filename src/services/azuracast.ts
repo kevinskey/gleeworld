@@ -281,6 +281,43 @@ class AzuraCastService {
     await this.makeProxyRequest(`/station/{stationId}/restart`, 'POST');
   }
 
+  // STATION POWER CONTROL (affects all listeners)
+  async startBackend(): Promise<void> {
+    console.log('AzuraCast: Starting station backend (AutoDJ)...');
+    await this.makeProxyRequest(`/station/{stationId}/backend/start`, 'POST');
+  }
+
+  async stopBackend(): Promise<void> {
+    console.log('AzuraCast: Stopping station backend (AutoDJ)...');
+    await this.makeProxyRequest(`/station/{stationId}/backend/stop`, 'POST');
+  }
+
+  async restartBackend(): Promise<void> {
+    console.log('AzuraCast: Restarting station backend (AutoDJ)...');
+    await this.makeProxyRequest(`/station/{stationId}/backend/restart`, 'POST');
+  }
+
+  async startFrontend(): Promise<void> {
+    console.log('AzuraCast: Starting station frontend (stream)...');
+    await this.makeProxyRequest(`/station/{stationId}/frontend/start`, 'POST');
+  }
+
+  async stopFrontend(): Promise<void> {
+    console.log('AzuraCast: Stopping station frontend (stream)...');
+    await this.makeProxyRequest(`/station/{stationId}/frontend/stop`, 'POST');
+  }
+
+  async restartFrontend(): Promise<void> {
+    console.log('AzuraCast: Restarting station frontend (stream)...');
+    await this.makeProxyRequest(`/station/{stationId}/frontend/restart`, 'POST');
+  }
+
+  // Skip to next track in queue
+  async skipTrack(): Promise<void> {
+    console.log('AzuraCast: Skipping current track...');
+    await this.makeProxyRequest(`/station/{stationId}/backend/skip`, 'POST');
+  }
+
   // MEDIA MANAGEMENT  
   async addToPlaylist(playlistId: number, fileIds: number[]): Promise<any> {
     return await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}/media`, 'POST', { media: fileIds });
