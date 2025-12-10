@@ -437,6 +437,22 @@ class AzuraCastService {
     await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}/media/${mediaId}`, 'DELETE');
   }
 
+  // Update media file metadata (title, artist, album, etc.)
+  async updateMedia(fileId: number, metadata: {
+    title?: string;
+    artist?: string;
+    album?: string;
+    genre?: string;
+  }): Promise<any> {
+    console.log('AzuraCast: Updating media metadata for file:', fileId, metadata);
+    return await this.makeProxyRequest(`/station/{stationId}/file/${fileId}`, 'PUT', metadata);
+  }
+
+  // Get single media file details
+  async getMediaFile(fileId: number): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/file/${fileId}`);
+  }
+
   // STREAMERS (Live DJs)
   async getStreamers(): Promise<any[]> {
     return await this.makeProxyRequest(`/station/{stationId}/streamers`, 'GET', undefined, { returnEmptyOnError: true });
