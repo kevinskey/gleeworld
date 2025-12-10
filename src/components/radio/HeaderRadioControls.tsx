@@ -57,7 +57,7 @@ export const HeaderRadioControls = () => {
                 togglePlayPause();
               }}
               disabled={isLoading}
-              className="relative h-8 w-8 p-0 rounded-full hover:bg-white/10"
+              className="relative h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
               style={{ color: getTextColor() }}
               type="button"
             >
@@ -81,7 +81,7 @@ export const HeaderRadioControls = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 px-2 hover:bg-white/10 hidden sm:flex"
+                className="h-6 px-1.5 sm:h-7 sm:px-2 hover:bg-white/10 hidden sm:flex"
                 style={{ color: getTextColor() }}
               >
                 <Radio className="h-4 w-4 mr-1" />
