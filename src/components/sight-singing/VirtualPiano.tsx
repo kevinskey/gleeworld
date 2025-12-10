@@ -268,26 +268,21 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   }, [startOctave, isMobile]);
 
   const playNote = useCallback(async (frequency: number, noteName: string) => {
-    // Fast path: if synth is ready and audio is unlocked, play immediately
-    if (synthRef.current && audioUnlocked && audioContextRef.current?.state === 'running') {
+    // Always try to unlock on first interaction (synchronous for iOS)
+    forceUnlockAudio();
+    
+    // Fast path: if synth is ready and audio context is running, play immediately
+    if (synthRef.current && audioContextRef.current?.state === 'running') {
       try {
         synthRef.current.playNote(noteName, frequency);
         setActiveNotes(prev => new Set(prev).add(noteName));
+        if (!audioUnlocked) setAudioUnlocked(true);
       } catch (error) {
         console.warn('🎹 Synth playNote failed:', error);
       }
       return;
     }
 
-    // First interaction path: unlock audio and initialize synth
-    if (!audioUnlocked) {
-      try {
-        await forceUnlockAudio();
-      } catch (e) {
-        // Ignore unlock errors
-      }
-    }
-    
     // Initialize audio context if needed
     const audioContext = audioContextRef.current || await initAudioContext();
     if (!audioContext) {
@@ -295,14 +290,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       return;
     }
 
-    // Resume if suspended (no artificial delay)
+    // Resume if suspended
     if (audioContext.state === 'suspended') {
-      try {
-        await audioContext.resume();
-      } catch (err) {
-        console.error('🎹 Failed to resume AudioContext:', err);
-        return;
-      }
+      await audioContext.resume();
     }
 
     // Play the note
@@ -310,6 +300,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       try {
         synthRef.current.playNote(noteName, frequency);
         setActiveNotes(prev => new Set(prev).add(noteName));
+        setAudioUnlocked(true);
       } catch (error) {
         console.warn('🎹 Synth playNote failed:', error);
       }
