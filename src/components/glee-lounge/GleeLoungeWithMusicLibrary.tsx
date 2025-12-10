@@ -41,11 +41,11 @@ export function GleeLoungeWithMusicLibrary({
         <ResizablePanel 
           defaultSize={isExpanded ? 70 : 50} 
           minSize={20}
-          className="relative"
+          className="relative overflow-hidden"
         >
-          <div className="h-full flex flex-col bg-background border-t border-border">
+          <div className="h-full flex flex-col bg-background border-t border-border overflow-hidden">
             {/* Music Library Header */}
-            <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-card border-b border-border">
               <div className="flex items-center gap-2">
                 <Music className="h-5 w-5 text-primary" />
                 <span className="font-semibold text-foreground">Music Library</span>
@@ -74,8 +74,8 @@ export function GleeLoungeWithMusicLibrary({
               </div>
             </div>
             
-            {/* Music Library Content */}
-            <div className="flex-1 overflow-hidden">
+            {/* Music Library Content - needs to scroll */}
+            <div className="flex-1 min-h-0 overflow-auto">
               <MusicLibrary />
             </div>
           </div>
