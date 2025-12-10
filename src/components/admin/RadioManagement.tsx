@@ -45,6 +45,7 @@ import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
 import { AzuraCastAdminPanel } from './AzuraCastAdminPanel';
 import { DJTransportControl } from '@/components/radio/DJTransportControl';
+import { RadioScheduleTimeline } from '@/components/radio/RadioScheduleTimeline';
 import { azuraCastService } from '@/services/azuracast';
 import { cn } from '@/lib/utils';
 
@@ -551,6 +552,9 @@ export const RadioManagement = () => {
         }}
         onRefresh={handleSync}
       />
+
+      {/* Schedule Timeline - Drag & Drop */}
+      <RadioScheduleTimeline onRefresh={handleSync} />
 
       {/* Two-Panel Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
