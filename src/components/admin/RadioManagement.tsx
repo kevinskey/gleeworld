@@ -93,6 +93,9 @@ export const RadioManagement = () => {
   const [webhooks, setWebhooks] = useState<any[]>([]);
   const [sftpUsers, setSftpUsers] = useState<any[]>([]);
 
+  // Track unsupported features
+  const [unsupportedFeatures, setUnsupportedFeatures] = useState<Set<string>>(new Set());
+
   // Form states
   const [newPlaylist, setNewPlaylist] = useState({ name: '', description: '', type: 'default' as 'default' | 'scheduled' | 'once_per_x_songs' | 'once_per_x_minutes', weight: 3, is_enabled: true });
   const [newStreamer, setNewStreamer] = useState({ streamer_username: '', streamer_password: '', display_name: '', is_active: true });
@@ -196,10 +199,23 @@ export const RadioManagement = () => {
     }
   };
 
+  const isUnsupportedError = (error: any): boolean => {
+    const errorStr = String(error?.message || error || '');
+    return errorStr.includes('StationUnsupportedException') || errorStr.includes('does not currently support');
+  };
+
   const loadPlaylists = async () => { try { setPlaylists(await azuraCastService.getPlaylists() || []); } catch (e) { console.error(e); } };
   const loadSchedule = async () => { try { setSchedule(await azuraCastService.getSchedule() || []); } catch (e) { console.error(e); } };
   const loadStationConfig = async () => { try { setStationConfig(await azuraCastService.getStationConfig()); } catch (e) { console.error(e); } };
-  const loadStreamers = async () => { try { setStreamers(await azuraCastService.getStreamers() || []); } catch (e) { console.error(e); } };
+  const loadStreamers = async () => { 
+    try { 
+      setStreamers(await azuraCastService.getStreamers() || []); 
+      setUnsupportedFeatures(prev => { const next = new Set(prev); next.delete('streamers'); return next; });
+    } catch (e: any) { 
+      console.error(e); 
+      if (isUnsupportedError(e)) setUnsupportedFeatures(prev => new Set(prev).add('streamers'));
+    } 
+  };
   const loadMounts = async () => { try { setMounts(await azuraCastService.getMounts() || []); } catch (e) { console.error(e); } };
   const loadListeners = async () => { try { setListeners(await azuraCastService.getListeners() || []); } catch (e) { console.error(e); } };
   const loadSongHistory = async () => { try { setSongHistory(await azuraCastService.getSongHistory() || []); } catch (e) { console.error(e); } };
@@ -526,26 +542,38 @@ export const RadioManagement = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
-              <div className="grid grid-cols-4 gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-                <Input value={newStreamer.streamer_username} onChange={(e) => setNewStreamer(p => ({ ...p, streamer_username: e.target.value }))} placeholder="Username" className="bg-slate-800 border-slate-600 text-white" />
-                <Input type="password" value={newStreamer.streamer_password} onChange={(e) => setNewStreamer(p => ({ ...p, streamer_password: e.target.value }))} placeholder="Password" className="bg-slate-800 border-slate-600 text-white" />
-                <Input value={newStreamer.display_name} onChange={(e) => setNewStreamer(p => ({ ...p, display_name: e.target.value }))} placeholder="Display Name" className="bg-slate-800 border-slate-600 text-white" />
-                <Button onClick={createStreamer}><Plus className="h-4 w-4 mr-2" />Add DJ</Button>
-              </div>
-              <ScrollArea className="h-[250px]">
-                {streamers.map(s => (
-                  <div key={s.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700 mb-2">
-                    <div>
-                      <p className="font-medium text-white">{s.display_name || s.streamer_username}</p>
-                      <p className="text-xs text-slate-400">@{s.streamer_username}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Badge variant={s.is_active ? "default" : "secondary"}>{s.is_active ? 'Active' : 'Off'}</Badge>
-                      <Button variant="ghost" size="sm" onClick={() => azuraCastService.deleteStreamer(s.id).then(loadStreamers)} className="text-red-400"><Trash2 className="h-4 w-4" /></Button>
-                    </div>
+              {unsupportedFeatures.has('streamers') ? (
+                <div className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                  <Server className="h-8 w-8 text-amber-400" />
+                  <div>
+                    <p className="font-medium text-amber-200">Live DJs Not Available</p>
+                    <p className="text-sm text-amber-400/80">This station does not have DJ/streamer functionality enabled. Contact your AzuraCast administrator to enable live streaming support.</p>
                   </div>
-                ))}
-              </ScrollArea>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-4 gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
+                    <Input value={newStreamer.streamer_username} onChange={(e) => setNewStreamer(p => ({ ...p, streamer_username: e.target.value }))} placeholder="Username" className="bg-slate-800 border-slate-600 text-white" />
+                    <Input type="password" value={newStreamer.streamer_password} onChange={(e) => setNewStreamer(p => ({ ...p, streamer_password: e.target.value }))} placeholder="Password" className="bg-slate-800 border-slate-600 text-white" />
+                    <Input value={newStreamer.display_name} onChange={(e) => setNewStreamer(p => ({ ...p, display_name: e.target.value }))} placeholder="Display Name" className="bg-slate-800 border-slate-600 text-white" />
+                    <Button onClick={createStreamer}><Plus className="h-4 w-4 mr-2" />Add DJ</Button>
+                  </div>
+                  <ScrollArea className="h-[250px]">
+                    {streamers.map(s => (
+                      <div key={s.id} className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700 mb-2">
+                        <div>
+                          <p className="font-medium text-white">{s.display_name || s.streamer_username}</p>
+                          <p className="text-xs text-slate-400">@{s.streamer_username}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge variant={s.is_active ? "default" : "secondary"}>{s.is_active ? 'Active' : 'Off'}</Badge>
+                          <Button variant="ghost" size="sm" onClick={() => azuraCastService.deleteStreamer(s.id).then(loadStreamers)} className="text-red-400"><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                      </div>
+                    ))}
+                  </ScrollArea>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
