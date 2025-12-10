@@ -43,6 +43,7 @@ import { RadioPlaylistQueue } from '../radio/RadioPlaylistQueue';
 import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
 import { AzuraCastAdminPanel } from './AzuraCastAdminPanel';
+import { azuraCastService } from '@/services/azuracast';
 import { cn } from '@/lib/utils';
 
 interface AudioTrack {
@@ -60,6 +61,7 @@ interface AudioTrack {
 
 interface RadioStats {
   totalTracks: number;
+  azuraCastTracks: number;
   totalListeners: number;
   currentlyPlaying: string | null;
   currentArtist: string | null;
@@ -90,6 +92,7 @@ export const RadioManagement = () => {
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [radioStats, setRadioStats] = useState<RadioStats>({
     totalTracks: 0,
+    azuraCastTracks: 0,
     totalListeners: 0,
     currentlyPlaying: null,
     currentArtist: null,
@@ -196,6 +199,7 @@ export const RadioManagement = () => {
 
   const fetchRadioStats = async () => {
     try {
+      // Fetch station state from Supabase
       const { data, error } = await supabase
         .from('gw_radio_station_state')
         .select('*')
@@ -215,6 +219,14 @@ export const RadioManagement = () => {
           streamerName: data.streamer_name || null,
           lastUpdated: data.last_updated || null
         }));
+      }
+
+      // Also try to fetch AzuraCast media count
+      try {
+        const azuraCount = await azuraCastService.getMediaCount();
+        setRadioStats(prev => ({ ...prev, azuraCastTracks: azuraCount }));
+      } catch (azuraError) {
+        console.log('Could not fetch AzuraCast media count:', azuraError);
       }
     } catch (error) {
       console.error('Error fetching radio stats:', error);
@@ -362,8 +374,15 @@ export const RadioManagement = () => {
               <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-full">
                 <Music className="h-4 w-4 text-blue-400" />
                 <span className="text-sm font-medium text-white">{radioStats.totalTracks}</span>
-                <span className="text-xs text-slate-400">tracks</span>
+                <span className="text-xs text-slate-400">local</span>
               </div>
+              {radioStats.azuraCastTracks > 0 && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 rounded-full">
+                  <Radio className="h-4 w-4 text-purple-400" />
+                  <span className="text-sm font-medium text-white">{radioStats.azuraCastTracks}</span>
+                  <span className="text-xs text-slate-400">server</span>
+                </div>
+              )}
               <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800 rounded-full">
                 <Users className="h-4 w-4 text-green-400" />
                 <span className="text-sm font-medium text-white">{radioStats.totalListeners}</span>

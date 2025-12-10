@@ -214,6 +214,20 @@ class AzuraCastService {
     return await this.makeProxyRequest(`/station/{stationId}/files?path=${encodeURIComponent(path)}`);
   }
 
+  async getMediaCount(): Promise<number> {
+    try {
+      // Get all files from AzuraCast media library
+      const files = await this.makeProxyRequest(`/station/{stationId}/files/list`);
+      if (Array.isArray(files)) {
+        return files.length;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error fetching AzuraCast media count:', error);
+      return 0;
+    }
+  }
+
   async deleteFile(filePath: string): Promise<void> {
     await this.makeProxyRequest(`/station/{stationId}/file`, 'DELETE', { path: filePath });
   }
