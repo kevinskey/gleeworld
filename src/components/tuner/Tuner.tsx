@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Mic, MicOff } from 'lucide-react';
+import { forceUnlockAudio, getSharedAudioContext } from '@/utils/mobileAudioUnlock';
 
 interface TunerReading {
   note: string;
@@ -73,8 +74,17 @@ export const Tuner: React.FC<{ className?: string }>
 
   const start = async () => {
     try {
+      // Force unlock audio for mobile compatibility
+      forceUnlockAudio();
+      
       const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Use shared audio context for mobile compatibility
+      const audioCtx = getSharedAudioContext();
+      if (audioCtx.state === 'suspended') {
+        await audioCtx.resume();
+      }
+      
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 2048;
       analyser.smoothingTimeConstant = 0.85;
@@ -110,7 +120,7 @@ export const Tuner: React.FC<{ className?: string }>
 
   const stop = () => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    if (audioCtxRef.current) audioCtxRef.current.close();
+    // Don't close the shared audio context
     audioCtxRef.current = null;
     analyserRef.current = null;
     micSourceRef.current = null;
