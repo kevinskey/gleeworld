@@ -38,7 +38,7 @@ const generateFullPianoKeys = () => {
   // A0 and A#0 and B0 first
   whiteKeys.push({ note: 'A', octave: 0, frequency: getFrequency('A', 0) });
   whiteKeys.push({ note: 'B', octave: 0, frequency: getFrequency('B', 0) });
-  blackKeys.push({ note: 'A#', octave: 0, frequency: getFrequency('A#', 0), position: 0.5 });
+  blackKeys.push({ note: 'A#', octave: 0, frequency: getFrequency('A#', 0), position: 1 });
 
   // C1 through B7, then C8
   for (let octave = 1; octave <= 8; octave++) {
@@ -57,11 +57,14 @@ const generateFullPianoKeys = () => {
     if (octave < 8) {
       blackNotes.forEach(({ note, posAfter }) => {
         const whiteIdx = whiteNotes.indexOf(posAfter);
+        // Position black key at the right edge of the white key it follows
+        // whiteKeyOffset + whiteIdx gives the index of the white key (e.g., C)
+        // Adding 1 positions it at the right edge of that white key (between C and D)
         blackKeys.push({
           note,
           octave,
           frequency: getFrequency(note, octave),
-          position: whiteKeyOffset + whiteIdx + 0.5
+          position: whiteKeyOffset + whiteIdx + 1
         });
       });
     }
