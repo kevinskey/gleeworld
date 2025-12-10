@@ -158,19 +158,34 @@ class AzuraCastService {
     
     console.log('AzuraCast: Making proxy request to:', endpoint);
     
-    const { data, error } = await supabase.functions.invoke('azuracast-api-proxy', {
-      body: {
-        endpoint,
-        method,
-        body,
-        stationId: this.stationId
+    let data: any;
+    let error: any;
+    
+    try {
+      const result = await supabase.functions.invoke('azuracast-api-proxy', {
+        body: {
+          endpoint,
+          method,
+          body,
+          stationId: this.stationId
+        }
+      });
+      data = result.data;
+      error = result.error;
+    } catch (e: any) {
+      console.error('AzuraCast: Invoke threw exception:', e);
+      if (options?.returnEmptyOnError) {
+        console.warn('AzuraCast: Returning empty array due to exception');
+        return [];
       }
-    });
+      throw e;
+    }
 
-    // Handle supabase invoke error
+    // Handle supabase invoke error (non-2xx status)
     if (error) {
       console.error('AzuraCast: Proxy request error:', error);
       if (options?.returnEmptyOnError) {
+        console.warn('AzuraCast: Returning empty array due to error response');
         return [];
       }
       throw new Error(`Proxy request failed: ${error.message}`);
@@ -189,6 +204,11 @@ class AzuraCastService {
             return [];
           }
         }
+        // For other errors, check returnEmptyOnError before throwing
+        if (options?.returnEmptyOnError) {
+          console.warn('AzuraCast: Returning empty array due to API error');
+          return [];
+        }
         // Combine error and details for better error message detection
         const errorMessage = `${data.error} ${data.details || ''}`;
         throw new Error(errorMessage);
@@ -196,8 +216,8 @@ class AzuraCastService {
       // Check if data itself indicates an error response from AzuraCast
       if (data.code && data.type && data.message) {
         console.error('AzuraCast: Direct API error:', data);
-        if (data.type === 'StationUnsupportedException' && options?.returnEmptyOnError) {
-          console.warn('AzuraCast: Feature not supported, returning empty array');
+        if (options?.returnEmptyOnError) {
+          console.warn('AzuraCast: Returning empty array due to direct API error');
           return [];
         }
         throw new Error(`${data.type}: ${data.message}`);
