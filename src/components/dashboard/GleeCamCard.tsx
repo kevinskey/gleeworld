@@ -89,14 +89,14 @@ export const GleeCamCard = ({
           {categories.map(category => {
           const IconComponent = getIconComponent(category.icon);
           return <div key={category.id} onClick={() => handleCategoryClick(category)} className="group cursor-pointer flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)]">
-                <div className={cn("p-4 flex flex-col items-center text-center transition-all duration-300", "bg-card border border-border hover:border-primary/50", "shadow-lg hover:shadow-xl min-h-[120px]")}>
-                  <div className="w-10 h-10 flex items-center justify-center mb-2 transition-transform group-hover:scale-110 bg-primary/20">
-                    <IconComponent className="h-5 w-5 text-primary" />
+                <div className={cn("p-2 flex flex-col items-center text-center transition-all duration-300", "bg-card border border-border hover:border-primary/50", "shadow-lg hover:shadow-xl min-h-[120px] justify-center")}>
+                  <div className="w-12 h-12 flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110 bg-primary/20">
+                    <IconComponent className="h-7 w-7 text-primary" />
                   </div>
-                  <h4 className="font-semibold text-[10px] sm:text-xs text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
+                  <h4 className="font-semibold text-xs sm:text-sm text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
                     {category.name}
                   </h4>
-                  <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight line-clamp-2">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">
                     {category.description}
                   </p>
                 </div>
