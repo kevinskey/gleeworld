@@ -10,11 +10,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home, Mic, Monitor, Smile, MapPinIcon, BarChart3, MessageSquare, Expand, Plus } from 'lucide-react';
+import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home, Mic, Monitor, Smile, MapPinIcon, BarChart3, MessageSquare, Expand, Plus, Calendar } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { PollCreator } from '@/components/messaging/PollCreator';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
+import { format } from 'date-fns';
 interface CreatePostCardProps {
   userProfile: {
     user_id: string;
@@ -57,8 +59,10 @@ export function CreatePostCard({
   const [shareToStory, setShareToStory] = useState(true);
   const [postDestination, setPostDestination] = useState<'profile' | 'timeline'>('profile');
   const [goLiveWhen, setGoLiveWhen] = useState<'now' | 'scheduled'>('now');
+  const [scheduledDate, setScheduledDate] = useState<Date>(new Date(Date.now() + 60 * 60 * 1000)); // Default to 1 hour from now
+  const [isScheduling, setIsScheduling] = useState(false);
   const [audienceType, setAudienceType] = useState<'friends' | 'public' | 'private'>('friends');
-  const [activeSection, setActiveSection] = useState<'setup' | 'dashboard' | 'settings' | 'interactivity'>('setup');
+  const [activeSection, setActiveSection] = useState<'setup' | 'dashboard' | 'settings' | 'interactivity' | 'schedule'>('setup');
   const [showSettings, setShowSettings] = useState(false);
   const [showInteractivity, setShowInteractivity] = useState(false);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
@@ -302,6 +306,65 @@ export function CreatePostCard({
     });
   };
 
+  // Schedule live stream to GleeWorld calendar
+  const handleScheduleLiveStream = async () => {
+    if (!liveTitle.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please enter a title for your scheduled live stream",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsScheduling(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Calculate end date (1 hour after start by default)
+      const endDate = new Date(scheduledDate.getTime() + 60 * 60 * 1000);
+
+      // Create calendar event for the scheduled live stream
+      const { data: eventData, error: eventError } = await supabase
+        .from('gw_events')
+        .insert({
+          title: `🔴 LIVE: ${liveTitle}`,
+          description: liveDescription || `Scheduled live stream by ${userProfile?.full_name}`,
+          event_type: 'live_stream',
+          start_date: scheduledDate.toISOString(),
+          end_date: endDate.toISOString(),
+          is_public: audienceType === 'friends',
+          is_private: audienceType === 'private',
+          created_by: user.id,
+          status: 'scheduled',
+          tags: ['live-stream', 'glee-lounge'],
+          calendar_id: '294b93cb-9654-4535-9f05-0dbc3fa6fd2c' // Default Calendar
+        })
+        .select()
+        .single();
+
+      if (eventError) throw eventError;
+
+      toast({
+        title: "Live stream scheduled!",
+        description: `Scheduled for ${format(scheduledDate, 'PPpp')}. Added to GleeWorld calendar.`
+      });
+
+      // Reset and close dialog
+      handleLiveDialogClose(false);
+    } catch (error) {
+      console.error('Error scheduling live stream:', error);
+      toast({
+        title: "Failed to schedule",
+        description: "Please try again",
+        variant: "destructive"
+      });
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
   // Handle dialog close
   const handleLiveDialogClose = (open: boolean) => {
     if (!open) {
@@ -511,23 +574,30 @@ export function CreatePostCard({
               </DialogTrigger>
               <DialogContent className="max-w-6xl p-0 overflow-hidden max-h-[90vh]">
                 {/* Mobile Tab Navigation */}
-                <div className="lg:hidden flex border-b border-border bg-card">
+                <div className="lg:hidden flex border-b border-border bg-card overflow-x-auto">
                   <button
-                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeSection === 'setup' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                    className={`flex-1 min-w-[70px] py-3 px-2 text-xs font-medium transition-colors ${activeSection === 'setup' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
                     onClick={() => setActiveSection('setup')}
                   >
                     <Video className="h-4 w-4 mx-auto mb-1" />
                     Setup
                   </button>
                   <button
-                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeSection === 'settings' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                    className={`flex-1 min-w-[70px] py-3 px-2 text-xs font-medium transition-colors ${activeSection === 'schedule' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                    onClick={() => setActiveSection('schedule')}
+                  >
+                    <Calendar className="h-4 w-4 mx-auto mb-1" />
+                    Schedule
+                  </button>
+                  <button
+                    className={`flex-1 min-w-[70px] py-3 px-2 text-xs font-medium transition-colors ${activeSection === 'settings' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
                     onClick={() => setActiveSection('settings')}
                   >
                     <Settings className="h-4 w-4 mx-auto mb-1" />
                     Settings
                   </button>
                   <button
-                    className={`flex-1 py-3 px-4 text-sm font-medium transition-colors ${activeSection === 'interactivity' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
+                    className={`flex-1 min-w-[70px] py-3 px-2 text-xs font-medium transition-colors ${activeSection === 'interactivity' ? 'border-b-2 border-primary text-primary' : 'text-muted-foreground'}`}
                     onClick={() => setActiveSection('interactivity')}
                   >
                     <Smile className="h-4 w-4 mx-auto mb-1" />
@@ -604,7 +674,7 @@ export function CreatePostCard({
 
                     {/* When going live */}
                     <Select value={goLiveWhen} onValueChange={(value: 'now' | 'scheduled') => setGoLiveWhen(value)}>
-                      <SelectTrigger className="border border-border rounded-lg p-3 mb-4 h-auto">
+                      <SelectTrigger className="border border-border rounded-lg p-3 mb-3 h-auto">
                         <div className="text-left">
                           <p className="text-xs text-muted-foreground mb-1">When are you going live?</p>
                           <SelectValue />
@@ -615,6 +685,68 @@ export function CreatePostCard({
                         <SelectItem value="scheduled">Schedule for later</SelectItem>
                       </SelectContent>
                     </Select>
+
+                    {/* Schedule date/time picker - shown when "Schedule for later" is selected */}
+                    {goLiveWhen === 'scheduled' && (
+                      <div className="mb-4 p-3 bg-muted/30 rounded-lg border border-border space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-foreground font-medium">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          Schedule Live Stream
+                        </div>
+                        
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">Stream Title *</Label>
+                          <Input
+                            placeholder="Enter a title for your live stream"
+                            value={liveTitle}
+                            onChange={(e) => setLiveTitle(e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">Description (optional)</Label>
+                          <Textarea
+                            placeholder="What will you be streaming about?"
+                            value={liveDescription}
+                            onChange={(e) => setLiveDescription(e.target.value)}
+                            className="text-sm resize-none"
+                            rows={2}
+                          />
+                        </div>
+
+                        <div>
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">Date & Time</Label>
+                          <DateTimePicker
+                            value={scheduledDate}
+                            onChange={(date) => date && setScheduledDate(date)}
+                            placeholder="Pick date and time"
+                          />
+                        </div>
+
+                        <p className="text-xs text-muted-foreground">
+                          This will add an event to the GleeWorld calendar
+                        </p>
+
+                        <Button 
+                          className="w-full bg-primary hover:bg-primary/90"
+                          onClick={handleScheduleLiveStream}
+                          disabled={isScheduling || !liveTitle.trim()}
+                        >
+                          {isScheduling ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Scheduling...
+                            </>
+                          ) : (
+                            <>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Schedule Live Stream
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
 
                     {/* Audience selector */}
                     <Select value={audienceType} onValueChange={(value: 'friends' | 'public' | 'private') => setAudienceType(value)}>
@@ -948,21 +1080,41 @@ export function CreatePostCard({
                       </button>
                     </div>
 
-                    {/* Mobile: Go Live Button */}
+                    {/* Mobile: Go Live / Schedule Button */}
                     <div className="lg:hidden">
-                      <Button 
-                        className="w-full bg-red-500 hover:bg-red-600 text-white"
-                        disabled={!cameraStream && !screenStream}
-                        onClick={() => {
-                          toast({
-                            title: "Going Live!",
-                            description: "Your live video is starting..."
-                          });
-                        }}
-                      >
-                        <Video className="h-4 w-4 mr-2" />
-                        Go Live
-                      </Button>
+                      {goLiveWhen === 'scheduled' ? (
+                        <Button 
+                          className="w-full bg-primary hover:bg-primary/90"
+                          onClick={handleScheduleLiveStream}
+                          disabled={isScheduling || !liveTitle.trim()}
+                        >
+                          {isScheduling ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Scheduling...
+                            </>
+                          ) : (
+                            <>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Schedule Live Stream
+                            </>
+                          )}
+                        </Button>
+                      ) : (
+                        <Button 
+                          className="w-full bg-red-500 hover:bg-red-600 text-white"
+                          disabled={!cameraStream && !screenStream}
+                          onClick={() => {
+                            toast({
+                              title: "Going Live!",
+                              description: "Your live video is starting..."
+                            });
+                          }}
+                        >
+                          <Video className="h-4 w-4 mr-2" />
+                          Go Live
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -1096,7 +1248,107 @@ export function CreatePostCard({
                     </div>
                   </div>
 
-                  {/* Right Sidebar - Post Details - Hidden on mobile */}
+                  {/* Mobile Schedule Panel */}
+                  <div className={`lg:hidden flex-1 p-4 bg-muted/30 overflow-y-auto ${activeSection !== 'schedule' && 'hidden'}`}>
+                    <h3 className="font-semibold text-foreground mb-4">Schedule Live Stream</h3>
+                    
+                    {/* When going live selector */}
+                    <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">When are you going live?</Label>
+                      <Select value={goLiveWhen} onValueChange={(value: 'now' | 'scheduled') => setGoLiveWhen(value)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="now">Now</SelectItem>
+                          <SelectItem value="scheduled">Schedule for later</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {goLiveWhen === 'scheduled' && (
+                      <>
+                        {/* Stream Title */}
+                        <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">Stream Title *</Label>
+                          <Input
+                            placeholder="Enter a title for your live stream"
+                            value={liveTitle}
+                            onChange={(e) => setLiveTitle(e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+
+                        {/* Description */}
+                        <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">Description (optional)</Label>
+                          <Textarea
+                            placeholder="What will you be streaming about?"
+                            value={liveDescription}
+                            onChange={(e) => setLiveDescription(e.target.value)}
+                            className="text-sm resize-none"
+                            rows={2}
+                          />
+                        </div>
+
+                        {/* Date & Time */}
+                        <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">Date & Time</Label>
+                          <DateTimePicker
+                            value={scheduledDate}
+                            onChange={(date) => date && setScheduledDate(date)}
+                            placeholder="Pick date and time"
+                          />
+                        </div>
+
+                        {/* Audience */}
+                        <div className="bg-card rounded-lg p-4 mb-3 border border-border">
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">Audience</Label>
+                          <Select value={audienceType} onValueChange={(value: 'friends' | 'public' | 'private') => setAudienceType(value)}>
+                            <SelectTrigger className="w-full">
+                              <Users className="h-4 w-4 mr-2" />
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="friends">Members</SelectItem>
+                              <SelectItem value="public">Exec-Board</SelectItem>
+                              <SelectItem value="private">Selected Group</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground mb-4 text-center">
+                          This will add an event to the GleeWorld calendar
+                        </p>
+
+                        <Button 
+                          className="w-full bg-primary hover:bg-primary/90"
+                          onClick={handleScheduleLiveStream}
+                          disabled={isScheduling || !liveTitle.trim()}
+                        >
+                          {isScheduling ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Scheduling...
+                            </>
+                          ) : (
+                            <>
+                              <Calendar className="h-4 w-4 mr-2" />
+                              Schedule Live Stream
+                            </>
+                          )}
+                        </Button>
+                      </>
+                    )}
+
+                    {goLiveWhen === 'now' && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Video className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                        <p className="text-sm">Go to Setup tab to start your live stream now</p>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="hidden lg:block w-80 border-l border-border p-4 bg-card overflow-y-auto">
                     <h3 className="font-semibold text-foreground mb-4">Add post details</h3>
                     
