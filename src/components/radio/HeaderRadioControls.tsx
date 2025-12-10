@@ -89,19 +89,20 @@ export const HeaderRadioControls = () => {
         {/* Full-Width Radio Bar - Rendered in Portal */}
         {isOpen && createPortal(
           <>
-            {/* Backdrop */}
+            {/* Backdrop - only below the header, doesn't cover header */}
             <div 
-              className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-sm"
+              className="fixed inset-x-0 bottom-0 z-[9998] bg-black/30"
+              style={{ top: '60px' }}
               onClick={() => setIsOpen(false)}
             />
             
-            {/* Horizontal Radio Bar */}
+            {/* Horizontal Radio Bar - Connected directly to header */}
             <div 
               className={cn(
-                "fixed left-0 right-0 z-[9999] bg-card border-b border-border shadow-xl",
-                "animate-in slide-in-from-top duration-300"
+                "fixed left-0 right-0 z-[9999] bg-card border-b-2 border-primary/20 shadow-lg",
+                "animate-in slide-in-from-top-2 duration-200"
               )}
-              style={{ top: '60px' }} // Below the header
+              style={{ top: '60px' }} // Directly below header, no gap
             >
               <div className="max-w-7xl mx-auto px-4 py-3">
                 {/* Main Row: Logo, Channels, Now Playing, Controls */}
