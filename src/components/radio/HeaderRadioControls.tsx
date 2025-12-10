@@ -1,9 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronDown, Music2, Church, Sparkles, Check } from 'lucide-react';
+import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check } from 'lucide-react';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels, type RadioChannel } from '@/hooks/useRadioChannels';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
@@ -14,10 +13,7 @@ import { cn } from '@/lib/utils';
 export const HeaderRadioControls = () => {
   try {
     const [isOpen, setIsOpen] = useState(false);
-    const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
-    const triggerRef = useRef<HTMLButtonElement>(null);
-    const radioData = useRadioPlayer();
-    const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
+    const { channels, selectedChannel, selectChannel } = useRadioChannels();
     const { themeName } = useTheme();
     
     // Theme-specific colors
@@ -26,14 +22,12 @@ export const HeaderRadioControls = () => {
     const hbcuGold = '#FFDF00';
     const spelmanWhite = '#ffffff';
     
-    // Get the appropriate text color
     const getTextColor = () => {
       if (isHbcuTheme) return hbcuGold;
       if (isSpelmanBlue) return spelmanWhite;
       return '#1e293b';
     };
 
-    // Get icon component for channel
     const getChannelIcon = (iconName: string | null) => {
       switch (iconName) {
         case 'Church': return Church;
@@ -54,11 +48,10 @@ export const HeaderRadioControls = () => {
       togglePlayPause, 
       setVolume,
       switchStream,
-    } = radioData;
+    } = useRadioPlayer();
 
     const isMuted = volume === 0;
 
-    // Handle channel change
     const handleChannelChange = (channel: RadioChannel) => {
       selectChannel(channel);
       if (switchStream) {
@@ -66,263 +59,286 @@ export const HeaderRadioControls = () => {
       }
     };
 
-    // Calculate dropdown position when opening
-    useEffect(() => {
-      if (isOpen && triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect();
-        setDropdownPosition({
-          top: rect.bottom + 8,
-          right: window.innerWidth - rect.right
-        });
-      }
-    }, [isOpen]);
-
     return (
-      <div className="relative">
-        {/* Header Buttons */}
-        <div className="flex items-center gap-1">
-          {/* Play/Pause Button - Always visible */}
-          <EnhancedTooltip 
-            content={`${isPlaying ? 'Pause' : 'Play'} Glee World Radio ${isOnline ? (isLive ? '(LIVE DJ)' : '') : '(Offline)'}`}
+      <>
+        {/* Header Radio Icon/Button */}
+        <EnhancedTooltip content={isOpen ? "Close Radio" : "Open Glee World Radio"}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOpen(!isOpen)}
+            className={cn(
+              "relative h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10 transition-colors",
+              isOpen && "bg-white/20"
+            )}
+            style={{ color: getTextColor() }}
+            type="button"
           >
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                togglePlayPause();
-              }}
-              disabled={isLoading}
-              className="relative h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
-              style={{ color: getTextColor() }}
-              type="button"
-            >
-              {isLoading ? (
-                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : isPlaying ? (
-                <Pause className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4 ml-0.5" />
-              )}
-              
-              {isLive && (
-                <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse">
-                  <div className="h-2 w-2 bg-white rounded-full absolute top-0.5 left-0.5" />
-                </div>
-              )}
-            </Button>
-          </EnhancedTooltip>
+            <Radio className="h-4 w-4" />
+            {isPlaying && (
+              <div className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+            )}
+            {isLive && (
+              <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse">
+                <div className="h-2 w-2 bg-white rounded-full absolute top-0.5 left-0.5" />
+              </div>
+            )}
+          </Button>
+        </EnhancedTooltip>
 
-          {/* Radio Dropdown Trigger */}
-          <EnhancedTooltip content="Open Radio Controls">
-            <Button
-              ref={triggerRef}
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(!isOpen)}
-              className="h-6 px-1.5 sm:h-7 sm:px-2 hover:bg-white/10 hidden sm:flex items-center gap-1"
-              style={{ color: getTextColor() }}
-              type="button"
-            >
-              <Radio className="h-4 w-4" />
-              <span className="text-xs font-medium">Radio</span>
-              <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-            </Button>
-          </EnhancedTooltip>
-        </div>
-
-        {/* Dropdown Card - Rendered in Portal */}
+        {/* Full-Width Radio Bar - Rendered in Portal */}
         {isOpen && createPortal(
           <>
-            {/* Backdrop to close on outside click */}
+            {/* Backdrop */}
             <div 
-              className="fixed inset-0 z-[9998]" 
+              className="fixed inset-0 z-[9998] bg-black/20 backdrop-blur-sm"
               onClick={() => setIsOpen(false)}
             />
             
-            {/* Radio Card */}
-            <Card 
-              className="fixed w-80 z-[9999] bg-card border border-border shadow-2xl"
-              style={{ top: dropdownPosition.top, right: dropdownPosition.right }}
+            {/* Horizontal Radio Bar */}
+            <div 
+              className={cn(
+                "fixed left-0 right-0 z-[9999] bg-card border-b border-border shadow-xl",
+                "animate-in slide-in-from-top duration-300"
+              )}
+              style={{ top: '60px' }} // Below the header
             >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
+              <div className="max-w-7xl mx-auto px-4 py-3">
+                {/* Main Row: Logo, Channels, Now Playing, Controls */}
+                <div className="flex items-center gap-4 flex-wrap lg:flex-nowrap">
+                  
+                  {/* Logo & Status */}
+                  <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="p-2 rounded-lg bg-primary/10">
                       <Radio className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <CardTitle className="text-base">Glee World Radio</CardTitle>
-                      <p className="text-xs text-muted-foreground">Est. 1924 • 100+ Years</p>
+                    <div className="hidden sm:block">
+                      <p className="font-semibold text-sm text-foreground">Glee World Radio</p>
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
+                          className={cn(
+                            "text-[10px] h-5",
+                            isLive ? "bg-red-500 hover:bg-red-600 text-white" : 
+                            isOnline ? "bg-green-500 hover:bg-green-600 text-white" : ""
+                          )}
+                        >
+                          {isLive ? 'LIVE DJ' : isOnline ? 'ONLINE' : 'OFFLINE'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {listenerCount}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge 
-                      variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
-                      className={isLive ? "bg-red-500 hover:bg-red-600 text-white" : isOnline ? "bg-green-500 hover:bg-green-600 text-white" : ""}
+
+                  {/* Divider */}
+                  <div className="hidden lg:block h-10 w-px bg-border" />
+
+                  {/* Channel Selector - Horizontal Pills */}
+                  {channels.length > 0 && (
+                    <div className="flex items-center gap-2 overflow-x-auto flex-shrink-0 scrollbar-hide">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap hidden md:inline">
+                        Channels:
+                      </span>
+                      <div className="flex gap-1.5">
+                        {channels.map((channel) => {
+                          const IconComponent = getChannelIcon(channel.icon);
+                          const isSelected = selectedChannel?.id === channel.id;
+                          return (
+                            <button
+                              key={channel.id}
+                              onClick={() => handleChannelChange(channel)}
+                              className={cn(
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all whitespace-nowrap",
+                                isSelected
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:border-muted-foreground/50"
+                              )}
+                            >
+                              <IconComponent 
+                                className="h-3.5 w-3.5" 
+                                style={{ color: isSelected ? undefined : (channel.color || undefined) }}
+                              />
+                              <span className="text-xs font-medium">{channel.name}</span>
+                              {isSelected && <Check className="h-3 w-3" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Divider */}
+                  <div className="hidden lg:block h-10 w-px bg-border" />
+
+                  {/* Now Playing */}
+                  <div className="flex-1 min-w-0 hidden md:block">
+                    {currentTrack && isOnline ? (
+                      <div className="flex items-center gap-3">
+                        {isPlaying && (
+                          <div className="flex gap-0.5 flex-shrink-0">
+                            {[1, 2, 3].map((i) => (
+                              <div 
+                                key={i}
+                                className="w-1 bg-primary rounded-full animate-pulse"
+                                style={{ 
+                                  height: `${8 + i * 4}px`,
+                                  animationDelay: `${i * 0.15}s`
+                                }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Now Playing</p>
+                          <p className="font-medium text-sm truncate text-foreground">{currentTrack.title}</p>
+                          {currentTrack.artist && (
+                            <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
+                          )}
+                        </div>
+                      </div>
+                    ) : !isOnline ? (
+                      <p className="text-sm text-muted-foreground">Radio is currently offline</p>
+                    ) : null}
+                  </div>
+
+                  {/* Playback Controls */}
+                  <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+                    {/* Play/Pause */}
+                    <Button
+                      variant={isPlaying ? "secondary" : "default"}
+                      size="sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        togglePlayPause();
+                      }}
+                      disabled={isLoading || !isOnline}
+                      className="h-9 px-4"
+                      type="button"
                     >
-                      {isLive ? 'LIVE DJ' : isOnline ? 'ONLINE' : 'OFFLINE'}
-                    </Badge>
+                      {isLoading ? (
+                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      ) : isPlaying ? (
+                        <Pause className="h-4 w-4" />
+                      ) : (
+                        <Play className="h-4 w-4 ml-0.5" />
+                      )}
+                      <span className="ml-2 hidden sm:inline">
+                        {isLoading ? 'Connecting...' : isPlaying ? 'Pause' : 'Play'}
+                      </span>
+                    </Button>
+
+                    {/* Volume Control */}
+                    <div className="flex items-center gap-2 hidden sm:flex">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setVolume(isMuted ? 0.7 : 0);
+                        }}
+                        type="button"
+                      >
+                        {isMuted ? (
+                          <VolumeX className="h-4 w-4" />
+                        ) : (
+                          <Volume2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Slider
+                        value={[volume]}
+                        onValueChange={([value]) => setVolume(value)}
+                        max={1}
+                        step={0.05}
+                        className="w-24"
+                      />
+                      <span className="text-xs text-muted-foreground w-8">
+                        {Math.round(volume * 100)}%
+                      </span>
+                    </div>
+
+                    {/* Close Button */}
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsOpen(false)}
-                      className="h-6 w-6 p-0"
+                      className="h-8 w-8 p-0"
                       type="button"
                     >
-                      <X className="h-4 w-4" />
+                      <ChevronUp className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
 
-              <CardContent className="space-y-4 pt-2">
-                {/* Channel Selector */}
-                {channels.length > 1 && (
-                  <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Channels</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {channels.map((channel) => {
-                        const IconComponent = getChannelIcon(channel.icon);
-                        const isSelected = selectedChannel?.id === channel.id;
-                        return (
-                          <button
-                            key={channel.id}
-                            onClick={() => handleChannelChange(channel)}
-                            className={cn(
-                              "flex items-center gap-2 p-2 rounded-lg border transition-all text-left",
-                              isSelected
-                                ? "border-primary bg-primary/10 text-foreground"
-                                : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:border-muted-foreground/50"
-                            )}
-                          >
-                            <IconComponent 
-                              className="h-4 w-4 flex-shrink-0" 
-                              style={{ color: channel.color || undefined }}
+                {/* Mobile: Now Playing Row */}
+                <div className="md:hidden mt-3 pt-3 border-t border-border">
+                  {currentTrack && isOnline ? (
+                    <div className="flex items-center gap-3">
+                      {isPlaying && (
+                        <div className="flex gap-0.5 flex-shrink-0">
+                          {[1, 2, 3].map((i) => (
+                            <div 
+                              key={i}
+                              className="w-1 bg-primary rounded-full animate-pulse"
+                              style={{ 
+                                height: `${8 + i * 4}px`,
+                                animationDelay: `${i * 0.15}s`
+                              }}
                             />
-                            <span className="text-xs font-medium truncate">{channel.name}</span>
-                            {isSelected && <Check className="h-3 w-3 ml-auto text-primary" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Now Playing */}
-                {currentTrack && isOnline && (
-                  <div className="p-3 rounded-lg bg-muted/50 space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Now Playing</p>
-                    <p className="font-semibold text-sm">{currentTrack.title}</p>
-                    {currentTrack.artist && (
-                      <p className="text-sm text-muted-foreground">{currentTrack.artist}</p>
-                    )}
-                  </div>
-                )}
-
-                {!isOnline && (
-                  <div className="p-3 rounded-lg bg-muted/50 text-center">
-                    <p className="text-sm text-muted-foreground">Radio is currently offline</p>
-                  </div>
-                )}
-
-                {/* Listener Count */}
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>{listenerCount} listener{listenerCount !== 1 ? 's' : ''}</span>
-                  </div>
-                  {isPlaying && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="flex gap-0.5">
-                        {[1, 2, 3].map((i) => (
-                          <div 
-                            key={i}
-                            className="w-1 bg-primary rounded-full animate-pulse"
-                            style={{ 
-                              height: `${8 + i * 4}px`,
-                              animationDelay: `${i * 0.15}s`
-                            }}
-                          />
-                        ))}
+                          ))}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate text-foreground">{currentTrack.title}</p>
+                        {currentTrack.artist && (
+                          <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
+                        )}
                       </div>
-                      <span className="text-xs text-primary font-medium">LIVE</span>
+                      {/* Mobile Volume */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setVolume(isMuted ? 0.7 : 0);
+                          }}
+                          type="button"
+                        >
+                          {isMuted ? (
+                            <VolumeX className="h-3.5 w-3.5" />
+                          ) : (
+                            <Volume2 className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                        <Slider
+                          value={[volume]}
+                          onValueChange={([value]) => setVolume(value)}
+                          max={1}
+                          step={0.05}
+                          className="w-20"
+                        />
+                      </div>
                     </div>
+                  ) : !isOnline ? (
+                    <p className="text-sm text-muted-foreground text-center">Radio is currently offline</p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground text-center italic">"To Amaze and Inspire"</p>
                   )}
                 </div>
-
-                {/* Play/Pause Control */}
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant={isPlaying ? "secondary" : "default"}
-                    size="sm"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      togglePlayPause();
-                    }}
-                    disabled={isLoading || !isOnline}
-                    className="flex-1"
-                    type="button"
-                  >
-                    {isLoading ? (
-                      <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                    ) : isPlaying ? (
-                      <Pause className="h-4 w-4 mr-2" />
-                    ) : (
-                      <Play className="h-4 w-4 mr-2" />
-                    )}
-                    {isLoading ? 'Connecting...' : isPlaying ? 'Pause' : 'Play'}
-                  </Button>
-                </div>
-
-                {/* Volume Control */}
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 flex-shrink-0"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setVolume(isMuted ? 0.7 : 0);
-                    }}
-                    type="button"
-                  >
-                    {isMuted ? (
-                      <VolumeX className="h-4 w-4" />
-                    ) : (
-                      <Volume2 className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Slider
-                    value={[volume]}
-                    onValueChange={([value]) => setVolume(value)}
-                    max={1}
-                    step={0.05}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-muted-foreground w-8 text-right">
-                    {Math.round(volume * 100)}%
-                  </span>
-                </div>
-
-                {/* Footer */}
-                <div className="text-center pt-2 border-t border-border">
-                  <p className="text-xs text-muted-foreground italic">
-                    "To Amaze and Inspire"
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Official Spelman College Glee Club Radio
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </>,
           document.body
         )}
-      </div>
+      </>
     );
   } catch (error) {
     console.error('HeaderRadioControls: Error rendering component:', error);
