@@ -62,7 +62,11 @@ interface RadioStats {
   totalTracks: number;
   totalListeners: number;
   currentlyPlaying: string | null;
-  uptime: string;
+  currentArtist: string | null;
+  isOnline: boolean;
+  isLive: boolean;
+  streamerName: string | null;
+  lastUpdated: string | null;
 }
 
 interface MediaSource {
@@ -86,9 +90,13 @@ export const RadioManagement = () => {
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [radioStats, setRadioStats] = useState<RadioStats>({
     totalTracks: 0,
-    totalListeners: 127,
+    totalListeners: 0,
     currentlyPlaying: null,
-    uptime: '24/7'
+    currentArtist: null,
+    isOnline: false,
+    isLive: false,
+    streamerName: null,
+    lastUpdated: null
   });
   const [selectedTrack, setSelectedTrack] = useState<AudioTrack | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -187,11 +195,36 @@ export const RadioManagement = () => {
   };
 
   const fetchRadioStats = async () => {
-    setRadioStats(prev => ({
-      ...prev,
-      totalListeners: Math.floor(Math.random() * 200) + 50,
-      currentlyPlaying: tracks[0]?.title || null
-    }));
+    try {
+      const { data, error } = await supabase
+        .from('gw_radio_station_state')
+        .select('*')
+        .eq('station_id', 'glee_world_radio')
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setRadioStats(prev => ({
+          ...prev,
+          totalListeners: data.listener_count || 0,
+          currentlyPlaying: data.current_song_title || null,
+          currentArtist: data.current_song_artist || null,
+          isOnline: data.is_online || false,
+          isLive: data.is_live || false,
+          streamerName: data.streamer_name || null,
+          lastUpdated: data.last_updated || null
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching radio stats:', error);
+    }
+  };
+
+  const handleSync = async () => {
+    toast({ title: "Syncing...", description: "Refreshing radio data" });
+    await Promise.all([fetchTracks(), fetchRadioStats()]);
+    toast({ title: "Synced", description: "Radio data refreshed" });
   };
 
   const filterAndSortTracks = () => {
@@ -336,14 +369,23 @@ export const RadioManagement = () => {
                 <span className="text-sm font-medium text-white">{radioStats.totalListeners}</span>
                 <span className="text-xs text-slate-400">listeners</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 rounded-full">
-                <Wifi className="h-4 w-4 text-emerald-400 animate-pulse" />
-                <span className="text-sm font-bold text-emerald-400">LIVE</span>
-              </div>
+              {radioStats.isOnline ? (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 rounded-full">
+                  <Wifi className="h-4 w-4 text-emerald-400 animate-pulse" />
+                  <span className="text-sm font-bold text-emerald-400">
+                    {radioStats.isLive ? 'LIVE' : 'ONLINE'}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/20 rounded-full">
+                  <Wifi className="h-4 w-4 text-red-400" />
+                  <span className="text-sm font-bold text-red-400">OFFLINE</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={fetchTracks} className="text-white border-slate-600 bg-slate-800 hover:bg-slate-700">
+            <Button variant="outline" size="sm" onClick={handleSync} className="text-white border-slate-600 bg-slate-800 hover:bg-slate-700">
               <RefreshCw className="h-4 w-4 mr-2" />
               Sync
             </Button>
@@ -355,7 +397,17 @@ export const RadioManagement = () => {
           <div className="mt-4 flex items-center gap-3 px-4 py-2 bg-slate-800/50 rounded-lg border border-slate-700">
             <Volume2 className="h-4 w-4 text-primary animate-pulse" />
             <span className="text-xs text-slate-400">Now Playing:</span>
-            <span className="text-sm font-medium text-white">{radioStats.currentlyPlaying}</span>
+            <span className="text-sm font-medium text-white">
+              {radioStats.currentlyPlaying}
+              {radioStats.currentArtist && (
+                <span className="text-slate-400 ml-2">— {radioStats.currentArtist}</span>
+              )}
+            </span>
+            {radioStats.isLive && radioStats.streamerName && (
+              <Badge variant="secondary" className="bg-red-500/20 text-red-400 border-red-500/30">
+                DJ: {radioStats.streamerName}
+              </Badge>
+            )}
           </div>
         )}
       </div>
