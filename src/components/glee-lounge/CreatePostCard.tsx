@@ -1462,21 +1462,41 @@ export function CreatePostCard({
                       </div>
                     </div>
 
-                    {/* Go Live Button */}
-                    <Button 
-                      className="w-full bg-red-500 hover:bg-red-600 text-white"
-                      disabled={!cameraStream && !screenStream}
-                      onClick={() => {
-                        toast({
-                          title: "Going Live!",
-                          description: "Your live video is starting..."
-                        });
-                        // TODO: Implement actual live streaming
-                      }}
-                    >
-                      <Video className="h-4 w-4 mr-2" />
-                      Go Live
-                    </Button>
+                    {/* Go Live / Schedule Button */}
+                    {goLiveWhen === 'scheduled' ? (
+                      <Button 
+                        className="w-full bg-primary hover:bg-primary/90"
+                        onClick={handleScheduleLiveStream}
+                        disabled={isScheduling || !liveTitle.trim()}
+                      >
+                        {isScheduling ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Scheduling...
+                          </>
+                        ) : (
+                          <>
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Schedule Live Stream
+                          </>
+                        )}
+                      </Button>
+                    ) : (
+                      <Button 
+                        className="w-full bg-red-500 hover:bg-red-600 text-white"
+                        disabled={!cameraStream && !screenStream}
+                        onClick={() => {
+                          toast({
+                            title: "Going Live!",
+                            description: "Your live video is starting..."
+                          });
+                          // TODO: Implement actual live streaming
+                        }}
+                      >
+                        <Video className="h-4 w-4 mr-2" />
+                        Go Live
+                      </Button>
+                    )}
                   </div>
                 </div>
               </DialogContent>
