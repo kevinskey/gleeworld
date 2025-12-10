@@ -69,11 +69,14 @@ export const DashboardYouTubeSection = () => {
     const id = extractVideoId(videoId);
     const params = new URLSearchParams({
       autoplay: '1',
-      mute: '0',
+      mute: '1', // Start muted to allow autoplay on mobile
       rel: '0',
       modestbranding: '1',
       controls: '1',
-      playsinline: '1'
+      playsinline: '1',
+      enablejsapi: '1',
+      origin: window.location.origin,
+      fs: '1' // Enable fullscreen
     });
     return `https://www.youtube.com/embed/${id}?${params.toString()}`;
   };
