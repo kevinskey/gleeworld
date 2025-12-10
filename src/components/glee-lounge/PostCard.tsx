@@ -9,7 +9,9 @@ import { SocialPost } from '@/hooks/useSocialFeed';
 import { PostReactions } from './PostReactions';
 import { PostComments } from './PostComments';
 import { ReportPostDialog } from './ReportPostDialog';
+import { YouTubeEmbed } from './YouTubeEmbed';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
+import { extractAllYouTubeVideoIds } from '@/utils/youtubeUtils';
 import { formatDistanceToNow } from 'date-fns';
 import { MapPin, Pin, MoreHorizontal, Flag, Trash2, X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -195,6 +197,24 @@ export function PostCard({
           {post.media_urls && post.media_urls.length > 0 && <div className={`grid gap-2 mb-3 ${post.media_urls.length === 1 ? 'grid-cols-1' : post.media_urls.length === 2 ? 'grid-cols-2' : post.media_urls.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
               {post.media_urls.map((url, index) => renderMediaItem(url, index))}
             </div>}
+
+          {/* YouTube embeds - from youtube_urls field or auto-detected in content */}
+          {(() => {
+            const youtubeUrls = (post as any).youtube_urls || [];
+            const detectedIds = extractAllYouTubeVideoIds(post.content);
+            const allYouTubeIds = [...new Set([...youtubeUrls, ...detectedIds])];
+            
+            if (allYouTubeIds.length > 0) {
+              return (
+                <div className="space-y-2 mb-3">
+                  {allYouTubeIds.map((videoId) => (
+                    <YouTubeEmbed key={videoId} videoId={videoId} />
+                  ))}
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           {/* Reactions */}
           <PostReactions postId={post.id} reactions={post.reactions} userReactions={post.user_reactions} onReactionChange={onRefresh} />

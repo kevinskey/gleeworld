@@ -10,7 +10,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
-import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home, Mic, Monitor, Smile, MapPinIcon, BarChart3, MessageSquare, Expand, Plus, Calendar } from 'lucide-react';
+import { ImagePlus, MapPin, Send, Loader2, X, Camera, Check, Video, Users, FileText, Settings, ChevronDown, Home, Mic, Monitor, Smile, MapPinIcon, BarChart3, MessageSquare, Expand, Plus, Calendar, Youtube } from 'lucide-react';
+import { YouTubePicker } from './YouTubePicker';
+import { extractAllYouTubeVideoIds, getYouTubeThumbnail } from '@/utils/youtubeUtils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -46,6 +48,8 @@ export function CreatePostCard({
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [showPhotoPicker, setShowPhotoPicker] = useState(false);
   const [showLiveCamera, setShowLiveCamera] = useState(false);
+  const [showYouTubePicker, setShowYouTubePicker] = useState(false);
+  const [youtubeVideos, setYoutubeVideos] = useState<string[]>([]);
   const [selectedPhotos, setSelectedPhotos] = useState<string[]>([]);
   const [liveStep, setLiveStep] = useState<'setup' | 'details' | 'live'>('setup');
   const [videoSource, setVideoSource] = useState<'webcam' | 'streaming'>('webcam');
@@ -450,19 +454,25 @@ export function CreatePostCard({
         }
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
+      // Auto-detect YouTube URLs in content
+      const detectedYouTubeIds = extractAllYouTubeVideoIds(content);
+      const allYouTubeUrls = [...new Set([...youtubeVideos, ...detectedYouTubeIds])];
+      
       const {
         error
       } = await supabase.from('gw_social_posts').insert({
         user_id: user.id,
         content: content.trim(),
         location_tag: locationTag.trim() || null,
-        media_urls: mediaUrls
+        media_urls: mediaUrls,
+        youtube_urls: allYouTubeUrls.length > 0 ? allYouTubeUrls : null
       });
       if (error) throw error;
       setContent('');
       setLocationTag('');
       setShowLocation(false);
       setMediaUrls([]);
+      setYoutubeVideos([]);
       toast({
         title: 'Posted!',
         description: 'Your post is now live in the lounge'
@@ -1547,6 +1557,16 @@ export function CreatePostCard({
               </DialogContent>
             </Dialog>
 
+            {/* YouTube - Red */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-10 w-10 rounded-full hover:bg-red-100 dark:hover:bg-red-900/30"
+              onClick={() => setShowYouTubePicker(true)}
+            >
+              <Youtube className="h-5 w-5 text-red-500" />
+            </Button>
+
             {/* Location/Emoji - Yellow */}
             <Button 
               variant="ghost" 
@@ -1559,8 +1579,18 @@ export function CreatePostCard({
           </div>
         </div>
 
+        {/* YouTube Picker Dialog */}
+        <YouTubePicker
+          open={showYouTubePicker}
+          onOpenChange={setShowYouTubePicker}
+          onVideoSelect={(videoId) => {
+            setYoutubeVideos(prev => [...prev, videoId]);
+          }}
+          selectedVideos={youtubeVideos}
+        />
+
         {/* Expanded compose area (hidden by default, shown when typing) */}
-        {(content || showLocation || mediaUrls.length > 0) && (
+        {(content || showLocation || mediaUrls.length > 0 || youtubeVideos.length > 0) && (
           <div className="mt-3 space-y-3 pt-3 border-t border-border">
             <Textarea 
               id="post-textarea"
@@ -1603,6 +1633,32 @@ export function CreatePostCard({
                       size="icon" 
                       className="absolute -top-2 -right-2 h-5 w-5" 
                       onClick={() => setMediaUrls(prev => prev.filter((_, i) => i !== index))}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* YouTube videos preview */}
+            {youtubeVideos.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {youtubeVideos.map((videoId, index) => (
+                  <div key={videoId} className="relative bg-muted rounded-md">
+                    <img 
+                      src={getYouTubeThumbnail(videoId, 'default')} 
+                      alt="YouTube video" 
+                      className="h-16 w-24 object-cover rounded-md"
+                    />
+                    <div className="absolute bottom-1 left-1 bg-red-600 text-white text-[10px] px-1 rounded flex items-center gap-0.5">
+                      <Youtube className="h-2.5 w-2.5" />
+                    </div>
+                    <Button 
+                      variant="destructive" 
+                      size="icon" 
+                      className="absolute -top-2 -right-2 h-5 w-5" 
+                      onClick={() => setYoutubeVideos(prev => prev.filter((_, i) => i !== index))}
                     >
                       <X className="h-3 w-3" />
                     </Button>

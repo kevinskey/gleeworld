@@ -14015,6 +14015,7 @@ export type Database = {
           media_urls: string[] | null
           updated_at: string
           user_id: string
+          youtube_urls: string[] | null
         }
         Insert: {
           content: string
@@ -14026,6 +14027,7 @@ export type Database = {
           media_urls?: string[] | null
           updated_at?: string
           user_id: string
+          youtube_urls?: string[] | null
         }
         Update: {
           content?: string
@@ -14037,6 +14039,7 @@ export type Database = {
           media_urls?: string[] | null
           updated_at?: string
           user_id?: string
+          youtube_urls?: string[] | null
         }
         Relationships: []
       }
