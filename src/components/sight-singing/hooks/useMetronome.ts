@@ -10,7 +10,6 @@ export const useMetronome = () => {
   const [soundType, setSoundType] = useState<MetronomeSoundType>('click');
   const audioContextRef = useRef<AudioContext | null>(null);
   const intervalRef = useRef<number | null>(null);
-  const isUnlockingRef = useRef(false);
 
   // Setup mobile audio unlock on mount
   useEffect(() => {
@@ -20,32 +19,23 @@ export const useMetronome = () => {
 
   const getAudioContext = useCallback(async (): Promise<AudioContext | null> => {
     try {
-      // Prevent multiple simultaneous unlock attempts
-      if (isUnlockingRef.current) {
-        // Wait a bit and check again
-        await new Promise(resolve => setTimeout(resolve, 100));
+      // Fast path: already have a running context
+      if (audioContextRef.current?.state === 'running') {
         return audioContextRef.current;
       }
-      
-      isUnlockingRef.current = true;
       
       // Use the shared unlock utility for iOS compatibility
       const ctx = await unlockAudioContext();
       audioContextRef.current = ctx;
       
-      // Extra check for mobile - ensure it's really running
+      // Resume if needed (no delay)
       if (ctx.state !== 'running') {
-        console.log('🎵 Metronome: Context not running, attempting resume...');
         await ctx.resume();
-        // Give iOS a moment
-        await new Promise(resolve => setTimeout(resolve, 50));
       }
       
-      isUnlockingRef.current = false;
       return ctx;
     } catch (error) {
       console.error('Failed to get audio context:', error);
-      isUnlockingRef.current = false;
       return null;
     }
   }, []);
@@ -106,11 +96,8 @@ export const useMetronome = () => {
       stopMetronome();
     }
     
-    console.log('🎵 Metronome: Starting...');
-    
     // Force unlock audio on iOS - must happen during user gesture
-    const unlocked = await forceUnlockAudio();
-    console.log('🎵 Metronome: Force unlock result:', unlocked);
+    await forceUnlockAudio();
     
     const ctx = await getAudioContext();
     if (!ctx) {
@@ -121,21 +108,9 @@ export const useMetronome = () => {
     // Store reference for playClick to use synchronously
     audioContextRef.current = ctx;
     
-    // Extra iOS workaround: multiple resume attempts
-    for (let i = 0; i < 3 && ctx.state !== 'running'; i++) {
-      try {
-        await ctx.resume();
-        await new Promise(resolve => setTimeout(resolve, 50));
-      } catch (e) {
-        console.warn('🎵 Metronome: Resume attempt', i + 1, 'failed:', e);
-      }
-    }
-    
-    console.log('🎵 Metronome: Context state after resume:', ctx.state);
-    
+    // Single resume attempt (no loops/delays)
     if (ctx.state !== 'running') {
-      console.warn('🎵 Metronome: Context still not running');
-      // Still try to play - some browsers allow it
+      await ctx.resume();
     }
     
     setIsPlaying(true);
