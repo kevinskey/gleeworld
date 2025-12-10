@@ -32,16 +32,43 @@ interface ScheduledTrack {
 
 interface RadioScheduleTimelineProps {
   onRefresh?: () => void;
+  currentSongElapsed?: number | null; // seconds elapsed
+  currentSongDuration?: number | null; // total duration in seconds
+  currentSongTitle?: string | null;
 }
 
-export const RadioScheduleTimeline = ({ onRefresh }: RadioScheduleTimelineProps) => {
+export const RadioScheduleTimeline = ({ 
+  onRefresh, 
+  currentSongElapsed, 
+  currentSongDuration,
+  currentSongTitle
+}: RadioScheduleTimelineProps) => {
   const [scheduledTracks, setScheduledTracks] = useState<ScheduledTrack[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [dragOverHour, setDragOverHour] = useState<number | null>(null);
-  const [viewOffset, setViewOffset] = useState(0); // hours offset from current time
+  const [dragOverMinute, setDragOverMinute] = useState<number | null>(null);
+  const [isDraggingOverEndZone, setIsDraggingOverEndZone] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+
+  // Calculate when current song ends (nearest minute)
+  const getSongEndTime = (): Date | null => {
+    if (currentSongElapsed === null || currentSongElapsed === undefined || 
+        currentSongDuration === null || currentSongDuration === undefined) {
+      return null;
+    }
+    const remainingSeconds = currentSongDuration - currentSongElapsed;
+    const endTime = new Date(currentTime.getTime() + remainingSeconds * 1000);
+    // Round to nearest minute
+    endTime.setSeconds(0, 0);
+    if (endTime.getSeconds() >= 30) {
+      endTime.setMinutes(endTime.getMinutes() + 1);
+    }
+    return endTime;
+  };
+
+  const songEndTime = getSongEndTime();
 
   // Update current time every minute
   useEffect(() => {
@@ -85,15 +112,103 @@ export const RadioScheduleTimeline = ({ onRefresh }: RadioScheduleTimelineProps)
     localStorage.setItem('gw_radio_timeline_schedule', JSON.stringify(tracks));
   };
 
-  const handleDragOver = (e: React.DragEvent, hour: number) => {
+  const handleDragOver = (e: React.DragEvent, hour: number, minute?: number) => {
     e.preventDefault();
     setIsDraggingOver(true);
     setDragOverHour(hour);
+    setDragOverMinute(minute ?? null);
   };
 
   const handleDragLeave = () => {
     setIsDraggingOver(false);
     setDragOverHour(null);
+    setDragOverMinute(null);
+    setIsDraggingOverEndZone(false);
+  };
+
+  const handleEndZoneDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOverEndZone(true);
+  };
+
+  const handleEndZoneDragLeave = () => {
+    setIsDraggingOverEndZone(false);
+  };
+
+  const handleDropAtEndOfSong = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDraggingOverEndZone(false);
+
+    if (!songEndTime) {
+      toast({ title: "Error", description: "No song currently playing", variant: "destructive" });
+      return;
+    }
+
+    const files = Array.from(e.dataTransfer.files);
+    const audioFile = files.find(f => f.type.startsWith('audio/'));
+
+    if (audioFile) {
+      try {
+        const fileName = `radio-schedule/${Date.now()}-${audioFile.name}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('audio-files')
+          .upload(fileName, audioFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('audio-files')
+          .getPublicUrl(fileName);
+
+        const newTrack: ScheduledTrack = {
+          id: crypto.randomUUID(),
+          title: audioFile.name.replace(/\.[^/.]+$/, ''),
+          startTime: songEndTime,
+          duration: 180,
+          audioUrl: urlData.publicUrl,
+          category: 'scheduled'
+        };
+
+        const updatedTracks = [...scheduledTracks, newTrack];
+        setScheduledTracks(updatedTracks);
+        saveScheduledTracks(updatedTracks);
+
+        const timeStr = songEndTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        toast({ title: "Scheduled", description: `${audioFile.name} scheduled for ${timeStr} (after current song)` });
+        onRefresh?.();
+      } catch (error) {
+        console.error('Error scheduling track:', error);
+        toast({ title: "Error", description: "Failed to schedule track", variant: "destructive" });
+      }
+      return;
+    }
+
+    // Handle JSON data
+    try {
+      const trackData = e.dataTransfer.getData('application/json');
+      if (trackData) {
+        const track = JSON.parse(trackData);
+        const newTrack: ScheduledTrack = {
+          id: crypto.randomUUID(),
+          title: track.title,
+          artist: track.artist,
+          startTime: songEndTime,
+          duration: track.duration || 180,
+          audioUrl: track.audioUrl,
+          category: track.category || 'scheduled'
+        };
+
+        const updatedTracks = [...scheduledTracks, newTrack];
+        setScheduledTracks(updatedTracks);
+        saveScheduledTracks(updatedTracks);
+
+        const timeStr = songEndTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        toast({ title: "Scheduled", description: `${track.title} scheduled for ${timeStr} (after current song)` });
+        onRefresh?.();
+      }
+    } catch (error) {
+      // Not JSON data
+    }
   };
 
   const handleDrop = async (e: React.DragEvent, hour: number) => {
@@ -235,11 +350,50 @@ export const RadioScheduleTimeline = ({ onRefresh }: RadioScheduleTimelineProps)
         </div>
       </CardHeader>
 
-      <CardContent className="p-4">
+      <CardContent className="p-4 space-y-4">
+        {/* After Current Song Drop Zone */}
+        {songEndTime && currentSongTitle && (
+          <div
+            className={cn(
+              "p-4 rounded-lg border-2 border-dashed transition-all cursor-pointer",
+              isDraggingOverEndZone 
+                ? "bg-emerald-500/20 border-emerald-500" 
+                : "bg-slate-800/50 border-slate-600 hover:border-emerald-500/50"
+            )}
+            onDragOver={handleEndZoneDragOver}
+            onDragLeave={handleEndZoneDragLeave}
+            onDrop={handleDropAtEndOfSong}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-emerald-500/20">
+                  <Play className="h-4 w-4 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white">After Current Song</p>
+                  <p className="text-xs text-slate-400">
+                    "{currentSongTitle}" ends at {songEndTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+                  <Clock className="h-3 w-3 mr-1" />
+                  {currentSongDuration && currentSongElapsed ? formatDuration(currentSongDuration - currentSongElapsed) : '--:--'} remaining
+                </Badge>
+                <div className="text-xs text-slate-500 flex items-center gap-1">
+                  <Upload className="h-3 w-3" />
+                  Drop here
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Timeline */}
         <div className="relative">
           {/* Drop zone indicator */}
-          {isDraggingOver && (
+          {isDraggingOver && !isDraggingOverEndZone && (
             <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary rounded-lg z-10 flex items-center justify-center pointer-events-none">
               <div className="bg-slate-900/90 px-4 py-2 rounded-lg">
                 <p className="text-primary font-medium flex items-center gap-2">
