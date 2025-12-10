@@ -130,14 +130,16 @@ Deno.serve(async (req) => {
       const errorText = await azuracastResponse.text();
       console.error('AzuraCast Proxy: API error:', azuracastResponse.status, errorText);
       
-      // For StationUnsupportedException or 405 errors, return empty array with 200 status
-      // This allows the UI to gracefully handle unsupported features
+      // For StationUnsupportedException, 405, or 404 errors, return success response
+      // This allows the UI to gracefully handle unsupported features and already-deleted items
       if (errorText.includes('StationUnsupportedException') || 
           errorText.includes('HttpMethodNotAllowedException') ||
-          azuracastResponse.status === 405) {
-        console.log('AzuraCast Proxy: Returning empty array for unsupported feature');
+          errorText.includes('Record not found') ||
+          azuracastResponse.status === 405 ||
+          azuracastResponse.status === 404) {
+        console.log('AzuraCast Proxy: Returning success for handled error:', azuracastResponse.status);
         return new Response(
-          JSON.stringify([]),
+          JSON.stringify({ success: true, message: 'Operation completed or resource already removed' }),
           { 
             status: 200, 
             headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
