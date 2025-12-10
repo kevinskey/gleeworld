@@ -707,7 +707,7 @@ export const AzuraCastAdminPanel = () => {
                         <p className="font-medium text-white">{entry.name}</p>
                         <p className="text-xs text-slate-400">{entry.start_time} - {entry.end_time} • {entry.days?.map(d => dayNames[d]).join(', ')}</p>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={() => azuraCastService.deleteScheduleEntry(entry.id).then(loadSchedule)} className="text-red-400"><Trash2 className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => azuraCastService.deleteScheduleEntry(entry.id).then(loadSchedule).catch((e) => toast({ title: 'Cannot Delete', description: e.message || 'Schedule items are managed through playlists', variant: 'destructive' }))} className="text-red-400"><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   ))}
                 </div>
