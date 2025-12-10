@@ -273,16 +273,25 @@ export const DashboardYouTubeSection = () => {
       </button>;
   };
   return <div className="w-full">
-      <div className="relative p-3 sm:p-4 bg-card/50 backdrop-blur-sm px-0 py-0 border-primary border-2 border-none rounded-none shadow opacity-100">
+      <div className="relative p-3 sm:p-4 bg-card/50 backdrop-blur-sm border-2 border-destructive/60 rounded-xl shadow-sm">
         <div className="absolute inset-1 rounded-lg border border-destructive/30 pointer-events-none" />
         
-        <div className="relative grid grid-cols-2 gap-2 sm:gap-4">
-          {/* Left Video */}
+        {/* Header */}
+        <div className="relative mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+            <Play className="h-5 w-5 text-primary" fill="currentColor" />
+            Featured Videos
+          </h2>
+        </div>
+        
+        {/* Videos - stacked on mobile, side-by-side on tablet+ */}
+        <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          {/* Top/Left Video */}
           <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
             <VideoThumbnail video={leftVideo} position="left" />
           </div>
 
-          {/* Right Video */}
+          {/* Bottom/Right Video */}
           <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
             <VideoThumbnail video={rightVideo} position="right" />
           </div>
