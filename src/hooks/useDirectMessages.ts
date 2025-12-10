@@ -301,11 +301,16 @@ export const useDirectMessages = () => {
 
   // Create or get conversation with a user
   const createConversation = async (otherUserId: string) => {
-    if (!user) return null;
+    console.log('🔵 createConversation called with otherUserId:', otherUserId);
+    if (!user) {
+      console.log('🔵 createConversation: No user, returning null');
+      return null;
+    }
 
     try {
       // Order participants consistently
       const [p1, p2] = [user.id, otherUserId].sort();
+      console.log('🔵 createConversation: Participants sorted:', { p1, p2, currentUser: user.id, otherUser: otherUserId });
 
       // Check if conversation exists
       const { data: existing, error: fetchError } = await supabase
@@ -315,21 +320,30 @@ export const useDirectMessages = () => {
         .eq('participant_2', p2)
         .single();
 
-      if (existing) return existing.id;
+      console.log('🔵 createConversation: Check existing result:', { existing, fetchError });
+
+      if (existing) {
+        console.log('🔵 createConversation: Returning existing conversation:', existing.id);
+        return existing.id;
+      }
 
       // Create new conversation
+      console.log('🔵 createConversation: Creating new conversation...');
       const { data: newConvo, error: createError } = await supabase
         .from('dm_conversations')
         .insert({ participant_1: p1, participant_2: p2 })
         .select()
         .single();
 
+      console.log('🔵 createConversation: Insert result:', { newConvo, createError });
+
       if (createError) throw createError;
 
       await fetchConversations();
+      console.log('🔵 createConversation: Returning new conversation:', newConvo.id);
       return newConvo.id;
     } catch (error) {
-      console.error('Error creating conversation:', error);
+      console.error('🔴 Error creating conversation:', error);
       toast.error('Failed to create conversation');
       return null;
     }
