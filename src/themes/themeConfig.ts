@@ -118,19 +118,19 @@ const spelmanBlueTheme: ThemeConfig = {
   description: 'Clean, modern, and professional - inspired by Spelman College',
   
   colors: {
-    primary: '208 100% 33%',            // Official Spelman Blue #0056a6
+    primary: '203 85% 63%',             // Lighter blue for buttons #55BBEE
     primaryForeground: '0 0% 100%',     // White on primary
-    secondary: '203 85% 63%',           // Bright sky blue #55BBEE
+    secondary: '208 100% 50%',          // Medium blue
     secondaryForeground: '0 0% 100%',   // White on secondary
-    accent: '208 100% 43%',             // Lighter Spelman Blue #0073c9
-    accentForeground: '0 0% 100%',      // White on accent
+    accent: '197 80% 70%',              // Light sky blue accent
+    accentForeground: '208 100% 20%',   // Dark blue on accent
     background: '208 100% 33%',         // Spelman Blue background
     foreground: '0 0% 100%',            // White text for dark background
-    card: '208 80% 25%',                // Darker blue for cards
+    card: '0 0% 100% / 0.15',           // Glass effect - translucent white
     cardForeground: '0 0% 100%',        // White text on cards
-    muted: '208 60% 30%',               // Muted blue backgrounds
-    mutedForeground: '0 0% 90%',        // Light muted text
-    border: '208 50% 40%',              // Blue border
+    muted: '0 0% 100% / 0.1',           // Translucent muted backgrounds
+    mutedForeground: '0 0% 85%',        // Light muted text
+    border: '0 0% 100% / 0.25',         // Translucent white border
   },
   
   typography: {
@@ -148,6 +148,8 @@ const spelmanBlueTheme: ThemeConfig = {
   decorations: {
     animations: false,
   },
+  
+  glassEffect: true,
 };
 
 /**
