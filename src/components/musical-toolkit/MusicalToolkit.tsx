@@ -30,9 +30,11 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   const [isMetroPlaying, setIsMetroPlaying] = useState(false);
   const { themeName } = useTheme();
   
-  // HBCU theme colors
+  // Theme-specific colors
   const isHbcuTheme = themeName === 'hbcu';
+  const isSpelmanBlue = themeName === 'spelman-blue';
   const hbcuGold = '#FFDF00';
+  const spelmanWhite = '#ffffff';
 
   // Setup mobile audio unlock on mount
   useEffect(() => {
@@ -53,14 +55,12 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             aria-label="Musical Toolkit"
             onClick={handleDropdownClick}
             onTouchStart={handleDropdownClick}
-            className="inline-flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-full border shadow-sm transition-colors hover:bg-white/10"
+            className="inline-flex items-center justify-center h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 transition-colors hover:bg-white/10"
             style={{ 
-              borderColor: isHbcuTheme ? hbcuGold : undefined,
-              backgroundColor: isHbcuTheme ? 'transparent' : 'white',
-              color: isHbcuTheme ? hbcuGold : '#1e293b'
+              color: isHbcuTheme ? hbcuGold : isSpelmanBlue ? spelmanWhite : '#1e293b'
             }}
           >
-            <TuningForkIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
+            <TuningForkIcon className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52 bg-background border border-border shadow-lg z-[200]">

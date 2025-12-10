@@ -169,16 +169,16 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
               <>
                 {/* Keep dashboard switcher as secondary navigation - Admin only */}
                 {hasExecBoardPerms && (
-                  <DropdownMenu>
+                <DropdownMenu>
                    <DropdownMenuTrigger asChild>
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 p-0 rounded-md hover:bg-white/10"
+                        className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
                         style={{ color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b' }}
                         type="button"
                       >
-                        <LayoutDashboard className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+                        <LayoutDashboard className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                       </Button>
                    </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-background border border-border shadow-2xl z-[1100]" align="end">
@@ -275,14 +275,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       variant="ghost" 
                       size="sm" 
                       onClick={() => navigate('/dashboard/member?addModule=true')}
-                      className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hover:opacity-90 flex items-center justify-center border-2 shadow-md"
+                      className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
                       style={{ 
-                        background: 'linear-gradient(to bottom right, #10b981, #059669)',
-                        borderColor: '#047857'
+                        color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
                       }}
                       type="button"
                     >
-                      <Plus className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                      <Plus className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                     </Button>
                   </EnhancedTooltip>
                 )}
@@ -298,22 +297,21 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       console.log('Camera button clicked - showing category selector');
                       setShowCategorySelector(true);
                     }}
-                    className="h-8 w-8 sm:h-9 sm:w-9 p-0 rounded-full hover:opacity-90 flex items-center justify-center border-2 shadow-md"
+                    className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
                     style={{ 
-                      background: 'linear-gradient(to bottom right, #3b82f6, #2563eb)',
-                      borderColor: '#1d4ed8'
+                      color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
                     }}
                     type="button"
                   >
-                    <Camera className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                    <Camera className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                   </Button>
                 </EnhancedTooltip>
                 
-                 <DropdownMenu>
+               <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className="relative h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 rounded-full p-0 hover:bg-white/10" style={{ color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b' }} type="button">
-                           <Avatar className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 border-2" style={{ borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined }}>
+                         <Button variant="ghost" className="relative h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0 hover:bg-white/10" style={{ color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b' }} type="button">
+                           <Avatar className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 border" style={{ borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined }}>
                              <AvatarImage
                                src={userProfile?.avatar_url || undefined} 
                                alt={userProfile?.full_name || user?.email || "Your Profile"}
