@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { azuraCastService } from '@/services/azuracast';
@@ -15,7 +16,8 @@ import {
   RefreshCw,
   Loader2,
   Radio,
-  SkipForward
+  SkipForward,
+  Search
 } from 'lucide-react';
 
 interface QueueItem {
@@ -57,13 +59,15 @@ export const RadioScheduleTimeline = ({
   const [availableMedia, setAvailableMedia] = useState<AzuraCastMedia[]>([]);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [quickAddId, setQuickAddId] = useState('');
   const { toast } = useToast();
 
-  // Load queue and available media on mount
+  // Load queue on mount - media loads on demand
   useEffect(() => {
     loadQueue();
-    loadAvailableMedia();
   }, []);
 
   const loadQueue = async () => {
@@ -82,6 +86,7 @@ export const RadioScheduleTimeline = ({
 
   const loadAvailableMedia = async () => {
     try {
+      setIsLoadingMedia(true);
       const media = await azuraCastService.getAllMedia();
       const formatted = media.map((file: any) => ({
         id: file.media?.id || 0,
@@ -94,8 +99,37 @@ export const RadioScheduleTimeline = ({
       setAvailableMedia(formatted);
     } catch (error) {
       console.error('Error loading media:', error);
+      toast({ title: "Error", description: "Failed to load media library", variant: "destructive" });
+    } finally {
+      setIsLoadingMedia(false);
     }
   };
+
+  const quickAddById = async () => {
+    const id = parseInt(quickAddId);
+    if (isNaN(id) || id <= 0) {
+      toast({ title: "Invalid ID", description: "Enter a valid media ID", variant: "destructive" });
+      return;
+    }
+    try {
+      setIsRequesting(true);
+      await azuraCastService.requestSong(id);
+      toast({ title: "Queued", description: `Media ID ${id} added to queue` });
+      setQuickAddId('');
+      await loadQueue();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error requesting song:', error);
+      toast({ title: "Error", description: "Failed to queue track", variant: "destructive" });
+    } finally {
+      setIsRequesting(false);
+    }
+  };
+
+  const filteredMedia = availableMedia.filter(m => 
+    m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.artist.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const formatTime = (timestamp: number): string => {
     const date = new Date(timestamp * 1000);
@@ -309,45 +343,96 @@ export const RadioScheduleTimeline = ({
           </div>
         </div>
 
-        {/* Available Media from AzuraCast */}
-        {availableMedia.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-xs text-slate-500 font-medium">Available Tracks (drag to queue):</p>
-            <ScrollArea className="h-[200px]">
-              <div className="space-y-1 pr-4">
-                {availableMedia.slice(0, 50).map((media) => (
-                  <div
-                    key={media.id}
-                    draggable
-                    onDragStart={(e) => {
-                      e.dataTransfer.setData('application/json', JSON.stringify({
-                        mediaId: media.id,
-                        title: media.title,
-                        artist: media.artist,
-                        duration: media.duration
-                      }));
-                    }}
-                    className="flex items-center gap-2 p-2 bg-slate-800/30 rounded cursor-grab hover:bg-slate-700/50 transition-colors"
-                  >
-                    <GripVertical className="h-3 w-3 text-slate-600" />
-                    <Music className="h-3 w-3 text-slate-500" />
-                    <span className="text-sm text-slate-300 truncate flex-1">
-                      {media.title}
-                    </span>
-                    {media.artist && (
-                      <span className="text-xs text-slate-500 truncate max-w-[100px]">
-                        {media.artist}
-                      </span>
-                    )}
-                    <span className="text-xs text-slate-600">
-                      {formatDuration(media.duration)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+        {/* Quick Add by ID */}
+        <div className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg">
+          <Input
+            type="number"
+            placeholder="Media ID"
+            value={quickAddId}
+            onChange={(e) => setQuickAddId(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && quickAddById()}
+            className="w-24 h-8 bg-slate-900 border-slate-600 text-white text-sm"
+          />
+          <Button 
+            size="sm" 
+            onClick={quickAddById} 
+            disabled={isRequesting || !quickAddId}
+            className="h-8"
+          >
+            {isRequesting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+            Queue
+          </Button>
+          <span className="text-xs text-slate-500">Quick add by ID</span>
+        </div>
+
+        {/* Available Media from AzuraCast - load on demand */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500 font-medium">Media Library:</p>
+            {availableMedia.length === 0 ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={loadAvailableMedia}
+                disabled={isLoadingMedia}
+                className="h-7 text-xs"
+              >
+                {isLoadingMedia ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <RefreshCw className="h-3 w-3 mr-1" />}
+                Load Library
+              </Button>
+            ) : (
+              <span className="text-xs text-slate-500">{availableMedia.length} tracks</span>
+            )}
           </div>
-        )}
+          
+          {availableMedia.length > 0 && (
+            <>
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-slate-500" />
+                <Input
+                  placeholder="Search tracks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-8 pl-7 bg-slate-900 border-slate-600 text-white text-sm"
+                />
+              </div>
+              <ScrollArea className="h-[200px]">
+                <div className="space-y-1 pr-4">
+                  {filteredMedia.slice(0, 50).map((media) => (
+                    <div
+                      key={media.id}
+                      draggable
+                      onDragStart={(e) => {
+                        e.dataTransfer.setData('application/json', JSON.stringify({
+                          mediaId: media.id,
+                          title: media.title,
+                          artist: media.artist,
+                          duration: media.duration
+                        }));
+                      }}
+                      onClick={() => requestSong(media.id, media.title)}
+                      className="flex items-center gap-2 p-2 bg-slate-800/30 rounded cursor-pointer hover:bg-slate-700/50 transition-colors"
+                    >
+                      <span className="text-xs text-slate-600 w-8">#{media.id}</span>
+                      <Music className="h-3 w-3 text-slate-500" />
+                      <span className="text-sm text-slate-300 truncate flex-1">
+                        {media.title}
+                      </span>
+                      {media.artist && (
+                        <span className="text-xs text-slate-500 truncate max-w-[100px]">
+                          {media.artist}
+                        </span>
+                      )}
+                      <span className="text-xs text-slate-600">
+                        {formatDuration(media.duration)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
