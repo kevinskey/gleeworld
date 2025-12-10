@@ -251,18 +251,17 @@ const ExitInterviewsModule: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Create the group (use a default course_id for general groups)
+      // Create the messaging group
       const { data: group, error: groupError } = await supabase
-        .from("gw_groups")
+        .from("gw_message_groups")
         .insert({
-          course_id: "23c4ee3c-7bbb-4534-8c0a-eecd88298d37", // Default course for general groups
           name: groupName.trim(),
           description: `Created from Exit Interviews - ${createGroupDialog.category}`,
-          leader_id: user.id,
-          is_active: true,
-          is_official: true,
-          member_count: createGroupDialog.members.length + 1,
-          semester: "Spring 2026"
+          created_by: user.id,
+          group_type: "custom",
+          is_private: false,
+          is_archived: false,
+          is_active: true
         })
         .select()
         .single();
