@@ -470,6 +470,94 @@ export const useRadioPlayer = () => {
     }
   }, []);
 
+  // Switch to a different stream URL (for channel switching)
+  const switchStream = useCallback(async (newStreamUrl: string) => {
+    console.log('Radio switchStream() called with:', newStreamUrl);
+    
+    if (!audioRef.current) {
+      console.log('No audio ref available');
+      return;
+    }
+
+    const wasPlaying = state.isPlaying;
+    
+    // Stop current stream
+    audioRef.current.pause();
+    audioRef.current.src = '';
+    audioRef.current.load();
+    
+    setState(prev => ({ ...prev, isLoading: true }));
+    
+    // Wait a bit for cleanup
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Set new source with cache buster
+    const hasQuery = newStreamUrl.includes('?');
+    const sep = hasQuery ? '&' : '?';
+    audioRef.current.src = `${newStreamUrl}${sep}ts=${Date.now()}`;
+    audioRef.current.load();
+    
+    console.log('Waiting for new stream to be ready...');
+    
+    try {
+      // Wait for the stream to be ready
+      await new Promise((resolve, reject) => {
+        const audio = audioRef.current!;
+        let resolved = false;
+        
+        const handleCanPlay = () => {
+          if (!resolved) {
+            resolved = true;
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleError);
+            resolve(void 0);
+          }
+        };
+        
+        const handleError = (e: any) => {
+          if (!resolved) {
+            resolved = true;
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleError);
+            reject(e);
+          }
+        };
+        
+        audio.addEventListener('canplay', handleCanPlay);
+        audio.addEventListener('error', handleError);
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          if (!resolved) {
+            resolved = true;
+            audio.removeEventListener('canplay', handleCanPlay);
+            audio.removeEventListener('error', handleError);
+            reject(new Error('Stream load timeout'));
+          }
+        }, 10000);
+      });
+      
+      setState(prev => ({ ...prev, isLoading: false }));
+      
+      // Resume playback if was playing before
+      if (wasPlaying) {
+        await audioRef.current.play();
+        toast({
+          title: "Channel Switched",
+          description: "Now playing new channel",
+        });
+      }
+    } catch (error) {
+      console.error('Failed to switch stream:', error);
+      setState(prev => ({ ...prev, isLoading: false, isPlaying: false }));
+      toast({
+        title: "Channel Unavailable",
+        description: "Could not connect to this channel. Try another.",
+        variant: "destructive",
+      });
+    }
+  }, [state.isPlaying, toast]);
+
   // Health check watchdog to auto-reconnect if playback stalls
   useEffect(() => {
     const audio = audioRef.current;
@@ -495,5 +583,6 @@ export const useRadioPlayer = () => {
     pause,
     togglePlayPause,
     setVolume,
+    switchStream,
   };
 };
