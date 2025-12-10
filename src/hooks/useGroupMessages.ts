@@ -157,7 +157,12 @@ export const useGroupMessages = () => {
       return true;
     }
     
-    // Check access based on group name (since we don't have a perfect mapping yet)
+    // If user has a role in this group (is a member), allow access
+    if (conversation.user_role) {
+      return true;
+    }
+    
+    // Check access based on group name for groups without explicit membership
     const groupName = conversation.name.toLowerCase();
     
     if (groupName.includes('executive') || groupName.includes('exec')) {
@@ -165,7 +170,7 @@ export const useGroupMessages = () => {
     }
     
     if (groupName.includes('section leader')) {
-      return userProfile.is_exec_board; // For now, exec board can see section leaders
+      return userProfile.is_exec_board;
     }
     
     if (groupName.includes('soprano 1') || groupName.includes('s1')) {
