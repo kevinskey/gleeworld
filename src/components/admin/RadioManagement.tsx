@@ -43,6 +43,7 @@ import { RadioPlaylistQueue } from '../radio/RadioPlaylistQueue';
 import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
 import { AzuraCastAdminPanel } from './AzuraCastAdminPanel';
+import { DJTransportControl } from '@/components/radio/DJTransportControl';
 import { azuraCastService } from '@/services/azuracast';
 import { cn } from '@/lib/utils';
 
@@ -430,6 +431,19 @@ export const RadioManagement = () => {
           </div>
         )}
       </div>
+
+      {/* DJ Transport Control - Full Width First Card */}
+      <DJTransportControl 
+        stationState={{
+          isOnline: radioStats.isOnline,
+          isLive: radioStats.isLive,
+          streamerName: radioStats.streamerName,
+          currentlyPlaying: radioStats.currentlyPlaying,
+          currentArtist: radioStats.currentArtist,
+          listenerCount: radioStats.totalListeners
+        }}
+        onRefresh={handleSync}
+      />
 
       {/* Two-Panel Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
