@@ -11758,6 +11758,51 @@ export type Database = {
           },
         ]
       }
+      gw_radio_playlist_queue: {
+        Row: {
+          added_by: string | null
+          artist_info: string | null
+          audio_url: string
+          category: string
+          created_at: string
+          duration_seconds: number | null
+          id: string
+          is_active: boolean | null
+          sort_order: number
+          title: string
+          track_id: string
+          updated_at: string
+        }
+        Insert: {
+          added_by?: string | null
+          artist_info?: string | null
+          audio_url: string
+          category?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number
+          title: string
+          track_id: string
+          updated_at?: string
+        }
+        Update: {
+          added_by?: string | null
+          artist_info?: string | null
+          audio_url?: string
+          category?: string
+          created_at?: string
+          duration_seconds?: number | null
+          id?: string
+          is_active?: boolean | null
+          sort_order?: number
+          title?: string
+          track_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_radio_playlists: {
         Row: {
           created_at: string | null
