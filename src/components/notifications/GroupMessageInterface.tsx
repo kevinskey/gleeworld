@@ -302,29 +302,20 @@ export const GroupMessageInterface: React.FC = () => {
   };
 
   const handleUserSelect = async (selectedUser: User) => {
-    console.log('📧 DM handleUserSelect called with:', selectedUser);
-    try {
-      const conversationId = await createConversation(selectedUser.user_id);
-      console.log('📧 DM createConversation result:', conversationId);
-      if (conversationId) {
-        setConversationType('direct');
-        setSelectedConversationId(conversationId);
-        setNewMessageOpen(false);
-        setSearchQuery('');
-        setSearchResults([]);
-        
-        // Fetch messages for the new/existing conversation
-        await fetchDirectMessages(conversationId);
-        
-        if (isMobile) {
-          setShowMessages(true);
-        }
-        console.log('📧 DM conversation selected successfully');
-      } else {
-        console.error('📧 DM createConversation returned null/undefined');
+    const conversationId = await createConversation(selectedUser.user_id);
+    if (conversationId) {
+      setConversationType('direct');
+      setSelectedConversationId(conversationId);
+      setNewMessageOpen(false);
+      setSearchQuery('');
+      setSearchResults([]);
+      
+      // Fetch messages for the new/existing conversation
+      await fetchDirectMessages(conversationId);
+      
+      if (isMobile) {
+        setShowMessages(true);
       }
-    } catch (error) {
-      console.error('📧 DM handleUserSelect error:', error);
     }
   };
 
