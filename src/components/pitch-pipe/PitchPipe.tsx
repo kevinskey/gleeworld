@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Slider } from '@/components/ui/slider';
-import { unlockAudioContext, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
+import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 
 interface PitchPipeProps {
   className?: string;
@@ -57,22 +57,24 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
 
   const initAudioContext = useCallback(async () => {
     try {
+      // Force unlock for iOS on user gesture
+      forceUnlockAudio();
+      
       // Use shared unlock utility for iOS compatibility
       const ctx = await unlockAudioContext();
       audioContextRef.current = ctx;
-      console.log('🎹 AudioContext ready, state:', ctx.state);
       return ctx;
     } catch (error) {
-      console.error('❌ Failed to initialize AudioContext:', error);
+      console.error('Failed to initialize AudioContext:', error);
       return null;
     }
   }, []);
 
   const playTone = useCallback(async (frequency: number, note: string) => {
-    console.log('PitchPipe: playTone called', { frequency, note, isPlaying });
+    // Force unlock audio on touch (critical for iOS)
+    forceUnlockAudio();
     
     if (isPlaying === note) {
-      console.log('PitchPipe: stopping current tone');
       stopTone();
       return;
     }
@@ -132,13 +134,11 @@ export const PitchPipe = ({ className = '' }: PitchPipeProps) => {
     setIsPlaying(null);
   }, []);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - don't close shared context
   useEffect(() => {
     return () => {
       stopTone();
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close();
-      }
+      // Don't close the shared audio context
     };
   }, [stopTone]);
 

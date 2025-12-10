@@ -41,8 +41,8 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   }, []);
 
   // Pre-unlock audio when dropdown is opened (user gesture)
-  const handleDropdownClick = async () => {
-    await forceUnlockAudio();
+  const handleDropdownClick = () => {
+    forceUnlockAudio();
   };
 
   return (
@@ -66,19 +66,19 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         <DropdownMenuContent align="end" className="w-52 bg-background border border-border shadow-lg z-[200]">
           <DropdownMenuLabel className="flex items-center gap-2"><Music2 className="h-4 w-4" /> Musical Toolkit</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setOpen((o) => ({ ...o, metronome: true }))}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, metronome: true })); }}>
             <Timer className="mr-2 h-4 w-4" /> Metronome
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setOpen((o) => ({ ...o, pitch: true }))}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, pitch: true })); }}>
             <AudioLines className="mr-2 h-4 w-4" /> Pitch Pipe
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setOpen((o) => ({ ...o, pianoSmall: true }))}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, pianoSmall: true })); }}>
             <Piano className="mr-2 h-4 w-4" /> Small Piano
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setOpen((o) => ({ ...o, pianoFull: true }))}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, pianoFull: true })); }}>
             <Piano className="mr-2 h-4 w-4" /> Full Piano (C3–G5)
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer" onClick={() => setOpen((o) => ({ ...o, tuner: true }))}>
+          <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, tuner: true })); }}>
             <Gauge className="mr-2 h-4 w-4" /> Tuner
           </DropdownMenuItem>
         </DropdownMenuContent>
