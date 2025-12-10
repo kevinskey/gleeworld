@@ -71,16 +71,19 @@ export const DashboardYouTubeSection = () => {
     const params = new URLSearchParams({
       autoplay: '1',
       mute: '1',
-      // Start muted to allow autoplay on mobile
-      rel: '0',
-      modestbranding: '1',
+      rel: '0',           // Don't show related videos
+      modestbranding: '1', // Minimal YouTube branding
       controls: '1',
       playsinline: '1',
       enablejsapi: '1',
       origin: window.location.origin,
-      fs: '1' // Enable fullscreen
+      fs: '1',
+      disablekb: '0',
+      iv_load_policy: '3', // Hide annotations
+      cc_load_policy: '0', // Don't show captions by default
     });
-    return `https://www.youtube.com/embed/${id}?${params.toString()}`;
+    // Use youtube-nocookie for privacy and cleaner embed
+    return `https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`;
   };
   const getThumbnailUrl = (video: DashboardVideo, quality: 'maxres' | 'sd' | 'hq' | 'mq' = 'hq') => {
     // For uploaded videos, we can't generate a thumbnail, so use a placeholder or first frame
