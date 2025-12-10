@@ -29,17 +29,23 @@ export const UniversalLayout = ({
   // Use PublicHeader for public, fan, and alumnae pages
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
-  return <div className="min-h-screen flex flex-col w-full overflow-x-hidden relative" style={{
-    background: 'var(--theme-background, hsl(var(--background)))'
-  }}>
-      {showHeader && <>
+  return (
+    <div className="min-h-screen flex flex-col w-full relative" style={{
+      background: 'var(--theme-background, hsl(var(--background)))'
+    }}>
+      {showHeader && (
+        <div className="sticky top-0 z-50">
           {shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />}
-        </>}
+        </div>
+      )}
       <main className={`flex-1 w-full overflow-x-hidden ${className}`}>
-        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-[5px]">
+        {containerized ? (
+          <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-[5px]">
             {children}
-          </ResponsiveContainer> : children}
+          </ResponsiveContainer>
+        ) : children}
       </main>
       {showFooter && <UniversalFooter />}
-    </div>;
+    </div>
+  );
 };
