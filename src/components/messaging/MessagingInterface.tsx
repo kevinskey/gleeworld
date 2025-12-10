@@ -9,6 +9,7 @@ import { CreateGroupDialog, EditGroupDialog, DeleteGroupDialog, ManageMembersDia
 import { UserSelector } from './UserSelector';
 import { useMessageGroups } from '@/hooks/useMessaging';
 import { MessageSquare, Users, Plus, Settings, UserPlus, ArrowLeft } from 'lucide-react';
+import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { GroupHeader } from '@/components/messaging/GroupHeader';
 
 interface MessagingInterfaceProps {
@@ -62,22 +63,24 @@ export const MessagingInterface: React.FC<MessagingInterfaceProps> = ({ embedded
               </div>
               <div className="flex gap-2">
                 <CreateGroupDialog onSuccess={() => setSelectedGroupId(null)} />
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-1 text-xs"
-                  onPointerDown={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setShowDirectMessages(true);
-                  }}
-                >
-                  <UserPlus className="h-4 w-4" />
-                  <span className="hidden sm:inline">DM</span>
-                </Button>
+                <EnhancedTooltip content="Send direct message">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="gap-1 text-xs"
+                    onPointerDown={(e) => {
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setShowDirectMessages(true);
+                    }}
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    <span className="hidden sm:inline">DM</span>
+                  </Button>
+                </EnhancedTooltip>
               </div>
             </div>
           </div>

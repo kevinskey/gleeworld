@@ -26,6 +26,7 @@ import { useUnvotedPollCount } from '@/hooks/useUnvotedPollCount';
 import { useCanManageGroupMembers } from '@/hooks/useCanManageGroupMembers';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 
 interface GroupHeaderProps {
   groupId: string;
@@ -105,14 +106,16 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
     <div className="bg-[hsl(var(--message-header))] text-white px-1.5 md:px-4 py-2 md:py-3 flex items-center justify-between shadow-md">
       <div className="flex items-center gap-1.5 md:gap-3 flex-1 min-w-0">
         {showBackButton && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onBack}
-            className="h-7 w-7 md:h-9 md:w-9 text-white hover:bg-white/20 flex-shrink-0"
-          >
-            <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
-          </Button>
+          <EnhancedTooltip content="Go back">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onBack}
+              className="h-7 w-7 md:h-9 md:w-9 text-white hover:bg-white/20 flex-shrink-0"
+            >
+              <ArrowLeft className="h-4 w-4 md:h-5 md:w-5" />
+            </Button>
+          </EnhancedTooltip>
         )}
         
         <Avatar className="h-7 w-7 md:h-10 md:w-10 flex-shrink-0 border-2 border-white/30">
@@ -127,37 +130,43 @@ export const GroupHeader: React.FC<GroupHeaderProps> = ({
 
       <div className="flex items-center gap-0.5 md:gap-1 flex-shrink-0">
         {/* Prominent Polls Button */}
-        <Button
-          variant="ghost"
-          onClick={() => setShowPollsDialog(true)}
-          className="relative h-8 md:h-9 px-2 md:px-3 text-white hover:bg-white/20 flex items-center gap-1"
-        >
-          <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
-          <span className="hidden sm:inline text-xs md:text-sm font-medium">Polls</span>
-          {unvotedCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 bg-red-500 text-white h-5 min-w-5 px-1.5 text-[10px] font-bold rounded-full animate-pulse">
-              {unvotedCount}
-            </Badge>
-          )}
-        </Button>
+        <EnhancedTooltip content="View and vote on polls">
+          <Button
+            variant="ghost"
+            onClick={() => setShowPollsDialog(true)}
+            className="relative h-8 md:h-9 px-2 md:px-3 text-white hover:bg-white/20 flex items-center gap-1"
+          >
+            <BarChart3 className="h-4 w-4 md:h-5 md:w-5" />
+            <span className="hidden sm:inline text-xs md:text-sm font-medium">Polls</span>
+            {unvotedCount > 0 && (
+              <Badge className="absolute -top-1 -right-1 bg-red-500 text-white h-5 min-w-5 px-1.5 text-[10px] font-bold rounded-full animate-pulse">
+                {unvotedCount}
+              </Badge>
+            )}
+          </Button>
+        </EnhancedTooltip>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 md:h-9 md:w-9 text-white hover:bg-white/20"
-        >
-          <Search className="h-4 w-4 md:h-5 md:w-5" />
-        </Button>
+        <EnhancedTooltip content="Search messages">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 md:h-9 md:w-9 text-white hover:bg-white/20"
+          >
+            <Search className="h-4 w-4 md:h-5 md:w-5" />
+          </Button>
+        </EnhancedTooltip>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 md:h-9 md:w-9 text-white hover:bg-white/20"
-            >
-              <MoreVertical className="h-4 w-4 md:h-5 md:w-5" />
-            </Button>
+            <EnhancedTooltip content="More options">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 md:h-9 md:w-9 text-white hover:bg-white/20"
+              >
+                <MoreVertical className="h-4 w-4 md:h-5 md:w-5" />
+              </Button>
+            </EnhancedTooltip>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-64 p-2 bg-background shadow-lg border z-50">
             {canManage && (

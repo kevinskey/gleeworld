@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Paperclip } from 'lucide-react';
+import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 
 interface MessageInputProps {
   onSendMessage: (content: string, file?: File) => void;
@@ -50,15 +51,17 @@ export const MessageInput: React.FC<MessageInputProps> = ({
   return (
     <form onSubmit={handleSubmit} className="w-full">
       <div className="flex items-end gap-2 bg-muted/30 rounded-2xl border border-border p-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted flex-shrink-0"
-          disabled={disabled}
-        >
-          <Paperclip className="h-5 w-5" />
-        </Button>
+        <EnhancedTooltip content="Attach file">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted flex-shrink-0"
+            disabled={disabled}
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
+        </EnhancedTooltip>
         
         <div className="flex-1 min-w-0">
           <Textarea
@@ -73,18 +76,20 @@ export const MessageInput: React.FC<MessageInputProps> = ({
           />
         </div>
         
-        <Button 
-          type="submit" 
-          disabled={disabled || !message.trim()}
-          size="icon"
-          className="h-10 w-10 rounded-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 flex-shrink-0"
-        >
-          {disabled ? (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-          ) : (
-            <Send className="h-5 w-5" />
-          )}
-        </Button>
+        <EnhancedTooltip content="Send message">
+          <Button 
+            type="submit" 
+            disabled={disabled || !message.trim()}
+            size="icon"
+            className="h-10 w-10 rounded-full bg-[hsl(var(--message-header))] hover:bg-[hsl(var(--message-header))]/90 flex-shrink-0"
+          >
+            {disabled ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <Send className="h-5 w-5" />
+            )}
+          </Button>
+        </EnhancedTooltip>
       </div>
     </form>
   );
