@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,7 +156,7 @@ const ExitInterviewsModule: React.FC = () => {
 
   return (
     <>
-      <Card className="h-full">
+      <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -178,7 +178,7 @@ const ExitInterviewsModule: React.FC = () => {
           </p>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[400px]">
+          <div className="space-y-2 max-h-[500px] overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -223,7 +223,7 @@ const ExitInterviewsModule: React.FC = () => {
                 ))}
               </div>
             )}
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
 
