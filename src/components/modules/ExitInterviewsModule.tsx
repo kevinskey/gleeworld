@@ -61,11 +61,15 @@ const ExitInterviewsModule: React.FC = () => {
   const fetchInterviews = async () => {
     setLoading(true);
     try {
+      console.log("ExitInterviewsModule: Fetching exit interviews...");
       const { data, error } = await supabase
         .from("member_exit_interviews")
         .select("*")
+        .eq("is_draft", false)
         .order("created_at", { ascending: false });
 
+      console.log("ExitInterviewsModule: Query result:", { data: data?.length, error });
+      
       if (error) throw error;
 
       // Fetch profile data for each interview
@@ -81,6 +85,7 @@ const ExitInterviewsModule: React.FC = () => {
         })
       );
 
+      console.log("ExitInterviewsModule: Loaded", interviewsWithProfiles.length, "interviews");
       setInterviews(interviewsWithProfiles);
     } catch (error) {
       console.error("Error fetching exit interviews:", error);
