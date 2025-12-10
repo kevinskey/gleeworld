@@ -9,11 +9,12 @@ import { SocialPost } from '@/hooks/useSocialFeed';
 import { PostReactions } from './PostReactions';
 import { PostComments } from './PostComments';
 import { ReportPostDialog } from './ReportPostDialog';
+import { SharePostDialog } from './SharePostDialog';
 import { YouTubeEmbed } from './YouTubeEmbed';
 import { getAvatarUrl, getInitials } from '@/utils/avatarUtils';
 import { extractAllYouTubeVideoIds } from '@/utils/youtubeUtils';
 import { formatDistanceToNow } from 'date-fns';
-import { MapPin, Pin, MoreHorizontal, Flag, Trash2, X, ChevronLeft, ChevronRight, Play } from 'lucide-react';
+import { MapPin, Pin, MoreHorizontal, Flag, Trash2, X, ChevronLeft, ChevronRight, Play, Share2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 interface PostCardProps {
@@ -37,6 +38,7 @@ export function PostCard({
   onRefresh
 }: PostCardProps) {
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -179,6 +181,10 @@ export function PostCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setShowShareDialog(true)}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share post
+                </DropdownMenuItem>
                 {isOwnPost ? <DropdownMenuItem onClick={handleDelete} disabled={isDeleting} className="text-destructive focus:text-destructive">
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete post
@@ -253,5 +259,13 @@ export function PostCard({
       </Dialog>
 
       <ReportPostDialog open={showReportDialog} onOpenChange={setShowReportDialog} contentType="post" contentId={post.id} />
+      
+      <SharePostDialog 
+        open={showShareDialog} 
+        onOpenChange={setShowShareDialog} 
+        postContent={post.content}
+        postMediaUrls={post.media_urls || []}
+        postId={post.id}
+      />
     </>;
 }
