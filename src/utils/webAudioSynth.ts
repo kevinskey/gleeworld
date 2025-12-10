@@ -463,8 +463,9 @@ export class WebAudioSynth {
   async playNote(noteName: string, frequency: number): Promise<void> {
     if (this.activeNotes.has(noteName)) return;
 
+    // Resume synchronously if needed - no await to avoid delay
     if (this.audioContext.state === 'suspended') {
-      await this.audioContext.resume();
+      this.audioContext.resume();
     }
 
     const instrument = this.currentInstrument;

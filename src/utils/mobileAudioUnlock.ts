@@ -58,6 +58,7 @@ const playUnlockTone = (ctx: AudioContext): void => {
 export const unlockAudioContext = async (): Promise<AudioContext> => {
   const ctx = getSharedAudioContext();
   
+  // Fast path: already unlocked
   if (isUnlocked && ctx.state === 'running') {
     return ctx;
   }
@@ -71,36 +72,22 @@ export const unlockAudioContext = async (): Promise<AudioContext> => {
   unlockPromise = (async () => {
     try {
       unlockAttempts++;
-      console.log(`🔊 Attempting to unlock AudioContext (attempt ${unlockAttempts}), current state:`, ctx.state);
       
-      // Step 1: Play silent buffer immediately (must be during user gesture)
+      // Play silent buffer immediately (must be during user gesture)
       playSilentBuffer(ctx);
       
-      // Step 2: Resume the context
+      // Resume the context
       if (ctx.state === 'suspended') {
         await ctx.resume();
-        console.log('🔊 Context resumed, state:', ctx.state);
       }
       
-      // Step 3: Play unlock tone
-      playUnlockTone(ctx);
-      
-      // Step 4: Wait for iOS to process
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
-      // Step 5: Double-check and retry resume if needed
-      if (ctx.state === 'suspended') {
-        console.log('🔊 Context still suspended, trying resume again...');
+      // Play unlock tone (helps on some iOS versions)
+      if (ctx.state !== 'running') {
+        playUnlockTone(ctx);
         await ctx.resume();
-        await new Promise(resolve => setTimeout(resolve, 50));
       }
       
-      if (ctx.state === 'running') {
-        isUnlocked = true;
-        console.log('✅ AudioContext unlocked successfully, state:', ctx.state);
-      } else {
-        console.warn('⚠️ AudioContext not running after unlock attempt, state:', ctx.state);
-      }
+      isUnlocked = ctx.state === 'running';
     } catch (error) {
       console.error('❌ Failed to unlock AudioContext:', error);
     } finally {
@@ -119,32 +106,25 @@ export const getAudioContextState = (): string => {
 };
 
 // Force unlock - call this directly from a touch/click handler
+// Optimized: no delays, fast synchronous unlock
 export const forceUnlockAudio = async (): Promise<boolean> => {
+  // Fast path: already unlocked
+  if (isUnlocked && globalAudioContext?.state === 'running') {
+    return true;
+  }
+  
   try {
     const ctx = getSharedAudioContext();
     
     // Immediately play silent buffer during user gesture
     playSilentBuffer(ctx);
     
-    // Resume context
-    if (ctx.state !== 'running') {
-      await ctx.resume();
-    }
-    
-    // Play unlock tone
-    playUnlockTone(ctx);
-    
-    // Wait briefly
-    await new Promise(resolve => setTimeout(resolve, 50));
-    
-    // Final resume attempt
+    // Resume context (no delay needed)
     if (ctx.state !== 'running') {
       await ctx.resume();
     }
     
     isUnlocked = ctx.state === 'running';
-    console.log('🔊 Force unlock result:', ctx.state);
-    
     return isUnlocked;
   } catch (e) {
     console.error('Force unlock failed:', e);
