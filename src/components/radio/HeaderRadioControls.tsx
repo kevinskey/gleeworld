@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronDown } from 'lucide-react';
+import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronDown, Music2, Church, Sparkles, Check } from 'lucide-react';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
+import { useRadioChannels, type RadioChannel } from '@/hooks/useRadioChannels';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
 import { createPortal } from 'react-dom';
+import { cn } from '@/lib/utils';
 
 export const HeaderRadioControls = () => {
   try {
@@ -15,6 +17,7 @@ export const HeaderRadioControls = () => {
     const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
     const triggerRef = useRef<HTMLButtonElement>(null);
     const radioData = useRadioPlayer();
+    const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
     const { themeName } = useTheme();
     
     // Theme-specific colors
@@ -29,6 +32,16 @@ export const HeaderRadioControls = () => {
       if (isSpelmanBlue) return spelmanWhite;
       return '#1e293b';
     };
+
+    // Get icon component for channel
+    const getChannelIcon = (iconName: string | null) => {
+      switch (iconName) {
+        case 'Church': return Church;
+        case 'Music2': return Music2;
+        case 'Sparkles': return Sparkles;
+        default: return Radio;
+      }
+    };
     
     const { 
       isPlaying, 
@@ -39,10 +52,19 @@ export const HeaderRadioControls = () => {
       currentTrack, 
       volume, 
       togglePlayPause, 
-      setVolume 
+      setVolume,
+      switchStream,
     } = radioData;
 
     const isMuted = volume === 0;
+
+    // Handle channel change
+    const handleChannelChange = (channel: RadioChannel) => {
+      selectChannel(channel);
+      if (switchStream) {
+        switchStream(channel.stream_url);
+      }
+    };
 
     // Calculate dropdown position when opening
     useEffect(() => {
@@ -156,6 +178,38 @@ export const HeaderRadioControls = () => {
               </CardHeader>
 
               <CardContent className="space-y-4 pt-2">
+                {/* Channel Selector */}
+                {channels.length > 1 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Channels</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {channels.map((channel) => {
+                        const IconComponent = getChannelIcon(channel.icon);
+                        const isSelected = selectedChannel?.id === channel.id;
+                        return (
+                          <button
+                            key={channel.id}
+                            onClick={() => handleChannelChange(channel)}
+                            className={cn(
+                              "flex items-center gap-2 p-2 rounded-lg border transition-all text-left",
+                              isSelected
+                                ? "border-primary bg-primary/10 text-foreground"
+                                : "border-border bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:border-muted-foreground/50"
+                            )}
+                          >
+                            <IconComponent 
+                              className="h-4 w-4 flex-shrink-0" 
+                              style={{ color: channel.color || undefined }}
+                            />
+                            <span className="text-xs font-medium truncate">{channel.name}</span>
+                            {isSelected && <Check className="h-3 w-3 ml-auto text-primary" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Now Playing */}
                 {currentTrack && isOnline && (
                   <div className="p-3 rounded-lg bg-muted/50 space-y-1">
