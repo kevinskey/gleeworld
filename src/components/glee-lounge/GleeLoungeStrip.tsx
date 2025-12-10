@@ -110,7 +110,7 @@ export const GleeLoungeStrip = () => {
               </span>
             </h3>
             {recentActivity && (
-              <p className="text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-[300px]">
+              <p className="text-xs text-muted-foreground truncate max-w-[200px] sm:max-w-[300px] mt-1">
                 Latest: "{recentActivity}"
               </p>
             )}
