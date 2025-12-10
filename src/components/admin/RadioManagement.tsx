@@ -804,7 +804,7 @@ export const RadioManagement = () => {
                 id="edit-title"
                 value={editFormData.title}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="bg-slate-800 border-slate-600 text-white"
+                className="!bg-slate-800 !border-slate-600 !text-white placeholder:!text-slate-400"
                 placeholder="Song title"
               />
             </div>
@@ -814,7 +814,7 @@ export const RadioManagement = () => {
                 id="edit-artist"
                 value={editFormData.artist_info}
                 onChange={(e) => setEditFormData(prev => ({ ...prev, artist_info: e.target.value }))}
-                className="bg-slate-800 border-slate-600 text-white"
+                className="!bg-slate-800 !border-slate-600 !text-white placeholder:!text-slate-400"
                 placeholder="Artist name"
               />
             </div>
