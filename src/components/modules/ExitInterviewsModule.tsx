@@ -6,9 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2, Users, Music, Briefcase, Plane } from "lucide-react";
+import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2, Users, Music, Briefcase, Plane, Mail, MessageSquare, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface ExitInterview {
   id: string;
@@ -159,6 +161,9 @@ const ExitInterviewsModule: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedInterview, setSelectedInterview] = useState<ExitInterview | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [createGroupDialog, setCreateGroupDialog] = useState<{ open: boolean; category: string; members: ExitInterview[] }>({ open: false, category: "", members: [] });
+  const [groupName, setGroupName] = useState("");
+  const [creatingGroup, setCreatingGroup] = useState(false);
 
   // Group interviews by different categories
   const groupedInterviews = useMemo(() => {
@@ -229,6 +234,65 @@ const ExitInterviewsModule: React.FC = () => {
     } catch (error) {
       console.error("Error deleting interview:", error);
       toast.error("Failed to delete interview");
+    }
+  };
+
+  const openCreateGroupDialog = (category: string, members: ExitInterview[]) => {
+    const defaultName = `Exit Interview - ${category} (${format(new Date(), "MMM yyyy")})`;
+    setGroupName(defaultName);
+    setCreateGroupDialog({ open: true, category, members });
+  };
+
+  const createMessagingGroup = async () => {
+    if (!groupName.trim() || createGroupDialog.members.length === 0) return;
+    
+    setCreatingGroup(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      // Create the group (use a default course_id for general groups)
+      const { data: group, error: groupError } = await supabase
+        .from("gw_groups")
+        .insert({
+          course_id: "23c4ee3c-7bbb-4534-8c0a-eecd88298d37", // Default course for general groups
+          name: groupName.trim(),
+          description: `Created from Exit Interviews - ${createGroupDialog.category}`,
+          leader_id: user.id,
+          is_active: true,
+          is_official: true,
+          member_count: createGroupDialog.members.length + 1,
+          semester: "Spring 2026"
+        })
+        .select()
+        .single();
+
+      if (groupError) throw groupError;
+
+      // Add members to the group
+      const memberInserts = [
+        { group_id: group.id, user_id: user.id, role: "admin" },
+        ...createGroupDialog.members.map(m => ({
+          group_id: group.id,
+          user_id: m.user_id,
+          role: "member"
+        }))
+      ];
+
+      const { error: membersError } = await supabase
+        .from("gw_group_members")
+        .insert(memberInserts);
+
+      if (membersError) throw membersError;
+
+      toast.success(`Group "${groupName}" created with ${createGroupDialog.members.length} members`);
+      setCreateGroupDialog({ open: false, category: "", members: [] });
+      setGroupName("");
+    } catch (error) {
+      console.error("Error creating group:", error);
+      toast.error("Failed to create group");
+    } finally {
+      setCreatingGroup(false);
     }
   };
 
@@ -352,6 +416,38 @@ const ExitInterviewsModule: React.FC = () => {
                 </TabsTrigger>
               </TabsList>
 
+              {/* Create Group Button for current tab */}
+              {activeTab !== "voice-part" && (
+                <div className="mb-3">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      const members = activeTab === "all" ? interviews :
+                        activeTab === "returning" ? groupedInterviews.returning :
+                        activeTab === "not-returning" ? groupedInterviews.notReturning :
+                        activeTab === "exec" ? groupedInterviews.execInterest :
+                        groupedInterviews.tourInterest;
+                      const categoryName = activeTab === "all" ? "All Respondents" :
+                        activeTab === "returning" ? "Returning Members" :
+                        activeTab === "not-returning" ? "Not Returning" :
+                        activeTab === "exec" ? "Exec Board Interest" : "Tour Interest";
+                      openCreateGroupDialog(categoryName, members);
+                    }}
+                    disabled={
+                      (activeTab === "all" && interviews.length === 0) ||
+                      (activeTab === "returning" && groupedInterviews.returning.length === 0) ||
+                      (activeTab === "not-returning" && groupedInterviews.notReturning.length === 0) ||
+                      (activeTab === "exec" && groupedInterviews.execInterest.length === 0) ||
+                      (activeTab === "tour" && groupedInterviews.tourInterest.length === 0)
+                    }
+                  >
+                    <Plus className="h-3 w-3 mr-1" />
+                    Create Messaging Group
+                  </Button>
+                </div>
+              )}
+
               <div className="max-h-[400px] overflow-y-auto">
                 <TabsContent value="all" className="mt-0 space-y-2">
                   {interviews.map((interview) => (
@@ -411,10 +507,21 @@ const ExitInterviewsModule: React.FC = () => {
                 <TabsContent value="voice-part" className="mt-0 space-y-4">
                   {Object.entries(groupedInterviews.byVoicePart).sort().map(([voicePart, list]) => (
                     <div key={voicePart}>
-                      <h4 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
-                        <Music className="h-4 w-4" />
-                        {voicePart} ({list.length})
-                      </h4>
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <Music className="h-4 w-4" />
+                          {voicePart} ({list.length})
+                        </h4>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="h-6 text-xs"
+                          onClick={() => openCreateGroupDialog(`${voicePart} Voice Part`, list)}
+                        >
+                          <Plus className="h-3 w-3 mr-1" />
+                          Create Group
+                        </Button>
+                      </div>
                       <div className="space-y-2">
                         {list.map((interview) => (
                           <SwipeableInterviewCard
@@ -639,6 +746,60 @@ const ExitInterviewsModule: React.FC = () => {
               </Accordion>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Create Group Dialog */}
+      <Dialog open={createGroupDialog.open} onOpenChange={(open) => !open && setCreateGroupDialog({ open: false, category: "", members: [] })}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Create Messaging Group
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="groupName">Group Name</Label>
+              <Input
+                id="groupName"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                placeholder="Enter group name..."
+              />
+            </div>
+            <div className="bg-muted/50 p-3 rounded-lg">
+              <p className="text-sm font-medium mb-2">Members to add:</p>
+              <p className="text-sm text-muted-foreground">
+                {createGroupDialog.members.length} member{createGroupDialog.members.length !== 1 ? "s" : ""} from "{createGroupDialog.category}"
+              </p>
+              <div className="flex flex-wrap gap-1 mt-2 max-h-24 overflow-y-auto">
+                {createGroupDialog.members.slice(0, 10).map(m => (
+                  <Badge key={m.id} variant="secondary" className="text-xs">
+                    {m.profile?.full_name || "Unknown"}
+                  </Badge>
+                ))}
+                {createGroupDialog.members.length > 10 && (
+                  <Badge variant="outline" className="text-xs">
+                    +{createGroupDialog.members.length - 10} more
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setCreateGroupDialog({ open: false, category: "", members: [] })}>
+                Cancel
+              </Button>
+              <Button onClick={createMessagingGroup} disabled={creatingGroup || !groupName.trim()}>
+                {creatingGroup ? (
+                  <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                )}
+                Create Group
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
