@@ -136,6 +136,21 @@
   }
 }
 
+/* Glass Theme Styles */
+.glass-theme [data-component="card"],
+.glass-theme .bg-card,
+.spelman-blue-theme [data-component="card"],
+.spelman-blue-theme .bg-card {
+  background: hsla(0, 0%, 100%, 0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid hsla(0, 0%, 100%, 0.25) !important;
+}
+
+.spelman-blue-theme .bg-background {
+  background: var(--theme-background) !important;
+}
+
 /* Musical Notation Styles */
 .musical-staff {
   position: relative;
