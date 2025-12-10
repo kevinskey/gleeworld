@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Rnd } from 'react-rnd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
@@ -76,10 +76,6 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   className = '',
   onClose
 }) => {
-  console.log('🎹 VirtualPiano mounted (full-screen):', {
-    className,
-    hasOnClose: !!onClose
-  });
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
@@ -466,9 +462,6 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         </div>
       );
     }
-    // Calculate centered position for Rnd default
-    const centerX = Math.max(0, (window.innerWidth - pianoSize.width) / 2);
-    const centerY = Math.max(0, (window.innerHeight - pianoSize.height) / 2);
     
     // Wrap Rnd in a fixed overlay to ensure proper viewport positioning
     return (
@@ -480,8 +473,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       }}>
         <Rnd 
           default={{
-            x: centerX,
-            y: centerY,
+            x: pianoPosition.x,
+            y: pianoPosition.y,
             width: pianoSize.width,
             height: pianoSize.height
           }}
