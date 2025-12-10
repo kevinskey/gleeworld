@@ -39,6 +39,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { RadioTimeline } from '../radio/RadioTimeline';
+import { RadioPlaylistQueue } from '../radio/RadioPlaylistQueue';
 import { MediaUploadButton } from '@/components/media/MediaUploadButton';
 import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
@@ -649,16 +650,11 @@ export const RadioManagement = () => {
           </Card>
         </div>
 
-        {/* Center: Timeline */}
+        {/* Center: Playlist Queue */}
         <div className="space-y-4">
-          <RadioTimeline 
-            onTrackScheduled={(track) => {
-              console.log('Track scheduled:', track);
-              toast({
-                title: "Track Scheduled",
-                description: `"${track.title}" scheduled for ${track.scheduledTime}`,
-              });
-            }}
+          <RadioPlaylistQueue 
+            availableTracks={filteredTracks}
+            onRefreshTracks={fetchTracks}
           />
         </div>
 
