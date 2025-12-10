@@ -383,6 +383,203 @@ class AzuraCastService {
   async removeFromPlaylist(playlistId: number, mediaId: number): Promise<void> {
     await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}/media/${mediaId}`, 'DELETE');
   }
+
+  // STREAMERS (Live DJs)
+  async getStreamers(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/streamers`);
+  }
+
+  async createStreamer(streamerData: {
+    streamer_username: string;
+    streamer_password: string;
+    display_name?: string;
+    comments?: string;
+    is_active?: boolean;
+    enforce_schedule?: boolean;
+  }): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/streamers`, 'POST', streamerData);
+  }
+
+  async updateStreamer(streamerId: number, streamerData: any): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/streamer/${streamerId}`, 'PUT', streamerData);
+  }
+
+  async deleteStreamer(streamerId: number): Promise<void> {
+    await this.makeProxyRequest(`/station/{stationId}/streamer/${streamerId}`, 'DELETE');
+  }
+
+  // MOUNT POINTS
+  async getMounts(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/mounts`);
+  }
+
+  async createMount(mountData: {
+    name: string;
+    display_name?: string;
+    is_visible_on_public_pages?: boolean;
+    is_default?: boolean;
+    relay_url?: string;
+    enable_autodj?: boolean;
+    autodj_format?: string;
+    autodj_bitrate?: number;
+  }): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/mounts`, 'POST', mountData);
+  }
+
+  async updateMount(mountId: number, mountData: any): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/mount/${mountId}`, 'PUT', mountData);
+  }
+
+  async deleteMount(mountId: number): Promise<void> {
+    await this.makeProxyRequest(`/station/{stationId}/mount/${mountId}`, 'DELETE');
+  }
+
+  // LISTENERS
+  async getListeners(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/listeners`);
+  }
+
+  async disconnectListener(listenerId: number): Promise<void> {
+    await this.makeProxyRequest(`/station/{stationId}/listener/${listenerId}/disconnect`, 'POST');
+  }
+
+  // SONG HISTORY
+  async getSongHistory(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/history`);
+  }
+
+  // REPORTS
+  async getListenerReport(startDate?: string, endDate?: string): Promise<any> {
+    let endpoint = `/station/{stationId}/reports/listeners`;
+    const params = [];
+    if (startDate) params.push(`start=${startDate}`);
+    if (endDate) params.push(`end=${endDate}`);
+    if (params.length) endpoint += `?${params.join('&')}`;
+    return await this.makeProxyRequest(endpoint);
+  }
+
+  async getPerformanceReport(): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/reports/performance`);
+  }
+
+  async getSongRequestReport(): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/reports/requests`);
+  }
+
+  // WEBHOOKS
+  async getWebhooks(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/webhooks`);
+  }
+
+  async createWebhook(webhookData: {
+    name: string;
+    type: string;
+    webhook_url?: string;
+    triggers?: string[];
+    config?: any;
+  }): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/webhooks`, 'POST', webhookData);
+  }
+
+  async updateWebhook(webhookId: number, webhookData: any): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/webhook/${webhookId}`, 'PUT', webhookData);
+  }
+
+  async deleteWebhook(webhookId: number): Promise<void> {
+    await this.makeProxyRequest(`/station/{stationId}/webhook/${webhookId}`, 'DELETE');
+  }
+
+  async testWebhook(webhookId: number): Promise<void> {
+    await this.makeProxyRequest(`/station/{stationId}/webhook/${webhookId}/test`, 'POST');
+  }
+
+  // SFTP USERS
+  async getSftpUsers(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/sftp-users`);
+  }
+
+  async createSftpUser(userData: {
+    username: string;
+    password: string;
+    public_keys?: string;
+  }): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/sftp-users`, 'POST', userData);
+  }
+
+  async deleteSftpUser(userId: number): Promise<void> {
+    await this.makeProxyRequest(`/station/{stationId}/sftp-user/${userId}`, 'DELETE');
+  }
+
+  // HLS STREAMS
+  async getHlsStreams(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/hls_streams`);
+  }
+
+  // REMOTE RELAYS
+  async getRemoteRelays(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/remotes`);
+  }
+
+  async createRemoteRelay(relayData: {
+    display_name: string;
+    url: string;
+    mount?: string;
+    enable_autodj?: boolean;
+    autodj_format?: string;
+    autodj_bitrate?: number;
+  }): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/remotes`, 'POST', relayData);
+  }
+
+  async deleteRemoteRelay(relayId: number): Promise<void> {
+    await this.makeProxyRequest(`/station/{stationId}/remote/${relayId}`, 'DELETE');
+  }
+
+  // PODCASTS
+  async getPodcasts(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/podcasts`);
+  }
+
+  async createPodcast(podcastData: {
+    title: string;
+    description?: string;
+    language?: string;
+    categories?: string[];
+  }): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/podcasts`, 'POST', podcastData);
+  }
+
+  async deletePodcast(podcastId: string): Promise<void> {
+    await this.makeProxyRequest(`/station/{stationId}/podcast/${podcastId}`, 'DELETE');
+  }
+
+  async getPodcastEpisodes(podcastId: string): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/podcast/${podcastId}/episodes`);
+  }
+
+  // STATION STATUS
+  async getStationStatus(): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/status`);
+  }
+
+  // FALLBACK / INTRO FILES
+  async getFallbackFile(): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/fallback`);
+  }
+
+  async getIntroFile(): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/intro`);
+  }
+
+  // STEREO TOOL (if enabled)
+  async getStereoToolConfig(): Promise<any> {
+    return await this.makeProxyRequest(`/station/{stationId}/stereo_tool_config`);
+  }
+
+  // LOGS
+  async getStationLogs(): Promise<any[]> {
+    return await this.makeProxyRequest(`/station/{stationId}/logs`);
+  }
 }
 
 export const azuraCastService = new AzuraCastService();
