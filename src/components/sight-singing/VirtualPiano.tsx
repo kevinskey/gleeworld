@@ -268,47 +268,53 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   }, [startOctave, isMobile]);
 
   const playNote = useCallback(async (frequency: number, noteName: string) => {
-    console.log('🎹 playNote called:', noteName, frequency);
-    
-    // Force unlock audio on first interaction (critical for mobile)
-    try {
-      await forceUnlockAudio();
-    } catch (e) {
-      console.log('🔊 Force unlock during playNote:', e);
+    // Fast path: if synth is ready and audio is unlocked, play immediately
+    if (synthRef.current && audioUnlocked && audioContextRef.current?.state === 'running') {
+      try {
+        synthRef.current.playNote(noteName, frequency);
+        setActiveNotes(prev => new Set(prev).add(noteName));
+      } catch (error) {
+        console.warn('🎹 Synth playNote failed:', error);
+      }
+      return;
+    }
+
+    // First interaction path: unlock audio and initialize synth
+    if (!audioUnlocked) {
+      try {
+        await forceUnlockAudio();
+      } catch (e) {
+        // Ignore unlock errors
+      }
     }
     
-    // Always ensure audio context is initialized and unlocked (mobile requirement)
-    const audioContext = await initAudioContext();
+    // Initialize audio context if needed
+    const audioContext = audioContextRef.current || await initAudioContext();
     if (!audioContext) {
       console.error('🎹 No AudioContext available');
       return;
     }
 
-    // Ensure context is running - critical for mobile
-    if (audioContext.state !== 'running') {
+    // Resume if suspended (no artificial delay)
+    if (audioContext.state === 'suspended') {
       try {
         await audioContext.resume();
-        await new Promise(resolve => setTimeout(resolve, 50));
-        console.log('🔊 AudioContext resumed for playNote, state:', audioContext.state);
       } catch (err) {
         console.error('🎹 Failed to resume AudioContext:', err);
         return;
       }
     }
 
-    // Use the WebAudioSynth to play the note
+    // Play the note
     if (synthRef.current) {
       try {
-        await synthRef.current.playNote(noteName, frequency);
+        synthRef.current.playNote(noteName, frequency);
         setActiveNotes(prev => new Set(prev).add(noteName));
-        console.log('🎹 Synth played:', noteName, 'at', frequency, 'Hz');
       } catch (error) {
         console.warn('🎹 Synth playNote failed:', error);
       }
-    } else {
-      console.warn('🎹 No synth available');
     }
-  }, [initAudioContext]);
+  }, [initAudioContext, audioUnlocked]);
 
   const stopNote = useCallback((noteName: string) => {
     // Stop synth note
