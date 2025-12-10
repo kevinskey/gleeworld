@@ -244,12 +244,11 @@ export const GleeWorldLanding = () => {
   // };
 
   if (loading || authLoading) {
-    return <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30 flex items-center justify-center">
-        <LoadingSpinner size="lg" text="Loading GleeWorld..." />
+    return <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
+        <LoadingSpinner size="lg" text="Loading GleeWorld..." className="text-white" />
       </div>;
   }
-  return <div className="min-h-screen w-full relative">
-      <div className="absolute inset-0 -z-10 [background-image:radial-gradient(1200px_800px_at_20%_0%,hsl(var(--primary)/0.12),transparent_60%),radial-gradient(900px_700px_at_80%_100%,hsl(var(--accent)/0.10),transparent_60%),linear-gradient(to_bottom,hsl(var(--background)),hsl(var(--background)))]" aria-hidden="true" />
+  return <div className="min-h-screen w-full relative" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
       <div className="absolute inset-0 -z-10 opacity-20 mix-blend-overlay" style={{
       backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.08'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")"
     }} aria-hidden="true" />
