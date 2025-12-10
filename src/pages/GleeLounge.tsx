@@ -7,9 +7,10 @@ import { MobileCreatePost } from '@/components/glee-lounge/MobileCreatePost';
 import { SocialFeed, SocialFeedRef } from '@/components/glee-lounge/SocialFeed';
 import { OnlineNowWidget } from '@/components/glee-lounge/OnlineNowWidget';
 import { OnlineSidebar } from '@/components/glee-lounge/OnlineSidebar';
+import { GleeLoungeWithMusicLibrary } from '@/components/glee-lounge/GleeLoungeWithMusicLibrary';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Loader2, Sofa, Plus, Users, ArrowLeft } from 'lucide-react';
+import { Loader2, Sofa, Plus, Users, ArrowLeft, Music } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfile {
@@ -23,6 +24,7 @@ export default function GleeLounge() {
   const [isLoading, setIsLoading] = useState(true);
   const [showMobileCreate, setShowMobileCreate] = useState(false);
   const [showMobileOnline, setShowMobileOnline] = useState(false);
+  const [showMusicLibrary, setShowMusicLibrary] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { onlineUsers, isConnected } = useGleeLoungePresence();
@@ -82,7 +84,7 @@ export default function GleeLounge() {
     );
   }
 
-  return (
+  const loungeContent = (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b border-border">
@@ -101,8 +103,17 @@ export default function GleeLounge() {
             </div>
           </div>
 
-          {/* Connection status */}
+          {/* Right side actions */}
           <div className="flex items-center gap-2">
+            <Button
+              variant={showMusicLibrary ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowMusicLibrary(!showMusicLibrary)}
+              className="gap-2"
+            >
+              <Music className="h-4 w-4" />
+              <span className="hidden sm:inline">Music Library</span>
+            </Button>
             {isConnected && (
               <span className="text-xs text-muted-foreground flex items-center gap-1">
                 <span className="h-2 w-2 rounded-full bg-green-500"></span>
@@ -194,5 +205,14 @@ export default function GleeLounge() {
         </Button>
       </div>
     </div>
+  );
+
+  return (
+    <GleeLoungeWithMusicLibrary
+      showMusicLibrary={showMusicLibrary}
+      onToggleMusicLibrary={() => setShowMusicLibrary(false)}
+    >
+      {loungeContent}
+    </GleeLoungeWithMusicLibrary>
   );
 }
