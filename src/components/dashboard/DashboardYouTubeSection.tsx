@@ -18,7 +18,7 @@ interface DashboardVideo {
 export const DashboardYouTubeSection = () => {
   const [videos, setVideos] = useState<DashboardVideo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedVideo, setExpandedVideo] = useState<'left' | 'right' | null>(null);
+  const [expandedVideo, setExpandedVideo] = useState<string | null>(null); // video ID
   const [isMuted, setIsMuted] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -107,10 +107,10 @@ export const DashboardYouTubeSection = () => {
   };
   const [videoKey, setVideoKey] = useState(0);
   
-  const handlePlay = (position: 'left' | 'right') => {
+  const handlePlay = (videoId: string) => {
     setVideoKey(prev => prev + 1);
     setIsMuted(true); // Reset muted state when playing new video
-    setExpandedVideo(position);
+    setExpandedVideo(videoId);
   };
   
   const handleClose = () => {
@@ -137,9 +137,6 @@ export const DashboardYouTubeSection = () => {
       videoRef.current.muted = newMutedState;
     }
   };
-
-  const leftVideo = videos.find(v => v.position === 'left');
-  const rightVideo = videos.find(v => v.position === 'right');
   
   if (!loading && videos.length === 0) {
     return null;
@@ -154,7 +151,7 @@ export const DashboardYouTubeSection = () => {
       </div>;
   }
   
-  const expandedVideoData = expandedVideo === 'left' ? leftVideo : expandedVideo === 'right' ? rightVideo : null;
+  const expandedVideoData = expandedVideo ? videos.find(v => v.id === expandedVideo) : null;
 
   // Render video player based on type
   const renderVideoPlayer = (video: DashboardVideo) => {
@@ -229,72 +226,122 @@ export const DashboardYouTubeSection = () => {
       </div>;
   }
 
-  // Two-column thumbnail view
+  // Video thumbnail component for carousel
   const VideoThumbnail = ({
     video,
-    position
+    index
   }: {
-    video: DashboardVideo | undefined;
-    position: 'left' | 'right';
+    video: DashboardVideo;
+    index: number;
   }) => {
-    if (!video) {
-      return <div className="absolute inset-0 flex items-center justify-center text-muted-foreground text-sm bg-muted/50">
-          No video configured
-        </div>;
-    }
     const isUploaded = video.video_type === 'uploaded' && video.video_url;
     const thumbnailUrl = getThumbnailUrl(video, 'hq');
-    return <button onClick={() => handlePlay(position)} className="absolute inset-0 w-full h-full group cursor-pointer" aria-label={`Play ${video.title || 'video'}`}>
+    
+    const handleClick = () => {
+      handlePlay(video.id);
+    };
+    
+    return (
+      <button 
+        onClick={handleClick} 
+        className="relative w-full aspect-video group cursor-pointer flex-shrink-0" 
+        aria-label={`Play ${video.title || 'video'}`}
+      >
         {/* Thumbnail Image or Video Preview */}
-        {isUploaded ? <video src={video.video_url!} className="absolute inset-0 w-full h-full object-cover" muted playsInline preload="metadata" /> : <img src={thumbnailUrl} alt={video.title || 'Video thumbnail'} className="absolute inset-0 w-full h-full object-cover" />}
+        {isUploaded ? (
+          <video 
+            src={video.video_url!} 
+            className="absolute inset-0 w-full h-full object-cover rounded-lg" 
+            muted 
+            playsInline 
+            preload="metadata" 
+          />
+        ) : (
+          <img 
+            src={thumbnailUrl} 
+            alt={video.title || 'Video thumbnail'} 
+            className="absolute inset-0 w-full h-full object-cover rounded-lg" 
+          />
+        )}
         
         {/* Overlay */}
-        <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/30 transition-colors duration-300 opacity-100 px-0" />
+        <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/30 transition-colors duration-300 rounded-lg" />
         
         {/* Title - Bottom Left */}
-        {video.title && <div className="absolute bottom-0 left-0 right-8 sm:right-12 bg-gradient-to-t from-foreground/80 via-foreground/40 to-transparent p-1.5 sm:p-2 z-10">
-            <h3 className="text-background sm:text-[10px] font-medium truncate text-left text-xs">
+        {video.title && (
+          <div className="absolute bottom-0 left-0 right-12 bg-gradient-to-t from-foreground/80 via-foreground/40 to-transparent p-2 sm:p-3 z-10 rounded-b-lg">
+            <h3 className="text-background text-xs sm:text-sm font-medium truncate text-left">
               {video.title}
             </h3>
-          </div>}
+          </div>
+        )}
         
-        {/* Play Button - Bottom Right, Small */}
-        <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 z-10 flex items-center gap-1.5">
-          {/* Mute indicator for YouTube */}
-          {!isUploaded && (
-            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-background/80 rounded-full flex items-center justify-center shadow-sm">
-              <VolumeX className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-muted-foreground" />
-            </div>
-          )}
-          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-background/90 rounded-full flex items-center justify-center group-hover:bg-background group-hover:scale-110 transition-all duration-300 shadow-md">
-            <Play className="w-3 h-3 sm:w-4 sm:h-4 text-primary ml-0.5" fill="currentColor" />
+        {/* Play Button - Center */}
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 bg-background/90 rounded-full flex items-center justify-center group-hover:bg-background group-hover:scale-110 transition-all duration-300 shadow-lg">
+            <Play className="w-5 h-5 sm:w-6 sm:h-6 text-primary ml-1" fill="currentColor" />
           </div>
         </div>
-      </button>;
+        
+        {/* Mute indicator - Bottom Right */}
+        {!isUploaded && (
+          <div className="absolute bottom-2 right-2 z-10 w-6 h-6 bg-background/80 rounded-full flex items-center justify-center shadow-sm">
+            <VolumeX className="w-3 h-3 text-muted-foreground" />
+          </div>
+        )}
+      </button>
+    );
   };
-  return <div className="w-full">
+
+  // Filter to only active videos and sort them
+  const activeVideos = videos.filter(v => v.is_active);
+
+  return (
+    <div className="w-full">
       <div className="relative p-3 sm:p-4 bg-card/50 backdrop-blur-sm border border-border rounded-xl shadow-sm">
         
         {/* Header */}
-        <div className="relative mb-3 sm:mb-4">
+        <div className="relative mb-3 sm:mb-4 flex items-center justify-between">
           <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
             <Play className="h-5 w-5 text-primary" fill="currentColor" />
             Featured Videos
           </h2>
+          {activeVideos.length > 1 && (
+            <span className="text-xs text-muted-foreground">
+              Swipe to browse
+            </span>
+          )}
         </div>
         
-        {/* Videos - stacked on mobile, side-by-side on tablet+ */}
-        <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-          {/* Top/Left Video */}
-          <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
-            <VideoThumbnail video={leftVideo} position="left" />
-          </div>
-
-          {/* Bottom/Right Video */}
-          <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-sm hover:shadow-md transition-shadow duration-300">
-            <VideoThumbnail video={rightVideo} position="right" />
+        {/* Horizontal Scroll Carousel */}
+        <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4">
+          <div 
+            className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {activeVideos.map((video, index) => (
+              <div 
+                key={video.id} 
+                className="flex-shrink-0 w-[85%] sm:w-[70%] md:w-[48%] lg:w-[48%] snap-center"
+              >
+                <VideoThumbnail video={video} index={index} />
+              </div>
+            ))}
           </div>
         </div>
+
+        {/* Scroll Indicators (dots) */}
+        {activeVideos.length > 1 && (
+          <div className="flex justify-center gap-1.5 mt-3">
+            {activeVideos.map((video, index) => (
+              <div 
+                key={video.id}
+                className="w-2 h-2 rounded-full bg-muted-foreground/30"
+              />
+            ))}
+          </div>
+        )}
       </div>
-    </div>;
+    </div>
+  );
 };
