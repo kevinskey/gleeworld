@@ -273,8 +273,7 @@ export const DashboardYouTubeSection = () => {
       </button>;
   };
   return <div className="w-full">
-      <div className="relative p-3 sm:p-4 bg-card/50 backdrop-blur-sm border-2 border-destructive/60 rounded-xl shadow-sm">
-        <div className="absolute inset-1 rounded-lg border border-destructive/30 pointer-events-none" />
+      <div className="relative p-3 sm:p-4 bg-card/50 backdrop-blur-sm border border-border rounded-xl shadow-sm">
         
         {/* Header */}
         <div className="relative mb-3 sm:mb-4">
