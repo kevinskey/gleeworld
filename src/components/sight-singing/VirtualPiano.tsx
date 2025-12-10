@@ -223,7 +223,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     return () => clearTimeout(timer);
   }, [startOctave, isMobile]);
 
-  const playNote = useCallback(async (frequency: number, noteName: string) => {
+  const playNote = useCallback(async (noteName: string, frequency: number) => {
     // Always force unlock on user interaction (synchronous for iOS)
     forceUnlockAudio();
     
@@ -382,8 +382,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
               }} className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none border-r border-gray-300/50 last:border-r-0 touch-manipulation ${isActive ? 'shadow-inner scale-[0.98]' : 'hover:bg-gray-50 shadow-lg active:scale-[0.98]'} ${index === 0 ? 'rounded-l-lg sm:rounded-l-xl' : ''} ${index === whiteKeys.length - 1 ? 'rounded-r-lg sm:rounded-r-xl' : ''}`} 
               onPointerDown={(e) => {
                 e.preventDefault();
-                playNote(key.frequency, keyName);
-              }} 
+                playNote(keyName, key.frequency);
+              }}
               onPointerUp={() => stopNote(keyName)} 
               onPointerLeave={() => {
                 if (isActive) stopNote(keyName);
@@ -417,8 +417,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 }} 
                 onPointerDown={(e) => {
                   e.preventDefault();
-                  playNote(key.frequency, keyName);
-                }} 
+                  playNote(keyName, key.frequency);
+                }}
                 onPointerUp={() => stopNote(keyName)} 
                 onPointerLeave={() => {
                   if (isActive) stopNote(keyName);
