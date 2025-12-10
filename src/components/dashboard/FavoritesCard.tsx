@@ -1,75 +1,116 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+
 interface FavoritesCardProps {
   favorites: any[];
   onModuleClick: (moduleId: string) => void;
   onToggleFavorite: (moduleId: string) => void;
 }
+
 export const FavoritesCard = ({
   favorites,
   onModuleClick,
   onToggleFavorite
 }: FavoritesCardProps) => {
   const navigate = useNavigate();
+
   if (favorites.length === 0) {
-    return <Card className="bg-background/95 backdrop-blur-sm mt-0">
-        <CardHeader className="py-3 px-3 sm:px-4">
-          <CardTitle className="flex items-center gap-2">
-            <Heart className="h-5 w-5 text-red-500" />
+    return (
+      <Card className="bg-background/95 backdrop-blur-sm mt-0">
+        <CardHeader className="py-3 px-3 sm:px-0">
+          <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
+            <Heart className="h-5 w-5 !text-red-500" />
             Favorites
-            <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">scroll to choose your fav!</span>
+            <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
+              scroll to choose your fav!
+            </span>
           </CardTitle>
-          <CardDescription>Your favorite modules will appear here</CardDescription>
+          <CardDescription className="!text-white/80 pl-[10px]">
+            Your favorite modules will appear here
+          </CardDescription>
         </CardHeader>
-        <CardContent className="px-3 sm:px-4">
+        <CardContent className="px-3 pb-3 pt-0 sm:px-[20px]">
           <p className="text-sm text-muted-foreground">
             Touch a heart to add a fave module.
           </p>
         </CardContent>
-      </Card>;
+      </Card>
+    );
   }
-  return <Card className="bg-background/95 backdrop-blur-sm">
-      <CardHeader className="py-3 px-3 sm:px-4">
-        <CardTitle className="flex items-center gap-2 text-primary-foreground px-[10px]">
-          <Heart className="h-5 w-5 text-red-500 fill-current" />
+
+  return (
+    <Card className="bg-background/95 backdrop-blur-sm">
+      <CardHeader className="py-3 px-3 sm:px-0">
+        <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
+          <Heart className="h-5 w-5 !text-red-500 fill-current" />
           Favorites
-          <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">scroll to choose your fav!</span>
+          <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
+            scroll to choose your fav!
+          </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-3 sm:px-0">
-        <ScrollArea className="h-44">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 pr-4">
-            {favorites.map(module => {
+      <CardContent className="px-3 pb-3 pt-0 sm:px-[20px]">
+        {/* Horizontal scrolling container like GleeCamCard */}
+        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+          {favorites.map(module => {
             const IconComponent = module.icon;
-            return <div key={module.id} className="relative flex items-center justify-between p-3 pr-10 rounded-lg border bg-card text-card-foreground hover:bg-accent/50 transition-colors cursor-pointer" onClick={() => {
-              if (module.id === 'librarian') {
-                navigate('/librarian-dashboard');
-              } else {
-                onModuleClick(module.id);
-              }
-            }}>
-                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-                  {IconComponent && <div className={`p-1.5 sm:p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
-                      <IconComponent className={`h-4 w-4 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
-                    </div>}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs sm:text-sm font-medium truncate text-card-foreground">{module.title}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{module.description}</p>
+            
+            return (
+              <div 
+                key={module.id} 
+                className="group cursor-pointer flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)] relative"
+              >
+                <div 
+                  onClick={() => {
+                    if (module.id === 'librarian') {
+                      navigate('/librarian-dashboard');
+                    } else {
+                      onModuleClick(module.id);
+                    }
+                  }}
+                  className={cn(
+                    "p-4 flex flex-col items-center text-center transition-all duration-300",
+                    "bg-card border border-border hover:border-primary/50",
+                    "shadow-lg hover:shadow-xl min-h-[120px]"
+                  )}
+                >
+                  {/* Icon */}
+                  <div className="w-10 h-10 flex items-center justify-center mb-2 transition-transform group-hover:scale-110 bg-primary/20">
+                    {IconComponent && <IconComponent className="h-5 w-5 text-primary" />}
                   </div>
+
+                  {/* Title */}
+                  <h4 className="font-semibold text-[10px] sm:text-xs text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
+                    {module.title}
+                  </h4>
+
+                  {/* Description */}
+                  <p className="text-[9px] sm:text-[10px] text-muted-foreground leading-tight line-clamp-2">
+                    {module.description}
+                  </p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={e => {
-                e.stopPropagation();
-                onToggleFavorite(module.id);
-              }} className="absolute top-2 right-2 p-1.5 sm:p-2 h-auto rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all" title="Remove from favorites">
-                  <Heart className="h-4 w-4 sm:h-5 sm:w-5 fill-current" />
+
+                {/* Favorite button - positioned at top right */}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={e => {
+                    e.stopPropagation();
+                    onToggleFavorite(module.id);
+                  }} 
+                  className="absolute top-1 right-1 p-1 h-auto text-red-500 hover:text-red-700 hover:bg-red-50/20 transition-all z-10"
+                  title="Remove from favorites"
+                >
+                  <Heart className="h-4 w-4 fill-current" />
                 </Button>
-              </div>;
+              </div>
+            );
           })}
-          </div>
-        </ScrollArea>
+        </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
