@@ -86,19 +86,52 @@ export function PostCard({
       if (inLightbox) {
         return <video key={index} src={url} controls autoPlay className="max-h-[80vh] max-w-full rounded-lg" />;
       }
-      return <div key={index} className="relative cursor-pointer group" onClick={() => openLightbox(index)}>
-          <video src={url} className="w-full h-48 object-cover rounded-lg" muted playsInline />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-lg group-hover:bg-black/40 transition-colors">
-            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center">
-              <Play className="h-6 w-6 text-foreground fill-current ml-1" />
+      // Layered video display: blurred background + contained video on top
+      return (
+        <div key={index} className="relative cursor-pointer group h-64 rounded-lg overflow-hidden" onClick={() => openLightbox(index)}>
+          {/* Background layer - blurred poster/first frame */}
+          <video 
+            src={url} 
+            className="absolute inset-0 w-full h-full object-cover blur-md scale-110 opacity-60" 
+            muted 
+            playsInline 
+          />
+          {/* Foreground layer - contained video */}
+          <video 
+            src={url} 
+            className="absolute inset-0 w-full h-full object-contain z-10" 
+            muted 
+            playsInline 
+          />
+          {/* Play button overlay */}
+          <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/20 group-hover:bg-black/30 transition-colors">
+            <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+              <Play className="h-7 w-7 text-foreground fill-current ml-1" />
             </div>
           </div>
-        </div>;
+        </div>
+      );
     }
     if (inLightbox) {
       return <img key={index} src={url} alt={`Post media ${index + 1}`} className="max-h-[80vh] max-w-full object-contain rounded-lg" />;
     }
-    return <img key={index} src={url} alt={`Post media ${index + 1}`} onClick={() => openLightbox(index)} className="w-full h-48 rounded-lg cursor-pointer hover:opacity-90 transition-opacity object-contain" />;
+    // Layered image display: blurred background + contained image on top
+    return (
+      <div key={index} className="relative cursor-pointer h-64 rounded-lg overflow-hidden hover:opacity-90 transition-opacity" onClick={() => openLightbox(index)}>
+        {/* Background layer - blurred image */}
+        <img 
+          src={url} 
+          alt="" 
+          className="absolute inset-0 w-full h-full object-cover blur-md scale-110 opacity-60" 
+        />
+        {/* Foreground layer - contained image */}
+        <img 
+          src={url} 
+          alt={`Post media ${index + 1}`} 
+          className="absolute inset-0 w-full h-full object-contain z-10" 
+        />
+      </div>
+    );
   };
   return <>
       <Card className="mb-4">
