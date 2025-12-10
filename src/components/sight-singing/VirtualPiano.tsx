@@ -5,7 +5,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Volume2, VolumeX, X } from 'lucide-react';
 import { WebAudioSynth, SYNTH_INSTRUMENTS } from '@/utils/webAudioSynth';
-import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
+import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio, getSharedAudioContext } from '@/utils/mobileAudioUnlock';
 interface VirtualPianoProps {
   className?: string;
   onClose?: () => void;
@@ -188,11 +188,19 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   // Initialize audio context with mobile unlock
   const initAudioContext = useCallback(async () => {
     try {
-      // Use shared unlock utility for iOS compatibility
-      const ctx = await unlockAudioContext();
+      // Force unlock synchronously first (critical for iOS)
+      forceUnlockAudio();
+      
+      // Get the shared audio context
+      const ctx = getSharedAudioContext();
       audioContextRef.current = ctx;
       
-      if (!audioUnlocked) {
+      // Resume if suspended
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
+      
+      if (!audioUnlocked && ctx.state === 'running') {
         setAudioUnlocked(true);
         console.log('✅ Audio unlocked for mobile');
       }
@@ -268,44 +276,35 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   }, [startOctave, isMobile]);
 
   const playNote = useCallback(async (frequency: number, noteName: string) => {
-    // Always try to unlock on first interaction (synchronous for iOS)
+    // Always force unlock on user interaction (synchronous for iOS)
     forceUnlockAudio();
     
-    // Fast path: if synth is ready and audio context is running, play immediately
-    if (synthRef.current && audioContextRef.current?.state === 'running') {
-      try {
-        synthRef.current.playNote(noteName, frequency);
-        setActiveNotes(prev => new Set(prev).add(noteName));
-        if (!audioUnlocked) setAudioUnlocked(true);
-      } catch (error) {
-        console.warn('🎹 Synth playNote failed:', error);
-      }
-      return;
-    }
-
-    // Initialize audio context if needed
-    const audioContext = audioContextRef.current || await initAudioContext();
-    if (!audioContext) {
-      console.error('🎹 No AudioContext available');
-      return;
-    }
-
+    // Get shared context and ensure synth exists
+    const ctx = getSharedAudioContext();
+    audioContextRef.current = ctx;
+    
     // Resume if suspended
-    if (audioContext.state === 'suspended') {
-      await audioContext.resume();
+    if (ctx.state === 'suspended') {
+      ctx.resume();
     }
-
+    
+    // Initialize synth if not already
+    if (!synthRef.current) {
+      synthRef.current = new WebAudioSynth(ctx);
+      synthRef.current.setInstrument(selectedInstrument);
+      synthRef.current.setVolume(isMuted ? 0 : volume[0]);
+      setSynthReady(true);
+    }
+    
     // Play the note
-    if (synthRef.current) {
-      try {
-        synthRef.current.playNote(noteName, frequency);
-        setActiveNotes(prev => new Set(prev).add(noteName));
-        setAudioUnlocked(true);
-      } catch (error) {
-        console.warn('🎹 Synth playNote failed:', error);
-      }
+    try {
+      synthRef.current.playNote(noteName, frequency);
+      setActiveNotes(prev => new Set(prev).add(noteName));
+      if (!audioUnlocked) setAudioUnlocked(true);
+    } catch (error) {
+      console.warn('🎹 Synth playNote failed:', error);
     }
-  }, [initAudioContext, audioUnlocked]);
+  }, [selectedInstrument, isMuted, volume, audioUnlocked]);
 
   const stopNote = useCallback((noteName: string) => {
     // Stop synth note
@@ -345,16 +344,14 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     };
   }, [activeNotes.size]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - don't close shared audio context
   useEffect(() => {
     return () => {
-      // Stop all synth notes
+      // Stop all synth notes but don't close the shared audio context
       if (synthRef.current) {
         synthRef.current.stopAllNotes();
       }
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close();
-      }
+      // Don't close audioContext - it's shared across the app
     };
   }, []);
 

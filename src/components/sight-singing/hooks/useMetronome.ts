@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio } from '@/utils/mobileAudioUnlock';
+import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio, getSharedAudioContext } from '@/utils/mobileAudioUnlock';
 
 export type MetronomeSoundType = 'pitch' | 'click';
 
@@ -17,20 +17,18 @@ export const useMetronome = () => {
     return cleanup;
   }, []);
 
-  const getAudioContext = useCallback(async (): Promise<AudioContext | null> => {
+  const getAudioContext = useCallback((): AudioContext | null => {
     try {
-      // Fast path: already have a running context
-      if (audioContextRef.current?.state === 'running') {
-        return audioContextRef.current;
-      }
+      // Force unlock synchronously (critical for iOS)
+      forceUnlockAudio();
       
-      // Use the shared unlock utility for iOS compatibility
-      const ctx = await unlockAudioContext();
+      // Get shared audio context
+      const ctx = getSharedAudioContext();
       audioContextRef.current = ctx;
       
-      // Resume if needed (no delay)
-      if (ctx.state !== 'running') {
-        await ctx.resume();
+      // Resume if suspended (fire and forget)
+      if (ctx.state === 'suspended') {
+        ctx.resume();
       }
       
       return ctx;
@@ -91,7 +89,7 @@ export const useMetronome = () => {
     setIsPlaying(false);
   }, []);
 
-  const startMetronome = useCallback(async (bpm: number = tempo) => {
+  const startMetronome = useCallback((bpm: number = tempo) => {
     if (intervalRef.current) {
       stopMetronome();
     }
@@ -99,18 +97,18 @@ export const useMetronome = () => {
     // Force unlock audio on iOS - synchronous call within user gesture
     forceUnlockAudio();
     
-    const ctx = await getAudioContext();
+    const ctx = getAudioContext();
     if (!ctx) {
       console.warn('🎵 Metronome: Failed to get audio context');
       return;
     }
     
-    // Store reference for playClick to use synchronously
+    // Store reference for playClick to use
     audioContextRef.current = ctx;
     
-    // Single resume attempt
+    // Resume if needed (fire and forget)
     if (ctx.state !== 'running') {
-      await ctx.resume();
+      ctx.resume();
     }
     
     setIsPlaying(true);
