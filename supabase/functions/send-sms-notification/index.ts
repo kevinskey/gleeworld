@@ -53,15 +53,13 @@ function chunk<T>(arr: T[], size: number): T[][] {
   return out;
 }
 
-async function requireAuth(req: Request, supabaseUrl: string, supabaseAnonKey: string) {
+async function requireAuth(req: Request, supabase: ReturnType<typeof createClient>) {
   const authHeader = req.headers.get("authorization") ?? "";
   const token = authHeader.toLowerCase().startsWith("bearer ") ? authHeader.slice(7) : null;
   if (!token) throw new Error("Unauthorized: missing bearer token");
 
-  // Validate token (no DB needed). If you want role checks, call auth.getUser() with a client.
-  // Here we create a client with anon key solely to validate the JWT.
-  const sb = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: `Bearer ${token}` } } });
-  const { data: { user }, error } = await sb.auth.getUser();
+  // Validate token using service role client
+  const { data: { user }, error } = await supabase.auth.getUser(token);
   if (error || !user) throw new Error("Unauthorized: invalid token");
   return user;
 }
@@ -82,11 +80,10 @@ serve(async (req: Request) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Require a valid Supabase JWT to call this function
-    await requireAuth(req, supabaseUrl, supabaseAnonKey);
+    await requireAuth(req, supabase);
 
     const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
     const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
