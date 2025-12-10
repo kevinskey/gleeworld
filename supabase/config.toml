@@ -166,6 +166,12 @@ verify_jwt = true
 [functions.send-sms-notification]
 verify_jwt = false
 
+[functions.gw-send-sms]
+verify_jwt = false
+
+[functions.send-sms]
+verify_jwt = false
+
 [functions.receive-sms]
 verify_jwt = false
 
