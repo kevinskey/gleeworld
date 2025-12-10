@@ -104,109 +104,94 @@ export const HeaderRadioControls = () => {
               )}
               style={{ top: '60px' }} // Directly below header, no gap
             >
-              <div className="max-w-7xl mx-auto px-4 py-3">
+              <div className="max-w-7xl mx-auto px-3 py-1.5">
                 {/* Main Row: Logo, Channels, Now Playing, Controls */}
-                <div className="flex items-center gap-4 flex-wrap lg:flex-nowrap">
+                <div className="flex items-center gap-3 flex-wrap lg:flex-nowrap">
                   
                   {/* Logo & Status */}
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Radio className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="hidden sm:block">
-                      <p className="font-semibold text-sm text-foreground">Glee World Radio</p>
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
-                          className={cn(
-                            "text-[10px] h-5",
-                            isLive ? "bg-red-500 hover:bg-red-600 text-white" : 
-                            isOnline ? "bg-green-500 hover:bg-green-600 text-white" : ""
-                          )}
-                        >
-                          {isLive ? 'LIVE DJ' : isOnline ? 'ONLINE' : 'OFFLINE'}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {listenerCount}
-                        </span>
-                      </div>
-                    </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Radio className="h-4 w-4 text-primary" />
+                    <span className="font-medium text-xs text-foreground hidden sm:inline">Radio</span>
+                    <Badge 
+                      variant={isOnline ? (isLive ? "default" : "secondary") : "outline"}
+                      className={cn(
+                        "text-[9px] h-4 px-1.5",
+                        isLive ? "bg-red-500 hover:bg-red-600 text-white" : 
+                        isOnline ? "bg-green-500 hover:bg-green-600 text-white" : ""
+                      )}
+                    >
+                      {isLive ? 'LIVE' : isOnline ? 'ON' : 'OFF'}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground items-center gap-0.5 hidden sm:flex">
+                      <Users className="h-2.5 w-2.5" />
+                      {listenerCount}
+                    </span>
                   </div>
 
                   {/* Divider */}
-                  <div className="hidden lg:block h-10 w-px bg-border" />
+                  <div className="hidden lg:block h-5 w-px bg-border" />
 
                   {/* Channel Selector - Horizontal Pills */}
                   {channels.length > 0 && (
-                    <div className="flex items-center gap-2 overflow-x-auto flex-shrink-0 scrollbar-hide">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap hidden md:inline">
-                        Channels:
-                      </span>
-                      <div className="flex gap-1.5">
-                        {channels.map((channel) => {
-                          const IconComponent = getChannelIcon(channel.icon);
-                          const isSelected = selectedChannel?.id === channel.id;
-                          return (
-                            <button
-                              key={channel.id}
-                              onClick={() => handleChannelChange(channel)}
-                              className={cn(
-                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full border transition-all whitespace-nowrap",
-                                isSelected
-                                  ? "border-primary bg-primary text-primary-foreground"
-                                  : "border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:border-muted-foreground/50"
-                              )}
-                            >
-                              <IconComponent 
-                                className="h-3.5 w-3.5" 
-                                style={{ color: isSelected ? undefined : (channel.color || undefined) }}
-                              />
-                              <span className="text-xs font-medium">{channel.name}</span>
-                              {isSelected && <Check className="h-3 w-3" />}
-                            </button>
-                          );
-                        })}
-                      </div>
+                    <div className="flex items-center gap-1 overflow-x-auto flex-shrink-0 scrollbar-hide">
+                      {channels.map((channel) => {
+                        const IconComponent = getChannelIcon(channel.icon);
+                        const isSelected = selectedChannel?.id === channel.id;
+                        return (
+                          <button
+                            key={channel.id}
+                            onClick={() => handleChannelChange(channel)}
+                            className={cn(
+                              "flex items-center gap-1 px-2 py-0.5 rounded-full transition-all whitespace-nowrap",
+                              isSelected
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                            )}
+                          >
+                            <IconComponent 
+                              className="h-3 w-3" 
+                              style={{ color: isSelected ? undefined : (channel.color || undefined) }}
+                            />
+                            <span className="text-[10px] font-medium">{channel.name}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 
                   {/* Divider */}
-                  <div className="hidden lg:block h-10 w-px bg-border" />
+                  <div className="hidden lg:block h-5 w-px bg-border" />
 
                   {/* Now Playing */}
-                  <div className="flex-1 min-w-0 hidden md:block">
+                  <div className="flex-1 min-w-0 hidden md:flex items-center gap-2">
                     {currentTrack && isOnline ? (
-                      <div className="flex items-center gap-3">
+                      <>
                         {isPlaying && (
                           <div className="flex gap-0.5 flex-shrink-0">
                             {[1, 2, 3].map((i) => (
                               <div 
                                 key={i}
-                                className="w-1 bg-primary rounded-full animate-pulse"
+                                className="w-0.5 bg-primary rounded-full animate-pulse"
                                 style={{ 
-                                  height: `${8 + i * 4}px`,
+                                  height: `${6 + i * 3}px`,
                                   animationDelay: `${i * 0.15}s`
                                 }}
                               />
                             ))}
                           </div>
                         )}
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground uppercase tracking-wide">Now Playing</p>
-                          <p className="font-medium text-sm truncate text-foreground">{currentTrack.title}</p>
-                          {currentTrack.artist && (
-                            <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
-                          )}
-                        </div>
-                      </div>
+                        <span className="text-[10px] font-medium truncate text-foreground">{currentTrack.title}</span>
+                        {currentTrack.artist && (
+                          <span className="text-[10px] text-muted-foreground truncate">— {currentTrack.artist}</span>
+                        )}
+                      </>
                     ) : !isOnline ? (
-                      <p className="text-sm text-muted-foreground">Radio is currently offline</p>
+                      <span className="text-[10px] text-muted-foreground">Offline</span>
                     ) : null}
                   </div>
 
                   {/* Playback Controls */}
-                  <div className="flex items-center gap-3 flex-shrink-0 ml-auto">
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
                     {/* Play/Pause */}
                     <Button
                       variant={isPlaying ? "secondary" : "default"}
@@ -217,27 +202,24 @@ export const HeaderRadioControls = () => {
                         togglePlayPause();
                       }}
                       disabled={isLoading || !isOnline}
-                      className="h-9 px-4"
+                      className="h-6 w-6 p-0 rounded-full"
                       type="button"
                     >
                       {isLoading ? (
-                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        <div className="h-3 w-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       ) : isPlaying ? (
-                        <Pause className="h-4 w-4" />
+                        <Pause className="h-3 w-3" />
                       ) : (
-                        <Play className="h-4 w-4 ml-0.5" />
+                        <Play className="h-3 w-3 ml-0.5" />
                       )}
-                      <span className="ml-2 hidden sm:inline">
-                        {isLoading ? 'Connecting...' : isPlaying ? 'Pause' : 'Play'}
-                      </span>
                     </Button>
 
                     {/* Volume Control */}
-                    <div className="flex items-center gap-2 hidden sm:flex">
+                    <div className="items-center gap-1.5 hidden sm:flex">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-6 w-6 p-0"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
@@ -246,9 +228,9 @@ export const HeaderRadioControls = () => {
                         type="button"
                       >
                         {isMuted ? (
-                          <VolumeX className="h-4 w-4" />
+                          <VolumeX className="h-3 w-3" />
                         ) : (
-                          <Volume2 className="h-4 w-4" />
+                          <Volume2 className="h-3 w-3" />
                         )}
                       </Button>
                       <Slider
@@ -256,11 +238,8 @@ export const HeaderRadioControls = () => {
                         onValueChange={([value]) => setVolume(value)}
                         max={1}
                         step={0.05}
-                        className="w-24"
+                        className="w-16"
                       />
-                      <span className="text-xs text-muted-foreground w-8">
-                        {Math.round(volume * 100)}%
-                      </span>
                     </div>
 
                     {/* Close Button */}
@@ -268,71 +247,40 @@ export const HeaderRadioControls = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsOpen(false)}
-                      className="h-8 w-8 p-0"
+                      className="h-6 w-6 p-0"
                       type="button"
                     >
-                      <ChevronUp className="h-4 w-4" />
+                      <ChevronUp className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
 
                 {/* Mobile: Now Playing Row */}
-                <div className="md:hidden mt-3 pt-3 border-t border-border">
+                <div className="md:hidden mt-1.5 pt-1.5 border-t border-border/50">
                   {currentTrack && isOnline ? (
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
                       {isPlaying && (
                         <div className="flex gap-0.5 flex-shrink-0">
                           {[1, 2, 3].map((i) => (
                             <div 
                               key={i}
-                              className="w-1 bg-primary rounded-full animate-pulse"
+                              className="w-0.5 bg-primary rounded-full animate-pulse"
                               style={{ 
-                                height: `${8 + i * 4}px`,
+                                height: `${5 + i * 2}px`,
                                 animationDelay: `${i * 0.15}s`
                               }}
                             />
                           ))}
                         </div>
                       )}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate text-foreground">{currentTrack.title}</p>
-                        {currentTrack.artist && (
-                          <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
-                        )}
-                      </div>
-                      {/* Mobile Volume */}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setVolume(isMuted ? 0.7 : 0);
-                          }}
-                          type="button"
-                        >
-                          {isMuted ? (
-                            <VolumeX className="h-3.5 w-3.5" />
-                          ) : (
-                            <Volume2 className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                        <Slider
-                          value={[volume]}
-                          onValueChange={([value]) => setVolume(value)}
-                          max={1}
-                          step={0.05}
-                          className="w-20"
-                        />
-                      </div>
+                      <span className="text-[10px] font-medium truncate text-foreground">{currentTrack.title}</span>
+                      {currentTrack.artist && (
+                        <span className="text-[10px] text-muted-foreground truncate">— {currentTrack.artist}</span>
+                      )}
                     </div>
                   ) : !isOnline ? (
-                    <p className="text-sm text-muted-foreground text-center">Radio is currently offline</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground text-center italic">"To Amaze and Inspire"</p>
-                  )}
+                    <p className="text-[10px] text-muted-foreground text-center">Offline</p>
+                  ) : null}
                 </div>
               </div>
             </div>
