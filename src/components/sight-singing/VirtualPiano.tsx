@@ -325,24 +325,29 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }
   };
 
-  // Global touchend listener to stop all notes (mobile fallback)
+  // Global pointer/touch end listener to stop all notes (mobile fallback for stuck keys)
   useEffect(() => {
-    const handleGlobalTouchEnd = () => {
-      // Stop all active notes when touch ends anywhere
-      if (synthRef.current && activeNotes.size > 0) {
+    const handleGlobalPointerUp = () => {
+      // Stop all active notes when any pointer/touch ends
+      if (synthRef.current) {
         synthRef.current.stopAllNotes();
-        setActiveNotes(new Set());
       }
+      setActiveNotes(new Set());
     };
 
-    document.addEventListener('touchend', handleGlobalTouchEnd);
-    document.addEventListener('touchcancel', handleGlobalTouchEnd);
+    // Listen for all pointer/touch end events at document level
+    document.addEventListener('pointerup', handleGlobalPointerUp);
+    document.addEventListener('pointercancel', handleGlobalPointerUp);
+    document.addEventListener('touchend', handleGlobalPointerUp);
+    document.addEventListener('touchcancel', handleGlobalPointerUp);
 
     return () => {
-      document.removeEventListener('touchend', handleGlobalTouchEnd);
-      document.removeEventListener('touchcancel', handleGlobalTouchEnd);
+      document.removeEventListener('pointerup', handleGlobalPointerUp);
+      document.removeEventListener('pointercancel', handleGlobalPointerUp);
+      document.removeEventListener('touchend', handleGlobalPointerUp);
+      document.removeEventListener('touchcancel', handleGlobalPointerUp);
     };
-  }, [activeNotes.size]);
+  }, []); // No dependencies - stable listener
 
   // Cleanup on unmount - don't close shared audio context
   useEffect(() => {
