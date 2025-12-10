@@ -1731,3 +1731,10 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Radio bar open state - push content down */
+body.radio-bar-open .dashboard-content,
+body.radio-bar-open .glee-lounge-strip,
+body.radio-bar-open main {
+  padding-top: 44px; /* Height of the compact radio bar */
+  transition: padding-top 0.2s ease-out;
+}
