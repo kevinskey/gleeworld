@@ -268,10 +268,11 @@ const ExitInterviewsModule: React.FC = () => {
 
       if (groupError) throw groupError;
 
-      // Add members to the group
+      // Add members to the group (filter out the admin to avoid duplicates)
+      const otherMembers = createGroupDialog.members.filter(m => m.user_id !== user.id);
       const memberInserts = [
         { group_id: group.id, user_id: user.id, role: "admin" },
-        ...createGroupDialog.members.map(m => ({
+        ...otherMembers.map(m => ({
           group_id: group.id,
           user_id: m.user_id,
           role: "member"
