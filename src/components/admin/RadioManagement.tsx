@@ -383,11 +383,13 @@ export const RadioManagement = () => {
                   <span className="text-xs">Media Library</span>
                 </Button>
                 <Button variant="outline" 
+                  onClick={() => toast({ title: "Glee Cam", description: "Browse Glee Cam audio recordings in the Media Library" })}
                   className="h-20 flex-col gap-2 bg-pink-500/10 border-pink-500/30 hover:bg-pink-500/20 text-white">
                   <Camera className="h-6 w-6 text-pink-400" />
                   <span className="text-xs">Glee Cam</span>
                 </Button>
                 <Button variant="outline" 
+                  onClick={() => toast({ title: "Voice Recording", description: "Use Glee Cam to record voice memos for radio" })}
                   className="h-20 flex-col gap-2 bg-amber-500/10 border-amber-500/30 hover:bg-amber-500/20 text-white">
                   <Mic className="h-6 w-6 text-amber-400" />
                   <span className="text-xs">Record Voice</span>
