@@ -37,7 +37,8 @@ import {
   RefreshCw,
   ChevronRight,
   Sparkles,
-  Layers
+  Layers,
+  SkipForward
 } from 'lucide-react';
 import { RadioPlaylistQueue } from '../radio/RadioPlaylistQueue';
 import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
@@ -66,6 +67,17 @@ interface RadioStats {
   totalListeners: number;
   currentlyPlaying: string | null;
   currentArtist: string | null;
+  currentPlaylist: string | null;
+  currentArt: string | null;
+  currentElapsed: number | null;
+  currentDuration: number | null;
+  playingNext: {
+    title: string | null;
+    artist: string | null;
+    playlist: string | null;
+    art: string | null;
+    duration: number | null;
+  } | null;
   isOnline: boolean;
   isLive: boolean;
   streamerName: string | null;
@@ -97,6 +109,11 @@ export const RadioManagement = () => {
     totalListeners: 0,
     currentlyPlaying: null,
     currentArtist: null,
+    currentPlaylist: null,
+    currentArt: null,
+    currentElapsed: null,
+    currentDuration: null,
+    playingNext: null,
     isOnline: false,
     isLive: false,
     streamerName: null,
@@ -220,6 +237,35 @@ export const RadioManagement = () => {
           streamerName: data.streamer_name || null,
           lastUpdated: data.last_updated || null
         }));
+      }
+
+      // Fetch live data from AzuraCast including Now Playing and Playing Next
+      try {
+        const nowPlaying = await azuraCastService.getNowPlaying();
+        if (nowPlaying) {
+          setRadioStats(prev => ({
+            ...prev,
+            currentlyPlaying: nowPlaying.now_playing?.song?.title || prev.currentlyPlaying,
+            currentArtist: nowPlaying.now_playing?.song?.artist || prev.currentArtist,
+            currentPlaylist: nowPlaying.now_playing?.playlist || null,
+            currentArt: nowPlaying.now_playing?.song?.art || null,
+            currentElapsed: nowPlaying.now_playing?.elapsed || null,
+            currentDuration: nowPlaying.now_playing?.duration || null,
+            totalListeners: nowPlaying.listeners?.current || prev.totalListeners,
+            isOnline: true,
+            isLive: nowPlaying.live?.is_live || false,
+            streamerName: nowPlaying.live?.streamer_name || null,
+            playingNext: nowPlaying.playing_next ? {
+              title: nowPlaying.playing_next.song?.title || null,
+              artist: nowPlaying.playing_next.song?.artist || null,
+              playlist: nowPlaying.playing_next.playlist || null,
+              art: nowPlaying.playing_next.song?.art || null,
+              duration: nowPlaying.playing_next.duration || null,
+            } : null
+          }));
+        }
+      } catch (azuraError) {
+        console.log('Could not fetch AzuraCast now playing:', azuraError);
       }
 
       // Also try to fetch AzuraCast media count
@@ -412,24 +458,85 @@ export const RadioManagement = () => {
           </div>
         </div>
         
-        {/* Now Playing */}
-        {radioStats.currentlyPlaying && (
-          <div className="mt-4 flex items-center gap-3 px-4 py-2 bg-slate-800/50 rounded-lg border border-slate-700">
-            <Volume2 className="h-4 w-4 text-primary animate-pulse" />
-            <span className="text-xs text-slate-400">Now Playing:</span>
-            <span className="text-sm font-medium text-white">
-              {radioStats.currentlyPlaying}
-              {radioStats.currentArtist && (
-                <span className="text-slate-400 ml-2">— {radioStats.currentArtist}</span>
+        {/* Now Playing & Playing Next */}
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Now Playing */}
+          <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Music className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold text-white">Now Playing</span>
+              {radioStats.isLive && radioStats.streamerName && (
+                <Badge className="ml-auto bg-red-500/20 text-red-400 border-red-500/30">
+                  DJ: {radioStats.streamerName}
+                </Badge>
               )}
-            </span>
-            {radioStats.isLive && radioStats.streamerName && (
-              <Badge variant="secondary" className="bg-red-500/20 text-red-400 border-red-500/30">
-                DJ: {radioStats.streamerName}
-              </Badge>
+            </div>
+            {radioStats.currentlyPlaying ? (
+              <div className="flex items-start gap-3">
+                {radioStats.currentArt ? (
+                  <img 
+                    src={radioStats.currentArt} 
+                    alt="Album art"
+                    className="h-14 w-14 rounded object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-14 w-14 bg-slate-700 rounded flex items-center justify-center flex-shrink-0">
+                    <Music className="h-6 w-6 text-slate-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{radioStats.currentlyPlaying}</p>
+                  {radioStats.currentPlaylist && (
+                    <p className="text-xs text-slate-400 truncate">Playlist: {radioStats.currentPlaylist}</p>
+                  )}
+                  {radioStats.currentElapsed !== null && radioStats.currentDuration !== null && (
+                    <p className="text-xs text-emerald-400 mt-1">
+                      {formatDuration(radioStats.currentElapsed)} / {formatDuration(radioStats.currentDuration)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">No track playing</p>
             )}
           </div>
-        )}
+
+          {/* Playing Next */}
+          <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <SkipForward className="h-4 w-4 text-amber-400" />
+              <span className="text-sm font-semibold text-white">Playing Next</span>
+            </div>
+            {radioStats.playingNext?.title ? (
+              <div className="flex items-start gap-3">
+                {radioStats.playingNext.art ? (
+                  <img 
+                    src={radioStats.playingNext.art} 
+                    alt="Album art"
+                    className="h-14 w-14 rounded object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-14 w-14 bg-slate-700 rounded flex items-center justify-center flex-shrink-0">
+                    <Music className="h-6 w-6 text-slate-400" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{radioStats.playingNext.title}</p>
+                  {radioStats.playingNext.playlist && (
+                    <p className="text-xs text-slate-400 truncate">Playlist: {radioStats.playingNext.playlist}</p>
+                  )}
+                  {radioStats.playingNext.duration !== null && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      Duration: {formatDuration(radioStats.playingNext.duration)}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 italic">No track queued</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* DJ Transport Control - Full Width First Card */}
