@@ -82,7 +82,7 @@ export const getAudioContextState = (): string => {
 // Force unlock - call this directly from a touch/click handler
 // Must be synchronous within user gesture for iOS
 export const forceUnlockAudio = (): boolean => {
-  // Fast path: already unlocked
+  // Fast path: already unlocked and running
   if (isUnlocked && globalAudioContext?.state === 'running') {
     return true;
   }
@@ -90,19 +90,38 @@ export const forceUnlockAudio = (): boolean => {
   try {
     const ctx = getSharedAudioContext();
     
-    // Immediately play silent buffer + tone during user gesture (synchronous)
+    // CRITICAL for iOS: Play silent buffer + tone synchronously within user gesture
+    // This must happen BEFORE any async operations
     playSilentBuffer(ctx);
     playUnlockTone(ctx);
     
-    // Resume context - this is async but we fire and forget
+    // Also try creating and playing an oscillator directly (another iOS unlock method)
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.001, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.01);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.01);
+    } catch (e) {
+      // Ignore
+    }
+    
+    // Resume context - fire and forget, don't block
     if (ctx.state !== 'running') {
       ctx.resume().then(() => {
         isUnlocked = ctx.state === 'running';
-      });
+        if (isUnlocked) {
+          console.log('✅ Audio context resumed and unlocked');
+        }
+      }).catch(() => {});
     } else {
       isUnlocked = true;
     }
     
+    // Return current state (may not be running yet, but unlock is in progress)
     return ctx.state === 'running';
   } catch (e) {
     console.error('Force unlock failed:', e);

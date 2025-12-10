@@ -460,12 +460,12 @@ export class WebAudioSynth {
     this.masterVolume = Math.max(0, Math.min(1, volume));
   }
 
-  async playNote(noteName: string, frequency: number): Promise<void> {
+  playNote(noteName: string, frequency: number): void {
     if (this.activeNotes.has(noteName)) return;
 
-    // Resume synchronously if needed - no await to avoid delay
+    // Resume synchronously if needed - fire and forget, no await
     if (this.audioContext.state === 'suspended') {
-      this.audioContext.resume();
+      this.audioContext.resume().catch(() => {});
     }
 
     const instrument = this.currentInstrument;
