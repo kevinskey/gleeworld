@@ -489,7 +489,7 @@ export const RadioManagement = () => {
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 bg-slate-800 border-slate-600 text-white" />
+                  <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 !bg-slate-800 !border-slate-600 !text-white placeholder:!text-slate-400" />
                 </div>
               </div>
               <ScrollArea className="h-[400px]">
