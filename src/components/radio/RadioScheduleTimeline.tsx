@@ -12,10 +12,10 @@ import {
   Plus,
   GripVertical,
   Upload,
-  X,
   RefreshCw,
   Loader2,
-  Radio
+  Radio,
+  SkipForward
 } from 'lucide-react';
 
 interface QueueItem {
@@ -162,16 +162,17 @@ export const RadioScheduleTimeline = ({
     }
   };
 
-  const removeFromQueue = async (queueItemId: number) => {
+  const skipCurrentTrack = async () => {
     try {
-      await azuraCastService.removeFromQueue(queueItemId);
-      toast({ title: "Removed", description: "Track removed from queue" });
+      await azuraCastService.skipTrack();
+      toast({ title: "Skipped", description: "Skipped to next track" });
       await loadQueue();
+      onRefresh?.();
     } catch (error) {
-      console.error('Error removing from queue:', error);
+      console.error('Error skipping track:', error);
       toast({ 
         title: "Error", 
-        description: "Failed to remove track from queue", 
+        description: "Failed to skip track", 
         variant: "destructive" 
       });
     }
@@ -222,6 +223,15 @@ export const RadioScheduleTimeline = ({
             <span className="text-xs text-slate-400">
               {formatDuration(remainingCurrentSong)} left
             </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={skipCurrentTrack}
+              className="text-slate-400 hover:text-white h-7 px-2"
+              title="Skip to next track"
+            >
+              <SkipForward className="h-4 w-4" />
+            </Button>
           </div>
         )}
 
@@ -255,12 +265,6 @@ export const RadioScheduleTimeline = ({
                 <span className="text-xs text-slate-500">
                   {formatDuration(item.duration)}
                 </span>
-                <button
-                  onClick={() => removeFromQueue(item.id)}
-                  className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-destructive/20 rounded transition-all"
-                >
-                  <X className="h-3 w-3 text-destructive" />
-                </button>
               </div>
             ))}
           </div>
