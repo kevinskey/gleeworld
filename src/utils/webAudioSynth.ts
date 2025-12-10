@@ -640,6 +640,9 @@ export class WebAudioSynth {
     const note = this.activeNotes.get(noteName);
     if (!note) return;
 
+    // Remove from active notes immediately to prevent stuck state
+    this.activeNotes.delete(noteName);
+
     const now = this.audioContext.currentTime;
     const releaseTime = this.currentInstrument.release;
 
@@ -659,14 +662,29 @@ export class WebAudioSynth {
       if (note.lfo) {
         try { note.lfo.stop(); } catch (e) {}
       }
-      this.activeNotes.delete(noteName);
     }, releaseTime * 1000 + 100);
   }
 
   stopAllNotes(): void {
-    this.activeNotes.forEach((_, noteName) => {
+    // Copy keys to array first to avoid modifying while iterating
+    const noteNames = Array.from(this.activeNotes.keys());
+    noteNames.forEach(noteName => {
       this.stopNote(noteName);
     });
+  }
+
+  // Force stop all notes immediately (no release envelope)
+  forceStopAllNotes(): void {
+    this.activeNotes.forEach((note) => {
+      try {
+        note.gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+        note.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+        note.oscillators.forEach(osc => { try { osc.stop(); } catch (e) {} });
+        note.harmonicOscillators?.forEach(osc => { try { osc.stop(); } catch (e) {} });
+        if (note.lfo) { try { note.lfo.stop(); } catch (e) {} }
+      } catch (e) {}
+    });
+    this.activeNotes.clear();
   }
 
   getActiveNoteCount(): number {

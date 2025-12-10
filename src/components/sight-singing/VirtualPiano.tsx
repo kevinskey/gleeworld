@@ -325,12 +325,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }
   };
 
-  // Global pointer/touch end listener to stop all notes (mobile fallback for stuck keys)
+  // Global pointer/touch end listener to stop all notes immediately (prevents stuck keys)
   useEffect(() => {
     const handleGlobalPointerUp = () => {
-      // Stop all active notes when any pointer/touch ends
+      // Force stop all notes immediately when pointer/touch ends
       if (synthRef.current) {
-        synthRef.current.stopAllNotes();
+        synthRef.current.forceStopAllNotes();
       }
       setActiveNotes(new Set());
     };
