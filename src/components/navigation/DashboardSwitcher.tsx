@@ -20,8 +20,12 @@ export const DashboardSwitcher = () => {
     return null;
   }
 
-  // All users get the dashboard switcher to toggle between admin and personal views
-  const hasAdminAccess = userProfile.is_admin || userProfile.is_super_admin || userProfile.is_exec_board;
+  // Only super admins get the dashboard switcher
+  if (!userProfile.is_super_admin) {
+    return null;
+  }
+
+  const hasAdminAccess = userProfile.is_super_admin;
 
   const isOnMemberDashboard = location.pathname.startsWith('/dashboard/member-view/');
   const isOnAdminDashboard = location.pathname === '/dashboard';
