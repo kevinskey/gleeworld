@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -27,13 +29,21 @@ import {
   Search,
   Filter,
   ArrowUpDown,
-  X
+  X,
+  Calendar,
+  GripVertical,
+  Save,
+  Pencil,
+  Music2,
+  Church,
+  Sparkles
 } from 'lucide-react';
 import { RadioTimeline } from '../radio/RadioTimeline';
 import { MediaUploadButton } from '@/components/media/MediaUploadButton';
 import { BulkUploadDialog } from '@/components/radio/BulkUploadDialog';
 import { MediaLibraryDialog } from '@/components/radio/MediaLibraryDialog';
 import { AzuraCastAdminPanel } from './AzuraCastAdminPanel';
+import { cn } from '@/lib/utils';
 
 interface AudioTrack {
   id: string;

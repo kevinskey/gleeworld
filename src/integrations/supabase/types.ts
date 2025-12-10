@@ -11667,6 +11667,45 @@ export type Database = {
           },
         ]
       }
+      gw_radio_now_playing_override: {
+        Row: {
+          album: string | null
+          art_url: string | null
+          artist: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          album?: string | null
+          art_url?: string | null
+          artist?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          album?: string | null
+          art_url?: string | null
+          artist?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_radio_playlist_items: {
         Row: {
           audio_archive_id: string | null
@@ -11757,6 +11796,50 @@ export type Database = {
           weekday?: number | null
         }
         Relationships: []
+      }
+      gw_radio_schedule: {
+        Row: {
+          channel_id: string | null
+          created_at: string
+          created_by: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          channel_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          channel_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_radio_schedule_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "gw_radio_channels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_radio_station_state: {
         Row: {
