@@ -398,9 +398,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
               return <button key={keyName} style={{
                 width: `${whiteKeyWidth}px`,
                 minWidth: `${whiteKeyWidth}px`,
-                boxShadow: isActive ? 'inset 0 6px 12px rgba(0,0,0,0.35)' : '0 6px 12px rgba(0,0,0,0.2), inset 0 3px 0 rgba(255,255,255,0.9)',
-                backgroundColor: isActive ? '#e0e7ff' : '#FFFFFF',
-              }} className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none border-r border-gray-300/50 last:border-r-0 touch-manipulation ${isActive ? 'shadow-inner scale-[0.98]' : 'hover:bg-gray-50 shadow-lg active:scale-[0.98]'} ${index === 0 ? 'rounded-l-lg sm:rounded-l-xl' : ''} ${index === whiteKeys.length - 1 ? 'rounded-r-lg sm:rounded-r-xl' : ''}`} 
+                boxShadow: isActive 
+                  ? 'inset 0 4px 8px rgba(0,0,0,0.15), inset 0 1px 3px rgba(0,0,0,0.1)' 
+                  : '0 6px 12px rgba(0,0,0,0.2), inset 0 3px 0 rgba(255,255,255,0.9)',
+                backgroundColor: '#FFFFFF',
+                transform: isActive ? 'translateY(2px)' : 'translateY(0)',
+              }} className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none border-r border-gray-300/50 last:border-r-0 touch-manipulation ${isActive ? 'shadow-inner' : 'hover:bg-gray-50 shadow-lg active:scale-[0.98]'} ${index === 0 ? 'rounded-l-lg sm:rounded-l-xl' : ''} ${index === whiteKeys.length - 1 ? 'rounded-r-lg sm:rounded-r-xl' : ''}`}
               onPointerDown={(e) => {
                 e.preventDefault();
                 playNote(keyName, key.frequency);
