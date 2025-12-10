@@ -94,11 +94,35 @@ export function SharePostDialog({
   };
 
   const copyToClipboard = async () => {
-    const fullText = `${shareText}\n\n${hashtags}\n\n${shareUrl}`;
-    await navigator.clipboard.writeText(fullText);
-    setCopied(true);
-    toast.success('Content copied to clipboard!');
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      const fullText = `${shareText}\n\n${hashtags}\n\n${shareUrl}`;
+      await navigator.clipboard.writeText(fullText);
+      setCopied(true);
+      toast.success('Content copied to clipboard!');
+      setTimeout(() => setCopied(false), 2000);
+      return true;
+    } catch (err) {
+      // Fallback for when clipboard API fails
+      const textArea = document.createElement('textarea');
+      textArea.value = `${shareText}\n\n${hashtags}\n\n${shareUrl}`;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+        toast.success('Content copied to clipboard!');
+        setTimeout(() => setCopied(false), 2000);
+        return true;
+      } catch {
+        toast.error('Failed to copy to clipboard');
+        return false;
+      } finally {
+        document.body.removeChild(textArea);
+      }
+    }
   };
 
   const shareToFacebook = () => {
@@ -107,22 +131,31 @@ export function SharePostDialog({
   };
 
   const shareToInstagram = async () => {
-    // Instagram doesn't have a web share API, so we copy content and open Instagram
-    await copyToClipboard();
-    toast.info('Content copied! Opening Instagram...', {
-      description: 'Paste the content in your Instagram post'
-    });
-    // Try to open Instagram app, fallback to web
-    window.open('https://www.instagram.com/', '_blank');
+    // Copy content FIRST while document is still focused
+    const copied = await copyToClipboard();
+    if (copied) {
+      toast.info('Content copied! Opening Instagram...', {
+        description: 'Paste the content in your Instagram post'
+      });
+    }
+    // Then open Instagram
+    setTimeout(() => {
+      window.open('https://www.instagram.com/', '_blank');
+    }, 100);
   };
 
   const shareToTikTok = async () => {
-    // TikTok doesn't have a web share API, so we copy content and open TikTok
-    await copyToClipboard();
-    toast.info('Content copied! Opening TikTok...', {
-      description: 'Paste the content in your TikTok post'
-    });
-    window.open('https://www.tiktok.com/upload', '_blank');
+    // Copy content FIRST while document is still focused
+    const copied = await copyToClipboard();
+    if (copied) {
+      toast.info('Content copied! Opening TikTok...', {
+        description: 'Paste the content in your TikTok post'
+      });
+    }
+    // Then open TikTok
+    setTimeout(() => {
+      window.open('https://www.tiktok.com/upload', '_blank');
+    }, 100);
   };
 
   const shareNative = async () => {
