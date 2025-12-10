@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
+import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { supabase } from '@/integrations/supabase/client';
 import { azuraCastService } from '@/services/azuracast';
 import { cn } from '@/lib/utils';
@@ -37,7 +38,8 @@ import {
   Settings,
   Signal,
   Wifi,
-  WifiOff
+  WifiOff,
+  Loader2
 } from 'lucide-react';
 
 interface DJTransportControlProps {
@@ -62,14 +64,22 @@ interface LiveInsertion {
 }
 
 export const DJTransportControl = ({ stationState, onRefresh }: DJTransportControlProps) => {
+  // Use the shared radio player hook - same as header
+  const { 
+    isPlaying, 
+    isLoading, 
+    togglePlayPause, 
+    setVolume, 
+    volume 
+  } = useRadioPlayer();
+
   const [isConnected, setIsConnected] = useState(false);
   const [isLiveMode, setIsLiveMode] = useState(false);
   const [djName, setDjName] = useState('');
-  const [masterVolume, setMasterVolume] = useState([80]);
+  const [masterVolume, setMasterVolume] = useState([volume * 100]);
   const [micVolume, setMicVolume] = useState([70]);
   const [isMicMuted, setIsMicMuted] = useState(true);
   const [crossfadeValue, setCrossfadeValue] = useState([50]);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [insertionQueue, setInsertionQueue] = useState<LiveInsertion[]>([]);
   const [selectedInsertion, setSelectedInsertion] = useState<string>('');
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
@@ -78,6 +88,17 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [activeTab, setActiveTab] = useState('transport');
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
+
+  // Sync master volume slider with radio player volume
+  useEffect(() => {
+    setMasterVolume([volume * 100]);
+  }, [volume]);
+
+  // Handle master volume change
+  const handleMasterVolumeChange = (value: number[]) => {
+    setMasterVolume(value);
+    setVolume(value[0] / 100);
+  };
 
   // Pre-defined live insertions
   const presetInsertions: LiveInsertion[] = [
@@ -197,19 +218,9 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
     }
   };
 
-  const handlePlayPause = async () => {
-    try {
-      if (isPlaying) {
-        // Pause playback - this would control AzuraCast AutoDJ
-        setIsPlaying(false);
-        toast({ title: "Paused", description: "Playback paused" });
-      } else {
-        setIsPlaying(true);
-        toast({ title: "Playing", description: "Playback resumed" });
-      }
-    } catch (error) {
-      toast({ title: "Error", description: "Playback control failed", variant: "destructive" });
-    }
+  // Use the shared togglePlayPause from useRadioPlayer hook
+  const handlePlayPause = () => {
+    togglePlayPause();
   };
 
   const handleSkipTrack = async () => {
@@ -352,13 +363,18 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
                 size="lg"
                 className={cn(
                   "h-20 w-20 rounded-full transition-all",
-                  isPlaying 
-                    ? "bg-amber-500 hover:bg-amber-600" 
-                    : "bg-emerald-500 hover:bg-emerald-600"
+                  isLoading
+                    ? "bg-slate-500"
+                    : isPlaying 
+                      ? "bg-amber-500 hover:bg-amber-600" 
+                      : "bg-emerald-500 hover:bg-emerald-600"
                 )}
                 onClick={handlePlayPause}
+                disabled={isLoading}
               >
-                {isPlaying ? (
+                {isLoading ? (
+                  <Loader2 className="h-8 w-8 text-white animate-spin" />
+                ) : isPlaying ? (
                   <Pause className="h-8 w-8 text-white" />
                 ) : (
                   <Play className="h-8 w-8 text-white ml-1" />
@@ -583,7 +599,7 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
               </div>
               <Slider
                 value={masterVolume}
-                onValueChange={setMasterVolume}
+                onValueChange={handleMasterVolumeChange}
                 max={100}
                 step={1}
                 className="w-full"
