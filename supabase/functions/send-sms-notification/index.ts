@@ -24,10 +24,27 @@ const DEBUG = Deno.env.get("DEBUG_SMS") === "true";
 function normalizePhone(raw: string): string | null {
   if (!raw) return null;
   const trimmed = raw.trim();
-  // Allow starting '+' or digits only; strip spaces, dashes, parentheses
-  const compact = trimmed.replace(/[\s().-]/g, "");
-  if (!E164_RE.test(compact)) return null;
-  return compact.startsWith("+") ? compact : `+${compact}`;
+  // Strip spaces, dashes, parentheses
+  let compact = trimmed.replace(/[\s().-]/g, "");
+  
+  // If it already starts with +, use as-is
+  if (compact.startsWith("+")) {
+    return E164_RE.test(compact) ? compact : null;
+  }
+  
+  // For US numbers: 10 digits without country code, add +1
+  if (compact.length === 10 && /^\d{10}$/.test(compact)) {
+    return `+1${compact}`;
+  }
+  
+  // For 11 digits starting with 1 (US with country code), add +
+  if (compact.length === 11 && compact.startsWith("1") && /^\d{11}$/.test(compact)) {
+    return `+${compact}`;
+  }
+  
+  // Otherwise, add + and validate
+  const withPlus = `+${compact}`;
+  return E164_RE.test(withPlus) ? withPlus : null;
 }
 
 function chunk<T>(arr: T[], size: number): T[][] {
