@@ -84,6 +84,43 @@ export default function GleeLounge() {
     );
   }
 
+  // Compact layout when Music Library is open
+  if (showMusicLibrary) {
+    return (
+      <GleeLoungeWithMusicLibrary
+        showMusicLibrary={showMusicLibrary}
+        onToggleMusicLibrary={() => setShowMusicLibrary(false)}
+      >
+        <div className="h-full flex flex-col bg-background">
+          {/* Compact Header */}
+          <header className="sticky top-0 z-40 bg-background border-b border-border px-3 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sofa className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-sm">Lounge</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowMusicLibrary(false)}
+                className="h-7 text-xs"
+              >
+                <Music className="h-3 w-3 mr-1" />
+                Close
+              </Button>
+            </div>
+          </header>
+
+          {/* Compact Feed */}
+          <div className="flex-1 overflow-auto p-2">
+            <SocialFeed ref={feedRef} userProfile={userProfile} compact={true} />
+          </div>
+        </div>
+      </GleeLoungeWithMusicLibrary>
+    );
+  }
+
+  // Full layout when Music Library is closed
   const loungeContent = (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -106,9 +143,9 @@ export default function GleeLounge() {
           {/* Right side actions */}
           <div className="flex items-center gap-2">
             <Button
-              variant={showMusicLibrary ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              onClick={() => setShowMusicLibrary(!showMusicLibrary)}
+              onClick={() => setShowMusicLibrary(true)}
               className="gap-2"
             >
               <Music className="h-4 w-4" />
@@ -180,7 +217,7 @@ export default function GleeLounge() {
             </div>
 
             {/* Feed */}
-            <SocialFeed ref={feedRef} userProfile={userProfile} compact={showMusicLibrary} />
+            <SocialFeed ref={feedRef} userProfile={userProfile} compact={false} />
           </div>
 
           {/* Desktop: Online sidebar */}
@@ -207,12 +244,5 @@ export default function GleeLounge() {
     </div>
   );
 
-  return (
-    <GleeLoungeWithMusicLibrary
-      showMusicLibrary={showMusicLibrary}
-      onToggleMusicLibrary={() => setShowMusicLibrary(false)}
-    >
-      {loungeContent}
-    </GleeLoungeWithMusicLibrary>
-  );
+  return loungeContent;
 }
