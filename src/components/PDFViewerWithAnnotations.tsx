@@ -633,28 +633,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     }
   }, [annotations, currentPage, annotationMode]);
 
+  // Load PDF document once
   useEffect(() => {
     if (!signedUrl) return;
 
     let cancelled = false;
 
-    const waitForCanvas = async () => {
-      // Wait until the canvas ref is mounted before attempting to render
-      let attempts = 0;
-      while (!cancelled && !canvasRef.current && attempts < 20) {
-        await new Promise((r) => requestAnimationFrame(r));
-        attempts++;
-      }
-      return !!canvasRef.current && !cancelled;
-    };
-
-    const loadPdf = async () => {
+    const loadPdfDoc = async () => {
       try {
         setIsLoading(true);
-
-        // Ensure canvas exists
-        const ready = await waitForCanvas();
-        if (!ready) return;
 
         let doc;
         try {
@@ -679,25 +666,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
         if (cancelled) return;
         setPdf(doc);
         setTotalPages(doc.numPages);
-
-        // Render current page
-        const page = await doc.getPage(currentPage);
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        
-        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
-        if (!ctx) return;
-
-        // Render at optimal scale
-        const baseViewport = page.getViewport({ scale: 1 });
-        const containerWidth = containerRef.current?.clientWidth || baseViewport.width;
-        const fitScale = Math.max(0.8, Math.min(2.0, containerWidth / baseViewport.width));
-        const viewport = page.getViewport({ scale: fitScale });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        await page.render({ canvasContext: ctx, viewport }).promise;
-        setScale(fitScale);
         setError(null);
       } catch (err) {
         toast.error('Failed to load PDF');
@@ -707,12 +675,45 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       }
     };
 
-    loadPdf();
+    loadPdfDoc();
 
     return () => {
       cancelled = true;
     };
-  }, [signedUrl, currentPage, annotationMode]);
+  }, [signedUrl]);
+
+  // Render PDF page when pdf, currentPage, or scale changes
+  useEffect(() => {
+    if (!pdf || !canvasRef.current) return;
+
+    let cancelled = false;
+
+    const renderPage = async () => {
+      try {
+        const page = await pdf.getPage(currentPage);
+        const canvas = canvasRef.current;
+        if (!canvas || cancelled) return;
+        
+        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
+        if (!ctx) return;
+
+        // Use the current scale state for rendering
+        const viewport = page.getViewport({ scale });
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+
+        await page.render({ canvasContext: ctx, viewport }).promise;
+      } catch (err) {
+        console.error('Error rendering page:', err);
+      }
+    };
+
+    renderPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pdf, currentPage, scale, annotationMode]);
 
   // Show loading while getting signed URL
   if (!pdfUrl) {
