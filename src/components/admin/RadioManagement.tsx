@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { 
   Radio, Music, Play, Pause, Plus, Edit, Trash2, Users, Volume2, Clock, Settings,
   BarChart3, Search, X, GripVertical, ListMusic, Wifi, Upload, Camera, Mic, Library,
-  Headphones, Folder, RefreshCw, ChevronRight, Sparkles, Layers, SkipForward,
+  Headphones, Folder, RefreshCw, ChevronRight, Sparkles, Layers,
   List, Calendar, Server, Activity, History, Webhook, HardDrive, Podcast, Globe, Eye, EyeOff
 } from 'lucide-react';
 import { RadioPlaylistQueue } from '../radio/RadioPlaylistQueue';
@@ -331,66 +331,32 @@ export const RadioManagement = () => {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg border border-slate-700 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+      {/* Header - compact status bar only */}
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg border border-slate-700 p-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Radio className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold text-white">Glee World Radio</span>
+              <Radio className="h-5 w-5 text-primary" />
+              <span className="text-lg font-bold text-white">Glee World Radio</span>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge className="bg-slate-800"><Music className="h-3 w-3 mr-1" />{radioStats.totalTracks} local</Badge>
-              <Badge className="bg-purple-500/20 text-purple-400"><Radio className="h-3 w-3 mr-1" />{radioStats.azuraCastTracks} server</Badge>
-              <Badge className="bg-green-500/20 text-green-400"><Users className="h-3 w-3 mr-1" />{radioStats.totalListeners}</Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge className="bg-slate-800 text-xs"><Music className="h-3 w-3 mr-1" />{radioStats.totalTracks} local</Badge>
+              <Badge className="bg-purple-500/20 text-purple-400 text-xs"><Radio className="h-3 w-3 mr-1" />{radioStats.azuraCastTracks} server</Badge>
+              <Badge className="bg-green-500/20 text-green-400 text-xs"><Users className="h-3 w-3 mr-1" />{radioStats.totalListeners}</Badge>
               {radioStats.isOnline ? (
-                <Badge className="bg-emerald-500"><Wifi className="h-3 w-3 mr-1" />{radioStats.isLive ? 'LIVE' : 'ONLINE'}</Badge>
+                <Badge className="bg-emerald-500 text-xs"><Wifi className="h-3 w-3 mr-1" />{radioStats.isLive ? 'LIVE' : 'ONLINE'}</Badge>
               ) : (
-                <Badge variant="destructive"><Wifi className="h-3 w-3 mr-1" />OFFLINE</Badge>
+                <Badge variant="destructive" className="text-xs"><Wifi className="h-3 w-3 mr-1" />OFFLINE</Badge>
               )}
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleSync} disabled={loading} className="border-slate-600 text-white hover:bg-slate-700">
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />Sync
+            <Button variant="outline" size="sm" onClick={handleSync} disabled={loading} className="border-slate-600 text-white hover:bg-slate-700 h-8">
+              <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />Sync
             </Button>
-            <Button variant="outline" size="sm" onClick={restartStation} className="border-red-600 text-red-400 hover:bg-red-500/20">
-              <RefreshCw className="h-4 w-4 mr-2" />Restart
+            <Button variant="outline" size="sm" onClick={restartStation} className="border-red-600 text-red-400 hover:bg-red-500/20 h-8">
+              <RefreshCw className="h-3 w-3 mr-1" />Restart
             </Button>
-          </div>
-        </div>
-
-        {/* Now Playing */}
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Music className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-white">Now Playing</span>
-            </div>
-            {radioStats.currentlyPlaying ? (
-              <div className="flex items-center gap-3">
-                {radioStats.currentArt ? <img src={radioStats.currentArt} alt="" className="h-12 w-12 rounded" /> : <div className="h-12 w-12 bg-slate-700 rounded flex items-center justify-center"><Music className="h-5 w-5 text-slate-400" /></div>}
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{radioStats.currentlyPlaying}</p>
-                  <p className="text-xs text-slate-400">{radioStats.currentPlaylist} • {formatDuration(radioStats.currentElapsed)} / {formatDuration(radioStats.currentDuration)}</p>
-                </div>
-              </div>
-            ) : <p className="text-sm text-slate-500">No track playing</p>}
-          </div>
-          <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <SkipForward className="h-4 w-4 text-amber-400" />
-              <span className="text-sm font-semibold text-white">Up Next</span>
-            </div>
-            {radioStats.playingNext?.title ? (
-              <div className="flex items-center gap-3">
-                {radioStats.playingNext.art ? <img src={radioStats.playingNext.art} alt="" className="h-12 w-12 rounded" /> : <div className="h-12 w-12 bg-slate-700 rounded flex items-center justify-center"><Music className="h-5 w-5 text-slate-400" /></div>}
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{radioStats.playingNext.title}</p>
-                  <p className="text-xs text-slate-400">{radioStats.playingNext.playlist}</p>
-                </div>
-              </div>
-            ) : <p className="text-sm text-slate-500">No track queued</p>}
           </div>
         </div>
       </div>
