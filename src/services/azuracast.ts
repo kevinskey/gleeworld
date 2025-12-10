@@ -153,7 +153,7 @@ class AzuraCastService {
   }
 
   // Make authenticated request via proxy
-  private async makeProxyRequest(endpoint: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any) {
+  private async makeProxyRequest(endpoint: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET', body?: any, options?: { returnEmptyOnError?: boolean }) {
     const { supabase } = await import('@/integrations/supabase/client');
     
     console.log('AzuraCast: Making proxy request to:', endpoint);
@@ -170,6 +170,9 @@ class AzuraCastService {
     // Handle supabase invoke error
     if (error) {
       console.error('AzuraCast: Proxy request error:', error);
+      if (options?.returnEmptyOnError) {
+        return [];
+      }
       throw new Error(`Proxy request failed: ${error.message}`);
     }
 
@@ -178,6 +181,14 @@ class AzuraCastService {
       // Check for error property (returned by our edge function on error)
       if (data.error) {
         console.error('AzuraCast: API error in response:', data);
+        // Check if it's an unsupported feature error - return empty array instead of throwing
+        const errorDetails = String(data.details || '');
+        if (errorDetails.includes('StationUnsupportedException') || errorDetails.includes('does not currently support')) {
+          console.warn('AzuraCast: Feature not supported by station, returning empty array');
+          if (options?.returnEmptyOnError) {
+            return [];
+          }
+        }
         // Combine error and details for better error message detection
         const errorMessage = `${data.error} ${data.details || ''}`;
         throw new Error(errorMessage);
@@ -185,6 +196,10 @@ class AzuraCastService {
       // Check if data itself indicates an error response from AzuraCast
       if (data.code && data.type && data.message) {
         console.error('AzuraCast: Direct API error:', data);
+        if (data.type === 'StationUnsupportedException' && options?.returnEmptyOnError) {
+          console.warn('AzuraCast: Feature not supported, returning empty array');
+          return [];
+        }
         throw new Error(`${data.type}: ${data.message}`);
       }
     }
@@ -453,7 +468,7 @@ class AzuraCastService {
 
   // LISTENERS
   async getListeners(): Promise<any[]> {
-    return await this.makeProxyRequest(`/station/{stationId}/listeners`);
+    return await this.makeProxyRequest(`/station/{stationId}/listeners`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   async disconnectListener(listenerId: number): Promise<void> {
@@ -512,7 +527,7 @@ class AzuraCastService {
 
   // SFTP USERS
   async getSftpUsers(): Promise<any[]> {
-    return await this.makeProxyRequest(`/station/{stationId}/sftp-users`);
+    return await this.makeProxyRequest(`/station/{stationId}/sftp-users`, 'GET', undefined, { returnEmptyOnError: true });
   }
 
   async createSftpUser(userData: {
