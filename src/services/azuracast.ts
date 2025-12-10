@@ -287,7 +287,16 @@ class AzuraCastService {
   }
 
   async deleteScheduleEntry(scheduleId: number): Promise<void> {
-    await this.makeProxyRequest(`/station/{stationId}/schedule/${scheduleId}`, 'DELETE');
+    try {
+      await this.makeProxyRequest(`/station/{stationId}/schedule/${scheduleId}`, 'DELETE');
+    } catch (error: any) {
+      // AzuraCast schedule entries are managed through playlists - direct deletion may not be supported
+      if (error.message?.includes('405') || error.message?.includes('Method not allowed')) {
+        console.warn('AzuraCast: Schedule deletion not supported - schedules are managed through playlists');
+        throw new Error('Schedule items are managed through playlists. Edit the playlist schedule instead.');
+      }
+      throw error;
+    }
   }
 
   // STATION CONFIGURATION
