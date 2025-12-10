@@ -170,35 +170,6 @@ export const HeaderRadioControls = () => {
                       )}
                     </Button>
 
-                    {/* Scrolling Now Playing Ticker */}
-                    {currentTrack && isOnline && (
-                      <div className="relative overflow-hidden w-[50%] h-6 bg-muted/30 px-2">
-                        <div className="absolute whitespace-nowrap animate-marquee flex items-center h-full gap-8">
-                          <span className="text-xs">
-                            <span className="text-primary font-semibold">Now Playing:</span>{' '}
-                            <span className="text-foreground">{currentTrack.title}</span>
-                            {currentTrack.artist && <span className="text-muted-foreground"> — {currentTrack.artist}</span>}
-                          </span>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className="text-xs">
-                            <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
-                            <span className="text-muted-foreground">More from {selectedChannel?.name || 'Glee World Radio'}</span>
-                          </span>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className="text-xs">
-                            <span className="text-primary font-semibold">Now Playing:</span>{' '}
-                            <span className="text-foreground">{currentTrack.title}</span>
-                            {currentTrack.artist && <span className="text-muted-foreground"> — {currentTrack.artist}</span>}
-                          </span>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className="text-xs">
-                            <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
-                            <span className="text-muted-foreground">More from {selectedChannel?.name || 'Glee World Radio'}</span>
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
                     <span className="text-[10px] text-muted-foreground items-center gap-0.5 hidden sm:flex">
                       <Users className="h-2.5 w-2.5" />
                       {listenerCount}
@@ -233,6 +204,38 @@ export const HeaderRadioControls = () => {
                           </button>
                         );
                       })}
+                    </div>
+                  )}
+
+                  {/* Scrolling Now Playing Ticker - After Channel Pills */}
+                  {currentTrack && isOnline && (
+                    <div className="relative overflow-hidden w-[50%] h-6 bg-muted/30 px-2">
+                      <div 
+                        className="absolute whitespace-nowrap flex items-center h-full gap-8"
+                        style={{ animation: 'marquee 45s linear infinite' }}
+                      >
+                        <span className="text-xs">
+                          <span className="text-primary font-semibold">Now Playing:</span>{' '}
+                          <span className="text-foreground">{currentTrack.title}</span>
+                          {currentTrack.artist && <span className="text-muted-foreground"> — {currentTrack.artist}</span>}
+                        </span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs">
+                          <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
+                          <span className="text-muted-foreground">More from {selectedChannel?.name || 'Glee World Radio'}</span>
+                        </span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs">
+                          <span className="text-primary font-semibold">Now Playing:</span>{' '}
+                          <span className="text-foreground">{currentTrack.title}</span>
+                          {currentTrack.artist && <span className="text-muted-foreground"> — {currentTrack.artist}</span>}
+                        </span>
+                        <span className="text-xs text-muted-foreground">•</span>
+                        <span className="text-xs">
+                          <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
+                          <span className="text-muted-foreground">More from {selectedChannel?.name || 'Glee World Radio'}</span>
+                        </span>
+                      </div>
                     </div>
                   )}
 
