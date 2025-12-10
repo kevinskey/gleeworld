@@ -84,7 +84,7 @@ export const GleeCamCard = ({
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-3 pb-3 pt-0 sm:px-0">
+      <CardContent className="px-3 pb-3 pt-0 sm:px-[20px] text-secondary-foreground">
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
           {categories.map(category => {
           const IconComponent = getIconComponent(category.icon);
