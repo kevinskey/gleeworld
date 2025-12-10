@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Play, X, VolumeX, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,15 @@ interface DashboardVideo {
   autoplay: boolean;
   muted: boolean;
 }
+
 export const DashboardYouTubeSection = () => {
   const [videos, setVideos] = useState<DashboardVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedVideo, setExpandedVideo] = useState<'left' | 'right' | null>(null);
+  const [isMuted, setIsMuted] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   useEffect(() => {
     fetchVideos();
   }, []);
@@ -101,19 +106,45 @@ export const DashboardYouTubeSection = () => {
     return `https://img.youtube.com/vi/${id}/${qualityMap[quality]}.jpg`;
   };
   const [videoKey, setVideoKey] = useState(0);
+  
   const handlePlay = (position: 'left' | 'right') => {
     setVideoKey(prev => prev + 1);
+    setIsMuted(true); // Reset muted state when playing new video
     setExpandedVideo(position);
   };
+  
   const handleClose = () => {
     setVideoKey(prev => prev + 1); // Force remount to stop playback
     setExpandedVideo(null);
+    setIsMuted(true); // Reset muted state
   };
+
+  const toggleMute = () => {
+    const newMutedState = !isMuted;
+    setIsMuted(newMutedState);
+    
+    // Control YouTube iframe via postMessage
+    if (iframeRef.current) {
+      const command = newMutedState ? 'mute' : 'unMute';
+      iframeRef.current.contentWindow?.postMessage(
+        JSON.stringify({ event: 'command', func: command }),
+        '*'
+      );
+    }
+    
+    // Control HTML5 video element
+    if (videoRef.current) {
+      videoRef.current.muted = newMutedState;
+    }
+  };
+
   const leftVideo = videos.find(v => v.position === 'left');
   const rightVideo = videos.find(v => v.position === 'right');
+  
   if (!loading && videos.length === 0) {
     return null;
   }
+  
   if (loading) {
     return <div className="w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -122,14 +153,37 @@ export const DashboardYouTubeSection = () => {
         </div>
       </div>;
   }
+  
   const expandedVideoData = expandedVideo === 'left' ? leftVideo : expandedVideo === 'right' ? rightVideo : null;
 
   // Render video player based on type
   const renderVideoPlayer = (video: DashboardVideo) => {
     if (video.video_type === 'uploaded' && video.video_url) {
-      return <video key={`video-${videoKey}`} src={video.video_url} title={video.title || 'Video'} className="absolute inset-0 w-full h-full" controls autoPlay playsInline />;
+      return (
+        <video 
+          ref={videoRef}
+          key={`video-${videoKey}`} 
+          src={video.video_url} 
+          title={video.title || 'Video'} 
+          className="absolute inset-0 w-full h-full" 
+          controls 
+          autoPlay 
+          playsInline
+          muted={isMuted}
+        />
+      );
     }
-    return <iframe key={`iframe-${videoKey}`} src={getEmbedUrl(video.video_id)} title={video.title || 'Video'} className="absolute inset-0 w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />;
+    return (
+      <iframe 
+        ref={iframeRef}
+        key={`iframe-${videoKey}`} 
+        src={getEmbedUrl(video.video_id)} 
+        title={video.title || 'Video'} 
+        className="absolute inset-0 w-full h-full" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowFullScreen 
+      />
+    );
   };
 
   // Expanded full-width view
@@ -157,12 +211,18 @@ export const DashboardYouTubeSection = () => {
             <div className="relative aspect-video rounded-lg overflow-hidden bg-card shadow-md">
               {renderVideoPlayer(expandedVideoData)}
               
-              {/* Mute indicator for YouTube videos - top left to avoid YouTube's controls */}
-              {isYouTube && (
-                <div className="absolute top-3 left-3 z-30 bg-black/70 backdrop-blur-sm rounded-full p-2 shadow-lg pointer-events-none">
+              {/* Mute toggle button - works for both YouTube and uploaded videos */}
+              <button
+                onClick={toggleMute}
+                className="absolute top-3 left-3 z-30 bg-black/70 hover:bg-black/90 backdrop-blur-sm rounded-full p-2 shadow-lg transition-colors cursor-pointer"
+                aria-label={isMuted ? 'Unmute video' : 'Mute video'}
+              >
+                {isMuted ? (
                   <VolumeX className="h-5 w-5 text-white" />
-                </div>
-              )}
+                ) : (
+                  <Volume2 className="h-5 w-5 text-white" />
+                )}
+              </button>
             </div>
           </div>
         </div>
