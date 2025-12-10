@@ -164,6 +164,19 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     setZoomLevel(1);
   }, []);
 
+  // Zoom controls for normal viewing mode (scale)
+  const handleScaleZoomIn = useCallback(() => {
+    setScale(prev => Math.min(prev + 0.2, 3));
+  }, []);
+
+  const handleScaleZoomOut = useCallback(() => {
+    setScale(prev => Math.max(prev - 0.2, 0.5));
+  }, []);
+
+  const handleScaleReset = useCallback(() => {
+    setScale(1.2);
+  }, []);
+
   // Pinch-to-zoom handler for annotation mode
   const handleAnnotationPinchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
@@ -965,7 +978,41 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
 
           {!annotationMode && (
-            <div className="absolute top-3 right-3 z-30 flex justify-end">
+            <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-1 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleScaleZoomOut}
+                  disabled={scale <= 0.5}
+                  className="h-8 w-8 p-0"
+                  title="Zoom out"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleScaleReset}
+                  className="h-8 px-2 text-xs font-medium"
+                  title="Reset zoom"
+                >
+                  {Math.round(scale * 100)}%
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleScaleZoomIn}
+                  disabled={scale >= 3}
+                  className="h-8 w-8 p-0"
+                  title="Zoom in"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Annotate Button */}
               <Button
                 size="sm"
                 variant="default"
