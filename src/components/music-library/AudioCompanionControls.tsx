@@ -84,7 +84,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
   };
 
   return (
-    <div className={cn("flex items-center gap-1 bg-card/95 backdrop-blur border border-border px-1 py-0.5 shadow-lg rounded", className)}>
+    <div className={cn("flex items-center gap-1 bg-card/95 backdrop-blur border border-border px-1 py-0.5 shadow-lg rounded z-50", className)}>
       <input
         ref={fileInputRef}
         type="file"
