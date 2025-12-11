@@ -6,11 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2, Users, Music, Briefcase, Plane, Mail, MessageSquare, Plus } from "lucide-react";
+import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2, Users, Music, Briefcase, Plane, Mail, MessageSquare, Plus, FileUser } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import MemberDossiersModule from "./member-dossiers/MemberDossiersModule";
 
 interface ExitInterview {
   id: string;
@@ -161,6 +162,7 @@ const ExitInterviewsModule: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedInterview, setSelectedInterview] = useState<ExitInterview | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [mainTab, setMainTab] = useState("interviews");
   const [createGroupDialog, setCreateGroupDialog] = useState<{ open: boolean; category: string; members: ExitInterview[] }>({ open: false, category: "", members: [] });
   const [groupName, setGroupName] = useState("");
   const [creatingGroup, setCreatingGroup] = useState(false);
@@ -359,6 +361,20 @@ const ExitInterviewsModule: React.FC = () => {
 
   return (
     <>
+      {/* Top-level tabs for Interviews vs Dossiers */}
+      <Tabs value={mainTab} onValueChange={setMainTab} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="interviews" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            Interviews
+          </TabsTrigger>
+          <TabsTrigger value="dossiers" className="flex items-center gap-2">
+            <FileUser className="h-4 w-4" />
+            Member Dossiers
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="interviews" className="mt-0">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -540,6 +556,12 @@ const ExitInterviewsModule: React.FC = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="dossiers" className="mt-0">
+          <MemberDossiersModule />
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={!!selectedInterview} onOpenChange={() => setSelectedInterview(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
