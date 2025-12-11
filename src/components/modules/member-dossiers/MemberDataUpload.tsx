@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Download, CheckCircle, XCircle, Loader2, UserX } from 'lucide-react';
+import { Upload, Download, CheckCircle, XCircle, Loader2, UserX, FileWarning } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -11,6 +11,7 @@ interface UploadResult {
   errors: string[];
   skipped: number;
   notFound: string[];
+  noInterview: Array<{ name: string; email: string }>;
 }
 
 export function MemberDataUpload() {
@@ -74,7 +75,8 @@ Mary Smith,S87654321,Senior`;
       const text = await file.text();
       const records = parseCSV(text);
 
-      const uploadResult: UploadResult = { updated: 0, errors: [], skipped: 0, notFound: [] };
+      const uploadResult: UploadResult = { updated: 0, errors: [], skipped: 0, notFound: [], noInterview: [] };
+      const updatedUsers: Array<{ user_id: string; name: string; email: string }> = [];
 
       for (const record of records) {
         if (!record.name) {
@@ -86,7 +88,7 @@ Mary Smith,S87654321,Senior`;
         const nameLower = record.name.toLowerCase().trim();
         const { data: profiles, error: findError } = await supabase
           .from('gw_profiles')
-          .select('user_id, full_name, first_name, last_name')
+          .select('user_id, full_name, first_name, last_name, email')
           .not('user_id', 'is', null)
           .or(`full_name.ilike.%${nameLower}%,last_name.ilike.%${nameLower}%,first_name.ilike.%${nameLower.split(' ')[0]}%`);
 
@@ -138,7 +140,26 @@ Mary Smith,S87654321,Senior`;
           uploadResult.errors.push(`Failed to update ${record.name}: ${updateError.message}`);
         } else {
           uploadResult.updated++;
+          updatedUsers.push({ 
+            user_id: profile.user_id, 
+            name: profile.full_name || `${profile.first_name} ${profile.last_name}`,
+            email: profile.email || ''
+          });
         }
+      }
+
+      // Check which updated users don't have exit interviews
+      if (updatedUsers.length > 0) {
+        const userIds = updatedUsers.map(u => u.user_id);
+        const { data: interviews } = await supabase
+          .from('member_exit_interviews')
+          .select('user_id')
+          .in('user_id', userIds);
+
+        const interviewUserIds = new Set(interviews?.map(i => i.user_id) || []);
+        uploadResult.noInterview = updatedUsers
+          .filter(u => !interviewUserIds.has(u.user_id))
+          .map(u => ({ name: u.name, email: u.email }));
       }
 
       setResult(uploadResult);
@@ -229,6 +250,32 @@ Mary Smith,S87654321,Senior`;
                     <li key={i} className="py-0.5">{email}</li>
                   ))}
                 </ul>
+              </div>
+            )}
+            {result.noInterview.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-orange-600">
+                  <FileWarning className="h-4 w-4" />
+                  {result.noInterview.length} student(s) have NOT submitted exit interviews
+                </div>
+                <div className="max-h-60 overflow-y-auto border border-orange-200 dark:border-orange-800 rounded">
+                  <table className="w-full text-xs">
+                    <thead className="bg-orange-50 dark:bg-orange-950/30 sticky top-0">
+                      <tr>
+                        <th className="text-left p-2 font-medium">Name</th>
+                        <th className="text-left p-2 font-medium">Email</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.noInterview.map((student, i) => (
+                        <tr key={i} className="border-t border-orange-100 dark:border-orange-900">
+                          <td className="p-2">{student.name}</td>
+                          <td className="p-2 text-muted-foreground">{student.email}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
             {result.errors.length > 0 && (
