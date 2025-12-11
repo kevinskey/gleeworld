@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { SplashWrapper } from "@/components/splash/SplashWrapper";
+import { LiveInvitePopup } from "@/components/glee-lounge/LiveInvitePopup";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -320,6 +321,7 @@ const App = () => {
                   <div>
                   <Toaster />
                   <Sonner />
+                  <LiveInvitePopup />
                   <DesignSystemEnforcer />
                   <Suspense fallback={<LoadingSpinner size="lg" text="Loading..." />}>
                     <Routes>

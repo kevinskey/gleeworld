@@ -286,15 +286,38 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
     onClose();
   };
 
-  const handleInviteMembers = () => {
+  const handleInviteMembers = async () => {
     const newlyInvited = members.filter(m => selectedMembers.includes(m.user_id));
+    
+    // Insert invites into database for real-time notifications
+    const inviteRecords = newlyInvited.map(member => ({
+      session_host_id: userProfile?.user_id,
+      session_host_name: userProfile?.full_name || 'Someone',
+      invited_user_id: member.user_id,
+      status: 'pending',
+    }));
+
+    const { error } = await supabase
+      .from('gw_live_session_invites')
+      .insert(inviteRecords);
+
+    if (error) {
+      console.error('Error sending invites:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Failed to send invites',
+        description: 'Please try again',
+      });
+      return;
+    }
+
     setInvitedMembers(prev => [...prev, ...newlyInvited.filter(n => !prev.find(p => p.user_id === n.user_id))]);
     setSelectedMembers([]);
     setShowInvite(false);
     
     toast({
       title: 'Invitations Sent!',
-      description: `${newlyInvited.length} member(s) have been invited to join`,
+      description: `${newlyInvited.length} member(s) have been notified`,
     });
   };
 
