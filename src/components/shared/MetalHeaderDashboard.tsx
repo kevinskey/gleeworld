@@ -245,8 +245,10 @@ export const MetalHeaderDashboard = ({
   } = useModuleOrdering(simulatedRole ? undefined : user.id); // Don't use personal ordering when simulating
   const {
     favorites: moduleFavorites,
+    orderedFavorites,
     toggleFavorite,
-    isFavorite
+    isFavorite,
+    reorderFavorites
   } = useModuleFavorites(simulatedRole ? undefined : user.id); // Don't use personal favorites when simulating
   const {
     quickActions: memberQuickActions,
@@ -636,7 +638,7 @@ export const MetalHeaderDashboard = ({
             isNew: moduleConfig?.isNew || false
           };
         }).filter(Boolean) : [];
-        return <FavoritesCard favorites={favoritesArray as any} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} />;
+        return <FavoritesCard favorites={favoritesArray as any} orderedFavoriteIds={orderedFavorites} onModuleClick={handleModuleSelect} onToggleFavorite={toggleFavorite} onReorder={reorderFavorites} />;
       })()}
 
       {/* Glee Cam Categories */}
