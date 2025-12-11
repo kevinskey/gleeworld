@@ -150,19 +150,27 @@ export default function GleeLounge() {
               variant="default"
               size="sm"
               onClick={() => setShowLiveVideo(true)}
-              className="gap-2 bg-red-600 hover:bg-red-700"
+              className="gap-1.5 bg-red-600 hover:bg-red-700 text-white"
             >
               <Radio className="h-4 w-4" />
-              <span className="hidden sm:inline">Go Live</span>
+              <span>Go Live</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowMusicLibrary(true)}
+              className="sm:hidden"
+            >
+              <Music className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowMusicLibrary(true)}
-              className="gap-2"
+              className="gap-2 hidden sm:flex"
             >
               <Music className="h-4 w-4" />
-              <span className="hidden sm:inline">Music Library</span>
+              <span>Music Library</span>
             </Button>
             {isConnected && (
               <span className="text-xs text-muted-foreground flex items-center gap-1">
