@@ -133,8 +133,8 @@ const SwipeableInterviewCard: React.FC<{
             <User className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <p className="font-semibold text-base md:text-lg text-foreground">{interview.profile?.full_name || "Unknown"}</p>
-            <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground">
+            <p className="font-semibold text-base md:text-xl text-foreground">{interview.profile?.full_name || "Unknown"}</p>
+            <div className="flex items-center gap-2 text-sm md:text-lg text-muted-foreground">
               <span>{interview.profile?.voice_part || "—"}</span>
               <span>•</span>
               <span>{interview.semester}</span>
