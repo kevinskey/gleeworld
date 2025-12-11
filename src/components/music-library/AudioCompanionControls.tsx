@@ -105,9 +105,9 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
           {audioSource === 'youtube' ? (
               <Youtube className="h-4 w-4 text-red-500" />
             ) : audioSource === 'file' ? (
-              <Music className="h-4 w-4 text-primary-foreground" />
+              <Music className="h-4 w-4 text-foreground" />
             ) : (
-              <Music className="h-4 w-4 text-primary-foreground" />
+              <Music className="h-4 w-4 text-foreground" />
             )}
           </Button>
         </PopoverTrigger>
