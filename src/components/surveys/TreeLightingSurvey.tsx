@@ -23,13 +23,22 @@ export const TreeLightingSurvey = () => {
 
   useEffect(() => {
     const checkExistingResponse = async () => {
-      if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
       
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("tree_lighting_survey_responses")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
+
+      if (error) {
+        console.error("Error checking survey response:", error);
+        setIsLoading(false);
+        return;
+      }
 
       if (data) {
         setHasSubmitted(true);
