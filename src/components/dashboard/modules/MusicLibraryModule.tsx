@@ -341,7 +341,7 @@ export const MusicLibraryModule = () => {
                 <PopoverContent className="w-40" align="start">
                   <div className="space-y-1">
                     <Label className="text-xs text-muted-foreground">Columns</Label>
-                    {[3, 4, 5, 6].map(num => (
+                    {[1, 2, 3, 4, 5, 6].map(num => (
                       <Button
                         key={num}
                         variant={columnCount === num ? 'default' : 'ghost'}
