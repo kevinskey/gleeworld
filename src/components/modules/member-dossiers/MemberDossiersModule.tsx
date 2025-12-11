@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, RefreshCw, Music, FileText, Filter } from "lucide-react";
+import { Users, Search, RefreshCw, Music } from "lucide-react";
 import { MemberDossierCard } from "./MemberDossierCard";
 import { MemberDossierDetail } from "./MemberDossierDetail";
 
@@ -73,22 +73,12 @@ const MemberDossiersModule: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [voicePartFilter, setVoicePartFilter] = useState<string>("all");
-  const [interviewFilter, setInterviewFilter] = useState<string>("all");
   const [selectedMember, setSelectedMember] = useState<MemberDossierData | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch all member profiles
-      const { data: profiles, error: profilesError } = await supabase
-        .from("gw_profiles")
-        .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes")
-        .in("role", ["member", "student", "admin", "super_admin"])
-        .order("full_name");
-
-      if (profilesError) throw profilesError;
-
-      // Fetch all exit interviews
+      // Fetch all exit interviews first - only show members who have submitted interviews
       const { data: interviews, error: interviewsError } = await supabase
         .from("member_exit_interviews")
         .select("*")
@@ -104,6 +94,24 @@ const MemberDossiersModule: React.FC = () => {
         }
         interviewsByUser[interview.user_id].push(interview);
       });
+
+      // Get unique user IDs who have submitted exit interviews
+      const userIdsWithInterviews = Object.keys(interviewsByUser);
+
+      if (userIdsWithInterviews.length === 0) {
+        setMembers([]);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch only profiles for members who have exit interviews
+      const { data: profiles, error: profilesError } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes")
+        .in("user_id", userIdsWithInterviews)
+        .order("full_name");
+
+      if (profilesError) throw profilesError;
 
       // Calculate average satisfaction for each member
       const calculateAvgSatisfaction = (userInterviews: ExitInterview[]) => {
@@ -125,7 +133,7 @@ const MemberDossiersModule: React.FC = () => {
         return allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
       };
 
-      // Combine data
+      // Combine data - only members with exit interviews
       const memberDossiers: MemberDossierData[] = (profiles || []).map((profile) => ({
         profile,
         exitInterviews: interviewsByUser[profile.user_id] || [],
@@ -157,15 +165,9 @@ const MemberDossiersModule: React.FC = () => {
       const matchesVoicePart = voicePartFilter === "all" || 
         member.profile.voice_part === voicePartFilter;
 
-      // Interview filter
-      const hasInterview = member.exitInterviews.length > 0;
-      const matchesInterview = interviewFilter === "all" ||
-        (interviewFilter === "with" && hasInterview) ||
-        (interviewFilter === "without" && !hasInterview);
-
-      return matchesSearch && matchesVoicePart && matchesInterview;
+      return matchesSearch && matchesVoicePart;
     });
-  }, [members, searchQuery, voicePartFilter, interviewFilter]);
+  }, [members, searchQuery, voicePartFilter]);
 
   // Get unique voice parts for filter
   const voiceParts = useMemo(() => {
@@ -179,7 +181,6 @@ const MemberDossiersModule: React.FC = () => {
   // Stats
   const stats = useMemo(() => ({
     total: members.length,
-    withInterviews: members.filter(m => m.exitInterviews.length > 0).length,
     avgSatisfaction: (() => {
       const scores = members
         .map(m => m.avgSatisfaction)
@@ -213,9 +214,7 @@ const MemberDossiersModule: React.FC = () => {
         
         {/* Stats */}
         <div className="flex gap-4 text-sm text-muted-foreground mt-2">
-          <span>{stats.total} members</span>
-          <span>•</span>
-          <span>{stats.withInterviews} interviews</span>
+          <span>{stats.total} members with interviews</span>
           {stats.avgSatisfaction && (
             <>
               <span>•</span>
@@ -249,17 +248,6 @@ const MemberDossiersModule: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
-          <Select value={interviewFilter} onValueChange={setInterviewFilter}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <FileText className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Interview Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Members</SelectItem>
-              <SelectItem value="with">With Interview</SelectItem>
-              <SelectItem value="without">No Interview</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Member List */}
@@ -269,9 +257,9 @@ const MemberDossiersModule: React.FC = () => {
           </div>
         ) : filteredMembers.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
-            {searchQuery || voicePartFilter !== "all" || interviewFilter !== "all"
+            {searchQuery || voicePartFilter !== "all"
               ? "No members match your filters"
-              : "No members found"}
+              : "No exit interviews submitted yet"}
           </div>
         ) : (
           <div className="space-y-2 max-h-[500px] overflow-y-auto">
