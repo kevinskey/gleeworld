@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, RefreshCw, Music, BarChart3, Upload } from "lucide-react";
+import { Users, Search, RefreshCw, Music, BarChart3, Upload, AlertTriangle } from "lucide-react";
 import { MemberDossierCard } from "./MemberDossierCard";
 import { MemberDossierDetail } from "./MemberDossierDetail";
 import { MemberDossierAnalytics } from "./MemberDossierAnalytics";
@@ -78,6 +78,7 @@ const MemberDossiersModule: React.FC = () => {
   const [voicePartFilter, setVoicePartFilter] = useState<string>("all");
   const [selectedMember, setSelectedMember] = useState<MemberDossierData | null>(null);
   const [activeTab, setActiveTab] = useState("analytics");
+  const [missingInterviews, setMissingInterviews] = useState<Array<{ name: string; email: string }>>([]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -245,6 +246,10 @@ const MemberDossiersModule: React.FC = () => {
               <Upload className="h-4 w-4 mr-2" />
               Upload Data
             </TabsTrigger>
+            <TabsTrigger value="missing" className="flex-1">
+              <AlertTriangle className="h-4 w-4 mr-2" />
+              Missing ({missingInterviews.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics" className="mt-4">
@@ -310,7 +315,42 @@ const MemberDossiersModule: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="upload" className="mt-4">
-            <MemberDataUpload />
+            <MemberDataUpload onMissingInterviewsFound={setMissingInterviews} />
+          </TabsContent>
+
+          <TabsContent value="missing" className="mt-4">
+            {missingInterviews.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Upload a CSV to see which students haven't submitted exit interviews
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-orange-600">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span className="font-medium">{missingInterviews.length} student(s) have NOT submitted exit interviews</span>
+                </div>
+                <div className="border rounded overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="text-left p-3 font-medium">#</th>
+                        <th className="text-left p-3 font-medium">Name</th>
+                        <th className="text-left p-3 font-medium">Email</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {missingInterviews.map((student, i) => (
+                        <tr key={i} className="border-t">
+                          <td className="p-3 text-muted-foreground">{i + 1}</td>
+                          <td className="p-3 font-medium">{student.name}</td>
+                          <td className="p-3 text-muted-foreground">{student.email}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

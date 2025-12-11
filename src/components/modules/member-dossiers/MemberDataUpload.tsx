@@ -14,7 +14,11 @@ interface UploadResult {
   noInterview: Array<{ name: string; email: string }>;
 }
 
-export function MemberDataUpload() {
+interface MemberDataUploadProps {
+  onMissingInterviewsFound?: (missing: Array<{ name: string; email: string }>) => void;
+}
+
+export function MemberDataUpload({ onMissingInterviewsFound }: MemberDataUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
@@ -163,6 +167,11 @@ Mary Smith,S87654321,Senior`;
       }
 
       setResult(uploadResult);
+      
+      // Notify parent of missing interviews
+      if (onMissingInterviewsFound && uploadResult.noInterview.length > 0) {
+        onMissingInterviewsFound(uploadResult.noInterview);
+      }
       
       if (uploadResult.updated > 0) {
         toast({
