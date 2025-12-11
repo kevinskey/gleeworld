@@ -68,6 +68,22 @@ export function useLiveInviteNotifications() {
       .on(
         'postgres_changes',
         {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'gw_live_session_invites',
+          filter: `invited_user_id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log('Invite updated:', payload);
+          const updated = payload.new as LiveInvite;
+          if (updated.status !== 'pending') {
+            setPendingInvites(prev => prev.filter(i => i.id !== updated.id));
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
           event: 'DELETE',
           schema: 'public',
           table: 'gw_live_session_invites',

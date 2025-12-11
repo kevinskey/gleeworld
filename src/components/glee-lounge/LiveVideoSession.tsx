@@ -287,26 +287,57 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
   };
 
   const handleInviteMembers = async () => {
+    if (!userProfile?.user_id) {
+      console.error('No user profile found for invite');
+      toast({
+        variant: 'destructive',
+        title: 'Not logged in',
+        description: 'Please log in to send invites',
+      });
+      return;
+    }
+
+    // Get current auth user to ensure session_host_id matches
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('No authenticated user');
+      toast({
+        variant: 'destructive',
+        title: 'Session expired',
+        description: 'Please log in again',
+      });
+      return;
+    }
+
     const newlyInvited = members.filter(m => selectedMembers.includes(m.user_id));
     
+    console.log('Sending invites:', {
+      host_id: user.id,
+      host_name: userProfile.full_name,
+      invited_users: newlyInvited.map(m => ({ id: m.user_id, name: m.full_name }))
+    });
+
     // Insert invites into database for real-time notifications
     const inviteRecords = newlyInvited.map(member => ({
-      session_host_id: userProfile?.user_id,
-      session_host_name: userProfile?.full_name || 'Someone',
+      session_host_id: user.id, // Use auth.uid() directly to match RLS policy
+      session_host_name: userProfile.full_name || 'Someone',
       invited_user_id: member.user_id,
       status: 'pending',
     }));
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('gw_live_session_invites')
-      .insert(inviteRecords);
+      .insert(inviteRecords)
+      .select();
+
+    console.log('Invite insert result:', { data, error });
 
     if (error) {
       console.error('Error sending invites:', error);
       toast({
         variant: 'destructive',
         title: 'Failed to send invites',
-        description: 'Please try again',
+        description: error.message || 'Please try again',
       });
       return;
     }
