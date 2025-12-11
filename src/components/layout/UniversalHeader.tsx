@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles, Plus } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles, Plus, Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -164,6 +164,24 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 lg:gap-5">
             <HeaderRadioControls />
             <MusicalToolkit />
+            
+            {/* Email Composer - Available to all authenticated users */}
+            {user && (
+              <EnhancedTooltip content="Send Email/SMS">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/compose')}
+                  className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
+                  style={{ 
+                    color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                  }}
+                  type="button"
+                >
+                  <Mail className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                </Button>
+              </EnhancedTooltip>
+            )}
             
             {user && (
               <>
