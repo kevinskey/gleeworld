@@ -233,27 +233,27 @@ const TreeLightingSurveyModule = () => {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-2">
-              <TreePine className="h-5 w-5 text-green-600" />
-              <CardTitle>Survey Module</CardTitle>
-            </div>
-            {selectedIds.size > 0 && (
-              <Button 
-                onClick={() => setIsMessageDialogOpen(true)}
-                className="gap-2"
-              >
-                <Send className="h-4 w-4" />
-                Message Selected ({selectedIds.size})
-              </Button>
-            )}
+        <CardHeader className="pb-2">
+          <div className="flex items-center gap-2">
+            <TreePine className="h-5 w-5 text-green-600" />
+            <CardTitle>Survey Module</CardTitle>
           </div>
           <CardDescription>
             Manage and view survey responses. Select respondents to send them messages.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Message Button - Always visible when selections exist */}
+          {selectedIds.size > 0 && (
+            <Button 
+              onClick={() => setIsMessageDialogOpen(true)}
+              className="w-full sm:w-auto gap-2 mb-4"
+              size="lg"
+            >
+              <Send className="h-4 w-4" />
+              Message Selected ({selectedIds.size})
+            </Button>
+          )}
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
             <Card className="bg-muted/50">
