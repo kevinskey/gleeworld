@@ -255,22 +255,22 @@ const TreeLightingSurveyModule = () => {
         </CardHeader>
         <CardContent>
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
             <Card className="bg-muted/50">
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold">{stats.total}</p>
+              <CardContent className="p-3 sm:p-4 text-center">
+                <p className="text-xl sm:text-2xl font-bold">{stats.total}</p>
                 <p className="text-xs text-muted-foreground">Total Responses</p>
               </CardContent>
             </Card>
             <Card className="bg-green-500/10 border-green-500/30">
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-green-600">{stats.attended}</p>
+              <CardContent className="p-3 sm:p-4 text-center">
+                <p className="text-xl sm:text-2xl font-bold text-green-600">{stats.attended}</p>
                 <p className="text-xs text-muted-foreground">Attended</p>
               </CardContent>
             </Card>
             <Card className="bg-red-500/10 border-red-500/30">
-              <CardContent className="p-4 text-center">
-                <p className="text-2xl font-bold text-red-600">{stats.notAttended}</p>
+              <CardContent className="p-3 sm:p-4 text-center">
+                <p className="text-xl sm:text-2xl font-bold text-red-600">{stats.notAttended}</p>
                 <p className="text-xs text-muted-foreground">Did Not Attend</p>
               </CardContent>
             </Card>
@@ -293,76 +293,124 @@ const TreeLightingSurveyModule = () => {
             )}
           </div>
 
-          {/* Table */}
+          {/* Mobile Cards / Desktop Table */}
           {responses.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No responses yet</p>
           ) : (
-            <div className="rounded-md border overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-12">
-                      <Checkbox 
-                        checked={selectedIds.size === responses.length && responses.length > 0}
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead>Member</TableHead>
-                    <TableHead>Attended</TableHead>
-                    <TableHead>What They Enjoyed</TableHead>
-                    <TableHead>Song Order</TableHead>
-                    <TableHead>Submitted</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {responses.map((response) => (
-                    <TableRow key={response.id} className={selectedIds.has(response.id) ? 'bg-primary/5' : ''}>
-                      <TableCell>
+            <>
+              {/* Mobile view - Cards */}
+              <div className="sm:hidden space-y-3">
+                {responses.map((response) => (
+                  <Card 
+                    key={response.id} 
+                    className={`${selectedIds.has(response.id) ? 'ring-2 ring-primary bg-primary/5' : ''}`}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-start gap-3">
                         <Checkbox 
                           checked={selectedIds.has(response.id)}
                           onCheckedChange={() => toggleSelect(response.id)}
+                          className="mt-1"
                         />
-                      </TableCell>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{response.profile?.full_name || "Unknown"}</p>
-                          <p className="text-xs text-muted-foreground">{response.profile?.email}</p>
-                          {response.profile?.phone_number && (
-                            <p className="text-xs text-muted-foreground">{response.profile.phone_number}</p>
+                        <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-medium truncate">{response.profile?.full_name || "Unknown"}</p>
+                            {response.attended ? (
+                              <Badge className="bg-green-600 shrink-0">
+                                <CheckCircle2 className="h-3 w-3 mr-1" />
+                                Yes
+                              </Badge>
+                            ) : (
+                              <Badge variant="destructive" className="shrink-0">
+                                <XCircle className="h-3 w-3 mr-1" />
+                                No
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">{response.profile?.email}</p>
+                          {response.enjoyed_most && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              <span className="font-medium text-foreground">Enjoyed:</span> {response.enjoyed_most}
+                            </p>
                           )}
+                          <p className="text-xs text-muted-foreground">
+                            {format(new Date(response.created_at), "MMM d, yyyy h:mm a")}
+                          </p>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {response.attended ? (
-                          <Badge className="bg-green-600">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Yes
-                          </Badge>
-                        ) : (
-                          <Badge variant="destructive">
-                            <XCircle className="h-3 w-3 mr-1" />
-                            No
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="max-w-[200px]">
-                        <p className="text-sm truncate" title={response.enjoyed_most || ""}>
-                          {response.enjoyed_most || "-"}
-                        </p>
-                      </TableCell>
-                      <TableCell className="max-w-[200px]">
-                        <p className="text-sm truncate whitespace-pre-line" title={response.song_order || ""}>
-                          {response.song_order || "-"}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(response.created_at), "MMM d, yyyy h:mm a")}
-                      </TableCell>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop view - Table */}
+              <div className="hidden sm:block rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox 
+                          checked={selectedIds.size === responses.length && responses.length > 0}
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
+                      <TableHead>Member</TableHead>
+                      <TableHead>Attended</TableHead>
+                      <TableHead>What They Enjoyed</TableHead>
+                      <TableHead>Song Order</TableHead>
+                      <TableHead>Submitted</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {responses.map((response) => (
+                      <TableRow key={response.id} className={selectedIds.has(response.id) ? 'bg-primary/5' : ''}>
+                        <TableCell>
+                          <Checkbox 
+                            checked={selectedIds.has(response.id)}
+                            onCheckedChange={() => toggleSelect(response.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{response.profile?.full_name || "Unknown"}</p>
+                            <p className="text-xs text-muted-foreground">{response.profile?.email}</p>
+                            {response.profile?.phone_number && (
+                              <p className="text-xs text-muted-foreground">{response.profile.phone_number}</p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {response.attended ? (
+                            <Badge className="bg-green-600">
+                              <CheckCircle2 className="h-3 w-3 mr-1" />
+                              Yes
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive">
+                              <XCircle className="h-3 w-3 mr-1" />
+                              No
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="max-w-[200px]">
+                          <p className="text-sm truncate" title={response.enjoyed_most || ""}>
+                            {response.enjoyed_most || "-"}
+                          </p>
+                        </TableCell>
+                        <TableCell className="max-w-[200px]">
+                          <p className="text-sm truncate whitespace-pre-line" title={response.song_order || ""}>
+                            {response.song_order || "-"}
+                          </p>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {format(new Date(response.created_at), "MMM d, yyyy h:mm a")}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
