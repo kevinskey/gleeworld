@@ -79,9 +79,20 @@ export const TreeLightingSurvey = () => {
     );
   }
 
-  // Hide completely once submitted
   if (hasSubmitted) {
-    return null;
+    return (
+      <Card className="border-2 border-green-600/30 bg-card">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+            <CardTitle className="text-lg text-card-foreground">Tree Lighting Survey Completed</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <p className="text-muted-foreground">Thank you for completing the Tree Lighting survey!</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (isExpired) {
