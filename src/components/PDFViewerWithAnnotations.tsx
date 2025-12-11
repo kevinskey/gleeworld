@@ -982,9 +982,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
 
           {!annotationMode && (
-            <div className="absolute top-3 right-3 z-30 flex items-center gap-2">
+            <div className="absolute top-3 right-3 z-30 flex items-center gap-2 flex-wrap justify-end">
               {/* Zoom Controls */}
-              <div className="flex items-center gap-1 bg-card/95 backdrop-blur border border-border rounded-lg p-1 shadow-lg">
+              <div className="flex items-center gap-1 bg-card/95 backdrop-blur border border-border p-1 shadow-lg">
                 <Button
                   size="sm"
                   variant="ghost"
@@ -1016,18 +1016,22 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 </Button>
               </div>
               
-              {/* Listen Along Button */}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setShowAudioCompanion(true)}
-                aria-label="Listen along with audio"
-                title="Play audio while reading sheet music"
-                className="shadow-lg bg-card/95 backdrop-blur border-border md:h-10 h-8 md:px-4 px-2"
-              >
-                <Music className="md:h-5 md:w-5 h-3 w-3 mr-1 md:mr-2" />
-                <span className="font-semibold md:text-base text-xs">Listen Along</span>
-              </Button>
+              {/* Audio Companion - inline in header */}
+              {showAudioCompanion ? (
+                <AudioCompanion onClose={() => setShowAudioCompanion(false)} />
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowAudioCompanion(true)}
+                  aria-label="Listen along with audio"
+                  title="Play audio while reading sheet music"
+                  className="shadow-lg bg-card/95 backdrop-blur border-border h-8 px-2"
+                >
+                  <Music className="h-4 w-4 mr-1" />
+                  <span className="font-medium text-xs">Listen Along</span>
+                </Button>
+              )}
               
               {/* Annotate Button */}
               <Button
@@ -1039,9 +1043,9 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 }}
                 aria-label="Enable annotations"
                 title="Click to enable drawing and annotations"
-                className="shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground md:text-base text-xs md:h-10 h-8 md:px-4 px-2"
+                className="shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-2"
               >
-                <Palette className="md:h-5 md:w-5 h-3 w-3 mr-1 md:mr-2" />
+                <Palette className="h-4 w-4 mr-1" />
                 <span className="font-semibold">Annotate</span>
               </Button>
             </div>
@@ -1195,11 +1199,6 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           </div>
         </div>
-      )}
-
-      {/* Audio Companion */}
-      {showAudioCompanion && (
-        <AudioCompanion onClose={() => setShowAudioCompanion(false)} />
       )}
     </Card>
   );
