@@ -10,7 +10,6 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
-import { AudioCompanionProvider } from "@/contexts/AudioCompanionContext";
 import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
@@ -317,7 +316,6 @@ const App = () => {
             <TooltipProvider>
               <CustomTooltipProvider>
                 <MusicPlayerProvider>
-                  <AudioCompanionProvider>
                   <SplashWrapper>
                   <div>
                   <Toaster />
@@ -2288,7 +2286,6 @@ const App = () => {
                     <PWAInstallPrompt />
                    </div>
                    </SplashWrapper>
-                  </AudioCompanionProvider>
                   </MusicPlayerProvider>
                 </CustomTooltipProvider>
               </TooltipProvider>
