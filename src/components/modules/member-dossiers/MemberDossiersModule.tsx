@@ -83,7 +83,17 @@ const MemberDossiersModule: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch all exit interviews first - only show members who have submitted interviews
+      // Fetch ALL member profiles (active members)
+      const { data: profiles, error: profilesError } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes")
+        .or("role.eq.member,role.eq.alumna,status.eq.active")
+        .not("user_id", "is", null)
+        .order("full_name");
+
+      if (profilesError) throw profilesError;
+
+      // Fetch all exit interviews
       const { data: interviews, error: interviewsError } = await supabase
         .from("member_exit_interviews")
         .select("*")
@@ -101,24 +111,6 @@ const MemberDossiersModule: React.FC = () => {
         }
         interviewsByUser[interview.user_id].push(interview);
       });
-
-      // Get unique user IDs who have submitted exit interviews
-      const userIdsWithInterviews = Object.keys(interviewsByUser);
-
-      if (userIdsWithInterviews.length === 0) {
-        setMembers([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch only profiles for members who have exit interviews
-      const { data: profiles, error: profilesError } = await supabase
-        .from("gw_profiles")
-        .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes")
-        .in("user_id", userIdsWithInterviews)
-        .order("full_name");
-
-      if (profilesError) throw profilesError;
 
       // Calculate average satisfaction for each member
       const calculateAvgSatisfaction = (userInterviews: ExitInterview[]) => {
@@ -140,7 +132,7 @@ const MemberDossiersModule: React.FC = () => {
         return allScores.length > 0 ? allScores.reduce((a, b) => a + b, 0) / allScores.length : null;
       };
 
-      // Combine data - only members with exit interviews
+      // Combine data - ALL members, with or without interviews
       const memberDossiers: MemberDossierData[] = (profiles || []).map((profile) => ({
         profile,
         exitInterviews: interviewsByUser[profile.user_id] || [],
@@ -186,15 +178,21 @@ const MemberDossiersModule: React.FC = () => {
   }, [members]);
 
   // Stats
-  const stats = useMemo(() => ({
-    total: members.length,
-    avgSatisfaction: (() => {
-      const scores = members
-        .map(m => m.avgSatisfaction)
-        .filter(s => s !== null) as number[];
-      return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
-    })()
-  }), [members]);
+  const stats = useMemo(() => {
+    const withInterviews = members.filter(m => m.exitInterviews.length > 0);
+    const withoutInterviews = members.filter(m => m.exitInterviews.length === 0);
+    return {
+      total: members.length,
+      withInterviews: withInterviews.length,
+      withoutInterviews: withoutInterviews.length,
+      avgSatisfaction: (() => {
+        const scores = withInterviews
+          .map(m => m.avgSatisfaction)
+          .filter(s => s !== null) as number[];
+        return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
+      })()
+    };
+  }, [members]);
 
   if (selectedMember) {
     return (
@@ -220,8 +218,12 @@ const MemberDossiersModule: React.FC = () => {
         </div>
         
         {/* Stats */}
-        <div className="flex gap-4 text-sm text-muted-foreground mt-2">
-          <span>{stats.total} members with interviews</span>
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mt-2">
+          <span>{stats.total} total members</span>
+          <span>•</span>
+          <span className="text-green-600">{stats.withInterviews} submitted</span>
+          <span>•</span>
+          <span className="text-orange-600">{stats.withoutInterviews} missing</span>
           {stats.avgSatisfaction && (
             <>
               <span>•</span>
@@ -248,7 +250,7 @@ const MemberDossiersModule: React.FC = () => {
             </TabsTrigger>
             <TabsTrigger value="missing" className="flex-1">
               <AlertTriangle className="h-4 w-4 mr-2" />
-              Missing ({missingInterviews.length})
+              Missing ({stats.withoutInterviews})
             </TabsTrigger>
           </TabsList>
 
@@ -319,38 +321,43 @@ const MemberDossiersModule: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="missing" className="mt-4">
-            {missingInterviews.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Upload a CSV to see which students haven't submitted exit interviews
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 text-orange-600">
-                  <AlertTriangle className="h-5 w-5" />
-                  <span className="font-medium">{missingInterviews.length} student(s) have NOT submitted exit interviews</span>
+            {(() => {
+              const membersWithoutInterviews = members.filter(m => m.exitInterviews.length === 0);
+              return membersWithoutInterviews.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  All members have submitted exit interviews!
                 </div>
-                <div className="border rounded overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted">
-                      <tr>
-                        <th className="text-left p-3 font-medium">#</th>
-                        <th className="text-left p-3 font-medium">Name</th>
-                        <th className="text-left p-3 font-medium">Email</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {missingInterviews.map((student, i) => (
-                        <tr key={i} className="border-t">
-                          <td className="p-3 text-muted-foreground">{i + 1}</td>
-                          <td className="p-3 font-medium">{student.name}</td>
-                          <td className="p-3 text-muted-foreground">{student.email}</td>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <AlertTriangle className="h-5 w-5" />
+                    <span className="font-medium">{membersWithoutInterviews.length} member(s) have NOT submitted exit interviews</span>
+                  </div>
+                  <div className="border rounded overflow-hidden max-h-[400px] overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted sticky top-0">
+                        <tr>
+                          <th className="text-left p-3 font-medium">#</th>
+                          <th className="text-left p-3 font-medium">Name</th>
+                          <th className="text-left p-3 font-medium">Email</th>
+                          <th className="text-left p-3 font-medium">Voice Part</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {membersWithoutInterviews.map((member, i) => (
+                          <tr key={member.profile.user_id} className="border-t hover:bg-muted/50">
+                            <td className="p-3 text-muted-foreground">{i + 1}</td>
+                            <td className="p-3 font-medium">{member.profile.full_name || `${member.profile.first_name} ${member.profile.last_name}`}</td>
+                            <td className="p-3 text-muted-foreground">{member.profile.email}</td>
+                            <td className="p-3 text-muted-foreground">{member.profile.voice_part || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </TabsContent>
         </Tabs>
       </CardContent>
