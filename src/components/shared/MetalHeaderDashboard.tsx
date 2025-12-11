@@ -33,6 +33,8 @@ import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, Ch
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
 import { TreeLightingSurvey } from "@/components/surveys/TreeLightingSurvey";
+import { CollapsibleMemberExitInterview } from "@/components/surveys/CollapsibleMemberExitInterview";
+import { CollapsibleExecBoardExitInterview } from "@/components/surveys/CollapsibleExecBoardExitInterview";
 import { GleeLoungeStrip } from "@/components/glee-lounge/GleeLoungeStrip";
 
 // Sortable Dashboard Card Component
@@ -614,6 +616,12 @@ export const MetalHeaderDashboard = ({
 
       {/* Tree Lighting Survey */}
       <TreeLightingSurvey />
+
+      {/* Member Exit Interview - Collapsible */}
+      <CollapsibleMemberExitInterview />
+
+      {/* Exec Board Exit Interview - Collapsible (only shows for exec board) */}
+      <CollapsibleExecBoardExitInterview />
 
       {/* Floating Quick Actions Button - Bottom Right */}
       <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} aria-label="Quick Actions" className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary hover:bg-primary/90 rounded-full border-2 border-primary-foreground/20 shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center justify-center group">
