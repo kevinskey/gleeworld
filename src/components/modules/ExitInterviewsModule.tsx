@@ -128,13 +128,13 @@ const SwipeableInterviewCard: React.FC<{
         onTouchEnd={handleTouchEnd}
         onClick={handleClick}
       >
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <User className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <p className="font-medium">{interview.profile?.full_name || "Unknown"}</p>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <p className="font-semibold text-base md:text-lg text-foreground">{interview.profile?.full_name || "Unknown"}</p>
+            <div className="flex items-center gap-2 text-sm md:text-base text-muted-foreground">
               <span>{interview.profile?.voice_part || "—"}</span>
               <span>•</span>
               <span>{interview.semester}</span>
