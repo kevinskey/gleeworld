@@ -86,7 +86,7 @@ const MemberDossiersModule: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [voicePartFilter, setVoicePartFilter] = useState<string>("all");
   const [selectedMember, setSelectedMember] = useState<MemberDossierData | null>(null);
-  const [activeTab, setActiveTab] = useState("analytics");
+  const [activeTab, setActiveTab] = useState("members");
   const [missingInterviews, setMissingInterviews] = useState<Array<{ name: string; email: string }>>([]);
 
   const fetchData = async () => {
