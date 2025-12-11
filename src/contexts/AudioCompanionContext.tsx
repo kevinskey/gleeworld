@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
+import FloatingYouTubePlayer from '@/components/music-library/FloatingYouTubePlayer';
 
 interface AudioCompanionState {
   isActive: boolean;
@@ -25,6 +26,7 @@ interface AudioCompanionContextValue extends AudioCompanionState {
   setVolume: (vol: number) => void;
   toggleMute: () => void;
   stop: () => void;
+  closeYouTube: () => void;
 }
 
 const AudioCompanionContext = createContext<AudioCompanionContextValue | null>(null);
@@ -238,6 +240,16 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     setDuration(0);
   }, [audioSource, sendYouTubeCommand]);
 
+  const closeYouTube = useCallback(() => {
+    setYoutubeVideoId(null);
+    setAudioSource(null);
+    setIsPlaying(false);
+    setIsLoading(false);
+    setPlayerReady(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, []);
+
   const handleAudioTimeUpdate = () => {
     if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
   };
@@ -286,25 +298,18 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
         setVolume,
         toggleMute,
         stop,
+        closeYouTube,
       }}
     >
       {children}
       
-      {/* Global YouTube iframe player - visible for user control */}
-      {youtubeVideoId && isActive && (
-        <div className="fixed bottom-4 right-4 z-50 bg-card rounded-lg shadow-lg border border-border overflow-hidden">
-          <iframe
-            ref={iframeRef}
-            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=0&controls=1&modestbranding=1&rel=0`}
-            onLoad={handleIframeLoad}
-            allow="autoplay; encrypted-media"
-            style={{ 
-              width: '320px',
-              height: '180px',
-              border: 'none',
-            }}
-          />
-        </div>
+      {/* Floating YouTube Player - draggable, resizable, closeable */}
+      {youtubeVideoId && (
+        <FloatingYouTubePlayer
+          videoId={youtubeVideoId}
+          onClose={closeYouTube}
+          title="YouTube Player"
+        />
       )}
       
       {/* Global hidden audio element */}
