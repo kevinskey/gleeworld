@@ -267,3 +267,6 @@ verify_jwt = true
 
 [functions.send-ticket-decision]
 verify_jwt = false
+
+[functions.send-live-invite-sms]
+verify_jwt = true

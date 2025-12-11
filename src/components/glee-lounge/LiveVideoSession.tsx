@@ -346,9 +346,25 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
     setSelectedMembers([]);
     setShowInvite(false);
     
+    // Send SMS notifications to invited members (fire and forget)
+    newlyInvited.forEach(member => {
+      supabase.functions.invoke('send-live-invite-sms', {
+        body: {
+          invited_user_id: member.user_id,
+          host_name: userProfile.full_name || 'A Glee Club member'
+        }
+      }).then(({ data, error }) => {
+        if (error) {
+          console.log('SMS invite error for', member.full_name, ':', error);
+        } else {
+          console.log('SMS invite sent to', member.full_name, ':', data);
+        }
+      });
+    });
+    
     toast({
       title: 'Invitations Sent!',
-      description: `${newlyInvited.length} member(s) have been notified`,
+      description: `${newlyInvited.length} member(s) have been notified via app & SMS`,
     });
   };
 
