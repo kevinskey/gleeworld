@@ -32,9 +32,7 @@ import { AnnouncementsDisplay } from "@/components/dashboard/AnnouncementsDispla
 import { Calendar, Search, Filter, SortAsc, SortDesc, ChevronDown, ChevronUp, ChevronRight, GripVertical, Pin, PinOff, Shield, Clock, BarChart3, GraduationCap, Key, Heart, Star, MessageSquare, Bot, Sparkles, Edit3, RotateCcw, Save, Globe, Users, Sun, Moon, Camera } from "lucide-react";
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
-import { TreeLightingSurvey } from "@/components/surveys/TreeLightingSurvey";
-import { CollapsibleMemberExitInterview } from "@/components/surveys/CollapsibleMemberExitInterview";
-import { CollapsibleExecBoardExitInterview } from "@/components/surveys/CollapsibleExecBoardExitInterview";
+import { EndOfSemesterDocsCard } from "@/components/surveys/EndOfSemesterDocsCard";
 import { GleeLoungeStrip } from "@/components/glee-lounge/GleeLoungeStrip";
 
 // Sortable Dashboard Card Component
@@ -614,14 +612,8 @@ export const MetalHeaderDashboard = ({
       {/* Glee Lounge Strip - Social Hub Access - TOP OF DASHBOARD */}
       <GleeLoungeStrip />
 
-      {/* Tree Lighting Survey */}
-      <TreeLightingSurvey />
-
-      {/* Member Exit Interview - Collapsible */}
-      <CollapsibleMemberExitInterview />
-
-      {/* Exec Board Exit Interview - Collapsible (only shows for exec board) */}
-      <CollapsibleExecBoardExitInterview />
+      {/* End of Semester Docs - Collapsible Card */}
+      <EndOfSemesterDocsCard />
 
       {/* Floating Quick Actions Button - Bottom Right */}
       <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} aria-label="Quick Actions" className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary hover:bg-primary/90 rounded-full border-2 border-primary-foreground/20 shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center justify-center group">
