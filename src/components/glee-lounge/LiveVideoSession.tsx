@@ -622,8 +622,8 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                   </div>
                 </TabsContent>
 
-                <TabsContent value="invite" className="flex-1 overflow-hidden m-0 p-0">
-                  <div className="p-3 space-y-3 h-full flex flex-col">
+                <TabsContent value="invite" className="flex-1 overflow-hidden m-0 p-0 bg-card">
+                  <div className="p-3 space-y-3 h-full flex flex-col bg-card">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
