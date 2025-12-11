@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Rnd } from 'react-rnd';
-import { X, Minimize2, Maximize2, GripHorizontal } from 'lucide-react';
+import { X, Minimize2, Maximize2, GripHorizontal, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getYouTubeThumbnail } from '@/utils/youtubeUtils';
 
 interface FloatingYouTubePlayerProps {
   videoId: string;
@@ -16,11 +17,14 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
   title = 'YouTube Player'
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [size, setSize] = useState({ width: 400, height: 280 });
   const [position, setPosition] = useState({ 
     x: Math.max(20, window.innerWidth - 420), 
     y: Math.max(20, window.innerHeight - 340) 
   });
+
+  const thumbnailUrl = getYouTubeThumbnail(videoId, 'high');
 
   const content = (
     <Rnd
@@ -91,16 +95,37 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
           </div>
         </div>
 
-        {/* YouTube Embed */}
+        {/* YouTube Content */}
         {!isMinimized && (
-          <div className="flex-1 bg-black">
-            <iframe
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=0&controls=1&modestbranding=1&rel=0`}
-              allow="autoplay; encrypted-media; fullscreen"
-              allowFullScreen
-              className="w-full h-full"
-              style={{ border: 'none' }}
-            />
+          <div className="flex-1 bg-black relative">
+            {!isPlaying ? (
+              // Thumbnail with play button
+              <div 
+                className="w-full h-full relative cursor-pointer group"
+                onClick={() => setIsPlaying(true)}
+              >
+                <img 
+                  src={thumbnailUrl} 
+                  alt={title}
+                  className="w-full h-full object-cover"
+                />
+                {/* Play button overlay */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                  <div className="w-16 h-12 bg-red-600 rounded-xl flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
+                    <Play className="h-7 w-7 text-white fill-white ml-1" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              // YouTube iframe
+              <iframe
+                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&modestbranding=1&rel=0`}
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+                className="w-full h-full"
+                style={{ border: 'none' }}
+              />
+            )}
           </div>
         )}
       </div>
