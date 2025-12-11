@@ -58,13 +58,22 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Load YouTube IFrame API once
   useEffect(() => {
-    if (window.YT?.Player) return;
+    if (window.YT?.Player) {
+      console.log('[AudioContext] YouTube API already loaded');
+      return;
+    }
     const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
-    if (existingScript) return;
+    if (existingScript) {
+      console.log('[AudioContext] YouTube script exists, waiting...');
+      return;
+    }
     
+    console.log('[AudioContext] Loading YouTube IFrame API');
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     tag.async = true;
+    tag.onload = () => console.log('[AudioContext] YouTube script loaded');
+    tag.onerror = (e) => console.error('[AudioContext] YouTube script error:', e);
     document.head.appendChild(tag);
   }, []);
 
@@ -72,6 +81,8 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   useEffect(() => {
     if (audioSource !== 'youtube' || !youtubeVideoId) return;
 
+    console.log('[AudioContext] Initializing for video:', youtubeVideoId);
+    
     let mounted = true;
     let pollInterval: number | null = null;
     
@@ -79,7 +90,16 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     setPlayerReady(false);
 
     const initPlayer = () => {
-      if (!mounted || !youtubeContainerRef.current) return;
+      if (!mounted) {
+        console.log('[AudioContext] Not mounted, skipping init');
+        return;
+      }
+      if (!youtubeContainerRef.current) {
+        console.error('[AudioContext] Container ref not available');
+        return;
+      }
+
+      console.log('[AudioContext] Creating YouTube player');
 
       if (youtubePlayerRef.current) {
         try { youtubePlayerRef.current.destroy(); } catch (e) {}
@@ -108,15 +128,19 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
         },
         events: {
           onReady: (event: any) => {
+            console.log('[AudioContext] Player ready');
             if (!mounted) return;
             setIsLoading(false);
             setPlayerReady(true);
             event.target.setVolume(volume * 100);
             if (isMuted) event.target.mute();
             setDuration(event.target.getDuration() || 0);
-            try { event.target.playVideo(); } catch (e) {}
+            try { event.target.playVideo(); } catch (e) {
+              console.log('[AudioContext] Autoplay blocked:', e);
+            }
           },
           onStateChange: (event: any) => {
+            console.log('[AudioContext] State change:', event.data);
             if (!mounted) return;
             if (event.data === window.YT?.PlayerState?.PLAYING) {
               setIsPlaying(true);
@@ -131,7 +155,8 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
               setIsLoading(true);
             }
           },
-          onError: () => {
+          onError: (event: any) => {
+            console.error('[AudioContext] Player error:', event.data);
             if (!mounted) return;
             setIsLoading(false);
           }
@@ -141,6 +166,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
 
     const tryInit = () => {
       if (window.YT?.Player) {
+        console.log('[AudioContext] YT API ready, initializing');
         if (pollInterval) clearInterval(pollInterval);
         setTimeout(initPlayer, 100);
         return true;
@@ -193,7 +219,9 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   const hidePlayer = useCallback(() => setIsActive(false), []);
 
   const loadYouTube = useCallback((url: string) => {
+    console.log('[AudioContext] loadYouTube called with:', url);
     const videoId = extractYouTubeVideoId(url);
+    console.log('[AudioContext] Extracted videoId:', videoId);
     if (videoId) {
       setYoutubeVideoId(videoId);
       setAudioSource('youtube');
@@ -221,11 +249,19 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   }, []);
 
   const togglePlayPause = useCallback(() => {
+    console.log('[AudioContext] togglePlayPause', { audioSource, isPlaying, hasPlayer: !!youtubePlayerRef.current });
     if (audioSource === 'youtube' && youtubePlayerRef.current) {
       try {
-        if (isPlaying) youtubePlayerRef.current.pauseVideo();
-        else youtubePlayerRef.current.playVideo();
-      } catch (e) {}
+        if (isPlaying) {
+          console.log('[AudioContext] Pausing YouTube');
+          youtubePlayerRef.current.pauseVideo();
+        } else {
+          console.log('[AudioContext] Playing YouTube');
+          youtubePlayerRef.current.playVideo();
+        }
+      } catch (e) {
+        console.error('[AudioContext] togglePlayPause error:', e);
+      }
     } else if (audioSource === 'file' && audioRef.current) {
       if (isPlaying) audioRef.current.pause();
       else audioRef.current.play();
