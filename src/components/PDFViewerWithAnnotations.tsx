@@ -1053,7 +1053,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               {showAudioCompanion ? (
                 <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
               ) : (
-                <Button
+              <Button
                   size="sm"
                   variant="outline"
                   onClick={() => setShowAudioCompanion(true)}
@@ -1063,7 +1063,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   }}
                   aria-label="Listen along with audio"
                   title="Play audio while reading sheet music"
-                  className="shadow-lg bg-card/95 backdrop-blur border-border h-10 sm:h-8 px-2 touch-manipulation"
+                  className="shadow-lg bg-primary text-primary-foreground hover:bg-primary/90 border-primary h-10 sm:h-8 px-2 touch-manipulation"
                 >
                   <Music className="h-5 w-5 sm:h-4 sm:w-4 mr-1" />
                   <span className="font-medium text-xs">Listen Along</span>
