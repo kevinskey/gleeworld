@@ -1,0 +1,229 @@
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Upload, Download, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+
+interface UploadResult {
+  updated: number;
+  errors: string[];
+  skipped: number;
+}
+
+export function MemberDataUpload() {
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [result, setResult] = useState<UploadResult | null>(null);
+
+  const downloadTemplate = () => {
+    const csvContent = `email,student_id,classification
+student@spelman.edu,S12345678,Junior
+another@spelman.edu,S87654321,Senior`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'member_data_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const parseCSV = (text: string): Array<{ email: string; student_id: string; classification: string }> => {
+    const lines = text.trim().split('\n');
+    const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+    
+    const emailIdx = headers.findIndex(h => h === 'email');
+    const studentIdIdx = headers.findIndex(h => h === 'student_id' || h === 'studentid');
+    const classIdx = headers.findIndex(h => h === 'classification' || h === 'class' || h === 'year');
+
+    if (emailIdx === -1) {
+      throw new Error('CSV must have an "email" column');
+    }
+
+    return lines.slice(1).filter(line => line.trim()).map(line => {
+      const values = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
+      return {
+        email: values[emailIdx] || '',
+        student_id: studentIdIdx !== -1 ? values[studentIdIdx] : '',
+        classification: classIdx !== -1 ? values[classIdx] : ''
+      };
+    });
+  };
+
+  const classificationToYear = (classification: string): number | null => {
+    const lower = classification.toLowerCase().trim();
+    if (lower === 'freshman' || lower === 'first year' || lower === '1') return 1;
+    if (lower === 'sophomore' || lower === 'second year' || lower === '2') return 2;
+    if (lower === 'junior' || lower === 'third year' || lower === '3') return 3;
+    if (lower === 'senior' || lower === 'fourth year' || lower === '4') return 4;
+    if (lower === 'graduate' || lower === 'grad' || lower === '5') return 5;
+    return null;
+  };
+
+  const handleUpload = async () => {
+    if (!file) return;
+
+    setIsUploading(true);
+    setResult(null);
+
+    try {
+      const text = await file.text();
+      const records = parseCSV(text);
+
+      const uploadResult: UploadResult = { updated: 0, errors: [], skipped: 0 };
+
+      for (const record of records) {
+        if (!record.email) {
+          uploadResult.skipped++;
+          continue;
+        }
+
+        // Find user by email
+        const { data: profile, error: findError } = await supabase
+          .from('gw_profiles')
+          .select('user_id')
+          .eq('email', record.email.toLowerCase())
+          .maybeSingle();
+
+        if (findError) {
+          uploadResult.errors.push(`Error finding ${record.email}: ${findError.message}`);
+          continue;
+        }
+
+        if (!profile) {
+          uploadResult.errors.push(`User not found: ${record.email}`);
+          continue;
+        }
+
+        // Build update object
+        const updates: Record<string, any> = {};
+        
+        if (record.student_id) {
+          updates.student_id = record.student_id;
+        }
+        
+        if (record.classification) {
+          const classYear = classificationToYear(record.classification);
+          if (classYear) {
+            updates.class_year = classYear;
+            updates.academic_year = record.classification.charAt(0).toUpperCase() + record.classification.slice(1).toLowerCase();
+          }
+        }
+
+        if (Object.keys(updates).length === 0) {
+          uploadResult.skipped++;
+          continue;
+        }
+
+        // Update profile
+        const { error: updateError } = await supabase
+          .from('gw_profiles')
+          .update(updates)
+          .eq('user_id', profile.user_id);
+
+        if (updateError) {
+          uploadResult.errors.push(`Failed to update ${record.email}: ${updateError.message}`);
+        } else {
+          uploadResult.updated++;
+        }
+      }
+
+      setResult(uploadResult);
+      
+      if (uploadResult.updated > 0) {
+        toast({
+          title: 'Upload Complete',
+          description: `Updated ${uploadResult.updated} member(s)`,
+        });
+      }
+
+    } catch (error: any) {
+      toast({
+        title: 'Upload Failed',
+        description: error.message,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Upload className="h-5 w-5" />
+          Update Member Data via CSV
+        </CardTitle>
+        <CardDescription>
+          Upload a CSV with email, student_id, and classification (Freshman/Sophomore/Junior/Senior)
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex gap-2 items-center">
+          <Input
+            type="file"
+            accept=".csv"
+            onChange={(e) => {
+              setFile(e.target.files?.[0] || null);
+              setResult(null);
+            }}
+            className="flex-1"
+          />
+          <Button variant="outline" size="sm" onClick={downloadTemplate}>
+            <Download className="h-4 w-4 mr-1" />
+            Template
+          </Button>
+        </div>
+
+        <Button 
+          onClick={handleUpload} 
+          disabled={!file || isUploading}
+          className="w-full"
+        >
+          {isUploading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            <>
+              <Upload className="h-4 w-4 mr-2" />
+              Upload & Update Profiles
+            </>
+          )}
+        </Button>
+
+        {result && (
+          <div className="space-y-2 p-3 bg-muted rounded text-sm">
+            <div className="flex items-center gap-2 text-green-600">
+              <CheckCircle className="h-4 w-4" />
+              {result.updated} profile(s) updated
+            </div>
+            {result.skipped > 0 && (
+              <div className="text-muted-foreground">
+                {result.skipped} row(s) skipped (no data)
+              </div>
+            )}
+            {result.errors.length > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-destructive">
+                  <XCircle className="h-4 w-4" />
+                  {result.errors.length} error(s)
+                </div>
+                <ul className="text-xs text-muted-foreground max-h-32 overflow-y-auto">
+                  {result.errors.map((err, i) => (
+                    <li key={i}>• {err}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

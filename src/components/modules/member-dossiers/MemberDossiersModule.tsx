@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, RefreshCw, Music, BarChart3 } from "lucide-react";
+import { Users, Search, RefreshCw, Music, BarChart3, Upload } from "lucide-react";
 import { MemberDossierCard } from "./MemberDossierCard";
 import { MemberDossierDetail } from "./MemberDossierDetail";
 import { MemberDossierAnalytics } from "./MemberDossierAnalytics";
+import { MemberDataUpload } from "./MemberDataUpload";
 
 interface MemberProfile {
   user_id: string;
@@ -240,6 +241,10 @@ const MemberDossiersModule: React.FC = () => {
               <Users className="h-4 w-4 mr-2" />
               Members ({stats.total})
             </TabsTrigger>
+            <TabsTrigger value="upload" className="flex-1">
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Data
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="analytics" className="mt-4">
@@ -302,6 +307,10 @@ const MemberDossiersModule: React.FC = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="upload" className="mt-4">
+            <MemberDataUpload />
           </TabsContent>
         </Tabs>
       </CardContent>
