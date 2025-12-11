@@ -87,7 +87,8 @@ Mary Smith,S87654321,Senior`;
         const { data: profiles, error: findError } = await supabase
           .from('gw_profiles')
           .select('user_id, full_name, first_name, last_name')
-          .or(`full_name.ilike.%${nameLower}%,first_name.ilike.%${nameLower.split(' ')[0]}%`);
+          .not('user_id', 'is', null)
+          .or(`full_name.ilike.%${nameLower}%,last_name.ilike.%${nameLower}%,first_name.ilike.%${nameLower.split(' ')[0]}%`);
 
         if (findError) {
           uploadResult.errors.push(`Error finding ${record.name}: ${findError.message}`);
