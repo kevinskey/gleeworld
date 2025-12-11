@@ -8,14 +8,18 @@ import {
   Volume2, 
   VolumeX, 
   X, 
-  Minimize2, 
-  Maximize2,
   Music,
   Youtube,
-  Upload
+  Upload,
+  StopCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface AudioCompanionProps {
   onClose: () => void;
@@ -25,7 +29,6 @@ interface AudioCompanionProps {
 type AudioSource = 'youtube' | 'file' | null;
 
 export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, className }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
   const [audioSource, setAudioSource] = useState<AudioSource>(null);
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
@@ -38,6 +41,7 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
   });
   const [isMuted, setIsMuted] = useState(false);
   const [audioFileName, setAudioFileName] = useState<string | null>(null);
+  const [showSourcePicker, setShowSourcePicker] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const youtubePlayerRef = useRef<any>(null);
@@ -64,12 +68,14 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
 
       // Destroy existing player
       if (youtubePlayerRef.current) {
-        youtubePlayerRef.current.destroy();
+        try {
+          youtubePlayerRef.current.destroy();
+        } catch (e) {}
       }
 
       youtubePlayerRef.current = new window.YT.Player(youtubeContainerRef.current, {
-        height: '1',
-        width: '1',
+        height: '100',
+        width: '178',
         videoId: youtubeVideoId,
         playerVars: {
           autoplay: 1,
@@ -78,18 +84,19 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
           fs: 0,
           modestbranding: 1,
           rel: 0,
+          playsinline: 1,
         },
         events: {
           onReady: (event: any) => {
             event.target.setVolume(volume * 100);
             if (isMuted) event.target.mute();
-            setDuration(event.target.getDuration());
+            setDuration(event.target.getDuration() || 0);
             setIsPlaying(true);
           },
           onStateChange: (event: any) => {
             if (event.data === window.YT?.PlayerState?.PLAYING) {
               setIsPlaying(true);
-              setDuration(event.target.getDuration());
+              setDuration(event.target.getDuration() || 0);
             } else if (event.data === window.YT?.PlayerState?.PAUSED) {
               setIsPlaying(false);
             } else if (event.data === window.YT?.PlayerState?.ENDED) {
@@ -97,19 +104,24 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
               setCurrentTime(0);
             }
           },
+          onError: (event: any) => {
+            console.error('YouTube player error:', event.data);
+          }
         },
       });
     };
 
     if (window.YT?.Player) {
-      initPlayer();
+      setTimeout(initPlayer, 100);
     } else {
       window.onYouTubeIframeAPIReady = initPlayer;
     }
 
     return () => {
       if (youtubePlayerRef.current) {
-        youtubePlayerRef.current.destroy();
+        try {
+          youtubePlayerRef.current.destroy();
+        } catch (e) {}
         youtubePlayerRef.current = null;
       }
     };
@@ -148,6 +160,7 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
       setYoutubeVideoId(videoId);
       setAudioSource('youtube');
       setAudioFileName(null);
+      setShowSourcePicker(false);
     }
   }, [youtubeUrl]);
 
@@ -164,6 +177,7 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
       setAudioFileName(file.name);
       setYoutubeVideoId(null);
       setIsPlaying(true);
+      setShowSourcePicker(false);
     }
   }, []);
 
@@ -226,6 +240,22 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
     }
   }, [audioSource, isMuted]);
 
+  const stopAndClear = useCallback(() => {
+    if (audioSource === 'youtube' && youtubePlayerRef.current) {
+      youtubePlayerRef.current.stopVideo();
+    } else if (audioSource === 'file' && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setAudioSource(null);
+    setYoutubeVideoId(null);
+    setYoutubeUrl('');
+    setAudioFileName(null);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, [audioSource]);
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
@@ -252,18 +282,16 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
   const handleAudioPlay = () => setIsPlaying(true);
   const handleAudioPause = () => setIsPlaying(false);
 
-  const currentTitle = audioSource === 'youtube' 
-    ? 'YouTube Audio' 
-    : audioFileName || 'No audio selected';
-
   return (
-    <div className={cn(
-      "fixed bottom-16 left-1/2 -translate-x-1/2 z-40 bg-card/95 backdrop-blur border border-border shadow-lg transition-all duration-200",
-      isExpanded ? "w-[90%] max-w-md p-3" : "w-auto px-3 py-2",
-      className
-    )}>
-      {/* Hidden elements */}
-      <div ref={youtubeContainerRef} className="hidden" />
+    <div className={cn("flex items-center gap-1.5 bg-card/95 backdrop-blur border border-border p-1 shadow-lg", className)}>
+      {/* Hidden YouTube player - needs minimum size to play */}
+      <div 
+        ref={youtubeContainerRef} 
+        className="absolute -left-[9999px] w-[178px] h-[100px]"
+        style={{ visibility: 'hidden', pointerEvents: 'none' }}
+      />
+      
+      {/* Hidden audio element */}
       <audio
         ref={audioRef}
         onTimeUpdate={handleAudioTimeUpdate}
@@ -280,183 +308,135 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
         className="hidden"
       />
 
-      {/* Collapsed view */}
-      {!isExpanded && (
-        <div className="flex items-center gap-2">
+      {/* Music icon / Source picker */}
+      <Popover open={showSourcePicker} onOpenChange={setShowSourcePicker}>
+        <PopoverTrigger asChild>
           <Button
             size="sm"
             variant="ghost"
-            onClick={togglePlayPause}
-            disabled={!audioSource}
-            className="h-7 w-7 p-0"
+            className="h-8 w-8 p-0"
+            title="Select audio source"
           >
-            {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-          </Button>
-          <div className="flex items-center gap-1.5 text-xs">
-            <Music className="h-3 w-3 text-muted-foreground" />
-            <span className="max-w-[120px] truncate">{currentTitle}</span>
-            {audioSource && <span className="text-muted-foreground">{formatTime(currentTime)}</span>}
-          </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => setIsExpanded(true)}
-            className="h-7 w-7 p-0 ml-auto"
-          >
-            <Maximize2 className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={onClose}
-            className="h-7 w-7 p-0"
-          >
-            <X className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      )}
-
-      {/* Expanded view */}
-      {isExpanded && (
-        <div className="space-y-3">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            {audioSource === 'youtube' ? (
+              <Youtube className="h-4 w-4 text-red-500" />
+            ) : audioSource === 'file' ? (
               <Music className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Listen Along</span>
-            </div>
-            <div className="flex items-center gap-1">
+            ) : (
+              <Music className="h-4 w-4" />
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-72 p-3" align="start">
+          <div className="space-y-3">
+            <div className="text-sm font-medium">Select Audio Source</div>
+            <div className="flex gap-2">
+              <Input
+                placeholder="Paste YouTube URL..."
+                value={youtubeUrl}
+                onChange={(e) => setYoutubeUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleYouTubeSubmit()}
+                className="flex-1 h-8 text-sm"
+              />
               <Button
                 size="sm"
-                variant="ghost"
-                onClick={() => setIsExpanded(false)}
-                className="h-7 w-7 p-0"
+                onClick={handleYouTubeSubmit}
+                disabled={!youtubeUrl}
+                className="h-8 px-2"
               >
-                <Minimize2 className="h-3.5 w-3.5" />
+                <Youtube className="h-4 w-4" />
               </Button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">or</span>
               <Button
                 size="sm"
-                variant="ghost"
-                onClick={onClose}
-                className="h-7 w-7 p-0"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="h-7 text-xs"
               >
-                <X className="h-3.5 w-3.5" />
+                <Upload className="h-3 w-3 mr-1" />
+                Upload Audio
               </Button>
             </div>
           </div>
+        </PopoverContent>
+      </Popover>
 
-          {/* Source selection */}
-          {!audioSource && (
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Paste YouTube URL..."
-                  value={youtubeUrl}
-                  onChange={(e) => setYoutubeUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleYouTubeSubmit()}
-                  className="flex-1 h-8 text-sm"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleYouTubeSubmit}
-                  disabled={!youtubeUrl}
-                  className="h-8"
-                >
-                  <Youtube className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span>or</span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="h-7 text-xs"
-                >
-                  <Upload className="h-3 w-3 mr-1" />
-                  Upload Audio File
-                </Button>
-              </div>
-            </div>
-          )}
+      {/* Play/Pause */}
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={togglePlayPause}
+        disabled={!audioSource}
+        className="h-8 w-8 p-0"
+        title={isPlaying ? "Pause" : "Play"}
+      >
+        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+      </Button>
 
-          {/* Now playing */}
-          {audioSource && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                {audioSource === 'youtube' ? (
-                  <Youtube className="h-4 w-4 text-red-500" />
-                ) : (
-                  <Music className="h-4 w-4 text-primary" />
-                )}
-                <span className="text-sm truncate flex-1">{currentTitle}</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    setAudioSource(null);
-                    setYoutubeVideoId(null);
-                    setYoutubeUrl('');
-                    setAudioFileName(null);
-                    setIsPlaying(false);
-                    setCurrentTime(0);
-                    setDuration(0);
-                  }}
-                  className="h-6 text-xs px-2"
-                >
-                  Change
-                </Button>
-              </div>
-
-              {/* Progress */}
-              <div className="space-y-1">
-                <Slider
-                  value={[currentTime]}
-                  min={0}
-                  max={duration || 100}
-                  step={1}
-                  onValueChange={handleSeek}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{formatTime(currentTime)}</span>
-                  <span>{formatTime(duration)}</span>
-                </div>
-              </div>
-
-              {/* Controls */}
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={togglePlayPause}
-                  className="h-8 w-8 p-0"
-                >
-                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-                </Button>
-                
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={toggleMute}
-                  className="h-8 w-8 p-0"
-                >
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </Button>
-                
-                <Slider
-                  value={[isMuted ? 0 : volume]}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  onValueChange={handleVolumeChange}
-                  className="w-20"
-                />
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Progress bar - only show when audio is loaded */}
+      {audioSource && (
+        <>
+          <span className="text-xs tabular-nums text-muted-foreground w-10">
+            {formatTime(currentTime)}
+          </span>
+          <Slider
+            value={[currentTime]}
+            min={0}
+            max={duration || 100}
+            step={1}
+            onValueChange={handleSeek}
+            className="w-24"
+          />
+          <span className="text-xs tabular-nums text-muted-foreground w-10">
+            {formatTime(duration)}
+          </span>
+        </>
       )}
+
+      {/* Volume */}
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={toggleMute}
+        className="h-8 w-8 p-0"
+        title={isMuted ? "Unmute" : "Mute"}
+      >
+        {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+      </Button>
+
+      <Slider
+        value={[isMuted ? 0 : volume]}
+        min={0}
+        max={1}
+        step={0.01}
+        onValueChange={handleVolumeChange}
+        className="w-16"
+      />
+
+      {/* Stop/Clear */}
+      {audioSource && (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={stopAndClear}
+          className="h-8 w-8 p-0"
+          title="Stop and clear"
+        >
+          <StopCircle className="h-4 w-4" />
+        </Button>
+      )}
+
+      {/* Close */}
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={onClose}
+        className="h-8 w-8 p-0"
+        title="Close audio companion"
+      >
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 };
