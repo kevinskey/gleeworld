@@ -177,15 +177,15 @@ export const MemberDossierAnalytics: React.FC<MemberDossierAnalyticsProps> = ({ 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-[200px]">
+          <div className="h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.satisfactionData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis type="number" domain={[0, 5]} tick={{ fontSize: 12 }} />
-                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={90} />
+                <XAxis type="number" domain={[0, 5]} tick={{ fontSize: 14 }} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 14 }} width={110} />
                 <Tooltip 
                   formatter={(value: number) => [value.toFixed(2), 'Score']}
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 14 }}
                 />
                 <Bar dataKey="score" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
               </BarChart>
@@ -297,14 +297,14 @@ export const MemberDossierAnalytics: React.FC<MemberDossierAnalyticsProps> = ({ 
               ))}
             </div>
             {positionData.length > 0 && (
-              <div className="h-[150px] mt-4">
+              <div className="h-[180px] mt-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={positionData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} angle={-45} textAnchor="end" height={60} />
-                    <YAxis tick={{ fontSize: 12 }} />
+                    <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-35} textAnchor="end" height={70} />
+                    <YAxis tick={{ fontSize: 14 }} />
                     <Tooltip 
-                      contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }}
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', fontSize: 14 }}
                     />
                     <Bar dataKey="value" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                   </BarChart>
