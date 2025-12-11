@@ -62,19 +62,24 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       console.log('[AudioContext] YouTube API already loaded');
       return;
     }
+    
     const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
-    if (existingScript) {
-      console.log('[AudioContext] YouTube script exists, waiting...');
-      return;
+    if (!existingScript) {
+      console.log('[AudioContext] Loading YouTube IFrame API');
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      tag.async = true;
+      document.head.appendChild(tag);
+    } else {
+      console.log('[AudioContext] YouTube script already exists');
     }
     
-    console.log('[AudioContext] Loading YouTube IFrame API');
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    tag.async = true;
-    tag.onload = () => console.log('[AudioContext] YouTube script loaded');
-    tag.onerror = (e) => console.error('[AudioContext] YouTube script error:', e);
-    document.head.appendChild(tag);
+    // Setup the callback for when API is ready
+    const originalCallback = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      console.log('[AudioContext] onYouTubeIframeAPIReady fired!');
+      originalCallback?.();
+    };
   }, []);
 
   // Initialize YouTube player when videoId changes
@@ -165,6 +170,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     };
 
     const tryInit = () => {
+      console.log('[AudioContext] tryInit - YT:', typeof window.YT, 'Player:', typeof window.YT?.Player);
       if (window.YT?.Player) {
         console.log('[AudioContext] YT API ready, initializing');
         if (pollInterval) clearInterval(pollInterval);
@@ -175,12 +181,16 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     };
 
     if (!tryInit()) {
+      console.log('[AudioContext] Starting poll for YT API');
       let attempts = 0;
       pollInterval = window.setInterval(() => {
         attempts++;
         if (tryInit() || attempts > 50) {
           if (pollInterval) clearInterval(pollInterval);
-          if (attempts > 50) setIsLoading(false);
+          if (attempts > 50) {
+            console.error('[AudioContext] YT API timeout after 50 attempts');
+            setIsLoading(false);
+          }
         }
       }, 200);
     }
