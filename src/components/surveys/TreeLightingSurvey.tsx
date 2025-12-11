@@ -88,10 +88,7 @@ export const TreeLightingSurvey = () => {
     );
   }
 
-  // Hide completely once submitted
-  if (hasSubmitted) {
-    return null;
-  }
+  // Always show the form - allow members to update their responses
 
   if (isExpired) {
     return (
@@ -114,15 +111,26 @@ export const TreeLightingSurvey = () => {
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <TreePine className="h-5 w-5 text-green-600" />
+            {hasSubmitted ? (
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            ) : (
+              <TreePine className="h-5 w-5 text-green-600" />
+            )}
             <CardTitle className="text-lg text-card-foreground">Tree Lighting Participation Survey</CardTitle>
+            {hasSubmitted && (
+              <span className="text-xs bg-green-600/20 text-green-600 px-2 py-0.5 rounded-full">Completed</span>
+            )}
           </div>
           <div className="flex items-center gap-1 text-xs text-amber-600">
             <Clock className="h-3 w-3" />
             <span>Due: 12/12/25</span>
           </div>
         </div>
-        <CardDescription className="text-muted-foreground">Please complete this survey about the Tree Lighting event on 12/8/25</CardDescription>
+        <CardDescription className="text-muted-foreground">
+          {hasSubmitted 
+            ? "You've already submitted. You can update your response below." 
+            : "Please complete this survey about the Tree Lighting event on 12/8/25"}
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-3">
@@ -172,7 +180,7 @@ export const TreeLightingSurvey = () => {
               disabled={isSubmitting}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              {isSubmitting ? "Submitting..." : "Submit Survey"}
+              {isSubmitting ? "Saving..." : hasSubmitted ? "Update Response" : "Submit Survey"}
             </Button>
           </>
         )}
@@ -185,7 +193,7 @@ export const TreeLightingSurvey = () => {
               disabled={isSubmitting}
               className="bg-green-600 hover:bg-green-700"
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? "Saving..." : hasSubmitted ? "Update Response" : "Submit"}
             </Button>
           </div>
         )}
