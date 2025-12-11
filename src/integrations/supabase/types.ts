@@ -15602,6 +15602,124 @@ export type Database = {
           },
         ]
       }
+      gw_video_session_chat: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_video_session_chat_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gw_video_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_video_session_participants: {
+        Row: {
+          id: string
+          is_host: boolean | null
+          joined_at: string
+          left_at: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          is_host?: boolean | null
+          joined_at?: string
+          left_at?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          is_host?: boolean | null
+          joined_at?: string
+          left_at?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_video_session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gw_video_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_video_sessions: {
+        Row: {
+          created_at: string
+          description: string | null
+          ended_at: string | null
+          host_user_id: string
+          id: string
+          is_recording_enabled: boolean | null
+          max_participants: number | null
+          recording_url: string | null
+          room_name: string
+          scheduled_start_at: string | null
+          started_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          host_user_id: string
+          id?: string
+          is_recording_enabled?: boolean | null
+          max_participants?: number | null
+          recording_url?: string | null
+          room_name: string
+          scheduled_start_at?: string | null
+          started_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          ended_at?: string | null
+          host_user_id?: string
+          id?: string
+          is_recording_enabled?: boolean | null
+          max_participants?: number | null
+          recording_url?: string | null
+          room_name?: string
+          scheduled_start_at?: string | null
+          started_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_vocal_health_entries: {
         Row: {
           created_at: string
