@@ -34,18 +34,38 @@ export const JitsiMeetRoom = ({
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check if script is already loaded
+    if (window.JitsiMeetExternalAPI) {
+      initJitsi();
+      return;
+    }
+
     // Load Jitsi Meet External API script
+    const existingScript = document.querySelector('script[src="https://meet.jit.si/external_api.js"]');
+    if (existingScript) {
+      existingScript.addEventListener('load', initJitsi);
+      return;
+    }
+
     const script = document.createElement('script');
     script.src = 'https://meet.jit.si/external_api.js';
     script.async = true;
     script.onload = initJitsi;
+    script.onerror = () => {
+      setIsLoading(false);
+      toast({
+        title: "Connection Error",
+        description: "Failed to load video conferencing. Please check your internet connection.",
+        variant: "destructive"
+      });
+    };
     document.body.appendChild(script);
 
     return () => {
       if (apiRef.current) {
         apiRef.current.dispose();
+        apiRef.current = null;
       }
-      document.body.removeChild(script);
     };
   }, []);
 

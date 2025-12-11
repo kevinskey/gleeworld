@@ -76,9 +76,12 @@ export const VideoSessionViewer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900 flex">
+    <div className="fixed inset-0 z-50 bg-slate-900 flex overflow-hidden">
       {/* Video area */}
-      <div className={`flex-1 ${showChat ? 'mr-80' : ''} transition-all duration-300`}>
+      <div 
+        className="flex-1 h-full transition-all duration-300"
+        style={{ marginRight: showChat ? '320px' : '0' }}
+      >
         <JitsiMeetRoom
           roomName={roomName}
           displayName={displayName}
@@ -90,7 +93,7 @@ export const VideoSessionViewer = ({
 
       {/* Chat sidebar */}
       {showChat && (
-        <div className="fixed right-0 top-0 bottom-0 w-80 bg-background border-l shadow-xl">
+        <div className="fixed right-0 top-0 bottom-0 w-80 bg-background border-l shadow-xl z-50">
           <VideoSessionChat 
             sessionId={sessionId} 
             onClose={() => setShowChat(false)}
@@ -102,7 +105,7 @@ export const VideoSessionViewer = ({
       {!showChat && (
         <Button
           onClick={() => setShowChat(true)}
-          className="fixed right-4 top-4 z-50 rounded-full h-10 w-10 p-0 shadow-lg"
+          className="fixed right-4 top-4 z-[60] rounded-full h-10 w-10 p-0 shadow-lg bg-primary hover:bg-primary/90"
         >
           <MessageSquare className="h-5 w-5" />
         </Button>
