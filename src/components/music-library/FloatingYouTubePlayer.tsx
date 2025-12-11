@@ -19,10 +19,10 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
-  const [size, setSize] = useState({ width: 400, height: 280 });
+  const [size, setSize] = useState({ width: 280, height: 200 });
   const [position, setPosition] = useState({ 
-    x: Math.max(20, window.innerWidth - 420), 
-    y: Math.max(20, window.innerHeight - 340) 
+    x: window.innerWidth - 300, 
+    y: 20 
   });
 
   const thumbnailUrl = getYouTubeThumbnail(videoId, 'high');
@@ -32,8 +32,8 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
       data-floating-youtube-player="true"
       position={position}
       size={{ width: size.width, height: isMinimized ? 48 : size.height }}
-      minWidth={280}
-      minHeight={isMinimized ? 48 : 200}
+      minWidth={240}
+      minHeight={isMinimized ? 48 : 180}
       maxWidth={800}
       maxHeight={600}
       bounds="window"
@@ -98,7 +98,7 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
 
         {/* YouTube Content */}
         {!isMinimized && (
-          <div className="flex-1 bg-black relative min-h-[180px]">
+          <div className="flex-1 bg-black relative min-h-[140px]">
             {!isPlaying ? (
               // Thumbnail with play button
               <div 
