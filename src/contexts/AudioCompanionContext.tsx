@@ -58,8 +58,9 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Load YouTube IFrame API once
   useEffect(() => {
-    if (window.YT?.Player) {
-      console.log('[AudioContext] YouTube API already loaded');
+    // Check if API already fully ready
+    if (typeof window.YT !== 'undefined' && typeof window.YT.Player === 'function') {
+      console.log('[AudioContext] YouTube API already fully loaded');
       return;
     }
     
@@ -71,15 +72,17 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       tag.async = true;
       document.head.appendChild(tag);
     } else {
-      console.log('[AudioContext] YouTube script already exists');
+      console.log('[AudioContext] YouTube script already exists, API ready:', typeof window.YT?.Player);
     }
     
-    // Setup the callback for when API is ready
-    const originalCallback = window.onYouTubeIframeAPIReady;
-    window.onYouTubeIframeAPIReady = () => {
-      console.log('[AudioContext] onYouTubeIframeAPIReady fired!');
-      originalCallback?.();
-    };
+    // Setup the callback for when API is ready (if not already fired)
+    if (!window.onYouTubeIframeAPIReady || typeof window.YT?.Player !== 'function') {
+      const originalCallback = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        console.log('[AudioContext] onYouTubeIframeAPIReady fired!');
+        originalCallback?.();
+      };
+    }
   }, []);
 
   // Initialize YouTube player when videoId changes
@@ -170,8 +173,11 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     };
 
     const tryInit = () => {
-      console.log('[AudioContext] tryInit - YT:', typeof window.YT, 'Player:', typeof window.YT?.Player);
-      if (window.YT?.Player) {
+      const ytExists = typeof window.YT !== 'undefined';
+      const playerExists = ytExists && typeof window.YT.Player === 'function';
+      console.log('[AudioContext] tryInit - YT exists:', ytExists, 'Player exists:', playerExists);
+      
+      if (playerExists) {
         console.log('[AudioContext] YT API ready, initializing');
         if (pollInterval) clearInterval(pollInterval);
         setTimeout(initPlayer, 100);
@@ -185,14 +191,21 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       let attempts = 0;
       pollInterval = window.setInterval(() => {
         attempts++;
-        if (tryInit() || attempts > 50) {
+        if (tryInit() || attempts > 100) {
           if (pollInterval) clearInterval(pollInterval);
-          if (attempts > 50) {
-            console.error('[AudioContext] YT API timeout after 50 attempts');
-            setIsLoading(false);
+          if (attempts > 100) {
+            console.error('[AudioContext] YT API timeout after 100 attempts, trying anyway...');
+            // Try to init anyway - maybe Player exists now
+            setTimeout(() => {
+              if (typeof window.YT?.Player === 'function') {
+                initPlayer();
+              } else {
+                setIsLoading(false);
+              }
+            }, 500);
           }
         }
-      }, 200);
+      }, 100);
     }
 
     return () => {
