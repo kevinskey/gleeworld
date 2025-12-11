@@ -25,6 +25,15 @@ interface MemberProfile {
   role: string | null;
   join_date: string | null;
   notes: string | null;
+  student_number: string | null;
+  dues_paid: boolean | null;
+  is_section_leader: boolean | null;
+  is_exec_board: boolean | null;
+  exec_board_role: string | null;
+  music_role: string | null;
+  can_dance: boolean | null;
+  instruments_played: string[] | null;
+  academic_year: string | null;
 }
 
 interface ExitInterview {
@@ -86,7 +95,7 @@ const MemberDossiersModule: React.FC = () => {
       // Fetch only member profiles (role = 'member')
       const { data: profiles, error: profilesError } = await supabase
         .from("gw_profiles")
-        .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes")
+        .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes, student_number, dues_paid, is_section_leader, is_exec_board, exec_board_role, music_role, can_dance, instruments_played, academic_year")
         .eq("role", "member")
         .not("user_id", "is", null)
         .order("full_name");
