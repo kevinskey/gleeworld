@@ -6,12 +6,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2, Users, Music, Briefcase, Plane, Mail, MessageSquare, Plus, FileUser } from "lucide-react";
+import { ClipboardList, User, Calendar, Star, ChevronRight, Download, RefreshCw, Trash2, Users, Music, Briefcase, Plane, Mail, MessageSquare, Plus, FileUser, Crown } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import MemberDossiersModule from "./member-dossiers/MemberDossiersModule";
+import ExecBoardInterviewsModule from "./ExecBoardInterviewsModule";
 
 interface ExitInterview {
   id: string;
@@ -366,7 +367,11 @@ const ExitInterviewsModule: React.FC = () => {
         <TabsList className="mb-4">
           <TabsTrigger value="interviews" className="flex items-center gap-2">
             <ClipboardList className="h-4 w-4" />
-            Interviews
+            Member Interviews
+          </TabsTrigger>
+          <TabsTrigger value="exec-board" className="flex items-center gap-2">
+            <Crown className="h-4 w-4" />
+            Exec Board
           </TabsTrigger>
           <TabsTrigger value="dossiers" className="flex items-center gap-2">
             <FileUser className="h-4 w-4" />
@@ -556,6 +561,10 @@ const ExitInterviewsModule: React.FC = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="exec-board" className="mt-0">
+          <ExecBoardInterviewsModule />
         </TabsContent>
 
         <TabsContent value="dossiers" className="mt-0">
