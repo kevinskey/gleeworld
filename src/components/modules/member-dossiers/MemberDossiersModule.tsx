@@ -83,11 +83,11 @@ const MemberDossiersModule: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch ALL member profiles (active members)
+      // Fetch only member profiles (role = 'member')
       const { data: profiles, error: profilesError } = await supabase
         .from("gw_profiles")
         .select("user_id, full_name, first_name, last_name, email, phone, voice_part, class_year, avatar_url, status, role, join_date, notes")
-        .or("role.eq.member,role.eq.alumna,status.eq.active")
+        .eq("role", "member")
         .not("user_id", "is", null)
         .order("full_name");
 
