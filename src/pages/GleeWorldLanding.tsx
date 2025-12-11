@@ -25,6 +25,8 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { TreeLightingSurvey } from "@/components/surveys/TreeLightingSurvey";
+import { CollapsibleMemberExitInterview } from "@/components/surveys/CollapsibleMemberExitInterview";
+import { CollapsibleExecBoardExitInterview } from "@/components/surveys/CollapsibleExecBoardExitInterview";
 import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
 interface Event {
   id: string;
@@ -341,6 +343,24 @@ export const GleeWorldLanding = () => {
         <section className="relative z-30 py-4 sm:py-6 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
           <div className="w-full max-w-screen-2xl mx-auto">
             <TreeLightingSurvey />
+          </div>
+        </section>
+      )}
+
+      {/* Member Exit Interview - for authenticated users */}
+      {user && (
+        <section className="relative z-30 py-4 sm:py-6 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+          <div className="w-full max-w-screen-2xl mx-auto">
+            <CollapsibleMemberExitInterview />
+          </div>
+        </section>
+      )}
+
+      {/* Exec Board Exit Interview - for exec board members */}
+      {user && (
+        <section className="relative z-30 py-4 sm:py-6 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+          <div className="w-full max-w-screen-2xl mx-auto">
+            <CollapsibleExecBoardExitInterview />
           </div>
         </section>
       )}
