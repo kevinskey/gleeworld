@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, Search, RefreshCw, Music } from "lucide-react";
+import { Users, Search, RefreshCw, Music, BarChart3 } from "lucide-react";
 import { MemberDossierCard } from "./MemberDossierCard";
 import { MemberDossierDetail } from "./MemberDossierDetail";
+import { MemberDossierAnalytics } from "./MemberDossierAnalytics";
 
 interface MemberProfile {
   user_id: string;
@@ -70,10 +71,12 @@ interface MemberDossierData {
 
 const MemberDossiersModule: React.FC = () => {
   const [members, setMembers] = useState<MemberDossierData[]>([]);
+  const [allInterviews, setAllInterviews] = useState<ExitInterview[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [voicePartFilter, setVoicePartFilter] = useState<string>("all");
   const [selectedMember, setSelectedMember] = useState<MemberDossierData | null>(null);
+  const [activeTab, setActiveTab] = useState("analytics");
 
   const fetchData = async () => {
     setLoading(true);
@@ -85,6 +88,8 @@ const MemberDossiersModule: React.FC = () => {
         .order("created_at", { ascending: false });
 
       if (interviewsError) throw interviewsError;
+
+      setAllInterviews(interviews || []);
 
       // Group interviews by user_id
       const interviewsByUser: Record<string, ExitInterview[]> = {};
@@ -225,55 +230,80 @@ const MemberDossiersModule: React.FC = () => {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Search & Filters */}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Select value={voicePartFilter} onValueChange={setVoicePartFilter}>
-            <SelectTrigger className="w-full sm:w-[140px]">
-              <Music className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Voice Part" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Parts</SelectItem>
-              {voiceParts.map(part => (
-                <SelectItem key={part} value={part}>{part}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full">
+            <TabsTrigger value="analytics" className="flex-1">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="members" className="flex-1">
+              <Users className="h-4 w-4 mr-2" />
+              Members ({stats.total})
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Member List */}
-        {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : filteredMembers.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {searchQuery || voicePartFilter !== "all"
-              ? "No members match your filters"
-              : "No exit interviews submitted yet"}
-          </div>
-        ) : (
-          <div className="space-y-2 max-h-[500px] overflow-y-auto">
-            {filteredMembers.map((member) => (
-              <MemberDossierCard
-                key={member.profile.user_id}
-                member={member.profile}
-                hasExitInterview={member.exitInterviews.length > 0}
-                satisfactionAvg={member.avgSatisfaction}
-                onViewDossier={() => setSelectedMember(member)}
-              />
-            ))}
-          </div>
-        )}
+          <TabsContent value="analytics" className="mt-4">
+            {loading ? (
+              <div className="flex items-center justify-center h-32">
+                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <MemberDossierAnalytics interviews={allInterviews} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="members" className="mt-4 space-y-4">
+            {/* Search & Filters */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={voicePartFilter} onValueChange={setVoicePartFilter}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <Music className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Voice Part" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Parts</SelectItem>
+                  {voiceParts.map(part => (
+                    <SelectItem key={part} value={part}>{part}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Member List */}
+            {loading ? (
+              <div className="flex items-center justify-center h-32">
+                <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredMembers.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {searchQuery || voicePartFilter !== "all"
+                  ? "No members match your filters"
+                  : "No exit interviews submitted yet"}
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                {filteredMembers.map((member) => (
+                  <MemberDossierCard
+                    key={member.profile.user_id}
+                    member={member.profile}
+                    hasExitInterview={member.exitInterviews.length > 0}
+                    satisfactionAvg={member.avgSatisfaction}
+                    onViewDossier={() => setSelectedMember(member)}
+                  />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
