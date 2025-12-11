@@ -311,7 +311,7 @@ const MemberDossiersModule: React.FC = () => {
                   : "No exit interviews submitted yet"}
               </div>
             ) : (
-              <div className="space-y-2 max-h-[500px] overflow-y-auto">
+              <div className="space-y-2">
                 {filteredMembers.map((member) => (
                   <MemberDossierCard
                     key={member.profile.user_id}
@@ -342,7 +342,7 @@ const MemberDossiersModule: React.FC = () => {
                     <AlertTriangle className="h-5 w-5" />
                     <span className="font-medium">{membersWithoutInterviews.length} member(s) have NOT submitted exit interviews</span>
                   </div>
-                  <div className="border rounded overflow-hidden max-h-[400px] overflow-y-auto">
+                  <div className="border rounded overflow-hidden">
                     <table className="w-full text-sm">
                       <thead className="bg-muted sticky top-0">
                         <tr>
