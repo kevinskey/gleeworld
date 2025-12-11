@@ -25,6 +25,20 @@ export const InAppPDFViewerDialog: React.FC<InAppPDFViewerDialogProps> = ({
       <DialogContent 
         className="max-w-7xl h-[90vh] p-0 z-[9999]"
         style={{ zIndex: 9999 }}
+        onInteractOutside={(e) => {
+          // Prevent closing when interacting with floating YouTube player
+          const target = e.target as HTMLElement;
+          if (target?.closest('[data-floating-youtube-player]') || target?.closest('iframe[src*="youtube"]')) {
+            e.preventDefault();
+          }
+        }}
+        onPointerDownOutside={(e) => {
+          // Prevent closing when clicking on floating YouTube player
+          const target = e.target as HTMLElement;
+          if (target?.closest('[data-floating-youtube-player]') || target?.closest('iframe[src*="youtube"]')) {
+            e.preventDefault();
+          }
+        }}
       >
         <div className="flex flex-col h-full">
           {title && (

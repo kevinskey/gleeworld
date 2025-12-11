@@ -36,30 +36,31 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
   }, [onClose]);
 
   const content = (
-    <Rnd
-      position={position}
-      size={{ width: size.width, height: isMinimized ? 48 : size.height }}
-      minWidth={280}
-      minHeight={isMinimized ? 48 : 200}
-      maxWidth={800}
-      maxHeight={600}
-      bounds="window"
-      dragHandleClassName="yt-drag-handle"
-      onDragStop={(e, d) => {
-        setPosition({ x: d.x, y: d.y });
-      }}
-      onResizeStop={(e, direction, ref, delta, pos) => {
-        if (!isMinimized) {
-          setSize({
-            width: parseInt(ref.style.width),
-            height: parseInt(ref.style.height),
-          });
-          setPosition(pos);
-        }
-      }}
-      enableResizing={!isMinimized}
-      style={{ zIndex: 999999 }}
-    >
+    <div data-floating-youtube-player="true">
+      <Rnd
+        position={position}
+        size={{ width: size.width, height: isMinimized ? 48 : size.height }}
+        minWidth={280}
+        minHeight={isMinimized ? 48 : 200}
+        maxWidth={800}
+        maxHeight={600}
+        bounds="window"
+        dragHandleClassName="yt-drag-handle"
+        onDragStop={(e, d) => {
+          setPosition({ x: d.x, y: d.y });
+        }}
+        onResizeStop={(e, direction, ref, delta, pos) => {
+          if (!isMinimized) {
+            setSize({
+              width: parseInt(ref.style.width),
+              height: parseInt(ref.style.height),
+            });
+            setPosition(pos);
+          }
+        }}
+        enableResizing={!isMinimized}
+        style={{ zIndex: 999999 }}
+      >
       <div 
         className={cn(
           "flex flex-col bg-card border-2 border-border rounded-lg shadow-2xl overflow-hidden",
@@ -107,7 +108,8 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
           </div>
         )}
       </div>
-    </Rnd>
+      </Rnd>
+    </div>
   );
 
   // Render via portal to isolate from parent event handlers
