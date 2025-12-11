@@ -5,6 +5,8 @@ import { ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { TreeLightingSurvey } from './TreeLightingSurvey';
 import { CollapsibleMemberExitInterview } from './CollapsibleMemberExitInterview';
 import { CollapsibleExecBoardExitInterview } from './CollapsibleExecBoardExitInterview';
+import { SheetMusicCheckoutForm } from './SheetMusicCheckoutForm';
+import { DressCheckoutForm } from './DressCheckoutForm';
 
 export const EndOfSemesterDocsCard = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +22,7 @@ export const EndOfSemesterDocsCard = () => {
                 <div>
                   <CardTitle className="text-lg">End of Semester Docs</CardTitle>
                   <CardDescription className="text-sm mt-1">
-                    Surveys and exit interviews for Fall 2025
+                    Surveys, exit interviews, and checkout forms for Fall 2025
                   </CardDescription>
                 </div>
               </div>
@@ -38,6 +40,8 @@ export const EndOfSemesterDocsCard = () => {
             <TreeLightingSurvey />
             <CollapsibleMemberExitInterview />
             <CollapsibleExecBoardExitInterview />
+            <SheetMusicCheckoutForm />
+            <DressCheckoutForm />
           </CardContent>
         </CollapsibleContent>
       </Card>
