@@ -71,7 +71,34 @@ export const VideoSessionViewer = ({
     };
   }, [sessionId, user]);
 
-  const handleLeave = () => {
+  const handleLeave = async () => {
+    // Mark the participant as left
+    if (user) {
+      await supabase
+        .from('gw_video_session_participants')
+        .update({ left_at: new Date().toISOString() })
+        .eq('session_id', sessionId)
+        .eq('user_id', user.id);
+
+      // Check if user is the host and end the session
+      const { data: session } = await supabase
+        .from('gw_video_sessions')
+        .select('host_user_id')
+        .eq('id', sessionId)
+        .single();
+
+      if (session?.host_user_id === user.id) {
+        // Host is leaving - end the session
+        await supabase
+          .from('gw_video_sessions')
+          .update({ 
+            status: 'ended',
+            ended_at: new Date().toISOString()
+          })
+          .eq('id', sessionId);
+      }
+    }
+    
     onClose();
   };
 
