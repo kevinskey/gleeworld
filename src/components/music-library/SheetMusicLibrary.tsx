@@ -50,6 +50,7 @@ interface SheetMusicLibraryProps {
   sortBy: string;
   sortOrder: "asc" | "desc";
   viewMode: "grid" | "list";
+  columns?: number;
   onPdfSelect?: (pdfUrl: string, title: string, id?: string) => void;
 }
 
@@ -59,6 +60,7 @@ export const SheetMusicLibrary = ({
   sortBy,
   sortOrder,
   viewMode,
+  columns = 1,
   onPdfSelect,
 }: SheetMusicLibraryProps) => {
   const { user } = useAuth();
@@ -250,8 +252,15 @@ export const SheetMusicLibrary = ({
     );
   }
 
+  const getGridCols = () => {
+    if (columns === 1) return 'grid-cols-1';
+    if (columns === 2) return 'grid-cols-2';
+    if (columns === 3) return 'grid-cols-3';
+    return 'grid-cols-1';
+  };
+
   const renderGridView = () => (
-    <div className="grid grid-cols-1 gap-2 w-full max-w-full">
+    <div className={`grid ${getGridCols()} gap-2 w-full max-w-full`}>
       {filteredAndSortedMusic.map((item) => {
         const isSelected = selectedItemId === item.id;
         
