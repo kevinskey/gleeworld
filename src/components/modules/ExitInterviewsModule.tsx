@@ -464,7 +464,7 @@ const ExitInterviewsModule: React.FC = () => {
                 </div>
               )}
 
-              <div className="max-h-[400px] overflow-y-auto">
+              <div>
                 <TabsContent value="all" className="mt-0 space-y-2">
                   {interviews.map((interview) => (
                     <SwipeableInterviewCard
