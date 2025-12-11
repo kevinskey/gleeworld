@@ -58,6 +58,8 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
 
   // Load YouTube IFrame API once
   useEffect(() => {
+    console.log('[AudioContext] useEffect for YT API loading started');
+    
     // Check if API already fully ready
     if (typeof window.YT !== 'undefined' && typeof window.YT.Player === 'function') {
       console.log('[AudioContext] YouTube API already fully loaded');
@@ -85,7 +87,17 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     const tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     tag.async = true;
-    document.head.appendChild(tag);
+    tag.onload = () => console.log('[AudioContext] YouTube script tag loaded');
+    tag.onerror = (e) => console.error('[AudioContext] YouTube script load ERROR:', e);
+    
+    const firstScript = document.getElementsByTagName('script')[0];
+    if (firstScript?.parentNode) {
+      firstScript.parentNode.insertBefore(tag, firstScript);
+    } else {
+      document.head.appendChild(tag);
+    }
+    
+    console.log('[AudioContext] Script tag inserted');
   }, []);
 
   // Initialize YouTube player when videoId changes
