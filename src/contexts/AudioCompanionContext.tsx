@@ -52,190 +52,73 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   const [audioFileName, setAudioFileName] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const youtubePlayerRef = useRef<any>(null);
-  const youtubeContainerRef = useRef<HTMLDivElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const progressIntervalRef = useRef<number | null>(null);
 
-  // Load YouTube IFrame API once
+  // Handle YouTube iframe postMessage events
   useEffect(() => {
-    console.log('[AudioContext] useEffect for YT API loading started');
-    
-    // Check if API already fully ready
-    if (typeof window.YT !== 'undefined' && typeof window.YT.Player === 'function') {
-      console.log('[AudioContext] YouTube API already fully loaded');
-      return;
-    }
-    
-    // Remove existing script and reload fresh to ensure our callback runs
-    const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
-    if (existingScript) {
-      console.log('[AudioContext] Removing existing YouTube script to reload fresh');
-      existingScript.remove();
-      // Clear partial YT object
-      if (window.YT && typeof window.YT.Player !== 'function') {
-        delete (window as any).YT;
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.youtube.com') return;
+      
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        
+        if (data.event === 'onReady') {
+          console.log('[AudioContext] YouTube iframe ready');
+          setPlayerReady(true);
+          setIsLoading(false);
+        }
+        
+        if (data.event === 'onStateChange') {
+          const state = data.info;
+          if (state === 1) { // Playing
+            setIsPlaying(true);
+            setIsLoading(false);
+          } else if (state === 2) { // Paused
+            setIsPlaying(false);
+          } else if (state === 0) { // Ended
+            setIsPlaying(false);
+            setCurrentTime(0);
+          } else if (state === 3) { // Buffering
+            setIsLoading(true);
+          }
+        }
+        
+        if (data.event === 'infoDelivery' && data.info) {
+          if (typeof data.info.currentTime === 'number') {
+            setCurrentTime(data.info.currentTime);
+          }
+          if (typeof data.info.duration === 'number') {
+            setDuration(data.info.duration);
+          }
+        }
+      } catch (e) {
+        // Ignore non-JSON messages
       }
-    }
-    
-    console.log('[AudioContext] Loading YouTube IFrame API fresh');
-    
-    // Set up callback BEFORE loading script
-    window.onYouTubeIframeAPIReady = () => {
-      console.log('[AudioContext] onYouTubeIframeAPIReady fired! YT.Player:', typeof window.YT?.Player);
     };
-    
-    const tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    tag.async = true;
-    tag.onload = () => console.log('[AudioContext] YouTube script tag loaded');
-    tag.onerror = (e) => console.error('[AudioContext] YouTube script load ERROR:', e);
-    
-    const firstScript = document.getElementsByTagName('script')[0];
-    if (firstScript?.parentNode) {
-      firstScript.parentNode.insertBefore(tag, firstScript);
-    } else {
-      document.head.appendChild(tag);
-    }
-    
-    console.log('[AudioContext] Script tag inserted');
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  // Initialize YouTube player when videoId changes
-  useEffect(() => {
-    if (audioSource !== 'youtube' || !youtubeVideoId) return;
-
-    console.log('[AudioContext] Initializing for video:', youtubeVideoId);
-    
-    let mounted = true;
-    let pollInterval: number | null = null;
-    
-    setIsLoading(true);
-    setPlayerReady(false);
-
-    const initPlayer = () => {
-      if (!mounted) {
-        console.log('[AudioContext] Not mounted, skipping init');
-        return;
-      }
-      if (!youtubeContainerRef.current) {
-        console.error('[AudioContext] Container ref not available');
-        return;
-      }
-
-      console.log('[AudioContext] Creating YouTube player');
-
-      if (youtubePlayerRef.current) {
-        try { youtubePlayerRef.current.destroy(); } catch (e) {}
-        youtubePlayerRef.current = null;
-      }
-
-      const container = youtubeContainerRef.current;
-      container.innerHTML = '';
-      const playerDiv = document.createElement('div');
-      playerDiv.id = 'yt-audio-global-' + Date.now();
-      container.appendChild(playerDiv);
-
-      youtubePlayerRef.current = new window.YT.Player(playerDiv, {
-        height: '150',
-        width: '200',
-        videoId: youtubeVideoId,
-        playerVars: {
-          autoplay: 1,
-          controls: 0,
-          disablekb: 1,
-          fs: 0,
-          modestbranding: 1,
-          rel: 0,
-          playsinline: 1,
-          origin: window.location.origin,
-        },
-        events: {
-          onReady: (event: any) => {
-            console.log('[AudioContext] Player ready');
-            if (!mounted) return;
-            setIsLoading(false);
-            setPlayerReady(true);
-            event.target.setVolume(volume * 100);
-            if (isMuted) event.target.mute();
-            setDuration(event.target.getDuration() || 0);
-            try { event.target.playVideo(); } catch (e) {
-              console.log('[AudioContext] Autoplay blocked:', e);
-            }
-          },
-          onStateChange: (event: any) => {
-            console.log('[AudioContext] State change:', event.data);
-            if (!mounted) return;
-            if (event.data === window.YT?.PlayerState?.PLAYING) {
-              setIsPlaying(true);
-              setIsLoading(false);
-              setDuration(event.target.getDuration() || 0);
-            } else if (event.data === window.YT?.PlayerState?.PAUSED) {
-              setIsPlaying(false);
-            } else if (event.data === window.YT?.PlayerState?.ENDED) {
-              setIsPlaying(false);
-              setCurrentTime(0);
-            } else if (event.data === window.YT?.PlayerState?.BUFFERING) {
-              setIsLoading(true);
-            }
-          },
-          onError: (event: any) => {
-            console.error('[AudioContext] Player error:', event.data);
-            if (!mounted) return;
-            setIsLoading(false);
-          }
-        },
+  // Send command to YouTube iframe
+  const sendYouTubeCommand = useCallback((command: string, args?: any) => {
+    if (iframeRef.current?.contentWindow) {
+      const message = JSON.stringify({
+        event: 'command',
+        func: command,
+        args: args || []
       });
-    };
-
-    const tryInit = () => {
-      const ytExists = typeof window.YT !== 'undefined';
-      const playerExists = ytExists && typeof window.YT.Player === 'function';
-      console.log('[AudioContext] tryInit - YT exists:', ytExists, 'Player exists:', playerExists);
-      
-      if (playerExists) {
-        console.log('[AudioContext] YT API ready, initializing');
-        if (pollInterval) clearInterval(pollInterval);
-        setTimeout(initPlayer, 100);
-        return true;
-      }
-      return false;
-    };
-
-    if (!tryInit()) {
-      console.log('[AudioContext] Starting poll for YT API');
-      let attempts = 0;
-      pollInterval = window.setInterval(() => {
-        attempts++;
-        if (tryInit() || attempts > 100) {
-          if (pollInterval) clearInterval(pollInterval);
-          if (attempts > 100) {
-            console.error('[AudioContext] YT API timeout after 100 attempts, trying anyway...');
-            // Try to init anyway - maybe Player exists now
-            setTimeout(() => {
-              if (typeof window.YT?.Player === 'function') {
-                initPlayer();
-              } else {
-                setIsLoading(false);
-              }
-            }, 500);
-          }
-        }
-      }, 100);
+      iframeRef.current.contentWindow.postMessage(message, 'https://www.youtube.com');
     }
+  }, []);
 
-    return () => {
-      mounted = false;
-      if (pollInterval) clearInterval(pollInterval);
-    };
-  }, [audioSource, youtubeVideoId]);
-
-  // Progress tracking for YouTube
+  // Progress tracking interval
   useEffect(() => {
-    if (audioSource === 'youtube' && isPlaying && youtubePlayerRef.current) {
+    if (audioSource === 'youtube' && isPlaying) {
+      // Request current time periodically
       progressIntervalRef.current = window.setInterval(() => {
-        if (youtubePlayerRef.current?.getCurrentTime) {
-          setCurrentTime(youtubePlayerRef.current.getCurrentTime());
-        }
+        sendYouTubeCommand('getCurrentTime');
       }, 500);
     } else {
       if (progressIntervalRef.current) {
@@ -246,7 +129,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     return () => {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
-  }, [audioSource, isPlaying]);
+  }, [audioSource, isPlaying, sendYouTubeCommand]);
 
   // Save volume
   useEffect(() => {
@@ -265,6 +148,11 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       setAudioSource('youtube');
       setAudioFileName(null);
       setIsActive(true);
+      setIsLoading(true);
+      setPlayerReady(false);
+      setIsPlaying(false);
+      setCurrentTime(0);
+      setDuration(0);
     }
   }, []);
 
@@ -287,61 +175,55 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   }, []);
 
   const togglePlayPause = useCallback(() => {
-    console.log('[AudioContext] togglePlayPause', { audioSource, isPlaying, hasPlayer: !!youtubePlayerRef.current });
-    if (audioSource === 'youtube' && youtubePlayerRef.current) {
-      try {
-        if (isPlaying) {
-          console.log('[AudioContext] Pausing YouTube');
-          youtubePlayerRef.current.pauseVideo();
-        } else {
-          console.log('[AudioContext] Playing YouTube');
-          youtubePlayerRef.current.playVideo();
-        }
-      } catch (e) {
-        console.error('[AudioContext] togglePlayPause error:', e);
+    console.log('[AudioContext] togglePlayPause', { audioSource, isPlaying });
+    if (audioSource === 'youtube') {
+      if (isPlaying) {
+        sendYouTubeCommand('pauseVideo');
+      } else {
+        sendYouTubeCommand('playVideo');
       }
     } else if (audioSource === 'file' && audioRef.current) {
       if (isPlaying) audioRef.current.pause();
       else audioRef.current.play();
     }
-  }, [audioSource, isPlaying]);
+  }, [audioSource, isPlaying, sendYouTubeCommand]);
 
   const seek = useCallback((time: number) => {
-    if (audioSource === 'youtube' && youtubePlayerRef.current) {
-      youtubePlayerRef.current.seekTo(time, true);
+    if (audioSource === 'youtube') {
+      sendYouTubeCommand('seekTo', [time, true]);
       setCurrentTime(time);
     } else if (audioSource === 'file' && audioRef.current) {
       audioRef.current.currentTime = time;
       setCurrentTime(time);
     }
-  }, [audioSource]);
+  }, [audioSource, sendYouTubeCommand]);
 
   const setVolume = useCallback((vol: number) => {
     setVolumeState(vol);
     setIsMuted(vol === 0);
-    if (audioSource === 'youtube' && youtubePlayerRef.current) {
-      youtubePlayerRef.current.setVolume(vol * 100);
-      if (vol === 0) youtubePlayerRef.current.mute();
-      else youtubePlayerRef.current.unMute();
+    if (audioSource === 'youtube') {
+      sendYouTubeCommand('setVolume', [vol * 100]);
+      if (vol === 0) sendYouTubeCommand('mute');
+      else sendYouTubeCommand('unMute');
     } else if (audioSource === 'file' && audioRef.current) {
       audioRef.current.volume = vol;
     }
-  }, [audioSource]);
+  }, [audioSource, sendYouTubeCommand]);
 
   const toggleMute = useCallback(() => {
     const newMuted = !isMuted;
     setIsMuted(newMuted);
-    if (audioSource === 'youtube' && youtubePlayerRef.current) {
-      if (newMuted) youtubePlayerRef.current.mute();
-      else youtubePlayerRef.current.unMute();
+    if (audioSource === 'youtube') {
+      if (newMuted) sendYouTubeCommand('mute');
+      else sendYouTubeCommand('unMute');
     } else if (audioSource === 'file' && audioRef.current) {
       audioRef.current.muted = newMuted;
     }
-  }, [audioSource, isMuted]);
+  }, [audioSource, isMuted, sendYouTubeCommand]);
 
   const stop = useCallback(() => {
-    if (audioSource === 'youtube' && youtubePlayerRef.current) {
-      youtubePlayerRef.current.stopVideo();
+    if (audioSource === 'youtube') {
+      sendYouTubeCommand('stopVideo');
     } else if (audioSource === 'file' && audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -354,7 +236,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     setPlayerReady(false);
     setCurrentTime(0);
     setDuration(0);
-  }, [audioSource]);
+  }, [audioSource, sendYouTubeCommand]);
 
   const handleAudioTimeUpdate = () => {
     if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
@@ -368,6 +250,18 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
   };
   const handleAudioPlay = () => setIsPlaying(true);
   const handleAudioPause = () => setIsPlaying(false);
+
+  // Handle iframe load
+  const handleIframeLoad = useCallback(() => {
+    console.log('[AudioContext] YouTube iframe loaded');
+    // Enable JS API by sending a listening command
+    if (iframeRef.current?.contentWindow) {
+      const message = JSON.stringify({ event: 'listening' });
+      iframeRef.current.contentWindow.postMessage(message, 'https://www.youtube.com');
+    }
+    setPlayerReady(true);
+    setIsLoading(false);
+  }, []);
 
   return (
     <AudioCompanionContext.Provider
@@ -396,18 +290,24 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     >
       {children}
       
-      {/* Global hidden YouTube player */}
-      <div 
-        ref={youtubeContainerRef}
-        className="fixed overflow-hidden pointer-events-none"
-        style={{ 
-          width: '200px',
-          height: '150px',
-          bottom: '-200px',
-          right: '0px',
-          zIndex: -9999,
-        }}
-      />
+      {/* Global YouTube iframe player - hidden */}
+      {youtubeVideoId && (
+        <iframe
+          ref={iframeRef}
+          src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&origin=${window.location.origin}`}
+          onLoad={handleIframeLoad}
+          allow="autoplay; encrypted-media"
+          className="fixed overflow-hidden pointer-events-none"
+          style={{ 
+            width: '200px',
+            height: '150px',
+            bottom: '-200px',
+            right: '0px',
+            zIndex: -9999,
+            border: 'none',
+          }}
+        />
+      )}
       
       {/* Global hidden audio element */}
       <audio
