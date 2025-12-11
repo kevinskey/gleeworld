@@ -562,9 +562,9 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
             </div>
 
             {/* Sidebar - Chat & Invite */}
-            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l flex flex-col h-[300px] lg:h-auto">
-              <Tabs value={sidebarTab} onValueChange={(v) => setSidebarTab(v as 'chat' | 'invite')} className="flex flex-col h-full">
-                <TabsList className="grid w-full grid-cols-2 m-2 mx-2" style={{ width: 'calc(100% - 16px)' }}>
+            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l bg-card flex flex-col min-h-[300px] lg:min-h-[400px]">
+              <Tabs value={sidebarTab} onValueChange={(v) => setSidebarTab(v as 'chat' | 'invite')} className="flex flex-col flex-1">
+                <TabsList className="grid w-full grid-cols-2 m-2" style={{ width: 'calc(100% - 16px)' }}>
                   <TabsTrigger value="chat" className="gap-1">
                     <MessageCircle className="h-4 w-4" />
                     Chat
@@ -575,7 +575,7 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 overflow-hidden">
+                <TabsContent value="chat" className="flex-1 flex flex-col mt-0 data-[state=active]:flex min-h-0">
                   {/* Chat Messages */}
                   <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
                     {chatMessages.length === 0 ? (
@@ -622,8 +622,8 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                   </div>
                 </TabsContent>
 
-                <TabsContent value="invite" className="flex-1 overflow-hidden m-0 p-0 bg-card">
-                  <div className="p-3 space-y-3 h-full flex flex-col bg-card">
+                <TabsContent value="invite" className="flex-1 flex flex-col mt-0 data-[state=active]:flex min-h-0 bg-card">
+                  <div className="p-3 space-y-3 flex-1 flex flex-col overflow-hidden">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
