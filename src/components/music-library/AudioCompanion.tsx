@@ -51,29 +51,46 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
 
   // Load YouTube IFrame API
   useEffect(() => {
-    if (audioSource === 'youtube' && youtubeVideoId && !window.YT) {
+    // Load the API script if not already present
+    if (!window.YT && !document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      console.log('[AudioCompanion] Loading YouTube IFrame API');
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
       const firstScriptTag = document.getElementsByTagName('script')[0];
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
     }
-  }, [audioSource, youtubeVideoId]);
+  }, []);
 
   // Initialize YouTube player
   useEffect(() => {
     if (audioSource !== 'youtube' || !youtubeVideoId) return;
 
+    let mounted = true;
+    let pollInterval: number | null = null;
+
     const initPlayer = () => {
-      if (!youtubeContainerRef.current || !window.YT?.Player) return;
+      if (!mounted || !youtubeContainerRef.current) return;
+      
+      console.log('[AudioCompanion] Initializing YouTube player for:', youtubeVideoId);
 
       // Destroy existing player
       if (youtubePlayerRef.current) {
         try {
           youtubePlayerRef.current.destroy();
-        } catch (e) {}
+        } catch (e) {
+          console.log('[AudioCompanion] Error destroying previous player:', e);
+        }
+        youtubePlayerRef.current = null;
       }
 
-      youtubePlayerRef.current = new window.YT.Player(youtubeContainerRef.current, {
+      // Create a fresh div for the player
+      const container = youtubeContainerRef.current;
+      container.innerHTML = '';
+      const playerDiv = document.createElement('div');
+      playerDiv.id = 'yt-audio-companion-' + Date.now();
+      container.appendChild(playerDiv);
+
+      youtubePlayerRef.current = new window.YT.Player(playerDiv, {
         height: '100',
         width: '178',
         videoId: youtubeVideoId,
@@ -85,15 +102,19 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
           modestbranding: 1,
           rel: 0,
           playsinline: 1,
+          origin: window.location.origin,
         },
         events: {
           onReady: (event: any) => {
+            console.log('[AudioCompanion] YouTube player ready');
             event.target.setVolume(volume * 100);
             if (isMuted) event.target.mute();
-            setDuration(event.target.getDuration() || 0);
+            const dur = event.target.getDuration() || 0;
+            setDuration(dur);
             setIsPlaying(true);
           },
           onStateChange: (event: any) => {
+            console.log('[AudioCompanion] YouTube state change:', event.data);
             if (event.data === window.YT?.PlayerState?.PLAYING) {
               setIsPlaying(true);
               setDuration(event.target.getDuration() || 0);
@@ -105,19 +126,41 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
             }
           },
           onError: (event: any) => {
-            console.error('YouTube player error:', event.data);
+            console.error('[AudioCompanion] YouTube player error:', event.data);
           }
         },
       });
     };
 
+    // Poll for YouTube API readiness
+    const tryInit = () => {
+      if (window.YT?.Player) {
+        console.log('[AudioCompanion] YouTube API ready, initializing player');
+        if (pollInterval) clearInterval(pollInterval);
+        setTimeout(initPlayer, 100);
+      }
+    };
+
+    // If API already loaded, init immediately
     if (window.YT?.Player) {
       setTimeout(initPlayer, 100);
     } else {
-      window.onYouTubeIframeAPIReady = initPlayer;
+      // Poll every 100ms for API readiness (max 5 seconds)
+      let attempts = 0;
+      pollInterval = window.setInterval(() => {
+        attempts++;
+        if (window.YT?.Player) {
+          tryInit();
+        } else if (attempts > 50) {
+          console.error('[AudioCompanion] YouTube API failed to load after 5 seconds');
+          if (pollInterval) clearInterval(pollInterval);
+        }
+      }, 100);
     }
 
     return () => {
+      mounted = false;
+      if (pollInterval) clearInterval(pollInterval);
       if (youtubePlayerRef.current) {
         try {
           youtubePlayerRef.current.destroy();
@@ -284,11 +327,17 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
 
   return (
     <div className={cn("flex items-center gap-1.5 bg-card/95 backdrop-blur border border-border p-1 shadow-lg", className)}>
-      {/* Hidden YouTube player - needs minimum size to play */}
+      {/* Hidden YouTube player - needs minimum size to play, use opacity instead of visibility for browser compatibility */}
       <div 
         ref={youtubeContainerRef} 
-        className="absolute -left-[9999px] w-[178px] h-[100px]"
-        style={{ visibility: 'hidden', pointerEvents: 'none' }}
+        className="fixed w-[178px] h-[100px]"
+        style={{ 
+          opacity: 0, 
+          pointerEvents: 'none',
+          top: '-9999px',
+          left: '-9999px',
+          zIndex: -1
+        }}
       />
       
       {/* Hidden audio element */}
