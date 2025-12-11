@@ -11,7 +11,8 @@ import {
   Music,
   Youtube,
   Upload,
-  StopCircle
+  StopCircle,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { extractYouTubeVideoId } from '@/utils/youtubeUtils';
@@ -33,6 +34,7 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [youtubeVideoId, setYoutubeVideoId] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(() => {
@@ -42,6 +44,7 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
   const [isMuted, setIsMuted] = useState(false);
   const [audioFileName, setAudioFileName] = useState<string | null>(null);
   const [showSourcePicker, setShowSourcePicker] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
   
   const audioRef = useRef<HTMLAudioElement>(null);
   const youtubePlayerRef = useRef<any>(null);
@@ -67,6 +70,9 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
 
     let mounted = true;
     let pollInterval: number | null = null;
+    
+    setIsLoading(true);
+    setPlayerReady(false);
 
     const initPlayer = () => {
       if (!mounted || !youtubeContainerRef.current) return;
@@ -107,26 +113,40 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
         events: {
           onReady: (event: any) => {
             console.log('[AudioCompanion] YouTube player ready');
+            if (!mounted) return;
+            setIsLoading(false);
+            setPlayerReady(true);
             event.target.setVolume(volume * 100);
             if (isMuted) event.target.mute();
             const dur = event.target.getDuration() || 0;
             setDuration(dur);
-            setIsPlaying(true);
+            // Try to play - may be blocked by browser
+            try {
+              event.target.playVideo();
+            } catch (e) {
+              console.log('[AudioCompanion] Autoplay blocked:', e);
+            }
           },
           onStateChange: (event: any) => {
             console.log('[AudioCompanion] YouTube state change:', event.data);
+            if (!mounted) return;
             if (event.data === window.YT?.PlayerState?.PLAYING) {
               setIsPlaying(true);
+              setIsLoading(false);
               setDuration(event.target.getDuration() || 0);
             } else if (event.data === window.YT?.PlayerState?.PAUSED) {
               setIsPlaying(false);
             } else if (event.data === window.YT?.PlayerState?.ENDED) {
               setIsPlaying(false);
               setCurrentTime(0);
+            } else if (event.data === window.YT?.PlayerState?.BUFFERING) {
+              setIsLoading(true);
             }
           },
           onError: (event: any) => {
             console.error('[AudioCompanion] YouTube player error:', event.data);
+            if (!mounted) return;
+            setIsLoading(false);
           }
         },
       });
@@ -154,6 +174,7 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
         } else if (attempts > 50) {
           console.error('[AudioCompanion] YouTube API failed to load after 5 seconds');
           if (pollInterval) clearInterval(pollInterval);
+          setIsLoading(false);
         }
       }, 100);
     }
@@ -220,16 +241,33 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
       setAudioFileName(file.name);
       setYoutubeVideoId(null);
       setIsPlaying(true);
+      setPlayerReady(true);
+      setIsLoading(false);
       setShowSourcePicker(false);
     }
   }, []);
 
   const togglePlayPause = useCallback(() => {
-    if (audioSource === 'youtube' && youtubePlayerRef.current) {
-      if (isPlaying) {
-        youtubePlayerRef.current.pauseVideo();
-      } else {
-        youtubePlayerRef.current.playVideo();
+    console.log('[AudioCompanion] togglePlayPause called', { 
+      audioSource, 
+      isPlaying, 
+      hasYoutubePlayer: !!youtubePlayerRef.current,
+      playerState: youtubePlayerRef.current?.getPlayerState?.()
+    });
+    
+    if (audioSource === 'youtube') {
+      if (!youtubePlayerRef.current) {
+        console.warn('[AudioCompanion] YouTube player not ready yet');
+        return;
+      }
+      try {
+        if (isPlaying) {
+          youtubePlayerRef.current.pauseVideo();
+        } else {
+          youtubePlayerRef.current.playVideo();
+        }
+      } catch (e) {
+        console.error('[AudioCompanion] Error controlling YouTube player:', e);
       }
     } else if (audioSource === 'file' && audioRef.current) {
       if (isPlaying) {
@@ -295,6 +333,8 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
     setYoutubeUrl('');
     setAudioFileName(null);
     setIsPlaying(false);
+    setIsLoading(false);
+    setPlayerReady(false);
     setCurrentTime(0);
     setDuration(0);
   }, [audioSource]);
@@ -416,11 +456,17 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
         size="sm"
         variant="ghost"
         onClick={togglePlayPause}
-        disabled={!audioSource}
+        disabled={!audioSource || (audioSource === 'youtube' && !playerReady)}
         className="h-8 w-8 p-0"
-        title={isPlaying ? "Pause" : "Play"}
+        title={isLoading ? "Loading..." : isPlaying ? "Pause" : "Play"}
       >
-        {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : isPlaying ? (
+          <Pause className="h-4 w-4" />
+        ) : (
+          <Play className="h-4 w-4" />
+        )}
       </Button>
 
       {/* Progress bar - only show when audio is loaded */}
