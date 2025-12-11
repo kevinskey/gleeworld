@@ -43,7 +43,8 @@ export const MobileMusicLibrary = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("title");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [columns, setColumns] = useState(2);
   const [studyDialogOpen, setStudyDialogOpen] = useState(false);
   const [studyItem, setStudyItem] = useState<any>(null);
   const { toast } = useToast();
@@ -127,14 +128,17 @@ export const MobileMusicLibrary = ({
             </SelectContent>
           </Select>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")}
-            className="h-8 w-8 flex-shrink-0"
-          >
-            {viewMode === "list" ? <Grid3X3 className="h-4 w-4" /> : <LayoutList className="h-4 w-4" />}
-          </Button>
+          <Select value={columns.toString()} onValueChange={(v) => setColumns(Number(v))}>
+            <SelectTrigger className="w-16 h-8 text-xs flex-shrink-0">
+              <Grid3X3 className="h-3 w-3 mr-1" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="1">1</SelectItem>
+              <SelectItem value="2">2</SelectItem>
+              <SelectItem value="3">3</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Selected PDF Info */}
@@ -184,6 +188,7 @@ export const MobileMusicLibrary = ({
               sortBy={sortBy}
               sortOrder="asc"
               viewMode={viewMode}
+              columns={columns}
               onPdfSelect={onPdfSelect}
             />
           </TabsContent>
