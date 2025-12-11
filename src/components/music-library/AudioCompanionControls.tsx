@@ -157,11 +157,11 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         title={isLoading ? "Loading..." : isPlaying ? "Pause" : "Play"}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
+          <Loader2 className="h-4 w-4 animate-spin text-foreground" />
         ) : isPlaying ? (
-          <Pause className="h-4 w-4 text-primary-foreground" />
+          <Pause className="h-4 w-4 text-foreground" />
         ) : (
-          <Play className="h-4 w-4 text-primary-foreground" />
+          <Play className="h-4 w-4 text-foreground" />
         )}
       </Button>
 
@@ -193,9 +193,9 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         title={isMuted ? "Unmute" : "Mute"}
       >
         {isMuted || volume === 0 ? (
-          <VolumeX className="h-4 w-4 text-primary-foreground" />
+          <VolumeX className="h-4 w-4 text-foreground" />
         ) : (
-          <Volume2 className="h-4 w-4 text-primary-foreground" />
+          <Volume2 className="h-4 w-4 text-foreground" />
         )}
       </Button>
       
@@ -216,7 +216,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
           className="h-8 w-8 p-0"
           title="Stop and clear"
         >
-          <StopCircle className="h-4 w-4 text-primary-foreground" />
+          <StopCircle className="h-4 w-4 text-foreground" />
         </Button>
       )}
 
@@ -238,7 +238,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         className="h-8 w-8 p-0"
         title="Close audio companion"
       >
-        <X className="h-4 w-4 text-primary-foreground" />
+        <X className="h-4 w-4 text-foreground" />
       </Button>
     </div>
   );
