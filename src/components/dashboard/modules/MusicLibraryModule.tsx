@@ -164,8 +164,8 @@ export const MusicLibraryModule = () => {
           </TabsList>
         </div>
 
-        <TabsContent value="all" className="flex-1 mt-0">
-          <ScrollArea className="flex-1 p-2 md:p-6">
+        <TabsContent value="all" className="flex-1 mt-0 flex flex-col min-h-0">
+          <div className="flex-1 overflow-auto p-2 md:p-6 pb-0">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-muted-foreground">Loading music library...</p>
@@ -177,12 +177,11 @@ export const MusicLibraryModule = () => {
                 </p>
               </div>
             ) : viewMode === 'grid' ? (
-              <>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 md:gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 md:gap-4 auto-rows-fr">
                 {paginatedMusic.map((piece) => (
                   <Card 
                     key={piece.id} 
-                    className="p-2 md:p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    className="p-2 md:p-4 hover:shadow-md transition-shadow cursor-pointer flex flex-col"
                     onClick={() => {
                       console.log('Piece clicked:', { 
                         id: piece.id, 
@@ -235,7 +234,7 @@ export const MusicLibraryModule = () => {
                       </Button>
                     </div>
                     
-                    <div className="space-y-1 md:space-y-2">
+                    <div className="space-y-1 md:space-y-2 flex-1 flex flex-col">
                       <h3 className="font-medium text-xs md:text-sm line-clamp-2">{piece.title}</h3>
                       <p className="text-xs text-muted-foreground line-clamp-1">{piece.composer || 'Unknown'}</p>
                       
@@ -253,7 +252,7 @@ export const MusicLibraryModule = () => {
                         )}
                       </div>
                       
-                      <div className="flex items-center justify-between pt-1 md:pt-2">
+                      <div className="flex items-center justify-between pt-1 md:pt-2 mt-auto">
                         <span className="text-xs text-muted-foreground hidden md:block">
                           {new Date(piece.created_at).toLocaleDateString()}
                         </span>
@@ -293,37 +292,7 @@ export const MusicLibraryModule = () => {
                   </Card>
                 ))}
               </div>
-              
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-4 md:mt-6">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="h-9 md:h-8 px-3 md:px-4"
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-xs md:text-sm text-muted-foreground px-2">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="h-9 md:h-8 px-3 md:px-4"
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-              </>
-
             ) : (
-              <>
               <div className="space-y-2">
                 {paginatedMusic.map((piece) => (
                   <Card 
@@ -341,10 +310,10 @@ export const MusicLibraryModule = () => {
                       if (piece.xml_content && piece.xml_content.trim()) {
                         console.log('Opening MusicXML viewer with content length:', piece.xml_content.length);
                         setSelectedMusicXML({ content: piece.xml_content, title: piece.title });
-                        } else if (piece.pdf_url) {
-                          console.log('Opening PDF viewer');
-                          openPdfViewer(piece);
-                        } else {
+                      } else if (piece.pdf_url) {
+                        console.log('Opening PDF viewer');
+                        openPdfViewer(piece);
+                      } else {
                         console.warn('No content available for this piece');
                         toast({
                           title: "No content available",
@@ -433,34 +402,35 @@ export const MusicLibraryModule = () => {
                   </Card>
                 ))}
               </div>
-              
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-6">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-              </>
             )}
-          </ScrollArea>
+          </div>
+          
+          {/* Pagination Controls - Always visible at bottom */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 p-4 border-t border-border bg-background">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-9 md:h-8 px-3 md:px-4"
+              >
+                Previous
+              </Button>
+              <span className="text-xs md:text-sm text-muted-foreground px-2">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="h-9 md:h-8 px-3 md:px-4"
+              >
+                Next
+              </Button>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="recent" className="flex-1">
