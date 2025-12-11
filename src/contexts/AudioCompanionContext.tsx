@@ -290,23 +290,21 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     >
       {children}
       
-      {/* Global YouTube iframe player - hidden */}
-      {youtubeVideoId && (
-        <iframe
-          ref={iframeRef}
-          src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&origin=${window.location.origin}`}
-          onLoad={handleIframeLoad}
-          allow="autoplay; encrypted-media"
-          className="fixed overflow-hidden pointer-events-none"
-          style={{ 
-            width: '200px',
-            height: '150px',
-            bottom: '-200px',
-            right: '0px',
-            zIndex: -9999,
-            border: 'none',
-          }}
-        />
+      {/* Global YouTube iframe player - visible for user control */}
+      {youtubeVideoId && isActive && (
+        <div className="fixed bottom-4 right-4 z-50 bg-card rounded-lg shadow-lg border border-border overflow-hidden">
+          <iframe
+            ref={iframeRef}
+            src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=0&controls=1&modestbranding=1&rel=0`}
+            onLoad={handleIframeLoad}
+            allow="autoplay; encrypted-media"
+            style={{ 
+              width: '320px',
+              height: '180px',
+              border: 'none',
+            }}
+          />
+        </div>
       )}
       
       {/* Global hidden audio element */}
