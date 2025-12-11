@@ -8747,6 +8747,36 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_live_session_invites: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          invited_user_id: string
+          session_host_id: string
+          session_host_name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invited_user_id: string
+          session_host_id: string
+          session_host_name: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invited_user_id?: string
+          session_host_id?: string
+          session_host_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       gw_marked_scores: {
         Row: {
           canvas_data: string | null
