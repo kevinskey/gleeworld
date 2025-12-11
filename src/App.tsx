@@ -73,6 +73,7 @@ import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
 import Messages from "./pages/Messages";
+import EmailComposerPage from "./pages/EmailComposerPage";
 import OnboardingInfo from "./pages/OnboardingInfo";
 import MemberRegistration from "./pages/MemberRegistration";
 import ResetPassword from "./pages/ResetPassword";
@@ -698,7 +699,16 @@ const App = () => {
                     <EventPlanner />
                   </ProtectedRoute>
                 } 
-              />
+                /> 
+               {/* Email/SMS Composer */}
+               <Route 
+                 path="/compose" 
+                 element={
+                   <ProtectedRoute>
+                     <EmailComposerPage />
+                   </ProtectedRoute>
+                 } 
+               />
               <Route 
                 path="/budget-approvals" 
                 element={
