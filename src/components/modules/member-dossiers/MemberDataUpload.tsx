@@ -19,9 +19,9 @@ export function MemberDataUpload() {
   const [result, setResult] = useState<UploadResult | null>(null);
 
   const downloadTemplate = () => {
-    const csvContent = `email,student_id,classification
-student@spelman.edu,S12345678,Junior
-another@spelman.edu,S87654321,Senior`;
+    const csvContent = `name,student_id,class
+Jane Doe,S12345678,Junior
+Mary Smith,S87654321,Senior`;
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -32,22 +32,22 @@ another@spelman.edu,S87654321,Senior`;
     window.URL.revokeObjectURL(url);
   };
 
-  const parseCSV = (text: string): Array<{ email: string; student_id: string; classification: string }> => {
+  const parseCSV = (text: string): Array<{ name: string; student_id: string; classification: string }> => {
     const lines = text.trim().split('\n');
     const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
     
-    const emailIdx = headers.findIndex(h => h === 'email');
-    const studentIdIdx = headers.findIndex(h => h === 'student_id' || h === 'studentid');
+    const nameIdx = headers.findIndex(h => h === 'name' || h === 'student_name' || h === 'full_name' || h === 'student');
+    const studentIdIdx = headers.findIndex(h => h === 'student_id' || h === 'studentid' || h === 'id');
     const classIdx = headers.findIndex(h => h === 'classification' || h === 'class' || h === 'year');
 
-    if (emailIdx === -1) {
-      throw new Error('CSV must have an "email" column');
+    if (nameIdx === -1) {
+      throw new Error('CSV must have a "name" column');
     }
 
     return lines.slice(1).filter(line => line.trim()).map(line => {
       const values = line.split(',').map(v => v.trim().replace(/^["']|["']$/g, ''));
       return {
-        email: values[emailIdx] || '',
+        name: values[nameIdx] || '',
         student_id: studentIdIdx !== -1 ? values[studentIdIdx] : '',
         classification: classIdx !== -1 ? values[classIdx] : ''
       };
@@ -77,25 +77,33 @@ another@spelman.edu,S87654321,Senior`;
       const uploadResult: UploadResult = { updated: 0, errors: [], skipped: 0, notFound: [] };
 
       for (const record of records) {
-        if (!record.email) {
+        if (!record.name) {
           uploadResult.skipped++;
           continue;
         }
 
-        // Find user by email
-        const { data: profile, error: findError } = await supabase
+        // Find user by name (try full_name match first, then fuzzy)
+        const nameLower = record.name.toLowerCase().trim();
+        const { data: profiles, error: findError } = await supabase
           .from('gw_profiles')
-          .select('user_id')
-          .eq('email', record.email.toLowerCase())
-          .maybeSingle();
+          .select('user_id, full_name, first_name, last_name')
+          .or(`full_name.ilike.%${nameLower}%,first_name.ilike.%${nameLower.split(' ')[0]}%`);
 
         if (findError) {
-          uploadResult.errors.push(`Error finding ${record.email}: ${findError.message}`);
+          uploadResult.errors.push(`Error finding ${record.name}: ${findError.message}`);
           continue;
         }
 
+        // Find best match
+        const exactMatch = profiles?.find(p => 
+          p.full_name?.toLowerCase().trim() === nameLower ||
+          `${p.first_name} ${p.last_name}`.toLowerCase().trim() === nameLower
+        );
+        
+        const profile = exactMatch || profiles?.[0];
+
         if (!profile) {
-          uploadResult.notFound.push(record.email);
+          uploadResult.notFound.push(record.name);
           continue;
         }
 
@@ -126,7 +134,7 @@ another@spelman.edu,S87654321,Senior`;
           .eq('user_id', profile.user_id);
 
         if (updateError) {
-          uploadResult.errors.push(`Failed to update ${record.email}: ${updateError.message}`);
+          uploadResult.errors.push(`Failed to update ${record.name}: ${updateError.message}`);
         } else {
           uploadResult.updated++;
         }
@@ -160,7 +168,7 @@ another@spelman.edu,S87654321,Senior`;
           Update Member Data via CSV
         </CardTitle>
         <CardDescription>
-          Upload a CSV with email, student_id, and classification (Freshman/Sophomore/Junior/Senior)
+          Upload a CSV with name, student_id, and class (Freshman/Sophomore/Junior/Senior)
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
