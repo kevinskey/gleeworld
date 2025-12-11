@@ -102,12 +102,12 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
             className="h-8 w-8 p-0"
             title="Select audio source"
           >
-            {audioSource === 'youtube' ? (
+          {audioSource === 'youtube' ? (
               <Youtube className="h-4 w-4 text-red-500" />
             ) : audioSource === 'file' ? (
-              <Music className="h-4 w-4 text-primary" />
+              <Music className="h-4 w-4 text-primary-foreground" />
             ) : (
-              <Music className="h-4 w-4" />
+              <Music className="h-4 w-4 text-primary-foreground" />
             )}
           </Button>
         </PopoverTrigger>
@@ -157,11 +157,11 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         title={isLoading ? "Loading..." : isPlaying ? "Pause" : "Play"}
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin text-primary-foreground" />
         ) : isPlaying ? (
-          <Pause className="h-4 w-4" />
+          <Pause className="h-4 w-4 text-primary-foreground" />
         ) : (
-          <Play className="h-4 w-4" />
+          <Play className="h-4 w-4 text-primary-foreground" />
         )}
       </Button>
 
@@ -193,9 +193,9 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         title={isMuted ? "Unmute" : "Mute"}
       >
         {isMuted || volume === 0 ? (
-          <VolumeX className="h-4 w-4" />
+          <VolumeX className="h-4 w-4 text-primary-foreground" />
         ) : (
-          <Volume2 className="h-4 w-4" />
+          <Volume2 className="h-4 w-4 text-primary-foreground" />
         )}
       </Button>
       
@@ -216,7 +216,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
           className="h-8 w-8 p-0"
           title="Stop and clear"
         >
-          <StopCircle className="h-4 w-4" />
+          <StopCircle className="h-4 w-4 text-primary-foreground" />
         </Button>
       )}
 
@@ -238,7 +238,7 @@ export const AudioCompanionControls: React.FC<AudioCompanionControlsProps> = ({ 
         className="h-8 w-8 p-0"
         title="Close audio companion"
       >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4 text-primary-foreground" />
       </Button>
     </div>
   );
