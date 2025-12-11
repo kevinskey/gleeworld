@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Upload, Download, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Upload, Download, CheckCircle, XCircle, Loader2, UserX } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -10,6 +10,7 @@ interface UploadResult {
   updated: number;
   errors: string[];
   skipped: number;
+  notFound: string[];
 }
 
 export function MemberDataUpload() {
@@ -73,7 +74,7 @@ another@spelman.edu,S87654321,Senior`;
       const text = await file.text();
       const records = parseCSV(text);
 
-      const uploadResult: UploadResult = { updated: 0, errors: [], skipped: 0 };
+      const uploadResult: UploadResult = { updated: 0, errors: [], skipped: 0, notFound: [] };
 
       for (const record of records) {
         if (!record.email) {
@@ -94,7 +95,7 @@ another@spelman.edu,S87654321,Senior`;
         }
 
         if (!profile) {
-          uploadResult.errors.push(`User not found: ${record.email}`);
+          uploadResult.notFound.push(record.email);
           continue;
         }
 
@@ -198,7 +199,7 @@ another@spelman.edu,S87654321,Senior`;
         </Button>
 
         {result && (
-          <div className="space-y-2 p-3 bg-muted rounded text-sm">
+          <div className="space-y-3 p-3 bg-muted rounded text-sm">
             <div className="flex items-center gap-2 text-green-600">
               <CheckCircle className="h-4 w-4" />
               {result.updated} profile(s) updated
@@ -206,6 +207,19 @@ another@spelman.edu,S87654321,Senior`;
             {result.skipped > 0 && (
               <div className="text-muted-foreground">
                 {result.skipped} row(s) skipped (no data)
+              </div>
+            )}
+            {result.notFound.length > 0 && (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-amber-600">
+                  <UserX className="h-4 w-4" />
+                  {result.notFound.length} incomplete dossier(s) - users not found
+                </div>
+                <ul className="text-xs bg-amber-50 dark:bg-amber-950/30 p-2 rounded max-h-40 overflow-y-auto border border-amber-200 dark:border-amber-800">
+                  {result.notFound.map((email, i) => (
+                    <li key={i} className="py-0.5">{email}</li>
+                  ))}
+                </ul>
               </div>
             )}
             {result.errors.length > 0 && (
