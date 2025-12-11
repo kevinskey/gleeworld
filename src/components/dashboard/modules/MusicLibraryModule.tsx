@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { Music, Search, Download, Play, Pause, Filter, Grid, List, Heart } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Music, Search, Download, Play, Pause, Filter, Grid, List, Heart, X, Columns, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -14,6 +18,9 @@ import { InAppPDFViewerDialog } from '@/components/music-library/InAppPDFViewerD
 import { PDFThumbnail } from '@/components/music-library/PDFThumbnail';
 import { MusicXMLViewer } from '@/components/liturgical/MusicXMLViewer';
 import { SetlistBuilder } from '@/components/music-library/SetlistBuilder';
+
+type SortOption = 'title' | 'composer' | 'date-newest' | 'date-oldest' | 'most-used';
+type TypeFilter = 'all' | 'pdf' | 'hard-copy' | 'both';
 
 export const MusicLibraryModule = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -25,9 +32,22 @@ export const MusicLibraryModule = () => {
   const [selectedMusicXML, setSelectedMusicXML] = useState<{ content: string; title: string } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const closeGuardUntilRef = React.useRef(0);
-  const itemsPerPage = 24; // Show 24 items per page (4 rows × 6 columns on desktop)
+  const gridRef = React.useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { isFavorite, toggleFavorite } = useFavorites();
+
+  // Filter states
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [composerFilter, setComposerFilter] = useState<string>('all');
+  const [voicingFilter, setVoicingFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [sortBy, setSortBy] = useState<SortOption>('date-newest');
+  
+  // Column count state (for desktop/tablet)
+  const [columnCount, setColumnCount] = useState<number>(6);
+
+  // Calculate items per page based on column count (4 rows)
+  const itemsPerPage = columnCount * 4;
 
   useEffect(() => {
     fetchSheetMusic();
@@ -43,17 +63,6 @@ export const MusicLibraryModule = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      console.log('📚 Fetched sheet music:', data?.length, 'items');
-      console.log('📚 Sample piece data:', data?.[0] ? {
-        id: data[0].id,
-        title: data[0].title,
-        has_xml_content: !!data[0].xml_content,
-        xml_content_length: data[0].xml_content?.length || 0,
-        has_pdf_url: !!data[0].pdf_url,
-        columns: Object.keys(data[0])
-      } : 'No data');
-      
       setMusicLibrary(data || []);
     } catch (error: any) {
       console.error('Error fetching sheet music:', error);
@@ -67,30 +76,68 @@ export const MusicLibraryModule = () => {
     }
   };
 
-  const openPdfViewer = (piece: any) => {
-    if (Date.now() < closeGuardUntilRef.current) {
-      console.log('Open suppressed due to recent close');
-      return;
-    }
-    setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
-  };
-  const togglePlay = (id: string) => {
-    setIsPlaying(isPlaying === id ? null : id);
-  };
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Get unique composers and voicings for filter dropdowns
+  const uniqueComposers = useMemo(() => {
+    const composers = musicLibrary
+      .map(p => p.composer)
+      .filter((c): c is string => !!c && c.trim() !== '');
+    return [...new Set(composers)].sort();
+  }, [musicLibrary]);
 
-  const filteredMusic = musicLibrary.filter(piece => 
-    piece.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    piece.composer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    piece.genre?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const uniqueVoicings = useMemo(() => {
+    const voicings = musicLibrary
+      .flatMap(p => p.voice_parts || [])
+      .filter((v): v is string => !!v && v.trim() !== '');
+    return [...new Set(voicings)].sort();
+  }, [musicLibrary]);
+
+  // Filtered and sorted music
+  const filteredMusic = useMemo(() => {
+    let result = musicLibrary.filter(piece => {
+      // Search filter
+      const matchesSearch = !searchTerm || 
+        piece.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        piece.composer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        piece.genre?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Composer filter
+      const matchesComposer = composerFilter === 'all' || piece.composer === composerFilter;
+
+      // Voicing filter
+      const matchesVoicing = voicingFilter === 'all' || 
+        (piece.voice_parts && piece.voice_parts.includes(voicingFilter));
+
+      // Type filter
+      const hasPdf = !!piece.pdf_url;
+      const hasHardCopy = piece.has_hard_copy === true;
+      let matchesType = true;
+      if (typeFilter === 'pdf') matchesType = hasPdf && !hasHardCopy;
+      else if (typeFilter === 'hard-copy') matchesType = hasHardCopy && !hasPdf;
+      else if (typeFilter === 'both') matchesType = hasPdf && hasHardCopy;
+
+      return matchesSearch && matchesComposer && matchesVoicing && matchesType;
+    });
+
+    // Sort
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case 'title':
+          return (a.title || '').localeCompare(b.title || '');
+        case 'composer':
+          return (a.composer || '').localeCompare(b.composer || '');
+        case 'date-newest':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'date-oldest':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'most-used':
+          return (b.play_count || 0) - (a.play_count || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [musicLibrary, searchTerm, composerFilter, voicingFilter, typeFilter, sortBy]);
 
   const favoritedMusic = musicLibrary.filter(piece => isFavorite(piece.id));
 
@@ -100,10 +147,68 @@ export const MusicLibraryModule = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedMusic = filteredMusic.slice(startIndex, endIndex);
 
-  // Reset to page 1 when search term changes
-  React.useEffect(() => {
+  // Reset to page 1 when filters change
+  useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, composerFilter, voicingFilter, typeFilter, sortBy]);
+
+  // Update grid columns on resize and column count change
+  useEffect(() => {
+    const updateGridColumns = () => {
+      if (!gridRef.current) return;
+      const width = window.innerWidth;
+      if (width >= 1280) { // xl
+        gridRef.current.style.gridTemplateColumns = `repeat(${columnCount}, minmax(0, 1fr))`;
+      } else if (width >= 1024) { // lg
+        gridRef.current.style.gridTemplateColumns = `repeat(${Math.min(columnCount, 4)}, minmax(0, 1fr))`;
+      } else if (width >= 768) { // md
+        gridRef.current.style.gridTemplateColumns = `repeat(${Math.min(columnCount, 3)}, minmax(0, 1fr))`;
+      } else {
+        gridRef.current.style.gridTemplateColumns = 'repeat(2, minmax(0, 1fr))';
+      }
+    };
+    
+    updateGridColumns();
+    window.addEventListener('resize', updateGridColumns);
+    return () => window.removeEventListener('resize', updateGridColumns);
+  }, [columnCount]);
+
+  // Count active filters
+  const activeFilterCount = [
+    composerFilter !== 'all',
+    voicingFilter !== 'all',
+    typeFilter !== 'all',
+    sortBy !== 'date-newest'
+  ].filter(Boolean).length;
+
+  const clearFilters = () => {
+    setComposerFilter('all');
+    setVoicingFilter('all');
+    setTypeFilter('all');
+    setSortBy('date-newest');
+  };
+
+
+  const openPdfViewer = (piece: any) => {
+    if (Date.now() < closeGuardUntilRef.current) {
+      console.log('Open suppressed due to recent close');
+      return;
+    }
+    setSelectedPdf({ url: piece.pdf_url, title: piece.title, id: piece.id });
+  };
+
+  const togglePlay = (id: string) => {
+    setIsPlaying(isPlaying === id ? null : id);
+  };
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'Beginner': return 'bg-green-100 text-green-800';
+      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
+      case 'Advanced': return 'bg-red-100 text-red-800';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -125,13 +230,135 @@ export const MusicLibraryModule = () => {
             />
           </div>
           
-          <div className="flex gap-2 md:gap-4">
-            <Button variant="outline" size="sm" className="flex-1 md:flex-none h-10 md:h-9">
-              <Filter className="w-4 h-4 mr-2" />
-              <span className="md:inline">Filter</span>
-            </Button>
+          <div className="flex gap-2 md:gap-3 flex-wrap">
+            {/* Filter Popover */}
+            <Popover open={filterOpen} onOpenChange={setFilterOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="h-10 md:h-9 relative">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <span>Filter</span>
+                  {activeFilterCount > 0 && (
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                      {activeFilterCount}
+                    </Badge>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80" align="start">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Filters</h4>
+                    {activeFilterCount > 0 && (
+                      <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8 text-xs">
+                        <X className="w-3 h-3 mr-1" />
+                        Clear all
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <Separator />
+                  
+                  {/* Composer Filter */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Composer</Label>
+                    <Select value={composerFilter} onValueChange={setComposerFilter}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All composers" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All composers</SelectItem>
+                        {uniqueComposers.map(composer => (
+                          <SelectItem key={composer} value={composer}>{composer}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Voicing Filter */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Voicing</Label>
+                    <Select value={voicingFilter} onValueChange={setVoicingFilter}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All voicings" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All voicings</SelectItem>
+                        {uniqueVoicings.map(voicing => (
+                          <SelectItem key={voicing} value={voicing}>{voicing}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Type Filter */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Type</Label>
+                    <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as TypeFilter)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue placeholder="All types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All types</SelectItem>
+                        <SelectItem value="pdf">PDF only</SelectItem>
+                        <SelectItem value="hard-copy">Hard copy only</SelectItem>
+                        <SelectItem value="both">Both PDF & hard copy</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <Separator />
+                  
+                  {/* Sort By */}
+                  <div className="space-y-2">
+                    <Label className="text-sm">Sort by</Label>
+                    <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="title">Name (A-Z)</SelectItem>
+                        <SelectItem value="composer">Composer (A-Z)</SelectItem>
+                        <SelectItem value="date-newest">Date added (newest)</SelectItem>
+                        <SelectItem value="date-oldest">Date added (oldest)</SelectItem>
+                        <SelectItem value="most-used">Most used</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             
-            <div className="flex gap-1 md:gap-1">
+            {/* Column Selector (desktop/tablet only) */}
+            <div className="hidden md:flex items-center gap-1">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-9">
+                    <Columns className="w-4 h-4 mr-2" />
+                    <span>{columnCount} cols</span>
+                    <ChevronDown className="w-3 h-3 ml-1" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-40" align="start">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-muted-foreground">Columns</Label>
+                    {[3, 4, 5, 6].map(num => (
+                      <Button
+                        key={num}
+                        variant={columnCount === num ? 'default' : 'ghost'}
+                        size="sm"
+                        className="w-full justify-start h-8"
+                        onClick={() => setColumnCount(num)}
+                      >
+                        {num} columns
+                      </Button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            {/* View Mode Toggle */}
+            <div className="flex gap-1">
               <Button 
                 variant={viewMode === 'grid' ? 'default' : 'outline'} 
                 size="sm"
@@ -157,7 +384,7 @@ export const MusicLibraryModule = () => {
       <Tabs defaultValue="all" className="flex-1 flex flex-col">
         <div className="pt-3 md:pt-4">
           <TabsList className="w-full md:w-auto grid grid-cols-4 md:inline-flex">
-            <TabsTrigger value="all" className="text-xs md:text-sm">All ({musicLibrary.length})</TabsTrigger>
+            <TabsTrigger value="all" className="text-xs md:text-sm">All ({filteredMusic.length})</TabsTrigger>
             <TabsTrigger value="recent" className="text-xs md:text-sm">Recent</TabsTrigger>
             <TabsTrigger value="favorites" className="text-xs md:text-sm">Favorites</TabsTrigger>
             <TabsTrigger value="current" className="text-xs md:text-sm">Setlists</TabsTrigger>
@@ -177,7 +404,11 @@ export const MusicLibraryModule = () => {
                 </p>
               </div>
             ) : viewMode === 'grid' ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 md:gap-4 auto-rows-fr">
+              <div 
+                ref={gridRef}
+                className="grid gap-2 md:gap-4 auto-rows-fr"
+                style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}
+              >
                 {paginatedMusic.map((piece) => (
                   <Card 
                     key={piece.id} 
