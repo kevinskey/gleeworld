@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -80,6 +81,7 @@ interface MemberDossierData {
 }
 
 const MemberDossiersModule: React.FC = () => {
+  const navigate = useNavigate();
   const [members, setMembers] = useState<MemberDossierData[]>([]);
   const [allInterviews, setAllInterviews] = useState<ExitInterview[]>([]);
   const [loading, setLoading] = useState(true);
@@ -319,6 +321,7 @@ const MemberDossiersModule: React.FC = () => {
                     hasExitInterview={member.exitInterviews.length > 0}
                     satisfactionAvg={member.avgSatisfaction}
                     onViewDossier={() => setSelectedMember(member)}
+                    onViewInterview={() => navigate(`/dashboard?module=exit-interviews&search=${encodeURIComponent(member.profile.full_name || member.profile.email)}`)}
                   />
                 ))}
               </div>

@@ -19,13 +19,15 @@ interface MemberDossierCardProps {
   hasExitInterview: boolean;
   satisfactionAvg: number | null;
   onViewDossier: () => void;
+  onViewInterview?: () => void;
 }
 
 export const MemberDossierCard: React.FC<MemberDossierCardProps> = ({
   member,
   hasExitInterview,
   satisfactionAvg,
-  onViewDossier
+  onViewDossier,
+  onViewInterview
 }) => {
   return (
     <Card 
@@ -68,7 +70,16 @@ export const MemberDossierCard: React.FC<MemberDossierCardProps> = ({
           <div className="flex items-center gap-3">
             <div className="text-right space-y-1">
               {hasExitInterview ? (
-                <Badge variant="default" className="text-xs">Interview Complete</Badge>
+                <Badge 
+                  variant="default" 
+                  className="text-xs cursor-pointer hover:bg-primary/80"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewInterview?.();
+                  }}
+                >
+                  Interview
+                </Badge>
               ) : (
                 <Badge variant="secondary" className="text-xs">No Interview</Badge>
               )}
