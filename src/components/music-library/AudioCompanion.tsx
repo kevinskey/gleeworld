@@ -393,19 +393,18 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
 
   return (
     <div className={cn("flex items-center gap-1.5 bg-card/95 backdrop-blur border border-border p-1 shadow-lg", className)}>
-      {/* Hidden YouTube player - keep on screen but clipped to allow playback */}
+      {/* Hidden YouTube player - needs proper dimensions to play, but visually hidden */}
       <div 
         ref={youtubeContainerRef} 
         className="fixed overflow-hidden"
         style={{ 
-          width: '1px',
-          height: '1px',
-          bottom: '0px',
+          width: '200px',
+          height: '150px',
+          bottom: '-200px', // Position off-screen but not clipped
           right: '0px',
-          opacity: 0.01, // Near-invisible but not completely hidden
+          opacity: 1, // Must be visible for YouTube to play
           pointerEvents: 'none',
-          zIndex: -1,
-          clip: 'rect(0, 1px, 1px, 0)',
+          zIndex: -9999,
         }}
       />
       
