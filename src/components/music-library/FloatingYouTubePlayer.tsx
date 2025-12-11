@@ -48,7 +48,8 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
         }
       }}
       enableResizing={!isMinimized}
-      style={{ zIndex: 9999 }}
+      className="!z-[99999]"
+      style={{ zIndex: 99999 }}
     >
       <div className={cn(
         "flex flex-col bg-card border border-border rounded-lg shadow-xl overflow-hidden",
