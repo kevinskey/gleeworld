@@ -2,9 +2,18 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { TreePine, CheckCircle2, XCircle } from "lucide-react";
+import { TreePine, CheckCircle2, XCircle, Mail, MessageSquare, Send, Loader2, Users } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SurveyResponse {
   id: string;
@@ -16,13 +25,23 @@ interface SurveyResponse {
   profile?: {
     full_name: string;
     email: string;
+    phone_number?: string;
   };
 }
 
 const TreeLightingSurveyModule = () => {
+  const { user } = useAuth();
   const [responses, setResponses] = useState<SurveyResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, attended: 0, notAttended: 0 });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+  const [messageTab, setMessageTab] = useState<'email' | 'sms'>('email');
+  const [emailSubject, setEmailSubject] = useState("Stipend Payment - CashApp Information Needed");
+  const [messageBody, setMessageBody] = useState(
+    `Hello!\n\nThank you for participating in the Tree Lighting event. We hope you enjoyed it!\n\nTo process your stipend payment, please reply with your CashApp username (e.g., $YourCashApp).\n\nBest regards,\nGlee Club`
+  );
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     fetchResponses();
@@ -38,11 +57,11 @@ const TreeLightingSurveyModule = () => {
 
       if (basicError) throw basicError;
 
-      // Fetch profiles separately
+      // Fetch profiles separately with phone numbers
       const userIds = basicData?.map(r => r.user_id) || [];
       const { data: profiles } = await supabase
         .from("gw_profiles")
-        .select("user_id, full_name, email")
+        .select("user_id, full_name, email, phone_number")
         .in("user_id", userIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
@@ -68,6 +87,135 @@ const TreeLightingSurveyModule = () => {
     setStats({ total, attended, notAttended });
   };
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === responses.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(responses.map(r => r.id)));
+    }
+  };
+
+  const toggleSelectAttended = () => {
+    const attendedIds = responses.filter(r => r.attended).map(r => r.id);
+    setSelectedIds(new Set(attendedIds));
+  };
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const getSelectedRecipients = () => {
+    return responses.filter(r => selectedIds.has(r.id));
+  };
+
+  const sendEmails = async () => {
+    const recipients = getSelectedRecipients();
+    const emails = recipients.map(r => r.profile?.email).filter(Boolean) as string[];
+    
+    if (emails.length === 0) {
+      toast.error("No valid email addresses found");
+      return;
+    }
+
+    setIsSending(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const email of emails) {
+      try {
+        const { data, error } = await supabase.functions.invoke('gw-send-email', {
+          body: {
+            to: email,
+            subject: emailSubject,
+            html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #1e40af;">GleeWorld - Stipend Information Request</h2>
+              <div style="white-space: pre-line; line-height: 1.6;">${messageBody}</div>
+              <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;" />
+              <p style="color: #6b7280; font-size: 12px;">This is an automated message from GleeWorld.</p>
+            </div>`
+          }
+        });
+
+        if (error) throw error;
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to send email to ${email}:`, error);
+        failCount++;
+      }
+    }
+
+    setIsSending(false);
+    
+    if (successCount > 0) {
+      toast.success(`Successfully sent ${successCount} email${successCount > 1 ? 's' : ''}`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to send ${failCount} email${failCount > 1 ? 's' : ''}`);
+    }
+    
+    if (successCount > 0) {
+      setIsMessageDialogOpen(false);
+    }
+  };
+
+  const sendSMS = async () => {
+    const recipients = getSelectedRecipients();
+    const phones = recipients.map(r => r.profile?.phone_number).filter(Boolean) as string[];
+    
+    if (phones.length === 0) {
+      toast.error("No valid phone numbers found for selected recipients");
+      return;
+    }
+
+    setIsSending(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const phone of phones) {
+      try {
+        const { data, error } = await supabase.functions.invoke('gw-send-sms', {
+          body: {
+            to: phone,
+            message: messageBody
+          }
+        });
+
+        if (error) throw error;
+        successCount++;
+      } catch (error) {
+        console.error(`Failed to send SMS to ${phone}:`, error);
+        failCount++;
+      }
+    }
+
+    setIsSending(false);
+    
+    if (successCount > 0) {
+      toast.success(`Successfully sent ${successCount} SMS message${successCount > 1 ? 's' : ''}`);
+    }
+    if (failCount > 0) {
+      toast.error(`Failed to send ${failCount} SMS message${failCount > 1 ? 's' : ''}`);
+    }
+    
+    if (successCount > 0) {
+      setIsMessageDialogOpen(false);
+    }
+  };
+
+  const handleSend = () => {
+    if (messageTab === 'email') {
+      sendEmails();
+    } else {
+      sendSMS();
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -78,16 +226,31 @@ const TreeLightingSurveyModule = () => {
     );
   }
 
+  const selectedRecipients = getSelectedRecipients();
+  const hasEmailRecipients = selectedRecipients.some(r => r.profile?.email);
+  const hasSmsRecipients = selectedRecipients.some(r => r.profile?.phone_number);
+
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2">
-            <TreePine className="h-5 w-5 text-green-600" />
-            <CardTitle>Survey Module</CardTitle>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <TreePine className="h-5 w-5 text-green-600" />
+              <CardTitle>Survey Module</CardTitle>
+            </div>
+            {selectedIds.size > 0 && (
+              <Button 
+                onClick={() => setIsMessageDialogOpen(true)}
+                className="gap-2"
+              >
+                <Send className="h-4 w-4" />
+                Message Selected ({selectedIds.size})
+              </Button>
+            )}
           </div>
           <CardDescription>
-            Manage and view survey responses
+            Manage and view survey responses. Select respondents to send them messages.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -113,6 +276,23 @@ const TreeLightingSurveyModule = () => {
             </Card>
           </div>
 
+          {/* Quick Actions */}
+          <div className="flex gap-2 mb-4 flex-wrap">
+            <Button variant="outline" size="sm" onClick={toggleSelectAll}>
+              <Users className="h-4 w-4 mr-1" />
+              {selectedIds.size === responses.length ? 'Deselect All' : 'Select All'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={toggleSelectAttended}>
+              <CheckCircle2 className="h-4 w-4 mr-1" />
+              Select Attended Only
+            </Button>
+            {selectedIds.size > 0 && (
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+                Clear Selection
+              </Button>
+            )}
+          </div>
+
           {/* Table */}
           {responses.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No responses yet</p>
@@ -121,6 +301,12 @@ const TreeLightingSurveyModule = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox 
+                        checked={selectedIds.size === responses.length && responses.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>Member</TableHead>
                     <TableHead>Attended</TableHead>
                     <TableHead>What They Enjoyed</TableHead>
@@ -130,11 +316,20 @@ const TreeLightingSurveyModule = () => {
                 </TableHeader>
                 <TableBody>
                   {responses.map((response) => (
-                    <TableRow key={response.id}>
+                    <TableRow key={response.id} className={selectedIds.has(response.id) ? 'bg-primary/5' : ''}>
+                      <TableCell>
+                        <Checkbox 
+                          checked={selectedIds.has(response.id)}
+                          onCheckedChange={() => toggleSelect(response.id)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <div>
                           <p className="font-medium">{response.profile?.full_name || "Unknown"}</p>
                           <p className="text-xs text-muted-foreground">{response.profile?.email}</p>
+                          {response.profile?.phone_number && (
+                            <p className="text-xs text-muted-foreground">{response.profile.phone_number}</p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -171,6 +366,100 @@ const TreeLightingSurveyModule = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Message Dialog */}
+      <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5" />
+              Send Message to {selectedIds.size} Recipient{selectedIds.size > 1 ? 's' : ''}
+            </DialogTitle>
+            <DialogDescription>
+              Send an email or SMS to selected survey respondents to request their CashApp information for stipend payment.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs value={messageTab} onValueChange={(v) => setMessageTab(v as 'email' | 'sms')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="email" className="gap-2">
+                <Mail className="h-4 w-4" />
+                Email ({selectedRecipients.filter(r => r.profile?.email).length})
+              </TabsTrigger>
+              <TabsTrigger value="sms" className="gap-2">
+                <MessageSquare className="h-4 w-4" />
+                SMS ({selectedRecipients.filter(r => r.profile?.phone_number).length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="email" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="email-subject">Subject</Label>
+                <Input
+                  id="email-subject"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  placeholder="Email subject..."
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email-body">Message</Label>
+                <Textarea
+                  id="email-body"
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  placeholder="Your message..."
+                  rows={8}
+                />
+              </div>
+              {!hasEmailRecipients && (
+                <p className="text-sm text-destructive">No selected recipients have email addresses.</p>
+              )}
+            </TabsContent>
+
+            <TabsContent value="sms" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label htmlFor="sms-body">Message (SMS)</Label>
+                <Textarea
+                  id="sms-body"
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  placeholder="Your message..."
+                  rows={6}
+                />
+                <p className="text-xs text-muted-foreground">
+                  {messageBody.length}/160 characters (longer messages may be split)
+                </p>
+              </div>
+              {!hasSmsRecipients && (
+                <p className="text-sm text-destructive">No selected recipients have phone numbers.</p>
+              )}
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMessageDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSend} 
+              disabled={isSending || (messageTab === 'email' ? !hasEmailRecipients : !hasSmsRecipients)}
+            >
+              {isSending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send {messageTab === 'email' ? 'Emails' : 'SMS'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
