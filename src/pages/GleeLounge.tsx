@@ -144,8 +144,8 @@ export default function GleeLounge() {
             </div>
           </div>
 
-          {/* Right side actions */}
-          <div className="flex items-center gap-2">
+          {/* Right side actions - desktop */}
+          <div className="hidden sm:flex items-center gap-2">
             <Button
               variant="default"
               size="sm"
@@ -157,17 +157,9 @@ export default function GleeLounge() {
             </Button>
             <Button
               variant="outline"
-              size="icon"
-              onClick={() => setShowMusicLibrary(true)}
-              className="sm:hidden"
-            >
-              <Music className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
               size="sm"
               onClick={() => setShowMusicLibrary(true)}
-              className="gap-2 hidden sm:flex"
+              className="gap-2"
             >
               <Music className="h-4 w-4" />
               <span>Music Library</span>
@@ -179,6 +171,29 @@ export default function GleeLounge() {
               </span>
             )}
           </div>
+
+          {/* Mobile: Music Library icon only */}
+          <div className="sm:hidden flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowMusicLibrary(true)}
+            >
+              <Music className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile: Go Live button row */}
+        <div className="sm:hidden px-4 pb-3">
+          <Button
+            variant="default"
+            onClick={() => setShowLiveVideo(true)}
+            className="w-full gap-2 bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Radio className="h-4 w-4" />
+            <span>Go Live</span>
+          </Button>
         </div>
       </header>
 
