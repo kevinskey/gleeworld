@@ -18,6 +18,7 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
 }) => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
   const [size, setSize] = useState({ width: 400, height: 280 });
   const [position, setPosition] = useState({ 
     x: Math.max(20, window.innerWidth - 420), 
@@ -97,20 +98,29 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
 
         {/* YouTube Content */}
         {!isMinimized && (
-          <div className="flex-1 bg-black relative">
+          <div className="flex-1 bg-black relative min-h-[180px]">
             {!isPlaying ? (
               // Thumbnail with play button
               <div 
-                className="w-full h-full relative cursor-pointer group"
+                className="w-full h-full relative cursor-pointer group flex items-center justify-center"
                 onClick={() => setIsPlaying(true)}
               >
+                {/* Background placeholder while image loads */}
+                <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900" />
+                
                 <img 
                   src={thumbnailUrl} 
                   alt={title}
-                  className="w-full h-full object-cover"
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
+                    thumbnailLoaded ? "opacity-100" : "opacity-0"
+                  )}
+                  onLoad={() => setThumbnailLoaded(true)}
+                  onError={() => setThumbnailLoaded(false)}
                 />
-                {/* Play button overlay */}
-                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                
+                {/* Play button overlay - always visible */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors z-10">
                   <div className="w-16 h-12 bg-red-600 rounded-xl flex items-center justify-center group-hover:bg-red-700 transition-colors shadow-lg">
                     <Play className="h-7 w-7 text-white fill-white ml-1" />
                   </div>
