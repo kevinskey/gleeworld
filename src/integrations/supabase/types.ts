@@ -3092,6 +3092,60 @@ export type Database = {
           },
         ]
       }
+      dress_checkouts: {
+        Row: {
+          accessories_returned: boolean | null
+          condition_notes: string | null
+          dress_condition: string | null
+          dress_returned: boolean | null
+          id: string
+          missing_items: string | null
+          semester: string
+          sign_off_notes: string | null
+          signed_off_at: string | null
+          signed_off_by: string | null
+          signed_off_by_name: string | null
+          status: string | null
+          submitted_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          accessories_returned?: boolean | null
+          condition_notes?: string | null
+          dress_condition?: string | null
+          dress_returned?: boolean | null
+          id?: string
+          missing_items?: string | null
+          semester?: string
+          sign_off_notes?: string | null
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          signed_off_by_name?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          accessories_returned?: boolean | null
+          condition_notes?: string | null
+          dress_condition?: string | null
+          dress_returned?: boolean | null
+          id?: string
+          missing_items?: string | null
+          semester?: string
+          sign_off_notes?: string | null
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          signed_off_by_name?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_campaigns: {
         Row: {
           content: string
@@ -20141,6 +20195,57 @@ export type Database = {
           title?: string
           updated_at?: string
           venue?: string | null
+        }
+        Relationships: []
+      }
+      sheet_music_checkouts: {
+        Row: {
+          condition_notes: string | null
+          folder_returned: boolean | null
+          id: string
+          missing_items: string | null
+          music_returned: boolean | null
+          semester: string
+          sign_off_notes: string | null
+          signed_off_at: string | null
+          signed_off_by: string | null
+          signed_off_by_name: string | null
+          status: string | null
+          submitted_at: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          condition_notes?: string | null
+          folder_returned?: boolean | null
+          id?: string
+          missing_items?: string | null
+          music_returned?: boolean | null
+          semester?: string
+          sign_off_notes?: string | null
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          signed_off_by_name?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          condition_notes?: string | null
+          folder_returned?: boolean | null
+          id?: string
+          missing_items?: string | null
+          music_returned?: boolean | null
+          semester?: string
+          sign_off_notes?: string | null
+          signed_off_at?: string | null
+          signed_off_by?: string | null
+          signed_off_by_name?: string | null
+          status?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
