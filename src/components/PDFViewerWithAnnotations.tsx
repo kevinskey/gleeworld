@@ -29,8 +29,10 @@ import {
   ChevronRight,
   ZoomIn,
   ZoomOut,
-  Share2
+  Share2,
+  Music
 } from "lucide-react";
+import { AudioCompanion } from '@/components/music-library/AudioCompanion';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -88,6 +90,7 @@ const scrollModePluginInstance = scrollModePlugin();
   const [currentPath, setCurrentPath] = useState<any>(null);
   const [hasAnnotations, setHasAnnotations] = useState(false);
   const [annotationMode, setAnnotationMode] = useState(false);
+  const [showAudioCompanion, setShowAudioCompanion] = useState(false);
   
   // Touch navigation state
   const [touchStart, setTouchStart] = useState<{ x: number; y: number; time: number } | null>(null);
@@ -1013,6 +1016,19 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                 </Button>
               </div>
               
+              {/* Listen Along Button */}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowAudioCompanion(true)}
+                aria-label="Listen along with audio"
+                title="Play audio while reading sheet music"
+                className="shadow-lg bg-card/95 backdrop-blur border-border md:h-10 h-8 md:px-4 px-2"
+              >
+                <Music className="md:h-5 md:w-5 h-3 w-3 mr-1 md:mr-2" />
+                <span className="font-semibold md:text-base text-xs">Listen Along</span>
+              </Button>
+              
               {/* Annotate Button */}
               <Button
                 size="sm"
@@ -1179,6 +1195,11 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
             </div>
           </div>
         </div>
+      )}
+
+      {/* Audio Companion */}
+      {showAudioCompanion && (
+        <AudioCompanion onClose={() => setShowAudioCompanion(false)} />
       )}
     </Card>
   );
