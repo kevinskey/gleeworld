@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-
+import { MemberCheckoutStatus } from "./MemberCheckoutStatus";
 interface ExitInterview {
   id: string;
   semester: string;
@@ -341,6 +341,9 @@ export const MemberDossierDetail: React.FC<MemberDossierDetailProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Checkout Status */}
+      <MemberCheckoutStatus userId={member.user_id} />
 
       {/* Exit Interviews */}
       {exitInterviews.length === 0 ? (
