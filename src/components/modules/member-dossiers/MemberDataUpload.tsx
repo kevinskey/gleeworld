@@ -19,7 +19,7 @@ export function MemberDataUpload() {
   const [result, setResult] = useState<UploadResult | null>(null);
 
   const downloadTemplate = () => {
-    const csvContent = `name,student_id,class
+    const csvContent = `student name,ID,class
 Jane Doe,S12345678,Junior
 Mary Smith,S87654321,Senior`;
     
@@ -36,9 +36,9 @@ Mary Smith,S87654321,Senior`;
     const lines = text.trim().split('\n');
     const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
     
-    const nameIdx = headers.findIndex(h => h === 'name' || h === 'student_name' || h === 'full_name' || h === 'student');
-    const studentIdIdx = headers.findIndex(h => h === 'student_id' || h === 'studentid' || h === 'id');
-    const classIdx = headers.findIndex(h => h === 'classification' || h === 'class' || h === 'year');
+    const nameIdx = headers.findIndex(h => h === 'student name' || h === 'name' || h === 'student_name' || h === 'full_name');
+    const studentIdIdx = headers.findIndex(h => h === 'id' || h === 'student_id' || h === 'studentid');
+    const classIdx = headers.findIndex(h => h === 'class' || h === 'classification' || h === 'year');
 
     if (nameIdx === -1) {
       throw new Error('CSV must have a "name" column');
