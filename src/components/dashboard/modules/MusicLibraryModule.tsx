@@ -43,8 +43,14 @@ export const MusicLibraryModule = () => {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [sortBy, setSortBy] = useState<SortOption>('date-newest');
   
-  // Column count state (for desktop/tablet)
-  const [columnCount, setColumnCount] = useState<number>(6);
+  // Column count state with responsive defaults
+  const getDefaultColumnCount = () => {
+    if (typeof window === 'undefined') return 3;
+    if (window.innerWidth < 768) return 1; // phone
+    if (window.innerWidth < 1024) return 2; // tablet/iPad
+    return 3; // desktop
+  };
+  const [columnCount, setColumnCount] = useState<number>(getDefaultColumnCount);
 
   // Calculate items per page based on column count (4 rows)
   const itemsPerPage = columnCount * 4;
