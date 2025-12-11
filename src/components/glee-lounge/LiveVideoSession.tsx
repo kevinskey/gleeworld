@@ -18,6 +18,7 @@ import {
   Search,
   Send,
   Radio,
+  Loader2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -41,13 +42,18 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
   const [isLive, setIsLive] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [members, setMembers] = useState<Member[]>([]);
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [invitedMembers, setInvitedMembers] = useState<Member[]>([]);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   // Fetch members for invitation
@@ -93,6 +99,9 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
     };
   }, [toast]);
 
@@ -116,8 +125,53 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
     }
   };
 
+  const startRecording = () => {
+    if (!streamRef.current) return;
+
+    recordedChunksRef.current = [];
+    const mediaRecorder = new MediaRecorder(streamRef.current, {
+      mimeType: 'video/webm;codecs=vp9,opus',
+    });
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        recordedChunksRef.current.push(event.data);
+      }
+    };
+
+    mediaRecorderRef.current = mediaRecorder;
+    mediaRecorder.start(1000); // Collect data every second
+
+    // Start duration timer
+    setRecordingDuration(0);
+    durationIntervalRef.current = setInterval(() => {
+      setRecordingDuration(prev => prev + 1);
+    }, 1000);
+  };
+
+  const stopRecording = (): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
+        resolve(null);
+        return;
+      }
+
+      mediaRecorderRef.current.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: 'video/webm' });
+        resolve(blob);
+      };
+
+      mediaRecorderRef.current.stop();
+
+      if (durationIntervalRef.current) {
+        clearInterval(durationIntervalRef.current);
+      }
+    });
+  };
+
   const handleGoLive = () => {
     setIsLive(true);
+    startRecording();
     toast({
       title: '🔴 You are now LIVE!',
       description: invitedMembers.length > 0 
@@ -126,7 +180,105 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
     });
   };
 
-  const handleEndSession = () => {
+  const archiveVideo = async (videoBlob: Blob) => {
+    if (!userProfile) return;
+
+    setIsUploading(true);
+    
+    try {
+      const timestamp = Date.now();
+      const fileName = `live-${userProfile.user_id}-${timestamp}.webm`;
+      const filePath = `live-videos/${fileName}`;
+
+      // Upload to storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('social-posts')
+        .upload(filePath, videoBlob, {
+          contentType: 'video/webm',
+          cacheControl: '3600',
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('social-posts')
+        .getPublicUrl(filePath);
+
+      // Create post in timeline
+      const durationText = formatDuration(recordingDuration);
+      const { error: postError } = await supabase
+        .from('gw_social_posts')
+        .insert({
+          user_id: userProfile.user_id,
+          content: `🔴 Live Session (${durationText})\n\nJust went live in the Glee Lounge!`,
+          media_urls: [publicUrl],
+        });
+
+      if (postError) {
+        console.error('Post creation error:', postError);
+        throw postError;
+      }
+
+      // Add to media library
+      const { error: mediaError } = await supabase
+        .from('gw_media_library')
+        .insert({
+          title: `Live Session - ${new Date().toLocaleDateString()}`,
+          description: `Live video recorded by ${userProfile.full_name} (${durationText})`,
+          file_url: publicUrl,
+          file_path: filePath,
+          file_type: 'video',
+          file_size: videoBlob.size,
+          category: 'Live Videos',
+          tags: ['live', 'glee-lounge', 'video'],
+          uploaded_by: userProfile.user_id,
+          is_public: true,
+          bucket_id: 'social-posts',
+        });
+
+      if (mediaError) {
+        console.error('Media library error:', mediaError);
+        // Don't throw - post was created successfully
+      }
+
+      toast({
+        title: '✅ Live Session Archived!',
+        description: 'Your video has been saved to the timeline and media library',
+      });
+
+    } catch (error) {
+      console.error('Error archiving video:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Archive Failed',
+        description: 'Unable to save your live session. Please try again.',
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const formatDuration = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleEndSession = async () => {
+    if (isLive && recordingDuration > 3) {
+      // Only archive if recorded more than 3 seconds
+      const videoBlob = await stopRecording();
+      if (videoBlob && videoBlob.size > 0) {
+        await archiveVideo(videoBlob);
+      }
+    } else {
+      await stopRecording();
+    }
+
     setIsLive(false);
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -161,6 +313,16 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
 
   return (
     <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
+      {isUploading && (
+        <div className="absolute inset-0 bg-black/80 z-60 flex items-center justify-center">
+          <div className="text-center text-white">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+            <p className="text-lg font-medium">Saving your live session...</p>
+            <p className="text-sm text-white/70">This may take a moment</p>
+          </div>
+        </div>
+      )}
+
       <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden bg-card">
         <CardHeader className="border-b flex flex-row items-center justify-between py-3 px-4">
           <div className="flex items-center gap-3">
@@ -169,12 +331,17 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
               {isLive ? 'LIVE Session' : 'Go Live'}
             </CardTitle>
             {isLive && (
-              <Badge variant="destructive" className="animate-pulse">
-                ● LIVE
-              </Badge>
+              <>
+                <Badge variant="destructive" className="animate-pulse">
+                  ● LIVE
+                </Badge>
+                <span className="text-sm text-muted-foreground font-mono">
+                  {formatDuration(recordingDuration)}
+                </span>
+              </>
             )}
           </div>
-          <Button variant="ghost" size="icon" onClick={handleEndSession}>
+          <Button variant="ghost" size="icon" onClick={handleEndSession} disabled={isUploading}>
             <X className="h-5 w-5" />
           </Button>
         </CardHeader>
@@ -218,6 +385,7 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                   size="icon"
                   className="rounded-full h-12 w-12"
                   onClick={toggleVideo}
+                  disabled={isUploading}
                 >
                   {isVideoOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
                 </Button>
@@ -226,6 +394,7 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                   size="icon"
                   className="rounded-full h-12 w-12"
                   onClick={toggleMic}
+                  disabled={isUploading}
                 >
                   {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
                 </Button>
@@ -235,6 +404,7 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                     size="icon"
                     className="rounded-full h-12 w-12"
                     onClick={handleEndSession}
+                    disabled={isUploading}
                   >
                     <Phone className="h-5 w-5 rotate-135" />
                   </Button>
@@ -242,6 +412,7 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                   <Button
                     className="rounded-full h-12 px-6 bg-red-600 hover:bg-red-700"
                     onClick={handleGoLive}
+                    disabled={isUploading}
                   >
                     <Radio className="h-5 w-5 mr-2" />
                     Go Live
@@ -257,6 +428,7 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                   variant="outline"
                   className="w-full gap-2"
                   onClick={() => setShowInvite(!showInvite)}
+                  disabled={isUploading}
                 >
                   <UserPlus className="h-4 w-4" />
                   Invite Members
