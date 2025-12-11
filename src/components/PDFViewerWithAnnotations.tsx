@@ -1001,24 +1001,34 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
 
           {!annotationMode && (
             <div className="absolute top-1 right-1 z-30 flex items-center gap-1 flex-wrap justify-end">
-              {/* Zoom Controls */}
-              <div className="flex items-center gap-0.5 bg-card/95 backdrop-blur border border-border p-0.5 shadow-lg rounded">
+              {/* Zoom Controls - larger touch targets for mobile */}
+              <div className="flex items-center gap-0.5 bg-card/95 backdrop-blur border border-border p-1 shadow-lg rounded">
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={handleScaleZoomOut}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    handleScaleZoomOut();
+                  }}
                   disabled={scale <= 0.5}
-                  className="h-6 w-6 p-0"
+                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 touch-manipulation"
                   title="Zoom out"
+                  aria-label="Zoom out"
                 >
-                  <ZoomOut className="h-3.5 w-3.5" />
+                  <ZoomOut className="h-5 w-5 sm:h-4 sm:w-4" />
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={handleScaleReset}
-                  className="h-6 px-1.5 text-xs font-medium"
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    handleScaleReset();
+                  }}
+                  className="h-10 px-2 sm:h-8 sm:px-1.5 text-sm sm:text-xs font-medium touch-manipulation"
                   title="Reset zoom"
+                  aria-label="Reset zoom"
                 >
                   {Math.round(scale * 100)}%
                 </Button>
@@ -1026,11 +1036,16 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   size="sm"
                   variant="ghost"
                   onClick={handleScaleZoomIn}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    handleScaleZoomIn();
+                  }}
                   disabled={scale >= 3}
-                  className="h-6 w-6 p-0"
+                  className="h-10 w-10 sm:h-8 sm:w-8 p-0 touch-manipulation"
                   title="Zoom in"
+                  aria-label="Zoom in"
                 >
-                  <ZoomIn className="h-3.5 w-3.5" />
+                  <ZoomIn className="h-5 w-5 sm:h-4 sm:w-4" />
                 </Button>
               </div>
               
@@ -1042,11 +1057,15 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   size="sm"
                   variant="outline"
                   onClick={() => setShowAudioCompanion(true)}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    setShowAudioCompanion(true);
+                  }}
                   aria-label="Listen along with audio"
                   title="Play audio while reading sheet music"
-                  className="shadow-lg bg-card/95 backdrop-blur border-border h-8 px-2"
+                  className="shadow-lg bg-card/95 backdrop-blur border-border h-10 sm:h-8 px-2 touch-manipulation"
                 >
-                  <Music className="h-4 w-4 mr-1" />
+                  <Music className="h-5 w-5 sm:h-4 sm:w-4 mr-1" />
                   <span className="font-medium text-xs">Listen Along</span>
                 </Button>
               )}
@@ -1059,11 +1078,16 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   setError(null); 
                   setAnnotationMode(true); 
                 }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  setError(null); 
+                  setAnnotationMode(true);
+                }}
                 aria-label="Enable annotations"
                 title="Click to enable drawing and annotations"
-                className="shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8 px-2"
+                className="shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-10 sm:h-8 px-2 touch-manipulation"
               >
-                <Palette className="h-4 w-4 mr-1" />
+                <Palette className="h-5 w-5 sm:h-4 sm:w-4 mr-1" />
                 <span className="font-semibold">Annotate</span>
               </Button>
             </div>
