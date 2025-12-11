@@ -108,7 +108,7 @@ export const MusicLibraryModule = () => {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="p-2 md:p-6 border-b border-border bg-background">
+      <div className="py-2 md:py-4 border-b border-border bg-background">
         <div className="flex items-center gap-2 mb-3 md:mb-4">
           <Music className="w-4 h-4 md:w-5 md:h-5 text-primary" />
           <h2 className="text-base md:text-lg font-semibold">Music Library</h2>
@@ -155,7 +155,7 @@ export const MusicLibraryModule = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="all" className="flex-1 flex flex-col">
-        <div className="px-2 md:px-6 pt-3 md:pt-4">
+        <div className="pt-3 md:pt-4">
           <TabsList className="w-full md:w-auto grid grid-cols-4 md:inline-flex">
             <TabsTrigger value="all" className="text-xs md:text-sm">All ({musicLibrary.length})</TabsTrigger>
             <TabsTrigger value="recent" className="text-xs md:text-sm">Recent</TabsTrigger>
@@ -165,7 +165,7 @@ export const MusicLibraryModule = () => {
         </div>
 
         <TabsContent value="all" className="flex-1 mt-0 flex flex-col min-h-0">
-          <div className="flex-1 overflow-auto p-2 md:p-6 pb-0">
+          <div className="flex-1 overflow-auto py-2 md:py-4 pb-0">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-muted-foreground">Loading music library...</p>
@@ -407,7 +407,7 @@ export const MusicLibraryModule = () => {
           
           {/* Pagination Controls - Always visible at bottom */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 p-4 border-t border-border bg-background">
+            <div className="flex items-center justify-center gap-2 py-4 border-t border-border bg-background">
               <Button
                 variant="outline"
                 size="sm"
@@ -434,7 +434,7 @@ export const MusicLibraryModule = () => {
         </TabsContent>
 
         <TabsContent value="recent" className="flex-1">
-          <ScrollArea className="flex-1 p-6">
+          <ScrollArea className="flex-1 py-4">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-muted-foreground">Loading...</p>
@@ -460,7 +460,7 @@ export const MusicLibraryModule = () => {
         </TabsContent>
 
         <TabsContent value="favorites" className="flex-1">
-          <ScrollArea className="flex-1 p-2 md:p-6">
+          <ScrollArea className="flex-1 py-2 md:py-4">
             {favoritedMusic.length === 0 ? (
               <div className="flex items-center justify-center text-muted-foreground py-12">
                 <p>No favorite pieces yet. Click the heart icon on any piece to add it to your favorites!</p>
@@ -522,7 +522,7 @@ export const MusicLibraryModule = () => {
         </TabsContent>
 
         <TabsContent value="current" className="flex-1 mt-0">
-          <ScrollArea className="flex-1 p-2 md:p-6">
+          <ScrollArea className="flex-1 py-2 md:py-4">
             <SetlistBuilder 
               onPdfSelect={(url, title, id) => {
                 if (id) {
