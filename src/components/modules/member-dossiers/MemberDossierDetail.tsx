@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,9 +6,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { 
   User, Music, GraduationCap, Star, ArrowLeft, Mail, Phone, 
   Calendar, ClipboardList, Target, Heart, Briefcase, Plane,
-  MessageSquare, TrendingUp, Award
+  MessageSquare, TrendingUp, Award, CheckCircle, XCircle, Clock,
+  DollarSign, Users, IdCard
 } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ExitInterview {
   id: string;
@@ -60,6 +62,24 @@ interface MemberProfile {
   role: string | null;
   join_date: string | null;
   notes: string | null;
+  student_number?: string | null;
+  dues_paid?: boolean | null;
+  is_section_leader?: boolean | null;
+  is_exec_board?: boolean | null;
+  exec_board_role?: string | null;
+  music_role?: string | null;
+  can_dance?: boolean | null;
+  instruments_played?: string[] | null;
+  academic_year?: string | null;
+}
+
+interface AttendanceRecord {
+  id: string;
+  event_id: string;
+  status: string;
+  recorded_at: string;
+  event_title?: string;
+  event_date?: string;
 }
 
 interface MemberDossierDetailProps {
@@ -73,6 +93,50 @@ export const MemberDossierDetail: React.FC<MemberDossierDetailProps> = ({
   exitInterviews,
   onBack
 }) => {
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(true);
+
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("attendance")
+          .select(`
+            id, event_id, status, recorded_at,
+            events!attendance_event_id_fkey(title, start_date)
+          `)
+          .eq("user_id", member.user_id)
+          .order("recorded_at", { ascending: false })
+          .limit(50);
+
+        if (!error && data) {
+          setAttendance(data.map((a: any) => ({
+            id: a.id,
+            event_id: a.event_id,
+            status: a.status,
+            recorded_at: a.recorded_at,
+            event_title: a.events?.title,
+            event_date: a.events?.start_date
+          })));
+        }
+      } catch (err) {
+        console.error("Error fetching attendance:", err);
+      } finally {
+        setLoadingAttendance(false);
+      }
+    };
+
+    fetchAttendance();
+  }, [member.user_id]);
+
+  const attendanceStats = {
+    present: attendance.filter(a => a.status === 'present').length,
+    absent: attendance.filter(a => a.status === 'absent').length,
+    excused: attendance.filter(a => a.status === 'excused').length,
+    late: attendance.filter(a => a.status === 'late').length,
+    total: attendance.length
+  };
+
   const renderStars = (rating: number | null) => {
     if (!rating) return <span className="text-muted-foreground text-sm">N/A</span>;
     return (
@@ -137,19 +201,26 @@ export const MemberDossierDetail: React.FC<MemberDossierDetailProps> = ({
                     {member.voice_part}
                   </Badge>
                 )}
-                {member.class_year && (
+                {member.academic_year && (
                   <Badge variant="outline" className="flex items-center gap-1">
                     <GraduationCap className="h-3 w-3" />
-                    Class of {member.class_year}
+                    {member.academic_year}
                   </Badge>
                 )}
-                {member.status && (
-                  <Badge variant={member.status === "active" ? "default" : "secondary"}>
-                    {member.status}
+                {member.is_section_leader && (
+                  <Badge variant="default">Section Leader</Badge>
+                )}
+                {member.is_exec_board && (
+                  <Badge variant="default">{member.exec_board_role || "Exec Board"}</Badge>
+                )}
+                {member.dues_paid !== null && (
+                  <Badge variant={member.dues_paid ? "default" : "destructive"} className="flex items-center gap-1">
+                    <DollarSign className="h-3 w-3" />
+                    {member.dues_paid ? "Dues Paid" : "Dues Unpaid"}
                   </Badge>
                 )}
               </div>
-              <div className="flex flex-col gap-1 mt-3 text-sm text-muted-foreground">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-3 text-sm text-muted-foreground">
                 {member.email && (
                   <span className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
@@ -162,16 +233,113 @@ export const MemberDossierDetail: React.FC<MemberDossierDetailProps> = ({
                     {member.phone}
                   </span>
                 )}
+                {member.student_number && (
+                  <span className="flex items-center gap-2">
+                    <IdCard className="h-4 w-4" />
+                    ID: {member.student_number}
+                  </span>
+                )}
                 {member.join_date && (
                   <span className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
-                    Joined {format(new Date(member.join_date), "MMMM yyyy")}
+                    Joined {format(new Date(member.join_date), "MMM yyyy")}
+                  </span>
+                )}
+                {member.music_role && (
+                  <span className="flex items-center gap-2">
+                    <Music className="h-4 w-4" />
+                    {member.music_role}
+                  </span>
+                )}
+                {member.can_dance && (
+                  <span className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Can Dance
                   </span>
                 )}
               </div>
+              {member.instruments_played && member.instruments_played.length > 0 && (
+                <div className="mt-2">
+                  <span className="text-xs text-muted-foreground">Instruments: </span>
+                  {member.instruments_played.map((inst, i) => (
+                    <Badge key={i} variant="outline" className="text-xs mr-1">{inst}</Badge>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
+      </Card>
+
+      {/* Attendance Summary */}
+      <Card>
+        <CardHeader className="py-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Attendance Record
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="py-0 pb-4">
+          {loadingAttendance ? (
+            <p className="text-sm text-muted-foreground">Loading attendance...</p>
+          ) : attendance.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No attendance records found</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-4 gap-3 mb-4">
+                <div className="bg-green-50 dark:bg-green-950/30 rounded-lg p-3 text-center">
+                  <CheckCircle className="h-5 w-5 mx-auto text-green-600 mb-1" />
+                  <p className="text-lg font-bold text-green-600">{attendanceStats.present}</p>
+                  <p className="text-xs text-muted-foreground">Present</p>
+                </div>
+                <div className="bg-red-50 dark:bg-red-950/30 rounded-lg p-3 text-center">
+                  <XCircle className="h-5 w-5 mx-auto text-red-600 mb-1" />
+                  <p className="text-lg font-bold text-red-600">{attendanceStats.absent}</p>
+                  <p className="text-xs text-muted-foreground">Absent</p>
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 text-center">
+                  <Clock className="h-5 w-5 mx-auto text-amber-600 mb-1" />
+                  <p className="text-lg font-bold text-amber-600">{attendanceStats.late}</p>
+                  <p className="text-xs text-muted-foreground">Late</p>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 text-center">
+                  <Calendar className="h-5 w-5 mx-auto text-blue-600 mb-1" />
+                  <p className="text-lg font-bold text-blue-600">{attendanceStats.excused}</p>
+                  <p className="text-xs text-muted-foreground">Excused</p>
+                </div>
+              </div>
+              <div className="max-h-40 overflow-y-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-muted sticky top-0">
+                    <tr>
+                      <th className="text-left p-2">Event</th>
+                      <th className="text-left p-2">Date</th>
+                      <th className="text-left p-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendance.slice(0, 20).map((record) => (
+                      <tr key={record.id} className="border-t">
+                        <td className="p-2">{record.event_title || "Unknown Event"}</td>
+                        <td className="p-2 text-muted-foreground">
+                          {record.event_date ? format(new Date(record.event_date), "MMM d, yyyy") : "-"}
+                        </td>
+                        <td className="p-2">
+                          <Badge 
+                            variant={record.status === 'present' ? 'default' : record.status === 'absent' ? 'destructive' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {record.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </CardContent>
       </Card>
 
       {/* Exit Interviews */}
