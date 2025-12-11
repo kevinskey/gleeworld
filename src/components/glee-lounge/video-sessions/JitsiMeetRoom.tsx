@@ -118,13 +118,14 @@ export const JitsiMeetRoom = ({
         </Button>
 
         <Button
-          variant="ghost"
+          variant="destructive"
           size="sm"
           onClick={hangUp}
-          className="rounded-full h-10 w-10 bg-red-500 hover:bg-red-600 text-white"
+          className="rounded-full px-4 h-10 bg-red-500 hover:bg-red-600 text-white gap-2"
           title="Leave meeting"
         >
           <PhoneOff className="h-5 w-5" />
+          <span className="font-medium">End Session</span>
         </Button>
       </div>
     </div>
