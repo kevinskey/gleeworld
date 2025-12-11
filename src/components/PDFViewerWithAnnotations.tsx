@@ -32,7 +32,7 @@ import {
   Share2,
   Music
 } from "lucide-react";
-import { AudioCompanion } from '@/components/music-library/AudioCompanion';
+import { AudioCompanionControls } from '@/components/music-library/AudioCompanionControls';
 import { toast } from "sonner";
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -1018,7 +1018,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               
               {/* Audio Companion - inline in header */}
               {showAudioCompanion ? (
-                <AudioCompanion onClose={() => setShowAudioCompanion(false)} />
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
               ) : (
                 <Button
                   size="sm"
