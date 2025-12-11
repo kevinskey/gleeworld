@@ -13,6 +13,8 @@ export const PermissionsModule = ({ user, isFullPage = false }: ModuleProps) => 
       icon={Shield}
       iconColor="red"
       fullPage={isFullPage}
+      collapsible={false}
+      defaultOpen={true}
     >
       <UnifiedUserManagement />
     </ModuleWrapper>
