@@ -403,64 +403,64 @@ export const UnifiedUserManagement = () => {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.total}</div>
+              <CardContent className="pt-0">
+                <div className="text-lg sm:text-2xl font-bold">{userStats.total}</div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Admins</CardTitle>
-                <Shield className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Admins</CardTitle>
+                <Shield className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.admins}</div>
+              <CardContent className="pt-0">
+                <div className="text-lg sm:text-2xl font-bold">{userStats.admins}</div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Members</CardTitle>
-                <User className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Members</CardTitle>
+                <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.members}</div>
+              <CardContent className="pt-0">
+                <div className="text-lg sm:text-2xl font-bold">{userStats.members}</div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">VIP Members</CardTitle>
-                <Star className="h-4 w-4 text-yellow-500" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">VIP</CardTitle>
+                <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.vips}</div>
+              <CardContent className="pt-0">
+                <div className="text-lg sm:text-2xl font-bold">{userStats.vips}</div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Alumnae</CardTitle>
-                <GraduationCap className="h-4 w-4 text-purple-500" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Alumnae</CardTitle>
+                <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.alumnae}</div>
+              <CardContent className="pt-0">
+                <div className="text-lg sm:text-2xl font-bold">{userStats.alumnae}</div>
               </CardContent>
             </Card>
             
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Executive Board</CardTitle>
-                <Settings className="h-4 w-4 text-muted-foreground" />
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
+                <CardTitle className="text-xs sm:text-sm font-medium">Exec Board</CardTitle>
+                <Settings className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{userStats.executives}</div>
+              <CardContent className="pt-0">
+                <div className="text-lg sm:text-2xl font-bold">{userStats.executives}</div>
               </CardContent>
             </Card>
           </div>
@@ -528,224 +528,323 @@ export const UnifiedUserManagement = () => {
                 </Select>
               </div>
 
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Executive Board</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                            <User className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {user.full_name || 'No name set'}
-                            </div>
-                            <div className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {user.email}
-                            </div>
-                          </div>
+              {/* Mobile Cards View */}
+              <div className="sm:hidden space-y-3">
+                {filteredUsers.map((user) => (
+                  <Card key={user.id} className="p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <User className="h-4 w-4 text-primary" />
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getRoleBadgeColor(user.role)}>
-                          <div className="flex items-center gap-1">
-                            {getRoleIcon(user.role)}
-                            {user.role || 'No role'}
-                          </div>
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {user.is_exec_board ? (
-                          <Badge variant="outline" className="text-blue-600 border-blue-200">
-                            {user.exec_board_role || 'Executive'}
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={user.verified ? "default" : "secondary"}>
-                          {user.verified ? 'Verified' : 'Unverified'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          {user.created_at 
-                            ? new Date(user.created_at).toLocaleDateString()
-                            : 'Unknown'
-                          }
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{user.full_name || 'No name'}</p>
+                          <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent 
-                            align="end" 
-                            className="w-56 max-h-[400px] overflow-y-auto z-50 bg-popover"
-                            sideOffset={5}
-                          >
-                            <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                setSelectedUser({
-                                  id: user.user_id,
-                                  email: user.email,
-                                  full_name: user.full_name,
-                                  role: user.role,
-                                  created_at: user.created_at,
-                                  exec_board_role: user.exec_board_role ?? null,
-                                  is_exec_board: !!user.is_exec_board,
-                                  avatar_url: user.avatar_url ?? null,
-                                  verified: !!user.verified,
-                                  is_admin: !!user.is_admin,
-                                  is_super_admin: !!user.is_super_admin,
-                                });
-                                setShowResetDialog(true);
-                              }}
-                            >
-                              <KeyRound className="h-4 w-4 mr-2 text-blue-500" />
-                              Reset Password
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 max-h-[300px] overflow-y-auto">
+                          <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedUser({
+                              id: user.user_id,
+                              email: user.email,
+                              full_name: user.full_name,
+                              role: user.role,
+                              created_at: user.created_at,
+                              exec_board_role: user.exec_board_role ?? null,
+                              is_exec_board: !!user.is_exec_board,
+                              avatar_url: user.avatar_url ?? null,
+                              verified: !!user.verified,
+                              is_admin: !!user.is_admin,
+                              is_super_admin: !!user.is_super_admin,
+                            });
+                            setShowResetDialog(true);
+                          }}>
+                            <KeyRound className="h-4 w-4 mr-2 text-blue-500" />
+                            Reset Password
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}>
+                            {user.verified ? (
+                              <><UserX className="h-4 w-4 mr-2 text-yellow-500" />Mark Unverified</>
+                            ) : (
+                              <><UserCheck className="h-4 w-4 mr-2 text-green-500" />Mark Verified</>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => {
+                            setSelectedUser({
+                              id: user.user_id!,
+                              email: user.email,
+                              full_name: user.full_name,
+                              role: user.role,
+                              created_at: user.created_at,
+                              exec_board_role: user.exec_board_role ?? null,
+                              is_exec_board: !!user.is_exec_board,
+                              avatar_url: user.avatar_url ?? null,
+                              verified: !!user.verified,
+                              is_admin: !!user.is_admin,
+                              is_super_admin: !!user.is_super_admin,
+                            });
+                            setDeleteDialogOpen(true);
+                          }} className="text-destructive">
+                            <Trash2 className="h-4 w-4 mr-2" />Delete User
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel>Change Role</DropdownMenuLabel>
+                          {['vip', 'guest', 'fan', 'student', 'member', 'alumna', 'executive', 'admin', 'super-admin'].map(r => (
+                            <DropdownMenuItem key={r} onClick={() => handleQuickRoleChange(user.user_id!, r)} disabled={user.role === r}>
+                              {getRoleIcon(r)}
+                              <span className="ml-2 capitalize">{r.replace('-', ' ')}</span>
                             </DropdownMenuItem>
-                            
-                            <DropdownMenuItem 
-                              onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}
-                            >
-                              {user.verified ? (
-                                <>
-                                  <UserX className="h-4 w-4 mr-2 text-yellow-500" />
-                                  Mark Unverified
-                                </>
-                              ) : (
-                                <>
-                                  <UserCheck className="h-4 w-4 mr-2 text-green-500" />
-                                  Mark Verified
-                                </>
-                              )}
-                            </DropdownMenuItem>
-                            
-                            <DropdownMenuItem 
-                              onClick={() => {
-                                setSelectedUser({
-                                  id: user.user_id!,
-                                  email: user.email,
-                                  full_name: user.full_name,
-                                  role: user.role,
-                                  created_at: user.created_at,
-                                  exec_board_role: user.exec_board_role ?? null,
-                                  is_exec_board: !!user.is_exec_board,
-                                  avatar_url: user.avatar_url ?? null,
-                                  verified: !!user.verified,
-                                  is_admin: !!user.is_admin,
-                                  is_super_admin: !!user.is_super_admin,
-                                });
-                                setDeleteDialogOpen(true);
-                              }}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete User
-                            </DropdownMenuItem>
-                            
-                            <DropdownMenuSeparator />
-                            <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'vip')}
-                              disabled={user.role === 'vip'}
-                            >
-                              <Star className="h-4 w-4 mr-2 text-yellow-500" />
-                              Make VIP
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'guest')}
-                              disabled={user.role === 'guest'}
-                            >
-                              <User className="h-4 w-4 mr-2" />
-                              Make Guest
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'fan')}
-                              disabled={user.role === 'fan'}
-                            >
-                              <UserX className="h-4 w-4 mr-2" />
-                              Make Fan
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'student')}
-                              disabled={user.role === 'student'}
-                            >
-                              <User className="h-4 w-4 mr-2" />
-                              Make Student
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'member')}
-                              disabled={user.role === 'member'}
-                            >
-                              <User className="h-4 w-4 mr-2" />
-                              Make Member
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'alumna')}
-                              disabled={user.role === 'alumna'}
-                            >
-                              <UserCheck className="h-4 w-4 mr-2" />
-                              Make Alumna
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'executive')}
-                              disabled={user.role === 'executive'}
-                            >
-                              <UserCog className="h-4 w-4 mr-2" />
-                              Make Executive
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'admin')}
-                              disabled={user.role === 'admin'}
-                            >
-                              <Shield className="h-4 w-4 mr-2" />
-                              Make Admin
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'super-admin')}
-                              disabled={user.role === 'super-admin'}
-                            >
-                              <Crown className="h-4 w-4 mr-2" />
-                              Make Super Admin
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleQuickRoleChange(user.user_id!, 'auditioner')}
-                              disabled={user.role === 'auditioner'}
-                            >
-                              <Calendar className="h-4 w-4 mr-2" />
-                              Make Auditioner
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      <Badge className={`${getRoleBadgeColor(user.role)} text-xs`}>
+                        {getRoleIcon(user.role)}
+                        <span className="ml-1">{user.role || 'No role'}</span>
+                      </Badge>
+                      {user.is_exec_board && (
+                        <Badge variant="outline" className="text-blue-600 border-blue-200 text-xs">
+                          {user.exec_board_role || 'Exec'}
+                        </Badge>
+                      )}
+                      <Badge variant={user.verified ? "default" : "secondary"} className="text-xs">
+                        {user.verified ? 'Verified' : 'Unverified'}
+                      </Badge>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden sm:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Executive Board</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Joined</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <User className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <div className="font-medium">
+                                {user.full_name || 'No name set'}
+                              </div>
+                              <div className="text-sm text-muted-foreground flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                {user.email}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getRoleBadgeColor(user.role)}>
+                            <div className="flex items-center gap-1">
+                              {getRoleIcon(user.role)}
+                              {user.role || 'No role'}
+                            </div>
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {user.is_exec_board ? (
+                            <Badge variant="outline" className="text-blue-600 border-blue-200">
+                              {user.exec_board_role || 'Executive'}
+                            </Badge>
+                          ) : (
+                            <span className="text-muted-foreground text-sm">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.verified ? "default" : "secondary"}>
+                            {user.verified ? 'Verified' : 'Unverified'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {user.created_at 
+                              ? new Date(user.created_at).toLocaleDateString()
+                              : 'Unknown'
+                            }
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent 
+                              align="end" 
+                              className="w-56 max-h-[400px] overflow-y-auto z-50 bg-popover"
+                              sideOffset={5}
+                            >
+                              <DropdownMenuLabel>Account Actions</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setSelectedUser({
+                                    id: user.user_id,
+                                    email: user.email,
+                                    full_name: user.full_name,
+                                    role: user.role,
+                                    created_at: user.created_at,
+                                    exec_board_role: user.exec_board_role ?? null,
+                                    is_exec_board: !!user.is_exec_board,
+                                    avatar_url: user.avatar_url ?? null,
+                                    verified: !!user.verified,
+                                    is_admin: !!user.is_admin,
+                                    is_super_admin: !!user.is_super_admin,
+                                  });
+                                  setShowResetDialog(true);
+                                }}
+                              >
+                                <KeyRound className="h-4 w-4 mr-2 text-blue-500" />
+                                Reset Password
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleVerificationToggle(user.user_id!, user.verified || false)}
+                              >
+                                {user.verified ? (
+                                  <>
+                                    <UserX className="h-4 w-4 mr-2 text-yellow-500" />
+                                    Mark Unverified
+                                  </>
+                                ) : (
+                                  <>
+                                    <UserCheck className="h-4 w-4 mr-2 text-green-500" />
+                                    Mark Verified
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuItem 
+                                onClick={() => {
+                                  setSelectedUser({
+                                    id: user.user_id!,
+                                    email: user.email,
+                                    full_name: user.full_name,
+                                    role: user.role,
+                                    created_at: user.created_at,
+                                    exec_board_role: user.exec_board_role ?? null,
+                                    is_exec_board: !!user.is_exec_board,
+                                    avatar_url: user.avatar_url ?? null,
+                                    verified: !!user.verified,
+                                    is_admin: !!user.is_admin,
+                                    is_super_admin: !!user.is_super_admin,
+                                  });
+                                  setDeleteDialogOpen(true);
+                                }}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete User
+                              </DropdownMenuItem>
+                              
+                              <DropdownMenuSeparator />
+                              <DropdownMenuLabel>Change Role</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'vip')}
+                                disabled={user.role === 'vip'}
+                              >
+                                <Star className="h-4 w-4 mr-2 text-yellow-500" />
+                                Make VIP
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'guest')}
+                                disabled={user.role === 'guest'}
+                              >
+                                <User className="h-4 w-4 mr-2" />
+                                Make Guest
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'fan')}
+                                disabled={user.role === 'fan'}
+                              >
+                                <UserX className="h-4 w-4 mr-2" />
+                                Make Fan
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'student')}
+                                disabled={user.role === 'student'}
+                              >
+                                <User className="h-4 w-4 mr-2" />
+                                Make Student
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'member')}
+                                disabled={user.role === 'member'}
+                              >
+                                <User className="h-4 w-4 mr-2" />
+                                Make Member
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'alumna')}
+                                disabled={user.role === 'alumna'}
+                              >
+                                <UserCheck className="h-4 w-4 mr-2" />
+                                Make Alumna
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'executive')}
+                                disabled={user.role === 'executive'}
+                              >
+                                <UserCog className="h-4 w-4 mr-2" />
+                                Make Executive
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'admin')}
+                                disabled={user.role === 'admin'}
+                              >
+                                <Shield className="h-4 w-4 mr-2" />
+                                Make Admin
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'super-admin')}
+                                disabled={user.role === 'super-admin'}
+                              >
+                                <Crown className="h-4 w-4 mr-2" />
+                                Make Super Admin
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleQuickRoleChange(user.user_id!, 'auditioner')}
+                                disabled={user.role === 'auditioner'}
+                              >
+                                <Calendar className="h-4 w-4 mr-2" />
+                                Make Auditioner
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
