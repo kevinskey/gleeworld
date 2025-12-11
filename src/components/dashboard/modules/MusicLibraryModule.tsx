@@ -25,7 +25,7 @@ export const MusicLibraryModule = () => {
   const [selectedMusicXML, setSelectedMusicXML] = useState<{ content: string; title: string } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const closeGuardUntilRef = React.useRef(0);
-  const itemsPerPage = 12; // Show 12 items per page
+  const itemsPerPage = 24; // Show 24 items per page (4 rows × 6 columns on desktop)
   const { toast } = useToast();
   const { isFavorite, toggleFavorite } = useFavorites();
 
