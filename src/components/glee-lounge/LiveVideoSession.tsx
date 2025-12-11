@@ -495,7 +495,7 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                 autoPlay
                 muted
                 playsInline
-                className={`w-full h-full object-cover ${!isVideoOn ? 'hidden' : ''}`}
+                className={`w-full h-full object-contain bg-black ${!isVideoOn ? 'hidden' : ''}`}
               />
               {!isVideoOn && (
                 <div className="absolute inset-0 flex items-center justify-center bg-muted">
