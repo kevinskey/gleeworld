@@ -54,14 +54,30 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
 
   // Load YouTube IFrame API
   useEffect(() => {
-    // Load the API script if not already present
-    if (!window.YT && !document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      console.log('[AudioCompanion] Loading YouTube IFrame API');
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    // Check if already fully loaded
+    if (window.YT?.Player) {
+      console.log('[AudioCompanion] YouTube API already loaded');
+      return;
     }
+    
+    // Check if script tag exists
+    const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
+    if (existingScript) {
+      console.log('[AudioCompanion] YouTube script tag exists, waiting for API');
+      return;
+    }
+    
+    console.log('[AudioCompanion] Loading YouTube IFrame API');
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    tag.async = true;
+    tag.onload = () => {
+      console.log('[AudioCompanion] YouTube script loaded');
+    };
+    tag.onerror = (e) => {
+      console.error('[AudioCompanion] Failed to load YouTube script:', e);
+    };
+    document.head.appendChild(tag);
   }, []);
 
   // Initialize YouTube player
@@ -158,25 +174,35 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
         console.log('[AudioCompanion] YouTube API ready, initializing player');
         if (pollInterval) clearInterval(pollInterval);
         setTimeout(initPlayer, 100);
+        return true;
       }
+      return false;
     };
 
     // If API already loaded, init immediately
-    if (window.YT?.Player) {
-      setTimeout(initPlayer, 100);
+    if (tryInit()) {
+      // Already initialized
     } else {
-      // Poll every 100ms for API readiness (max 5 seconds)
+      // Set up global callback as well
+      const existingCallback = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        console.log('[AudioCompanion] onYouTubeIframeAPIReady fired');
+        if (existingCallback) existingCallback();
+        tryInit();
+      };
+      
+      // Poll every 200ms for API readiness (max 10 seconds)
       let attempts = 0;
       pollInterval = window.setInterval(() => {
         attempts++;
-        if (window.YT?.Player) {
-          tryInit();
+        if (tryInit()) {
+          // Success
         } else if (attempts > 50) {
-          console.error('[AudioCompanion] YouTube API failed to load after 5 seconds');
+          console.error('[AudioCompanion] YouTube API failed to load after 10 seconds');
           if (pollInterval) clearInterval(pollInterval);
           setIsLoading(false);
         }
-      }, 100);
+      }, 200);
     }
 
     return () => {
@@ -367,16 +393,19 @@ export const AudioCompanion: React.FC<AudioCompanionProps> = ({ onClose, classNa
 
   return (
     <div className={cn("flex items-center gap-1.5 bg-card/95 backdrop-blur border border-border p-1 shadow-lg", className)}>
-      {/* Hidden YouTube player - needs minimum size to play, use opacity instead of visibility for browser compatibility */}
+      {/* Hidden YouTube player - keep on screen but clipped to allow playback */}
       <div 
         ref={youtubeContainerRef} 
-        className="fixed w-[178px] h-[100px]"
+        className="fixed overflow-hidden"
         style={{ 
-          opacity: 0, 
+          width: '1px',
+          height: '1px',
+          bottom: '0px',
+          right: '0px',
+          opacity: 0.01, // Near-invisible but not completely hidden
           pointerEvents: 'none',
-          top: '-9999px',
-          left: '-9999px',
-          zIndex: -1
+          zIndex: -1,
+          clip: 'rect(0, 1px, 1px, 0)',
         }}
       />
       
