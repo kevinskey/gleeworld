@@ -64,25 +64,28 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
       return;
     }
     
+    // Remove existing script and reload fresh to ensure our callback runs
     const existingScript = document.querySelector('script[src*="youtube.com/iframe_api"]');
-    if (!existingScript) {
-      console.log('[AudioContext] Loading YouTube IFrame API');
-      const tag = document.createElement('script');
-      tag.src = 'https://www.youtube.com/iframe_api';
-      tag.async = true;
-      document.head.appendChild(tag);
-    } else {
-      console.log('[AudioContext] YouTube script already exists, API ready:', typeof window.YT?.Player);
+    if (existingScript) {
+      console.log('[AudioContext] Removing existing YouTube script to reload fresh');
+      existingScript.remove();
+      // Clear partial YT object
+      if (window.YT && typeof window.YT.Player !== 'function') {
+        delete (window as any).YT;
+      }
     }
     
-    // Setup the callback for when API is ready (if not already fired)
-    if (!window.onYouTubeIframeAPIReady || typeof window.YT?.Player !== 'function') {
-      const originalCallback = window.onYouTubeIframeAPIReady;
-      window.onYouTubeIframeAPIReady = () => {
-        console.log('[AudioContext] onYouTubeIframeAPIReady fired!');
-        originalCallback?.();
-      };
-    }
+    console.log('[AudioContext] Loading YouTube IFrame API fresh');
+    
+    // Set up callback BEFORE loading script
+    window.onYouTubeIframeAPIReady = () => {
+      console.log('[AudioContext] onYouTubeIframeAPIReady fired! YT.Player:', typeof window.YT?.Player);
+    };
+    
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    tag.async = true;
+    document.head.appendChild(tag);
   }, []);
 
   // Initialize YouTube player when videoId changes
