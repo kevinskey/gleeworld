@@ -8,9 +8,10 @@ import { SocialFeed, SocialFeedRef } from '@/components/glee-lounge/SocialFeed';
 import { OnlineNowWidget } from '@/components/glee-lounge/OnlineNowWidget';
 import { OnlineSidebar } from '@/components/glee-lounge/OnlineSidebar';
 import { GleeLoungeWithMusicLibrary } from '@/components/glee-lounge/GleeLoungeWithMusicLibrary';
+import { LiveVideoSession } from '@/components/glee-lounge/LiveVideoSession';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Loader2, Sofa, Plus, Users, ArrowLeft, Music } from 'lucide-react';
+import { Loader2, Sofa, Plus, Users, ArrowLeft, Music, Radio } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfile {
@@ -25,6 +26,7 @@ export default function GleeLounge() {
   const [showMobileCreate, setShowMobileCreate] = useState(false);
   const [showMobileOnline, setShowMobileOnline] = useState(false);
   const [showMusicLibrary, setShowMusicLibrary] = useState(false);
+  const [showLiveVideo, setShowLiveVideo] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { onlineUsers, isConnected } = useGleeLoungePresence();
@@ -145,6 +147,15 @@ export default function GleeLounge() {
           {/* Right side actions */}
           <div className="flex items-center gap-2">
             <Button
+              variant="default"
+              size="sm"
+              onClick={() => setShowLiveVideo(true)}
+              className="gap-2 bg-red-600 hover:bg-red-700"
+            >
+              <Radio className="h-4 w-4" />
+              <span className="hidden sm:inline">Go Live</span>
+            </Button>
+            <Button
               variant="outline"
               size="sm"
               onClick={() => setShowMusicLibrary(true)}
@@ -246,5 +257,15 @@ export default function GleeLounge() {
     </div>
   );
 
-  return loungeContent;
+  return (
+    <>
+      {loungeContent}
+      {showLiveVideo && (
+        <LiveVideoSession
+          userProfile={userProfile}
+          onClose={() => setShowLiveVideo(false)}
+        />
+      )}
+    </>
+  );
 }
