@@ -104,6 +104,7 @@ import { ConcertTicketRequestsModule } from '@/components/modules/ConcertTicketR
 import ExitInterviewsModule from '@/components/modules/ExitInterviewsModule';
 import ExecBoardInterviewsModule from '@/components/modules/ExecBoardInterviewsModule';
 import TreeLightingSurveyModule from '@/components/modules/TreeLightingSurveyModule';
+import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
 import { GleeLoungeAnalyticsModule } from '@/components/modules/GleeLoungeAnalyticsModule';
 import StipendPaymentModule from '@/components/modules/StipendPaymentModule';
 
@@ -993,6 +994,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: ExecBoardInterviewsModule,
     dbFunctionName: "exec-board-interviews",
+    requiredRoles: ["admin", "super-admin"]
+  },
+  {
+    id: "member-dossiers",
+    name: "member-dossiers",
+    title: "Member Dossiers",
+    description: "View comprehensive member profiles with exit interviews, goals, and satisfaction data",
+    icon: Users,
+    iconColor: "indigo",
+    category: "member-management",
+    isActive: true,
+    component: MemberDossiersModule,
+    dbFunctionName: "member-dossiers",
     requiredRoles: ["admin", "super-admin"]
   },
   {
