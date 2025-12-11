@@ -183,9 +183,9 @@ export const MusicLibrary = () => {
   // Desktop layout with resizable panels
   return <>
       <MusicLibraryHeader />
-      <div className="w-full overflow-hidden page-container">
+      <div className="w-full overflow-hidden px-0">
         {/* Desktop resizable layout */}
-        <PanelGroup direction="horizontal" className="min-h-[calc(100vh-8rem)] lg:h-[calc(100vh-5rem)]">
+        <PanelGroup direction="horizontal" className="min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-3rem)]">
           {/* Left column - Library sections */}
           {!leftColumnCollapsed && (
             <>
@@ -305,8 +305,8 @@ export const MusicLibrary = () => {
               </div>
             )}
             
-            <div className="flex items-center justify-between mb-1 md:mb-4 px-1 lg:px-0">
-              <h2 className="page-header">PDF Viewer</h2>
+            <div className="flex items-center justify-between mb-1 px-1 lg:px-0">
+              <h2 className="text-sm font-semibold">PDF Viewer</h2>
               <div className="flex items-center gap-2">
                 {selectedPdf && (
                   <Button 

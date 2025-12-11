@@ -809,7 +809,7 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
     <Card className={cn("w-full", className)}>
       {/* Annotation Toolbar */}
         {annotationMode && (
-          <div className="flex flex-wrap items-center gap-1.5 p-1.5 sm:gap-2 sm:p-2 bg-muted/50 rounded-t-lg border-b">
+          <div className="flex flex-wrap items-center gap-1 p-1 bg-muted/50 rounded-t-lg border-b">
             {/* Save Button */}
             {hasAnnotations && (
               <Button
@@ -1000,24 +1000,24 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           )}
 
           {!annotationMode && (
-            <div className="absolute top-3 right-3 z-30 flex items-center gap-2 flex-wrap justify-end">
+            <div className="absolute top-1 right-1 z-30 flex items-center gap-1 flex-wrap justify-end">
               {/* Zoom Controls */}
-              <div className="flex items-center gap-1 bg-card/95 backdrop-blur border border-border p-1 shadow-lg">
+              <div className="flex items-center gap-0.5 bg-card/95 backdrop-blur border border-border p-0.5 shadow-lg rounded">
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={handleScaleZoomOut}
                   disabled={scale <= 0.5}
-                  className="h-8 w-8 p-0"
+                  className="h-6 w-6 p-0"
                   title="Zoom out"
                 >
-                  <ZoomOut className="h-4 w-4" />
+                  <ZoomOut className="h-3.5 w-3.5" />
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={handleScaleReset}
-                  className="h-8 px-2 text-xs font-medium"
+                  className="h-6 px-1.5 text-xs font-medium"
                   title="Reset zoom"
                 >
                   {Math.round(scale * 100)}%
@@ -1027,10 +1027,10 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
                   variant="ghost"
                   onClick={handleScaleZoomIn}
                   disabled={scale >= 3}
-                  className="h-8 w-8 p-0"
+                  className="h-6 w-6 p-0"
                   title="Zoom in"
                 >
-                  <ZoomIn className="h-4 w-4" />
+                  <ZoomIn className="h-3.5 w-3.5" />
                 </Button>
               </div>
               
