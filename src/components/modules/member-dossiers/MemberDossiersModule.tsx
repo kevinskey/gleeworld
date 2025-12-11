@@ -359,7 +359,7 @@ const MemberDossiersModule: React.FC = () => {
                         {membersWithoutInterviews.map((member, i) => (
                           <tr key={member.profile.user_id} className="border-t hover:bg-muted/50">
                             <td className="p-3 text-muted-foreground">{i + 1}</td>
-                            <td className="p-3 font-medium">{member.profile.full_name || `${member.profile.first_name} ${member.profile.last_name}`}</td>
+                            <td className="p-3 font-medium text-foreground">{member.profile.full_name || `${member.profile.first_name} ${member.profile.last_name}`}</td>
                             <td className="p-3 text-muted-foreground">{member.profile.email}</td>
                             <td className="p-3 text-muted-foreground">{member.profile.voice_part || '-'}</td>
                           </tr>
