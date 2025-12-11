@@ -1,8 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Rnd } from 'react-rnd';
 import { X, Minimize2, Maximize2, GripHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface FloatingYouTubePlayerProps {
@@ -22,18 +21,6 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
     x: Math.max(20, window.innerWidth - 420), 
     y: Math.max(20, window.innerHeight - 340) 
   });
-
-  const handleMinimize = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setIsMinimized(prev => !prev);
-  }, []);
-
-  const handleClose = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    onClose();
-  }, [onClose]);
 
   const content = (
     <Rnd
@@ -74,25 +61,33 @@ const FloatingYouTubePlayer: React.FC<FloatingYouTubePlayerProps> = ({
             <GripHorizontal className="h-4 w-4 opacity-60" />
             <span className="text-sm font-medium truncate max-w-[200px]">{title}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-primary-foreground hover:bg-primary-foreground/20 no-drag"
-              onClick={handleMinimize}
+          <div className="flex items-center gap-1" style={{ pointerEvents: 'auto' }}>
+            <button
+              type="button"
+              className="h-6 w-6 flex items-center justify-center text-primary-foreground hover:bg-primary-foreground/20 rounded"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setIsMinimized(prev => !prev);
+              }}
               onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
             >
               {isMinimized ? <Maximize2 className="h-3.5 w-3.5" /> : <Minimize2 className="h-3.5 w-3.5" />}
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-primary-foreground hover:bg-destructive hover:text-destructive-foreground no-drag"
-              onClick={handleClose}
+            </button>
+            <button
+              type="button"
+              className="h-6 w-6 flex items-center justify-center text-primary-foreground hover:bg-destructive hover:text-destructive-foreground rounded"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onClose();
+              }}
               onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
             >
               <X className="h-3.5 w-3.5" />
-            </Button>
+            </button>
           </div>
         </div>
 
