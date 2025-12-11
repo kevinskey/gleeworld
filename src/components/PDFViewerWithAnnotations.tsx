@@ -932,6 +932,24 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
               </Button>
             </div>
 
+            {/* Audio Companion in annotation mode */}
+            <div className="flex items-center border-l pl-1.5 sm:pl-2 ml-1">
+              {showAudioCompanion ? (
+                <AudioCompanionControls onClose={() => setShowAudioCompanion(false)} />
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAudioCompanion(true)}
+                  className="h-7 px-1.5 sm:h-8 sm:px-2"
+                  title="Listen along with audio"
+                >
+                  <Music className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="text-xs hidden sm:inline">Listen</span>
+                </Button>
+              )}
+            </div>
+
             {/* Actions */}
             <div className="flex gap-0.5 sm:gap-1 ml-auto">
               <Button
