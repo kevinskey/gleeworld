@@ -9,15 +9,24 @@ import { OnlineNowWidget } from '@/components/glee-lounge/OnlineNowWidget';
 import { OnlineSidebar } from '@/components/glee-lounge/OnlineSidebar';
 import { GleeLoungeWithMusicLibrary } from '@/components/glee-lounge/GleeLoungeWithMusicLibrary';
 import { LiveVideoSession } from '@/components/glee-lounge/LiveVideoSession';
+import { ActiveVideoSessions } from '@/components/glee-lounge/video-sessions/ActiveVideoSessions';
+import { CreateVideoSessionDialog } from '@/components/glee-lounge/video-sessions/CreateVideoSessionDialog';
+import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/VideoSessionViewer';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Loader2, Sofa, Plus, Users, ArrowLeft, Music, Radio } from 'lucide-react';
+import { Loader2, Sofa, Plus, Users, ArrowLeft, Music, Radio, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfile {
   user_id: string;
   full_name: string;
   avatar_url: string | null;
+}
+
+interface ActiveSession {
+  id: string;
+  roomName: string;
+  isRecording: boolean;
 }
 
 export default function GleeLounge() {
@@ -27,6 +36,8 @@ export default function GleeLounge() {
   const [showMobileOnline, setShowMobileOnline] = useState(false);
   const [showMusicLibrary, setShowMusicLibrary] = useState(false);
   const [showLiveVideo, setShowLiveVideo] = useState(false);
+  const [showCreateVideoSession, setShowCreateVideoSession] = useState(false);
+  const [activeVideoSession, setActiveVideoSession] = useState<ActiveSession | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { onlineUsers, isConnected } = useGleeLoungePresence();
@@ -149,6 +160,15 @@ export default function GleeLounge() {
             <Button
               variant="default"
               size="sm"
+              onClick={() => setShowCreateVideoSession(true)}
+              className="gap-1.5 bg-primary hover:bg-primary/90"
+            >
+              <Video className="h-4 w-4" />
+              <span>Video Session</span>
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
               onClick={() => setShowLiveVideo(true)}
               className="gap-1.5 bg-red-600 hover:bg-red-700 text-white"
             >
@@ -184,12 +204,20 @@ export default function GleeLounge() {
           </div>
         </div>
 
-        {/* Mobile: Go Live button row */}
-        <div className="sm:hidden px-4 pb-3">
+        {/* Mobile: Action buttons row */}
+        <div className="sm:hidden px-4 pb-3 flex gap-2">
+          <Button
+            variant="default"
+            onClick={() => setShowCreateVideoSession(true)}
+            className="flex-1 gap-2"
+          >
+            <Video className="h-4 w-4" />
+            <span>Video Session</span>
+          </Button>
           <Button
             variant="default"
             onClick={() => setShowLiveVideo(true)}
-            className="w-full gap-2 bg-red-600 hover:bg-red-700 text-white"
+            className="flex-1 gap-2 bg-red-600 hover:bg-red-700 text-white"
           >
             <Radio className="h-4 w-4" />
             <span>Go Live</span>
@@ -225,6 +253,14 @@ export default function GleeLounge() {
               </div>
             </SheetContent>
           </Sheet>
+        </div>
+
+        {/* Active Video Sessions */}
+        <div className="mb-6">
+          <ActiveVideoSessions
+            onJoinSession={(id, room, isRec) => setActiveVideoSession({ id, roomName: room, isRecording: isRec })}
+            onCreateSession={() => setShowCreateVideoSession(true)}
+          />
         </div>
 
         <div className="flex gap-6">
@@ -283,10 +319,31 @@ export default function GleeLounge() {
   return (
     <>
       {loungeContent}
+      
+      {/* Solo Live Video */}
       {showLiveVideo && (
         <LiveVideoSession
           userProfile={userProfile}
           onClose={() => setShowLiveVideo(false)}
+        />
+      )}
+      
+      {/* Create Video Session Dialog */}
+      <CreateVideoSessionDialog
+        open={showCreateVideoSession}
+        onOpenChange={setShowCreateVideoSession}
+        onSessionCreated={(id, roomName) => {
+          setActiveVideoSession({ id, roomName, isRecording: false });
+        }}
+      />
+      
+      {/* Active Video Session Viewer */}
+      {activeVideoSession && (
+        <VideoSessionViewer
+          sessionId={activeVideoSession.id}
+          roomName={activeVideoSession.roomName}
+          isRecordingEnabled={activeVideoSession.isRecording}
+          onClose={() => setActiveVideoSession(null)}
         />
       )}
     </>
