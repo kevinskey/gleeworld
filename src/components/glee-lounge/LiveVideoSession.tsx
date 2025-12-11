@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Video,
   VideoOff,
@@ -19,6 +20,7 @@ import {
   Send,
   Radio,
   Loader2,
+  MessageCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -38,6 +40,15 @@ interface Member {
   avatar_url: string | null;
 }
 
+interface ChatMessage {
+  id: string;
+  user_id: string;
+  user_name: string;
+  avatar_url: string | null;
+  message: string;
+  timestamp: Date;
+}
+
 export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps) => {
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
@@ -49,11 +60,16 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
   const [searchQuery, setSearchQuery] = useState('');
   const [invitedMembers, setInvitedMembers] = useState<Member[]>([]);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [sidebarTab, setSidebarTab] = useState<'chat' | 'invite'>('chat');
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const chatChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   // Fetch members for invitation
@@ -104,6 +120,60 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
       }
     };
   }, [toast]);
+
+  // Setup live chat channel
+  useEffect(() => {
+    if (!userProfile?.user_id) return;
+
+    const channelName = `live-chat-${userProfile.user_id}`;
+    const channel = supabase.channel(channelName);
+    
+    channel
+      .on('broadcast', { event: 'chat_message' }, (payload) => {
+        const msg = payload.payload as ChatMessage;
+        setChatMessages(prev => [...prev, { ...msg, timestamp: new Date(msg.timestamp) }]);
+        // Auto-scroll to bottom
+        setTimeout(() => {
+          chatScrollRef.current?.scrollTo({ top: chatScrollRef.current.scrollHeight, behavior: 'smooth' });
+        }, 100);
+      })
+      .subscribe();
+
+    chatChannelRef.current = channel;
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userProfile?.user_id]);
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim() || !userProfile || !chatChannelRef.current) return;
+
+    const message: ChatMessage = {
+      id: crypto.randomUUID(),
+      user_id: userProfile.user_id,
+      user_name: userProfile.full_name,
+      avatar_url: userProfile.avatar_url,
+      message: chatInput.trim(),
+      timestamp: new Date(),
+    };
+
+    // Broadcast to channel
+    await chatChannelRef.current.send({
+      type: 'broadcast',
+      event: 'chat_message',
+      payload: message,
+    });
+
+    // Add to local messages
+    setChatMessages(prev => [...prev, message]);
+    setChatInput('');
+    
+    // Auto-scroll to bottom
+    setTimeout(() => {
+      chatScrollRef.current?.scrollTo({ top: chatScrollRef.current.scrollHeight, behavior: 'smooth' });
+    }, 100);
+  };
 
   const toggleVideo = () => {
     if (streamRef.current) {
@@ -491,76 +561,87 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
               </div>
             </div>
 
-            {/* Sidebar - Invite Members */}
-            <div className="w-full lg:w-72 border-t lg:border-t-0 lg:border-l">
-              <div className="p-3 border-b">
-                <Button
-                  variant="outline"
-                  className="w-full gap-2"
-                  onClick={() => setShowInvite(!showInvite)}
-                  disabled={isUploading}
-                >
-                  <UserPlus className="h-4 w-4" />
-                  Invite Members
-                </Button>
-              </div>
+            {/* Sidebar - Chat & Invite */}
+            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l flex flex-col h-[300px] lg:h-auto">
+              <Tabs value={sidebarTab} onValueChange={(v) => setSidebarTab(v as 'chat' | 'invite')} className="flex flex-col h-full">
+                <TabsList className="grid w-full grid-cols-2 m-2 mx-2" style={{ width: 'calc(100% - 16px)' }}>
+                  <TabsTrigger value="chat" className="gap-1">
+                    <MessageCircle className="h-4 w-4" />
+                    Chat
+                  </TabsTrigger>
+                  <TabsTrigger value="invite" className="gap-1">
+                    <UserPlus className="h-4 w-4" />
+                    Invite
+                  </TabsTrigger>
+                </TabsList>
 
-              {showInvite ? (
-                <div className="p-3 space-y-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search members..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-9"
-                    />
-                  </div>
-                  <ScrollArea className="h-48">
-                    <div className="space-y-1">
-                      {filteredMembers.map((member) => (
-                        <div
-                          key={member.user_id}
-                          className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted cursor-pointer"
-                          onClick={() => toggleMemberSelection(member.user_id)}
-                        >
-                          <Checkbox checked={selectedMembers.includes(member.user_id)} />
-                          <Avatar className="h-8 w-8">
-                            <AvatarImage src={member.avatar_url || ''} />
-                            <AvatarFallback className="text-xs">
-                              {member.full_name?.charAt(0) || 'M'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm truncate flex-1">{member.full_name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                  {selectedMembers.length > 0 && (
-                    <Button className="w-full gap-2" onClick={handleInviteMembers}>
-                      <Send className="h-4 w-4" />
-                      Invite ({selectedMembers.length})
-                    </Button>
-                  )}
-                </div>
-              ) : (
-                <div className="p-3">
-                  <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
-                    <Users className="h-4 w-4" />
-                    <span>Invited ({invitedMembers.length})</span>
-                  </div>
-                  <ScrollArea className="h-48">
-                    {invitedMembers.length === 0 ? (
+                <TabsContent value="chat" className="flex-1 flex flex-col m-0 p-0 overflow-hidden">
+                  {/* Chat Messages */}
+                  <div ref={chatScrollRef} className="flex-1 overflow-y-auto p-3 space-y-3">
+                    {chatMessages.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-8">
-                        No members invited yet
+                        No messages yet. Start the conversation!
                       </p>
                     ) : (
-                      <div className="space-y-2">
-                        {invitedMembers.map((member) => (
+                      chatMessages.map((msg) => (
+                        <div key={msg.id} className={`flex gap-2 ${msg.user_id === userProfile?.user_id ? 'flex-row-reverse' : ''}`}>
+                          <Avatar className="h-7 w-7 flex-shrink-0">
+                            <AvatarImage src={msg.avatar_url || ''} />
+                            <AvatarFallback className="text-xs">
+                              {msg.user_name?.charAt(0) || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className={`max-w-[75%] ${msg.user_id === userProfile?.user_id ? 'items-end' : 'items-start'}`}>
+                            <p className={`text-xs text-muted-foreground mb-0.5 ${msg.user_id === userProfile?.user_id ? 'text-right' : ''}`}>
+                              {msg.user_name}
+                            </p>
+                            <div className={`rounded-lg px-3 py-1.5 text-sm ${
+                              msg.user_id === userProfile?.user_id 
+                                ? 'bg-primary text-primary-foreground' 
+                                : 'bg-muted'
+                            }`}>
+                              {msg.message}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {/* Chat Input */}
+                  <div className="p-3 border-t flex gap-2">
+                    <Input
+                      placeholder="Type a message..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && sendChatMessage()}
+                      disabled={isUploading}
+                    />
+                    <Button size="icon" onClick={sendChatMessage} disabled={!chatInput.trim() || isUploading}>
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="invite" className="flex-1 overflow-hidden m-0 p-0">
+                  <div className="p-3 space-y-3 h-full flex flex-col">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search members..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <ScrollArea className="flex-1">
+                      <div className="space-y-1">
+                        {filteredMembers.map((member) => (
                           <div
                             key={member.user_id}
-                            className="flex items-center gap-2 p-2 rounded-lg bg-muted/50"
+                            className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted cursor-pointer"
+                            onClick={() => toggleMemberSelection(member.user_id)}
                           >
+                            <Checkbox checked={selectedMembers.includes(member.user_id)} />
                             <Avatar className="h-8 w-8">
                               <AvatarImage src={member.avatar_url || ''} />
                               <AvatarFallback className="text-xs">
@@ -568,14 +649,22 @@ export const LiveVideoSession = ({ userProfile, onClose }: LiveVideoSessionProps
                               </AvatarFallback>
                             </Avatar>
                             <span className="text-sm truncate flex-1">{member.full_name}</span>
-                            <Badge variant="outline" className="text-xs">Invited</Badge>
+                            {invitedMembers.find(i => i.user_id === member.user_id) && (
+                              <Badge variant="outline" className="text-xs">Invited</Badge>
+                            )}
                           </div>
                         ))}
                       </div>
+                    </ScrollArea>
+                    {selectedMembers.length > 0 && (
+                      <Button className="w-full gap-2" onClick={handleInviteMembers}>
+                        <Send className="h-4 w-4" />
+                        Invite ({selectedMembers.length})
+                      </Button>
                     )}
-                  </ScrollArea>
-                </div>
-              )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </CardContent>
