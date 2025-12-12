@@ -28,7 +28,7 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
-  const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB
+  const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB - Supabase storage limit
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const audioFiles = acceptedFiles.filter(file => 
@@ -111,98 +111,50 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
     };
   };
 
-  const LARGE_FILE_THRESHOLD = 50 * 1024 * 1024; // 50MB - use edge function for larger files
+  const uploadFileToStorage = async (file: File, fileName: string): Promise<string> => {
+    // Check file size before attempting upload
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error(`File size (${Math.round(file.size / 1024 / 1024)}MB) exceeds maximum allowed size of 100MB`);
+    }
 
-  const uploadLargeFile = async (file: File, fileName: string): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('bucket', 'user-files');
-    formData.append('fileName', `audio-tracks/${fileName}`);
-
-    const { data: { session } } = await supabase.auth.getSession();
+    const filePath = `audio-tracks/${fileName}`;
     
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-large-file`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
-        },
-        body: formData,
-      }
-    );
+    // Use direct Supabase storage upload (handles large files up to 100MB)
+    const { error: uploadError } = await supabase.storage
+      .from('user-files')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Upload failed');
+    if (uploadError) {
+      throw uploadError;
     }
 
-    const { jobId } = await response.json();
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('user-files')
+      .getPublicUrl(filePath);
 
-    // Poll for completion
-    let attempts = 0;
-    const maxAttempts = 120; // 2 minutes max
-    while (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const { data: job } = await supabase
-        .from('upload_jobs')
-        .select('status, url, error')
-        .eq('job_id', jobId)
-        .single();
-
-      if (job?.status === 'completed' && job.url) {
-        return job.url;
-      } else if (job?.status === 'failed') {
-        throw new Error(job.error || 'Upload failed');
-      }
-      attempts++;
-    }
-    throw new Error('Upload timed out');
+    return publicUrl;
   };
 
-  const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
-    const { file } = uploadFile;
+  const processFile = async (uploadFile: UploadFile): Promise<void> => {
+    const file = uploadFile.file;
+    const fileName = `radio-upload-${Date.now()}-${Math.random().toString(36).substring(7)}.${file.name.split('.').pop()}`;
     
     try {
-      // Update status to uploading
+      // Update progress to show upload starting
       setUploadFiles(prev => prev.map(f => 
-        f.id === uploadFile.id ? { ...f, status: 'uploading', progress: 0 } : f
+        f.id === uploadFile.id ? { ...f, status: 'uploading' as const, progress: 10 } : f
       ));
 
-      // Generate unique filename
-      const timestamp = Date.now();
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `radio-upload-${timestamp}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
+      // Direct upload to Supabase Storage (works for files up to 100MB)
+      const publicUrl = await uploadFileToStorage(file, fileName);
       
-      let publicUrl: string;
-
-      if (file.size > LARGE_FILE_THRESHOLD) {
-        // Use edge function for large files
-        setUploadFiles(prev => prev.map(f => 
-          f.id === uploadFile.id ? { ...f, progress: 10 } : f
-        ));
-        publicUrl = await uploadLargeFile(file, fileName);
-      } else {
-        // Direct upload for smaller files
-        const { error: uploadError } = await supabase.storage
-          .from('user-files')
-          .upload(`audio-tracks/${fileName}`, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl: url } } = supabase.storage
-          .from('user-files')
-          .getPublicUrl(`audio-tracks/${fileName}`);
-        publicUrl = url;
-      }
-
       // Update progress
       setUploadFiles(prev => prev.map(f => 
-        f.id === uploadFile.id ? { ...f, progress: 50, status: 'processing' } : f
+        f.id === uploadFile.id ? { ...f, status: 'processing' as const, progress: 50 } : f
       ));
 
       // Extract metadata from filename
@@ -231,18 +183,18 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
       setUploadFiles(prev => prev.map(f => 
         f.id === uploadFile.id ? { 
           ...f, 
-          status: 'completed', 
+          status: 'completed' as const, 
           progress: 100,
           trackId: trackData.id 
         } : f
       ));
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload error:', error);
       setUploadFiles(prev => prev.map(f => 
         f.id === uploadFile.id ? { 
           ...f, 
-          status: 'error', 
+          status: 'error' as const, 
           error: error instanceof Error ? error.message : 'Upload failed'
         } : f
       ));
@@ -259,7 +211,7 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
       
       for (let i = 0; i < pendingFiles.length; i += batchSize) {
         const batch = pendingFiles.slice(i, i + batchSize);
-        await Promise.all(batch.map(uploadFile));
+        await Promise.all(batch.map(processFile));
       }
 
       const completedCount = uploadFiles.filter(f => f.status === 'completed').length;
