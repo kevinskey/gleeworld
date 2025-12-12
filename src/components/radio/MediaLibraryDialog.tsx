@@ -51,7 +51,7 @@ export const MediaLibraryDialog = ({
             </div>
           </DialogTitle>
         </DialogHeader>
-        <div className="overflow-y-auto">
+        <div className="overflow-y-auto max-h-[calc(80vh-100px)]">
           <MediaLibrary
             onAddToPlaylist={onAddToPlaylist}
             onPlayTrack={onPlayTrack}
