@@ -77,7 +77,7 @@ export const MusicLibrary = () => {
     const viewScoreId = searchParams.get('view');
     
     if (viewScoreId) {
-      // Fetch the score and open it
+      // Fetch the score and open it in-app (not full viewer mode)
       const fetchAndOpenScore = async () => {
         try {
           const { data: score, error } = await supabase
@@ -97,7 +97,14 @@ export const MusicLibrary = () => {
           }
           
           if (score && score.pdf_url) {
-            handlePdfSelect(score.pdf_url, score.title, score.id);
+            // Set PDF directly without triggering mobile full-screen mode
+            setSelectedPdf({
+              url: score.pdf_url,
+              title: score.title,
+              id: score.id
+            });
+            // Keep mobile in library view (shows PDF in embedded panel)
+            // Don't switch to full viewer mode
             // Clear the query param to avoid re-triggering
             navigate('/music-library', { replace: true });
           } else {
