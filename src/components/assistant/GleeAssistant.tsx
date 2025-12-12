@@ -45,8 +45,20 @@ export const GleeAssistant = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const wakeWordRecognitionRef = useRef<any>(null);
+  // Refs to track current state for use in callbacks (avoids stale closures)
+  const isWakeWordActiveRef = useRef(isWakeWordActive);
+  const isOpenRef = useRef(isOpen);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    isWakeWordActiveRef.current = isWakeWordActive;
+  }, [isWakeWordActive]);
+
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
 
   // Initialize wake word detection (always listening for "Hey Glee")
   useEffect(() => {
@@ -104,9 +116,10 @@ export const GleeAssistant = () => {
         if (event.error !== 'no-speech' && event.error !== 'aborted') {
           // Restart wake word listening after error
           setTimeout(() => {
-            if (isWakeWordActive && wakeWordRecognitionRef.current) {
+            if (isWakeWordActiveRef.current && wakeWordRecognitionRef.current) {
               try {
                 wakeWordRecognitionRef.current.start();
+                setWakeWordStatus('listening');
               } catch (e) {
                 console.log('Could not restart wake word recognition');
               }
@@ -116,16 +129,17 @@ export const GleeAssistant = () => {
       };
 
       wakeWordRecognitionRef.current.onend = () => {
-        console.log('Wake word recognition ended');
+        console.log('Wake word recognition ended, isWakeWordActive:', isWakeWordActiveRef.current, 'isOpen:', isOpenRef.current);
         // Restart if wake word mode is still active and assistant is closed
-        if (isWakeWordActive && !isOpen) {
+        if (isWakeWordActiveRef.current && !isOpenRef.current) {
           setTimeout(() => {
-            if (wakeWordRecognitionRef.current && isWakeWordActive) {
+            if (wakeWordRecognitionRef.current && isWakeWordActiveRef.current) {
               try {
                 wakeWordRecognitionRef.current.start();
                 setWakeWordStatus('listening');
+                console.log('Wake word listening restarted');
               } catch (e) {
-                console.log('Could not restart wake word recognition');
+                console.log('Could not restart wake word recognition:', e);
               }
             }
           }, 500);
