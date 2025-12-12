@@ -149,28 +149,41 @@ export const RadioScheduleTimeline = ({
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
     setIsDraggingOver(true);
   };
 
-  const handleDragLeave = () => {
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsDraggingOver(false);
   };
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDraggingOver(false);
 
     // Handle JSON track data from internal drag
     try {
       const trackData = e.dataTransfer.getData('application/json');
+      console.log('Drop received, trackData:', trackData);
       if (trackData) {
         const track = JSON.parse(trackData);
+        console.log('Parsed track:', track);
         if (track.mediaId) {
           await requestSong(track.mediaId, track.title);
+        } else {
+          console.warn('No mediaId in dropped track data');
+          toast({ title: "Invalid Track", description: "Track data missing media ID", variant: "destructive" });
         }
+      } else {
+        console.warn('No application/json data in drop event');
       }
     } catch (err) {
       console.error('Failed to parse track data:', err);
+      toast({ title: "Drop Error", description: "Failed to process dropped track", variant: "destructive" });
     }
   };
 
@@ -427,12 +440,16 @@ export const RadioScheduleTimeline = ({
                       key={media.id}
                       draggable
                       onDragStart={(e) => {
-                        e.dataTransfer.setData('application/json', JSON.stringify({
+                        const data = JSON.stringify({
                           mediaId: media.id,
                           title: media.title,
                           artist: media.artist,
                           duration: media.duration
-                        }));
+                        });
+                        e.dataTransfer.setData('application/json', data);
+                        e.dataTransfer.setData('text/plain', data);
+                        e.dataTransfer.effectAllowed = 'copy';
+                        console.log('Drag started for media:', media.id, media.title);
                       }}
                       onClick={() => requestSong(media.id, media.title)}
                       className="flex items-center gap-2 p-2 bg-slate-800/30 rounded cursor-pointer hover:bg-slate-700/50 transition-colors"
