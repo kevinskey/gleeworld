@@ -17,6 +17,7 @@ import { DesignSystemEnforcer } from "@/components/ui/design-system-enforcer";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { SplashWrapper } from "@/components/splash/SplashWrapper";
 import { LiveInvitePopup } from "@/components/glee-lounge/LiveInvitePopup";
+import { GleeAssistant } from "@/components/assistant/GleeAssistant";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -323,6 +324,7 @@ const App = () => {
                   <Toaster />
                   <Sonner />
                   <LiveInvitePopup />
+                  <GleeAssistant />
                   <DesignSystemEnforcer />
                   <Suspense fallback={<LoadingSpinner size="lg" text="Loading..." />}>
                     <Routes>
