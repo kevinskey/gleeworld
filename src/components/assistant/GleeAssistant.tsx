@@ -7,18 +7,17 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { 
-  MessageCircle, 
   X, 
   Send, 
   Mic, 
   MicOff, 
   Loader2,
-  Bot,
   User,
   ExternalLink,
   Music
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import gleeAssistantAvatar from '@/assets/glee-assistant-avatar.png';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -200,9 +199,9 @@ export const GleeAssistant = () => {
           "transition-all duration-300 hover:scale-110",
           isOpen && "hidden"
         )}
-        style={{ zIndex: 9999 }}
+        style={{ zIndex: 9999, padding: 0, overflow: 'hidden' }}
       >
-        <Bot className="h-6 w-6" />
+        <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
       </Button>
 
       {/* Chat Panel */}
@@ -211,7 +210,7 @@ export const GleeAssistant = () => {
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
             <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
+              <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-6 w-6 rounded-full object-cover" />
               <span className="font-semibold">Glee Assistant</span>
             </div>
             <Button
@@ -228,7 +227,7 @@ export const GleeAssistant = () => {
           <ScrollArea ref={scrollRef} className="flex-1 p-4">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground text-sm py-8">
-                <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-16 w-16 mx-auto mb-3 rounded-full opacity-80" />
                 <p className="font-medium">Hi! I'm your Glee Assistant.</p>
                 <p className="mt-1">Ask me to open a score, check assignments, or navigate anywhere!</p>
                 <div className="mt-4 space-y-2 text-xs">
@@ -249,8 +248,8 @@ export const GleeAssistant = () => {
                     )}
                   >
                     {msg.role === 'assistant' && (
-                      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Bot className="h-4 w-4 text-primary" />
+                      <div className="h-7 w-7 rounded-full overflow-hidden flex-shrink-0">
+                        <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
                       </div>
                     )}
                     <div
@@ -291,8 +290,8 @@ export const GleeAssistant = () => {
                 ))}
                 {isLoading && (
                   <div className="flex gap-2">
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-primary" />
+                    <div className="h-7 w-7 rounded-full overflow-hidden">
+                      <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
                     </div>
                     <div className="bg-muted rounded-lg px-3 py-2">
                       <Loader2 className="h-4 w-4 animate-spin" />
