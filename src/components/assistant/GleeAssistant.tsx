@@ -194,12 +194,12 @@ export const GleeAssistant = () => {
       <Button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg",
+          "fixed bottom-6 right-6 rounded-full shadow-lg",
           "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
           "transition-all duration-300 hover:scale-110",
           isOpen && "hidden"
         )}
-        style={{ zIndex: 9999, padding: 0, overflow: 'hidden' }}
+        style={{ zIndex: 9999, padding: 0, overflow: 'hidden', width: '72px', height: '72px' }}
       >
         <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
       </Button>
