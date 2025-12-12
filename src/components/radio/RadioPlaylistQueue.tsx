@@ -439,23 +439,54 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
         return;
       }
 
-      // Get AzuraCast media library to match tracks
-      const azuraMedia = await azuraCastService.getAllMedia();
+      toast({
+        title: 'Syncing...',
+        description: 'Uploading tracks to AzuraCast and building queue',
+      });
+
+      // Get AzuraCast media library to find existing matches
+      let azuraMedia = await azuraCastService.getAllMedia();
       
-      // Clear current AzuraCast queue
-      await azuraCastService.clearQueue();
-      
+      let uploaded = 0;
       let matched = 0;
       let failed = 0;
 
-      // Request each track by matching title
+      // Process each track - upload if not found, then queue
       for (const track of allTracks) {
-        const match = azuraMedia.find((m: any) => {
+        // Try to find existing match in AzuraCast
+        let match = azuraMedia.find((m: any) => {
           const mediaTitle = (m.media?.title || m.path_short || '').toLowerCase();
           const trackTitle = track.title.toLowerCase();
           return mediaTitle.includes(trackTitle) || trackTitle.includes(mediaTitle);
         });
 
+        // If no match, upload the track to AzuraCast first
+        if (!match?.media?.id && track.audio_url) {
+          try {
+            console.log('Uploading to AzuraCast:', track.title);
+            const fileName = track.title.replace(/[^a-zA-Z0-9_\-\.]/g, '_') + '.wav';
+            const uploadResult = await azuraCastService.uploadMediaFromUrl(
+              track.audio_url,
+              fileName,
+              track.title,
+              track.artist_info || 'Spelman College Glee Club'
+            );
+            
+            if (uploadResult?.id || uploadResult?.mediaId) {
+              uploaded++;
+              // Refresh media list to get the new file
+              azuraMedia = await azuraCastService.getAllMedia();
+              match = azuraMedia.find((m: any) => 
+                m.media?.id === (uploadResult.id || uploadResult.mediaId) ||
+                (m.media?.title || '').toLowerCase().includes(track.title.toLowerCase())
+              );
+            }
+          } catch (uploadError) {
+            console.error('Failed to upload track:', track.title, uploadError);
+          }
+        }
+
+        // Now try to queue the track
         if (match?.media?.id) {
           try {
             await azuraCastService.requestSong(match.media.id);
@@ -470,9 +501,14 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
         }
       }
 
+      const parts = [];
+      if (matched > 0) parts.push(`${matched} queued`);
+      if (uploaded > 0) parts.push(`${uploaded} uploaded`);
+      if (failed > 0) parts.push(`${failed} failed`);
+
       toast({
         title: 'Queue Synced',
-        description: `${matched} tracks pushed to live radio${failed > 0 ? `, ${failed} not found` : ''}`,
+        description: parts.join(', ') || 'Complete',
       });
 
       onRefreshTracks?.();

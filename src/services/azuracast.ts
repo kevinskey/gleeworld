@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 interface AzuraCastStation {
   id: number;
   name: string;
@@ -457,6 +459,32 @@ class AzuraCastService {
   async deleteMedia(fileId: number): Promise<void> {
     console.log('AzuraCast: Deleting media file:', fileId);
     await this.makeProxyRequest(`/station/{stationId}/file/${fileId}`, 'DELETE');
+  }
+
+  // Upload a file from URL to AzuraCast media library
+  async uploadMediaFromUrl(fileUrl: string, fileName: string, title?: string, artist?: string): Promise<any> {
+    console.log('AzuraCast: Uploading media from URL:', fileUrl);
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch('https://oopmlreysjzuxzylyheb.functions.supabase.co/azuracast-upload-media', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ fileUrl, fileName, title, artist }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Upload failed');
+    }
+
+    return await response.json();
   }
 
   // STREAMERS (Live DJs)
