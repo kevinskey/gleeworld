@@ -165,10 +165,20 @@ export const RadioScheduleTimeline = ({
     e.stopPropagation();
     setIsDraggingOver(false);
 
-    // Handle JSON track data from internal drag
+    // Handle JSON track data from internal drag - try multiple MIME types for browser compatibility
     try {
-      const trackData = e.dataTransfer.getData('application/json');
+      // Try application/json first, then text/plain as fallback
+      let trackData = e.dataTransfer.getData('application/json');
+      if (!trackData) {
+        trackData = e.dataTransfer.getData('text/plain');
+      }
+      if (!trackData) {
+        trackData = e.dataTransfer.getData('text');
+      }
+      
       console.log('Drop received, trackData:', trackData);
+      console.log('Available types:', e.dataTransfer.types);
+      
       if (trackData) {
         const track = JSON.parse(trackData);
         console.log('Parsed track:', track);
@@ -179,7 +189,8 @@ export const RadioScheduleTimeline = ({
           toast({ title: "Invalid Track", description: "Track data missing media ID", variant: "destructive" });
         }
       } else {
-        console.warn('No application/json data in drop event');
+        console.warn('No track data in drop event. Types available:', e.dataTransfer.types);
+        toast({ title: "Drop Failed", description: "No track data received. Try clicking the track instead.", variant: "destructive" });
       }
     } catch (err) {
       console.error('Failed to parse track data:', err);
