@@ -40,15 +40,99 @@ export const GleeAssistant = () => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isWakeWordActive, setIsWakeWordActive] = useState(false);
+  const [wakeWordStatus, setWakeWordStatus] = useState<'inactive' | 'listening' | 'activated'>('inactive');
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const wakeWordRecognitionRef = useRef<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Initialize speech recognition
+  // Initialize wake word detection (always listening for "Hey Glee")
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      
+      // Wake word recognition (continuous)
+      wakeWordRecognitionRef.current = new SpeechRecognition();
+      wakeWordRecognitionRef.current.continuous = true;
+      wakeWordRecognitionRef.current.interimResults = true;
+      wakeWordRecognitionRef.current.lang = 'en-US';
+
+      wakeWordRecognitionRef.current.onresult = (event: any) => {
+        const lastResult = event.results[event.results.length - 1];
+        const transcript = lastResult[0].transcript.toLowerCase().trim();
+        
+        console.log('Wake word listener heard:', transcript);
+        
+        // Check for wake word
+        if (transcript.includes('hey glee') || transcript.includes('hey glea') || transcript.includes('a glee')) {
+          console.log('Wake word detected!');
+          setWakeWordStatus('activated');
+          
+          // Stop wake word listening temporarily
+          wakeWordRecognitionRef.current.stop();
+          
+          // Open assistant and start command listening
+          setIsOpen(true);
+          
+          // Extract command after wake word if present
+          const wakeWordIndex = transcript.indexOf('hey glee') !== -1 
+            ? transcript.indexOf('hey glee') + 8 
+            : transcript.indexOf('hey glea') !== -1
+            ? transcript.indexOf('hey glea') + 8
+            : transcript.indexOf('a glee') + 6;
+          const command = transcript.substring(wakeWordIndex).trim();
+          
+          if (command && command.length > 2) {
+            // User said command after wake word
+            handleSend(command);
+          } else {
+            // Start listening for command
+            setTimeout(() => {
+              if (recognitionRef.current) {
+                recognitionRef.current.start();
+                setIsListening(true);
+              }
+            }, 300);
+          }
+        }
+      };
+
+      wakeWordRecognitionRef.current.onerror = (event: any) => {
+        console.log('Wake word recognition error:', event.error);
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          // Restart wake word listening after error
+          setTimeout(() => {
+            if (isWakeWordActive && wakeWordRecognitionRef.current) {
+              try {
+                wakeWordRecognitionRef.current.start();
+              } catch (e) {
+                console.log('Could not restart wake word recognition');
+              }
+            }
+          }, 1000);
+        }
+      };
+
+      wakeWordRecognitionRef.current.onend = () => {
+        console.log('Wake word recognition ended');
+        // Restart if wake word mode is still active and assistant is closed
+        if (isWakeWordActive && !isOpen) {
+          setTimeout(() => {
+            if (wakeWordRecognitionRef.current && isWakeWordActive) {
+              try {
+                wakeWordRecognitionRef.current.start();
+                setWakeWordStatus('listening');
+              } catch (e) {
+                console.log('Could not restart wake word recognition');
+              }
+            }
+          }, 500);
+        }
+      };
+
+      // Command recognition (for after wake word)
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
@@ -58,25 +142,66 @@ export const GleeAssistant = () => {
         const transcript = event.results[0][0].transcript;
         setInput(transcript);
         setIsListening(false);
-        // Auto-send after voice input
         handleSend(transcript);
       };
 
       recognitionRef.current.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
-        toast({
-          title: "Voice Error",
-          description: "Could not understand. Please try again.",
-          variant: "destructive",
-        });
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          toast({
+            title: "Voice Error",
+            description: "Could not understand. Please try again.",
+            variant: "destructive",
+          });
+        }
       };
 
       recognitionRef.current.onend = () => {
         setIsListening(false);
       };
     }
+    
+    return () => {
+      if (wakeWordRecognitionRef.current) {
+        try {
+          wakeWordRecognitionRef.current.stop();
+        } catch (e) {}
+      }
+    };
   }, []);
+
+  // Manage wake word listening state
+  useEffect(() => {
+    if (isWakeWordActive && !isOpen && wakeWordRecognitionRef.current) {
+      try {
+        wakeWordRecognitionRef.current.start();
+        setWakeWordStatus('listening');
+        console.log('Wake word listening started');
+      } catch (e) {
+        console.log('Wake word already listening or error');
+      }
+    } else if (!isWakeWordActive && wakeWordRecognitionRef.current) {
+      try {
+        wakeWordRecognitionRef.current.stop();
+        setWakeWordStatus('inactive');
+      } catch (e) {}
+    }
+  }, [isWakeWordActive, isOpen]);
+
+  // Resume wake word listening when assistant closes
+  useEffect(() => {
+    if (!isOpen && isWakeWordActive && wakeWordRecognitionRef.current) {
+      setTimeout(() => {
+        try {
+          wakeWordRecognitionRef.current.start();
+          setWakeWordStatus('listening');
+        } catch (e) {
+          console.log('Could not resume wake word listening');
+        }
+      }, 500);
+    }
+  }, [isOpen, isWakeWordActive]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -84,6 +209,41 @@ export const GleeAssistant = () => {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  const toggleWakeWord = async () => {
+    if (!wakeWordRecognitionRef.current) {
+      toast({
+        title: "Not Supported",
+        description: "Voice recognition is not supported in this browser.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isWakeWordActive) {
+      setIsWakeWordActive(false);
+      toast({
+        title: "Hey Glee Disabled",
+        description: "Wake word detection turned off.",
+      });
+    } else {
+      // Request microphone permission
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        setIsWakeWordActive(true);
+        toast({
+          title: "Hey Glee Enabled",
+          description: "Say \"Hey Glee\" to activate the assistant.",
+        });
+      } catch (e) {
+        toast({
+          title: "Microphone Required",
+          description: "Please allow microphone access to use wake word.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
   const toggleListening = () => {
     if (!recognitionRef.current) {
@@ -99,6 +259,12 @@ export const GleeAssistant = () => {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
+      // Stop wake word temporarily while manual listening
+      if (wakeWordRecognitionRef.current && isWakeWordActive) {
+        try {
+          wakeWordRecognitionRef.current.stop();
+        } catch (e) {}
+      }
       recognitionRef.current.start();
       setIsListening(true);
     }
@@ -201,19 +367,51 @@ export const GleeAssistant = () => {
 
   return (
     <>
-      {/* Floating Button */}
-      <Button
-        onClick={() => setIsOpen(true)}
-        className={cn(
-          "fixed bottom-6 right-6 rounded-full shadow-lg",
-          "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
-          "transition-all duration-300 hover:scale-110",
-          isOpen && "hidden"
-        )}
-        style={{ zIndex: 9999, padding: 0, overflow: 'hidden', width: '72px', height: '72px' }}
-      >
-        <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
-      </Button>
+      {/* Wake Word Status Indicator */}
+      {isWakeWordActive && !isOpen && (
+        <div 
+          className="fixed bottom-[100px] right-6 bg-card/95 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg border border-border flex items-center gap-2 text-xs"
+          style={{ zIndex: 9999 }}
+        >
+          <span className={cn(
+            "h-2 w-2 rounded-full animate-pulse",
+            wakeWordStatus === 'listening' ? "bg-green-500" : "bg-yellow-500"
+          )} />
+          <span className="text-muted-foreground">
+            {wakeWordStatus === 'listening' ? 'Listening for "Hey Glee"' : 'Activating...'}
+          </span>
+        </div>
+      )}
+
+      {/* Floating Button Group */}
+      <div className={cn("fixed bottom-6 right-6 flex flex-col items-center gap-2", isOpen && "hidden")} style={{ zIndex: 9999 }}>
+        {/* Wake Word Toggle */}
+        <Button
+          onClick={toggleWakeWord}
+          size="sm"
+          variant={isWakeWordActive ? "default" : "outline"}
+          className={cn(
+            "rounded-full h-8 px-3 text-xs shadow-md",
+            isWakeWordActive && "bg-green-600 hover:bg-green-700"
+          )}
+        >
+          <Mic className={cn("h-3 w-3 mr-1", isWakeWordActive && "animate-pulse")} />
+          {isWakeWordActive ? "Hey Glee On" : "Hey Glee"}
+        </Button>
+        
+        {/* Main Assistant Button */}
+        <Button
+          onClick={() => setIsOpen(true)}
+          className={cn(
+            "rounded-full shadow-lg",
+            "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
+            "transition-all duration-300 hover:scale-110"
+          )}
+          style={{ padding: 0, overflow: 'hidden', width: '72px', height: '72px' }}
+        >
+          <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
+        </Button>
+      </div>
 
       {/* Chat Panel */}
       {isOpen && (
