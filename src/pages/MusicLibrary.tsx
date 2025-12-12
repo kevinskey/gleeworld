@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { MusicLibrary } from "@/components/music-library/MusicLibrary";
+import { UniversalLayout } from "@/components/layout/UniversalLayout";
 
 const MusicLibraryPage = () => {
   useEffect(() => {
@@ -26,7 +27,11 @@ const MusicLibraryPage = () => {
     if (link) link.setAttribute('href', href);
   }, []);
 
-  return <MusicLibrary />;
+  return (
+    <UniversalLayout showFooter={false} containerized={false}>
+      <MusicLibrary />
+    </UniversalLayout>
+  );
 };
 
 export default MusicLibraryPage;
