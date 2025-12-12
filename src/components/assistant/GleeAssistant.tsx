@@ -206,7 +206,7 @@ export const GleeAssistant = () => {
 
       {/* Chat Panel */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-[380px] h-[520px] shadow-2xl flex flex-col overflow-hidden border-2 border-primary/20" style={{ zIndex: 9999 }}>
+        <Card className="fixed bottom-4 right-4 left-4 sm:left-auto sm:w-[380px] h-[70vh] sm:h-[520px] max-h-[600px] shadow-2xl flex flex-col overflow-hidden border-2 border-primary/20" style={{ zIndex: 9999 }}>
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
             <div className="flex items-center gap-2">
@@ -264,18 +264,18 @@ export const GleeAssistant = () => {
                       
                       {/* Action buttons */}
                       {msg.actions && msg.actions.length > 0 && (
-                        <div className="mt-2 space-y-1">
+                        <div className="mt-2 space-y-1.5">
                           {msg.actions.map((action, actionIdx) => (
                             <Button
                               key={actionIdx}
                               variant="secondary"
                               size="sm"
                               onClick={() => handleAction(action)}
-                              className="w-full text-xs h-7"
+                              className="w-full text-xs h-auto py-2 px-2 whitespace-normal text-left justify-start"
                             >
-                              {action.action === 'open_score' && <Music className="h-3 w-3 mr-1" />}
-                              {action.action === 'navigate' && <ExternalLink className="h-3 w-3 mr-1" />}
-                              {action.title || action.route?.replace('/', '') || 'Go'}
+                              {action.action === 'open_score' && <Music className="h-3 w-3 mr-1.5 flex-shrink-0" />}
+                              {action.action === 'navigate' && <ExternalLink className="h-3 w-3 mr-1.5 flex-shrink-0" />}
+                              <span className="break-words">{action.title || action.route?.replace('/', '') || 'Go'}</span>
                             </Button>
                           ))}
                         </div>
