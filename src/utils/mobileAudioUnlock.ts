@@ -82,13 +82,21 @@ export const getAudioContextState = (): string => {
 // Force unlock - call this directly from a touch/click handler
 // Must be synchronous within user gesture for iOS
 export const forceUnlockAudio = (): boolean => {
+  console.log('[AudioUnlock] forceUnlockAudio called. Current state:', {
+    hasContext: !!globalAudioContext,
+    state: globalAudioContext?.state || 'not-created',
+    isUnlocked,
+  });
+
   // Fast path: already unlocked and running
   if (isUnlocked && globalAudioContext?.state === 'running') {
+    console.log('[AudioUnlock] Already unlocked and running');
     return true;
   }
   
   try {
     const ctx = getSharedAudioContext();
+    console.log('[AudioUnlock] Got shared AudioContext with state:', ctx.state);
     
     // CRITICAL for iOS: Play silent buffer + tone synchronously within user gesture
     // This must happen BEFORE any async operations
@@ -106,19 +114,23 @@ export const forceUnlockAudio = (): boolean => {
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.01);
     } catch (e) {
-      // Ignore
+      console.warn('[AudioUnlock] Error during unlock oscillator:', e);
     }
     
     // Resume context - fire and forget, don't block
     if (ctx.state !== 'running') {
       ctx.resume().then(() => {
         isUnlocked = ctx.state === 'running';
+        console.log('[AudioUnlock] Resume resolved. New state:', ctx.state, 'isUnlocked:', isUnlocked);
         if (isUnlocked) {
           console.log('✅ Audio context resumed and unlocked');
         }
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('[AudioUnlock] ctx.resume() failed:', err);
+      });
     } else {
       isUnlocked = true;
+      console.log('[AudioUnlock] Context already running, marking as unlocked');
     }
     
     // Return current state (may not be running yet, but unlock is in progress)
