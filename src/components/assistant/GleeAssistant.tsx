@@ -136,11 +136,22 @@ export const GleeAssistant = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Handle any navigation actions automatically
+      // Auto-execute navigation actions and close assistant
       if (data.actions?.length > 0) {
         for (const action of data.actions) {
           if (action.action === 'navigate' && action.route) {
-            // Don't auto-navigate, let user click
+            // Auto-navigate and close
+            setTimeout(() => {
+              navigate(action.route);
+              setIsOpen(false);
+            }, 500); // Brief delay so user sees the response
+            break;
+          } else if (action.action === 'open_score' && action.score_id) {
+            setTimeout(() => {
+              navigate(`/music-library?view=${action.score_id}`);
+              setIsOpen(false);
+            }, 500);
+            break;
           }
         }
       }
