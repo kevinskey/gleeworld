@@ -128,18 +128,29 @@ const TextToSpeechTab: React.FC = () => {
 
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('elevenlabs-tts', {
-        body: { 
-          text, 
-          voiceId,
-          stability: stability[0],
-          similarity_boost: similarity[0]
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            text,
+            voiceId,
+            stability: stability[0],
+            similarity_boost: similarity[0]
+          }),
         }
-      });
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate speech');
+      }
 
-      const audioBlob = new Blob([data], { type: 'audio/mpeg' });
+      const audioBlob = await response.blob();
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
       toast.success('Speech generated!');
@@ -404,13 +415,24 @@ const SoundEffectsTab: React.FC = () => {
 
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('elevenlabs-sfx', {
-        body: { prompt, duration: duration[0] }
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-sfx`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ prompt, duration: duration[0] }),
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate sound effect');
+      }
 
-      const audioBlob = new Blob([data], { type: 'audio/mpeg' });
+      const audioBlob = await response.blob();
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
       toast.success('Sound effect generated!');
@@ -500,13 +522,24 @@ const MusicGenerationTab: React.FC = () => {
 
     setIsGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('elevenlabs-music', {
-        body: { prompt, duration: duration[0] }
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-music`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ prompt, duration: duration[0] }),
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to generate music');
+      }
 
-      const audioBlob = new Blob([data], { type: 'audio/mpeg' });
+      const audioBlob = await response.blob();
       const url = URL.createObjectURL(audioBlob);
       setAudioUrl(url);
       toast.success('Music generated!');
