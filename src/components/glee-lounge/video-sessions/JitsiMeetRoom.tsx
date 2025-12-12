@@ -88,10 +88,9 @@ export const JitsiMeetRoom = ({
       <iframe
         src={jitsiUrl}
         className="h-full w-full border-0"
-        allow="camera *; microphone *; fullscreen *; display-capture *; autoplay *; clipboard-write *; encrypted-media *"
+        allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-write; encrypted-media"
         allowFullScreen
         referrerPolicy="no-referrer-when-downgrade"
-        sandbox="allow-same-origin allow-scripts allow-popups allow-forms allow-modals allow-downloads"
         onLoad={() => setIsLoading(false)}
       />
 
