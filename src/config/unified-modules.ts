@@ -41,6 +41,7 @@ import {
   Crown,
   TreePine,
   Armchair,
+  Wand2,
 } from 'lucide-react';
 
 // Import core module components
@@ -110,6 +111,7 @@ import StipendPaymentModule from '@/components/modules/StipendPaymentModule';
 import { NotificationSoundsModule } from '@/components/admin/NotificationSoundsModule';
 import RehearsalTranscriptionModule from '@/components/modules/RehearsalTranscriptionModule';
 import VoiceConversationAgent from '@/components/assistant/VoiceConversationAgent';
+import { TheLabModule } from '@/components/modules/TheLabModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -1091,6 +1093,20 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isNew: true,
     component: VoiceConversationAgent,
     dbFunctionName: "voice-conversation",
+    requiredRoles: ["admin", "super-admin"]
+  },
+  {
+    id: "the-lab",
+    name: "the-lab",
+    title: "The Lab",
+    description: "ElevenLabs AI voice & audio tools - TTS, transcription, SFX, music generation",
+    icon: Wand2,
+    iconColor: "purple",
+    category: "system",
+    isActive: true,
+    isNew: true,
+    component: TheLabModule,
+    dbFunctionName: "the-lab",
     requiredRoles: ["admin", "super-admin"]
   }
 ];
