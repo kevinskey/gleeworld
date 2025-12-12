@@ -262,7 +262,9 @@ async function executeTool(toolName: string, args: any, userId: string) {
     }
 
     case "search_music_library": {
-      const query = args.query || "";
+      const rawQuery = args.query || "";
+      // Normalize query by removing common punctuation so it matches titles
+      const query = rawQuery.replace(/[.,!?]/g, " ").replace(/\s+/g, " ").trim();
       
       // Search by title first (handles special characters like commas)
       const { data: titleMatches, error: titleError } = await supabase
