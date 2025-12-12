@@ -43,6 +43,27 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("ElevenLabs Music error:", errorText);
+      
+      // Try to parse error for more details
+      try {
+        const errorJson = JSON.parse(errorText);
+        const detail = errorJson.detail;
+        if (detail?.status === 'bad_prompt') {
+          return new Response(
+            JSON.stringify({ 
+              error: detail.message || 'Prompt violates content policy',
+              suggestion: detail.data?.prompt_suggestion || null
+            }),
+            {
+              status: 400,
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            }
+          );
+        }
+      } catch (e) {
+        // Not JSON, continue with generic error
+      }
+      
       throw new Error(`ElevenLabs API error: ${response.status}`);
     }
 
