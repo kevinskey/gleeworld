@@ -38,6 +38,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSheetMusicUrl } from '@/hooks/useSheetMusicUrl';
 import { useSheetMusicAnnotations } from '@/hooks/useSheetMusicAnnotations';
+import { useSheetMusicAudio } from '@/hooks/useSheetMusicAudio';
+import { useAudioCompanion } from '@/contexts/AudioCompanionContext';
 import { cn } from '@/lib/utils';
 import { AnnotationShareButton } from '@/components/music-library/AnnotationShareButton';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -72,6 +74,8 @@ export const PDFViewerWithAnnotations = forwardRef<PDFViewerHandle, PDFViewerWit
     saveAnnotation, 
     fetchAnnotations 
   } = useSheetMusicAnnotations(musicId);
+  const { audioData } = useSheetMusicAudio(musicId);
+  const { loadUrl, audioSource } = useAudioCompanion();
   
   // Initialize the default layout plugin
 const scrollModePluginInstance = scrollModePlugin();
@@ -342,6 +346,14 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
       setAnnotationMode(true);
     }
   }, [startInAnnotationMode, annotationMode]);
+
+  // Auto-load associated audio when PDF opens
+  useEffect(() => {
+    if (audioData?.audio_url && !audioSource) {
+      loadUrl(audioData.audio_url, audioData.audio_title || musicTitle || 'Audio');
+      setShowAudioCompanion(true);
+    }
+  }, [audioData, audioSource, loadUrl, musicTitle]);
 
   // Toggle global annotation mode to hide/show the app header
   useEffect(() => {

@@ -21,6 +21,7 @@ interface AudioCompanionContextValue extends AudioCompanionState {
   hidePlayer: () => void;
   loadYouTube: (url: string) => void;
   loadFile: (file: File) => void;
+  loadUrl: (url: string, fileName?: string) => void;
   togglePlayPause: () => void;
   seek: (time: number) => void;
   setVolume: (vol: number) => void;
@@ -176,6 +177,22 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
     }
   }, []);
 
+  // Load audio from a URL (for Supabase stored files)
+  const loadUrl = useCallback((url: string, fileName?: string) => {
+    if (audioRef.current) {
+      audioRef.current.src = url;
+      audioRef.current.load();
+      audioRef.current.play();
+    }
+    setAudioSource('file');
+    setAudioFileName(fileName || 'Audio');
+    setYoutubeVideoId(null);
+    setIsPlaying(true);
+    setPlayerReady(true);
+    setIsLoading(false);
+    setIsActive(true);
+  }, []);
+
   const togglePlayPause = useCallback(() => {
     console.log('[AudioContext] togglePlayPause', { audioSource, isPlaying });
     if (audioSource === 'youtube') {
@@ -293,6 +310,7 @@ export const AudioCompanionProvider: React.FC<{ children: React.ReactNode }> = (
         hidePlayer,
         loadYouTube,
         loadFile,
+        loadUrl,
         togglePlayPause,
         seek,
         setVolume,
