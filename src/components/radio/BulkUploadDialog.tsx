@@ -111,6 +111,56 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
     };
   };
 
+  const LARGE_FILE_THRESHOLD = 50 * 1024 * 1024; // 50MB - use edge function for larger files
+
+  const uploadLargeFile = async (file: File, fileName: string): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', 'user-files');
+    formData.append('fileName', `audio-tracks/${fileName}`);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    const response = await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-large-file`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Upload failed');
+    }
+
+    const { jobId } = await response.json();
+
+    // Poll for completion
+    let attempts = 0;
+    const maxAttempts = 120; // 2 minutes max
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const { data: job } = await supabase
+        .from('upload_jobs')
+        .select('status, url, error')
+        .eq('job_id', jobId)
+        .single();
+
+      if (job?.status === 'completed' && job.url) {
+        return job.url;
+      } else if (job?.status === 'failed') {
+        throw new Error(job.error || 'Upload failed');
+      }
+      attempts++;
+    }
+    throw new Error('Upload timed out');
+  };
+
   const uploadFile = async (uploadFile: UploadFile): Promise<void> => {
     const { file } = uploadFile;
     
@@ -125,25 +175,35 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
       const fileExtension = file.name.split('.').pop();
       const fileName = `radio-upload-${timestamp}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
       
-      // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('user-files')
-        .upload(`audio-tracks/${fileName}`, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
+      let publicUrl: string;
 
-      if (uploadError) throw uploadError;
+      if (file.size > LARGE_FILE_THRESHOLD) {
+        // Use edge function for large files
+        setUploadFiles(prev => prev.map(f => 
+          f.id === uploadFile.id ? { ...f, progress: 10 } : f
+        ));
+        publicUrl = await uploadLargeFile(file, fileName);
+      } else {
+        // Direct upload for smaller files
+        const { error: uploadError } = await supabase.storage
+          .from('user-files')
+          .upload(`audio-tracks/${fileName}`, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl: url } } = supabase.storage
+          .from('user-files')
+          .getPublicUrl(`audio-tracks/${fileName}`);
+        publicUrl = url;
+      }
 
       // Update progress
       setUploadFiles(prev => prev.map(f => 
         f.id === uploadFile.id ? { ...f, progress: 50, status: 'processing' } : f
       ));
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('user-files')
-        .getPublicUrl(`audio-tracks/${fileName}`);
 
       // Extract metadata from filename
       const { title, artist } = extractMetadataFromFilename(file.name);
@@ -158,7 +218,7 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
           title,
           artist,
           audio_url: publicUrl,
-          duration: 180, // Default duration, could be calculated from audio
+          duration: 180,
           created_by: user?.id,
           play_count: 0
         })
