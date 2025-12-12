@@ -195,18 +195,19 @@ export const GleeAssistant = () => {
       <Button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50",
+          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg",
           "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
           "transition-all duration-300 hover:scale-110",
           isOpen && "hidden"
         )}
+        style={{ zIndex: 9999 }}
       >
         <Bot className="h-6 w-6" />
       </Button>
 
       {/* Chat Panel */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-[380px] h-[520px] z-50 shadow-2xl flex flex-col overflow-hidden border-2 border-primary/20">
+        <Card className="fixed bottom-6 right-6 w-[380px] h-[520px] shadow-2xl flex flex-col overflow-hidden border-2 border-primary/20" style={{ zIndex: 9999 }}>
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
             <div className="flex items-center gap-2">
