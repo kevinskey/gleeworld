@@ -63,13 +63,13 @@ const tools = [
     type: "function",
     function: {
       name: "open_score",
-      description: "Open a specific score/PDF from the music library. Returns the URL to open.",
+      description: "Open a specific score/PDF from the music library by its UUID or title. First search the music library to find the score, then use the UUID from the search results to open it.",
       parameters: {
         type: "object",
         properties: {
           score_id: {
             type: "string",
-            description: "The ID of the score to open",
+            description: "The UUID of the score from search results (e.g., '9a713722-108b-41ae-90cc-08a7ec6b77df'), OR the exact title if UUID is not available",
           },
         },
         required: ["score_id"],
@@ -275,24 +275,59 @@ async function executeTool(toolName: string, args: any, userId: string) {
         return { scores: [], message: "Could not search music library" };
       }
 
+      // Format with explicit UUID labels for the AI to use
+      const formattedScores = (scores || []).map(s => ({
+        uuid: s.id,
+        title: s.title,
+        composer: s.composer,
+        voicing: s.voicing,
+        has_pdf: !!s.pdf_url
+      }));
+
       return {
-        scores: scores || [],
-        count: scores?.length || 0,
-        message: scores?.length
-          ? `Found ${scores.length} score(s) matching "${args.query}".`
+        scores: formattedScores,
+        count: formattedScores.length,
+        message: formattedScores.length
+          ? `Found ${formattedScores.length} score(s) matching "${args.query}". Use the 'uuid' field when calling open_score.`
           : `No scores found matching "${args.query}".`
       };
     }
 
     case "open_score": {
-      const { data: score, error } = await supabase
+      // First try to find by UUID
+      let { data: score, error } = await supabase
         .from("gw_sheet_music")
         .select("id, title, pdf_url")
         .eq("id", args.score_id)
-        .single();
+        .maybeSingle();
 
-      if (error || !score) {
-        return { success: false, message: "Score not found" };
+      // If not found by UUID, try searching by title
+      if (!score) {
+        console.log("Score not found by UUID, searching by title:", args.score_id);
+        const { data: titleMatch, error: titleError } = await supabase
+          .from("gw_sheet_music")
+          .select("id, title, pdf_url")
+          .ilike("title", `%${args.score_id}%`)
+          .limit(1)
+          .maybeSingle();
+        
+        if (titleMatch) {
+          score = titleMatch;
+        }
+      }
+
+      if (!score) {
+        return { 
+          success: false, 
+          message: `Score "${args.score_id}" not found. Please search the music library first to get the correct UUID.` 
+        };
+      }
+
+      if (!score.pdf_url) {
+        return {
+          success: false,
+          message: `Found "${score.title}" but it doesn't have a PDF file attached.`
+        };
       }
 
       return {
