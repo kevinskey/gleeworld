@@ -80,13 +80,18 @@ const tools = [
     type: "function",
     function: {
       name: "navigate_to_page",
-      description: "Navigate to a specific page in GleeWorld",
+      description: "Navigate to a specific page in GleeWorld. Use this when users want to go to a specific feature or section.",
       parameters: {
         type: "object",
         properties: {
           page: {
             type: "string",
-            enum: ["dashboard", "music-library", "calendar", "glee-academy", "email-composer", "messages", "glee-lounge"],
+            enum: [
+              "dashboard", "music-library", "calendar", "glee-academy", 
+              "email-composer", "messages", "glee-lounge", "handbook",
+              "first-year-resources", "exec-board-workshop", "wardrobe",
+              "alumnae", "profile", "admin-dashboard"
+            ],
             description: "The page to navigate to",
           },
         },
@@ -128,6 +133,69 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "search_members",
+      description: "Search for Glee Club members by name to get their contact info or profile",
+      parameters: {
+        type: "object",
+        properties: {
+          name: {
+            type: "string",
+            description: "Name of the member to search for",
+          },
+        },
+        required: ["name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_announcements",
+      description: "Get the latest announcements from the Glee Club",
+      parameters: {
+        type: "object",
+        properties: {
+          limit: {
+            type: "number",
+            description: "Number of announcements to fetch (default 5)",
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_polls",
+      description: "Get active polls that need voting or recent poll results",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_handbook_info",
+      description: "Get information from the Glee Club handbook about policies, procedures, or positions",
+      parameters: {
+        type: "object",
+        properties: {
+          topic: {
+            type: "string",
+            description: "Topic to search for in the handbook (e.g., 'attendance policy', 'exec board positions', 'dress code')",
+          },
+        },
+        required: ["topic"],
+      },
+    },
+  },
 ];
 
 // Execute tool calls
@@ -137,7 +205,6 @@ async function executeTool(toolName: string, args: any, userId: string) {
 
   switch (toolName) {
     case "get_assignments_due_today": {
-      // Get assignments due today
       const { data: assignments, error } = await supabase
         .from("gw_assignments")
         .select("id, title, description, due_date, course_id")
@@ -165,10 +232,9 @@ async function executeTool(toolName: string, args: any, userId: string) {
 
       const { data: events, error } = await supabase
         .from("events")
-        .select("id, title, description, event_date, start_time, end_time, location, event_type")
-        .gte("event_date", today)
-        .lte("event_date", endDate.toISOString().split('T')[0])
-        .order("event_date", { ascending: true })
+        .select("id, title, event_name, description, start_date, event_date_start, end_date, location, event_type")
+        .or(`start_date.gte.${today},event_date_start.gte.${today}`)
+        .order("start_date", { ascending: true })
         .limit(10);
 
       if (error) {
@@ -176,11 +242,21 @@ async function executeTool(toolName: string, args: any, userId: string) {
         return { events: [], message: "Could not fetch events" };
       }
 
+      // Format events for response
+      const formattedEvents = (events || []).map(e => ({
+        id: e.id,
+        title: e.title || e.event_name,
+        description: e.description,
+        date: e.start_date || e.event_date_start,
+        location: e.location,
+        type: e.event_type
+      }));
+
       return {
-        events: events || [],
-        count: events?.length || 0,
-        message: events?.length 
-          ? `Found ${events.length} upcoming event(s) in the next ${daysAhead} days.`
+        events: formattedEvents,
+        count: formattedEvents.length,
+        message: formattedEvents.length 
+          ? `Found ${formattedEvents.length} upcoming event(s) in the next ${daysAhead} days.`
           : `No events scheduled in the next ${daysAhead} days.`
       };
     }
@@ -238,17 +314,23 @@ async function executeTool(toolName: string, args: any, userId: string) {
         "email-composer": "/compose",
         "messages": "/messages",
         "glee-lounge": "/glee-lounge",
+        "handbook": "/handbook",
+        "first-year-resources": "/first-year-resources",
+        "exec-board-workshop": "/exec-board-workshop",
+        "wardrobe": "/wardrobe",
+        "alumnae": "/alumnae",
+        "profile": "/profile",
+        "admin-dashboard": "/admin-dashboard",
       };
 
       return {
         action: "navigate",
         route: pageRoutes[args.page] || "/dashboard",
-        message: `Navigating to ${args.page.replace("-", " ")}.`
+        message: `Navigating to ${args.page.replace(/-/g, " ")}.`
       };
     }
 
     case "get_class_schedule": {
-      // Get course information and important dates
       const { data: courses, error } = await supabase
         .from("gw_courses")
         .select("id, title, description, start_date, end_date")
@@ -259,7 +341,6 @@ async function executeTool(toolName: string, args: any, userId: string) {
         return { courses: [], message: "Could not fetch course schedule" };
       }
 
-      // Find the latest end date as "last day of class"
       let lastDayOfClass = null;
       if (courses && courses.length > 0) {
         const endDates = courses.map(c => c.end_date).filter(Boolean).sort();
@@ -276,7 +357,6 @@ async function executeTool(toolName: string, args: any, userId: string) {
     }
 
     case "prepare_message": {
-      // Search for the recipient
       const { data: profiles, error } = await supabase
         .from("gw_profiles")
         .select("user_id, full_name, email, phone")
@@ -297,6 +377,110 @@ async function executeTool(toolName: string, args: any, userId: string) {
       };
     }
 
+    case "search_members": {
+      const { data: profiles, error } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, email, phone, role, voice_part, is_exec_board, exec_board_role")
+        .ilike("full_name", `%${args.name}%`)
+        .limit(5);
+
+      if (error) {
+        console.error("Error searching members:", error);
+        return { members: [], message: "Could not search members" };
+      }
+
+      return {
+        members: profiles || [],
+        count: profiles?.length || 0,
+        message: profiles?.length
+          ? `Found ${profiles.length} member(s) matching "${args.name}".`
+          : `No members found matching "${args.name}".`
+      };
+    }
+
+    case "get_announcements": {
+      const limit = args.limit || 5;
+      
+      const { data: announcements, error } = await supabase
+        .from("gw_announcements")
+        .select("id, title, content, created_at, is_active")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) {
+        console.error("Error fetching announcements:", error);
+        return { announcements: [], message: "Could not fetch announcements" };
+      }
+
+      return {
+        announcements: announcements || [],
+        count: announcements?.length || 0,
+        message: announcements?.length
+          ? `Here are the latest ${announcements.length} announcement(s).`
+          : "No active announcements at this time."
+      };
+    }
+
+    case "get_polls": {
+      const { data: polls, error } = await supabase
+        .from("gw_polls")
+        .select("id, question, options, created_at, expires_at, group_id")
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error) {
+        console.error("Error fetching polls:", error);
+        return { polls: [], message: "Could not fetch polls" };
+      }
+
+      return {
+        polls: polls || [],
+        count: polls?.length || 0,
+        message: polls?.length
+          ? `Found ${polls.length} active poll(s) that need your vote.`
+          : "No active polls at this time."
+      };
+    }
+
+    case "get_handbook_info": {
+      // Return handbook information based on topic
+      const handbookInfo: Record<string, string> = {
+        "attendance": "Attendance is mandatory for all rehearsals and performances. Members must notify the Attendance Chair in advance if unable to attend. Excessive absences may result in probation or removal from performances.",
+        "attendance policy": "Attendance is mandatory for all rehearsals and performances. Members must notify the Attendance Chair in advance if unable to attend. Excessive absences may result in probation or removal from performances.",
+        "dress code": "Performance attire includes the official Glee Club dress (stored in wardrobe), appropriate undergarments, nude hosiery, and closed-toe black heels (2-3 inches). Hair must be styled neatly away from face.",
+        "exec board": "Executive Board positions include: President, Vice President, Secretary, Treasurer, Chaplain, Parliamentarian, Historian, Public Relations Chair, Social Chair, and various committee chairs. Elections are held each spring semester.",
+        "exec board positions": "Executive Board positions include: President, Vice President, Secretary, Treasurer, Chaplain, Parliamentarian, Historian, Public Relations Chair, Social Chair, and various committee chairs. Elections are held each spring semester.",
+        "rehearsal": "Rehearsals are held weekly during the academic year. Members should arrive 10 minutes early, bring their music and pencil, and be prepared to sing. Cell phones must be silenced.",
+        "performances": "Members are expected to participate in all performances unless excused. This includes concerts, tours, and special events. Performance schedules are released at the beginning of each semester.",
+        "tour": "The Glee Club tours domestically and internationally. Tour participation requires good academic standing and payment of all dues. Tour dates are announced at the start of each academic year.",
+        "dues": "Membership dues cover music, uniforms, and operational costs. Payment plans are available. Contact the Treasurer for more information.",
+        "auditions": "Auditions are held at the beginning of each fall semester. Prospective members must prepare a song of their choice and demonstrate sight-reading ability.",
+      };
+
+      const topic = args.topic.toLowerCase();
+      let info = null;
+      
+      // Search for matching topic
+      for (const [key, value] of Object.entries(handbookInfo)) {
+        if (topic.includes(key) || key.includes(topic)) {
+          info = value;
+          break;
+        }
+      }
+
+      return {
+        topic: args.topic,
+        info: info,
+        message: info 
+          ? `Here's information about ${args.topic}: ${info}`
+          : `I don't have specific handbook information about "${args.topic}". You can view the full handbook at the Handbook page.`,
+        action: info ? null : "navigate",
+        route: info ? null : "/handbook"
+      };
+    }
+
     default:
       return { message: "Unknown tool" };
   }
@@ -314,18 +498,56 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are Glee Assistant, a helpful AI assistant for GleeWorld - the digital platform of the Spelman College Glee Club. You help members with:
+    const systemPrompt = `You are Glee Assistant, a helpful AI assistant for GleeWorld - the official digital platform of the Spelman College Glee Club, celebrating over 100 years of musical excellence. The Glee Club's motto is "To Amaze and Inspire."
 
-- Finding and opening sheet music/scores
-- Checking assignment due dates
-- Getting calendar and event information
-- Navigating the platform
-- Sending messages to other members
-- Answering questions about class schedules
+## Your Knowledge of GleeWorld Features:
 
-Be friendly, concise, and helpful. When users ask to do something, use the available tools to help them. If you need to perform an action (like opening a score or navigating), always use the appropriate tool.
+**Music & Performance:**
+- Music Library: Search and access sheet music, view PDFs with the built-in viewer, listen along with audio companions
+- Virtual Piano: Practice tool with 88 keys, metronome, and multiple instrument sounds
+- Calendar: View upcoming rehearsals, concerts, performances, and events
 
-Today's date is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+**Academic (Glee Academy):**
+- MUS-240 and other courses with assignments, tests, quizzes
+- Class schedules and important academic dates
+- Student dashboard for tracking progress
+
+**Communication:**
+- Messages: Group messaging with polls and announcements
+- Glee Lounge: Social hub for members to connect, share photos/videos, go live
+- Email/SMS Composer: Send branded communications to members
+
+**Member Resources:**
+- Handbook: Policies, procedures, exec board positions, attendance rules
+- First-Year Resources: Guides for new members
+- Executive Board Workshop: Training materials for leadership
+- Wardrobe: Dress checkout and management
+- Alumnae Portal: Connect with Glee Club graduates
+
+**Administrative:**
+- Profile management
+- Exit interviews and surveys
+- Concert ticket requests
+- Member dossiers
+
+## Your Capabilities:
+- Search and open sheet music from the library
+- Check assignment due dates and class schedules
+- Get upcoming events and rehearsals
+- Search for member contact information
+- Navigate users to any page in GleeWorld
+- Help compose messages to other members
+- Get the latest announcements
+- Check active polls
+- Provide handbook information about policies and procedures
+
+## Guidelines:
+- Be warm, friendly, and helpful - embody the spirit of sisterhood
+- Use tools to provide accurate, real-time information
+- When users ask to do something, use the appropriate tool
+- If you don't have a tool for something, explain what the user can do manually
+- Today's date is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+- Keep responses concise but helpful`;
 
     // First call to get tool calls or response
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
