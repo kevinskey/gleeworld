@@ -536,7 +536,13 @@ const MusicGenerationTab: React.FC = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to generate music');
+        if (errorData.suggestion) {
+          toast.error(`Content policy issue. Try: "${errorData.suggestion.substring(0, 100)}..."`);
+          setPrompt(errorData.suggestion);
+        } else {
+          throw new Error(errorData.error || 'Failed to generate music');
+        }
+        return;
       }
 
       const audioBlob = await response.blob();
@@ -545,7 +551,7 @@ const MusicGenerationTab: React.FC = () => {
       toast.success('Music generated!');
     } catch (error) {
       console.error('Music error:', error);
-      toast.error('Failed to generate music');
+      toast.error(error instanceof Error ? error.message : 'Failed to generate music');
     } finally {
       setIsGenerating(false);
     }
