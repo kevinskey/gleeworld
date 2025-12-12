@@ -513,6 +513,49 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
             </TabsContent>
           ))}
         </Tabs>
+
+        {/* Audio Track Library under queue for drag-and-drop */}
+        <div className="mt-6 border-t pt-4">
+          <p className="text-xs text-muted-foreground mb-2">
+            Audio Track Library • Drag any track into the playlist queue above.
+          </p>
+          <ScrollArea className="h-[220px]">
+            <div className="space-y-1 pr-2">
+              {availableTracks.length === 0 ? (
+                <div className="flex items-center justify-center h-[120px] text-muted-foreground text-xs">
+                  No tracks available. Add audio in the Library tab.
+                </div>
+              ) : (
+                availableTracks.map((track, index) => (
+                  <div
+                    key={track.id}
+                    draggable
+                    onDragStart={(e) => {
+                      const data = JSON.stringify(track);
+                      e.dataTransfer.setData('application/json', data);
+                      e.dataTransfer.setData('text/plain', data);
+                      e.dataTransfer.effectAllowed = 'copyMove';
+                    }}
+                    className="flex items-center gap-3 p-2 rounded-md bg-muted/40 hover:bg-muted cursor-grab active:cursor-grabbing text-xs"
+                  >
+                    <div className="w-6 h-6 flex items-center justify-center rounded-full bg-muted-foreground/10 text-[10px] font-mono text-muted-foreground">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-foreground text-sm">{track.title}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {track.artist_info || 'Unknown'} • {formatDuration(track.duration_seconds)}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] capitalize">
+                      {track.category}
+                    </Badge>
+                  </div>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
@@ -527,4 +570,11 @@ function formatTotalDuration(tracks: PlaylistTrack[]) {
     return `${hours}h ${mins}m`;
   }
   return `${mins}m`;
+}
+
+function formatDuration(seconds: number | null) {
+  if (!seconds) return '--:--';
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
