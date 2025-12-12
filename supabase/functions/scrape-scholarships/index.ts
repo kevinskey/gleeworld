@@ -1,4 +1,5 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js'
 
 const corsHeaders = {
