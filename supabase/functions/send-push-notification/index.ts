@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
         });
 
         // Use web-push library (imported via esm.sh)
-        const webpush = await import('https://esm.sh/web-push@3.6.6');
+        const webpush = await import('https://esm.sh/web-push@3.6.6?target=deno');
         
         webpush.default.setVapidDetails(
           'mailto:gleeworldapp@gmail.com',

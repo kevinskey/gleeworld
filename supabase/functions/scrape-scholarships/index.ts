@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js'
+import FirecrawlApp from 'https://esm.sh/@mendable/firecrawl-js?target=deno'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
