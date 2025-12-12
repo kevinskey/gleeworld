@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const supabase = createClient(
   Deno.env.get('SUPABASE_URL') ?? '',
