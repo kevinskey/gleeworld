@@ -270,3 +270,6 @@ verify_jwt = false
 
 [functions.send-live-invite-sms]
 verify_jwt = true
+
+[functions.glee-assistant]
+verify_jwt = false
