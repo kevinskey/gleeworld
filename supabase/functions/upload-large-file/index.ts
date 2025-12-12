@@ -31,110 +31,82 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate job ID
-    const jobId = crypto.randomUUID();
+    // Check file size - limit to 25MB for edge function memory constraints
+    const MAX_SIZE = 25 * 1024 * 1024; // 25MB
+    if (file.size > MAX_SIZE) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'File too large for edge function processing. Maximum size is 25MB.',
+          maxSize: MAX_SIZE,
+          fileSize: file.size
+        }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Processing upload: ${fileName || file.name}, size: ${file.size} bytes`);
+
+    // Generate unique file path
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(7);
+    const safeFileName = (fileName || file.name).replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `${timestamp}-${randomSuffix}-${safeFileName}`;
+
+    // Stream the file directly without loading entirely into memory
+    const fileStream = file.stream();
+    const chunks: Uint8Array[] = [];
+    const reader = fileStream.getReader();
     
-    // Create job record in database
-    const { error: jobError } = await supabaseClient
-      .from('upload_jobs')
-      .insert({
-        job_id: jobId,
-        status: 'processing',
-        file_name: fileName || file.name,
-        bucket: bucket,
-        file_size: file.size
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+    
+    // Combine chunks
+    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
+    const fileBuffer = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const chunk of chunks) {
+      fileBuffer.set(chunk, offset);
+      offset += chunk.length;
+    }
+
+    console.log(`Uploading to bucket: ${bucket}, path: ${filePath}`);
+
+    // Upload to Supabase Storage
+    const { data, error } = await supabaseClient.storage
+      .from(bucket)
+      .upload(filePath, fileBuffer, {
+        contentType: file.type || 'application/octet-stream',
+        cacheControl: '3600',
+        upsert: false
       });
 
-    if (jobError) {
-      console.error('Failed to create job record:', jobError);
-      throw new Error('Failed to create upload job');
+    if (error) {
+      console.error('Upload failed:', error);
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log(`Created upload job ${jobId} for file: ${fileName || file.name}, size: ${file.size} bytes`);
+    // Get public URL
+    const { data: { publicUrl } } = supabaseClient.storage
+      .from(bucket)
+      .getPublicUrl(filePath);
 
-    // Start background upload task
-    const uploadTask = async () => {
-      try {
-        console.log(`Starting background upload for job ${jobId}`);
-        
-        // Generate unique file path
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(7);
-        const safeFileName = (fileName || file.name).replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filePath = `${timestamp}-${randomSuffix}-${safeFileName}`;
+    console.log(`Upload completed, URL: ${publicUrl}`);
 
-        // Convert File to ArrayBuffer
-        const arrayBuffer = await file.arrayBuffer();
-        const fileBuffer = new Uint8Array(arrayBuffer);
-
-        console.log(`Uploading to bucket: ${bucket}, path: ${filePath}`);
-
-        // Upload to Supabase Storage
-        const { data, error } = await supabaseClient.storage
-          .from(bucket)
-          .upload(filePath, fileBuffer, {
-            contentType: file.type || 'application/octet-stream',
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (error) {
-          console.error(`Upload failed for job ${jobId}:`, error);
-          await supabaseClient
-            .from('upload_jobs')
-            .update({
-              status: 'failed',
-              error: error.message
-            })
-            .eq('job_id', jobId);
-          return;
-        }
-
-        // Get public URL
-        const { data: { publicUrl } } = supabaseClient.storage
-          .from(bucket)
-          .getPublicUrl(filePath);
-
-        console.log(`Upload completed for job ${jobId}, URL: ${publicUrl}`);
-
-        // Update job status
-        await supabaseClient
-          .from('upload_jobs')
-          .update({
-            status: 'completed',
-            url: publicUrl
-          })
-          .eq('job_id', jobId);
-
-      } catch (error) {
-        console.error(`Background upload error for job ${jobId}:`, error);
-        await supabaseClient
-          .from('upload_jobs')
-          .update({
-            status: 'failed',
-            error: error.message
-          })
-          .eq('job_id', jobId);
-      }
-    };
-
-    // Use EdgeRuntime.waitUntil to handle background task
-    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) {
-      EdgeRuntime.waitUntil(uploadTask());
-    } else {
-      // Fallback: run upload without waiting
-      uploadTask().catch(console.error);
-    }
-
-    // Return job ID immediately
     return new Response(
       JSON.stringify({
-        jobId,
-        status: 'processing',
-        message: 'Upload started in background'
+        success: true,
+        url: publicUrl,
+        path: filePath,
+        size: file.size
       }),
       { 
-        status: 202, 
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
