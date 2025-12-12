@@ -23,7 +23,6 @@ import { CalendarManagementModule } from '../modules/CalendarManagementModule';
 import { BucketsOfLoveModule } from '../modules/BucketsOfLoveModule';
 import { FanEngagementModule } from '../modules/FanEngagementModule';
 import { SchedulingModule } from '../modules/SchedulingModule';
-
 import { GleeWritingWidget } from '../writing/GleeWritingWidget';
 import { FirstYearConsoleModule } from '../modules/FirstYearConsoleModule';
 import { PermissionsModule } from '../modules/PermissionsModule';
@@ -114,7 +113,12 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'scheduling-module':
         return <SchedulingModule />;
       case 'service-management':
-        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Service Management</h2><p>Service management module coming soon!</p></div>;
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Service Management</h2>
+            <p>Service management module coming soon!</p>
+          </div>
+        );
       case 'first-year-console':
         return <FirstYearConsoleModule />;
       case 'user-management':
@@ -151,8 +155,15 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <TreeLightingSurveyModule />;
       case 'exit-interviews':
         return <ExitInterviewsModule />;
+      case 'the-lab':
+        return <TheLabModule />;
       default:
-        return <div className="p-6"><h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2><p>This module is being developed. Stay tuned!</p></div>;
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-4">Module: {selectedModule}</h2>
+            <p>This module is being developed. Stay tuned!</p>
+          </div>
+        );
     }
   };
 
