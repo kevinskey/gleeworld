@@ -48,12 +48,60 @@ export const GleeAssistant = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const wakeWordRecognitionRef = useRef<any>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   // Refs to track current state for use in callbacks (avoids stale closures)
   const isWakeWordActiveRef = useRef(isWakeWordActive);
   const isOpenRef = useRef(isOpen);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio } = useRadioPlayer();
+
+  // ElevenLabs TTS function
+  const speakWithElevenLabs = async (text: string) => {
+    try {
+      console.log('Speaking with ElevenLabs:', text.substring(0, 50) + '...');
+      
+      const response = await supabase.functions.invoke('elevenlabs-tts', {
+        body: { text }
+      });
+
+      if (response.error) {
+        console.error('ElevenLabs TTS error:', response.error);
+        // Fallback to browser TTS
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 1;
+          utterance.pitch = 1;
+          window.speechSynthesis.speak(utterance);
+        }
+        return;
+      }
+
+      // Create audio from the response
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      await audio.play();
+    } catch (error) {
+      console.error('TTS error:', error);
+      // Fallback to browser TTS
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+  };
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -353,12 +401,9 @@ export const GleeAssistant = () => {
         }
       }
 
-      // Speak the response (optional TTS)
-      if ('speechSynthesis' in window && data.message) {
-        const utterance = new SpeechSynthesisUtterance(data.message);
-        utterance.rate = 1;
-        utterance.pitch = 1;
-        window.speechSynthesis.speak(utterance);
+      // Speak the response using ElevenLabs TTS
+      if (data.message) {
+        speakWithElevenLabs(data.message);
       }
 
     } catch (error: any) {
