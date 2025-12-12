@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { 
   X, 
   Send, 
@@ -14,7 +15,8 @@ import {
   Loader2,
   User,
   ExternalLink,
-  Music
+  Music,
+  Radio
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import gleeAssistantAvatar from '@/assets/glee-assistant-avatar.png';
@@ -32,6 +34,7 @@ interface AssistantAction {
   title?: string;
   url?: string;
   recipients?: any[];
+  command?: string; // for radio control
 }
 
 export const GleeAssistant = () => {
@@ -50,6 +53,7 @@ export const GleeAssistant = () => {
   const isOpenRef = useRef(isOpen);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio } = useRadioPlayer();
 
   // Keep refs in sync with state
   useEffect(() => {
@@ -316,7 +320,7 @@ export const GleeAssistant = () => {
 
       setMessages(prev => [...prev, assistantMessage]);
 
-      // Auto-execute navigation actions and close assistant
+      // Auto-execute actions and close assistant
       if (data.actions?.length > 0) {
         for (const action of data.actions) {
           if (action.action === 'navigate' && action.route) {
@@ -324,11 +328,24 @@ export const GleeAssistant = () => {
             setTimeout(() => {
               navigate(action.route);
               setIsOpen(false);
-            }, 500); // Brief delay so user sees the response
+            }, 500);
             break;
           } else if (action.action === 'open_score' && action.score_id) {
             setTimeout(() => {
               navigate(`/music-library?view=${action.score_id}`);
+              setIsOpen(false);
+            }, 500);
+            break;
+          } else if (action.action === 'control_radio') {
+            // Execute radio command
+            setTimeout(() => {
+              if (action.command === 'play') {
+                playRadio();
+              } else if (action.command === 'pause') {
+                pauseRadio();
+              } else {
+                toggleRadio();
+              }
               setIsOpen(false);
             }, 500);
             break;
