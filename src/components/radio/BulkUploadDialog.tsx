@@ -28,6 +28,8 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
+  const MAX_FILE_SIZE = 150 * 1024 * 1024; // 150MB
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const audioFiles = acceptedFiles.filter(file => 
       file.type.startsWith('audio/') || 
@@ -37,6 +39,10 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
       file.name.toLowerCase().endsWith('.aac')
     );
 
+    // Filter by size
+    const validFiles = audioFiles.filter(file => file.size <= MAX_FILE_SIZE);
+    const oversizedFiles = audioFiles.filter(file => file.size > MAX_FILE_SIZE);
+
     if (audioFiles.length !== acceptedFiles.length) {
       toast({
         title: "Some files skipped",
@@ -45,7 +51,15 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
       });
     }
 
-    const newUploadFiles: UploadFile[] = audioFiles.map((file, index) => ({
+    if (oversizedFiles.length > 0) {
+      toast({
+        title: `${oversizedFiles.length} file(s) too large`,
+        description: "Maximum file size is 150MB",
+        variant: "destructive"
+      });
+    }
+
+    const newUploadFiles: UploadFile[] = validFiles.map((file, index) => ({
       file,
       id: `${Date.now()}-${index}`,
       status: 'pending',
