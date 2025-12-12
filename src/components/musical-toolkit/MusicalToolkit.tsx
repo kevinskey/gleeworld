@@ -63,7 +63,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             <TuningForkIcon className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-52 bg-background border border-border shadow-lg z-[200]">
+        <DropdownMenuContent align="end" className="w-52 bg-background border border-border shadow-lg z-[9999]" sideOffset={8}>
           <DropdownMenuLabel className="flex items-center gap-2"><Music2 className="h-4 w-4" /> Musical Toolkit</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, metronome: true })); }}>
