@@ -323,8 +323,14 @@ async function executeTool(toolName: string, args: any, userId: string) {
           .from("gw_sheet_music")
           .select("id, title, pdf_url")
           .ilike("title", `%${args.score_id}%`)
+          .not("pdf_url", "is", null)
+          .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
+        
+        if (titleError) {
+          console.error("Error searching score by title:", titleError);
+        }
         
         if (titleMatch) {
           score = titleMatch;
