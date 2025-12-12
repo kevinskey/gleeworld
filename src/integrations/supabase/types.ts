@@ -13256,6 +13256,8 @@ export type Database = {
           archived_date: string | null
           arranger: string | null
           audio_preview_url: string | null
+          audio_title: string | null
+          audio_url: string | null
           composer: string | null
           condition_notes: string | null
           copyright_year: number | null
@@ -13294,6 +13296,8 @@ export type Database = {
           archived_date?: string | null
           arranger?: string | null
           audio_preview_url?: string | null
+          audio_title?: string | null
+          audio_url?: string | null
           composer?: string | null
           condition_notes?: string | null
           copyright_year?: number | null
@@ -13332,6 +13336,8 @@ export type Database = {
           archived_date?: string | null
           arranger?: string | null
           audio_preview_url?: string | null
+          audio_title?: string | null
+          audio_url?: string | null
           composer?: string | null
           condition_notes?: string | null
           copyright_year?: number | null
