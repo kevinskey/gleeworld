@@ -70,6 +70,52 @@ export const MusicLibrary = () => {
   
   // Breadcrumb state
   const [currentSection, setCurrentSection] = useState<string | null>(null);
+  
+  // Handle URL query parameter for auto-opening a score (from assistant)
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const viewScoreId = searchParams.get('view');
+    
+    if (viewScoreId) {
+      // Fetch the score and open it
+      const fetchAndOpenScore = async () => {
+        try {
+          const { data: score, error } = await supabase
+            .from('gw_sheet_music')
+            .select('id, title, pdf_url')
+            .eq('id', viewScoreId)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error fetching score:', error);
+            toast({
+              title: 'Error',
+              description: 'Could not load the requested score.',
+              variant: 'destructive',
+            });
+            return;
+          }
+          
+          if (score && score.pdf_url) {
+            handlePdfSelect(score.pdf_url, score.title, score.id);
+            // Clear the query param to avoid re-triggering
+            navigate('/music-library', { replace: true });
+          } else {
+            toast({
+              title: 'Score not found',
+              description: 'The requested score could not be found or has no PDF.',
+              variant: 'destructive',
+            });
+          }
+        } catch (err) {
+          console.error('Error opening score from URL:', err);
+        }
+      };
+      
+      fetchAndOpenScore();
+    }
+  }, [location.search]);
+  
   const handlePdfSelect = (pdfUrl: string, title: string, id?: string) => {
     console.log('MusicLibrary: PDF selected:', {
       pdfUrl,
