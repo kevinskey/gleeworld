@@ -1,5 +1,6 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 // Asynchronous trigger for the existing grade-midterm-ai function.
 // Returns immediately (202 Accepted) and relays the grading in the background

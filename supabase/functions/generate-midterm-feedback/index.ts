@@ -1,6 +1,7 @@
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 // @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 type MidtermSubmission = {
   id: string;
