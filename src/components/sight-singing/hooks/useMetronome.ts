@@ -39,29 +39,29 @@ export const useMetronome = () => {
   }, []);
 
   const playClick = useCallback(() => {
-    // Get or create context - ensure it's always available
+    // Always try to unlock and get context
+    forceUnlockAudio();
+    
     let ctx = audioContextRef.current;
     if (!ctx || ctx.state === 'closed') {
       ctx = getSharedAudioContext();
       audioContextRef.current = ctx;
     }
     
-    // Resume if suspended (fire and forget, don't block)
+    // Resume if suspended (fire and forget)
     if (ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
     
-    // Try to play even if not running yet - iOS may resume mid-play
+    // Play sound
     try {
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       
-      // Same sound every time - just different waveform based on type
       osc.frequency.value = soundType === 'click' ? 1000 : 800;
       osc.type = soundType === 'click' ? 'square' : 'sine';
       
-      // Quick attack and decay - same every beat
       gain.gain.setValueAtTime(volume * 0.5, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
       
@@ -70,6 +70,8 @@ export const useMetronome = () => {
       
       osc.start(now);
       osc.stop(now + 0.03);
+      
+      console.log('🎵 Metronome click played, ctx state:', ctx.state);
     } catch (e) {
       console.warn('🎵 Metronome: Failed to play click:', e);
     }
