@@ -279,3 +279,12 @@ verify_jwt = false
 
 [functions.elevenlabs-sfx]
 verify_jwt = true
+
+[functions.elevenlabs-scribe-token]
+verify_jwt = true
+
+[functions.elevenlabs-conversation-token]
+verify_jwt = true
+
+[functions.elevenlabs-transcribe]
+verify_jwt = true

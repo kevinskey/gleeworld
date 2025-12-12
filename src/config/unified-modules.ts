@@ -108,6 +108,8 @@ import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDos
 import { GleeLoungeAnalyticsModule } from '@/components/modules/GleeLoungeAnalyticsModule';
 import StipendPaymentModule from '@/components/modules/StipendPaymentModule';
 import { NotificationSoundsModule } from '@/components/admin/NotificationSoundsModule';
+import RehearsalTranscriptionModule from '@/components/modules/RehearsalTranscriptionModule';
+import VoiceConversationAgent from '@/components/assistant/VoiceConversationAgent';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -1061,6 +1063,34 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isNew: true,
     component: NotificationSoundsModule,
     dbFunctionName: "notification-sounds",
+    requiredRoles: ["admin", "super-admin"]
+  },
+  {
+    id: "rehearsal-transcription",
+    name: "rehearsal-transcription",
+    title: "Rehearsal Transcription",
+    description: "AI-powered transcription of rehearsal recordings with speaker labels",
+    icon: Mic2,
+    iconColor: "purple",
+    category: "musical-leadership",
+    isActive: true,
+    isNew: true,
+    component: RehearsalTranscriptionModule,
+    dbFunctionName: "rehearsal-transcription",
+    requiredRoles: ["admin", "super-admin", "exec"]
+  },
+  {
+    id: "voice-conversation",
+    name: "voice-conversation",
+    title: "Voice Conversation",
+    description: "Have natural voice conversations with Glee Assistant",
+    icon: Mic2,
+    iconColor: "green",
+    category: "system",
+    isActive: true,
+    isNew: true,
+    component: VoiceConversationAgent,
+    dbFunctionName: "voice-conversation",
     requiredRoles: ["admin", "super-admin"]
   }
 ];
