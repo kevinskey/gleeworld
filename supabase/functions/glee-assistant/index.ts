@@ -196,6 +196,24 @@ const tools = [
       },
     },
   },
+  {
+    type: "function",
+    function: {
+      name: "control_radio",
+      description: "Control the Glee World Radio - turn it on (play), off (pause/stop), or toggle. Use this when users want to play music, listen to the radio, or stop the radio.",
+      parameters: {
+        type: "object",
+        properties: {
+          command: {
+            type: "string",
+            enum: ["play", "pause", "toggle"],
+            description: "The radio command: 'play' to start, 'pause' to stop, 'toggle' to switch",
+          },
+        },
+        required: ["command"],
+      },
+    },
+  },
 ];
 
 // Execute tool calls
@@ -562,6 +580,19 @@ async function executeTool(toolName: string, args: any, userId: string) {
       };
     }
 
+    case "control_radio": {
+      const command = args.command || "play";
+      return {
+        action: "control_radio",
+        command: command,
+        message: command === "play" 
+          ? "Turning on Glee World Radio!" 
+          : command === "pause" 
+          ? "Stopping the radio." 
+          : "Toggling the radio."
+      };
+    }
+
     default:
       return { message: "Unknown tool" };
   }
@@ -612,6 +643,7 @@ serve(async (req) => {
 - Member dossiers
 
 ## Your Capabilities:
+- Control Glee World Radio (play/pause music)
 - Search and open sheet music from the library
 - Check assignment due dates and class schedules
 - Get upcoming events and rehearsals
