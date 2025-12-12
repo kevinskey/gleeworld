@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,7 @@ export const RadioScheduleTimeline = ({
   const [isRequesting, setIsRequesting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [quickAddId, setQuickAddId] = useState('');
+  const lastDraggedMediaRef = useRef<AzuraCastMedia | null>(null);
   const { toast } = useToast();
 
   // Load queue on mount - media loads on demand
@@ -184,12 +185,19 @@ export const RadioScheduleTimeline = ({
         console.log('Parsed track:', track);
         if (track.mediaId) {
           await requestSong(track.mediaId, track.title);
+          return;
         } else {
           console.warn('No mediaId in dropped track data');
-          toast({ title: "Invalid Track", description: "Track data missing media ID", variant: "destructive" });
         }
+      }
+
+      // Fallback: use last dragged media from ref if available
+      if (lastDraggedMediaRef.current) {
+        const media = lastDraggedMediaRef.current;
+        console.log('Using lastDraggedMediaRef fallback:', media);
+        await requestSong(media.id, media.title);
       } else {
-        console.warn('No track data in drop event. Types available:', e.dataTransfer.types);
+        console.warn('No track data in drop event and no last dragged media. Types:', e.dataTransfer.types);
         toast({ title: "Drop Failed", description: "No track data received. Try clicking the track instead.", variant: "destructive" });
       }
     } catch (err) {
