@@ -43,6 +43,7 @@ import { AnnouncementsModule } from '../modules/AnnouncementsModule';
 import { TourManagerDashboard } from '../tour-manager/TourManagerDashboard';
 import TreeLightingSurveyModule from '../modules/TreeLightingSurveyModule';
 import ExitInterviewsModule from '../modules/ExitInterviewsModule';
+import { TheLabModule } from '@/components/modules/TheLabModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
