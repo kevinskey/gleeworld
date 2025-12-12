@@ -531,7 +531,7 @@ export const RadioManagement = () => {
             </CardHeader>
             <CardContent className="p-4 space-y-4">
               <div className="grid grid-cols-3 gap-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-                <Input value={newPlaylist.name} onChange={(e) => setNewPlaylist(p => ({ ...p, name: e.target.value }))} placeholder="Name" className="bg-slate-800 border-slate-600 text-white" />
+                <Input value={newPlaylist.name} onChange={(e) => setNewPlaylist(p => ({ ...p, name: e.target.value }))} placeholder="Name" className="bg-slate-800 border-slate-600 text-black" />
                 <Select value={newPlaylist.type} onValueChange={(v) => setNewPlaylist(p => ({ ...p, type: v as 'default' | 'scheduled' | 'once_per_x_songs' | 'once_per_x_minutes' }))}>
                   <SelectTrigger className="bg-slate-800 border-slate-600 text-white"><SelectValue /></SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-600">
