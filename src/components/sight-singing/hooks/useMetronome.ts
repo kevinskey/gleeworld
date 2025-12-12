@@ -38,26 +38,20 @@ export const useMetronome = () => {
     }
   }, []);
 
-  const playClick = useCallback(async () => {
-    const ctx = audioContextRef.current;
-    if (!ctx) {
-      console.warn('🎵 Metronome: No audio context available');
-      return;
+  const playClick = useCallback(() => {
+    // Get or create context - ensure it's always available
+    let ctx = audioContextRef.current;
+    if (!ctx || ctx.state === 'closed') {
+      ctx = getSharedAudioContext();
+      audioContextRef.current = ctx;
     }
     
-    // On mobile, context might go back to suspended - resume inline
+    // Resume if suspended (fire and forget, don't block)
     if (ctx.state === 'suspended') {
-      try {
-        await ctx.resume();
-      } catch {
-        // Ignore, try to play anyway
-      }
+      ctx.resume().catch(() => {});
     }
     
-    if (ctx.state !== 'running') {
-      return;
-    }
-    
+    // Try to play even if not running yet - iOS may resume mid-play
     try {
       const now = ctx.currentTime;
       const osc = ctx.createOscillator();
