@@ -6,6 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { azuraCastService } from '@/services/azuracast';
 import {
   DndContext,
   closestCenter,
@@ -34,7 +35,9 @@ import {
   Clock,
   Plus,
   RefreshCw,
-  Volume2
+  Volume2,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -168,6 +171,7 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -414,24 +418,111 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
     e.dataTransfer.dropEffect = 'copy';
   };
 
+  // Push local queue to AzuraCast live radio
+  const pushToAzuraCast = async () => {
+    setSyncing(true);
+    try {
+      // Get all tracks from all categories in order
+      const allTracks: PlaylistTrack[] = [];
+      CATEGORIES.forEach(cat => {
+        const categoryTracks = playlists[cat.id] || [];
+        allTracks.push(...categoryTracks);
+      });
+
+      if (allTracks.length === 0) {
+        toast({
+          title: 'Empty Queue',
+          description: 'Add tracks to the queue first',
+          variant: 'destructive',
+        });
+        setSyncing(false);
+        return;
+      }
+
+      // Get AzuraCast media library to match tracks
+      const azuraMedia = await azuraCastService.getAllMedia();
+      
+      // Clear current AzuraCast queue
+      await azuraCastService.clearQueue();
+      
+      let matched = 0;
+      let failed = 0;
+
+      // Request each track by matching title
+      for (const track of allTracks) {
+        const match = azuraMedia.find((m: any) => {
+          const mediaTitle = (m.media?.title || m.path_short || '').toLowerCase();
+          const trackTitle = track.title.toLowerCase();
+          return mediaTitle.includes(trackTitle) || trackTitle.includes(mediaTitle);
+        });
+
+        if (match?.media?.id) {
+          try {
+            await azuraCastService.requestSong(match.media.id);
+            matched++;
+          } catch (e) {
+            console.error('Failed to request track:', track.title, e);
+            failed++;
+          }
+        } else {
+          console.warn('No AzuraCast match for:', track.title);
+          failed++;
+        }
+      }
+
+      toast({
+        title: 'Queue Synced',
+        description: `${matched} tracks pushed to live radio${failed > 0 ? `, ${failed} not found` : ''}`,
+      });
+
+      onRefreshTracks?.();
+    } catch (error) {
+      console.error('Error syncing to AzuraCast:', error);
+      toast({
+        title: 'Sync Failed',
+        description: 'Could not push queue to live radio',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const currentCategoryTracks = playlists[activeCategory] || [];
   const currentCategory = CATEGORIES.find(c => c.id === activeCategory);
+  const totalTracks = CATEGORIES.reduce((sum, cat) => sum + (playlists[cat.id]?.length || 0), 0);
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2">
             <Radio className="h-5 w-5" />
             Playlist Queue
+            <Badge variant="outline" className="ml-2">{totalTracks} tracks</Badge>
           </CardTitle>
-          <Button size="sm" variant="outline" onClick={fetchPlaylist}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={fetchPlaylist}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+            <Button 
+              size="sm" 
+              onClick={pushToAzuraCast} 
+              disabled={syncing || totalTracks === 0}
+              className="bg-primary"
+            >
+              {syncing ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4 mr-2" />
+              )}
+              Push to Live
+            </Button>
+          </div>
         </div>
         <p className="text-sm text-muted-foreground">
-          Drag tracks from the library to add. Drag handles to reorder. Loops when done.
+          Drag tracks from the library to add. Reorder with drag handles. Click "Push to Live" to sync with radio.
         </p>
       </CardHeader>
       <CardContent>
