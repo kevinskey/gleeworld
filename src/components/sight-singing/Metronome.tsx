@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Play, Square, Volume2 } from 'lucide-react';
 import { useMetronome } from './hooks/useMetronome';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { forceUnlockAudio } from '@/utils/mobileAudioUnlock';
 
 export const Metronome: React.FC = () => {
   const {
@@ -34,6 +35,9 @@ export const Metronome: React.FC = () => {
   };
 
   const handlePlayStop = () => {
+    // CRITICAL: Force unlock audio on the button click (user gesture) for iOS
+    forceUnlockAudio();
+    
     if (isPlaying) {
       stopMetronome();
     } else {
@@ -124,7 +128,9 @@ export const Metronome: React.FC = () => {
           variant={isPlaying ? "destructive" : "default"}
           size="lg"
           onClick={handlePlayStop}
-          className="w-full"
+          onPointerDown={() => forceUnlockAudio()}
+          onTouchStart={() => forceUnlockAudio()}
+          className="w-full touch-manipulation"
         >
           {isPlaying ? (
             <>
