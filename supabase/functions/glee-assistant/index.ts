@@ -262,21 +262,34 @@ async function executeTool(toolName: string, args: any, userId: string) {
     }
 
     case "search_music_library": {
-      const query = args.query?.toLowerCase() || "";
+      const query = args.query || "";
       
-      const { data: scores, error } = await supabase
+      // Search by title first (handles special characters like commas)
+      const { data: titleMatches, error: titleError } = await supabase
         .from("gw_sheet_music")
         .select("id, title, composer, voicing, pdf_url")
-        .or(`title.ilike.%${query}%,composer.ilike.%${query}%`)
+        .ilike("title", `%${query}%`)
         .limit(5);
 
-      if (error) {
-        console.error("Error searching music:", error);
+      // Search by composer separately
+      const { data: composerMatches, error: composerError } = await supabase
+        .from("gw_sheet_music")
+        .select("id, title, composer, voicing, pdf_url")
+        .ilike("composer", `%${query}%`)
+        .limit(5);
+
+      if (titleError && composerError) {
+        console.error("Error searching music:", titleError || composerError);
         return { scores: [], message: "Could not search music library" };
       }
 
-      // Format with explicit UUID labels for the AI to use
-      const formattedScores = (scores || []).map(s => ({
+      // Combine and dedupe results
+      const allScores = [...(titleMatches || []), ...(composerMatches || [])];
+      const uniqueScores = allScores.filter((score, index, self) => 
+        index === self.findIndex(s => s.id === score.id)
+      ).slice(0, 5);
+
+      const formattedScores = uniqueScores.map(s => ({
         uuid: s.id,
         title: s.title,
         composer: s.composer,
