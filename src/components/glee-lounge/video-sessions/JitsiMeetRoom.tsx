@@ -11,9 +11,6 @@ interface JitsiMeetRoomProps {
   isRecordingEnabled?: boolean;
 }
 
-// JaaS App ID
-const JAAS_APP_ID = 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9';
-
 declare global {
   interface Window {
     JitsiMeetExternalAPI: any;
@@ -33,22 +30,22 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
+  // Use meet.jit.si which is allowed by CSP
   const jitsiRoom = `GleeWorld-${roomName}`;
-  const jaasRoomName = `${JAAS_APP_ID}/${jitsiRoom}`;
 
   useEffect(() => {
     let mounted = true;
 
-    const loadJaaSAPI = async () => {
+    const loadJitsiAPI = async () => {
       // Check if already loaded
       if (window.JitsiMeetExternalAPI) {
         initializeJitsi();
         return;
       }
 
-      // Load the JaaS External API script
+      // Load the Jitsi External API script from meet.jit.si
       const script = document.createElement('script');
-      script.src = `https://8x8.vc/${JAAS_APP_ID}/external_api.js`;
+      script.src = 'https://meet.jit.si/external_api.js';
       script.async = true;
       
       script.onload = () => {
@@ -74,8 +71,8 @@ export const JitsiMeetRoom = ({
       if (!containerRef.current || !mounted) return;
 
       try {
-        apiRef.current = new window.JitsiMeetExternalAPI('8x8.vc', {
-          roomName: jaasRoomName,
+        apiRef.current = new window.JitsiMeetExternalAPI('meet.jit.si', {
+          roomName: jitsiRoom,
           parentNode: containerRef.current,
           userInfo: {
             displayName: displayName
@@ -132,7 +129,7 @@ export const JitsiMeetRoom = ({
       }
     };
 
-    loadJaaSAPI();
+    loadJitsiAPI();
 
     return () => {
       mounted = false;
@@ -141,7 +138,7 @@ export const JitsiMeetRoom = ({
         apiRef.current = null;
       }
     };
-  }, [jaasRoomName, displayName, onLeave, toast]);
+  }, [jitsiRoom, displayName, onLeave, toast]);
 
   const hangUp = () => {
     if (apiRef.current) {
