@@ -9,7 +9,7 @@ import { OnlineNowWidget } from '@/components/glee-lounge/OnlineNowWidget';
 import { OnlineSidebar } from '@/components/glee-lounge/OnlineSidebar';
 import { GleeLoungeWithMusicLibrary } from '@/components/glee-lounge/GleeLoungeWithMusicLibrary';
 import { LiveVideoSession } from '@/components/glee-lounge/LiveVideoSession';
-import { ActiveVideoSessions } from '@/components/glee-lounge/video-sessions/ActiveVideoSessions';
+
 import { CreateVideoSessionDialog } from '@/components/glee-lounge/video-sessions/CreateVideoSessionDialog';
 import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/VideoSessionViewer';
 import { Button } from '@/components/ui/button';
@@ -255,13 +255,6 @@ export default function GleeLounge() {
           </Sheet>
         </div>
 
-        {/* Active Video Sessions */}
-        <div className="mb-6">
-          <ActiveVideoSessions
-            onJoinSession={(id, room, isRec) => setActiveVideoSession({ id, roomName: room, isRecording: isRec })}
-            onCreateSession={() => setShowCreateVideoSession(true)}
-          />
-        </div>
 
         <div className="flex gap-6">
           {/* Main content */}
