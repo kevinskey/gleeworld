@@ -264,21 +264,33 @@ async function executeTool(toolName: string, args: any, userId: string) {
     case "search_music_library": {
       const rawQuery = args.query || "";
       // Normalize query by removing common punctuation so it matches titles
-      const query = rawQuery.replace(/[.,!?]/g, " ").replace(/\s+/g, " ").trim();
+      let query = rawQuery.replace(/[.,!?]/g, " ").replace(/\s+/g, " ").trim();
+      console.log("Searching music library for:", query);
+
+      // Handle "title by composer" pattern (e.g., "Ave Maria by Nathaniel Dett")
+      let titleQuery = query;
+      let composerQuery = query;
       
-      // Search by title first (handles special characters like commas)
+      const byMatch = query.match(/^(.+?)\s+by\s+(.+)$/i);
+      if (byMatch) {
+        titleQuery = byMatch[1].trim();
+        composerQuery = byMatch[2].trim();
+        console.log("Parsed as title:", titleQuery, "composer:", composerQuery);
+      }
+      
+      // Search by title
       const { data: titleMatches, error: titleError } = await supabase
         .from("gw_sheet_music")
         .select("id, title, composer, voicing, pdf_url")
-        .ilike("title", `%${query}%`)
-        .limit(5);
+        .ilike("title", `%${titleQuery}%`)
+        .limit(10);
 
-      // Search by composer separately
+      // Search by composer
       const { data: composerMatches, error: composerError } = await supabase
         .from("gw_sheet_music")
         .select("id, title, composer, voicing, pdf_url")
-        .ilike("composer", `%${query}%`)
-        .limit(5);
+        .ilike("composer", `%${composerQuery}%`)
+        .limit(10);
 
       if (titleError && composerError) {
         console.error("Error searching music:", titleError || composerError);
@@ -286,7 +298,20 @@ async function executeTool(toolName: string, args: any, userId: string) {
       }
 
       // Combine and dedupe results
-      const allScores = [...(titleMatches || []), ...(composerMatches || [])];
+      let allScores = [...(titleMatches || []), ...(composerMatches || [])];
+      
+      // If we parsed "title by composer", prioritize scores matching BOTH
+      if (byMatch) {
+        const exactMatches = allScores.filter(s => 
+          s.title?.toLowerCase().includes(titleQuery.toLowerCase()) &&
+          s.composer?.toLowerCase().includes(composerQuery.toLowerCase())
+        );
+        if (exactMatches.length > 0) {
+          // Put exact matches first
+          allScores = [...exactMatches, ...allScores.filter(s => !exactMatches.includes(s))];
+        }
+      }
+      
       const uniqueScores = allScores.filter((score, index, self) => 
         index === self.findIndex(s => s.id === score.id)
       ).slice(0, 5);
