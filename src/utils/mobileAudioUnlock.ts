@@ -133,19 +133,28 @@ export const forceUnlockAudio = (): boolean => {
 export const setupMobileAudioUnlock = () => {
   const unlockOnInteraction = () => {
     if (!isUnlocked) {
+      console.log('[AudioUnlock] User interaction detected, attempting unlock');
       forceUnlockAudio();
     }
   };
   
-  // Listen for various touch/click events
-  const events = ['touchstart', 'touchend', 'click', 'pointerdown', 'keydown'];
-  events.forEach(event => {
-    document.addEventListener(event, unlockOnInteraction, { once: false, passive: true });
+  // Listen for various touch/click events (non-passive, fire only once per event type)
+  const events: Array<keyof DocumentEventMap> = ['touchstart', 'touchend', 'click', 'pointerdown', 'keydown'];
+  events.forEach((event) => {
+    try {
+      document.addEventListener(event, unlockOnInteraction, {
+        once: true,
+        passive: false,
+      });
+    } catch (e) {
+      // Fallback for older browsers without options support
+      document.addEventListener(event, unlockOnInteraction as EventListener);
+    }
   });
   
   return () => {
-    events.forEach(event => {
-      document.removeEventListener(event, unlockOnInteraction);
+    events.forEach((event) => {
+      document.removeEventListener(event, unlockOnInteraction as EventListener);
     });
   };
 };
