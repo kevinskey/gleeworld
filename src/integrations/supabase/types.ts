@@ -10010,6 +10010,8 @@ export type Database = {
           phone_number: string | null
           push_enabled: boolean
           sms_enabled: boolean
+          sound_enabled: boolean | null
+          sound_volume: number | null
           updated_at: string
           user_id: string | null
         }
@@ -10027,6 +10029,8 @@ export type Database = {
           phone_number?: string | null
           push_enabled?: boolean
           sms_enabled?: boolean
+          sound_enabled?: boolean | null
+          sound_volume?: number | null
           updated_at?: string
           user_id?: string | null
         }
@@ -10044,6 +10048,8 @@ export type Database = {
           phone_number?: string | null
           push_enabled?: boolean
           sms_enabled?: boolean
+          sound_enabled?: boolean | null
+          sound_volume?: number | null
           updated_at?: string
           user_id?: string | null
         }
@@ -18858,6 +18864,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_sounds: {
+        Row: {
+          created_at: string | null
+          duration_seconds: number | null
+          id: string
+          prompt_used: string | null
+          sound_type: string
+          storage_path: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          prompt_used?: string | null
+          sound_type: string
+          storage_path: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          duration_seconds?: number | null
+          id?: string
+          prompt_used?: string | null
+          sound_type?: string
+          storage_path?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       onboarding_signatures: {
         Row: {

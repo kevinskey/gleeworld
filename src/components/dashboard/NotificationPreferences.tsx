@@ -4,15 +4,18 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Bell, Mail, MessageSquare } from 'lucide-react';
+import { Slider } from '@/components/ui/slider';
+import { Bell, Mail, MessageSquare, Volume2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { useNotificationSounds } from '@/hooks/useNotificationSounds';
 
 export const NotificationPreferences = () => {
   const { user } = useAuth();
   const { isSubscribed, subscribe, unsubscribe, permission } = usePushNotifications();
+  const { soundEnabled, setSoundEnabled, volume, setVolume, playSound } = useNotificationSounds();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [smsEnabled, setSmsEnabled] = useState(false);
   const [emailEnabled, setEmailEnabled] = useState(true);
@@ -65,6 +68,10 @@ export const NotificationPreferences = () => {
     }
   };
 
+  const handleTestSound = () => {
+    playSound('message');
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -100,6 +107,52 @@ export const NotificationPreferences = () => {
             Push notifications are blocked. Please enable them in your browser settings.
           </p>
         )}
+
+        {/* Sound Notifications */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label className="text-base flex items-center gap-2">
+                <Volume2 className="h-4 w-4" />
+                Sound Notifications
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Play sounds for new notifications
+              </p>
+            </div>
+            <Switch
+              checked={soundEnabled}
+              onCheckedChange={setSoundEnabled}
+            />
+          </div>
+
+          {soundEnabled && (
+            <div className="ml-6 space-y-3">
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">
+                  Volume: {Math.round(volume * 100)}%
+                </Label>
+                <div className="flex items-center gap-3">
+                  <Slider
+                    value={[volume]}
+                    onValueChange={([v]) => setVolume(v)}
+                    min={0}
+                    max={1}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleTestSound}
+                  >
+                    Test
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* SMS Notifications */}
         <div className="space-y-3">

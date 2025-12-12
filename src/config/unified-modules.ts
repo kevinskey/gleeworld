@@ -107,6 +107,7 @@ import TreeLightingSurveyModule from '@/components/modules/TreeLightingSurveyMod
 import MemberDossiersModule from '@/components/modules/member-dossiers/MemberDossiersModule';
 import { GleeLoungeAnalyticsModule } from '@/components/modules/GleeLoungeAnalyticsModule';
 import StipendPaymentModule from '@/components/modules/StipendPaymentModule';
+import { NotificationSoundsModule } from '@/components/admin/NotificationSoundsModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -1047,6 +1048,20 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: StipendPaymentModule,
     dbFunctionName: "stipend-payments",
     requiredRoles: ["admin", "super-admin", "exec"]
+  },
+  {
+    id: "notification-sounds",
+    name: "notification-sounds",
+    title: "Notification Sounds",
+    description: "Generate custom AI notification sounds using ElevenLabs",
+    icon: Music,
+    iconColor: "amber",
+    category: "system",
+    isActive: true,
+    isNew: true,
+    component: NotificationSoundsModule,
+    dbFunctionName: "notification-sounds",
+    requiredRoles: ["admin", "super-admin"]
   }
 ];
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGlobalUnvotedPolls } from '@/hooks/useGlobalUnvotedPolls';
+import { useNotificationSounds } from '@/hooks/useNotificationSounds';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +22,7 @@ const DISMISS_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 export const PollReminderPopup = () => {
   const { user } = useAuth();
   const { unvotedPolls, loading, hasUnvotedPolls } = useGlobalUnvotedPolls();
+  const { playSound } = useNotificationSounds();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -39,10 +41,12 @@ export const PollReminderPopup = () => {
     // Show popup after a short delay
     const timer = setTimeout(() => {
       setIsOpen(true);
+      // Play poll notification sound when popup opens
+      playSound('poll');
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [loading, user, hasUnvotedPolls]);
+  }, [loading, user, hasUnvotedPolls, playSound]);
 
   const handleDismiss = () => {
     localStorage.setItem(POPUP_DISMISSED_KEY, Date.now().toString());
