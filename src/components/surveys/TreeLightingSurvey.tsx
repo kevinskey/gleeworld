@@ -20,7 +20,7 @@ export const TreeLightingSurvey = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
 
-  const deadline = new Date("2025-12-12T23:59:59");
+  const deadline = new Date("2025-12-31T23:59:59");
   const isExpired = new Date() > deadline;
 
   useEffect(() => {
