@@ -391,25 +391,49 @@ export const RadioManagement = () => {
     try {
       // First check if track exists in AzuraCast
       const azuraMedia = await azuraCastService.getAllMedia();
-      let match = azuraMedia.find((m: any) => 
-        m.media?.title?.toLowerCase() === track.title.toLowerCase() ||
-        m.media?.path?.toLowerCase().includes(track.title.toLowerCase())
-      );
+      const normalizedTitle = track.title.toLowerCase().replace(/[_\-\.]/g, ' ').trim();
+      
+      // Improved matching: check title, path, and text fields
+      let match = azuraMedia.find((m: any) => {
+        const mediaTitle = (m.media?.title || '').toLowerCase().replace(/[_\-\.]/g, ' ').trim();
+        const mediaPath = (m.media?.path || '').toLowerCase();
+        const mediaText = (m.media?.text || '').toLowerCase();
+        
+        return mediaTitle === normalizedTitle ||
+               mediaTitle.includes(normalizedTitle) ||
+               normalizedTitle.includes(mediaTitle) ||
+               mediaPath.includes(normalizedTitle.split(' ')[0]) ||
+               mediaText.includes(normalizedTitle.split(' ')[0]);
+      });
 
-      // If not found, upload it
+      // If not found and track has audio_url, try to upload
       if (!match && track.audio_url) {
+        // Check file size first (skip if likely too large)
+        toast({ title: "Uploading...", description: `Uploading "${track.title}" to AzuraCast` });
+        
         const fileName = track.audio_url.split('/').pop() || `${track.title}.mp3`;
-        const uploadResult = await azuraCastService.uploadMediaFromUrl(
-          track.audio_url,
-          fileName,
-          track.title,
-          track.artist_info || 'Spelman College Glee Club'
-        );
-        if (uploadResult?.id || uploadResult?.mediaId) {
-          const refreshedMedia = await azuraCastService.getAllMedia();
-          match = refreshedMedia.find((m: any) => 
-            m.media?.id === (uploadResult.id || uploadResult.mediaId)
+        try {
+          const uploadResult = await azuraCastService.uploadMediaFromUrl(
+            track.audio_url,
+            fileName,
+            track.title,
+            track.artist_info || 'Spelman College Glee Club'
           );
+          if (uploadResult?.id || uploadResult?.mediaId) {
+            const refreshedMedia = await azuraCastService.getAllMedia();
+            match = refreshedMedia.find((m: any) => 
+              m.media?.id === (uploadResult.id || uploadResult.mediaId)
+            );
+          }
+        } catch (uploadError: any) {
+          toast({ 
+            title: "Upload Failed", 
+            description: uploadError.message?.includes('413') || uploadError.message?.includes('Too Large') 
+              ? "File too large for AzuraCast. Use Bulk Upload or upload directly via AzuraCast admin." 
+              : "Could not upload to AzuraCast", 
+            variant: "destructive" 
+          });
+          return;
         }
       }
 
@@ -418,7 +442,11 @@ export const RadioManagement = () => {
         const playlist = playlists.find(p => p.id === playlistId);
         toast({ title: "Added to Playlist", description: `"${track.title}" added to ${playlist?.name || 'playlist'}` });
       } else {
-        toast({ title: "Error", description: "Could not find or upload track to AzuraCast", variant: "destructive" });
+        toast({ 
+          title: "Track Not Found", 
+          description: "Track not in AzuraCast library. Upload it first via Bulk Upload.", 
+          variant: "destructive" 
+        });
       }
     } catch (error) {
       console.error('Error assigning to playlist:', error);
