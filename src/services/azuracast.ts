@@ -194,13 +194,20 @@ class AzuraCastService {
     }
 
     // Handle supabase invoke error (non-2xx status)
+    // NOTE: Even when `error` is set, `data` may contain our custom error body from the edge function
     if (error) {
       console.error('AzuraCast: Proxy request error:', error);
+      // Extract actual error details from response body if available
+      let errorMessage = error.message || 'Unknown error';
+      if (data && typeof data === 'object' && data.error) {
+        errorMessage = `${data.error}${data.details ? ` ${data.details}` : ''}`;
+        console.error('AzuraCast: Actual error from edge function:', data);
+      }
       if (options?.returnEmptyOnError) {
         console.warn('AzuraCast: Returning empty array due to error response');
         return [];
       }
-      throw new Error(`Proxy request failed: ${error.message}`);
+      throw new Error(errorMessage);
     }
 
     // Check if the response contains an error from the edge function/AzuraCast API
