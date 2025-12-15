@@ -81,13 +81,12 @@ Deno.serve(async (req) => {
     }
 
     const fileArrayBuffer = await fileResponse.arrayBuffer();
-    const fileBytes = new Uint8Array(fileArrayBuffer);
-    console.log('AzuraCast Upload: File downloaded, size:', fileBytes.length);
+    console.log('AzuraCast Upload: File downloaded, size:', fileArrayBuffer.byteLength);
 
     // Check file size - AzuraCast nginx has ~50MB limit
     const maxSize = 50 * 1024 * 1024; // 50MB
-    if (fileBytes.length > maxSize) {
-      console.log('AzuraCast Upload: File too large:', fileBytes.length, 'bytes (max:', maxSize, ')');
+    if (fileArrayBuffer.byteLength > maxSize) {
+      console.log('AzuraCast Upload: File too large:', fileArrayBuffer.byteLength, 'bytes (max:', maxSize, ')');
       return new Response(
         JSON.stringify({ error: 'File too large for AzuraCast upload. Maximum size is 50MB.' }),
         { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -106,50 +105,23 @@ Deno.serve(async (req) => {
     };
     const contentType = mimeTypes[ext] || 'audio/mpeg';
 
-    // Build multipart form data manually for better compatibility
-    const boundary = '----FormBoundary' + Math.random().toString(36).substring(2);
-    
-    // Build the multipart body
-    const textEncoder = new TextEncoder();
-    
-    // File part
-    const fileHeader = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fileName}"\r\nContent-Type: ${contentType}\r\n\r\n`;
-    const fileFooter = '\r\n';
-    
-    // Path part (empty = root directory)
-    const pathPart = `--${boundary}\r\nContent-Disposition: form-data; name="path"\r\n\r\n\r\n`;
-    
-    // Final boundary
-    const finalBoundary = `--${boundary}--\r\n`;
-    
-    // Combine all parts
-    const headerBytes = textEncoder.encode(fileHeader);
-    const footerBytes = textEncoder.encode(fileFooter);
-    const pathBytes = textEncoder.encode(pathPart);
-    const finalBytes = textEncoder.encode(finalBoundary);
-    
-    const totalLength = headerBytes.length + fileBytes.length + footerBytes.length + pathBytes.length + finalBytes.length;
-    const body = new Uint8Array(totalLength);
-    
-    let offset = 0;
-    body.set(headerBytes, offset); offset += headerBytes.length;
-    body.set(fileBytes, offset); offset += fileBytes.length;
-    body.set(footerBytes, offset); offset += footerBytes.length;
-    body.set(pathBytes, offset); offset += pathBytes.length;
-    body.set(finalBytes, offset);
+    // Create FormData with proper Blob
+    const formData = new FormData();
+    const blob = new Blob([fileArrayBuffer], { type: contentType });
+    formData.append('file', blob, fileName);
 
     // Upload to AzuraCast
     const uploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files';
-    console.log('AzuraCast Upload: Uploading to:', uploadUrl, 'file size:', fileBytes.length, 'content-type:', contentType);
+    console.log('AzuraCast Upload: Uploading to:', uploadUrl, 'file size:', fileArrayBuffer.byteLength, 'content-type:', contentType);
 
     const uploadResponse = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
         'X-API-Key': azuracastApiKey,
         'Accept': 'application/json',
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        // Don't set Content-Type - let fetch set it with the boundary for FormData
       },
-      body: body,
+      body: formData,
     });
 
     console.log('AzuraCast Upload: Response status:', uploadResponse.status);
