@@ -290,9 +290,16 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
       await azuraCastService.startFrontend();
       onRefresh();
       toast({ title: "Station Started", description: "Radio is now broadcasting to all listeners" });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Start station error:', error);
-      toast({ title: "Error", description: "Failed to start station", variant: "destructive" });
+      const errorMessage = error?.message || String(error) || '';
+      // "AlreadyRunningException" means the station is already running - treat as success
+      if (errorMessage.includes('AlreadyRunning') || errorMessage.includes('already running')) {
+        onRefresh();
+        toast({ title: "Station Online", description: "Radio is already broadcasting" });
+      } else {
+        toast({ title: "Error", description: "Failed to start station", variant: "destructive" });
+      }
     } finally {
       setServerControlLoading(null);
     }
@@ -307,9 +314,16 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
       await azuraCastService.stopFrontend();
       onRefresh();
       toast({ title: "Station Stopped", description: "Radio broadcast has been stopped" });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Stop station error:', error);
-      toast({ title: "Error", description: "Failed to stop station", variant: "destructive" });
+      const errorMessage = error?.message || String(error) || '';
+      // "NotRunningException" means the station is already stopped - treat as success
+      if (errorMessage.includes('NotRunning') || errorMessage.includes('not running') || errorMessage.includes('already stopped')) {
+        onRefresh();
+        toast({ title: "Station Offline", description: "Radio is already stopped" });
+      } else {
+        toast({ title: "Error", description: "Failed to stop station", variant: "destructive" });
+      }
     } finally {
       setServerControlLoading(null);
     }
