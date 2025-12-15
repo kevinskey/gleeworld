@@ -396,7 +396,8 @@ class AzuraCastService {
   // Request a song to be queued (uses song_id from media library)
   async requestSong(mediaId: number): Promise<any> {
     console.log('AzuraCast: Requesting song with media ID:', mediaId);
-    return await this.makeProxyRequest(`/station/{stationId}/requests/${mediaId}`, 'POST');
+    // AzuraCast uses singular "request" not plural "requests" for POSTing
+    return await this.makeProxyRequest(`/station/{stationId}/request/${mediaId}`, 'POST');
   }
 
   // Get requestable songs list
