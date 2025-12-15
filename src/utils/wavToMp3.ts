@@ -14,23 +14,71 @@ export async function convertWavToMp3(
   
   onProgress?.(10);
   
-  // Parse WAV header (use lamejs built-in parser for correctness)
-  const wavHeader = (lamejs as any).WavHeader?.readHeader?.(new DataView(arrayBuffer));
-  if (!wavHeader) {
-    throw new Error('Invalid WAV header');
+  // Parse WAV header (robust RIFF chunk scanning; supports BWF with extra chunks)
+  const dataView = new DataView(arrayBuffer);
+
+  const readFourCC = (offset: number) =>
+    String.fromCharCode(
+      dataView.getUint8(offset),
+      dataView.getUint8(offset + 1),
+      dataView.getUint8(offset + 2),
+      dataView.getUint8(offset + 3),
+    );
+
+  const riff = readFourCC(0);
+  const wave = readFourCC(8);
+  if (riff !== 'RIFF' || wave !== 'WAVE') {
+    throw new Error(`Invalid WAV file (missing RIFF/WAVE). riff=${riff} wave=${wave}`);
   }
 
-  const numChannels = wavHeader.channels;
-  const sampleRate = wavHeader.sampleRate;
-  const bitsPerSample = 16; // lamejs outputs PCM16
-  const dataOffset = wavHeader.dataOffset;
-  const dataSize = wavHeader.dataLen;
+  let numChannels: number | null = null;
+  let sampleRate: number | null = null;
+  let bitsPerSample: number | null = null;
+  let dataOffset: number | null = null;
+  let dataSize: number | null = null;
+
+  // Chunks start at byte 12
+  let pos = 12;
+  while (pos + 8 <= arrayBuffer.byteLength) {
+    const chunkId = readFourCC(pos);
+    const chunkSize = dataView.getUint32(pos + 4, true);
+    const chunkDataStart = pos + 8;
+
+    if (chunkId === 'fmt ' && chunkDataStart + 16 <= arrayBuffer.byteLength) {
+      const audioFormat = dataView.getUint16(chunkDataStart + 0, true);
+      numChannels = dataView.getUint16(chunkDataStart + 2, true);
+      sampleRate = dataView.getUint32(chunkDataStart + 4, true);
+      bitsPerSample = dataView.getUint16(chunkDataStart + 14, true);
+
+      // PCM(1) or IEEE float(3) are common; we only encode PCM16
+      if (audioFormat !== 1) {
+        console.warn('WAV to MP3: Unsupported WAV audioFormat:', audioFormat, '(expected PCM=1)');
+      }
+    }
+
+    if (chunkId === 'data') {
+      dataOffset = chunkDataStart;
+      dataSize = chunkSize;
+      break; // data is what we need
+    }
+
+    // Move to next chunk; chunks are word-aligned
+    pos = chunkDataStart + chunkSize + (chunkSize % 2);
+  }
+
+  if (!numChannels || !sampleRate || !bitsPerSample || dataOffset == null || dataSize == null) {
+    throw new Error('Invalid WAV header (missing fmt/data chunks)');
+  }
+
+  if (bitsPerSample !== 16) {
+    throw new Error(`Unsupported WAV bit depth: ${bitsPerSample}. Only 16-bit PCM is supported.`);
+  }
 
   console.log('WAV to MP3: channels:', numChannels, 'sampleRate:', sampleRate, 'bits:', bitsPerSample);
 
   // Convert to PCM16 samples
   const samples = new Int16Array(arrayBuffer, dataOffset, dataSize / 2);
-  
+
   onProgress?.(15);
   
   // Initialize MP3 encoder
