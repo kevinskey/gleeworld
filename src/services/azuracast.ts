@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import { convertWavToMp3, isWavFile } from '@/utils/wavToMp3';
 
 interface AzuraCastStation {
   id: number;
@@ -477,56 +476,6 @@ class AzuraCastService {
       throw new Error('Not authenticated');
     }
 
-    let uploadUrl = fileUrl;
-    let uploadFileName = fileName;
-
-    // Convert WAV to MP3 automatically
-    if (isWavFile(fileName) || isWavFile(fileUrl)) {
-      try {
-        onProgress?.('Converting WAV to MP3...', 0);
-        console.log('AzuraCast: Converting WAV to MP3...');
-        
-        const { blob, newFileName } = await convertWavToMp3(fileUrl, fileName, (progress) => {
-          onProgress?.('Converting WAV to MP3...', progress);
-        });
-        
-        // Upload converted file to Supabase storage
-        onProgress?.('Uploading converted file...', 0);
-        const convertedPath = `radio-uploads/${Date.now()}-${newFileName}`;
-        const bucket = 'media-library';
-
-        const contentType = blob.type || (newFileName.toLowerCase().endsWith('.mp3') ? 'audio/mpeg' : 'application/octet-stream');
-
-        const { error: uploadError } = await supabase.storage
-          .from(bucket)
-          .upload(convertedPath, blob, { contentType });
-
-        if (uploadError) {
-          throw new Error(`Failed to upload converted file: ${uploadError.message}`);
-        }
-
-        // Prefer signed URL (works even if bucket is not public)
-        const { data: signed } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(convertedPath, 60 * 10);
-
-        if (signed?.signedUrl) {
-          uploadUrl = signed.signedUrl;
-        } else {
-          const { data: urlData } = supabase.storage
-            .from(bucket)
-            .getPublicUrl(convertedPath);
-          uploadUrl = urlData.publicUrl;
-        }
-
-        uploadFileName = newFileName;
-        console.log('AzuraCast: Converted audio uploaded to:', uploadUrl, 'type:', contentType);
-      } catch (conversionError) {
-        console.error('AzuraCast: WAV conversion failed:', conversionError);
-        throw new Error(`WAV conversion failed: ${conversionError instanceof Error ? conversionError.message : 'Unknown error'}`);
-      }
-    }
-
     onProgress?.('Uploading to radio station...');
     
     const response = await fetch('https://oopmlreysjzuxzylyheb.functions.supabase.co/azuracast-upload-media', {
@@ -535,7 +484,7 @@ class AzuraCastService {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ fileUrl: uploadUrl, fileName: uploadFileName, title, artist }),
+      body: JSON.stringify({ fileUrl, fileName, title, artist }),
     });
 
     if (!response.ok) {
