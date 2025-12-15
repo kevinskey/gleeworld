@@ -393,30 +393,52 @@ class AzuraCastService {
     await this.makeProxyRequest(`/station/{stationId}/queue/${queueItemId}`, 'DELETE');
   }
 
-  // Request a song to be queued (uses song_id from media library)
-  async requestSong(mediaId: number): Promise<any> {
-    console.log('AzuraCast: Requesting song with media ID:', mediaId);
+  // Request a song to be queued (uses media ID or title to find in requestable list)
+  async requestSong(mediaId: number, title?: string): Promise<any> {
+    console.log('AzuraCast: Requesting song with media ID:', mediaId, 'title:', title);
     
-    // AzuraCast request endpoint requires a request_id from the requestable songs list,
-    // not the media file ID. We need to look up the correct request_id first.
+    // AzuraCast request endpoint requires a request_id from the requestable songs list.
+    // The song.id in that list is a hash, not the media file ID, so we match by title.
     const requestableSongs = await this.getRequestableSongs();
     
     if (!Array.isArray(requestableSongs)) {
       throw new Error('Failed to fetch requestable songs');
     }
+
+    console.log('AzuraCast: Found', requestableSongs.length, 'requestable songs');
     
-    // Find the song by media ID (song.id matches the media file ID)
-    const matchingSong = requestableSongs.find((song: any) => {
-      const songId = song.song?.id || song.id;
-      return String(songId) === String(mediaId) || songId === mediaId;
+    // First try to get media info to get the title if not provided
+    let searchTitle = title;
+    if (!searchTitle) {
+      try {
+        const files = await this.getAllMedia();
+        const mediaFile = files.find((f: any) => f.media?.id === mediaId);
+        searchTitle = mediaFile?.media?.title;
+        console.log('AzuraCast: Found title from media:', searchTitle);
+      } catch (e) {
+        console.warn('Could not fetch media title:', e);
+      }
+    }
+    
+    // Find the song by title (case-insensitive partial match)
+    const matchingSong = requestableSongs.find((item: any) => {
+      const songTitle = (item.song?.title || '').toLowerCase();
+      const targetTitle = (searchTitle || '').toLowerCase();
+      // Also check if song.id matches (in case it does map to media ID sometimes)
+      const songId = item.song?.id;
+      return (targetTitle && songTitle.includes(targetTitle)) || 
+             (targetTitle && targetTitle.includes(songTitle)) ||
+             String(songId) === String(mediaId);
     });
     
     if (!matchingSong) {
-      throw new Error(`Song with media ID ${mediaId} is not requestable or not found`);
+      console.error('AzuraCast: No requestable song found for:', { mediaId, searchTitle });
+      console.log('AzuraCast: Sample requestable songs:', requestableSongs.slice(0, 3));
+      throw new Error(`Song "${searchTitle || mediaId}" is not requestable or not found`);
     }
     
     const requestId = matchingSong.request_id;
-    console.log('AzuraCast: Found request_id:', requestId, 'for media ID:', mediaId);
+    console.log('AzuraCast: Found request_id:', requestId, 'for song:', matchingSong.song?.title);
     
     return await this.makeProxyRequest(`/station/{stationId}/request/${requestId}`, 'POST');
   }
