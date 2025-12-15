@@ -52,7 +52,7 @@ export const useRadioPlayer = () => {
     currentTrack: null,
     isLive: false,
     isOnline: false,
-    volume: 0.7,
+    volume: 1.0,
     streamerName: undefined,
   });
 
@@ -367,7 +367,7 @@ export const useRadioPlayer = () => {
         
         // Set new source and load
         audioRef.current.src = withCacheBuster(streamUrl);
-        audioRef.current.volume = audioRef.current.volume || 0.7; // Use current volume from audio element
+        audioRef.current.volume = audioRef.current.volume || 1.0; // Use current volume from audio element, default to max
         audioRef.current.load();
         
         console.log('Waiting for canplay event...');
