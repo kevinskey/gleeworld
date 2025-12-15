@@ -83,13 +83,25 @@ Deno.serve(async (req) => {
     const fileBlob = await fileResponse.blob();
     console.log('AzuraCast Upload: File downloaded, size:', fileBlob.size);
 
+    // Check file size - AzuraCast nginx has ~50MB limit
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (fileBlob.size > maxSize) {
+      console.log('AzuraCast Upload: File too large:', fileBlob.size, 'bytes (max:', maxSize, ')');
+      return new Response(
+        JSON.stringify({ error: 'File too large for AzuraCast upload. Maximum size is 50MB.' }),
+        { status: 413, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Create multipart form data for AzuraCast
+    // AzuraCast API requires 'file' field and optional 'path' field
     const formData = new FormData();
     formData.append('file', fileBlob, fileName);
+    formData.append('path', ''); // Root directory
 
     // Upload to AzuraCast
     const uploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files';
-    console.log('AzuraCast Upload: Uploading to:', uploadUrl);
+    console.log('AzuraCast Upload: Uploading to:', uploadUrl, 'file size:', fileBlob.size);
 
     const uploadResponse = await fetch(uploadUrl, {
       method: 'POST',
