@@ -628,12 +628,15 @@ export const MediaLibrary = ({
 
             {/* File Info */}
             <div className="flex-1 min-w-0 space-y-2">
-              {canPlay && isAdmin ? (
+              {canPlay ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors text-left hover:underline cursor-pointer flex items-center gap-2 w-full">
+                    <button 
+                      className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors text-left hover:underline cursor-pointer flex items-center gap-2 w-full"
+                      title="Click to assign to AzuraCast playlist"
+                    >
                       <span className="truncate">{file.title}</span>
-                      <ListMusic className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <ListMusic className="h-4 w-4 text-primary/60 flex-shrink-0" />
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64 p-2" align="start">
