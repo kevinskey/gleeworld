@@ -6911,33 +6911,599 @@ export type Database = {
         }
         Relationships: []
       }
-      gw_courses: {
+      gw_course_announcements: {
         Row: {
-          code: string | null
+          content: string
+          course_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_pinned: boolean | null
+          send_email: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          send_email?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_pinned?: boolean | null
+          send_email?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_announcements_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_assignments: {
+        Row: {
+          allow_late_submissions: boolean | null
+          assignment_type: string | null
+          available_from: string | null
+          available_until: string | null
+          course_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          due_date: string | null
+          id: string
+          instructions: string | null
+          is_published: boolean | null
+          late_penalty_percent: number | null
+          points: number | null
+          rubric_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          allow_late_submissions?: boolean | null
+          assignment_type?: string | null
+          available_from?: string | null
+          available_until?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean | null
+          late_penalty_percent?: number | null
+          points?: number | null
+          rubric_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          allow_late_submissions?: boolean | null
+          assignment_type?: string | null
+          available_from?: string | null
+          available_until?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          due_date?: string | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean | null
+          late_penalty_percent?: number | null
+          points?: number | null
+          rubric_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_assignments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_attendance: {
+        Row: {
+          attendance_date: string
+          course_id: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          recorded_by: string | null
+          status: string | null
+          student_id: string | null
+        }
+        Insert: {
+          attendance_date: string
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          recorded_by?: string | null
+          status?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          attendance_date?: string
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          recorded_by?: string | null
+          status?: string | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_attendance_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_calendar: {
+        Row: {
+          course_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_time: string | null
+          event_type: string | null
+          id: string
+          is_recurring: boolean | null
+          location: string | null
+          recurrence_rule: string | null
+          start_time: string
+          title: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_type?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          location?: string | null
+          recurrence_rule?: string | null
+          start_time: string
+          title: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_time?: string | null
+          event_type?: string | null
+          id?: string
+          is_recurring?: boolean | null
+          location?: string | null
+          recurrence_rule?: string | null
+          start_time?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_calendar_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_enrollments: {
+        Row: {
+          completed_at: string | null
+          course_id: string | null
+          created_at: string | null
+          enrolled_at: string | null
+          enrollment_status: string | null
+          final_percentage: number | null
+          grade: string | null
+          id: string
+          payment_id: string | null
+          role: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          enrolled_at?: string | null
+          enrollment_status?: string | null
+          final_percentage?: number | null
+          grade?: string | null
+          id?: string
+          payment_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          enrolled_at?: string | null
+          enrollment_status?: string | null
+          final_percentage?: number | null
+          grade?: string | null
+          id?: string
+          payment_id?: string | null
+          role?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_enrollments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_lounge_comments: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string | null
+          id: string
+          post_id: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_lounge_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_lounge_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_lounge_posts: {
+        Row: {
+          author_id: string | null
+          content: string
+          course_id: string | null
+          created_at: string | null
+          id: string
+          is_announcement: boolean | null
+          is_pinned: boolean | null
+          media_urls: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_announcement?: boolean | null
+          is_pinned?: boolean | null
+          media_urls?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          course_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_announcement?: boolean | null
+          is_pinned?: boolean | null
+          media_urls?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_lounge_posts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_rubrics: {
+        Row: {
+          assignment_type: string | null
+          course_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           id: string
+          is_default: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignment_type?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignment_type?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_default?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_rubrics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_submissions: {
+        Row: {
+          ai_feedback: string | null
+          ai_score: number | null
+          assignment_id: string | null
+          content: string | null
+          created_at: string | null
+          feedback: string | null
+          file_name: string | null
+          file_url: string | null
+          grade: number | null
+          graded_at: string | null
+          graded_by: string | null
+          id: string
+          is_late: boolean | null
+          points_earned: number | null
+          status: string | null
+          student_id: string | null
+          submitted_at: string | null
+          updated_at: string | null
+          word_count: number | null
+        }
+        Insert: {
+          ai_feedback?: string | null
+          ai_score?: number | null
+          assignment_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          feedback?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_late?: boolean | null
+          points_earned?: number | null
+          status?: string | null
+          student_id?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          word_count?: number | null
+        }
+        Update: {
+          ai_feedback?: string | null
+          ai_score?: number | null
+          assignment_id?: string | null
+          content?: string | null
+          created_at?: string | null
+          feedback?: string | null
+          file_name?: string | null
+          file_url?: string | null
+          grade?: number | null
+          graded_at?: string | null
+          graded_by?: string | null
+          id?: string
+          is_late?: boolean | null
+          points_earned?: number | null
+          status?: string | null
+          student_id?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_submissions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_tests: {
+        Row: {
+          allow_retakes: boolean | null
+          available_from: string | null
+          available_until: string | null
+          course_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          instructions: string | null
+          is_published: boolean | null
+          max_attempts: number | null
+          randomize_questions: boolean | null
+          show_results_immediately: boolean | null
+          test_type: string | null
+          title: string
+          total_points: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allow_retakes?: boolean | null
+          available_from?: string | null
+          available_until?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean | null
+          max_attempts?: number | null
+          randomize_questions?: boolean | null
+          show_results_immediately?: boolean | null
+          test_type?: string | null
+          title: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allow_retakes?: boolean | null
+          available_from?: string | null
+          available_until?: string | null
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          instructions?: string | null
+          is_published?: boolean | null
+          max_attempts?: number | null
+          randomize_questions?: boolean | null
+          show_results_immediately?: boolean | null
+          test_type?: string | null
+          title?: string
+          total_points?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_tests_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_courses: {
+        Row: {
+          code: string | null
+          course_code: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          instructor_email: string | null
+          instructor_hours: string | null
+          instructor_id: string | null
+          instructor_name: string | null
+          instructor_office: string | null
+          is_active: boolean | null
+          is_free: boolean | null
+          max_enrollment: number | null
+          price_cents: number | null
+          semester: string | null
+          syllabus_url: string | null
           term: string | null
           title: string
+          updated_at: string | null
         }
         Insert: {
           code?: string | null
+          course_code?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           id?: string
+          instructor_email?: string | null
+          instructor_hours?: string | null
+          instructor_id?: string | null
+          instructor_name?: string | null
+          instructor_office?: string | null
+          is_active?: boolean | null
+          is_free?: boolean | null
+          max_enrollment?: number | null
+          price_cents?: number | null
+          semester?: string | null
+          syllabus_url?: string | null
           term?: string | null
           title: string
+          updated_at?: string | null
         }
         Update: {
           code?: string | null
+          course_code?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           id?: string
+          instructor_email?: string | null
+          instructor_hours?: string | null
+          instructor_id?: string | null
+          instructor_name?: string | null
+          instructor_office?: string | null
+          is_active?: boolean | null
+          is_free?: boolean | null
+          max_enrollment?: number | null
+          price_cents?: number | null
+          semester?: string | null
+          syllabus_url?: string | null
           term?: string | null
           title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -12572,6 +13138,47 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      gw_rubric_criteria: {
+        Row: {
+          created_at: string | null
+          criterion_name: string
+          description: string | null
+          display_order: number | null
+          id: string
+          max_points: number | null
+          rubric_id: string | null
+          weight_percentage: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          criterion_name: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          max_points?: number | null
+          rubric_id?: string | null
+          weight_percentage?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          criterion_name?: string
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          max_points?: number | null
+          rubric_id?: string | null
+          weight_percentage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_rubric_criteria_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_rubrics"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       gw_rubric_items: {
         Row: {
