@@ -87,6 +87,7 @@ export const RadioManagement = () => {
   const [editingTrack, setEditingTrack] = useState<AudioTrack | null>(null);
   const [editFormData, setEditFormData] = useState({ title: '', artist_info: '' });
   const [isSaving, setIsSaving] = useState(false);
+  const [syncToAzuraProgress, setSyncToAzuraProgress] = useState<{ current: number; total: number; status: string } | null>(null);
 
   // AzuraCast data
   const [playlists, setPlaylists] = useState<any[]>([]);
@@ -294,6 +295,71 @@ export const RadioManagement = () => {
     toast({ title: "Syncing..." });
     await loadAllData();
     toast({ title: "Synced" });
+  };
+
+  const handleSyncAllToAzuraCast = async () => {
+    try {
+      setSyncToAzuraProgress({ current: 0, total: 0, status: 'Fetching local tracks...' });
+      
+      // Get all local tracks with audio URLs
+      const localTracks = tracks.filter(t => t.audio_url && t.source !== 'AzuraCast');
+      
+      if (localTracks.length === 0) {
+        toast({ title: "No tracks to sync", description: "All local tracks are already synced or have no audio files" });
+        setSyncToAzuraProgress(null);
+        return;
+      }
+
+      // Get existing AzuraCast media
+      setSyncToAzuraProgress({ current: 0, total: localTracks.length, status: 'Checking AzuraCast library...' });
+      const azuraMedia = await azuraCastService.getAllMedia();
+      const azuraTitles = new Set(azuraMedia.map((m: any) => (m.media?.title || m.path_short || '').toLowerCase()));
+
+      // Find tracks not in AzuraCast
+      const tracksToUpload = localTracks.filter(t => !azuraTitles.has(t.title.toLowerCase()));
+
+      if (tracksToUpload.length === 0) {
+        toast({ title: "Already synced", description: "All local tracks are already in AzuraCast" });
+        setSyncToAzuraProgress(null);
+        return;
+      }
+
+      toast({ title: "Starting sync", description: `Uploading ${tracksToUpload.length} tracks to AzuraCast...` });
+
+      let uploaded = 0;
+      let failed = 0;
+      
+      for (const track of tracksToUpload) {
+        setSyncToAzuraProgress({ current: uploaded + 1, total: tracksToUpload.length, status: `Uploading: ${track.title}` });
+        
+        try {
+          const fileName = track.audio_url.split('/').pop() || `${track.title}.mp3`;
+          await azuraCastService.uploadMediaFromUrl(
+            track.audio_url,
+            fileName,
+            track.title,
+            track.artist_info || undefined
+          );
+          uploaded++;
+        } catch (error: any) {
+          console.error(`Failed to upload ${track.title}:`, error);
+          failed++;
+        }
+      }
+
+      setSyncToAzuraProgress(null);
+      toast({ 
+        title: "Sync complete", 
+        description: `Uploaded ${uploaded} tracks${failed > 0 ? `, ${failed} failed` : ''}`,
+        variant: failed > 0 ? 'destructive' : 'default'
+      });
+      
+      await loadAllData();
+    } catch (error: any) {
+      console.error('Sync to AzuraCast error:', error);
+      toast({ title: "Sync failed", description: error.message, variant: "destructive" });
+      setSyncToAzuraProgress(null);
+    }
   };
 
   const handleEditTrack = (track: AudioTrack) => {
@@ -610,6 +676,18 @@ export const RadioManagement = () => {
               <CardTitle className="text-sm text-white flex items-center justify-between">
                 <span className="flex items-center gap-2"><Library className="h-4 w-4" />Media Library</span>
                 <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleSyncAllToAzuraCast} 
+                    disabled={!!syncToAzuraProgress || loading}
+                    className="border-emerald-600 text-emerald-400 hover:bg-emerald-500/20"
+                  >
+                    <Upload className={`h-4 w-4 mr-1 ${syncToAzuraProgress ? 'animate-pulse' : ''}`} />
+                    {syncToAzuraProgress 
+                      ? `${syncToAzuraProgress.current}/${syncToAzuraProgress.total}` 
+                      : 'Sync to AzuraCast'}
+                  </Button>
                   <BulkUploadDialog onUploadComplete={() => { fetchTracks(); toast({ title: "Uploaded" }); }} />
                   <Button variant="outline" size="sm" onClick={() => setShowMediaLibrary(true)} className="border-slate-600 text-white">
                     <Plus className="h-4 w-4 mr-1" />Browse
@@ -617,6 +695,21 @@ export const RadioManagement = () => {
                 </div>
               </CardTitle>
             </CardHeader>
+            {syncToAzuraProgress && (
+              <div className="px-4 py-2 bg-emerald-500/10 border-b border-emerald-500/30">
+                <div className="flex items-center gap-2 text-sm text-emerald-400">
+                  <Upload className="h-4 w-4 animate-pulse" />
+                  <span className="flex-1 truncate">{syncToAzuraProgress.status}</span>
+                  <span className="font-mono">{syncToAzuraProgress.current}/{syncToAzuraProgress.total}</span>
+                </div>
+                <div className="mt-1 h-1 bg-slate-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-emerald-500 transition-all duration-300" 
+                    style={{ width: `${(syncToAzuraProgress.current / syncToAzuraProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
             <CardContent className="p-4 space-y-4">
               <div className="flex flex-wrap gap-2">
                 {mediaSources.map(src => (
