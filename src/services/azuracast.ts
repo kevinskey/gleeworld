@@ -135,16 +135,15 @@ class AzuraCastService {
   }
 
   getPublicStreamUrl(): string {
-    return `${this.baseUrl}/public/${this.stationId}`;
+    // Return the actual audio stream URL, not the public player page
+    return this.directStreamUrl;
   }
 
-  // Get stream URLs - use Supabase proxy first to satisfy CSP, then direct
+  // Get stream URLs - prioritize direct stream, proxy as fallback
   getStreamUrls(): string[] {
     return [
-      this.directStreamUrl, // Prefer direct HTTPS stream for long-lived connections
-      this.getPublicStreamUrl(), // AzuraCast public player URL as fallback
-      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.directStreamUrl)}`, // Proxied direct stream (last resort)
-      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.getPublicStreamUrl())}`, // Proxied public page (last resort)
+      this.directStreamUrl, // Direct HTTPS stream (preferred)
+      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.directStreamUrl)}`, // Proxied stream for CSP issues
     ];
   }
 
