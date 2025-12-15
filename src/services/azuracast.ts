@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { convertWavToMp3, isWavFile } from '@/utils/wavToMp3';
 
 interface AzuraCastStation {
   id: number;
@@ -476,6 +477,44 @@ class AzuraCastService {
       throw new Error('Not authenticated');
     }
 
+    let uploadUrl = fileUrl;
+    let uploadFileName = fileName;
+
+    // Convert WAV to MP3 automatically
+    if (isWavFile(fileName)) {
+      try {
+        onProgress?.('Converting WAV to MP3...', 0);
+        console.log('AzuraCast: Converting WAV to MP3...');
+        
+        const { blob, newFileName } = await convertWavToMp3(fileUrl, fileName, (progress) => {
+          onProgress?.('Converting WAV to MP3...', progress);
+        });
+        
+        // Upload converted MP3 to Supabase storage
+        onProgress?.('Uploading converted file...', 0);
+        const mp3Path = `radio-uploads/${Date.now()}-${newFileName}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('quick-capture-media')
+          .upload(mp3Path, blob, { contentType: 'audio/mp3' });
+        
+        if (uploadError) {
+          throw new Error(`Failed to upload converted file: ${uploadError.message}`);
+        }
+        
+        const { data: urlData } = supabase.storage
+          .from('quick-capture-media')
+          .getPublicUrl(mp3Path);
+        
+        uploadUrl = urlData.publicUrl;
+        uploadFileName = newFileName;
+        console.log('AzuraCast: Converted MP3 uploaded to:', uploadUrl);
+      } catch (conversionError) {
+        console.error('AzuraCast: WAV conversion failed:', conversionError);
+        throw new Error(`WAV conversion failed: ${conversionError instanceof Error ? conversionError.message : 'Unknown error'}`);
+      }
+    }
+
     onProgress?.('Uploading to radio station...');
     
     const response = await fetch('https://oopmlreysjzuxzylyheb.functions.supabase.co/azuracast-upload-media', {
@@ -484,17 +523,12 @@ class AzuraCastService {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ fileUrl, fileName, title, artist }),
+      body: JSON.stringify({ fileUrl: uploadUrl, fileName: uploadFileName, title, artist }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
       const errorMsg = errorData.error || 'Upload failed';
-      
-      // Provide helpful message for large files
-      if (errorMsg.includes('413') || errorMsg.includes('Too Large') || errorMsg.includes('size')) {
-        throw new Error('File too large. Please convert WAV to MP3 using an online converter (e.g., cloudconvert.com) before uploading.');
-      }
       throw new Error(errorMsg);
     }
 
