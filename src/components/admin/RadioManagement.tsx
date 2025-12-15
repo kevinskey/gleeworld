@@ -171,12 +171,34 @@ export const RadioManagement = () => {
       }
       if (musicTracksResult.data) {
         musicTracksResult.data.forEach(track => {
-          allTracks.push({ id: `music_${track.id}`, title: track.title, artist_info: track.artist || 'Glee Club', audio_url: track.audio_url!, category: 'performance', duration_seconds: track.duration || 180, play_count: track.play_count || 0, is_public: true, created_at: track.created_at, source: 'music' });
+          allTracks.push({
+            id: `music_${track.id}`,
+            title: track.title,
+            artist_info: track.artist || 'Glee Club',
+            audio_url: track.audio_url!,
+            category: 'performance',
+            duration_seconds: track.duration ?? null,
+            play_count: track.play_count || 0,
+            is_public: true,
+            created_at: track.created_at,
+            source: 'music'
+          });
         });
       }
       if (alumnaeAudioResult.data) {
         alumnaeAudioResult.data.forEach(track => {
-          allTracks.push({ id: `alumni_${track.id}`, title: track.title, artist_info: 'Alumnae Story', audio_url: track.audio_url!, category: 'alumni_story', duration_seconds: track.duration_seconds || 300, play_count: 0, is_public: track.is_approved || false, created_at: track.created_at, source: 'alumni' });
+          allTracks.push({
+            id: `alumni_${track.id}`,
+            title: track.title,
+            artist_info: 'Alumnae Story',
+            audio_url: track.audio_url!,
+            category: 'alumni_story',
+            duration_seconds: track.duration_seconds ?? null,
+            play_count: 0,
+            is_public: track.is_approved || false,
+            created_at: track.created_at,
+            source: 'alumni'
+          });
         });
       }
       allTracks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
