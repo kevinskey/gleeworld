@@ -329,8 +329,13 @@ export const RadioManagement = () => {
       let uploaded = 0;
       let failed = 0;
       
-      for (const track of tracksToUpload) {
-        setSyncToAzuraProgress({ current: uploaded + 1, total: tracksToUpload.length, status: `Uploading: ${track.title}` });
+      for (let i = 0; i < tracksToUpload.length; i++) {
+        const track = tracksToUpload[i];
+        setSyncToAzuraProgress({ 
+          current: i + 1, 
+          total: tracksToUpload.length, 
+          status: `Uploading (${i + 1}/${tracksToUpload.length}): ${track.title}` 
+        });
         
         try {
           const fileName = track.audio_url.split('/').pop() || `${track.title}.mp3`;
@@ -341,6 +346,7 @@ export const RadioManagement = () => {
             track.artist_info || undefined
           );
           uploaded++;
+          console.log(`Successfully uploaded: ${track.title}`);
         } catch (error: any) {
           console.error(`Failed to upload ${track.title}:`, error);
           failed++;
