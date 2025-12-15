@@ -510,7 +510,8 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
         // Now try to queue the track
         if (match?.media?.id) {
           try {
-            await azuraCastService.requestSong(match.media.id);
+            // Pass title to help match in requestable songs list
+            await azuraCastService.requestSong(match.media.id, match.media?.title || track.title);
             matched++;
           } catch (e) {
             console.error('Failed to request track:', track.title, e);
