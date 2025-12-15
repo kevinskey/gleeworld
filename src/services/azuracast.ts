@@ -481,7 +481,7 @@ class AzuraCastService {
     let uploadFileName = fileName;
 
     // Convert WAV to MP3 automatically
-    if (isWavFile(fileName)) {
+    if (isWavFile(fileName) || isWavFile(fileUrl)) {
       try {
         onProgress?.('Converting WAV to MP3...', 0);
         console.log('AzuraCast: Converting WAV to MP3...');
