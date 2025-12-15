@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { 
   Play, 
   Pause, 
@@ -40,13 +41,15 @@ import {
   Camera,
   Mic,
   UserCheck,
-  Sparkles
+  Sparkles,
+  ListMusic
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { getFileUrl } from '@/utils/storage';
 import { MediaLibraryBulkUpload } from '@/components/media/MediaLibraryBulkUpload';
+import { azuraCastService } from '@/services/azuracast';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
@@ -100,12 +103,16 @@ export const MediaLibrary = ({
   const [showBulkUpload, setShowBulkUpload] = useState(false);
   const [quickCaptureMedia, setQuickCaptureMedia] = useState<any[]>([]);
   const [quickCaptureCategory, setQuickCaptureCategory] = useState<string | null>(null);
+  const [azuraPlaylists, setAzuraPlaylists] = useState<any[]>([]);
+  const [playlistPickerFile, setPlaylistPickerFile] = useState<MediaFile | null>(null);
+  const [assigningPlaylist, setAssigningPlaylist] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     fetchAdminStatus();
     fetchMediaData();
     fetchQuickCaptureMedia();
+    fetchAzuraPlaylists();
   }, []);
 
   const fetchAdminStatus = async () => {
@@ -172,6 +179,70 @@ export const MediaLibrary = ({
       }
     } catch (error) {
       console.error('Error fetching quick capture media:', error);
+    }
+  };
+
+  const fetchAzuraPlaylists = async () => {
+    try {
+      const playlists = await azuraCastService.getPlaylists();
+      setAzuraPlaylists(playlists || []);
+    } catch (error) {
+      console.error('Error fetching AzuraCast playlists:', error);
+    }
+  };
+
+  const handleAssignToPlaylist = async (file: MediaFile, playlistId: number) => {
+    setAssigningPlaylist(true);
+    try {
+      // First, find or upload the file to AzuraCast
+      const azuraMedia = await azuraCastService.getAllMedia();
+      let match = azuraMedia.find((m: any) => {
+        const mediaTitle = (m.media?.title || m.path_short || '').toLowerCase();
+        const fileTitle = file.title.toLowerCase();
+        return mediaTitle.includes(fileTitle) || fileTitle.includes(mediaTitle);
+      });
+
+      if (!match?.media?.id && file.file_url) {
+        // Upload to AzuraCast first
+        const fileName = file.title.replace(/[^a-zA-Z0-9_\-\.]/g, '_') + '.mp3';
+        const uploadResult = await azuraCastService.uploadMediaFromUrl(
+          file.file_url,
+          fileName,
+          file.title,
+          'Spelman College Glee Club'
+        );
+        if (uploadResult?.id || uploadResult?.mediaId) {
+          const refreshedMedia = await azuraCastService.getAllMedia();
+          match = refreshedMedia.find((m: any) => 
+            m.media?.id === (uploadResult.id || uploadResult.mediaId)
+          );
+        }
+      }
+
+      if (match?.media?.id) {
+        await azuraCastService.addToPlaylist(playlistId, [match.media.id]);
+        const playlist = azuraPlaylists.find(p => p.id === playlistId);
+        toast({
+          title: "Added to Playlist",
+          description: `"${file.title}" added to ${playlist?.name || 'playlist'}`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Could not find or upload track to AzuraCast",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error assigning to playlist:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add to playlist",
+        variant: "destructive",
+      });
+    } finally {
+      setAssigningPlaylist(false);
+      setPlaylistPickerFile(null);
     }
   };
 
@@ -557,9 +628,49 @@ export const MediaLibrary = ({
 
             {/* File Info */}
             <div className="flex-1 min-w-0 space-y-2">
-              <h4 className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors">
-                {file.title}
-              </h4>
+              {canPlay && isAdmin ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors text-left hover:underline cursor-pointer flex items-center gap-2 w-full">
+                      <span className="truncate">{file.title}</span>
+                      <ListMusic className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-2" align="start">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground px-2 py-1">Add to AzuraCast Playlist</p>
+                      {azuraPlaylists.length === 0 ? (
+                        <p className="text-xs text-muted-foreground px-2 py-2">No playlists found</p>
+                      ) : (
+                        azuraPlaylists.map((playlist) => (
+                          <Button
+                            key={playlist.id}
+                            variant="ghost"
+                            size="sm"
+                            className="w-full justify-start text-sm"
+                            disabled={assigningPlaylist}
+                            onClick={() => handleAssignToPlaylist(file, playlist.id)}
+                          >
+                            {assigningPlaylist ? (
+                              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                            ) : (
+                              <ListMusic className="h-3 w-3 mr-2" />
+                            )}
+                            {playlist.name}
+                            {playlist.is_enabled && (
+                              <Badge variant="secondary" className="ml-auto text-xs">Active</Badge>
+                            )}
+                          </Button>
+                        ))
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <h4 className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors">
+                  {file.title}
+                </h4>
+              )}
               {file.description && (
                 <p className="text-sm text-muted-foreground truncate leading-relaxed">
                   {file.description}
