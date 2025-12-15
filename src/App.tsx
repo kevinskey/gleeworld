@@ -25,6 +25,7 @@ import MusicTheoryFundamentals from "./pages/MusicTheoryFundamentals";
 import ChoralConductingLiterature from "./pages/ChoralConductingLiterature";
 import Mus210 from "./pages/Mus210";
 import Mus210Page from "./pages/Mus210Page";
+import GleeClubCoursePage from "./pages/GleeClubCoursePage";
 import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
 import GleeCamGallery from "./pages/GleeCamGallery";
@@ -447,6 +448,16 @@ const App = () => {
               {/* Legacy redirects */}
               <Route path="/choral-conducting-literature" element={<Navigate to="/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/mus-210" replace />} />
+              
+              {/* Glee Club Course */}
+              <Route 
+                path="/glee-club-course" 
+                element={
+                  <PublicRoute>
+                    <GleeClubCoursePage />
+                  </PublicRoute>
+                }
+              />
               {/* Grand Staff Classroom page */}
               <Route 
                 path="/grand-staff-classroom" 
