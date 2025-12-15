@@ -396,8 +396,29 @@ class AzuraCastService {
   // Request a song to be queued (uses song_id from media library)
   async requestSong(mediaId: number): Promise<any> {
     console.log('AzuraCast: Requesting song with media ID:', mediaId);
-    // AzuraCast uses singular "request" not plural "requests" for POSTing
-    return await this.makeProxyRequest(`/station/{stationId}/request/${mediaId}`, 'POST');
+    
+    // AzuraCast request endpoint requires a request_id from the requestable songs list,
+    // not the media file ID. We need to look up the correct request_id first.
+    const requestableSongs = await this.getRequestableSongs();
+    
+    if (!Array.isArray(requestableSongs)) {
+      throw new Error('Failed to fetch requestable songs');
+    }
+    
+    // Find the song by media ID (song.id matches the media file ID)
+    const matchingSong = requestableSongs.find((song: any) => {
+      const songId = song.song?.id || song.id;
+      return String(songId) === String(mediaId) || songId === mediaId;
+    });
+    
+    if (!matchingSong) {
+      throw new Error(`Song with media ID ${mediaId} is not requestable or not found`);
+    }
+    
+    const requestId = matchingSong.request_id;
+    console.log('AzuraCast: Found request_id:', requestId, 'for media ID:', mediaId);
+    
+    return await this.makeProxyRequest(`/station/{stationId}/request/${requestId}`, 'POST');
   }
 
   // Get requestable songs list
