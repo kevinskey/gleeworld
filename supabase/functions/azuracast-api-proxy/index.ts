@@ -131,19 +131,23 @@ Deno.serve(async (req) => {
       const errorText = await azuracastResponse.text();
       console.error('AzuraCast Proxy: API error:', azuracastResponse.status, errorText);
       
-      // For StationUnsupportedException, 405, or 404 errors, return graceful response
-      // This allows the UI to handle unsupported features and already-deleted items
-      if (errorText.includes('StationUnsupportedException') || 
-          errorText.includes('HttpMethodNotAllowedException') ||
-          errorText.includes('Record not found') ||
-          azuracastResponse.status === 405 ||
-          azuracastResponse.status === 404) {
-        console.log('AzuraCast Proxy: Returning graceful response for handled error:', azuracastResponse.status, method);
+      // For DELETE operations - 404 means already deleted (OK)
+      // For GET operations with StationUnsupportedException - return empty
+      // For POST operations - report actual errors so we know assignment failed
+      const isDeleteOperation = method === 'DELETE';
+      const isGetOperation = method === 'GET';
+      const is404Or405 = azuracastResponse.status === 404 || azuracastResponse.status === 405;
+      const isUnsupportedException = errorText.includes('StationUnsupportedException') || 
+                                      errorText.includes('HttpMethodNotAllowedException');
+      
+      // Only mask errors gracefully for DELETE (already deleted) or unsupported GET features
+      if ((isDeleteOperation && is404Or405) || 
+          (isGetOperation && isUnsupportedException)) {
+        console.log('AzuraCast Proxy: Returning graceful response for:', method, azuracastResponse.status);
         
-        // For GET requests, return empty array; for others return success object
-        const responseBody = method === 'GET' 
+        const responseBody = isGetOperation 
           ? [] 
-          : { success: true, message: 'Operation completed or resource already removed' };
+          : { success: true, message: 'Resource already removed' };
         
         return new Response(
           JSON.stringify(responseBody),
@@ -153,6 +157,20 @@ Deno.serve(async (req) => {
           }
         );
       }
+      
+      // For POST/PUT errors (like playlist assignment), return actual error
+      console.error('AzuraCast Proxy: Returning error for', method, 'operation');
+      return new Response(
+        JSON.stringify({ 
+          error: `AzuraCast API error: ${azuracastResponse.status}`,
+          details: errorText,
+          success: false
+        }),
+        { 
+          status: azuracastResponse.status, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
       
       return new Response(
         JSON.stringify({ 
