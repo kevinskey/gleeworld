@@ -404,15 +404,36 @@ class AzuraCastService {
     await this.makeProxyRequest(`/station/{stationId}/queue/${queueItemId}`, 'DELETE');
   }
 
-  // Add a song directly to the queue using the media file ID
+  // Add a song to the queue using the AzuraCast Requests API
   async requestSong(mediaId: number, title?: string): Promise<any> {
     console.log('AzuraCast: Adding song to queue with media ID:', mediaId, 'title:', title);
     
-    // Use the direct queue API with media_id to add to queue
-    // This bypasses the listener request system which has quirks with request_id
-    return await this.makeProxyRequest(`/station/{stationId}/queue`, 'POST', {
-      media_id: mediaId
-    });
+    // AzuraCast queue endpoint doesn't support POST - must use the Requests API
+    // Step 1: Get list of requestable songs to find the request_id for this media
+    const requestableSongs = await this.getRequestableSongs();
+    
+    if (!Array.isArray(requestableSongs)) {
+      console.error('AzuraCast: Could not fetch requestable songs');
+      throw new Error('Could not fetch requestable songs from station');
+    }
+    
+    // Step 2: Find the song by media_id (song.id matches the media file ID)
+    const song = requestableSongs.find((s: any) => s.song?.id === mediaId || s.request_id === String(mediaId));
+    
+    if (!song || !song.request_id) {
+      console.error('AzuraCast: Song not found in requestable list. Media ID:', mediaId);
+      console.log('AzuraCast: Available request IDs sample:', requestableSongs.slice(0, 5).map((s: any) => ({
+        request_id: s.request_id,
+        song_id: s.song?.id,
+        title: s.song?.title
+      })));
+      throw new Error(`Song "${title || mediaId}" is not currently requestable. It may be in cooldown or not eligible for requests.`);
+    }
+    
+    console.log('AzuraCast: Found request_id:', song.request_id, 'for media ID:', mediaId);
+    
+    // Step 3: Submit the request using the request_id
+    return await this.makeProxyRequest(`/station/{stationId}/request/${song.request_id}`, 'POST');
   }
 
   // Get requestable songs list
