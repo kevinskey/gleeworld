@@ -139,11 +139,10 @@ class AzuraCastService {
     return this.directStreamUrl;
   }
 
-  // Get stream URLs - prioritize direct stream, proxy as fallback
+  // Get stream URLs - direct stream only (proxy has timeout issues for streaming)
   getStreamUrls(): string[] {
     return [
-      this.directStreamUrl, // Direct HTTPS stream (preferred)
-      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.directStreamUrl)}`, // Proxied stream for CSP issues
+      this.directStreamUrl, // Direct HTTPS stream
     ];
   }
 
