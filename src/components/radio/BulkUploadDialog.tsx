@@ -170,7 +170,7 @@ export const BulkUploadDialog = ({ onUploadComplete }: BulkUploadDialogProps) =>
           title,
           artist,
           audio_url: publicUrl,
-          duration: 180,
+          duration: 0,
           created_by: user?.id,
           play_count: 0
         })

@@ -151,7 +151,7 @@ export const RadioStationPage = () => {
             id: `music_${track.id}`,
             title: track.title,
             artist: track.artist || 'Glee Club',
-            duration: track.duration || 180,
+            duration: track.duration ?? 0,
             audio_url: track.audio_url,
             category: 'performance'
           });
@@ -165,7 +165,7 @@ export const RadioStationPage = () => {
             id: `archive_${track.id}`,
             title: track.title,
             artist: track.artist_info || 'Glee Club',
-            duration: track.duration_seconds || 180,
+            duration: track.duration_seconds ?? 0,
             audio_url: track.audio_url,
             category: track.category as any || 'performance'
           });
@@ -179,7 +179,7 @@ export const RadioStationPage = () => {
             id: `alumni_${track.id}`,
             title: track.title,
             artist: 'Alumnae Story',
-            duration: track.duration_seconds || 300,
+            duration: track.duration_seconds ?? 0,
             audio_url: track.audio_url,
             category: 'alumni_story'
           });

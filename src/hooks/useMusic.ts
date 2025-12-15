@@ -91,7 +91,7 @@ export const useMusic = () => {
             title: track.title,
             artist: track.artist || 'Glee Club',
             audio_url: track.audio_url,
-            duration: track.duration || 180,
+            duration: track.duration ?? 0,
             album_id: track.album_id,
             album: track.album,
             play_count: track.play_count || 0,
@@ -109,7 +109,7 @@ export const useMusic = () => {
             title: track.title,
             artist: track.artist_info || 'Glee Club',
             audio_url: track.audio_url,
-            duration: track.duration_seconds || 180,
+            duration: track.duration_seconds ?? 0,
             play_count: track.play_count || 0,
             isLiked: false,
             likeCount: 0
@@ -125,7 +125,7 @@ export const useMusic = () => {
             title: track.title,
             artist: 'Alumnae Story',
             audio_url: track.audio_url,
-            duration: track.duration_seconds || 300,
+            duration: track.duration_seconds ?? 0,
             play_count: 0,
             isLiked: false,
             likeCount: 0
