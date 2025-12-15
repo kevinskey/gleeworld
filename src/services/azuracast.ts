@@ -409,7 +409,7 @@ class AzuraCastService {
     console.log('AzuraCast: Adding song to queue with media ID:', mediaId, 'title:', title);
     
     // AzuraCast queue endpoint doesn't support POST - must use the Requests API
-    // Step 1: Get list of requestable songs to find the request_id for this media
+    // Step 1: Get list of requestable songs to find the request_id
     const requestableSongs = await this.getRequestableSongs();
     
     if (!Array.isArray(requestableSongs)) {
@@ -417,20 +417,29 @@ class AzuraCastService {
       throw new Error('Could not fetch requestable songs from station');
     }
     
-    // Step 2: Find the song by media_id (song.id matches the media file ID)
-    const song = requestableSongs.find((s: any) => s.song?.id === mediaId || s.request_id === String(mediaId));
+    // Step 2: Find the song by title (AzuraCast uses hash IDs, not numeric media IDs)
+    // Normalize titles for comparison
+    const normalizeTitle = (t: string) => (t || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+    const searchTitle = normalizeTitle(title || '');
+    
+    const song = requestableSongs.find((s: any) => {
+      const songTitle = normalizeTitle(s.song?.title || '');
+      // Try exact match first, then contains match
+      return songTitle === searchTitle || 
+             songTitle.includes(searchTitle) || 
+             searchTitle.includes(songTitle);
+    });
     
     if (!song || !song.request_id) {
-      console.error('AzuraCast: Song not found in requestable list. Media ID:', mediaId);
-      console.log('AzuraCast: Available request IDs sample:', requestableSongs.slice(0, 5).map((s: any) => ({
+      console.error('AzuraCast: Song not found in requestable list. Title:', title);
+      console.log('AzuraCast: Available songs sample:', requestableSongs.slice(0, 10).map((s: any) => ({
         request_id: s.request_id,
-        song_id: s.song?.id,
         title: s.song?.title
       })));
-      throw new Error(`Song "${title || mediaId}" is not currently requestable. It may be in cooldown or not eligible for requests.`);
+      throw new Error(`Song "${title || mediaId}" is not currently requestable. It may be in cooldown, not in an active playlist, or the title doesn't match.`);
     }
     
-    console.log('AzuraCast: Found request_id:', song.request_id, 'for media ID:', mediaId);
+    console.log('AzuraCast: Found request_id:', song.request_id, 'for title:', title, '-> matched:', song.song?.title);
     
     // Step 3: Submit the request using the request_id
     return await this.makeProxyRequest(`/station/{stationId}/request/${song.request_id}`, 'POST');
