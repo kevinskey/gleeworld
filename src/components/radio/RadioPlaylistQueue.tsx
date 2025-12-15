@@ -225,6 +225,27 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
 
   useEffect(() => {
     fetchPlaylist();
+
+    // Subscribe to real-time updates
+    const channel = supabase
+      .channel('radio-playlist-queue-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'gw_radio_playlist_queue'
+        },
+        (payload) => {
+          console.log('Playlist queue updated:', payload);
+          fetchPlaylist();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Handle drag end - reorder tracks
