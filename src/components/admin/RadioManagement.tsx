@@ -454,7 +454,7 @@ export const RadioManagement = () => {
         if (track.source === 'archive') {
           await supabase
             .from('audio_archive')
-            .update({ azura_playlist_id: playlistId, azura_playlist_name: playlist?.name || 'Unknown' })
+            .update({ azura_playlist_id: playlistId, azura_playlist_name: playlist?.name || 'Unknown' } as any)
             .eq('id', track.id);
         }
         

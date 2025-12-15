@@ -243,7 +243,7 @@ export const MediaLibrary = ({
           .update({ 
             azura_playlist_id: playlistId, 
             azura_playlist_name: playlist?.name || 'Unknown' 
-          })
+          } as any)
           .eq('id', file.id);
         
         if (updateError) {
