@@ -70,23 +70,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify user has admin permissions
+    // Verify user has admin or exec board permissions
     const { data: profile } = await supabaseClient
       .from('gw_profiles')
-      .select('is_admin, is_super_admin')
+      .select('is_admin, is_super_admin, is_exec_board')
       .eq('user_id', user.id)
       .single();
 
-    if (!profile?.is_admin && !profile?.is_super_admin) {
-      console.error('AzuraCast Proxy: User does not have admin permissions');
+    const hasPermission = profile?.is_admin || profile?.is_super_admin || profile?.is_exec_board;
+    
+    if (!hasPermission) {
+      console.error('AzuraCast Proxy: User does not have required permissions. Profile:', profile);
       return new Response(
-        JSON.stringify({ error: 'Admin permissions required' }),
+        JSON.stringify({ error: 'Admin or Exec Board permissions required' }),
         { 
           status: 403, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
     }
+    
+    console.log('AzuraCast Proxy: User authorized:', { userId: user.id, isAdmin: profile?.is_admin, isSuperAdmin: profile?.is_super_admin, isExecBoard: profile?.is_exec_board });
 
     // Parse request data
     const requestData: AzuraCastRequest = await req.json();
