@@ -8,6 +8,14 @@ import { useNavigate } from 'react-router-dom';
 import academyHeroImage from '@/assets/glee-world-academy-hero.jpg';
 
 const courses = [{
+  id: 'glee-club',
+  title: 'Glee Club',
+  description: 'Join the premier choral ensemble with over 100 years of musical excellence at Spelman College.',
+  icon: Users,
+  level: 'Audition Required',
+  duration: 'Semester',
+  highlights: ['Choral Performance', 'Vocal Training', 'Tours & Concerts', 'Community']
+}, {
   id: 'choral-conducting',
   title: 'Choral Conducting and Literature',
   description: 'Master the art of choral conducting with comprehensive training in technique, score analysis, and repertoire selection.',
@@ -60,7 +68,9 @@ const GleeAcademy = () => {
   const navigate = useNavigate();
   
   const handleCourseClick = (courseId: string) => {
-    if (courseId === 'choral-conducting') {
+    if (courseId === 'glee-club') {
+      navigate('/glee-club-course');
+    } else if (courseId === 'choral-conducting') {
       navigate('/mus-210');
     } else if (courseId === 'african-american-music') {
       navigate('/mus-240');
