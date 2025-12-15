@@ -98,6 +98,9 @@ export async function convertWavToMp3(
   return { blob, newFileName };
 }
 
-export function isWavFile(fileName: string): boolean {
-  return fileName.toLowerCase().endsWith('.wav');
+export function isWavFile(value: string): boolean {
+  const lower = value.toLowerCase();
+  // handle URLs with query params
+  const noQuery = lower.split('?')[0];
+  return noQuery.endsWith('.wav') || noQuery.includes('.wav/');
 }
