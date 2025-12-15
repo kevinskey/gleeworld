@@ -51,8 +51,9 @@ const QueueTrack = ({ item, index, isPlaying, onPlay, onRemove, isRemoving }: Qu
   };
 
   const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const totalSecs = Math.round(seconds);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -249,8 +250,9 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
 
   const formatDuration = (seconds: number | null) => {
     if (!seconds) return '--:--';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const totalSecs = Math.round(seconds);
+    const mins = Math.floor(totalSecs / 60);
+    const secs = totalSecs % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
