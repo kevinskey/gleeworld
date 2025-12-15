@@ -31,6 +31,13 @@ import GleeAcademy from "./pages/GleeAcademy";
 import GleeCamGallery from "./pages/GleeCamGallery";
 import InstructorAdmin from "./pages/InstructorAdmin";
 
+// Unified Course Pages
+import Mus070Page from "./pages/courses/Mus070Page";
+import Mus101Page from "./pages/courses/Mus101Page";
+import Mus001Page from "./pages/courses/Mus001Page";
+import Mus000Page from "./pages/courses/Mus000Page";
+import Glee101Page from "./pages/courses/Glee101Page";
+
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
 import Auth from "./pages/Auth";
@@ -449,12 +456,47 @@ const App = () => {
               <Route path="/choral-conducting-literature" element={<Navigate to="/mus-210" replace />} />
               <Route path="/classes/mus210" element={<Navigate to="/mus-210" replace />} />
               
-              {/* Glee Club Course */}
+              {/* Glee Club Course - Legacy redirect */}
+              <Route path="/glee-club-course" element={<Navigate to="/mus-070" replace />} />
+              
+              {/* Unified Academy Course Pages */}
               <Route 
-                path="/glee-club-course" 
+                path="/mus-070" 
                 element={
                   <PublicRoute>
-                    <GleeClubCoursePage />
+                    <Mus070Page />
+                  </PublicRoute>
+                }
+              />
+              <Route 
+                path="/mus-101" 
+                element={
+                  <PublicRoute>
+                    <Mus101Page />
+                  </PublicRoute>
+                }
+              />
+              <Route 
+                path="/mus-001" 
+                element={
+                  <PublicRoute>
+                    <Mus001Page />
+                  </PublicRoute>
+                }
+              />
+              <Route 
+                path="/mus-000" 
+                element={
+                  <PublicRoute>
+                    <Mus000Page />
+                  </PublicRoute>
+                }
+              />
+              <Route 
+                path="/glee-101" 
+                element={
+                  <PublicRoute>
+                    <Glee101Page />
                   </PublicRoute>
                 }
               />
