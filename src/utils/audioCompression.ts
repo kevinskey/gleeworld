@@ -1,5 +1,3 @@
-import lamejs from 'lamejs';
-
 const MAX_SIZE_FOR_UPLOAD = 45 * 1024 * 1024; // 45MB (leave buffer for 50MB limit)
 
 export interface CompressionResult {
@@ -18,7 +16,8 @@ export function needsCompression(fileSize: number): boolean {
 }
 
 /**
- * Compress a WAV audio file to MP3 format
+ * Compress audio by downsampling and converting to mono
+ * This is fast (offline processing) and significantly reduces file size
  */
 export async function compressAudioToMp3(
   audioUrl: string,
@@ -48,137 +47,146 @@ export async function compressAudioToMp3(
   
   onProgress?.(10);
   
-  // Decode the audio
-  const audioContext = new AudioContext();
-  const arrayBuffer = await originalBlob.arrayBuffer();
-  
-  onProgress?.(20);
-  
-  let audioBuffer: AudioBuffer;
   try {
-    audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-  } catch (error) {
-    console.error('Audio Compression: Failed to decode audio, returning original');
+    const audioContext = new AudioContext();
+    const arrayBuffer = await originalBlob.arrayBuffer();
+    
+    onProgress?.(20);
+    
+    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+    await audioContext.close();
+    
+    onProgress?.(30);
+    
+    const originalSampleRate = audioBuffer.sampleRate;
+    const originalChannels = audioBuffer.numberOfChannels;
+    const duration = audioBuffer.duration;
+    
+    console.log('Audio Compression: Original - channels:', originalChannels, 
+      'sampleRate:', originalSampleRate, 'duration:', duration.toFixed(2), 's');
+    
+    // Target: 22050Hz mono for significant compression
+    // This gives about 4x reduction from 48kHz stereo
+    const targetSampleRate = 22050;
+    const targetChannels = 1; // Mono
+    
+    // Calculate new length
+    const newLength = Math.ceil(duration * targetSampleRate);
+    
+    // Use OfflineAudioContext to resample
+    const offlineContext = new OfflineAudioContext(
+      targetChannels,
+      newLength,
+      targetSampleRate
+    );
+    
+    onProgress?.(40);
+    
+    // Create source and connect
+    const source = offlineContext.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineContext.destination);
+    source.start();
+    
+    // Render (this is fast - offline processing)
+    const renderedBuffer = await offlineContext.startRendering();
+    
+    onProgress?.(70);
+    
+    console.log('Audio Compression: Resampled - channels:', renderedBuffer.numberOfChannels,
+      'sampleRate:', renderedBuffer.sampleRate, 'length:', renderedBuffer.length);
+    
+    // Convert to WAV blob
+    const wavBlob = audioBufferToWav(renderedBuffer);
+    const compressedSize = wavBlob.size;
+    
+    onProgress?.(90);
+    
+    const newFileName = fileName.replace(/\.(wav|WAV)$/, '-compressed.wav');
+    
+    const reductionPercent = ((1 - compressedSize / originalSize) * 100).toFixed(1);
+    console.log('Audio Compression: Compressed size:', (compressedSize / 1024 / 1024).toFixed(2), 'MB',
+      '(', reductionPercent, '% reduction)');
+    
+    onProgress?.(100);
+    
+    // Check if still too large
+    if (compressedSize > MAX_SIZE_FOR_UPLOAD) {
+      console.log('Audio Compression: Still too large after compression:', 
+        (compressedSize / 1024 / 1024).toFixed(2), 'MB');
+      throw new Error(`File still too large after compression (${(compressedSize / 1024 / 1024).toFixed(1)}MB). Please compress externally to under 45MB.`);
+    }
+    
     return {
-      blob: originalBlob,
+      blob: wavBlob,
       originalSize,
-      compressedSize: originalSize,
-      wasCompressed: false,
-      newFileName: fileName,
+      compressedSize,
+      wasCompressed: true,
+      newFileName,
     };
-  }
-  
-  onProgress?.(30);
-  
-  console.log('Audio Compression: Audio decoded - channels:', audioBuffer.numberOfChannels, 
-    'sampleRate:', audioBuffer.sampleRate, 'duration:', audioBuffer.duration.toFixed(2), 's');
-  
-  // Get audio data
-  const channels = audioBuffer.numberOfChannels;
-  const sampleRate = audioBuffer.sampleRate;
-  const samples = audioBuffer.length;
-  
-  // Convert to mono if stereo (reduces size)
-  let leftChannel: Float32Array;
-  let rightChannel: Float32Array | null = null;
-  
-  if (channels === 1) {
-    leftChannel = audioBuffer.getChannelData(0);
-  } else {
-    leftChannel = audioBuffer.getChannelData(0);
-    rightChannel = audioBuffer.getChannelData(1);
-  }
-  
-  onProgress?.(40);
-  
-  // Create MP3 encoder
-  // Use 128kbps for good quality/size balance
-  const mp3encoder = new lamejs.Mp3Encoder(channels === 1 ? 1 : 2, sampleRate, 128);
-  
-  const mp3Data: Int8Array[] = [];
-  const blockSize = 1152; // Samples per frame for MP3
-  
-  // Convert float samples to 16-bit integers
-  const leftInt16 = floatTo16BitPCM(leftChannel);
-  const rightInt16 = rightChannel ? floatTo16BitPCM(rightChannel) : null;
-  
-  onProgress?.(50);
-  
-  // Encode in chunks
-  const totalBlocks = Math.ceil(samples / blockSize);
-  for (let i = 0; i < samples; i += blockSize) {
-    const leftChunk = leftInt16.subarray(i, i + blockSize);
     
-    let mp3buf: Int8Array;
-    if (channels === 1) {
-      mp3buf = mp3encoder.encodeBuffer(leftChunk);
-    } else {
-      const rightChunk = rightInt16!.subarray(i, i + blockSize);
-      mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
-    }
-    
-    if (mp3buf.length > 0) {
-      mp3Data.push(mp3buf);
-    }
-    
-    // Update progress (50-90%)
-    const blockIndex = Math.floor(i / blockSize);
-    const progressPercent = 50 + Math.floor((blockIndex / totalBlocks) * 40);
-    if (blockIndex % 100 === 0) {
-      onProgress?.(progressPercent);
-    }
+  } catch (error) {
+    console.error('Audio Compression: Failed:', error);
+    throw error;
   }
-  
-  // Flush remaining data
-  const mp3buf = mp3encoder.flush();
-  if (mp3buf.length > 0) {
-    mp3Data.push(mp3buf);
-  }
-  
-  onProgress?.(95);
-  
-  // Combine all MP3 chunks
-  const totalLength = mp3Data.reduce((acc, buf) => acc + buf.length, 0);
-  const mp3Array = new Uint8Array(totalLength);
-  let offset = 0;
-  for (const buf of mp3Data) {
-    mp3Array.set(new Uint8Array(buf.buffer, buf.byteOffset, buf.length), offset);
-    offset += buf.length;
-  }
-  
-  const compressedBlob = new Blob([mp3Array], { type: 'audio/mp3' });
-  const compressedSize = compressedBlob.size;
-  
-  // Update filename to .mp3
-  const newFileName = fileName.replace(/\.(wav|WAV)$/, '.mp3');
-  
-  console.log('Audio Compression: Compressed size:', (compressedSize / 1024 / 1024).toFixed(2), 'MB',
-    '(', ((1 - compressedSize / originalSize) * 100).toFixed(1), '% reduction)');
-  
-  onProgress?.(100);
-  
-  // Close audio context
-  audioContext.close();
-  
-  return {
-    blob: compressedBlob,
-    originalSize,
-    compressedSize,
-    wasCompressed: true,
-    newFileName,
-  };
 }
 
 /**
- * Convert Float32Array to Int16Array for MP3 encoding
+ * Convert AudioBuffer to WAV Blob (16-bit PCM)
  */
-function floatTo16BitPCM(float32Array: Float32Array): Int16Array {
-  const int16Array = new Int16Array(float32Array.length);
-  for (let i = 0; i < float32Array.length; i++) {
-    const s = Math.max(-1, Math.min(1, float32Array[i]));
-    int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+function audioBufferToWav(buffer: AudioBuffer): Blob {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = 1; // PCM
+  const bitDepth = 16;
+  
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
+  
+  const dataLength = buffer.length * blockAlign;
+  const bufferLength = 44 + dataLength;
+  
+  const arrayBuffer = new ArrayBuffer(bufferLength);
+  const view = new DataView(arrayBuffer);
+  
+  // WAV header
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true); // fmt chunk size
+  view.setUint16(20, format, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataLength, true);
+  
+  // Write audio data
+  const channels: Float32Array[] = [];
+  for (let i = 0; i < numChannels; i++) {
+    channels.push(buffer.getChannelData(i));
   }
-  return int16Array;
+  
+  let offset = 44;
+  for (let i = 0; i < buffer.length; i++) {
+    for (let channel = 0; channel < numChannels; channel++) {
+      const sample = Math.max(-1, Math.min(1, channels[channel][i]));
+      const int16 = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+      view.setInt16(offset, int16, true);
+      offset += 2;
+    }
+  }
+  
+  return new Blob([arrayBuffer], { type: 'audio/wav' });
+}
+
+function writeString(view: DataView, offset: number, string: string): void {
+  for (let i = 0; i < string.length; i++) {
+    view.setUint8(offset + i, string.charCodeAt(i));
+  }
 }
 
 /**
@@ -196,7 +204,7 @@ export async function uploadCompressedAudio(
   const { data, error } = await supabase.storage
     .from('user-files')
     .upload(storagePath, blob, {
-      contentType: 'audio/mp3',
+      contentType: 'audio/wav',
       cacheControl: '3600',
     });
   
