@@ -565,6 +565,72 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
               )}
             </div>
 
+            {/* Station Power Controls */}
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Power className="h-4 w-4 text-amber-400" />
+                  <span className="text-xs font-medium text-amber-400">Station Power Control</span>
+                </div>
+                <Badge variant={stationState.isOnline ? "default" : "destructive"} className="text-xs">
+                  {stationState.isOnline ? 'ONLINE' : 'OFFLINE'}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "border-emerald-600 text-emerald-400 hover:bg-emerald-500/20",
+                    serverControlLoading === 'start' && "opacity-50"
+                  )}
+                  onClick={handleStartStation}
+                  disabled={serverControlLoading !== null}
+                >
+                  {serverControlLoading === 'start' ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Power className="h-3 w-3 mr-1" />
+                  )}
+                  Start
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "border-red-600 text-red-400 hover:bg-red-500/20",
+                    serverControlLoading === 'stop' && "opacity-50"
+                  )}
+                  onClick={handleStopStation}
+                  disabled={serverControlLoading !== null}
+                >
+                  {serverControlLoading === 'stop' ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <PowerOff className="h-3 w-3 mr-1" />
+                  )}
+                  Stop
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "border-amber-600 text-amber-400 hover:bg-amber-500/20",
+                    serverControlLoading === 'restart' && "opacity-50"
+                  )}
+                  onClick={handleRestartStation}
+                  disabled={serverControlLoading !== null}
+                >
+                  {serverControlLoading === 'restart' ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <RotateCcw className="h-3 w-3 mr-1" />
+                  )}
+                  Restart
+                </Button>
+              </div>
+            </div>
+
             {/* Quick Actions */}
             <div className="grid grid-cols-3 gap-2">
               <Button
@@ -588,10 +654,19 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700"
+                className={cn(
+                  "border-blue-600 text-blue-400 hover:bg-blue-500/20",
+                  serverControlLoading === 'skip' && "opacity-50"
+                )}
+                onClick={handleSkipTrack}
+                disabled={serverControlLoading !== null}
               >
-                <Headphones className="h-3 w-3 mr-1" />
-                Preview
+                {serverControlLoading === 'skip' ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <SkipForward className="h-3 w-3 mr-1" />
+                )}
+                Skip Track
               </Button>
             </div>
           </TabsContent>
