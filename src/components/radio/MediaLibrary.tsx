@@ -153,6 +153,18 @@ export const MediaLibrary = ({
           return acc;
         }, {} as Record<string, number>));
         setMediaFiles(mediaData || []);
+        
+        // Load playlist assignments from database
+        const playlistMap: Record<string, { id: number; name: string }> = {};
+        mediaData?.forEach(file => {
+          if (file.azura_playlist_id && file.azura_playlist_name) {
+            playlistMap[file.id] = { 
+              id: file.azura_playlist_id, 
+              name: file.azura_playlist_name 
+            };
+          }
+        });
+        setFilePlaylistMap(playlistMap);
       }
     } catch (error) {
       console.error('❌ Error fetching media data:', error);
@@ -224,6 +236,19 @@ export const MediaLibrary = ({
       if (match?.media?.id) {
         await azuraCastService.addToPlaylist(playlistId, [match.media.id]);
         const playlist = azuraPlaylists.find(p => p.id === playlistId);
+        
+        // Persist playlist assignment to database
+        const { error: updateError } = await supabase
+          .from('gw_media_library')
+          .update({ 
+            azura_playlist_id: playlistId, 
+            azura_playlist_name: playlist?.name || 'Unknown' 
+          })
+          .eq('id', file.id);
+        
+        if (updateError) {
+          console.error('Error saving playlist assignment:', updateError);
+        }
         
         // Track the playlist assignment locally
         setFilePlaylistMap(prev => ({
