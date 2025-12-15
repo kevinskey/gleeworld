@@ -139,10 +139,11 @@ class AzuraCastService {
     return this.directStreamUrl;
   }
 
-  // Get stream URLs - direct stream only (proxy has timeout issues for streaming)
+  // Get stream URLs - try direct first, then proxy for CORS issues
   getStreamUrls(): string[] {
     return [
-      this.directStreamUrl, // Direct HTTPS stream
+      this.directStreamUrl, // Direct HTTPS stream (works if CORS enabled)
+      `${this.proxyBaseUrl}?url=${encodeURIComponent(this.directStreamUrl)}`, // Proxied stream for CORS bypass
     ];
   }
 
