@@ -115,8 +115,11 @@ export const RadioScheduleTimeline = ({
     }
     try {
       setIsRequesting(true);
-      await azuraCastService.requestSong(id);
-      toast({ title: "Queued", description: `Media ID ${id} added to queue` });
+      // Try to find title from loaded media, or use ID as fallback
+      const mediaItem = availableMedia.find(m => m.id === id);
+      const title = mediaItem?.title || `Media #${id}`;
+      await azuraCastService.requestSong(id, title);
+      toast({ title: "Queued", description: `"${title}" added to queue` });
       setQuickAddId('');
       await loadQueue();
       onRefresh?.();
@@ -209,7 +212,7 @@ export const RadioScheduleTimeline = ({
   const requestSong = async (mediaId: number, title: string) => {
     try {
       setIsRequesting(true);
-      await azuraCastService.requestSong(mediaId);
+      await azuraCastService.requestSong(mediaId, title);
       toast({ 
         title: "Queued", 
         description: `"${title}" added to AzuraCast queue` 
