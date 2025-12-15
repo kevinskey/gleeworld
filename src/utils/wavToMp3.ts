@@ -1,4 +1,4 @@
-import lamejs from 'lamejs';
+import * as lamejs from 'lamejs';
 
 export async function convertWavToMp3(
   wavUrl: string, 
@@ -14,30 +14,32 @@ export async function convertWavToMp3(
   
   onProgress?.(10);
   
-  // Parse WAV header
-  const dataView = new DataView(arrayBuffer);
-  const numChannels = dataView.getUint16(22, true);
-  const sampleRate = dataView.getUint32(24, true);
-  const bitsPerSample = dataView.getUint16(34, true);
-  
+  // Parse WAV header (use lamejs built-in parser for correctness)
+  const wavHeader = (lamejs as any).WavHeader?.readHeader?.(new DataView(arrayBuffer));
+  if (!wavHeader) {
+    throw new Error('Invalid WAV header');
+  }
+
+  const numChannels = wavHeader.channels;
+  const sampleRate = wavHeader.sampleRate;
+  const bitsPerSample = 16; // lamejs outputs PCM16
+  const dataOffset = wavHeader.dataOffset;
+  const dataSize = wavHeader.dataLen;
+
   console.log('WAV to MP3: channels:', numChannels, 'sampleRate:', sampleRate, 'bits:', bitsPerSample);
-  
-  // Find data chunk
-  let dataOffset = 44; // Standard WAV header size
-  const dataSize = arrayBuffer.byteLength - dataOffset;
-  
-  // Convert to samples
+
+  // Convert to PCM16 samples
   const samples = new Int16Array(arrayBuffer, dataOffset, dataSize / 2);
   
   onProgress?.(15);
   
   // Initialize MP3 encoder
-  const mp3encoder = new lamejs.Mp3Encoder(numChannels, sampleRate, 128);
+  const Mp3Encoder = (lamejs as any).Mp3Encoder;
+  const mp3encoder = new Mp3Encoder(numChannels, sampleRate, 128);
   const mp3Data: Int8Array[] = [];
   
   const sampleBlockSize = 1152; // Must be multiple of 576
-  const totalBlocks = Math.ceil(samples.length / (numChannels * sampleBlockSize));
-  
+
   if (numChannels === 1) {
     // Mono
     for (let i = 0; i < samples.length; i += sampleBlockSize) {
