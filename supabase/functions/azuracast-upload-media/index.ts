@@ -96,19 +96,21 @@ Deno.serve(async (req) => {
     // Determine content type from filename
     const ext = fileName.split('.').pop()?.toLowerCase() || 'mp3';
     const mimeTypes: Record<string, string> = {
-      'mp3': 'audio/mpeg',
-      'm4a': 'audio/mp4',
-      'aac': 'audio/aac',
-      'wav': 'audio/wav',
-      'ogg': 'audio/ogg',
-      'flac': 'audio/flac',
+      mp3: 'audio/mpeg',
+      m4a: 'audio/mp4',
+      aac: 'audio/aac',
+      wav: 'audio/wav',
+      ogg: 'audio/ogg',
+      flac: 'audio/flac',
+      aiff: 'audio/aiff',
+      aif: 'audio/aiff',
     };
-    const contentType = mimeTypes[ext] || 'audio/mpeg';
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
 
-    // Create FormData with proper Blob
+    // Create FormData with a File (AzuraCast expects an actual uploaded file)
     const formData = new FormData();
-    const blob = new Blob([fileArrayBuffer], { type: contentType });
-    formData.append('file', blob, fileName);
+    const file = new File([fileArrayBuffer], fileName, { type: contentType });
+    formData.append('file', file);
     formData.append('path', ''); // Root directory
 
     // Upload to AzuraCast
