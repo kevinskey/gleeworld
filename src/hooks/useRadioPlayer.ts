@@ -66,6 +66,9 @@ export const useRadioPlayer = () => {
   };
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isPlayingRef = useRef(false);
+  const isReconnectingRef = useRef(false);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   // Stable stream URLs - memoize to prevent re-computation
@@ -125,51 +128,59 @@ export const useRadioPlayer = () => {
         duration: (e as any).target?.duration
       });
       
-      // Attempt to reconnect after a brief delay if the stream drops
-      setTimeout(() => {
-        console.log('Attempting to reconnect radio stream...');
-        if (audioRef.current && state.isPlaying) {
-          play();
-        }
-      }, 3000);
-      
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
         isPlaying: false, 
         isLive: false 
       }));
+      isPlayingRef.current = false;
+      
+      // Only attempt reconnect if we were playing and not already reconnecting
+      if (isPlayingRef.current && !isReconnectingRef.current) {
+        isReconnectingRef.current = true;
+        
+        // Clear any pending reconnect
+        if (reconnectTimeoutRef.current) {
+          clearTimeout(reconnectTimeoutRef.current);
+        }
+        
+        reconnectTimeoutRef.current = setTimeout(() => {
+          console.log('Attempting to reconnect radio stream after error...');
+          isReconnectingRef.current = false;
+          // Don't auto-reconnect on error - let user manually retry
+        }, 5000);
+      }
     };
 
     const handlePlay = () => {
       console.log('Radio stream playing');
+      isPlayingRef.current = true;
+      isReconnectingRef.current = false;
       setState(prev => ({ ...prev, isPlaying: true }));
     };
 
     const handlePause = () => {
       console.log('Radio stream paused');
+      isPlayingRef.current = false;
       setState(prev => ({ ...prev, isPlaying: false }));
     };
 
     const handleStalled = () => {
-      console.log('Radio stream stalled, attempting to resume...');
-      if (audioRef.current && state.isPlaying) {
-        setTimeout(() => play(), 1000);
-      }
+      console.log('Radio stream stalled - waiting for buffer...');
+      // Don't immediately reconnect on stalled - this is normal for streaming
+      // The browser will automatically try to resume buffering
     };
 
     const handleSuspend = () => {
-      console.log('Radio stream suspended');
-      if (audioRef.current && state.isPlaying) {
-        setTimeout(() => {
-          console.log('Attempting resume after suspend...');
-          play();
-        }, 1500);
-      }
+      console.log('Radio stream suspended - browser paused download');
+      // This is normal browser behavior to save bandwidth
+      // Don't trigger reconnection
     };
 
     const handleWaiting = () => {
-      console.log('Radio stream waiting for data...');
+      console.log('Radio stream buffering...');
+      // Normal buffering, don't do anything aggressive
     };
 
     audio.addEventListener('loadstart', handleLoadStart);
@@ -191,6 +202,10 @@ export const useRadioPlayer = () => {
       audio.removeEventListener('stalled', handleStalled);
       audio.removeEventListener('suspend', handleSuspend);
       audio.removeEventListener('waiting', handleWaiting);
+      // Clear any pending reconnect timeout
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
       // Do not pause or clear src; keep sharedAudio alive for seamless playback
     };
   }, []); // Empty dependency array - only run once
