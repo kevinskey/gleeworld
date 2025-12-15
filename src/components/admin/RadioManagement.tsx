@@ -414,11 +414,36 @@ export const RadioManagement = () => {
               {radioStats.isOnline ? (
                 <Badge className="bg-emerald-500 text-xs"><Wifi className="h-3 w-3 mr-1" />{radioStats.isLive ? 'LIVE' : 'ONLINE'}</Badge>
               ) : (
-                <Badge variant="destructive" className="text-xs"><Wifi className="h-3 w-3 mr-1" />OFFLINE</Badge>
+                <Badge variant="destructive" className="text-xs animate-pulse"><Wifi className="h-3 w-3 mr-1" />OFFLINE</Badge>
               )}
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {!radioStats.isOnline && (
+              <Button 
+                size="sm" 
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    toast({ title: "Starting Station...", description: "Starting AutoDJ and stream" });
+                    await azuraCastService.startBackend();
+                    await azuraCastService.startFrontend();
+                    await loadAllData();
+                    toast({ title: "Station Started", description: "Radio is now broadcasting" });
+                  } catch (error) {
+                    console.error('Start station error:', error);
+                    toast({ title: "Error", description: "Failed to start station", variant: "destructive" });
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white h-8"
+              >
+                <Activity className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
+                Start Station
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={handleSync} disabled={loading} className="border-slate-600 text-white hover:bg-slate-700 h-8">
               <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />Sync
             </Button>
