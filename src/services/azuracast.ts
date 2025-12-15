@@ -431,7 +431,31 @@ class AzuraCastService {
 
   // MEDIA MANAGEMENT  
   async addToPlaylist(playlistId: number, fileIds: number[]): Promise<any> {
-    return await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}/media`, 'POST', { media: fileIds });
+    // AzuraCast requires updating each file individually with playlist assignment
+    // Use PUT to /station/{stationId}/file/{fileId} with playlists array
+    const results = [];
+    for (const fileId of fileIds) {
+      try {
+        // First get current file info to preserve existing playlists
+        const fileInfo = await this.makeProxyRequest(`/station/{stationId}/file/${fileId}`, 'GET');
+        const currentPlaylists = fileInfo?.playlists?.map((p: any) => p.id) || [];
+        
+        // Add new playlist if not already present
+        if (!currentPlaylists.includes(playlistId)) {
+          currentPlaylists.push(playlistId);
+        }
+        
+        // Update file with new playlist assignment
+        const result = await this.makeProxyRequest(`/station/{stationId}/file/${fileId}`, 'PUT', {
+          playlists: currentPlaylists
+        });
+        results.push(result);
+      } catch (error) {
+        console.error(`Failed to add file ${fileId} to playlist ${playlistId}:`, error);
+        throw error;
+      }
+    }
+    return results;
   }
 
   async removeFromPlaylist(playlistId: number, mediaId: number): Promise<void> {

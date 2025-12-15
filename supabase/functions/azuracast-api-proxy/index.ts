@@ -171,17 +171,6 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
-      
-      return new Response(
-        JSON.stringify({ 
-          error: `AzuraCast API error: ${azuracastResponse.status}`,
-          details: errorText 
-        }),
-        { 
-          status: azuracastResponse.status, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
     }
 
     // Parse and return successful response
