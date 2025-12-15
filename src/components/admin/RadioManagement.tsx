@@ -158,9 +158,15 @@ export const RadioManagement = () => {
       ]);
 
       const allTracks: AudioTrack[] = [];
+      const playlistMap: Record<string, { id: number; name: string }> = {};
+      
       if (audioArchiveResult.data) {
         audioArchiveResult.data.forEach(track => {
           allTracks.push({ id: track.id, title: track.title, artist_info: track.artist_info, audio_url: track.audio_url, category: track.category, duration_seconds: track.duration_seconds, play_count: track.play_count || 0, is_public: track.is_public, created_at: track.created_at, source: 'archive' });
+          // Load playlist assignment from database
+          if (track.azura_playlist_id && track.azura_playlist_name) {
+            playlistMap[track.id] = { id: track.azura_playlist_id, name: track.azura_playlist_name };
+          }
         });
       }
       if (musicTracksResult.data) {
@@ -175,6 +181,7 @@ export const RadioManagement = () => {
       }
       allTracks.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setTracks(allTracks);
+      setTrackPlaylistMap(playlistMap);
       setRadioStats(prev => ({ ...prev, totalTracks: allTracks.length }));
     } catch (error) {
       console.error('Error fetching tracks:', error);
@@ -442,6 +449,14 @@ export const RadioManagement = () => {
       if (match?.media?.id) {
         await azuraCastService.addToPlaylist(playlistId, [match.media.id]);
         const playlist = playlists.find(p => p.id === playlistId);
+        
+        // Persist playlist assignment to database for archive tracks
+        if (track.source === 'archive') {
+          await supabase
+            .from('audio_archive')
+            .update({ azura_playlist_id: playlistId, azura_playlist_name: playlist?.name || 'Unknown' })
+            .eq('id', track.id);
+        }
         
         // Track the playlist assignment locally
         setTrackPlaylistMap(prev => ({

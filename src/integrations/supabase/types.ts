@@ -1054,6 +1054,8 @@ export type Database = {
         Row: {
           artist_info: string | null
           audio_url: string
+          azura_playlist_id: number | null
+          azura_playlist_name: string | null
           category: string | null
           created_at: string | null
           created_by: string | null
@@ -1070,6 +1072,8 @@ export type Database = {
         Insert: {
           artist_info?: string | null
           audio_url: string
+          azura_playlist_id?: number | null
+          azura_playlist_name?: string | null
           category?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -1086,6 +1090,8 @@ export type Database = {
         Update: {
           artist_info?: string | null
           audio_url?: string
+          azura_playlist_id?: number | null
+          azura_playlist_name?: string | null
           category?: string | null
           created_at?: string | null
           created_by?: string | null
@@ -9446,6 +9452,8 @@ export type Database = {
       }
       gw_media_library: {
         Row: {
+          azura_playlist_id: number | null
+          azura_playlist_name: string | null
           bucket_id: string | null
           category: string
           context: string | null
@@ -9467,6 +9475,8 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          azura_playlist_id?: number | null
+          azura_playlist_name?: string | null
           bucket_id?: string | null
           category?: string
           context?: string | null
@@ -9488,6 +9498,8 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          azura_playlist_id?: number | null
+          azura_playlist_name?: string | null
           bucket_id?: string | null
           category?: string
           context?: string | null
