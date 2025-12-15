@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { compressAudioToMp3, needsCompression, uploadCompressedAudio } from '@/utils/audioCompression';
 
 interface AzuraCastStation {
   id: number;
@@ -461,7 +462,14 @@ class AzuraCastService {
   }
 
   // Upload a file from URL to AzuraCast media library
-  async uploadMediaFromUrl(fileUrl: string, fileName: string, title?: string, artist?: string): Promise<any> {
+  // Automatically compresses large WAV files to MP3 before uploading
+  async uploadMediaFromUrl(
+    fileUrl: string, 
+    fileName: string, 
+    title?: string, 
+    artist?: string,
+    onProgress?: (status: string, progress?: number) => void
+  ): Promise<any> {
     console.log('AzuraCast: Uploading media from URL:', fileUrl);
     
     const { data: { session } } = await supabase.auth.getSession();
@@ -469,13 +477,53 @@ class AzuraCastService {
       throw new Error('Not authenticated');
     }
 
+    let uploadUrl = fileUrl;
+    let uploadFileName = fileName;
+
+    // Check if file needs compression (WAV files over 45MB)
+    const isWavFile = fileName.toLowerCase().endsWith('.wav') || fileUrl.toLowerCase().includes('.wav');
+    
+    if (isWavFile) {
+      try {
+        // Check file size first
+        onProgress?.('Checking file size...');
+        const headResponse = await fetch(fileUrl, { method: 'HEAD' });
+        const contentLength = parseInt(headResponse.headers.get('content-length') || '0');
+        
+        if (needsCompression(contentLength)) {
+          console.log('AzuraCast: File is', (contentLength / 1024 / 1024).toFixed(2), 'MB, compressing to MP3...');
+          onProgress?.('Compressing audio to MP3...', 0);
+          
+          const result = await compressAudioToMp3(fileUrl, fileName, (progress) => {
+            onProgress?.('Compressing audio to MP3...', progress);
+          });
+          
+          if (result.wasCompressed) {
+            onProgress?.('Uploading compressed file...', 0);
+            console.log('AzuraCast: Compression complete, uploading to storage...');
+            
+            // Upload compressed file to Supabase storage
+            uploadUrl = await uploadCompressedAudio(result.blob, result.newFileName, supabase);
+            uploadFileName = result.newFileName;
+            
+            console.log('AzuraCast: Compressed file uploaded to:', uploadUrl);
+          }
+        }
+      } catch (compressionError) {
+        console.error('AzuraCast: Compression failed, attempting original upload:', compressionError);
+        // Continue with original file if compression fails
+      }
+    }
+
+    onProgress?.('Uploading to radio station...');
+    
     const response = await fetch('https://oopmlreysjzuxzylyheb.functions.supabase.co/azuracast-upload-media', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ fileUrl, fileName, title, artist }),
+      body: JSON.stringify({ fileUrl: uploadUrl, fileName: uploadFileName, title, artist }),
     });
 
     if (!response.ok) {
