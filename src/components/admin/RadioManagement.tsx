@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { azuraCastService } from '@/services/azuracast';
@@ -386,6 +387,45 @@ export const RadioManagement = () => {
     } catch (e) { toast({ title: "Error", variant: "destructive" }); }
   };
 
+  const handleAssignToPlaylist = async (track: AudioTrack, playlistId: number) => {
+    try {
+      // First check if track exists in AzuraCast
+      const azuraMedia = await azuraCastService.getAllMedia();
+      let match = azuraMedia.find((m: any) => 
+        m.media?.title?.toLowerCase() === track.title.toLowerCase() ||
+        m.media?.path?.toLowerCase().includes(track.title.toLowerCase())
+      );
+
+      // If not found, upload it
+      if (!match && track.audio_url) {
+        const fileName = track.audio_url.split('/').pop() || `${track.title}.mp3`;
+        const uploadResult = await azuraCastService.uploadMediaFromUrl(
+          track.audio_url,
+          fileName,
+          track.title,
+          track.artist_info || 'Spelman College Glee Club'
+        );
+        if (uploadResult?.id || uploadResult?.mediaId) {
+          const refreshedMedia = await azuraCastService.getAllMedia();
+          match = refreshedMedia.find((m: any) => 
+            m.media?.id === (uploadResult.id || uploadResult.mediaId)
+          );
+        }
+      }
+
+      if (match?.media?.id) {
+        await azuraCastService.addToPlaylist(playlistId, [match.media.id]);
+        const playlist = playlists.find(p => p.id === playlistId);
+        toast({ title: "Added to Playlist", description: `"${track.title}" added to ${playlist?.name || 'playlist'}` });
+      } else {
+        toast({ title: "Error", description: "Could not find or upload track to AzuraCast", variant: "destructive" });
+      }
+    } catch (error) {
+      console.error('Error assigning to playlist:', error);
+      toast({ title: "Error", description: "Failed to assign to playlist", variant: "destructive" });
+    }
+  };
+
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const webhookTypes = ['discord', 'telegram', 'twitter', 'tunein', 'generic'];
   const webhookTriggers = ['song_changed', 'live_connect', 'live_disconnect', 'station_offline', 'station_online'];
@@ -525,7 +565,34 @@ export const RadioManagement = () => {
                         {currentlyPlaying === track.id ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
                       </Button>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{track.title}</p>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="text-sm font-medium text-white truncate hover:text-primary hover:underline cursor-pointer flex items-center gap-1.5 text-left" title="Click to assign to playlist">
+                              <span className="truncate">{track.title}</span>
+                              <ListMusic className="h-3.5 w-3.5 text-primary/60 flex-shrink-0" />
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56 p-2 bg-slate-800 border-slate-700" align="start">
+                            <div className="space-y-1">
+                              <p className="text-xs font-medium text-slate-400 px-2 py-1">Add to AzuraCast Playlist</p>
+                              {playlists.length === 0 ? (
+                                <p className="text-xs text-slate-500 px-2 py-2">No playlists found</p>
+                              ) : (
+                                playlists.map((playlist) => (
+                                  <Button
+                                    key={playlist.id}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="w-full justify-start text-xs text-white hover:bg-slate-700"
+                                    onClick={() => handleAssignToPlaylist(track, playlist.id)}
+                                  >
+                                    {playlist.name}
+                                  </Button>
+                                ))
+                              )}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                         <p className="text-xs text-slate-400">{track.artist_info || 'Unknown'} • {formatDuration(track.duration_seconds)}</p>
                       </div>
                       <div className="flex items-center gap-1">
