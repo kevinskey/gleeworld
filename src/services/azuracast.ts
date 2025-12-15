@@ -404,21 +404,62 @@ class AzuraCastService {
     await this.makeProxyRequest(`/station/{stationId}/queue/${queueItemId}`, 'DELETE');
   }
 
-  // Add a song to the queue directly using admin queue endpoint
+  // Add a song to the queue.
+  // Prefer the admin queue endpoint when available; fall back to the Requests API when queue editing is disabled.
   async requestSong(mediaId: number, title?: string): Promise<any> {
     console.log('AzuraCast: Adding song to queue with media ID:', mediaId, 'title:', title);
-    
-    // Use the admin queue endpoint directly with media_id
-    // This bypasses the request system restrictions (cooldowns, playlist settings)
+
+    // 1) Try admin queue endpoint (some stations disable POST /queue)
     try {
       const result = await this.makeProxyRequest(`/station/{stationId}/queue`, 'POST', {
-        media_id: mediaId
+        media_id: mediaId,
       });
-      console.log('AzuraCast: Successfully added to queue:', result);
+      console.log('AzuraCast: Successfully added to queue via admin endpoint:', result);
       return result;
     } catch (error: any) {
-      console.error('AzuraCast: Failed to add to queue via admin endpoint:', error);
-      throw new Error(`Failed to add "${title || mediaId}" to queue: ${error.message || 'Unknown error'}`);
+      const msg = String(error?.message || error);
+      const looksDisabled =
+        msg.includes('Feature not enabled on radio station') ||
+        msg.includes('Edge function returned 400') ||
+        msg.includes('Method not allowed') ||
+        msg.includes('405');
+
+      if (!looksDisabled) {
+        console.error('AzuraCast: Failed to add to queue via admin endpoint:', error);
+        throw new Error(`Failed to add "${title || mediaId}" to queue: ${msg}`);
+      }
+
+      // 2) Fall back to Requests API
+      if (!title) {
+        throw new Error(
+          'Queue editing is disabled on this station, and no title was provided to fall back to song requests.',
+        );
+      }
+
+      console.warn('AzuraCast: Queue editing disabled; falling back to Requests API');
+
+      const requestableSongs = await this.getRequestableSongs();
+      if (!Array.isArray(requestableSongs)) {
+        throw new Error('Could not fetch requestable songs from station');
+      }
+
+      const normalizeTitle = (t: string) => (t || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+      const searchTitle = normalizeTitle(title);
+
+      const song = requestableSongs.find((s: any) => {
+        const songTitle = normalizeTitle(s.song?.title || '');
+        return songTitle === searchTitle || songTitle.includes(searchTitle) || searchTitle.includes(songTitle);
+      });
+
+      if (!song?.request_id) {
+        console.error('AzuraCast: Song not found in requestable list. Title:', title);
+        throw new Error(
+          `Song "${title}" is not currently requestable. Add it to a request-enabled playlist in AzuraCast, or wait for cooldowns.`,
+        );
+      }
+
+      console.log('AzuraCast: Found request_id:', song.request_id, 'for title:', title, '-> matched:', song.song?.title);
+      return await this.makeProxyRequest(`/station/{stationId}/request/${song.request_id}`, 'POST');
     }
   }
 
