@@ -161,19 +161,55 @@ export const RadioPlaylistQueue = ({ availableTracks, onRefreshTracks }: RadioPl
     return () => clearInterval(interval);
   }, [fetchQueue]);
 
+  // Normalize title for matching (remove extensions, special chars, extra spaces)
+  const normalizeTitle = (title: string): string => {
+    return title
+      .toLowerCase()
+      .replace(/\.(mp3|wav|ogg|flac|m4a|aac)$/i, '') // Remove audio extensions
+      .replace(/[_-]/g, ' ') // Replace underscores/dashes with spaces
+      .replace(/[^\w\s]/g, '') // Remove special characters
+      .replace(/\s+/g, ' ') // Normalize multiple spaces
+      .trim();
+  };
+
   // Add track directly to AzuraCast queue
   const addToQueue = async (track: typeof availableTracks[0]) => {
     setAddingTrack(track.id);
     try {
       // First get AzuraCast media to find the track
       const azuraMedia = await azuraCastService.getAllMedia();
+      const trackTitleNorm = normalizeTitle(track.title);
+      
+      // Try multiple matching strategies
       const match = azuraMedia.find((m: any) => {
-        const mediaTitle = (m.media?.title || m.path_short || '').toLowerCase();
-        const trackTitle = track.title.toLowerCase();
-        return mediaTitle.includes(trackTitle) || trackTitle.includes(mediaTitle);
+        const mediaTitle = normalizeTitle(m.media?.title || '');
+        const mediaPath = normalizeTitle(m.path_short || m.path || '');
+        const mediaFilename = normalizeTitle((m.path_short || m.path || '').split('/').pop() || '');
+        
+        // Exact normalized match
+        if (mediaTitle === trackTitleNorm || mediaPath === trackTitleNorm || mediaFilename === trackTitleNorm) {
+          return true;
+        }
+        
+        // Contains match (either direction)
+        if (mediaTitle && trackTitleNorm && (mediaTitle.includes(trackTitleNorm) || trackTitleNorm.includes(mediaTitle))) {
+          return true;
+        }
+        
+        // Filename contains match
+        if (mediaFilename && trackTitleNorm && (mediaFilename.includes(trackTitleNorm) || trackTitleNorm.includes(mediaFilename))) {
+          return true;
+        }
+        
+        return false;
       });
 
       if (!match?.media?.id) {
+        console.log('Track not found in AzuraCast. Local title:', track.title, 'Normalized:', trackTitleNorm);
+        console.log('Available AzuraCast media:', azuraMedia.slice(0, 5).map((m: any) => ({
+          title: m.media?.title,
+          path: m.path_short
+        })));
         toast({
           title: 'Track Not Found',
           description: `"${track.title}" is not in AzuraCast media library. Upload it first via Library tab.`,
