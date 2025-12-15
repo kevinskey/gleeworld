@@ -107,11 +107,13 @@ Deno.serve(async (req) => {
     };
     const contentType = mimeTypes[ext] || 'application/octet-stream';
 
-    // Create FormData with a File (AzuraCast expects an actual uploaded file)
+    // Create FormData (AzuraCast expects multipart fields: file + path)
     const formData = new FormData();
     const file = new File([fileArrayBuffer], fileName, { type: contentType });
-    formData.append('file', file);
-    formData.append('path', ''); // Root directory
+    // Ensure filename is explicitly provided in multipart disposition
+    formData.append('file', file, fileName);
+    // AzuraCast expects the *destination path including filename*
+    formData.append('path', fileName);
 
     // Upload to AzuraCast
     const uploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files';
