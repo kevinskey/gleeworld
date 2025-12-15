@@ -214,6 +214,118 @@ const tools = [
       },
     },
   },
+  // Admin Tools (require admin privileges)
+  {
+    type: "function",
+    function: {
+      name: "admin_reset_user_password",
+      description: "Reset a user's password (ADMIN ONLY). Search for the user first to get their email or user ID.",
+      parameters: {
+        type: "object",
+        properties: {
+          user_email: {
+            type: "string",
+            description: "The email of the user whose password should be reset",
+          },
+          new_password: {
+            type: "string",
+            description: "The new password to set (minimum 8 characters). If not provided, a secure random password will be generated.",
+          },
+        },
+        required: ["user_email"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "admin_get_user_login_info",
+      description: "Get user login information and activity (ADMIN ONLY). Shows last login, account status, and profile details.",
+      parameters: {
+        type: "object",
+        properties: {
+          user_email: {
+            type: "string",
+            description: "The email of the user to look up",
+          },
+        },
+        required: ["user_email"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "admin_list_users",
+      description: "List users with optional filters (ADMIN ONLY). Can filter by role, verified status, or search by name.",
+      parameters: {
+        type: "object",
+        properties: {
+          role: {
+            type: "string",
+            enum: ["member", "fan", "alumna", "auditioner", "student", "admin", "super-admin"],
+            description: "Filter by user role",
+          },
+          verified_only: {
+            type: "boolean",
+            description: "Only show verified users",
+          },
+          search_name: {
+            type: "string",
+            description: "Search users by name",
+          },
+          limit: {
+            type: "number",
+            description: "Maximum number of users to return (default 10)",
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "admin_update_user_role",
+      description: "Update a user's role (ADMIN ONLY). Can change user role like member, fan, alumna, etc.",
+      parameters: {
+        type: "object",
+        properties: {
+          user_email: {
+            type: "string",
+            description: "The email of the user to update",
+          },
+          new_role: {
+            type: "string",
+            enum: ["member", "fan", "alumna", "auditioner", "student"],
+            description: "The new role to assign",
+          },
+        },
+        required: ["user_email", "new_role"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "admin_verify_user",
+      description: "Verify or unverify a user account (ADMIN ONLY).",
+      parameters: {
+        type: "object",
+        properties: {
+          user_email: {
+            type: "string",
+            description: "The email of the user to verify/unverify",
+          },
+          verified: {
+            type: "boolean",
+            description: "Set to true to verify, false to unverify",
+          },
+        },
+        required: ["user_email", "verified"],
+      },
+    },
+  },
 ];
 
 // Execute tool calls
@@ -593,9 +705,304 @@ async function executeTool(toolName: string, args: any, userId: string) {
       };
     }
 
+    // ====== ADMIN TOOLS ======
+    
+    case "admin_reset_user_password": {
+      // Verify admin status first
+      const { data: adminProfile } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin")
+        .eq("user_id", userId)
+        .single();
+
+      if (!adminProfile?.is_admin && !adminProfile?.is_super_admin) {
+        return { 
+          success: false, 
+          message: "Access denied. This action requires admin privileges." 
+        };
+      }
+
+      // Find the user
+      const { data: targetUser } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, email")
+        .eq("email", args.user_email)
+        .single();
+
+      if (!targetUser) {
+        return { 
+          success: false, 
+          message: `User with email "${args.user_email}" not found.` 
+        };
+      }
+
+      // Generate a secure random password if not provided
+      const newPassword = args.new_password || generateSecurePassword();
+
+      // Reset password using Supabase admin API
+      const { error: resetError } = await supabase.auth.admin.updateUserById(
+        targetUser.user_id,
+        { password: newPassword }
+      );
+
+      if (resetError) {
+        console.error("Password reset error:", resetError);
+        return { 
+          success: false, 
+          message: `Failed to reset password: ${resetError.message}` 
+        };
+      }
+
+      // Log the action
+      await supabase.from("gw_security_audit_log").insert({
+        user_id: userId,
+        action: "admin_password_reset",
+        target_user_id: targetUser.user_id,
+        details: { target_email: args.user_email, method: "assistant" }
+      });
+
+      return {
+        success: true,
+        message: `Password for ${targetUser.full_name || args.user_email} has been reset.`,
+        new_password: args.new_password ? "[provided by admin]" : newPassword,
+        important: "Please securely share this temporary password with the user. They should change it upon login."
+      };
+    }
+
+    case "admin_get_user_login_info": {
+      // Verify admin status
+      const { data: adminCheck } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin")
+        .eq("user_id", userId)
+        .single();
+
+      if (!adminCheck?.is_admin && !adminCheck?.is_super_admin) {
+        return { 
+          success: false, 
+          message: "Access denied. This action requires admin privileges." 
+        };
+      }
+
+      // Get user profile
+      const { data: userProfile, error: profileError } = await supabase
+        .from("gw_profiles")
+        .select("*")
+        .eq("email", args.user_email)
+        .single();
+
+      if (profileError || !userProfile) {
+        return { 
+          success: false, 
+          message: `User with email "${args.user_email}" not found.` 
+        };
+      }
+
+      // Get auth user info
+      const { data: authUser } = await supabase.auth.admin.getUserById(userProfile.user_id);
+
+      // Get recent activity
+      const { data: recentActivity } = await supabase
+        .from("activity_logs")
+        .select("action_type, created_at, resource_type")
+        .eq("user_id", userProfile.user_id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      return {
+        success: true,
+        user: {
+          name: userProfile.full_name,
+          email: userProfile.email,
+          role: userProfile.role,
+          voice_part: userProfile.voice_part,
+          verified: userProfile.verified,
+          is_admin: userProfile.is_admin,
+          is_super_admin: userProfile.is_super_admin,
+          is_exec_board: userProfile.is_exec_board,
+          exec_board_role: userProfile.exec_board_role,
+          created_at: userProfile.created_at,
+          last_sign_in: authUser?.user?.last_sign_in_at,
+          email_confirmed: authUser?.user?.email_confirmed_at ? true : false,
+        },
+        recent_activity: recentActivity || [],
+        message: `User info for ${userProfile.full_name || args.user_email}`
+      };
+    }
+
+    case "admin_list_users": {
+      // Verify admin status
+      const { data: adminCheck } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin")
+        .eq("user_id", userId)
+        .single();
+
+      if (!adminCheck?.is_admin && !adminCheck?.is_super_admin) {
+        return { 
+          success: false, 
+          message: "Access denied. This action requires admin privileges." 
+        };
+      }
+
+      let query = supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, email, role, verified, is_admin, is_super_admin, is_exec_board, voice_part, created_at");
+
+      if (args.role) {
+        query = query.eq("role", args.role);
+      }
+      if (args.verified_only) {
+        query = query.eq("verified", true);
+      }
+      if (args.search_name) {
+        query = query.ilike("full_name", `%${args.search_name}%`);
+      }
+
+      const limit = args.limit || 10;
+      query = query.order("created_at", { ascending: false }).limit(limit);
+
+      const { data: users, error } = await query;
+
+      if (error) {
+        console.error("Error listing users:", error);
+        return { success: false, message: "Failed to fetch users" };
+      }
+
+      return {
+        success: true,
+        users: users || [],
+        count: users?.length || 0,
+        message: `Found ${users?.length || 0} user(s)${args.role ? ` with role '${args.role}'` : ''}${args.search_name ? ` matching '${args.search_name}'` : ''}.`
+      };
+    }
+
+    case "admin_update_user_role": {
+      // Verify admin status
+      const { data: adminCheck } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin")
+        .eq("user_id", userId)
+        .single();
+
+      if (!adminCheck?.is_admin && !adminCheck?.is_super_admin) {
+        return { 
+          success: false, 
+          message: "Access denied. This action requires admin privileges." 
+        };
+      }
+
+      // Find the user
+      const { data: targetUser } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, email, role")
+        .eq("email", args.user_email)
+        .single();
+
+      if (!targetUser) {
+        return { 
+          success: false, 
+          message: `User with email "${args.user_email}" not found.` 
+        };
+      }
+
+      const oldRole = targetUser.role;
+
+      // Update the role
+      const { error: updateError } = await supabase
+        .from("gw_profiles")
+        .update({ role: args.new_role })
+        .eq("user_id", targetUser.user_id);
+
+      if (updateError) {
+        console.error("Role update error:", updateError);
+        return { 
+          success: false, 
+          message: `Failed to update role: ${updateError.message}` 
+        };
+      }
+
+      // Log the role transition
+      await supabase.from("user_role_transitions").insert({
+        user_id: targetUser.user_id,
+        from_role: oldRole,
+        to_role: args.new_role,
+        transition_reason: "Updated via Glee Assistant",
+        changed_by: userId
+      });
+
+      return {
+        success: true,
+        message: `Role for ${targetUser.full_name || args.user_email} changed from '${oldRole}' to '${args.new_role}'.`
+      };
+    }
+
+    case "admin_verify_user": {
+      // Verify admin status
+      const { data: adminCheck } = await supabase
+        .from("gw_profiles")
+        .select("is_admin, is_super_admin")
+        .eq("user_id", userId)
+        .single();
+
+      if (!adminCheck?.is_admin && !adminCheck?.is_super_admin) {
+        return { 
+          success: false, 
+          message: "Access denied. This action requires admin privileges." 
+        };
+      }
+
+      // Find and update the user
+      const { data: targetUser } = await supabase
+        .from("gw_profiles")
+        .select("user_id, full_name, email, verified")
+        .eq("email", args.user_email)
+        .single();
+
+      if (!targetUser) {
+        return { 
+          success: false, 
+          message: `User with email "${args.user_email}" not found.` 
+        };
+      }
+
+      const { error: updateError } = await supabase
+        .from("gw_profiles")
+        .update({ verified: args.verified })
+        .eq("user_id", targetUser.user_id);
+
+      if (updateError) {
+        console.error("Verify update error:", updateError);
+        return { 
+          success: false, 
+          message: `Failed to update verification: ${updateError.message}` 
+        };
+      }
+
+      return {
+        success: true,
+        message: args.verified 
+          ? `${targetUser.full_name || args.user_email} has been verified.`
+          : `${targetUser.full_name || args.user_email} has been unverified.`
+      };
+    }
+
     default:
       return { message: "Unknown tool" };
   }
+}
+
+// Helper function to generate secure random password
+function generateSecurePassword(): string {
+  const length = 12;
+  const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+  let password = "";
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  for (let i = 0; i < length; i++) {
+    password += charset[array[i] % charset.length];
+  }
+  return password;
 }
 
 serve(async (req) => {
@@ -654,10 +1061,21 @@ serve(async (req) => {
 - Check active polls
 - Provide handbook information about policies and procedures
 
+## Admin Capabilities (Admin/Super-Admin Only):
+If the user is an admin or super-admin, you can also:
+- Reset user passwords (generate new temporary password or set specific one)
+- Get user login info and account details (last login, verification status, role, activity)
+- List and search users with filters (by role, verified status, name)
+- Update user roles (member, fan, alumna, auditioner, student)
+- Verify or unverify user accounts
+
+When performing admin actions, always confirm the action with the user before executing, and provide clear results including any temporary passwords generated.
+
 ## Guidelines:
 - Be warm, friendly, and helpful - embody the spirit of sisterhood
 - Use tools to provide accurate, real-time information
 - When users ask to do something, use the appropriate tool
+- For admin actions, verify the request clearly before executing
 - If you don't have a tool for something, explain what the user can do manually
 - Today's date is ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
 - Keep responses concise but helpful`;
