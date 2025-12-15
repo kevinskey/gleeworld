@@ -106,6 +106,7 @@ export const MediaLibrary = ({
   const [azuraPlaylists, setAzuraPlaylists] = useState<any[]>([]);
   const [playlistPickerFile, setPlaylistPickerFile] = useState<MediaFile | null>(null);
   const [assigningPlaylist, setAssigningPlaylist] = useState(false);
+  const [openPlaylistPopoverId, setOpenPlaylistPopoverId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -629,7 +630,10 @@ export const MediaLibrary = ({
             {/* File Info */}
             <div className="flex-1 min-w-0 space-y-2">
               {canPlay ? (
-                <Popover>
+                <Popover 
+                  open={openPlaylistPopoverId === file.id} 
+                  onOpenChange={(open) => setOpenPlaylistPopoverId(open ? file.id : null)}
+                >
                   <PopoverTrigger asChild>
                     <button 
                       className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors text-left hover:underline cursor-pointer flex items-center gap-2 w-full"
@@ -639,7 +643,7 @@ export const MediaLibrary = ({
                       <ListMusic className="h-4 w-4 text-primary/60 flex-shrink-0" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-64 p-2" align="start">
+                  <PopoverContent className="w-64 p-2 bg-popover" align="start">
                     <div className="space-y-1">
                       <p className="text-sm font-medium text-muted-foreground px-2 py-1">Add to AzuraCast Playlist</p>
                       {azuraPlaylists.length === 0 ? (
@@ -652,7 +656,10 @@ export const MediaLibrary = ({
                             size="sm"
                             className="w-full justify-start text-sm"
                             disabled={assigningPlaylist}
-                            onClick={() => handleAssignToPlaylist(file, playlist.id)}
+                            onClick={() => {
+                              handleAssignToPlaylist(file, playlist.id);
+                              setOpenPlaylistPopoverId(null);
+                            }}
                           >
                             {assigningPlaylist ? (
                               <Loader2 className="h-3 w-3 mr-2 animate-spin" />

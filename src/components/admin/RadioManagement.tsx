@@ -98,6 +98,7 @@ export const RadioManagement = () => {
   const [songHistory, setSongHistory] = useState<any[]>([]);
   const [webhooks, setWebhooks] = useState<any[]>([]);
   const [sftpUsers, setSftpUsers] = useState<any[]>([]);
+  const [openPlaylistPopoverId, setOpenPlaylistPopoverId] = useState<string | null>(null);
 
   // Track unsupported features
   const [unsupportedFeatures, setUnsupportedFeatures] = useState<Set<string>>(new Set());
@@ -593,7 +594,10 @@ export const RadioManagement = () => {
                         {currentlyPlaying === track.id ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
                       </Button>
                       <div className="flex-1 min-w-0">
-                        <Popover>
+                        <Popover
+                          open={openPlaylistPopoverId === track.id}
+                          onOpenChange={(open) => setOpenPlaylistPopoverId(open ? track.id : null)}
+                        >
                           <PopoverTrigger asChild>
                             <button className="text-sm font-medium text-white truncate hover:text-primary hover:underline cursor-pointer flex items-center gap-1.5 text-left" title="Click to assign to playlist">
                               <span className="truncate">{track.title}</span>
@@ -612,7 +616,10 @@ export const RadioManagement = () => {
                                     variant="ghost"
                                     size="sm"
                                     className="w-full justify-start text-xs text-white hover:bg-slate-700"
-                                    onClick={() => handleAssignToPlaylist(track, playlist.id)}
+                                    onClick={() => {
+                                      handleAssignToPlaylist(track, playlist.id);
+                                      setOpenPlaylistPopoverId(null);
+                                    }}
                                   >
                                     {playlist.name}
                                   </Button>
