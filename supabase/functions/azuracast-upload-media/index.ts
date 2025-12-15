@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
     const formData = new FormData();
     const blob = new Blob([fileArrayBuffer], { type: contentType });
     formData.append('file', blob, fileName);
+    formData.append('path', ''); // Root directory
 
     // Upload to AzuraCast
     const uploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files';
