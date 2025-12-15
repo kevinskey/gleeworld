@@ -159,6 +159,17 @@ class AzuraCastService {
     
     console.log('AzuraCast: Making proxy request to:', endpoint);
     
+    // Ensure we have a valid session before making the request
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData?.session) {
+      console.error('AzuraCast: No active session found');
+      if (options?.returnEmptyOnError) {
+        console.warn('AzuraCast: Returning empty array due to no session');
+        return [];
+      }
+      throw new Error('Authentication required - please log in');
+    }
+    
     let data: any;
     let error: any;
     
