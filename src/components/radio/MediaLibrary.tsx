@@ -107,6 +107,7 @@ export const MediaLibrary = ({
   const [playlistPickerFile, setPlaylistPickerFile] = useState<MediaFile | null>(null);
   const [assigningPlaylist, setAssigningPlaylist] = useState(false);
   const [openPlaylistPopoverId, setOpenPlaylistPopoverId] = useState<string | null>(null);
+  const [filePlaylistMap, setFilePlaylistMap] = useState<Record<string, { id: number; name: string }>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -223,6 +224,13 @@ export const MediaLibrary = ({
       if (match?.media?.id) {
         await azuraCastService.addToPlaylist(playlistId, [match.media.id]);
         const playlist = azuraPlaylists.find(p => p.id === playlistId);
+        
+        // Track the playlist assignment locally
+        setFilePlaylistMap(prev => ({
+          ...prev,
+          [file.id]: { id: playlistId, name: playlist?.name || 'Unknown' }
+        }));
+        
         toast({
           title: "Added to Playlist",
           description: `"${file.title}" added to ${playlist?.name || 'playlist'}`,
@@ -636,11 +644,11 @@ export const MediaLibrary = ({
                 >
                   <PopoverTrigger asChild>
                     <button 
-                      className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors text-left hover:underline cursor-pointer flex items-center gap-2 w-full"
+                      className="font-semibold text-foreground truncate text-lg group-hover:text-primary transition-colors text-left hover:underline cursor-pointer flex items-center gap-3 w-full"
                       title="Click to assign to AzuraCast playlist"
                     >
+                      <ListMusic className="h-6 w-6 text-primary flex-shrink-0" />
                       <span className="truncate">{file.title}</span>
-                      <ListMusic className="h-4 w-4 text-primary/60 flex-shrink-0" />
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64 p-2 bg-popover" align="start">
@@ -686,7 +694,7 @@ export const MediaLibrary = ({
                   {file.description}
                 </p>
               )}
-              <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-3 mt-2 flex-wrap">
                 <Badge variant="secondary" className="text-xs font-medium bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-primary/30">
                   {fileType.toUpperCase()}
                 </Badge>
@@ -694,6 +702,12 @@ export const MediaLibrary = ({
                   <span className="text-xs text-muted-foreground font-medium">
                     {formatFileSize(file.file_size)}
                   </span>
+                )}
+                {filePlaylistMap[file.id] && (
+                  <Badge variant="outline" className="text-xs font-medium bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30">
+                    <ListMusic className="h-3 w-3 mr-1" />
+                    {filePlaylistMap[file.id].name}
+                  </Badge>
                 )}
               </div>
             </div>

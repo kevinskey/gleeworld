@@ -99,6 +99,7 @@ export const RadioManagement = () => {
   const [webhooks, setWebhooks] = useState<any[]>([]);
   const [sftpUsers, setSftpUsers] = useState<any[]>([]);
   const [openPlaylistPopoverId, setOpenPlaylistPopoverId] = useState<string | null>(null);
+  const [trackPlaylistMap, setTrackPlaylistMap] = useState<Record<string, { id: number; name: string }>>({});
 
   // Track unsupported features
   const [unsupportedFeatures, setUnsupportedFeatures] = useState<Set<string>>(new Set());
@@ -441,6 +442,13 @@ export const RadioManagement = () => {
       if (match?.media?.id) {
         await azuraCastService.addToPlaylist(playlistId, [match.media.id]);
         const playlist = playlists.find(p => p.id === playlistId);
+        
+        // Track the playlist assignment locally
+        setTrackPlaylistMap(prev => ({
+          ...prev,
+          [track.id]: { id: playlistId, name: playlist?.name || 'Unknown' }
+        }));
+        
         toast({ title: "Added to Playlist", description: `"${track.title}" added to ${playlist?.name || 'playlist'}` });
       } else {
         toast({ 
@@ -599,9 +607,9 @@ export const RadioManagement = () => {
                           onOpenChange={(open) => setOpenPlaylistPopoverId(open ? track.id : null)}
                         >
                           <PopoverTrigger asChild>
-                            <button className="text-sm font-medium text-white truncate hover:text-primary hover:underline cursor-pointer flex items-center gap-1.5 text-left" title="Click to assign to playlist">
+                            <button className="text-sm font-medium text-white truncate hover:text-primary hover:underline cursor-pointer flex items-center gap-2 text-left" title="Click to assign to playlist">
+                              <ListMusic className="h-5 w-5 text-primary flex-shrink-0" />
                               <span className="truncate">{track.title}</span>
-                              <ListMusic className="h-3.5 w-3.5 text-primary/60 flex-shrink-0" />
                             </button>
                           </PopoverTrigger>
                           <PopoverContent className="w-56 p-2 bg-slate-800 border-slate-700" align="start">
@@ -628,7 +636,15 @@ export const RadioManagement = () => {
                             </div>
                           </PopoverContent>
                         </Popover>
-                        <p className="text-xs text-slate-400">{track.artist_info || 'Unknown'} • {formatDuration(track.duration_seconds)}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-slate-400">{track.artist_info || 'Unknown'} • {formatDuration(track.duration_seconds)}</p>
+                          {trackPlaylistMap[track.id] && (
+                            <Badge variant="outline" className="text-[10px] bg-green-500/10 text-green-400 border-green-500/30">
+                              <ListMusic className="h-2.5 w-2.5 mr-1" />
+                              {trackPlaylistMap[track.id].name}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center gap-1">
                         <Button variant="ghost" size="sm" onClick={() => handleEditTrack(track)} className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-white">
