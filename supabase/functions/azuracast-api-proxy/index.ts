@@ -144,6 +144,22 @@ Deno.serve(async (req) => {
       const isUnsupportedException = errorText.includes('StationUnsupportedException') || 
                                       errorText.includes('HttpMethodNotAllowedException');
       
+      // Handle 405 Method Not Allowed for POST operations (e.g., queue disabled)
+      if (azuracastResponse.status === 405 && isUnsupportedException) {
+        console.log('AzuraCast Proxy: Method not allowed for:', method, endpoint);
+        return new Response(
+          JSON.stringify({ 
+            error: 'Feature not enabled on radio station',
+            details: 'This operation is not available. The queue/request feature may be disabled in AzuraCast station settings.',
+            success: false
+          }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
       // Only mask errors gracefully for DELETE (already deleted) or unsupported GET features
       if ((isDeleteOperation && is404Or405) || 
           (isGetOperation && isUnsupportedException)) {
