@@ -1,12 +1,12 @@
 // Unified Academy Course Configuration
-import { Users, Music, BookOpen, Mic, Eye, Award, GraduationCap } from 'lucide-react';
+import { Users, Music, BookOpen, Mic, Eye, Award, GraduationCap, LucideIcon } from 'lucide-react';
 
 export interface AcademyCourse {
   id: string;
   courseCode: string;
   title: string;
   description: string;
-  icon: any;
+  icon: LucideIcon;
   level: string;
   duration: string;
   highlights: string[];
