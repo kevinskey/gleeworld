@@ -493,20 +493,30 @@ class AzuraCastService {
         // Upload converted MP3 to Supabase storage
         onProgress?.('Uploading converted file...', 0);
         const mp3Path = `radio-uploads/${Date.now()}-${newFileName}`;
+        const bucket = 'media-library';
         
         const { error: uploadError } = await supabase.storage
-          .from('quick-capture-media')
+          .from(bucket)
           .upload(mp3Path, blob, { contentType: 'audio/mp3' });
         
         if (uploadError) {
           throw new Error(`Failed to upload converted file: ${uploadError.message}`);
         }
-        
-        const { data: urlData } = supabase.storage
-          .from('quick-capture-media')
-          .getPublicUrl(mp3Path);
-        
-        uploadUrl = urlData.publicUrl;
+
+        // Prefer signed URL (works even if bucket is not public)
+        const { data: signed } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(mp3Path, 60 * 10);
+
+        if (signed?.signedUrl) {
+          uploadUrl = signed.signedUrl;
+        } else {
+          const { data: urlData } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(mp3Path);
+          uploadUrl = urlData.publicUrl;
+        }
+
         uploadFileName = newFileName;
         console.log('AzuraCast: Converted MP3 uploaded to:', uploadUrl);
       } catch (conversionError) {
