@@ -404,54 +404,15 @@ class AzuraCastService {
     await this.makeProxyRequest(`/station/{stationId}/queue/${queueItemId}`, 'DELETE');
   }
 
-  // Request a song to be queued (uses media ID or title to find in requestable list)
+  // Add a song directly to the queue using the media file ID
   async requestSong(mediaId: number, title?: string): Promise<any> {
-    console.log('AzuraCast: Requesting song with media ID:', mediaId, 'title:', title);
+    console.log('AzuraCast: Adding song to queue with media ID:', mediaId, 'title:', title);
     
-    // AzuraCast request endpoint requires a request_id from the requestable songs list.
-    // The song.id in that list is a hash, not the media file ID, so we match by title.
-    const requestableSongs = await this.getRequestableSongs();
-    
-    if (!Array.isArray(requestableSongs)) {
-      throw new Error('Failed to fetch requestable songs');
-    }
-
-    console.log('AzuraCast: Found', requestableSongs.length, 'requestable songs');
-    
-    // First try to get media info to get the title if not provided
-    let searchTitle = title;
-    if (!searchTitle) {
-      try {
-        const files = await this.getAllMedia();
-        const mediaFile = files.find((f: any) => f.media?.id === mediaId);
-        searchTitle = mediaFile?.media?.title;
-        console.log('AzuraCast: Found title from media:', searchTitle);
-      } catch (e) {
-        console.warn('Could not fetch media title:', e);
-      }
-    }
-    
-    // Find the song by title (case-insensitive partial match)
-    const matchingSong = requestableSongs.find((item: any) => {
-      const songTitle = (item.song?.title || '').toLowerCase();
-      const targetTitle = (searchTitle || '').toLowerCase();
-      // Also check if song.id matches (in case it does map to media ID sometimes)
-      const songId = item.song?.id;
-      return (targetTitle && songTitle.includes(targetTitle)) || 
-             (targetTitle && targetTitle.includes(songTitle)) ||
-             String(songId) === String(mediaId);
+    // Use the direct queue API with media_id to add to queue
+    // This bypasses the listener request system which has quirks with request_id
+    return await this.makeProxyRequest(`/station/{stationId}/queue`, 'POST', {
+      media_id: mediaId
     });
-    
-    if (!matchingSong) {
-      console.error('AzuraCast: No requestable song found for:', { mediaId, searchTitle });
-      console.log('AzuraCast: Sample requestable songs:', requestableSongs.slice(0, 3));
-      throw new Error(`Song "${searchTitle || mediaId}" is not requestable or not found`);
-    }
-    
-    const requestId = matchingSong.request_id;
-    console.log('AzuraCast: Found request_id:', requestId, 'for song:', matchingSong.song?.title);
-    
-    return await this.makeProxyRequest(`/station/{stationId}/request/${requestId}`, 'POST');
   }
 
   // Get requestable songs list
