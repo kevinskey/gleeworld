@@ -48,11 +48,31 @@ export const CourseLounge: React.FC<CourseLoungeProps> = ({ courseId, courseName
     if (isEnrolled) {
       fetchPosts();
       fetchEnrolledMembers();
-      subscribeToUpdates();
     } else {
       setLoading(false);
       setMembersLoading(false);
     }
+  }, [courseId, isEnrolled]);
+
+  // Separate effect for real-time subscription
+  useEffect(() => {
+    if (!isEnrolled) return;
+
+    const channel = supabase
+      .channel(`course-lounge-${courseId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'gw_course_lounge_posts',
+        filter: `course_id=eq.${courseId}`
+      }, () => {
+        fetchPosts();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [courseId, isEnrolled]);
 
   const fetchEnrolledMembers = async () => {
@@ -127,24 +147,6 @@ export const CourseLounge: React.FC<CourseLoungeProps> = ({ courseId, courseName
     } finally {
       setLoading(false);
     }
-  };
-
-  const subscribeToUpdates = () => {
-    const channel = supabase
-      .channel(`course-lounge-${courseId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'gw_course_lounge_posts',
-        filter: `course_id=eq.${courseId}`
-      }, () => {
-        fetchPosts();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   };
 
   const handlePost = async () => {
