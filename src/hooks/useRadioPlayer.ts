@@ -385,92 +385,53 @@ export const useRadioPlayer = () => {
       const streamUrl = allUrls[i];
       try {
         console.log(`Attempting to play stream ${i + 1}/${allUrls.length}: ${streamUrl}`);
-        
-        // Clear any previous source first
+
+        // IMPORTANT (iOS): keep this inside the user gesture as much as possible.
+        // Kick off AudioContext resume immediately (don’t wait for any timers first).
+        const resumePromise = (sharedAudioContext && sharedAudioContext.state === 'suspended')
+          ? sharedAudioContext.resume()
+          : Promise.resolve();
+
+        // Stop any previous stream
         audioRef.current.pause();
-        audioRef.current.src = '';
-        audioRef.current.load();
-        
-        // Wait a bit for cleanup
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Set new source and load
+
+        // Set new source and attempt playback immediately.
+        // For live streams, waiting for canplay can break iOS user-gesture playback.
         audioRef.current.src = withCacheBuster(streamUrl);
         audioRef.current.volume = 1.0; // Keep at 1.0, gain control via Web Audio
         audioRef.current.load();
-        
-        // Resume AudioContext if suspended (required after user interaction)
-        if (sharedAudioContext && sharedAudioContext.state === 'suspended') {
-          try {
-            await sharedAudioContext.resume();
-            console.log('Resumed Web Audio context for mixer');
-          } catch (e) {
-            console.warn('Could not resume Web Audio context:', e);
+
+        try {
+          await resumePromise;
+          if (sharedAudioContext) {
+            console.log('Web Audio context state:', sharedAudioContext.state);
           }
+        } catch (e) {
+          console.warn('Could not resume Web Audio context:', e);
         }
-        
-        console.log('Waiting for canplay event...');
-        
-        // Wait for the stream to be ready
-        await new Promise((resolve, reject) => {
-          const audio = audioRef.current!;
-          let resolved = false;
-          
-          const handleCanPlay = () => {
-            if (!resolved) {
-              resolved = true;
-              audio.removeEventListener('canplay', handleCanPlay);
-              audio.removeEventListener('error', handleError);
-              resolve(void 0);
-            }
-          };
-          
-          const handleError = (e: any) => {
-            if (!resolved) {
-              resolved = true;
-              audio.removeEventListener('canplay', handleCanPlay);
-              audio.removeEventListener('error', handleError);
-              reject(e);
-            }
-          };
-          
-          audio.addEventListener('canplay', handleCanPlay);
-          audio.addEventListener('error', handleError);
-          
-          // Timeout after 10 seconds
-          setTimeout(() => {
-            if (!resolved) {
-              resolved = true;
-              audio.removeEventListener('canplay', handleCanPlay);
-              audio.removeEventListener('error', handleError);
-              reject(new Error('Stream load timeout'));
-            }
-          }, 10000);
-        });
-        
-        console.log('Stream ready, calling play()...');
-        
-        // Try to play with user gesture requirement handling
+
+        console.log('Calling play()...');
+
         try {
           await audioRef.current.play();
         } catch (playError: any) {
           console.error('Audio play error:', playError);
-          
+
           // Handle common autoplay restriction
-          if (playError.name === 'NotAllowedError') {
-            throw new Error('Browser blocked audio playback. Please interact with the page first (click anywhere).');
-          } else {
-            throw playError;
+          if (playError?.name === 'NotAllowedError') {
+            throw new Error('Browser blocked audio playback. Please interact with the page first (tap/click anywhere), then press Play again.');
           }
+
+          throw playError;
         }
-        
+
         console.log('Successfully started playing stream:', streamUrl);
         toast({
           title: "Now Playing",
           description: "Glee World Radio is now streaming",
         });
         return; // Success - exit the loop
-        
+
       } catch (error) {
         console.error(`Failed to play stream ${streamUrl}:`, error);
         console.error('Error details:', {
@@ -480,14 +441,14 @@ export const useRadioPlayer = () => {
           target: (error as any)?.target,
           type: (error as any)?.type
         });
-        
+
         // If this was the last URL, show error
         if (i === allUrls.length - 1) {
           console.error('All stream URLs failed, showing error to user');
-          setState(prev => ({ 
-            ...prev, 
-            isLoading: false, 
-            isPlaying: false 
+          setState(prev => ({
+            ...prev,
+            isLoading: false,
+            isPlaying: false
           }));
           toast({
             title: "Radio Unavailable",
