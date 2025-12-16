@@ -116,11 +116,13 @@ Deno.serve(async (req) => {
     // Step 2: Upload to AzuraCast media library
     const fileName = `announcement_${Date.now()}.mp3`;
     const formData = new FormData();
-    const blob = new Blob([audioBuffer], { type: "audio/mpeg" });
 
-    // AzuraCast expects BOTH: `file` (multipart file) AND `path` (directory path)
-    // If `path` is omitted, AzuraCast returns a 500 MissingConstructorArgumentsException.
-    formData.append("file", blob, fileName);
+    // AzuraCast's /files endpoint expects a multipart upload where `file` is a real file part.
+    // In practice, some AzuraCast installs don't recognize a raw Blob part as an uploaded file.
+    const fileBytes = new Uint8Array(audioBuffer);
+    const file = new File([fileBytes], fileName, { type: "audio/mpeg" });
+
+    formData.append("file", file);
     formData.append("path", "announcements");
 
     const uploadUrl = "https://radio.gleeworld.org/api/station/glee_world_radio/files";
