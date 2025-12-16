@@ -7219,7 +7219,9 @@ export type Database = {
           created_at: string | null
           id: string
           is_announcement: boolean | null
+          is_hidden: boolean | null
           is_pinned: boolean | null
+          location_tag: string | null
           media_urls: string[] | null
           updated_at: string | null
         }
@@ -7230,7 +7232,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_announcement?: boolean | null
+          is_hidden?: boolean | null
           is_pinned?: boolean | null
+          location_tag?: string | null
           media_urls?: string[] | null
           updated_at?: string | null
         }
@@ -7241,7 +7245,9 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_announcement?: boolean | null
+          is_hidden?: boolean | null
           is_pinned?: boolean | null
+          location_tag?: string | null
           media_urls?: string[] | null
           updated_at?: string | null
         }
@@ -7251,6 +7257,38 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_lounge_reactions: {
+        Row: {
+          author_id: string
+          created_at: string | null
+          id: string
+          post_id: string
+          reaction_type: string
+        }
+        Insert: {
+          author_id: string
+          created_at?: string | null
+          id?: string
+          post_id: string
+          reaction_type: string
+        }
+        Update: {
+          author_id?: string
+          created_at?: string | null
+          id?: string
+          post_id?: string
+          reaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_lounge_reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_lounge_posts"
             referencedColumns: ["id"]
           },
         ]
