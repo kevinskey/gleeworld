@@ -302,11 +302,27 @@ Deno.serve(async (req) => {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // 4c) Request immediate playback via Requests API.
-      // IMPORTANT: We must match the *new* file precisely; otherwise an older "announcement" may be requested.
+      // IMPORTANT: Clear existing requests first so announcement plays right after current song.
       const requestsUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/requests`;
-      console.log("Fetching requestable songs to find newly uploaded announcement...");
+      console.log("Clearing pending requests and fetching requestable songs...");
 
       try {
+        // Clear any pending requests so our announcement is FIRST in queue
+        const clearRequestsUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/requests/clear`;
+        const clearResponse = await fetch(clearRequestsUrl, {
+          method: "POST",
+          headers: {
+            "X-API-Key": AZURACAST_API_KEY,
+            Accept: "application/json",
+          },
+        });
+        
+        if (clearResponse.ok) {
+          console.log("Cleared pending requests queue");
+        } else {
+          console.warn("Could not clear requests (may not be supported):", clearResponse.status);
+        }
+
         const requestsResponse = await fetch(requestsUrl, {
           method: "GET",
           headers: {
