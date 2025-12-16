@@ -147,9 +147,8 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         const finalScore = finalByStudent.get(studentId) || 0;
         const finalExamPct = (finalScore / 150) * GRADE_WEIGHTS.finalExam;
 
-        // AI Project: 100% if in group, 0% otherwise
-        const inGroup = inGroupSet.has(studentId);
-        const aiProjectPct = inGroup ? GRADE_WEIGHTS.aiProject : 0;
+        // AI Project: Everyone gets 100% (full 25%)
+        const aiProjectPct = GRADE_WEIGHTS.aiProject;
 
         // Polls: count / 10 expected polls
         const pollsAnswered = pollCountByStudent.get(studentId)?.size || 0;
