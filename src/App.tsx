@@ -37,6 +37,7 @@ import Mus101Page from "./pages/courses/Mus101Page";
 import Mus001Page from "./pages/courses/Mus001Page";
 import Mus000Page from "./pages/courses/Mus000Page";
 import Glee101Page from "./pages/courses/Glee101Page";
+import AcademyCoursePage from "./pages/academy/AcademyCoursePage";
 
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -443,63 +444,29 @@ const App = () => {
               {/* Legacy redirect */}
               <Route path="/music-theory-fundamentals" element={<Navigate to="/mus-100" replace />} />
               
-              {/* MUS 210 - Choral Conducting */}
-              <Route 
-                path="/mus-210" 
-                element={
-                  <PublicRoute>
-                    <Mus210Page />
-                  </PublicRoute>
-                }
-              />
-              {/* Legacy redirects */}
-              <Route path="/choral-conducting-literature" element={<Navigate to="/mus-210" replace />} />
-              <Route path="/classes/mus210" element={<Navigate to="/mus-210" replace />} />
+              {/* MUS 210 - Legacy redirects to academy */}
+              <Route path="/mus-210" element={<Navigate to="/academy/mus-210" replace />} />
+              <Route path="/choral-conducting-literature" element={<Navigate to="/academy/mus-210" replace />} />
+              <Route path="/classes/mus210" element={<Navigate to="/academy/mus-210" replace />} />
               
-              {/* Glee Club Course - Legacy redirect */}
-              <Route path="/glee-club-course" element={<Navigate to="/mus-070" replace />} />
+              {/* Dynamic Academy Course Page - handles all courses */}
+              <Route 
+                path="/academy/:courseCode/*" 
+                element={
+                  <PublicRoute>
+                    <AcademyCoursePage />
+                  </PublicRoute>
+                }
+              />
               
-              {/* Unified Academy Course Pages */}
-              <Route 
-                path="/mus-070" 
-                element={
-                  <PublicRoute>
-                    <Mus070Page />
-                  </PublicRoute>
-                }
-              />
-              <Route 
-                path="/mus-101" 
-                element={
-                  <PublicRoute>
-                    <Mus101Page />
-                  </PublicRoute>
-                }
-              />
-              <Route 
-                path="/mus-001" 
-                element={
-                  <PublicRoute>
-                    <Mus001Page />
-                  </PublicRoute>
-                }
-              />
-              <Route 
-                path="/mus-000" 
-                element={
-                  <PublicRoute>
-                    <Mus000Page />
-                  </PublicRoute>
-                }
-              />
-              <Route 
-                path="/glee-101" 
-                element={
-                  <PublicRoute>
-                    <Glee101Page />
-                  </PublicRoute>
-                }
-              />
+              {/* Legacy redirects to new academy structure */}
+              <Route path="/glee-club-course" element={<Navigate to="/academy/mus-070" replace />} />
+              <Route path="/mus-070" element={<Navigate to="/academy/mus-070" replace />} />
+              <Route path="/mus-101" element={<Navigate to="/academy/mus-101" replace />} />
+              <Route path="/mus-001" element={<Navigate to="/academy/mus-001" replace />} />
+              <Route path="/mus-000" element={<Navigate to="/academy/mus-000" replace />} />
+              <Route path="/glee-101" element={<Navigate to="/academy/glee-101" replace />} />
+              <Route path="/mus-240" element={<Navigate to="/academy/mus-240" replace />} />
               {/* Grand Staff Classroom page */}
               <Route 
                 path="/grand-staff-classroom" 
