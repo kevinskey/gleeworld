@@ -313,7 +313,8 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
-      setSortDirection('desc');
+      // Default to ascending for names, descending for grades
+      setSortDirection(field === 'student_name' ? 'asc' : 'desc');
     }
   };
 
@@ -322,6 +323,11 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
     return sortDirection === 'asc' 
       ? <ArrowUp className="h-3 w-3 ml-1" /> 
       : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
+  const getLastName = (fullName: string): string => {
+    const parts = fullName.trim().split(' ');
+    return parts[parts.length - 1].toLowerCase();
   };
 
   const sortedAndFilteredStudents = useMemo(() => {
@@ -334,8 +340,9 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       let bVal: number | string;
 
       if (sortField === 'student_name') {
-        aVal = a.student_name.toLowerCase();
-        bVal = b.student_name.toLowerCase();
+        // Sort by last name
+        aVal = getLastName(a.student_name);
+        bVal = getLastName(b.student_name);
       } else if (sortField === 'final_grade') {
         aVal = calculateTotal(a);
         bVal = calculateTotal(b);
@@ -396,7 +403,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
                     onClick={() => handleSort('student_name')}
                   >
                     <div className="flex items-center">
-                      Student Name {getSortIcon('student_name')}
+                      <span>Student Name <span className="text-xs text-muted-foreground">(by last)</span></span> {getSortIcon('student_name')}
                     </div>
                   </TableHead>
                   <TableHead 
