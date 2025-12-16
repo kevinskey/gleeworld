@@ -143,6 +143,13 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         journalsByStudent.set(j.student_id, current + score);
       });
 
+      // Find max journal score for curve (capped at 200)
+      let maxJournalScore = 0;
+      journalsByStudent.forEach((score) => {
+        const capped = Math.min(score, 200);
+        if (capped > maxJournalScore) maxJournalScore = capped;
+      });
+
       // Midterm scores by student
       const midtermByStudent = new Map<string, number>();
       midterms.forEach((m: any) => {
@@ -192,9 +199,11 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         const studentId = enrollment.student_id;
         const studentName = enrollment.gw_profiles?.full_name || 'Unknown';
 
-        // Assignments (journals): earned / 200 max, capped at 100%
+        // Assignments (journals): curved based on max score
         const journalPoints = Math.min(journalsByStudent.get(studentId) || 0, 200);
-        const assignmentsPct = (journalPoints / 200) * GRADE_WEIGHTS.assignments;
+        const assignmentsPct = maxJournalScore > 0 
+          ? (journalPoints / maxJournalScore) * GRADE_WEIGHTS.assignments 
+          : 0;
 
         // Midterm: curved based on max score
         const midtermScore = midtermByStudent.get(studentId) || 0;
