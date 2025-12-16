@@ -127,6 +127,14 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         pollCountByStudent.get(p.student_id)!.add(p.poll_id);
       });
 
+      // Find max polls answered for curve calculation
+      let maxPollsAnswered = 0;
+      pollCountByStudent.forEach((pollSet) => {
+        if (pollSet.size > maxPollsAnswered) {
+          maxPollsAnswered = pollSet.size;
+        }
+      });
+
       // Group membership set
       const inGroupSet = new Set(groups.map((g: any) => g.member_id));
 
@@ -150,9 +158,11 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         // AI Project: Everyone gets 100% (full 25%)
         const aiProjectPct = GRADE_WEIGHTS.aiProject;
 
-        // Polls: count / 10 expected polls
+        // Polls: curved based on max polls answered by any student
         const pollsAnswered = pollCountByStudent.get(studentId)?.size || 0;
-        const pollsPct = (Math.min(pollsAnswered, 10) / 10) * GRADE_WEIGHTS.polls;
+        const pollsPct = maxPollsAnswered > 0 
+          ? (pollsAnswered / maxPollsAnswered) * GRADE_WEIGHTS.polls 
+          : 0;
 
         // Final grade: sum of all percentages
         const finalGradePct = assignmentsPct + midtermPct + finalExamPct + aiProjectPct + pollsPct;
