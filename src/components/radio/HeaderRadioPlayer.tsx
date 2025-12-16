@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 
 export const HeaderRadioPlayer = () => {
-  const { 
-    isPlaying, 
-    isLoading, 
-    togglePlayPause 
+  const {
+    isPlaying,
+    isLoading,
+    togglePlayPause,
+    resetAudio,
   } = useRadioPlayer();
 
   return (
@@ -15,6 +16,10 @@ export const HeaderRadioPlayer = () => {
       variant="ghost"
       size="sm"
       onClick={togglePlayPause}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        resetAudio();
+      }}
       disabled={isLoading}
       className="bg-background/50 border hover:bg-primary/10"
       title={isPlaying ? 'Pause Radio' : 'Play Radio'}

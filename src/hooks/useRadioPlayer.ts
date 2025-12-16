@@ -96,6 +96,65 @@ export const useRadioPlayer = () => {
     return `${url}${sep}ts=${Date.now()}`;
   }, []);
 
+  const resetAudio = useCallback(async () => {
+    console.log('useRadioPlayer.resetAudio() called');
+
+    try {
+      // Stop playback immediately
+      if (sharedAudio) {
+        try {
+          sharedAudio.pause();
+        } catch {}
+        sharedAudio.src = '';
+        sharedAudio.load();
+      }
+
+      // Disconnect WebAudio graph
+      try {
+        sharedSourceNode?.disconnect();
+      } catch {}
+      try {
+        sharedGainNode?.disconnect();
+      } catch {}
+
+      sharedSourceNode = null;
+      sharedGainNode = null;
+
+      // Close context (forces a clean re-init next time)
+      if (sharedAudioContext && sharedAudioContext.state !== 'closed') {
+        try {
+          await sharedAudioContext.close();
+        } catch {}
+      }
+      sharedAudioContext = null;
+
+      // Force re-create audio element too
+      sharedAudio = null;
+      audioRef.current = null;
+
+      // Reset local state
+      isPlayingRef.current = false;
+      isReconnectingRef.current = false;
+      setState(prev => ({
+        ...prev,
+        isPlaying: false,
+        isLoading: false,
+      }));
+
+      toast({
+        title: 'Audio Reset',
+        description: 'Radio audio has been reset. Press Play again.',
+      });
+    } catch (e) {
+      console.error('resetAudio failed:', e);
+      toast({
+        title: 'Reset Failed',
+        description: 'Could not reset audio. Try refreshing the page.',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
   useEffect(() => {
     console.log('useRadioPlayer: Initializing audio element (singleton)...');
 
@@ -618,5 +677,6 @@ export const useRadioPlayer = () => {
     setVolume,
     switchStream,
     skipTrack,
+    resetAudio,
   };
 };
