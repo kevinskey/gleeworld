@@ -173,25 +173,51 @@ Deno.serve(async (req) => {
     let mediaId: string | null = null;
     let songId: string | null = null;
 
+    // Expected AzuraCast song "text" often normalizes filename like:
+    // announcement_123.mp3 -> "announcement 123"
+    const expectedSongText = fileName.replace(/_/g, " ").replace(/\.mp3$/i, "");
+
     if (filesResponse.ok) {
       const filesList = await filesResponse.json();
       console.log("Files search result:", JSON.stringify(filesList).substring(0, 500));
 
-      // Find our uploaded file by path
+      // Find our uploaded file by exact path first (most reliable)
       const uploadedFile = Array.isArray(filesList)
         ? filesList.find((f: any) =>
             f.path === fullPath ||
-            f.path?.endsWith(fileName) ||
             f.media?.path === fullPath ||
-            f.media?.path?.endsWith(fileName)
+            // fallback: if the API omits folders in some fields
+            f.path?.endsWith(`/${fileName}`) ||
+            f.media?.path?.endsWith(`/${fileName}`)
           )
         : null;
 
       if (uploadedFile) {
-        mediaId = String(uploadedFile.media?.id ?? uploadedFile.id ?? "") || null;
-        songId = String(uploadedFile.media?.song_id ?? "") || null;
+        const extractedMediaId =
+          uploadedFile.media?.id ??
+          uploadedFile.media_id ??
+          uploadedFile.id ??
+          null;
 
-        console.log("Found uploaded file, media ID:", mediaId, "song ID:", songId);
+        // Different AzuraCast endpoints shape this differently; try all known shapes.
+        const extractedSongId =
+          uploadedFile.media?.song_id ??
+          uploadedFile.song_id ??
+          uploadedFile.media?.song?.id ??
+          uploadedFile.song?.id ??
+          null;
+
+        mediaId = extractedMediaId ? String(extractedMediaId) : null;
+        songId = extractedSongId ? String(extractedSongId) : null;
+
+        console.log(
+          "Found uploaded file, media ID:",
+          mediaId,
+          "song ID:",
+          songId,
+          "expectedSongText:",
+          expectedSongText
+        );
       } else {
         console.warn("Could not find uploaded file in search results");
       }
@@ -273,11 +299,12 @@ Deno.serve(async (req) => {
       }
 
       // Wait for AzuraCast to process the playlist update
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      // 4c) Request immediate playback via Requests API (match by song_id)
+      // 4c) Request immediate playback via Requests API.
+      // IMPORTANT: We must match the *new* file precisely; otherwise an older "announcement" may be requested.
       const requestsUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/requests`;
-      console.log("Fetching requestable songs to find announcement...");
+      console.log("Fetching requestable songs to find newly uploaded announcement...");
 
       try {
         const requestsResponse = await fetch(requestsUrl, {
@@ -297,14 +324,30 @@ Deno.serve(async (req) => {
           );
 
           const announcement = Array.isArray(requestableSongs)
-            ? requestableSongs.find((s: any) =>
-                (songId && String(s.song?.id) === String(songId)) ||
-                s.song?.path?.includes(fileName)
-              )
+            ? requestableSongs.find((s: any) => {
+                const sSongId = s?.song?.id ? String(s.song.id) : null;
+                const sText = String(s?.song?.text ?? "");
+                const sTitle = String(s?.song?.title ?? "");
+                const sPath = String(s?.song?.path ?? "");
+
+                // Most reliable: exact song id match
+                if (songId && sSongId && sSongId === String(songId)) return true;
+
+                // Next: exact normalized title match
+                if (expectedSongText && (sText === expectedSongText || sTitle === expectedSongText)) return true;
+
+                // Last resort: exact filename presence in path
+                if (sPath && sPath.includes(fileName)) return true;
+
+                return false;
+              })
             : null;
 
           if (announcement?.request_id) {
-            console.log("Found announcement in requestable list, request_id:", announcement.request_id);
+            console.log(
+              "Found newly uploaded announcement in requestable list, request_id:",
+              announcement.request_id
+            );
 
             const submitRequestUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/request/${announcement.request_id}`;
             const submitResponse = await fetch(submitRequestUrl, {
@@ -316,14 +359,14 @@ Deno.serve(async (req) => {
             });
 
             if (submitResponse.ok) {
-              console.log("Announcement requested for immediate playback!");
+              console.log("Announcement requested for playback (will play after current track finishes)");
             } else {
               const submitError = await submitResponse.text();
               console.warn("Request submission failed:", submitResponse.status, submitError);
             }
           } else {
             console.warn(
-              "Announcement not found in requestable songs list. Likely the target playlist is not requestable; it will play in rotation if scheduled."
+              "New announcement not found in requestable songs list. This usually means the target playlist isn't requestable or AzuraCast hasn't indexed the new track yet."
             );
           }
         } else {
