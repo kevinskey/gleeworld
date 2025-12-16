@@ -59,12 +59,12 @@ export const CourseLounge: React.FC<CourseLoungeProps> = ({ courseId, courseName
     try {
       setMembersLoading(true);
       
-      // For MUS 070, get all members with role='member'
+      // For MUS 070, get all members with role='member' plus admins
       if (courseId === MUS_070_ID) {
         const { data, error } = await supabase
           .from('gw_profiles')
-          .select('user_id, full_name, avatar_url, role')
-          .eq('role', 'member')
+          .select('user_id, full_name, avatar_url, role, is_admin, is_super_admin')
+          .or('role.eq.member,is_admin.eq.true,is_super_admin.eq.true')
           .order('full_name');
         
         if (error) throw error;

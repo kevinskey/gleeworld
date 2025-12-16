@@ -56,11 +56,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
       setIsAdmin(profile?.is_admin || profile?.is_super_admin || false);
 
-      // For MUS 070 (Glee Club), members are auto-enrolled
-      if (course.id === 'a0000000-0000-0000-0000-000000000070' && profile?.role === 'member') {
-        setIsEnrolled(true);
-        setEnrollmentLoading(false);
-        return;
+      // For MUS 070 (Glee Club), members and admins are auto-enrolled
+      if (course.id === 'a0000000-0000-0000-0000-000000000070') {
+        if (profile?.role === 'member' || profile?.is_admin || profile?.is_super_admin) {
+          setIsEnrolled(true);
+          setEnrollmentLoading(false);
+          return;
+        }
       }
 
       // Check enrollment for other courses
