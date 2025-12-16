@@ -148,9 +148,9 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
       <Card className="h-[680px]">
         <CardContent className="flex items-center justify-center h-full text-center p-8">
           <div>
-            <User className="h-20 w-20 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No Student Selected</h3>
-            <p className="text-gray-500">Select a student from the list on the left to view their comprehensive grade record.</p>
+            <User className="h-20 w-20 text-muted-foreground/50 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-foreground mb-2">No Student Selected</h3>
+            <p className="text-muted-foreground">Select a student from the list on the left to view their comprehensive grade record.</p>
           </div>
         </CardContent>
       </Card>
@@ -192,12 +192,12 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
     <Card className="h-full">
       <CardHeader>
         <div className="flex items-center gap-4">
-          <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <User className="h-6 w-6 text-blue-600" />
+          <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
+            <User className="h-6 w-6 text-primary" />
           </div>
           <div>
             <CardTitle className="text-xl">{selectedStudent.full_name}</CardTitle>
-            <p className="text-sm text-gray-600">{selectedStudent.email}</p>
+            <p className="text-sm text-muted-foreground">{selectedStudent.email}</p>
           </div>
         </div>
       </CardHeader>
@@ -205,38 +205,38 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
         {/* Student Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
 
-          <Card className="p-3 bg-blue-50 border-blue-200">
+          <Card className="p-3 bg-primary/10 border-primary/20">
             <div className="flex items-center gap-2 mb-1">
-              <GraduationCap className="h-3 w-3 text-blue-600" />
-              <span className="text-xs font-medium">Status</span>
+              <GraduationCap className="h-3 w-3 text-primary" />
+              <span className="text-xs font-medium text-foreground">Status</span>
             </div>
             <Badge variant={selectedStudent.enrollment_status === 'enrolled' ? 'default' : 'secondary'} className="text-xs">
               {selectedStudent.enrollment_status}
             </Badge>
           </Card>
 
-          <Card className="p-3 bg-green-50 border-green-200">
+          <Card className="p-3 bg-success/10 border-success/20">
             <div className="flex items-center gap-2 mb-1">
-              <Calendar className="h-3 w-3 text-green-600" />
-              <span className="text-xs font-medium">Enrolled</span>
+              <Calendar className="h-3 w-3 text-success" />
+              <span className="text-xs font-medium text-foreground">Enrolled</span>
             </div>
-            <p className="text-xs font-semibold">{new Date(selectedStudent.enrolled_at).toLocaleDateString()}</p>
+            <p className="text-xs font-semibold text-foreground">{new Date(selectedStudent.enrolled_at).toLocaleDateString()}</p>
           </Card>
 
-          <Card className="p-3 bg-purple-50 border-purple-200">
+          <Card className="p-3 bg-secondary/50 border-secondary">
             <div className="flex items-center gap-2 mb-1">
-              <BarChart3 className="h-3 w-3 text-purple-600" />
-              <span className="text-xs font-medium">Current</span>
+              <BarChart3 className="h-3 w-3 text-secondary-foreground" />
+              <span className="text-xs font-medium text-foreground">Current</span>
             </div>
             <Badge variant={getGradeBadgeVariant(calculateOverallGrade())} className="text-xs">
               {calculateOverallGrade()}%
             </Badge>
           </Card>
 
-          <Card className="p-3 bg-orange-50 border-orange-200">
+          <Card className="p-3 bg-warning/10 border-warning/20">
             <div className="flex items-center gap-2 mb-1">
-              <FileText className="h-3 w-3 text-orange-600" />
-              <span className="text-xs font-medium">Final</span>
+              <FileText className="h-3 w-3 text-warning" />
+              <span className="text-xs font-medium text-foreground">Final</span>
             </div>
             <Badge variant="outline" className="text-xs">
               {selectedStudent.final_grade || 'Not Set'}
@@ -267,28 +267,28 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
 
           <TabsContent value="assignments" className="mt-2">
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Assignment History</h3>
-              <ScrollArea className="h-72 border rounded-lg p-2 bg-gray-50">
+              <h3 className="text-sm font-semibold text-foreground">Assignment History</h3>
+              <ScrollArea className="h-72 border rounded-lg p-2 bg-muted/50">
                   {loading ? (
-                    <div className="text-center py-8 text-sm">Loading...</div>
+                    <div className="text-center py-8 text-sm text-foreground">Loading...</div>
                   ) : assignments.length === 0 ? (
-                    <div className="text-center py-8 text-sm text-gray-500">No assignments submitted</div>
+                    <div className="text-center py-8 text-sm text-muted-foreground">No assignments submitted</div>
                   ) : (
                     <div className="space-y-2">
                       {assignments.map((assignment) => (
-                        <div key={assignment.id} className="flex justify-between items-center p-2 bg-white border rounded text-sm">
+                        <div key={assignment.id} className="flex justify-between items-center p-2 bg-card border rounded text-sm">
                           <div className="flex-1">
-                            <p className="font-medium text-xs">{assignment.assignment_id?.toUpperCase()}</p>
-                            <p className="text-xs text-gray-600">
+                            <p className="font-medium text-xs text-foreground">{assignment.assignment_id?.toUpperCase()}</p>
+                            <p className="text-xs text-muted-foreground">
                               Submitted: {new Date(assignment.submission_date).toLocaleDateString()}
                             </p>
                             {assignment.graded_at && (
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-muted-foreground">
                                 Graded: {new Date(assignment.graded_at).toLocaleDateString()}
                               </p>
                             )}
                             {assignment.feedback && (
-                              <p className="text-xs text-gray-600 mt-1 italic">
+                              <p className="text-xs text-muted-foreground mt-1 italic">
                                 "{assignment.feedback.substring(0, 50)}..."
                               </p>
                             )}
@@ -297,7 +297,7 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                             <Badge variant={assignment.grade ? 'default' : 'outline'} className="text-xs">
                               {assignment.grade ? `${assignment.grade} pts` : 'Pending'}
                             </Badge>
-                            <p className="text-xs text-gray-500 mt-1 capitalize">{assignment.status}</p>
+                            <p className="text-xs text-muted-foreground mt-1 capitalize">{assignment.status}</p>
                           </div>
                         </div>
                       ))}
@@ -309,12 +309,12 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
 
           <TabsContent value="journals" className="mt-2">
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Journal Entries</h3>
-              <ScrollArea className="h-72 border rounded-lg p-2 bg-gray-50">
+              <h3 className="text-sm font-semibold text-foreground">Journal Entries</h3>
+              <ScrollArea className="h-72 border rounded-lg p-2 bg-muted/50">
                   {loading ? (
-                    <div className="text-center py-8 text-sm">Loading...</div>
+                    <div className="text-center py-8 text-sm text-foreground">Loading...</div>
                   ) : journals.length === 0 ? (
-                    <div className="text-center py-8 text-sm text-gray-500">No journal entries</div>
+                    <div className="text-center py-8 text-sm text-muted-foreground">No journal entries</div>
                   ) : (
                     <div className="space-y-2">
                       {journals.map((journal: any) => {
@@ -323,11 +323,11 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                         const maxScore = assignmentId === 'lj3' ? 15 : 10;
                         
                         return (
-                          <div key={journal.id} className="p-2 bg-white border rounded text-sm">
+                          <div key={journal.id} className="p-2 bg-card border rounded text-sm">
                             <div className="flex justify-between items-start mb-1">
                               <div>
-                                <p className="font-medium text-xs">{assignmentId.toUpperCase()}</p>
-                                <p className="text-xs text-gray-500">
+                                <p className="font-medium text-xs text-foreground">{assignmentId.toUpperCase()}</p>
+                                <p className="text-xs text-muted-foreground">
                                   {journalEntry?.title || 'Journal Entry'}
                                 </p>
                               </div>
@@ -339,17 +339,17 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                               <Badge variant="secondary" className="text-xs">
                                 {journal.letter_grade || 'N/A'}
                               </Badge>
-                              <p className="text-xs text-gray-600">
+                              <p className="text-xs text-muted-foreground">
                                 {new Date(journal.graded_at || journal.created_at).toLocaleDateString()}
                               </p>
                             </div>
                             {journal.feedback && (
-                              <div className="bg-gray-50 p-1.5 rounded text-xs mt-1">
+                              <div className="bg-muted/50 p-1.5 rounded text-xs mt-1 text-foreground">
                                 <strong>Feedback:</strong> {journal.feedback.substring(0, 80)}...
                               </div>
                             )}
                             {journal.ai_model && (
-                              <p className="text-xs text-gray-400 mt-1">Graded by: {journal.ai_model}</p>
+                              <p className="text-xs text-muted-foreground mt-1">Graded by: {journal.ai_model}</p>
                             )}
                           </div>
                         );
@@ -362,29 +362,29 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
 
           <TabsContent value="midterm" className="mt-2">
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Midterm Exam</h3>
-              <div className="border rounded-lg overflow-hidden bg-gray-50 min-h-[288px]">
+              <h3 className="text-sm font-semibold text-foreground">Midterm Exam</h3>
+              <div className="border rounded-lg overflow-hidden bg-muted/50 min-h-[288px]">
                 {loading ? (
-                  <div className="text-center py-8 text-sm">Loading midterm data...</div>
+                  <div className="text-center py-8 text-sm text-foreground">Loading midterm data...</div>
                 ) : !midterm ? (
-                  <div className="text-center py-8 text-sm text-gray-500">
-                    <GraduationCap className="h-12 w-12 mx-auto mb-3 text-gray-300" />
-                    <p className="font-medium">No midterm submission found</p>
+                  <div className="text-center py-8 text-sm text-muted-foreground">
+                    <GraduationCap className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                    <p className="font-medium text-foreground">No midterm submission found</p>
                     <p className="text-xs mt-1">This student has not submitted the midterm exam yet.</p>
                   </div>
                 ) : (
                   <div>
-                    <div className="p-3 bg-white border-b">
+                    <div className="p-3 bg-card border-b">
                       <div className="flex justify-between items-center text-sm">
                         <div>
-                          <p className="font-medium text-xs">
+                          <p className="font-medium text-xs text-foreground">
                             Submitted: {new Date(midterm.submitted_at).toLocaleDateString()}
                           </p>
-                          <p className="text-xs text-gray-600">
+                          <p className="text-xs text-muted-foreground">
                             Time taken: {midterm.total_time_minutes || 0} minutes
                           </p>
                           {midterm.graded_at && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                               Graded: {new Date(midterm.graded_at).toLocaleDateString()}
                             </p>
                           )}
@@ -395,7 +395,7 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                       </div>
                       
                       {midterm.feedback && (
-                        <div className="bg-blue-50 p-2 rounded text-xs mt-2">
+                        <div className="bg-primary/10 p-2 rounded text-xs mt-2 text-foreground">
                           <strong>Instructor Feedback:</strong>
                           <p className="mt-1">{midterm.feedback}</p>
                         </div>
@@ -406,15 +406,15 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                     {midtermDetails.length > 0 && (
                       <ScrollArea className="h-[400px]">
                         <div className="p-3 space-y-3">
-                          <h4 className="text-xs font-semibold text-gray-700">Question Breakdown ({midtermDetails.length} questions)</h4>
+                          <h4 className="text-xs font-semibold text-foreground">Question Breakdown ({midtermDetails.length} questions)</h4>
                           {midtermDetails.map((detail: any, idx: number) => (
-                            <div key={idx} className="border rounded-lg p-3 bg-white">
+                            <div key={idx} className="border rounded-lg p-3 bg-card">
                               <div className="flex justify-between items-start mb-2">
                                 <div>
-                                  <p className="font-medium text-sm capitalize">
+                                  <p className="font-medium text-sm capitalize text-foreground">
                                     {detail.question_id.replace(/_/g, ' ')}
                                   </p>
-                                  <p className="text-xs text-gray-500 capitalize">
+                                  <p className="text-xs text-muted-foreground capitalize">
                                     {detail.question_type.replace(/_/g, ' ')}
                                   </p>
                                 </div>
@@ -427,18 +427,18 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                               {detail.breakdown && Object.keys(detail.breakdown).length > 0 && (
                                 <div className="grid grid-cols-2 gap-2 mb-2">
                                   {Object.entries(detail.breakdown).map(([criterion, data]: [string, any]) => (
-                                    <div key={criterion} className="bg-gray-50 rounded p-2 text-xs">
+                                    <div key={criterion} className="bg-muted/50 rounded p-2 text-xs">
                                       <div className="flex justify-between items-center mb-1">
-                                        <span className="text-gray-600 capitalize">
+                                        <span className="text-muted-foreground capitalize">
                                           {criterion.replace(/_/g, ' ')}
                                         </span>
-                                        <span className="font-medium">
+                                        <span className="font-medium text-foreground">
                                           {data.score}/{data.max_points}
                                         </span>
                                       </div>
-                                      <div className="bg-gray-200 rounded-full h-1.5">
+                                      <div className="bg-muted rounded-full h-1.5">
                                         <div 
-                                          className="bg-blue-600 h-1.5 rounded-full"
+                                          className="bg-primary h-1.5 rounded-full"
                                           style={{ width: `${(data.score / data.max_points) * 100}%` }}
                                         />
                                       </div>
@@ -450,10 +450,10 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                               {/* AI Feedback */}
                               {detail.feedback && (
                                 <details className="mt-2">
-                                  <summary className="text-xs text-blue-600 cursor-pointer hover:text-blue-800">
+                                  <summary className="text-xs text-primary cursor-pointer hover:text-primary/80">
                                     View AI Feedback
                                   </summary>
-                                  <div className="mt-2 p-2 bg-gray-50 rounded text-xs whitespace-pre-wrap max-h-40 overflow-y-auto">
+                                  <div className="mt-2 p-2 bg-muted/50 rounded text-xs whitespace-pre-wrap max-h-40 overflow-y-auto text-foreground">
                                     {detail.feedback}
                                   </div>
                                 </details>
@@ -471,13 +471,13 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
 
           <TabsContent value="contact" className="mt-2">
             <div className="space-y-2">
-              <h3 className="text-sm font-semibold">Contact Information</h3>
-              <div className="border rounded-lg p-3 bg-gray-50 space-y-3">
+              <h3 className="text-sm font-semibold text-foreground">Contact Information</h3>
+              <div className="border rounded-lg p-3 bg-muted/50 space-y-3">
                 <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-gray-500" />
+                  <Mail className="h-4 w-4 text-muted-foreground" />
                   <div className="flex-1">
-                    <p className="font-medium text-xs">Email</p>
-                    <p className="text-xs text-gray-600">{selectedStudent.email}</p>
+                    <p className="font-medium text-xs text-foreground">Email</p>
+                    <p className="text-xs text-muted-foreground">{selectedStudent.email}</p>
                   </div>
                   <Button size="sm" variant="outline" className="text-xs h-7">
                     Email
@@ -486,10 +486,10 @@ export const StudentRecordView: React.FC<StudentRecordViewProps> = ({ selectedSt
                 
                 {selectedStudent.phone && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-gray-500" />
+                    <Phone className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <p className="font-medium text-xs">Phone</p>
-                      <p className="text-xs text-gray-600">{selectedStudent.phone}</p>
+                      <p className="font-medium text-xs text-foreground">Phone</p>
+                      <p className="text-xs text-muted-foreground">{selectedStudent.phone}</p>
                     </div>
                   </div>
                 )}
