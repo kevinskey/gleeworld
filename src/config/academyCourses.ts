@@ -22,7 +22,7 @@ export interface AcademyCourse {
 
 export const ACADEMY_COURSES: AcademyCourse[] = [
   {
-    id: 'mus-070',
+    id: 'a0000000-0000-0000-0000-000000000070',
     courseCode: 'MUS 070',
     title: 'Glee Club',
     description: 'The premier choral ensemble of Spelman College with over 100 years of musical excellence.',
