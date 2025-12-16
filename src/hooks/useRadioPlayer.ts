@@ -42,6 +42,12 @@ export interface RadioPlayerState {
 
 // Shared audio element to persist across route changes
 let sharedAudio: HTMLAudioElement | null = null;
+let sharedAudioContext: AudioContext | null = null;
+let sharedGainNode: GainNode | null = null;
+let sharedSourceNode: MediaElementAudioSourceNode | null = null;
+
+// Maximum gain to prevent clipping (0.7 = -3dB headroom)
+const MAX_GAIN = 0.7;
 
 export const useRadioPlayer = () => {
   
@@ -52,7 +58,7 @@ export const useRadioPlayer = () => {
     currentTrack: null,
     isLive: false,
     isOnline: false,
-    volume: 1.0,
+    volume: 0.8, // Default to 80% to prevent clipping
     streamerName: undefined,
   });
 
@@ -101,12 +107,30 @@ export const useRadioPlayer = () => {
       audio.preload = 'none';
       sharedAudio = audio;
       console.log('Created new shared radio audio element');
+      
+      // Set up Web Audio API for proper gain control (prevents clipping)
+      try {
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContextClass && !sharedAudioContext) {
+          sharedAudioContext = new AudioContextClass();
+          sharedGainNode = sharedAudioContext.createGain();
+          // Start with default volume * MAX_GAIN to prevent clipping
+          sharedGainNode.gain.value = 0.8 * MAX_GAIN;
+          sharedGainNode.connect(sharedAudioContext.destination);
+          console.log('Created Web Audio gain node for mixer (MAX_GAIN:', MAX_GAIN, ')');
+        }
+      } catch (e) {
+        console.warn('Could not create Web Audio context for mixer:', e);
+      }
     } else {
       console.log('Reusing existing shared radio audio element');
     }
 
     const audio = sharedAudio!;
     audioRef.current = audio;
+    
+    // Keep audio element volume at 1.0 - we control gain via Web Audio
+    audio.volume = 1.0;
 
     const handleLoadStart = () => {
       console.log('Radio stream load start');
@@ -368,8 +392,23 @@ export const useRadioPlayer = () => {
         
         // Set new source and load
         audioRef.current.src = withCacheBuster(streamUrl);
-        audioRef.current.volume = audioRef.current.volume || 1.0; // Use current volume from audio element, default to max
+        audioRef.current.volume = 1.0; // Keep at 1.0, gain control via Web Audio
         audioRef.current.load();
+        
+        // Connect to Web Audio gain node for proper mixing (prevents clipping)
+        if (sharedAudioContext && sharedGainNode && !sharedSourceNode) {
+          try {
+            // Resume audio context if suspended (required after user interaction)
+            if (sharedAudioContext.state === 'suspended') {
+              await sharedAudioContext.resume();
+            }
+            sharedSourceNode = sharedAudioContext.createMediaElementSource(audioRef.current);
+            sharedSourceNode.connect(sharedGainNode);
+            console.log('Connected audio to Web Audio mixer gain node');
+          } catch (e) {
+            console.warn('Could not connect to Web Audio mixer:', e);
+          }
+        }
         
         console.log('Waiting for canplay event...');
         
@@ -481,8 +520,16 @@ export const useRadioPlayer = () => {
   const setVolume = useCallback((volume: number) => {
     const clampedVolume = Math.max(0, Math.min(1, volume));
     setState(prev => ({ ...prev, volume: clampedVolume }));
-    if (audioRef.current) {
-      audioRef.current.volume = clampedVolume;
+    
+    // Use Web Audio gain node for proper mixing (prevents clipping)
+    if (sharedGainNode && sharedAudioContext) {
+      // Apply MAX_GAIN ceiling to prevent clipping from hot audio sources
+      const actualGain = clampedVolume * MAX_GAIN;
+      sharedGainNode.gain.setValueAtTime(actualGain, sharedAudioContext.currentTime);
+      console.log('Mixer gain set to:', actualGain, '(volume:', clampedVolume, ')');
+    } else if (audioRef.current) {
+      // Fallback to direct audio volume if Web Audio not available
+      audioRef.current.volume = clampedVolume * MAX_GAIN;
     }
   }, []);
 
