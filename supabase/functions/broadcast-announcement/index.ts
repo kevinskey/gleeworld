@@ -154,28 +154,29 @@ Deno.serve(async (req) => {
     const uploadResult = await uploadResponse.json();
     console.log("Upload successful:", uploadResult);
 
-    // Step 3: Search for the uploaded file to get its media ID
-    // AzuraCast upload doesn't return the media ID, so we need to find it
+    // Step 3: Search for the uploaded file to get its media + song IDs
+    // AzuraCast upload doesn't return IDs, so we need to find it
     console.log("Searching for uploaded file:", fullPath);
-    
+
     // Wait a moment for AzuraCast to process the file
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
     const filesListUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/files/list?searchPhrase=${encodeURIComponent(fileName)}`;
     const filesResponse = await fetch(filesListUrl, {
       method: "GET",
       headers: {
         "X-API-Key": AZURACAST_API_KEY,
-        "Accept": "application/json",
+        Accept: "application/json",
       },
     });
 
     let mediaId: string | null = null;
-    
+    let songId: string | null = null;
+
     if (filesResponse.ok) {
       const filesList = await filesResponse.json();
       console.log("Files search result:", JSON.stringify(filesList).substring(0, 500));
-      
+
       // Find our uploaded file by path
       const uploadedFile = Array.isArray(filesList)
         ? filesList.find((f: any) =>
@@ -187,16 +188,10 @@ Deno.serve(async (req) => {
         : null;
 
       if (uploadedFile) {
-        // AzuraCast returns media details nested under `media` for type="media" rows
-        mediaId = String(
-          uploadedFile.media?.id ??
-            uploadedFile.media?.unique_id ??
-            uploadedFile.id ??
-            uploadedFile.unique_id ??
-            ""
-        ) || null;
+        mediaId = String(uploadedFile.media?.id ?? uploadedFile.id ?? "") || null;
+        songId = String(uploadedFile.media?.song_id ?? "") || null;
 
-        console.log("Found uploaded file, media ID:", mediaId);
+        console.log("Found uploaded file, media ID:", mediaId, "song ID:", songId);
       } else {
         console.warn("Could not find uploaded file in search results");
       }
@@ -204,15 +199,56 @@ Deno.serve(async (req) => {
       console.warn("Files list search failed:", filesResponse.status);
     }
 
-    // Step 4: Add announcement to Jingles playlist and request immediate playback
-    // Queue POST is disabled on this station, so we use the Requests API instead
-    const JINGLES_PLAYLIST_ID = 21; // Jingles playlist ID from AzuraCast
-    
+    // Step 4: Make announcement requestable + request immediate playback
+    // Note: POST /queue is disabled on this station (405), so we use the Requests API.
     if (mediaId) {
-      // First, add the file to the Jingles playlist so it's requestable
+      // 4a) Pick a requestable playlist (prefer one named "Requests", fallback to "Jingles")
+      let targetPlaylistId: number | null = null;
+
+      try {
+        const playlistsUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/playlists`;
+        const playlistsResp = await fetch(playlistsUrl, {
+          method: "GET",
+          headers: {
+            "X-API-Key": AZURACAST_API_KEY,
+            Accept: "application/json",
+          },
+        });
+
+        if (playlistsResp.ok) {
+          const playlists = await playlistsResp.json();
+
+          const findByName = (name: string) =>
+            Array.isArray(playlists)
+              ? playlists.find((p: any) =>
+                  String(p.name || "")
+                    .toLowerCase()
+                    .includes(name.toLowerCase())
+                )
+              : null;
+
+          const preferred = findByName("requests") ?? findByName("announcement") ?? findByName("jingles");
+          if (preferred?.id) {
+            targetPlaylistId = Number(preferred.id);
+            console.log("Selected playlist for announcement:", preferred.name, "id=", targetPlaylistId);
+          }
+        } else {
+          console.warn("Failed to fetch playlists:", playlistsResp.status);
+        }
+      } catch (err) {
+        console.warn("Error fetching playlists:", err);
+      }
+
+      // Hard fallback (existing known Jingles playlist id)
+      if (!targetPlaylistId) {
+        targetPlaylistId = 21;
+        console.log("Falling back to playlist ID 21 (Jingles)");
+      }
+
+      // 4b) Attach the file to the chosen playlist
       const fileId = mediaId;
       const updateFileUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/file/${fileId}`;
-      console.log("Adding announcement to Jingles playlist, file ID:", fileId);
+      console.log("Adding announcement to playlist, file ID:", fileId, "playlist ID:", targetPlaylistId);
 
       try {
         const updateResponse = await fetch(updateFileUrl, {
@@ -222,12 +258,12 @@ Deno.serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            playlists: [JINGLES_PLAYLIST_ID],
+            playlists: [targetPlaylistId],
           }),
         });
 
         if (updateResponse.ok) {
-          console.log("Added to Jingles playlist successfully");
+          console.log("Added to playlist successfully");
         } else {
           const updateError = await updateResponse.text();
           console.warn("Failed to add to playlist:", updateResponse.status, updateError);
@@ -237,10 +273,9 @@ Deno.serve(async (req) => {
       }
 
       // Wait for AzuraCast to process the playlist update
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1200));
 
-      // Now try to request immediate playback via Requests API
-      // First get the list of requestable songs to find our announcement
+      // 4c) Request immediate playback via Requests API (match by song_id)
       const requestsUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/requests`;
       console.log("Fetching requestable songs to find announcement...");
 
@@ -249,33 +284,34 @@ Deno.serve(async (req) => {
           method: "GET",
           headers: {
             "X-API-Key": AZURACAST_API_KEY,
-            "Accept": "application/json",
+            Accept: "application/json",
           },
         });
 
         if (requestsResponse.ok) {
           const requestableSongs = await requestsResponse.json();
-          console.log("Got", Array.isArray(requestableSongs) ? requestableSongs.length : 0, "requestable songs");
+          console.log(
+            "Got",
+            Array.isArray(requestableSongs) ? requestableSongs.length : 0,
+            "requestable songs"
+          );
 
-          // Find our announcement by matching filename or path
           const announcement = Array.isArray(requestableSongs)
-            ? requestableSongs.find((s: any) => 
-                s.song?.title?.includes(fileName.replace('.mp3', '')) ||
-                s.song?.path?.includes(fileName) ||
-                String(s.song?.id) === String(mediaId)
+            ? requestableSongs.find((s: any) =>
+                (songId && String(s.song?.id) === String(songId)) ||
+                s.song?.path?.includes(fileName)
               )
             : null;
 
           if (announcement?.request_id) {
             console.log("Found announcement in requestable list, request_id:", announcement.request_id);
-            
-            // Submit the request for immediate playback
+
             const submitRequestUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/request/${announcement.request_id}`;
             const submitResponse = await fetch(submitRequestUrl, {
               method: "POST",
               headers: {
                 "X-API-Key": AZURACAST_API_KEY,
-                "Accept": "application/json",
+                Accept: "application/json",
               },
             });
 
@@ -286,7 +322,9 @@ Deno.serve(async (req) => {
               console.warn("Request submission failed:", submitResponse.status, submitError);
             }
           } else {
-            console.warn("Announcement not found in requestable songs list. It will play in Jingles rotation.");
+            console.warn(
+              "Announcement not found in requestable songs list. Likely the target playlist is not requestable; it will play in rotation if scheduled."
+            );
           }
         } else {
           console.warn("Failed to fetch requestable songs:", requestsResponse.status);
