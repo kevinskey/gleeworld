@@ -40,7 +40,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'mus-210',
+    id: 'a0000000-0000-0000-0000-000000000210',
     courseCode: 'MUS 210',
     title: 'Choral Conducting and Literature',
     description: 'Master the art of choral conducting with comprehensive training in technique, score analysis, and repertoire selection.',
@@ -58,7 +58,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'mus-240',
+    id: 'a0000000-0000-0000-0000-000000000240',
     courseCode: 'MUS 240',
     title: 'Survey of African American Music',
     description: 'Explore the rich tapestry of African American musical traditions, from spirituals and blues to jazz, gospel, R&B, and hip-hop.',
@@ -76,7 +76,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'mus-101',
+    id: 'a0000000-0000-0000-0000-000000000101',
     courseCode: 'MUS 101',
     title: 'Music Fundamentals Theory',
     description: 'Build a strong foundation in music theory including notation, rhythm, scales, intervals, chords, and basic harmony.',
@@ -94,7 +94,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'mus-001',
+    id: 'a0000000-0000-0000-0000-000000000001',
     courseCode: 'MUS 001',
     title: 'Private Applied Lessons',
     description: 'One-on-one instruction in voice or instrument with personalized curriculum tailored to your skill level and musical goals.',
@@ -112,7 +112,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'mus-000',
+    id: 'a0000000-0000-0000-0000-000000000000',
     courseCode: 'MUS 000',
     title: 'Sight Singing Institute',
     description: 'Intensive training in sight-reading and ear training to develop musicianship skills essential for all musicians.',
@@ -130,7 +130,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     isActive: true
   },
   {
-    id: 'glee-101',
+    id: 'a0000000-0000-0000-0000-0000000e0101',
     courseCode: 'GLEE 101',
     title: 'Leadership Development',
     description: 'Develop leadership skills essential for executive board members and future leaders in the Glee Club organization.',
