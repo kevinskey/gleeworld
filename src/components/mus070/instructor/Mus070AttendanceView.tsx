@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { UserCheck, AlertTriangle } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { UserCheck, AlertTriangle, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // MUS 070 Fall 2025 attendance data
 const mus070AttendanceData: Record<string, { rehearsalAbsences: number; performanceAbsences: number; tardies: number }> = {
@@ -108,31 +111,156 @@ const mus070AttendanceData: Record<string, { rehearsalAbsences: number; performa
 
 // Calculate effective absences per handbook rules
 const calculateEffectiveAbsences = (data: { rehearsalAbsences: number; performanceAbsences: number; tardies: number }) => {
-  // Missing a performance = 2 absences
   const performanceAsAbsences = data.performanceAbsences * 2;
-  // Every 2 tardies beyond 3 = 1 absence
   const excessTardies = Math.max(0, data.tardies - 3);
   const tardiesAsAbsences = Math.floor(excessTardies / 2);
-  
   return data.rehearsalAbsences + performanceAsAbsences + tardiesAsAbsences;
+};
+
+const getStatus = (effectiveAbsences: number) => {
+  if (effectiveAbsences >= 6) return 'DROPPED';
+  if (effectiveAbsences > 3) return 'Warning';
+  return 'Good';
 };
 
 export const Mus070AttendanceView: React.FC = () => {
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin')
+        .eq('user_id', user.id)
+        .single();
+      setIsAdmin(data?.is_admin || data?.is_super_admin || false);
+    };
+    checkAdminStatus();
+  }, [user]);
+
   const userName = user?.user_metadata?.full_name || '';
-  
-  // Find user's attendance data
   const userAttendance = mus070AttendanceData[userName];
-  
+
+  // Admin view - show all members
+  if (isAdmin) {
+    const allMembers = Object.entries(mus070AttendanceData)
+      .map(([name, data]) => ({
+        name,
+        ...data,
+        effectiveAbsences: calculateEffectiveAbsences(data),
+        status: getStatus(calculateEffectiveAbsences(data))
+      }))
+      .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const droppedCount = allMembers.filter(m => m.status === 'DROPPED').length;
+    const warningCount = allMembers.filter(m => m.status === 'Warning').length;
+
+    return (
+      <div className="space-y-6">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-3xl font-bold text-foreground">{allMembers.length}</div>
+              <p className="text-sm text-muted-foreground">Total Members</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-3xl font-bold text-green-600">{allMembers.length - droppedCount - warningCount}</div>
+              <p className="text-sm text-muted-foreground">Good Standing</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-3xl font-bold text-yellow-600">{warningCount}</div>
+              <p className="text-sm text-muted-foreground">Warning</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <div className="text-3xl font-bold text-red-600">{droppedCount}</div>
+              <p className="text-sm text-muted-foreground">Dropped</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Full Attendance Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5 text-primary" />
+              All Members Attendance ({allMembers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="text-center">Rehearsal UA</TableHead>
+                    <TableHead className="text-center">Performance UA</TableHead>
+                    <TableHead className="text-center">Tardies</TableHead>
+                    <TableHead className="text-center">Effective Absences</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {allMembers.map((member) => (
+                    <TableRow key={member.name} className={member.status === 'DROPPED' ? 'bg-red-50 dark:bg-red-950/20' : ''}>
+                      <TableCell className="font-medium">{member.name}</TableCell>
+                      <TableCell className="text-center">{member.rehearsalAbsences}</TableCell>
+                      <TableCell className="text-center">{member.performanceAbsences}</TableCell>
+                      <TableCell className="text-center">{member.tardies}</TableCell>
+                      <TableCell className="text-center">
+                        <span className={member.effectiveAbsences >= 6 ? 'text-red-600 font-bold' : member.effectiveAbsences > 3 ? 'text-yellow-600' : ''}>
+                          {member.effectiveAbsences}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {member.status === 'DROPPED' ? (
+                          <Badge variant="destructive">DROPPED</Badge>
+                        ) : member.status === 'Warning' ? (
+                          <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">Warning</Badge>
+                        ) : (
+                          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">Good</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Student view - show only their own attendance
   if (!userAttendance) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
           <UserCheck className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">Attendance</h3>
-          <p className="text-muted-foreground">
-            No attendance record found for your account.
-          </p>
+          <p className="text-muted-foreground">No attendance record found for your account.</p>
         </CardContent>
       </Card>
     );
@@ -145,7 +273,6 @@ export const Mus070AttendanceView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
@@ -175,7 +302,6 @@ export const Mus070AttendanceView: React.FC = () => {
         </Card>
       </div>
 
-      {/* Status Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -199,7 +325,6 @@ export const Mus070AttendanceView: React.FC = () => {
             <span className={isDropped ? 'text-red-600 font-bold' : 'text-foreground'}>{gradePenalty}</span>
           </div>
           
-          {/* Policy Info */}
           <div className="mt-4 p-4 bg-muted/20 rounded-lg">
             <h4 className="font-semibold flex items-center gap-2 mb-2">
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
