@@ -154,9 +154,44 @@ Deno.serve(async (req) => {
     const uploadResult = await uploadResponse.json();
     console.log("Upload successful:", uploadResult);
 
-    // Step 3: Queue the announcement for immediate playback
-    const mediaId = uploadResult.id || uploadResult.unique_id;
+    // Step 3: Search for the uploaded file to get its media ID
+    // AzuraCast upload doesn't return the media ID, so we need to find it
+    console.log("Searching for uploaded file:", fullPath);
     
+    // Wait a moment for AzuraCast to process the file
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    const filesListUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/files/list?searchPhrase=${encodeURIComponent(fileName)}`;
+    const filesResponse = await fetch(filesListUrl, {
+      method: "GET",
+      headers: {
+        "X-API-Key": AZURACAST_API_KEY,
+        "Accept": "application/json",
+      },
+    });
+
+    let mediaId: string | null = null;
+    
+    if (filesResponse.ok) {
+      const filesList = await filesResponse.json();
+      console.log("Files search result:", JSON.stringify(filesList).substring(0, 500));
+      
+      // Find our uploaded file by path
+      const uploadedFile = Array.isArray(filesList) 
+        ? filesList.find((f: any) => f.path === fullPath || f.path?.endsWith(fileName))
+        : null;
+      
+      if (uploadedFile) {
+        mediaId = uploadedFile.id || uploadedFile.unique_id;
+        console.log("Found uploaded file, media ID:", mediaId);
+      } else {
+        console.warn("Could not find uploaded file in search results");
+      }
+    } else {
+      console.warn("Files list search failed:", filesResponse.status);
+    }
+
+    // Step 4: Queue the announcement for immediate playback
     if (mediaId) {
       const queueUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/queue`;
       console.log("Queueing announcement for playback, media ID:", mediaId);
@@ -173,17 +208,20 @@ Deno.serve(async (req) => {
       });
 
       if (queueResponse.ok) {
-        console.log("Announcement queued successfully");
+        const queueResult = await queueResponse.json();
+        console.log("Announcement queued successfully:", queueResult);
       } else {
         const queueError = await queueResponse.text();
         console.warn("Queue response:", queueResponse.status, queueError);
       }
+    } else {
+      console.warn("No media ID found, cannot queue announcement");
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Announcement uploaded and queued for broadcast",
+        message: mediaId ? "Announcement uploaded and queued for broadcast" : "Announcement uploaded but could not be queued",
         mediaId,
         fileName 
       }),
