@@ -297,3 +297,6 @@ verify_jwt = true
 
 [functions.broadcast-announcement]
 verify_jwt = true
+
+[functions.elevenlabs-voice-info]
+verify_jwt = false
