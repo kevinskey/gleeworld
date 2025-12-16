@@ -368,11 +368,19 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
     }
   };
 
+  // Pre-defined scripts for each insertion type
+  const insertionScripts: Record<string, string> = {
+    'station-id': "You're listening to Glee World Radio, the official voice of the Spelman College Glee Club. To amaze and inspire.",
+    'break-bumper': "We'll be right back after this short break. Stay tuned to Glee World Radio.",
+    'emergency': "Attention! This is an emergency alert from Glee World Radio. Please stand by for important information.",
+    'promo-1': "Don't miss our upcoming performances! Visit GleeWorld.org for tickets and event information. Glee World Radio, where music meets legacy.",
+    'hey-glee': "Hey Glee! You're listening to the sounds of sisterhood on Glee World Radio.",
+  };
+
   const handleLiveInsertion = async (insertion: LiveInsertion) => {
     try {
       // If it's an announcement type, prompt for text
       if (insertion.type === 'announcement') {
-        // Focus the announcement text input
         toast({ 
           title: "Live Announcement", 
           description: "Enter your announcement text below and click the mic button to broadcast"
@@ -381,18 +389,43 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
         return;
       }
 
+      // Get the script for this insertion type
+      const script = insertionScripts[insertion.id];
+      if (!script) {
+        toast({ title: "No Script", description: "No audio script defined for this insertion", variant: "destructive" });
+        return;
+      }
+
+      setIsBroadcasting(true);
       toast({ 
-        title: `Inserting: ${insertion.title}`, 
-        description: `Playing ${insertion.type}`
+        title: `Broadcasting: ${insertion.title}`, 
+        description: "Generating and sending to radio..."
       });
 
-      // Add to insertion queue
-      setInsertionQueue(prev => [...prev, { ...insertion, id: `${insertion.id}-${Date.now()}` }]);
+      // Use the broadcast-announcement edge function
+      const { data, error } = await supabase.functions.invoke('broadcast-announcement', {
+        body: { 
+          text: script, 
+          voiceId: selectedVoice,
+          title: insertion.title 
+        }
+      });
 
-      // Log the insertion
-      console.log('Live insertion triggered:', insertion);
+      if (error) throw error;
+
+      toast({ 
+        title: "Broadcast Queued", 
+        description: `${insertion.title} will play after current song`
+      });
+
+      // Add to insertion queue for UI tracking
+      setInsertionQueue(prev => [...prev, { ...insertion, id: `${insertion.id}-${Date.now()}` }]);
+      console.log('Live insertion broadcast:', insertion, data);
     } catch (error) {
-      toast({ title: "Insertion Failed", description: "Could not play insertion", variant: "destructive" });
+      console.error('Insertion broadcast error:', error);
+      toast({ title: "Broadcast Failed", description: "Could not broadcast insertion", variant: "destructive" });
+    } finally {
+      setIsBroadcasting(false);
     }
   };
 
