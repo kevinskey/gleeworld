@@ -122,11 +122,13 @@ Deno.serve(async (req) => {
     const fileBytes = new Uint8Array(audioBuffer);
     const file = new File([fileBytes], fileName, { type: "audio/mpeg" });
 
-    formData.append("file", file);
-    formData.append("path", "announcements");
+    // Ensure filename is explicitly provided in multipart disposition
+    formData.append("file", file, fileName);
+    // AzuraCast expects the *destination path including filename*, NOT just a directory
+    formData.append("path", fileName);
 
     const uploadUrl = "https://radio.gleeworld.org/api/station/glee_world_radio/files";
-    console.log("Uploading to AzuraCast:", uploadUrl, "path=announcements", "file=", fileName);
+    console.log("Uploading to AzuraCast:", uploadUrl, "path=", fileName);
 
     const uploadResponse = await fetch(uploadUrl, {
       method: "POST",
