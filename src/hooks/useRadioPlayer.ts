@@ -423,17 +423,32 @@ export const useRadioPlayer = () => {
   }, []); // Empty dependency array - only run once
 
   const play = useCallback(async () => {
-    console.log('Radio play() called');
-    
+    console.log('useRadioPlayer: play() called');
+
     if (!audioRef.current) {
-      console.log('No audio ref available');
+      console.log('useRadioPlayer: No audio ref available');
       return;
     }
 
+    // If volume was muted elsewhere (e.g. radio bar), ensure header playback isn't silent.
+    if (state.volume === 0) {
+      const unmutedVolume = 0.8;
+      console.log('useRadioPlayer: Volume is 0; restoring to', unmutedVolume);
+      setState(prev => ({ ...prev, volume: unmutedVolume }));
+
+      if (sharedGainNode && sharedAudioContext) {
+        const actualGain = unmutedVolume * MAX_GAIN;
+        sharedGainNode.gain.setValueAtTime(actualGain, sharedAudioContext.currentTime);
+        console.log('useRadioPlayer: Mixer gain restored to:', actualGain);
+      } else {
+        audioRef.current.volume = unmutedVolume * MAX_GAIN;
+      }
+    }
+
     const urls = streamUrls();
-    console.log('Available stream URLs:', urls);
-    
-    console.log('Setting loading state and starting stream attempt...');
+    console.log('useRadioPlayer: Available stream URLs:', urls);
+
+    console.log('useRadioPlayer: Setting loading state and starting stream attempt...');
     setState(prev => ({ ...prev, isLoading: true }));
 
     // Try each stream URL until one works
@@ -536,7 +551,7 @@ export const useRadioPlayer = () => {
         }
       }
     }
-  }, [streamUrls, toast]);
+  }, [state.volume, streamUrls, toast, withCacheBuster]);
 
   const pause = useCallback(() => {
     if (audioRef.current) {
