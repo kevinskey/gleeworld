@@ -47,7 +47,23 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
     }
 
     try {
-      // Check enrollment
+      // Check admin status and role
+      const { data: profile } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, role')
+        .eq('user_id', user.id)
+        .single();
+
+      setIsAdmin(profile?.is_admin || profile?.is_super_admin || false);
+
+      // For MUS 070 (Glee Club), members are auto-enrolled
+      if (course.courseCode === 'MUS 070' && profile?.role === 'member') {
+        setIsEnrolled(true);
+        setEnrollmentLoading(false);
+        return;
+      }
+
+      // Check enrollment for other courses
       const { data: enrollment } = await supabase
         .from('gw_course_enrollments')
         .select('*')
@@ -56,15 +72,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
         .maybeSingle();
 
       setIsEnrolled(!!enrollment);
-
-      // Check admin status
-      const { data: profile } = await supabase
-        .from('gw_profiles')
-        .select('is_admin, is_super_admin')
-        .eq('user_id', user.id)
-        .single();
-
-      setIsAdmin(profile?.is_admin || profile?.is_super_admin || false);
     } catch (error) {
       console.error('Error checking enrollment:', error);
     } finally {
