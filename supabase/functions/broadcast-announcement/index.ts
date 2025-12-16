@@ -358,7 +358,23 @@ Deno.serve(async (req) => {
             });
 
             if (submitResponse.ok) {
-              console.log("Announcement requested for playback (will play after current track finishes)");
+              console.log("Announcement requested for playback");
+              
+              // Skip the current track so the announcement plays IMMEDIATELY next
+              const skipUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/backend/skip`;
+              const skipResponse = await fetch(skipUrl, {
+                method: "POST",
+                headers: {
+                  "X-API-Key": AZURACAST_API_KEY,
+                  Accept: "application/json",
+                },
+              });
+              
+              if (skipResponse.ok) {
+                console.log("Skipped current track - announcement will play NOW");
+              } else {
+                console.warn("Could not skip track:", skipResponse.status);
+              }
             } else {
               const submitError = await submitResponse.text();
               console.warn("Request submission failed:", submitResponse.status, submitError);
