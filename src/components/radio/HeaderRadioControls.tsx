@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check } from 'lucide-react';
+import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check, Bell, MapPin, Mic, Disc, Clock, Music } from 'lucide-react';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels, type RadioChannel } from '@/hooks/useRadioChannels';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
@@ -16,7 +16,7 @@ const RADIO_OPEN_CLASS = 'radio-bar-open';
 export const HeaderRadioControls = () => {
   try {
     const [isOpen, setIsOpen] = useState(false);
-    const { channels, selectedChannel, selectChannel } = useRadioChannels();
+    const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
     const { themeName } = useTheme();
     
     // Theme-specific colors
@@ -36,6 +36,12 @@ export const HeaderRadioControls = () => {
         case 'Church': return Church;
         case 'Music2': return Music2;
         case 'Sparkles': return Sparkles;
+        case 'Bell': return Bell;
+        case 'MapPin': return MapPin;
+        case 'Mic': return Mic;
+        case 'Disc': return Disc;
+        case 'Clock': return Clock;
+        case 'Music': return Music;
         default: return Radio;
       }
     };
