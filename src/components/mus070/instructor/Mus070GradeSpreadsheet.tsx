@@ -1,11 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Download, Search, RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from 'lucide-react';
+import { Download, Search, RefreshCw, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 // MUS 070 Grade weights per Glee Club Handbook
 const GRADE_WEIGHTS = {
@@ -161,10 +163,37 @@ type SortField = 'student_name' | GradeField | 'final_grade' | 'ua_rehearsal' | 
 type SortDirection = 'asc' | 'desc';
 
 export const Mus070GradeSpreadsheet: React.FC = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [overrides, setOverrides] = useState<Record<string, Partial<Record<GradeField, number>>>>({});
   const [sortField, setSortField] = useState<SortField>('student_name');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [canEditGrades, setCanEditGrades] = useState(false);
+
+  // Check if user has permission to edit grades (admin, super_admin, or secretary)
+  useEffect(() => {
+    const checkEditPermission = async () => {
+      if (!user) {
+        setCanEditGrades(false);
+        return;
+      }
+      
+      const { data } = await supabase
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, exec_board_role')
+        .eq('user_id', user.id)
+        .single();
+      
+      const hasPermission = 
+        data?.is_admin || 
+        data?.is_super_admin || 
+        data?.exec_board_role === 'secretary';
+      
+      setCanEditGrades(hasPermission || false);
+    };
+    
+    checkEditPermission();
+  }, [user]);
 
   const handleOverride = (studentName: string, field: GradeField, value: number) => {
     const maxValues: Record<GradeField, number> = {
@@ -340,9 +369,17 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
       <CardHeader>
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <CardTitle className="text-foreground">MUS 070 - Glee Club Grade Sheet</CardTitle>
+            <CardTitle className="text-foreground flex items-center gap-2">
+              MUS 070 - Glee Club Grade Sheet
+              {canEditGrades ? (
+                <Badge className="bg-green-500/20 text-green-600 border-green-500/30">Edit Mode</Badge>
+              ) : (
+                <Badge variant="outline" className="text-muted-foreground"><Lock className="h-3 w-3 mr-1" />View Only</Badge>
+              )}
+            </CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
               Fall 2025 • Per Glee Club Handbook grading policy
+              {!canEditGrades && <span className="ml-2">(Only admins and secretary can edit grades)</span>}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -457,40 +494,52 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
                       {student.student_name}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Input
-                        type="number"
-                        min="0"
-                        max={GRADE_WEIGHTS.sectionals}
-                        step="0.5"
-                        value={getEffectiveValue(student, 'sectionals_pct')}
-                        onChange={(e) => handleOverride(student.student_name, 'sectionals_pct', parseFloat(e.target.value) || 0)}
-                        className="w-16 text-center mx-auto h-8"
-                        disabled={student.is_dropped}
-                      />
+                      {canEditGrades ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          max={GRADE_WEIGHTS.sectionals}
+                          step="0.5"
+                          value={getEffectiveValue(student, 'sectionals_pct')}
+                          onChange={(e) => handleOverride(student.student_name, 'sectionals_pct', parseFloat(e.target.value) || 0)}
+                          className="w-16 text-center mx-auto h-8"
+                          disabled={student.is_dropped}
+                        />
+                      ) : (
+                        <span className="text-foreground">{getEffectiveValue(student, 'sectionals_pct').toFixed(1)}</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Input
-                        type="number"
-                        min="0"
-                        max={GRADE_WEIGHTS.sightSinging}
-                        step="0.5"
-                        value={getEffectiveValue(student, 'sight_singing_pct')}
-                        onChange={(e) => handleOverride(student.student_name, 'sight_singing_pct', parseFloat(e.target.value) || 0)}
-                        className="w-16 text-center mx-auto h-8"
-                        disabled={student.is_dropped}
-                      />
+                      {canEditGrades ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          max={GRADE_WEIGHTS.sightSinging}
+                          step="0.5"
+                          value={getEffectiveValue(student, 'sight_singing_pct')}
+                          onChange={(e) => handleOverride(student.student_name, 'sight_singing_pct', parseFloat(e.target.value) || 0)}
+                          className="w-16 text-center mx-auto h-8"
+                          disabled={student.is_dropped}
+                        />
+                      ) : (
+                        <span className="text-foreground">{getEffectiveValue(student, 'sight_singing_pct').toFixed(1)}</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Input
-                        type="number"
-                        min="0"
-                        max={GRADE_WEIGHTS.performances}
-                        step="0.5"
-                        value={getEffectiveValue(student, 'performances_pct')}
-                        onChange={(e) => handleOverride(student.student_name, 'performances_pct', parseFloat(e.target.value) || 0)}
-                        className="w-16 text-center mx-auto h-8"
-                        disabled={student.is_dropped}
-                      />
+                      {canEditGrades ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          max={GRADE_WEIGHTS.performances}
+                          step="0.5"
+                          value={getEffectiveValue(student, 'performances_pct')}
+                          onChange={(e) => handleOverride(student.student_name, 'performances_pct', parseFloat(e.target.value) || 0)}
+                          className="w-16 text-center mx-auto h-8"
+                          disabled={student.is_dropped}
+                        />
+                      ) : (
+                        <span className="text-foreground">{getEffectiveValue(student, 'performances_pct').toFixed(1)}</span>
+                      )}
                     </TableCell>
                     <TableCell className={`text-center ${getAbsenceColor(student.ua_rehearsal + student.ua_performance * 2)}`}>
                       {student.ua_rehearsal}
