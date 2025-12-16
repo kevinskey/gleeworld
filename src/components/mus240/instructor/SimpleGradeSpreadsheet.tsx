@@ -151,9 +151,9 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         const midtermScore = midtermByStudent.get(studentId) || 0;
         const midtermPct = (midtermScore / 100) * GRADE_WEIGHTS.midterm;
 
-        // Final Exam: earned / 150 max (assuming 150 point exam)
+        // Final Exam: earned / 100 max
         const finalScore = finalByStudent.get(studentId) || 0;
-        const finalExamPct = (finalScore / 150) * GRADE_WEIGHTS.finalExam;
+        const finalExamPct = (finalScore / 100) * GRADE_WEIGHTS.finalExam;
 
         // AI Project: Everyone gets 100% (full 25%)
         const aiProjectPct = GRADE_WEIGHTS.aiProject;
