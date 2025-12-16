@@ -213,23 +213,23 @@ export const Mus070AttendanceView: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead className="text-center">Rehearsal UA</TableHead>
-                    <TableHead className="text-center">Performance UA</TableHead>
-                    <TableHead className="text-center">Tardies</TableHead>
-                    <TableHead className="text-center">Effective Absences</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-foreground font-semibold">Name</TableHead>
+                    <TableHead className="text-center text-foreground font-semibold">Rehearsal UA</TableHead>
+                    <TableHead className="text-center text-foreground font-semibold">Performance UA</TableHead>
+                    <TableHead className="text-center text-foreground font-semibold">Tardies</TableHead>
+                    <TableHead className="text-center text-foreground font-semibold">Effective Absences</TableHead>
+                    <TableHead className="text-center text-foreground font-semibold">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {allMembers.map((member) => (
-                    <TableRow key={member.name} className={member.status === 'DROPPED' ? 'bg-red-50 dark:bg-red-950/20' : ''}>
-                      <TableCell className="font-medium">{member.name}</TableCell>
-                      <TableCell className="text-center">{member.rehearsalAbsences}</TableCell>
-                      <TableCell className="text-center">{member.performanceAbsences}</TableCell>
-                      <TableCell className="text-center">{member.tardies}</TableCell>
+                    <TableRow key={member.name} className={member.status === 'DROPPED' ? 'bg-red-500/20' : ''}>
+                      <TableCell className="font-medium text-foreground">{member.name}</TableCell>
+                      <TableCell className="text-center text-foreground">{member.rehearsalAbsences}</TableCell>
+                      <TableCell className="text-center text-foreground">{member.performanceAbsences}</TableCell>
+                      <TableCell className="text-center text-foreground">{member.tardies}</TableCell>
                       <TableCell className="text-center">
-                        <span className={member.effectiveAbsences >= 6 ? 'text-red-600 font-bold' : member.effectiveAbsences > 3 ? 'text-yellow-600' : ''}>
+                        <span className={member.effectiveAbsences >= 6 ? 'text-red-400 font-bold' : member.effectiveAbsences > 3 ? 'text-yellow-400' : 'text-foreground'}>
                           {member.effectiveAbsences}
                         </span>
                       </TableCell>
@@ -237,9 +237,9 @@ export const Mus070AttendanceView: React.FC = () => {
                         {member.status === 'DROPPED' ? (
                           <Badge variant="destructive">DROPPED</Badge>
                         ) : member.status === 'Warning' ? (
-                          <Badge variant="outline" className="bg-yellow-100 text-yellow-700 border-yellow-200">Warning</Badge>
+                          <Badge className="bg-yellow-500 text-yellow-950 border-yellow-400">Warning</Badge>
                         ) : (
-                          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200">Good</Badge>
+                          <Badge className="bg-green-500 text-green-950 border-green-400">Good</Badge>
                         )}
                       </TableCell>
                     </TableRow>
