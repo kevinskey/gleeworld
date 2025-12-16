@@ -439,8 +439,25 @@ export const useRadioPlayer = () => {
           message: error instanceof Error ? error.message : String(error),
           code: (error as any)?.code,
           target: (error as any)?.target,
-          type: (error as any)?.type
+          type: (error as any)?.type,
         });
+
+        // If this is an autoplay/user-gesture restriction, don't cycle through URLs.
+        // The browser will block ALL of them the same way.
+        const msg = error instanceof Error ? error.message : String(error);
+        if (msg.includes('Browser blocked audio playback')) {
+          setState(prev => ({
+            ...prev,
+            isLoading: false,
+            isPlaying: false,
+          }));
+          toast({
+            title: 'Tap to enable audio',
+            description: msg,
+            variant: 'destructive',
+          });
+          return;
+        }
 
         // If this was the last URL, show error
         if (i === allUrls.length - 1) {
@@ -448,7 +465,7 @@ export const useRadioPlayer = () => {
           setState(prev => ({
             ...prev,
             isLoading: false,
-            isPlaying: false
+            isPlaying: false,
           }));
           toast({
             title: "Radio Unavailable",
