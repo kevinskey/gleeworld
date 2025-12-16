@@ -22,8 +22,8 @@ const GleeAcademy = () => {
         <div className="relative w-full bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460] py-6 sm:py-8">
           <div className="w-[80vw] mx-auto text-center">
             <h1 
-              className="font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase"
-              style={{ fontSize: 'clamp(7.5rem, 40vw, 30rem)' }}
+              className="font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase leading-none"
+              style={{ fontSize: 'clamp(4rem, 18vw, 16rem)' }}
             >
               Glee Academy
             </h1>
