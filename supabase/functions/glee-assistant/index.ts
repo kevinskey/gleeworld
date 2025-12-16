@@ -200,17 +200,58 @@ const tools = [
     type: "function",
     function: {
       name: "control_radio",
-      description: "Control the Glee World Radio - turn it on (play), off (pause/stop), or toggle. Use this when users want to play music, listen to the radio, or stop the radio.",
+      description: "Control the Glee World Radio - turn it on (play), off (pause/stop), toggle, skip to next song, or adjust volume.",
       parameters: {
         type: "object",
         properties: {
           command: {
             type: "string",
-            enum: ["play", "pause", "toggle"],
-            description: "The radio command: 'play' to start, 'pause' to stop, 'toggle' to switch",
+            enum: ["play", "pause", "toggle", "skip", "volume_up", "volume_down", "mute", "unmute"],
+            description: "The radio command: 'play' to start, 'pause' to stop, 'toggle' to switch, 'skip' to go to next track, 'volume_up'/'volume_down' to adjust volume, 'mute'/'unmute' for muting",
           },
         },
         required: ["command"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_radio_playlists",
+      description: "Get a list of available radio playlists/channels that can be requested. Use this when users ask about what music is available or want to see playlist options.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "request_playlist",
+      description: "Request a song from a specific playlist to play on the radio. This queues a random song from the selected playlist.",
+      parameters: {
+        type: "object",
+        properties: {
+          playlist_name: {
+            type: "string",
+            description: "Name of the playlist to request from (e.g., 'Gospel', 'Christmas', 'Classical', 'Jazz'). Get available playlists using get_radio_playlists first.",
+          },
+        },
+        required: ["playlist_name"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_now_playing",
+      description: "Get information about what's currently playing on Glee World Radio including the song title, artist, and what's up next.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: [],
       },
     },
   },
@@ -694,14 +735,142 @@ async function executeTool(toolName: string, args: any, userId: string) {
 
     case "control_radio": {
       const command = args.command || "play";
+      const messages: Record<string, string> = {
+        play: "Turning on Glee World Radio!",
+        pause: "Stopping the radio.",
+        toggle: "Toggling the radio.",
+        skip: "Skipping to the next track!",
+        volume_up: "Turning up the volume.",
+        volume_down: "Turning down the volume.",
+        mute: "Muting the radio.",
+        unmute: "Unmuting the radio.",
+      };
       return {
         action: "control_radio",
         command: command,
-        message: command === "play" 
-          ? "Turning on Glee World Radio!" 
-          : command === "pause" 
-          ? "Stopping the radio." 
-          : "Toggling the radio."
+        message: messages[command] || "Radio command received."
+      };
+    }
+
+    case "get_radio_playlists": {
+      // Fetch playlists from AzuraCast via proxy
+      try {
+        const AZURACAST_API_KEY = Deno.env.get("AZURACAST_API_KEY");
+        const response = await fetch("https://radio.gleeworld.org/api/station/glee_world_radio/playlists", {
+          headers: {
+            "X-API-Key": AZURACAST_API_KEY || "",
+          },
+        });
+        
+        if (response.ok) {
+          const playlists = await response.json();
+          const enabledPlaylists = playlists
+            .filter((p: any) => p.is_enabled !== false)
+            .map((p: any) => ({
+              id: p.id,
+              name: p.name,
+              type: p.type,
+              description: p.description || `${p.type || 'default'} playlist`,
+            }));
+          
+          return {
+            playlists: enabledPlaylists,
+            count: enabledPlaylists.length,
+            message: enabledPlaylists.length > 0
+              ? `Found ${enabledPlaylists.length} available playlist(s): ${enabledPlaylists.map((p: any) => p.name).join(', ')}`
+              : "No playlists available at this time."
+          };
+        }
+      } catch (error) {
+        console.error("Error fetching playlists:", error);
+      }
+      
+      // Return action to get from client if API fails
+      return {
+        action: "get_radio_playlists",
+        message: "Fetching available radio playlists..."
+      };
+    }
+
+    case "request_playlist": {
+      const playlistName = args.playlist_name;
+      
+      // Try to find matching playlist
+      try {
+        const AZURACAST_API_KEY = Deno.env.get("AZURACAST_API_KEY");
+        const response = await fetch("https://radio.gleeworld.org/api/station/glee_world_radio/playlists", {
+          headers: {
+            "X-API-Key": AZURACAST_API_KEY || "",
+          },
+        });
+        
+        if (response.ok) {
+          const playlists = await response.json();
+          const matchedPlaylist = playlists.find((p: any) => 
+            p.name.toLowerCase().includes(playlistName.toLowerCase()) ||
+            playlistName.toLowerCase().includes(p.name.toLowerCase())
+          );
+          
+          if (matchedPlaylist) {
+            return {
+              action: "request_playlist",
+              playlist_id: matchedPlaylist.id,
+              playlist_name: matchedPlaylist.name,
+              message: `Requesting a song from the "${matchedPlaylist.name}" playlist. A track will be queued shortly!`
+            };
+          } else {
+            const availableNames = playlists.filter((p: any) => p.is_enabled !== false).map((p: any) => p.name).join(', ');
+            return {
+              success: false,
+              message: `Couldn't find a playlist matching "${playlistName}". Available playlists: ${availableNames || 'None found'}`
+            };
+          }
+        }
+      } catch (error) {
+        console.error("Error requesting playlist:", error);
+      }
+      
+      return {
+        action: "request_playlist",
+        playlist_name: playlistName,
+        message: `Requesting a song from the "${playlistName}" playlist...`
+      };
+    }
+
+    case "get_now_playing": {
+      try {
+        const response = await fetch("https://radio.gleeworld.org/api/nowplaying/glee_world_radio");
+        
+        if (response.ok) {
+          const data = await response.json();
+          const nowPlaying = data.now_playing?.song;
+          const playingNext = data.playing_next?.song;
+          const listeners = data.listeners?.current || 0;
+          
+          return {
+            now_playing: nowPlaying ? {
+              title: nowPlaying.title,
+              artist: nowPlaying.artist,
+              album: nowPlaying.album,
+            } : null,
+            playing_next: playingNext ? {
+              title: playingNext.title,
+              artist: playingNext.artist,
+            } : null,
+            listeners: listeners,
+            is_live: data.live?.is_live || false,
+            message: nowPlaying
+              ? `Now playing: "${nowPlaying.title}" by ${nowPlaying.artist || 'Unknown Artist'}${playingNext ? `. Up next: "${playingNext.title}"` : ''}`
+              : "No track information available at the moment."
+          };
+        }
+      } catch (error) {
+        console.error("Error fetching now playing:", error);
+      }
+      
+      return {
+        action: "get_now_playing",
+        message: "Fetching current track information..."
       };
     }
 
@@ -1050,7 +1219,13 @@ serve(async (req) => {
 - Member dossiers
 
 ## Your Capabilities:
-- Control Glee World Radio (play/pause music)
+- **Glee World Radio Control:**
+  - Play, pause, or toggle the radio
+  - Skip to the next track
+  - Adjust volume (up, down, mute, unmute)
+  - Request songs from specific playlists (e.g., "play something from the Gospel playlist")
+  - Get list of available playlists/channels
+  - Check what's currently playing on the radio
 - Search and open sheet music from the library
 - Check assignment due dates and class schedules
 - Get upcoming events and rehearsals

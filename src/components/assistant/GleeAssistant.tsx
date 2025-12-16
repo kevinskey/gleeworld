@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
+import { useRadioChannels } from '@/hooks/useRadioChannels';
 import { 
   X, 
   Send, 
@@ -35,6 +36,8 @@ interface AssistantAction {
   url?: string;
   recipients?: any[];
   command?: string; // for radio control
+  playlist_id?: number; // for playlist request
+  playlist_name?: string;
 }
 
 export const GleeAssistant = () => {
@@ -54,7 +57,8 @@ export const GleeAssistant = () => {
   const isOpenRef = useRef(isOpen);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio } = useRadioPlayer();
+  const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume, skipTrack } = useRadioPlayer();
+  const { channels, requestSongFromChannel } = useRadioChannels();
 
   // ElevenLabs TTS function
   const speakWithElevenLabs = async (text: string) => {
@@ -391,11 +395,55 @@ export const GleeAssistant = () => {
                 playRadio();
               } else if (action.command === 'pause') {
                 pauseRadio();
-              } else {
+              } else if (action.command === 'toggle') {
                 toggleRadio();
+              } else if (action.command === 'skip') {
+                skipTrack();
+              } else if (action.command === 'volume_up') {
+                setVolume(Math.min(1, volume + 0.2));
+              } else if (action.command === 'volume_down') {
+                setVolume(Math.max(0, volume - 0.2));
+              } else if (action.command === 'mute') {
+                setVolume(0);
+              } else if (action.command === 'unmute') {
+                setVolume(0.7);
               }
               setIsOpen(false);
             }, 500);
+            break;
+          } else if (action.action === 'request_playlist') {
+            // Request a song from the specified playlist
+            setTimeout(async () => {
+              if (action.playlist_id || action.playlist_name) {
+                const channel = channels.find(c => 
+                  c.azura_playlist_id === action.playlist_id ||
+                  c.name.toLowerCase().includes((action.playlist_name || '').toLowerCase())
+                );
+                if (channel) {
+                  const result = await requestSongFromChannel(channel);
+                  toast({
+                    title: result.success ? 'Song Requested' : 'Request Failed',
+                    description: result.message,
+                    variant: result.success ? 'default' : 'destructive',
+                  });
+                } else {
+                  toast({
+                    title: 'Playlist Not Found',
+                    description: `Could not find playlist: ${action.playlist_name}`,
+                    variant: 'destructive',
+                  });
+                }
+              }
+              setIsOpen(false);
+            }, 500);
+            break;
+          } else if (action.action === 'get_radio_playlists') {
+            // Client-side fallback - the server should have returned the list
+            // but if it didn't, we can provide it from our local channels
+            // This action doesn't need to close the assistant
+            break;
+          } else if (action.action === 'get_now_playing') {
+            // Client-side fallback - server should have returned this info
             break;
           }
         }

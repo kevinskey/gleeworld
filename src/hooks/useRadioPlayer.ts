@@ -568,6 +568,24 @@ export const useRadioPlayer = () => {
     return () => clearInterval(interval);
   }, [state.isPlaying, play]);
 
+  // Skip to next track
+  const skipTrack = useCallback(async () => {
+    try {
+      await azuraCastService.skipTrack();
+      toast({
+        title: 'Skipped',
+        description: 'Moving to the next track...',
+      });
+    } catch (error) {
+      console.error('Failed to skip track:', error);
+      toast({
+        title: 'Skip Failed',
+        description: 'Could not skip to next track.',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
   return {
     ...state,
     play,
@@ -575,5 +593,6 @@ export const useRadioPlayer = () => {
     togglePlayPause,
     setVolume,
     switchStream,
+    skipTrack,
   };
 };
