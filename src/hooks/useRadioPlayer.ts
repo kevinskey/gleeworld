@@ -96,7 +96,8 @@ export const useRadioPlayer = () => {
     // Ensure a single shared audio element persists across route changes
     if (!sharedAudio) {
       const audio = new Audio();
-      audio.crossOrigin = 'anonymous';
+      // NOTE: do NOT set crossOrigin here; it can cause some browsers to require CORS
+      // headers for playback and break streaming on published domains.
       audio.preload = 'none';
       sharedAudio = audio;
       console.log('Created new shared radio audio element');
