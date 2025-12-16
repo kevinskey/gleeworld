@@ -103,22 +103,28 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [announcementText, setAnnouncementText] = useState('');
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState('cgSgspJ2msm6clMCkdW9'); // Jessica default
+  const [selectedVoice, setSelectedVoice] = useState('pvxGJdhknm00gMyYHtET'); // Default to first Black voice
 
   // ElevenLabs voice options
   const voiceOptions = [
+    // Black voices
+    { id: 'pvxGJdhknm00gMyYHtET', name: 'Voice 1', description: 'Black voice' },
+    { id: '03vEurziQfq3V8WZhQvn', name: 'Voice 2', description: 'Black voice' },
+    { id: 'oflwtV9KmZO1p0N9Rv4x', name: 'Voice 3', description: 'Black voice' },
+    { id: 'ewxUvnyvvOehYjKjUVKC', name: 'Voice 4', description: 'Black voice' },
+    { id: 'X4Lh5Ftnso6JSt25plzX', name: 'Voice 5', description: 'Black voice' },
+    { id: 'wevlkhfRsG0ND2D2pQHq', name: 'Voice 6', description: 'Black voice' },
+    { id: '9wYX8b0wRvLUEYtGuzP5', name: 'Voice 7', description: 'Black voice' },
+    { id: 'CVRACyqNcQefTlxMj9bt', name: 'Voice 8', description: 'Black voice' },
+    { id: 'OOk3INdXVLRmSaQoAX9D', name: 'Voice 9', description: 'Black voice' },
+    { id: '7sXif1ZLnLgbMgmFvs2G', name: 'Voice 10', description: 'Black voice' },
+    { id: '1Y79BeuotytFuNrig6K0', name: 'Voice 11', description: 'Black voice' },
+    // Standard voices
     { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', description: 'Young female' },
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Soft female' },
     { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Warm female' },
-    { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', description: 'British female' },
-    { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda', description: 'Friendly female' },
-    { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', description: 'Clear female' },
     { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', description: 'Warm male' },
-    { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', description: 'British male' },
-    { id: 'N2lVS1w4EtoT3dr4eOWO', name: 'Callum', description: 'Transatlantic male' },
-    { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam', description: 'Articulate male' },
     { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', description: 'Deep male' },
-    { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', description: 'British male' },
     { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric', description: 'Friendly male' },
   ];
   const mediaStreamRef = useRef<MediaStream | null>(null);
