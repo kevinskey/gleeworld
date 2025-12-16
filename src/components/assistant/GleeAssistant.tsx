@@ -17,8 +17,16 @@ import {
   User,
   ExternalLink,
   Music,
-  Radio
+  Radio,
+  Volume2
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import gleeAssistantAvatar from '@/assets/glee-assistant-avatar.png';
 
@@ -60,13 +68,31 @@ export const GleeAssistant = () => {
   const { isPlaying: isRadioPlaying, play: playRadio, pause: pauseRadio, togglePlayPause: toggleRadio, setVolume, volume, skipTrack } = useRadioPlayer();
   const { channels, requestSongFromChannel } = useRadioChannels();
 
+  // ElevenLabs voice options
+  const voiceOptions = [
+    // Black voices (prioritized per community identity)
+    { id: '9wYX8b0wRvLUEYtGuzP5', name: 'KeKe', description: 'Black woman, sassy' },
+    { id: 'CVRACyqNcQefTlxMj9bt', name: 'Lamar Lincoln', description: 'Black male, young raspy' },
+    { id: 'OOk3INdXVLRmSaQoAX9D', name: 'Alicia Speaks', description: 'Black woman, calm' },
+    { id: '7sXif1ZLnLgbMgmFvs2G', name: 'Denzel', description: 'Black male, deep' },
+    { id: '1Y79BeuotytFuNrig6K0', name: 'Kevin J', description: 'Black male' },
+    // Standard voices
+    { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', description: 'Young female' },
+    { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Soft female' },
+    { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Warm female' },
+    { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', description: 'Warm male' },
+    { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', description: 'Deep male' },
+    { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric', description: 'Friendly male' },
+  ];
+  const [selectedVoice, setSelectedVoice] = useState('9wYX8b0wRvLUEYtGuzP5'); // Default to KeKe
+
   // ElevenLabs TTS function
   const speakWithElevenLabs = async (text: string) => {
     try {
       console.log('Speaking with ElevenLabs:', text.substring(0, 50) + '...');
       
       const response = await supabase.functions.invoke('elevenlabs-tts', {
-        body: { text }
+        body: { text, voiceId: selectedVoice }
       });
 
       if (response.error) {
@@ -635,8 +661,26 @@ export const GleeAssistant = () => {
             )}
           </ScrollArea>
 
-          {/* Input */}
-          <div className="p-3 border-t bg-background">
+          {/* Voice selector and Input */}
+          <div className="p-3 border-t bg-background space-y-2">
+            {/* Voice selector */}
+            <div className="flex items-center gap-2">
+              <Volume2 className="h-4 w-4 text-muted-foreground" />
+              <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                <SelectTrigger className="h-8 text-xs flex-1">
+                  <SelectValue placeholder="Select voice" />
+                </SelectTrigger>
+                <SelectContent>
+                  {voiceOptions.map((voice) => (
+                    <SelectItem key={voice.id} value={voice.id} className="text-xs">
+                      {voice.name} - {voice.description}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Input row */}
             <div className="flex gap-2">
               <Button
                 variant={isListening ? "destructive" : "outline"}
