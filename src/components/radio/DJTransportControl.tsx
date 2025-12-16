@@ -103,6 +103,24 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [announcementText, setAnnouncementText] = useState('');
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+  const [selectedVoice, setSelectedVoice] = useState('cgSgspJ2msm6clMCkdW9'); // Jessica default
+
+  // ElevenLabs voice options
+  const voiceOptions = [
+    { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', description: 'Young female' },
+    { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Soft female' },
+    { id: 'FGY2WhTYpPnrIDTdsKH5', name: 'Laura', description: 'Warm female' },
+    { id: 'Xb7hH8MSUJpSbSDYk0k2', name: 'Alice', description: 'British female' },
+    { id: 'XrExE9yKIg1WjnnlVkGX', name: 'Matilda', description: 'Friendly female' },
+    { id: 'pFZP5JQG7iQjIQuC4Bku', name: 'Lily', description: 'Clear female' },
+    { id: 'CwhRBWXzGAHq8TQ4Fs17', name: 'Roger', description: 'Warm male' },
+    { id: 'JBFqnCBsd6RMkjVDRZzb', name: 'George', description: 'British male' },
+    { id: 'N2lVS1w4EtoT3dr4eOWO', name: 'Callum', description: 'Transatlantic male' },
+    { id: 'TX3LPaxmHKxFdv7VOQHJ', name: 'Liam', description: 'Articulate male' },
+    { id: 'nPczCjzI2devNBz1zQrb', name: 'Brian', description: 'Deep male' },
+    { id: 'onwK4e9ZLuTAKqWW03F9', name: 'Daniel', description: 'British male' },
+    { id: 'cjVigY5qzO86Huf0OWal', name: 'Eric', description: 'Friendly male' },
+  ];
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const announcementAudioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -401,7 +419,7 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
-          body: JSON.stringify({ text: announcementText }),
+          body: JSON.stringify({ text: announcementText, voiceId: selectedVoice }),
         }
       );
 
@@ -467,7 +485,7 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
       const { data: { session } } = await supabase.auth.getSession();
       
       const response = await supabase.functions.invoke('broadcast-announcement', {
-        body: { text: announcementText }
+        body: { text: announcementText, voiceId: selectedVoice }
       });
 
       if (response.error) {
@@ -946,6 +964,28 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
             {/* Custom Insertion */}
             <div className="space-y-2">
               <Label className="text-slate-300 text-xs">Quick Text Announcement (TTS)</Label>
+              
+              {/* Voice Selector */}
+              <div className="flex gap-2 items-center">
+                <Label className="text-slate-400 text-xs whitespace-nowrap">Voice:</Label>
+                <Select value={selectedVoice} onValueChange={setSelectedVoice}>
+                  <SelectTrigger className="bg-slate-800 border-slate-600 text-white text-xs h-8 flex-1">
+                    <SelectValue placeholder="Select voice" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600">
+                    {voiceOptions.map((voice) => (
+                      <SelectItem 
+                        key={voice.id} 
+                        value={voice.id}
+                        className="text-white hover:bg-slate-700 text-xs"
+                      >
+                        {voice.name} - {voice.description}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="flex gap-2">
                 <Input 
                   placeholder="Type announcement to broadcast..."
