@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCourseSocialFeed } from '@/hooks/useCourseSocialFeed';
 import { CoursePostCard } from './course-lounge/CoursePostCard';
 import { CourseCreatePost } from './course-lounge/CourseCreatePost';
-
+import { CourseGroupsPanel } from './course-lounge/CourseGroupsPanel';
 interface CourseLoungeProps {
   courseId: string;
   courseName: string;
@@ -100,35 +100,39 @@ export const CourseLounge: React.FC<CourseLoungeProps> = ({ courseId, courseName
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      {/* Members Panel */}
-      <Card className="lg:col-span-1 h-fit lg:sticky lg:top-4">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-4 w-4 text-primary" />
-            Members ({enrolledMembers.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          {membersLoading ? (
-            <div className="flex justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {enrolledMembers.map(member => (
-                <div key={member.user_id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={member.avatar_url || undefined} />
-                    <AvatarFallback className="text-xs">{member.full_name?.charAt(0) || '?'}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium truncate flex-1">{member.full_name}</span>
-                  <Circle className="h-2 w-2 fill-green-500 text-green-500" />
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Left Panel: Groups + Members */}
+      <div className="lg:col-span-1 space-y-4 lg:sticky lg:top-4 h-fit">
+        <CourseGroupsPanel courseId={courseId} />
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Users className="h-4 w-4 text-primary" />
+              Members ({enrolledMembers.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {membersLoading ? (
+              <div className="flex justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {enrolledMembers.map(member => (
+                  <div key={member.user_id} className="flex items-center gap-2 p-2 rounded-lg hover:bg-muted/50">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={member.avatar_url || undefined} />
+                      <AvatarFallback className="text-xs">{member.full_name?.charAt(0) || '?'}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium truncate flex-1">{member.full_name}</span>
+                    <Circle className="h-2 w-2 fill-green-500 text-green-500" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Feed Panel */}
       <div className="lg:col-span-3">
