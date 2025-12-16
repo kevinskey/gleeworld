@@ -204,31 +204,98 @@ Deno.serve(async (req) => {
       console.warn("Files list search failed:", filesResponse.status);
     }
 
-    // Step 4: Queue the announcement for immediate playback
+    // Step 4: Add announcement to Jingles playlist and request immediate playback
+    // Queue POST is disabled on this station, so we use the Requests API instead
+    const JINGLES_PLAYLIST_ID = 21; // Jingles playlist ID from AzuraCast
+    
     if (mediaId) {
-      const queueUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/queue`;
-      console.log("Queueing announcement for playback, media ID:", mediaId);
+      // First, add the file to the Jingles playlist so it's requestable
+      const fileId = mediaId;
+      const updateFileUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/file/${fileId}`;
+      console.log("Adding announcement to Jingles playlist, file ID:", fileId);
 
-      const queueResponse = await fetch(queueUrl, {
-        method: "POST",
-        headers: {
-          "X-API-Key": AZURACAST_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          media_id: mediaId,
-        }),
-      });
+      try {
+        const updateResponse = await fetch(updateFileUrl, {
+          method: "PUT",
+          headers: {
+            "X-API-Key": AZURACAST_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            playlists: [JINGLES_PLAYLIST_ID],
+          }),
+        });
 
-      if (queueResponse.ok) {
-        const queueResult = await queueResponse.json();
-        console.log("Announcement queued successfully:", queueResult);
-      } else {
-        const queueError = await queueResponse.text();
-        console.warn("Queue response:", queueResponse.status, queueError);
+        if (updateResponse.ok) {
+          console.log("Added to Jingles playlist successfully");
+        } else {
+          const updateError = await updateResponse.text();
+          console.warn("Failed to add to playlist:", updateResponse.status, updateError);
+        }
+      } catch (err) {
+        console.warn("Error adding to playlist:", err);
+      }
+
+      // Wait for AzuraCast to process the playlist update
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Now try to request immediate playback via Requests API
+      // First get the list of requestable songs to find our announcement
+      const requestsUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/requests`;
+      console.log("Fetching requestable songs to find announcement...");
+
+      try {
+        const requestsResponse = await fetch(requestsUrl, {
+          method: "GET",
+          headers: {
+            "X-API-Key": AZURACAST_API_KEY,
+            "Accept": "application/json",
+          },
+        });
+
+        if (requestsResponse.ok) {
+          const requestableSongs = await requestsResponse.json();
+          console.log("Got", Array.isArray(requestableSongs) ? requestableSongs.length : 0, "requestable songs");
+
+          // Find our announcement by matching filename or path
+          const announcement = Array.isArray(requestableSongs)
+            ? requestableSongs.find((s: any) => 
+                s.song?.title?.includes(fileName.replace('.mp3', '')) ||
+                s.song?.path?.includes(fileName) ||
+                String(s.song?.id) === String(mediaId)
+              )
+            : null;
+
+          if (announcement?.request_id) {
+            console.log("Found announcement in requestable list, request_id:", announcement.request_id);
+            
+            // Submit the request for immediate playback
+            const submitRequestUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/request/${announcement.request_id}`;
+            const submitResponse = await fetch(submitRequestUrl, {
+              method: "POST",
+              headers: {
+                "X-API-Key": AZURACAST_API_KEY,
+                "Accept": "application/json",
+              },
+            });
+
+            if (submitResponse.ok) {
+              console.log("Announcement requested for immediate playback!");
+            } else {
+              const submitError = await submitResponse.text();
+              console.warn("Request submission failed:", submitResponse.status, submitError);
+            }
+          } else {
+            console.warn("Announcement not found in requestable songs list. It will play in Jingles rotation.");
+          }
+        } else {
+          console.warn("Failed to fetch requestable songs:", requestsResponse.status);
+        }
+      } catch (err) {
+        console.warn("Error with Requests API:", err);
       }
     } else {
-      console.warn("No media ID found, cannot queue announcement");
+      console.warn("No media ID found, cannot add to playlist or request");
     }
 
     return new Response(
