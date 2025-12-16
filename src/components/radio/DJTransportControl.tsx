@@ -378,7 +378,7 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
     }
   };
 
-  // Generate and play TTS announcement
+  // Generate and play TTS announcement (local preview)
   const handleTTSAnnouncement = async () => {
     if (!announcementText.trim()) {
       toast({ title: "No Text", description: "Please enter announcement text", variant: "destructive" });
@@ -391,16 +391,27 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
 
       const { data: { session } } = await supabase.auth.getSession();
       
-      const response = await supabase.functions.invoke('elevenlabs-tts', {
-        body: { text: announcementText }
-      });
+      // Use fetch instead of supabase.functions.invoke for binary audio data
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ text: announcementText }),
+        }
+      );
 
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `TTS request failed: ${response.status}`);
       }
 
-      // Create audio blob and play it
-      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+      // Get audio blob directly
+      const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
       
       // Stop current announcement if playing
@@ -432,12 +443,11 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
         text: announcementText
       }]);
 
-      toast({ title: "Playing Announcement", description: "Voice announcement is now playing" });
-      setAnnouncementText('');
+      toast({ title: "Playing Announcement", description: "Voice announcement is now playing locally" });
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('TTS error:', error);
-      toast({ title: "TTS Error", description: "Could not generate voice announcement", variant: "destructive" });
+      toast({ title: "TTS Error", description: error.message || "Could not generate voice announcement", variant: "destructive" });
     } finally {
       setIsGeneratingTTS(false);
     }
