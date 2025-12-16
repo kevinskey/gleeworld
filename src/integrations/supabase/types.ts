@@ -23661,7 +23661,7 @@ export type Database = {
       }
       grant_exec_board_all_modules: { Args: never; Returns: Json }
       has_course_lounge_access: {
-        Args: { course_uuid: string }
+        Args: { p_course_id: string }
         Returns: boolean
       }
       has_group_permission: {
