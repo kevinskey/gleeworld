@@ -102,6 +102,7 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [loadingUpNext, setLoadingUpNext] = useState(false);
   const [announcementText, setAnnouncementText] = useState('');
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
   const mediaStreamRef = useRef<MediaStream | null>(null);
   const announcementAudioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
@@ -439,6 +440,51 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
       toast({ title: "TTS Error", description: "Could not generate voice announcement", variant: "destructive" });
     } finally {
       setIsGeneratingTTS(false);
+    }
+  };
+
+  // Broadcast TTS announcement to radio station
+  const handleBroadcastAnnouncement = async () => {
+    if (!announcementText.trim()) {
+      toast({ title: "No Text", description: "Please enter announcement text", variant: "destructive" });
+      return;
+    }
+
+    try {
+      setIsBroadcasting(true);
+      toast({ title: "Broadcasting...", description: "Generating and sending to radio station" });
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('broadcast-announcement', {
+        body: { text: announcementText }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
+
+      toast({ 
+        title: "Announcement Queued!", 
+        description: "Your announcement will play on the radio shortly" 
+      });
+      
+      setAnnouncementText('');
+      onRefresh();
+      
+    } catch (error: any) {
+      console.error('Broadcast error:', error);
+      toast({ 
+        title: "Broadcast Error", 
+        description: error.message || "Could not broadcast announcement", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsBroadcasting(false);
     }
   };
 
@@ -895,25 +941,40 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
                   placeholder="Type announcement to broadcast..."
                   value={announcementText}
                   onChange={(e) => setAnnouncementText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && !isGeneratingTTS && handleTTSAnnouncement()}
+                  onKeyDown={(e) => e.key === 'Enter' && !isGeneratingTTS && !isBroadcasting && handleBroadcastAnnouncement()}
                   className="bg-slate-800 border-slate-600 text-white text-sm"
-                  disabled={isGeneratingTTS}
+                  disabled={isGeneratingTTS || isBroadcasting}
                 />
                 <Button 
                   size="sm" 
-                  className="bg-blue-500 hover:bg-blue-600"
+                  variant="outline"
+                  className="border-blue-500 text-blue-400 hover:bg-blue-500/20"
                   onClick={handleTTSAnnouncement}
-                  disabled={isGeneratingTTS || !announcementText.trim()}
+                  disabled={isGeneratingTTS || isBroadcasting || !announcementText.trim()}
+                  title="Preview locally"
                 >
                   {isGeneratingTTS ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <Mic className="h-3 w-3" />
+                    <Headphones className="h-3 w-3" />
+                  )}
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-red-500 hover:bg-red-600"
+                  onClick={handleBroadcastAnnouncement}
+                  disabled={isGeneratingTTS || isBroadcasting || !announcementText.trim()}
+                  title="Broadcast to radio"
+                >
+                  {isBroadcasting ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Radio className="h-3 w-3" />
                   )}
                 </Button>
               </div>
               <p className="text-[10px] text-slate-500">
-                Enter text and click the mic to generate & play a voice announcement
+                <Headphones className="h-3 w-3 inline mr-1" /> Preview locally | <Radio className="h-3 w-3 inline mx-1" /> Broadcast to all listeners
               </p>
             </div>
           </TabsContent>

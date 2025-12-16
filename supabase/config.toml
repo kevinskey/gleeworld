@@ -294,3 +294,6 @@ verify_jwt = true
 
 [functions.azuracast-upload-media]
 verify_jwt = true
+
+[functions.broadcast-announcement]
+verify_jwt = true
