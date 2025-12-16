@@ -177,12 +177,25 @@ Deno.serve(async (req) => {
       console.log("Files search result:", JSON.stringify(filesList).substring(0, 500));
       
       // Find our uploaded file by path
-      const uploadedFile = Array.isArray(filesList) 
-        ? filesList.find((f: any) => f.path === fullPath || f.path?.endsWith(fileName))
+      const uploadedFile = Array.isArray(filesList)
+        ? filesList.find((f: any) =>
+            f.path === fullPath ||
+            f.path?.endsWith(fileName) ||
+            f.media?.path === fullPath ||
+            f.media?.path?.endsWith(fileName)
+          )
         : null;
-      
+
       if (uploadedFile) {
-        mediaId = uploadedFile.id || uploadedFile.unique_id;
+        // AzuraCast returns media details nested under `media` for type="media" rows
+        mediaId = String(
+          uploadedFile.media?.id ??
+            uploadedFile.media?.unique_id ??
+            uploadedFile.id ??
+            uploadedFile.unique_id ??
+            ""
+        ) || null;
+
         console.log("Found uploaded file, media ID:", mediaId);
       } else {
         console.warn("Could not find uploaded file in search results");
