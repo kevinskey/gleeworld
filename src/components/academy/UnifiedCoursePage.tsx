@@ -8,7 +8,7 @@ import {
   BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, 
   MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, 
   Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home,
-  Bell, Trophy, Clock
+  Bell, Trophy, Clock, PenLine, Brain, Library
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,6 +16,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AcademyCourse } from '@/config/academyCourses';
 import { CourseLounge } from './CourseLounge';
+import { CourseGroupsPanel } from './course-lounge/CourseGroupsPanel';
 import { CourseAssignments } from './CourseAssignments';
 import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
@@ -23,6 +24,14 @@ import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
 import { Mus070AttendanceView } from '@/components/mus070/instructor/Mus070AttendanceView';
+
+// MUS 240 Specific Components (lazy loaded for performance)
+const Mus240StudentDashboard = React.lazy(() => import('@/pages/mus240/StudentDashboard').then(m => ({ default: m.StudentDashboard })));
+const Mus240JournalEditor = React.lazy(() => import('@/components/mus240/JournalEditor').then(m => ({ default: m.JournalEditor })));
+const Mus240Groups = React.lazy(() => import('@/pages/mus240/Groups'));
+const Mus240Resources = React.lazy(() => import('@/pages/mus240/Resources'));
+const Mus240PollSystem = React.lazy(() => import('@/components/mus240/Mus240PollSystem').then(m => ({ default: m.Mus240PollSystem })));
+const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/GradesAdmin').then(m => ({ default: m.GradesAdmin })));
 
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
@@ -152,9 +161,16 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
               { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
+              // MUS 240 specific: Journals
+              ...(course.id === 'mus-240' ? [{ icon: PenLine, label: 'Journals', tab: 'journals' }] : []),
               { icon: FileCheck, label: 'Tests', tab: 'tests' },
               { icon: BarChart, label: 'Polls', tab: 'polls' },
+              // MUS 240 specific: AI Group Project
+              ...(course.id === 'mus-240' ? [{ icon: Brain, label: 'AI Groups', tab: 'ai-groups' }] : []),
+              { icon: Users, label: 'Groups', tab: 'groups' },
               { icon: MessageSquare, label: 'Lounge', tab: 'lounge' },
+              // MUS 240 specific: Resources
+              ...(course.id === 'mus-240' ? [{ icon: Library, label: 'Resources', tab: 'resources' }] : []),
               { icon: Mail, label: 'Mail Center', tab: 'mail' },
               { icon: Trophy, label: 'Grades', tab: 'grades' },
               { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
@@ -325,24 +341,112 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
               <CourseAssignments courseId={course.id} isEnrolled={isEnrolled} />
             )}
 
+            {/* MUS 240 Journals Tab */}
+            {activeTab === 'journals' && course.id === 'mus-240' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading journals...</CardContent></Card>}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PenLine className="h-5 w-5 text-primary" />
+                      Listening Journals
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-4">
+                      Submit your listening journals for each week's assigned music. Each journal requires a minimum of 250 words.
+                    </p>
+                    <Button onClick={() => navigate('/mus-240/student/dashboard')}>
+                      <PenLine className="h-4 w-4 mr-2" />
+                      Open Student Dashboard
+                    </Button>
+                  </CardContent>
+                </Card>
+              </React.Suspense>
+            )}
+
             {activeTab === 'tests' && (
               <Card>
                 <CardHeader>
                   <CardTitle>Tests & Quizzes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Tests will be available here when published.</p>
+                  {course.id === 'mus-240' ? (
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">Access all MUS 240 tests and exams from your student dashboard.</p>
+                      <Button onClick={() => navigate('/mus-240/student/dashboard')}>
+                        <FileCheck className="h-4 w-4 mr-2" />
+                        Go to Student Dashboard
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">Tests will be available here when published.</p>
+                  )}
                 </CardContent>
               </Card>
             )}
 
             {activeTab === 'polls' && (
+              course.id === 'mus-240' ? (
+                <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading polls...</CardContent></Card>}>
+                  <Mus240PollSystem />
+                </React.Suspense>
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Class Polls</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground">Polls will appear here during class.</p>
+                  </CardContent>
+                </Card>
+              )
+            )}
+
+            {/* MUS 240 AI Groups Tab */}
+            {activeTab === 'ai-groups' && course.id === 'mus-240' && (
+              <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading groups...</CardContent></Card>}>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="h-5 w-5 text-primary" />
+                      AI Music Project Groups
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-4">
+                      Collaborate with your group on the AI Music Project. Topics include Commodification & Technology, Artist Careers, Genres & AI, Cultural Identity, Business & Economics, and Ethics & Futures.
+                    </p>
+                    <Button onClick={() => navigate('/mus-240/groups')}>
+                      <Users className="h-4 w-4 mr-2" />
+                      Manage AI Project Groups
+                    </Button>
+                  </CardContent>
+                </Card>
+              </React.Suspense>
+            )}
+
+            {/* Groups Tab */}
+            {activeTab === 'groups' && (
+              <CourseGroupsPanel courseId={course.id} />
+            )}
+
+            {/* MUS 240 Resources Tab */}
+            {activeTab === 'resources' && course.id === 'mus-240' && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Class Polls</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Library className="h-5 w-5 text-primary" />
+                    Course Resources
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">Polls will appear here during class.</p>
+                  <p className="text-muted-foreground mb-4">
+                    Access readings, audio examples, videos, and research materials for the course.
+                  </p>
+                  <Button onClick={() => navigate('/mus-240/resources')}>
+                    <Library className="h-4 w-4 mr-2" />
+                    Open Resources Library
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -368,6 +472,10 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             {activeTab === 'grades' && (
               course.id === 'a0000000-0000-0000-0000-000000000070' && isAdmin ? (
                 <Mus070GradeSpreadsheet />
+              ) : course.id === 'mus-240' && isAdmin ? (
+                <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
+                  <GradesAdmin />
+                </React.Suspense>
               ) : (
                 <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />
               )
