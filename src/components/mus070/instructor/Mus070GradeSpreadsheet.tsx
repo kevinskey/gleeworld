@@ -424,6 +424,17 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
                   </div>
                 </TableHead>
                 <TableHead 
+                  className="text-center text-foreground font-bold cursor-pointer hover:bg-muted/50"
+                  onClick={() => handleSort('final_grade')}
+                >
+                  <div className="flex items-center justify-center">
+                    Final Grade {getSortIcon('final_grade')}
+                  </div>
+                </TableHead>
+                <TableHead className="text-center text-foreground">
+                  Status
+                </TableHead>
+                <TableHead 
                   className="text-center text-foreground cursor-pointer hover:bg-muted/50"
                   onClick={() => handleSort('sectionals_pct')}
                 >
@@ -466,20 +477,6 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
                     Eff. Abs {getSortIcon('effective_absences')}
                   </div>
                 </TableHead>
-                <TableHead 
-                  className="text-center text-foreground font-bold cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleSort('final_grade')}
-                >
-                  <div className="flex items-center justify-center">
-                    Final Grade {getSortIcon('final_grade')}
-                  </div>
-                </TableHead>
-                <TableHead className="text-center text-foreground">
-                  Letter
-                </TableHead>
-                <TableHead className="text-center text-foreground">
-                  Status
-                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -491,6 +488,18 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
                   <TableRow key={student.student_name} className={student.is_dropped ? 'bg-destructive/10' : ''}>
                     <TableCell className="font-medium text-foreground">
                       {student.student_name}
+                    </TableCell>
+                    <TableCell className={`text-center font-bold ${getGradeColor(finalGrade, student.is_dropped)}`}>
+                      {student.is_dropped ? 'F' : student.letter_grade}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {student.is_dropped ? (
+                        <Badge variant="destructive">DROPPED</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
+                          Active
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-center">
                       {canEditGrades ? (
@@ -553,21 +562,6 @@ export const Mus070GradeSpreadsheet: React.FC = () => {
                       {student.effective_absences}
                       {student.effective_absences > MAX_ABSENCES_NO_PENALTY && (
                         <AlertTriangle className="h-3 w-3 inline ml-1" />
-                      )}
-                    </TableCell>
-                    <TableCell className={`text-center font-bold ${getGradeColor(finalGrade, student.is_dropped)}`}>
-                      {student.is_dropped ? '0.0' : finalGrade.toFixed(1)}%
-                    </TableCell>
-                    <TableCell className={`text-center font-bold ${getGradeColor(finalGrade, student.is_dropped)}`}>
-                      {student.is_dropped ? 'F' : letterGrade}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {student.is_dropped ? (
-                        <Badge variant="destructive">DROPPED</Badge>
-                      ) : (
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/30">
-                          Active
-                        </Badge>
                       )}
                     </TableCell>
                   </TableRow>
