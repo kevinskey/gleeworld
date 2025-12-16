@@ -103,22 +103,16 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [announcementText, setAnnouncementText] = useState('');
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState('pvxGJdhknm00gMyYHtET'); // Default to first Black voice
+  const [selectedVoice, setSelectedVoice] = useState('9wYX8b0wRvLUEYtGuzP5'); // Default to KeKe
 
   // ElevenLabs voice options
   const voiceOptions = [
     // Black voices
-    { id: 'pvxGJdhknm00gMyYHtET', name: 'Voice 1', description: 'Black voice' },
-    { id: '03vEurziQfq3V8WZhQvn', name: 'Voice 2', description: 'Black voice' },
-    { id: 'oflwtV9KmZO1p0N9Rv4x', name: 'Voice 3', description: 'Black voice' },
-    { id: 'ewxUvnyvvOehYjKjUVKC', name: 'Voice 4', description: 'Black voice' },
-    { id: 'X4Lh5Ftnso6JSt25plzX', name: 'Voice 5', description: 'Black voice' },
-    { id: 'wevlkhfRsG0ND2D2pQHq', name: 'Voice 6', description: 'Black voice' },
-    { id: '9wYX8b0wRvLUEYtGuzP5', name: 'Voice 7', description: 'Black voice' },
-    { id: 'CVRACyqNcQefTlxMj9bt', name: 'Voice 8', description: 'Black voice' },
-    { id: 'OOk3INdXVLRmSaQoAX9D', name: 'Voice 9', description: 'Black voice' },
-    { id: '7sXif1ZLnLgbMgmFvs2G', name: 'Voice 10', description: 'Black voice' },
-    { id: '1Y79BeuotytFuNrig6K0', name: 'Voice 11', description: 'Black voice' },
+    { id: '9wYX8b0wRvLUEYtGuzP5', name: 'KeKe', description: 'Black woman, sassy' },
+    { id: 'CVRACyqNcQefTlxMj9bt', name: 'Lamar Lincoln', description: 'Black male, young raspy' },
+    { id: 'OOk3INdXVLRmSaQoAX9D', name: 'Alicia Speaks', description: 'Black woman, calm' },
+    { id: '7sXif1ZLnLgbMgmFvs2G', name: 'Denzel', description: 'Black male, deep' },
+    { id: '1Y79BeuotytFuNrig6K0', name: 'Kevin J', description: 'Black male' },
     // Standard voices
     { id: 'cgSgspJ2msm6clMCkdW9', name: 'Jessica', description: 'Young female' },
     { id: 'EXAVITQu4vr4xnSDxMaL', name: 'Sarah', description: 'Soft female' },
