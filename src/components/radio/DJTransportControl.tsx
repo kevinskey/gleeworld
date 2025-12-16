@@ -407,22 +407,26 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
       setIsGeneratingTTS(true);
       toast({ title: "Generating...", description: "Creating voice announcement" });
 
-      const { data: { session } } = await supabase.auth.getSession();
+      // Use the same Supabase project constants as the frontend client.
+      const SUPABASE_FUNCTIONS_URL = "https://oopmlreysjzuxzylyheb.functions.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg";
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       // Use fetch instead of supabase.functions.invoke for binary audio data
-      const response = await fetch(
-        "https://oopmlreysjzuxzylyheb.functions.supabase.co/elevenlabs-tts",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg",
-            Authorization: `Bearer ${session?.access_token || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9vcG1scmV5c2p6dXh6eWx5aGViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg5NTUsImV4cCI6MjA2NDY1NDk1NX0.tDq4HaTAy9p80e4upXFHIA90gUxZSHTH5mnqfpxh7eg"}`,
-          },
-          body: JSON.stringify({ text: announcementText, voiceId: selectedVoice }),
-        }
-      );
+      const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/elevenlabs-tts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${session?.access_token || SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ text: announcementText, voiceId: selectedVoice }),
+      });
+
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -497,9 +501,24 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
         throw new Error(response.data.error);
       }
 
-      toast({ 
-        title: "Announcement Queued!", 
-        description: "Your announcement will play on the radio shortly" 
+      // AzuraCast plays "requests" after the currently playing track finishes.
+      // Give an ETA so "queued" doesn't feel like it failed.
+      let etaText = "Queued — it will play after the current track.";
+      try {
+        const np = await azuraCastService.getNowPlaying();
+        const remaining = np?.now_playing?.remaining;
+        if (typeof remaining === 'number' && Number.isFinite(remaining)) {
+          const mins = Math.floor(remaining / 60);
+          const secs = Math.max(0, Math.floor(remaining % 60));
+          etaText = `Queued — expected in ~${mins}:${String(secs).padStart(2, '0')} (after current track).`;
+        }
+      } catch {
+        // ignore ETA failures
+      }
+
+      toast({
+        title: "Announcement Queued!",
+        description: etaText,
       });
       
       setAnnouncementText('');
