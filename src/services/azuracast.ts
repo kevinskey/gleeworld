@@ -417,6 +417,7 @@ class AzuraCastService {
     console.log('AzuraCast: Adding song to queue with media ID:', mediaId, 'title:', title);
 
     // 1) Try admin queue endpoint (some stations disable POST /queue)
+    let queueError: any = null;
     try {
       const result = await this.makeProxyRequest(`/station/{stationId}/queue`, 'POST', {
         media_id: mediaId,
@@ -424,30 +425,43 @@ class AzuraCastService {
       console.log('AzuraCast: Successfully added to queue via admin endpoint:', result);
       return result;
     } catch (error: any) {
-      const msg = String(error?.message || error);
+      queueError = error;
+      const msg = String(error?.message || error).toLowerCase();
+      console.log('AzuraCast: Queue endpoint error message:', msg);
+      
+      // Check for various indicators that queue is disabled/unsupported
       const looksDisabled =
-        msg.includes('Feature not enabled on radio station') ||
-        msg.includes('Edge function returned 400') ||
-        msg.includes('Method not allowed') ||
-        msg.includes('405');
+        msg.includes('feature not enabled') ||
+        msg.includes('not enabled on radio') ||
+        msg.includes('400') ||
+        msg.includes('405') ||
+        msg.includes('method not allowed') ||
+        msg.includes('not available') ||
+        msg.includes('unsupported');
 
       if (!looksDisabled) {
-        console.error('AzuraCast: Failed to add to queue via admin endpoint:', error);
-        throw new Error(`Failed to add "${title || mediaId}" to queue: ${msg}`);
+        console.error('AzuraCast: Failed to add to queue via admin endpoint (non-recoverable):', error);
+        throw new Error(`Failed to add "${title || mediaId}" to queue: ${String(error?.message || error)}`);
       }
 
-      // 2) Fall back to Requests API
-      if (!title) {
-        throw new Error(
-          'Queue editing is disabled on this station, and no title was provided to fall back to song requests.',
-        );
-      }
+      console.warn('AzuraCast: Queue endpoint unavailable, will try Requests API fallback');
+    }
 
-      console.warn('AzuraCast: Queue editing disabled; falling back to Requests API');
+    // 2) Fall back to Requests API
+    if (!title) {
+      throw new Error(
+        'Queue editing is disabled on this station, and no title was provided to fall back to song requests.',
+      );
+    }
 
+    console.log('AzuraCast: Falling back to Requests API for:', title);
+
+    try {
       const requestableSongs = await this.getRequestableSongs();
-      if (!Array.isArray(requestableSongs)) {
-        throw new Error('Could not fetch requestable songs from station');
+      console.log('AzuraCast: Got', Array.isArray(requestableSongs) ? requestableSongs.length : 0, 'requestable songs');
+      
+      if (!Array.isArray(requestableSongs) || requestableSongs.length === 0) {
+        throw new Error('No requestable songs available. Enable song requests in AzuraCast station settings.');
       }
 
       const normalizeTitle = (t: string) => (t || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
@@ -459,7 +473,8 @@ class AzuraCastService {
       });
 
       if (!song?.request_id) {
-        console.error('AzuraCast: Song not found in requestable list. Title:', title);
+        console.error('AzuraCast: Song not found in requestable list. Title:', title, 'Search:', searchTitle);
+        console.log('AzuraCast: Available songs sample:', requestableSongs.slice(0, 5).map((s: any) => s.song?.title));
         throw new Error(
           `Song "${title}" is not currently requestable. Add it to a request-enabled playlist in AzuraCast, or wait for cooldowns.`,
         );
@@ -467,6 +482,13 @@ class AzuraCastService {
 
       console.log('AzuraCast: Found request_id:', song.request_id, 'for title:', title, '-> matched:', song.song?.title);
       return await this.makeProxyRequest(`/station/{stationId}/request/${song.request_id}`, 'POST');
+    } catch (requestError: any) {
+      console.error('AzuraCast: Requests API fallback also failed:', requestError);
+      // Provide helpful error message
+      throw new Error(
+        `Could not add "${title}" to queue. Queue editing is disabled and song requests may not be enabled. ` +
+        `Enable "Allow Song Requests" in AzuraCast station settings.`
+      );
     }
   }
 
