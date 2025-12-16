@@ -100,7 +100,10 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [serverControlLoading, setServerControlLoading] = useState<'start' | 'stop' | 'skip' | 'restart' | null>(null);
   const [upNext, setUpNext] = useState<UpNextTrack | null>(null);
   const [loadingUpNext, setLoadingUpNext] = useState(false);
+  const [announcementText, setAnnouncementText] = useState('');
+  const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const announcementAudioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
   // Fetch up next track
@@ -348,9 +351,20 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
 
   const handleLiveInsertion = async (insertion: LiveInsertion) => {
     try {
+      // If it's an announcement type, prompt for text
+      if (insertion.type === 'announcement') {
+        // Focus the announcement text input
+        toast({ 
+          title: "Live Announcement", 
+          description: "Enter your announcement text below and click the mic button to broadcast"
+        });
+        setActiveTab('insertions');
+        return;
+      }
+
       toast({ 
         title: `Inserting: ${insertion.title}`, 
-        description: insertion.type === 'announcement' ? 'Speak now...' : `Playing ${insertion.type}`
+        description: `Playing ${insertion.type}`
       });
 
       // Add to insertion queue
@@ -358,13 +372,73 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
 
       // Log the insertion
       console.log('Live insertion triggered:', insertion);
-
-      // If it's an announcement, activate mic
-      if (insertion.type === 'announcement' && isMicMuted) {
-        await handleMicToggle();
-      }
     } catch (error) {
       toast({ title: "Insertion Failed", description: "Could not play insertion", variant: "destructive" });
+    }
+  };
+
+  // Generate and play TTS announcement
+  const handleTTSAnnouncement = async () => {
+    if (!announcementText.trim()) {
+      toast({ title: "No Text", description: "Please enter announcement text", variant: "destructive" });
+      return;
+    }
+
+    try {
+      setIsGeneratingTTS(true);
+      toast({ title: "Generating...", description: "Creating voice announcement" });
+
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('elevenlabs-tts', {
+        body: { text: announcementText }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      // Create audio blob and play it
+      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      // Stop current announcement if playing
+      if (announcementAudioRef.current) {
+        announcementAudioRef.current.pause();
+        announcementAudioRef.current = null;
+      }
+
+      const audio = new Audio(audioUrl);
+      announcementAudioRef.current = audio;
+      
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        announcementAudioRef.current = null;
+        toast({ title: "Announcement Complete", description: "Voice announcement finished" });
+      };
+
+      audio.onerror = () => {
+        toast({ title: "Playback Error", description: "Could not play announcement", variant: "destructive" });
+      };
+
+      await audio.play();
+      
+      // Add to queue for tracking
+      setInsertionQueue(prev => [...prev, { 
+        id: `tts-${Date.now()}`, 
+        type: 'announcement', 
+        title: announcementText.substring(0, 30) + (announcementText.length > 30 ? '...' : ''),
+        text: announcementText
+      }]);
+
+      toast({ title: "Playing Announcement", description: "Voice announcement is now playing" });
+      setAnnouncementText('');
+      
+    } catch (error) {
+      console.error('TTS error:', error);
+      toast({ title: "TTS Error", description: "Could not generate voice announcement", variant: "destructive" });
+    } finally {
+      setIsGeneratingTTS(false);
     }
   };
 
@@ -815,16 +889,32 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
 
             {/* Custom Insertion */}
             <div className="space-y-2">
-              <Label className="text-slate-300 text-xs">Quick Text Announcement</Label>
+              <Label className="text-slate-300 text-xs">Quick Text Announcement (TTS)</Label>
               <div className="flex gap-2">
                 <Input 
-                  placeholder="Type announcement..."
+                  placeholder="Type announcement to broadcast..."
+                  value={announcementText}
+                  onChange={(e) => setAnnouncementText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && !isGeneratingTTS && handleTTSAnnouncement()}
                   className="bg-slate-800 border-slate-600 text-white text-sm"
+                  disabled={isGeneratingTTS}
                 />
-                <Button size="sm" className="bg-blue-500 hover:bg-blue-600">
-                  <Mic className="h-3 w-3" />
+                <Button 
+                  size="sm" 
+                  className="bg-blue-500 hover:bg-blue-600"
+                  onClick={handleTTSAnnouncement}
+                  disabled={isGeneratingTTS || !announcementText.trim()}
+                >
+                  {isGeneratingTTS ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    <Mic className="h-3 w-3" />
+                  )}
                 </Button>
               </div>
+              <p className="text-[10px] text-slate-500">
+                Enter text and click the mic to generate & play a voice announcement
+              </p>
             </div>
           </TabsContent>
 
