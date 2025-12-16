@@ -99,7 +99,15 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
 
       if (enrollError) throw enrollError;
 
-      const studentIds = enrollments?.map((e: any) => e.student_id) || [];
+      // Deduplicate enrollments by student_id
+      const seenIds = new Set<string>();
+      const uniqueEnrollments = (enrollments || []).filter((e: any) => {
+        if (seenIds.has(e.student_id)) return false;
+        seenIds.add(e.student_id);
+        return true;
+      });
+
+      const studentIds = uniqueEnrollments.map((e: any) => e.student_id);
       if (studentIds.length === 0) {
         setStudents([]);
         return;
@@ -207,7 +215,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       const inGroupSet = new Set(groups.map((g: any) => g.member_id));
 
       // Calculate grades for each student
-      const studentGrades: StudentGradeRow[] = enrollments!.map((enrollment: any) => {
+      const studentGrades: StudentGradeRow[] = uniqueEnrollments.map((enrollment: any) => {
         const studentId = enrollment.student_id;
         const studentName = enrollment.gw_profiles?.full_name || 'Unknown';
 
@@ -261,9 +269,14 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         });
       }
 
+      // Final deduplication check by student_id
+      const uniqueGrades = studentGrades.filter((student, index, self) =>
+        index === self.findIndex(s => s.student_id === student.student_id)
+      );
+
       // Sort by final grade descending
-      studentGrades.sort((a, b) => b.final_grade_pct - a.final_grade_pct);
-      setStudents(studentGrades);
+      uniqueGrades.sort((a, b) => b.final_grade_pct - a.final_grade_pct);
+      setStudents(uniqueGrades);
     } catch (error) {
       console.error('Error fetching grades:', error);
       toast.error('Failed to load grades');
