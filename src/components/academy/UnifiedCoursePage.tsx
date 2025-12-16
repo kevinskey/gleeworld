@@ -22,6 +22,7 @@ import { CourseAttendance } from './CourseAttendance';
 import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
+import { Mus070AttendanceView } from '@/components/mus070/instructor/Mus070AttendanceView';
 
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
@@ -364,7 +365,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {activeTab === 'attendance' && (
-              <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} />
+              course.id === 'mus-070' ? (
+                <Mus070AttendanceView />
+              ) : (
+                <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} />
+              )
             )}
 
             {activeTab === 'rubrics' && (
