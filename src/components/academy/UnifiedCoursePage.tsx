@@ -364,7 +364,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {activeTab === 'grades' && (
-              course.id === 'mus-070' && isAdmin ? (
+              course.id === 'a0000000-0000-0000-0000-000000000070' && isAdmin ? (
                 <Mus070GradeSpreadsheet />
               ) : (
                 <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />
@@ -372,7 +372,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {activeTab === 'attendance' && (
-              course.id === 'mus-070' ? (
+              course.id === 'a0000000-0000-0000-0000-000000000070' ? (
                 <Mus070AttendanceView />
               ) : (
                 <CourseAttendance courseId={course.id} isEnrolled={isEnrolled} />
