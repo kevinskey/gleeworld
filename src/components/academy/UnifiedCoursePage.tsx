@@ -21,6 +21,7 @@ import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
 import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
+import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
 
 interface UnifiedCoursePageProps {
   course: AcademyCourse;
@@ -355,7 +356,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {activeTab === 'grades' && (
-              <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />
+              course.id === 'mus-070' && isAdmin ? (
+                <Mus070GradeSpreadsheet />
+              ) : (
+                <CourseGradebook courseId={course.id} isEnrolled={isEnrolled} />
+              )
             )}
 
             {activeTab === 'attendance' && (
