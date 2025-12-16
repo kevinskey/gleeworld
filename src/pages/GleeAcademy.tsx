@@ -18,13 +18,13 @@ const GleeAcademy = () => {
   return (
     <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
       <div className="min-h-screen bg-background">
-        {/* Hero Section with Academy Branding */}
-        <div className="relative w-full bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] py-16 sm:py-24">
-          <div className="container mx-auto px-4 text-center">
+        {/* Hero Section - Horizontal Banner */}
+        <div className="relative w-full bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460] py-6 sm:py-8">
+          <div className="container mx-auto px-4">
             <img 
               src={academyHeroImage} 
               alt="Glee Academy" 
-              className="w-full max-w-xl mx-auto object-contain"
+              className="h-16 sm:h-20 md:h-24 mx-auto object-contain"
             />
           </div>
         </div>

@@ -17,13 +17,13 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
 
   return (
     <div className="min-h-screen -m-6">
-      {/* Hero Section with Full Background */}
-      <div className="relative w-full bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] py-12 mb-8">
-        <div className="container mx-auto px-4 flex items-center justify-center">
+      {/* Hero Section - Horizontal Banner */}
+      <div className="relative w-full bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460] py-6 sm:py-8 mb-8">
+        <div className="container mx-auto px-4">
           <img 
             src={academyHeroImage} 
             alt="Glee World Academy" 
-            className="max-w-2xl h-auto object-contain rounded-lg"
+            className="h-16 sm:h-20 md:h-24 mx-auto object-contain"
           />
         </div>
       </div>
