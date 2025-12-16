@@ -359,21 +359,58 @@ Deno.serve(async (req) => {
 
             if (submitResponse.ok) {
               console.log("Announcement requested for playback");
-              
-              // Skip the current track so the announcement plays IMMEDIATELY next
-              const skipUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/backend/skip`;
-              const skipResponse = await fetch(skipUrl, {
-                method: "POST",
-                headers: {
-                  "X-API-Key": AZURACAST_API_KEY,
-                  Accept: "application/json",
-                },
-              });
-              
-              if (skipResponse.ok) {
-                console.log("Skipped current track - announcement will play NOW");
-              } else {
-                console.warn("Could not skip track:", skipResponse.status);
+
+              // AzuraCast AutoDJ can pre-cue multiple tracks, so a single skip may jump to the next pre-cued song
+              // instead of our request. We loop-skip until the request is actually Now Playing (or we give up).
+              const nowPlayingUrl = "https://radio.gleeworld.org/api/nowplaying/glee_world_radio";
+              const skipUrl = "https://radio.gleeworld.org/api/station/glee_world_radio/backend/skip";
+
+              const isAnnouncementNowPlaying = async (): Promise<boolean> => {
+                try {
+                  const npResp = await fetch(nowPlayingUrl, {
+                    method: "GET",
+                    headers: {
+                      "X-API-Key": AZURACAST_API_KEY,
+                      Accept: "application/json",
+                    },
+                  });
+
+                  if (!npResp.ok) return false;
+                  const np = await npResp.json();
+
+                  const isRequest = Boolean(np?.now_playing?.is_request);
+                  const text = String(np?.now_playing?.song?.text ?? "");
+
+                  // Our announcements normalize like: "announcement 1234567890"
+                  return isRequest && text.toLowerCase().includes("announcement");
+                } catch (err) {
+                  console.warn("Now playing check failed:", err);
+                  return false;
+                }
+              };
+
+              for (let attempt = 1; attempt <= 6; attempt++) {
+                if (await isAnnouncementNowPlaying()) {
+                  console.log("Announcement is now playing (confirmed via nowplaying)");
+                  break;
+                }
+
+                console.log(`Skip attempt ${attempt}/6 to reach request...`);
+                const skipResponse = await fetch(skipUrl, {
+                  method: "POST",
+                  headers: {
+                    "X-API-Key": AZURACAST_API_KEY,
+                    Accept: "application/json",
+                  },
+                });
+
+                if (!skipResponse.ok) {
+                  console.warn("Could not skip track:", skipResponse.status);
+                  break;
+                }
+
+                // Give AzuraCast a moment to transition / update nowplaying
+                await new Promise((resolve) => setTimeout(resolve, 900));
               }
             } else {
               const submitError = await submitResponse.text();
