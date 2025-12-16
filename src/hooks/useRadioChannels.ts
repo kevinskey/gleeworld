@@ -103,10 +103,35 @@ export const useRadioChannels = () => {
     fetchChannels();
   }, [user]);
 
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [lastRequestMessage, setLastRequestMessage] = useState<string | null>(null);
+
   const selectChannel = (channel: RadioChannel) => {
     setSelectedChannel(channel);
     // Store preference in localStorage
     localStorage.setItem('gleeworld-radio-channel', channel.id);
+  };
+
+  // Request a song from the selected playlist (on-demand feature)
+  const requestSongFromChannel = async (channel: RadioChannel): Promise<{ success: boolean; message: string }> => {
+    if (!channel.azura_playlist_id) {
+      return { success: false, message: 'No playlist ID available' };
+    }
+    
+    setIsRequesting(true);
+    setLastRequestMessage(null);
+    
+    try {
+      const result = await azuraCastService.requestSongFromPlaylist(channel.azura_playlist_id);
+      setLastRequestMessage(result.message);
+      return result;
+    } catch (error: any) {
+      const message = error.message || 'Request failed';
+      setLastRequestMessage(message);
+      return { success: false, message };
+    } finally {
+      setIsRequesting(false);
+    }
   };
 
   // Restore saved channel preference on mount
@@ -124,6 +149,9 @@ export const useRadioChannels = () => {
     channels,
     selectedChannel,
     selectChannel,
+    requestSongFromChannel,
+    isRequesting,
+    lastRequestMessage,
     isLoading,
   };
 };
