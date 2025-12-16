@@ -29,10 +29,47 @@ interface StudentGradeRow {
   final_grade_pct: number;
 }
 
+type GradeField = 'assignments_pct' | 'midterm_pct' | 'final_exam_pct' | 'ai_project_pct' | 'polls_pct';
+
 export const SimpleGradeSpreadsheet: React.FC = () => {
   const [students, setStudents] = useState<StudentGradeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [overrides, setOverrides] = useState<Record<string, Partial<Record<GradeField, number>>>>({});
+
+  const handleOverride = (studentId: string, field: GradeField, value: number) => {
+    // Clamp value to max weight for that field
+    const maxValues: Record<GradeField, number> = {
+      assignments_pct: GRADE_WEIGHTS.assignments,
+      midterm_pct: GRADE_WEIGHTS.midterm,
+      final_exam_pct: GRADE_WEIGHTS.finalExam,
+      ai_project_pct: GRADE_WEIGHTS.aiProject,
+      polls_pct: GRADE_WEIGHTS.polls,
+    };
+    const clampedValue = Math.min(Math.max(0, value), maxValues[field]);
+    
+    setOverrides(prev => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        [field]: clampedValue
+      }
+    }));
+  };
+
+  const getEffectiveValue = (student: StudentGradeRow, field: GradeField): number => {
+    return overrides[student.student_id]?.[field] ?? student[field];
+  };
+
+  const calculateTotal = (student: StudentGradeRow): number => {
+    return (
+      getEffectiveValue(student, 'assignments_pct') +
+      getEffectiveValue(student, 'midterm_pct') +
+      getEffectiveValue(student, 'final_exam_pct') +
+      getEffectiveValue(student, 'ai_project_pct') +
+      getEffectiveValue(student, 'polls_pct')
+    );
+  };
 
   useEffect(() => {
     fetchGrades();
@@ -210,12 +247,12 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
     const headers = ['Student Name', 'Assignments (%)', 'Midterm (%)', 'Final Exam (%)', 'AI Project (%)', 'Polls (%)', 'Final Grade (%)'];
     const rows = filteredStudents.map(s => [
       s.student_name,
-      s.assignments_pct,
-      s.midterm_pct,
-      s.final_exam_pct,
-      s.ai_project_pct,
-      s.polls_pct,
-      s.final_grade_pct
+      getEffectiveValue(s, 'assignments_pct').toFixed(1),
+      getEffectiveValue(s, 'midterm_pct').toFixed(1),
+      getEffectiveValue(s, 'final_exam_pct').toFixed(1),
+      getEffectiveValue(s, 'ai_project_pct').toFixed(1),
+      getEffectiveValue(s, 'polls_pct').toFixed(1),
+      calculateTotal(s).toFixed(1)
     ]);
 
     const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
@@ -285,12 +322,62 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
                 {filteredStudents.map((student) => (
                   <TableRow key={student.student_id}>
                     <TableCell className="font-medium text-foreground">{student.student_name}</TableCell>
-                    <TableCell className="text-center text-foreground">{student.assignments_pct.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center text-foreground">{student.midterm_pct.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center text-foreground">{student.final_exam_pct.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center text-foreground">{student.ai_project_pct.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center text-foreground">{student.polls_pct.toFixed(1)}%</TableCell>
-                    <TableCell className="text-center font-bold text-foreground">{student.final_grade_pct.toFixed(1)}%</TableCell>
+                    <TableCell className="text-center p-1">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={GRADE_WEIGHTS.assignments}
+                        value={getEffectiveValue(student, 'assignments_pct').toFixed(1)}
+                        onChange={(e) => handleOverride(student.student_id, 'assignments_pct', parseFloat(e.target.value) || 0)}
+                        className="w-16 h-8 text-center text-sm mx-auto"
+                      />
+                    </TableCell>
+                    <TableCell className="text-center p-1">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={GRADE_WEIGHTS.midterm}
+                        value={getEffectiveValue(student, 'midterm_pct').toFixed(1)}
+                        onChange={(e) => handleOverride(student.student_id, 'midterm_pct', parseFloat(e.target.value) || 0)}
+                        className="w-16 h-8 text-center text-sm mx-auto"
+                      />
+                    </TableCell>
+                    <TableCell className="text-center p-1">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={GRADE_WEIGHTS.finalExam}
+                        value={getEffectiveValue(student, 'final_exam_pct').toFixed(1)}
+                        onChange={(e) => handleOverride(student.student_id, 'final_exam_pct', parseFloat(e.target.value) || 0)}
+                        className="w-16 h-8 text-center text-sm mx-auto"
+                      />
+                    </TableCell>
+                    <TableCell className="text-center p-1">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={GRADE_WEIGHTS.aiProject}
+                        value={getEffectiveValue(student, 'ai_project_pct').toFixed(1)}
+                        onChange={(e) => handleOverride(student.student_id, 'ai_project_pct', parseFloat(e.target.value) || 0)}
+                        className="w-16 h-8 text-center text-sm mx-auto"
+                      />
+                    </TableCell>
+                    <TableCell className="text-center p-1">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max={GRADE_WEIGHTS.polls}
+                        value={getEffectiveValue(student, 'polls_pct').toFixed(1)}
+                        onChange={(e) => handleOverride(student.student_id, 'polls_pct', parseFloat(e.target.value) || 0)}
+                        className="w-16 h-8 text-center text-sm mx-auto"
+                      />
+                    </TableCell>
+                    <TableCell className="text-center font-bold text-foreground">{calculateTotal(student).toFixed(1)}%</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
