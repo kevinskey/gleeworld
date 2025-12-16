@@ -30,7 +30,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     level: 'Audition Required',
     duration: 'Semester',
     highlights: ['Choral Performance', 'Vocal Training', 'Tours & Concerts', 'Community'],
-    route: '/mus-070',
+    route: '/academy/mus-070',
     instructor: {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
@@ -48,7 +48,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     level: 'Intermediate',
     duration: '16 Weeks',
     highlights: ['Conducting Technique', 'Score Analysis', 'Repertoire', 'Rehearsal Skills'],
-    route: '/mus-210',
+    route: '/academy/mus-210',
     instructor: {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
@@ -66,7 +66,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     level: 'All Levels',
     duration: '16 Weeks',
     highlights: ['Music History', 'Cultural Context', 'Listening Journals', 'Critical Analysis'],
-    route: '/mus-240',
+    route: '/academy/mus-240',
     instructor: {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
@@ -84,7 +84,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     level: 'Beginner',
     duration: '16 Weeks',
     highlights: ['Music Notation', 'Rhythm', 'Scales & Keys', 'Harmony Basics'],
-    route: '/mus-101',
+    route: '/academy/mus-101',
     instructor: {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
@@ -102,7 +102,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     level: 'All Levels',
     duration: 'Ongoing',
     highlights: ['Individual Instruction', 'Personalized Curriculum', 'Performance Prep', 'Technique Development'],
-    route: '/mus-001',
+    route: '/academy/mus-001',
     instructor: {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
@@ -120,7 +120,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     level: 'All Levels',
     duration: '8 Weeks',
     highlights: ['Sight Reading', 'Ear Training', 'Solfege', 'Musicianship'],
-    route: '/mus-000',
+    route: '/academy/mus-000',
     instructor: {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
@@ -138,7 +138,7 @@ export const ACADEMY_COURSES: AcademyCourse[] = [
     level: 'Advanced',
     duration: '16 Weeks',
     highlights: ['Leadership Skills', 'Team Management', 'Event Planning', 'Communication'],
-    route: '/glee-101',
+    route: '/academy/glee-101',
     instructor: {
       name: 'Dr. Kevin Johnson',
       email: 'kjohns10@spelman.edu',
