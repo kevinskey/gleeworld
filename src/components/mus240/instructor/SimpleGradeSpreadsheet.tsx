@@ -226,7 +226,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
           ? (pollsAnswered / maxPollsAnswered) * GRADE_WEIGHTS.polls 
           : 0;
 
-        // Final grade: sum of all percentages
+        // Final grade: sum of all percentages (will be curved after)
         const finalGradePct = assignmentsPct + midtermPct + finalExamPct + aiProjectPct + pollsPct;
 
         return {
@@ -240,6 +240,14 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
           final_grade_pct: Math.round(finalGradePct * 100) / 100,
         };
       });
+
+      // Curve the final grade - find max and scale to 100%
+      const maxFinalGrade = Math.max(...studentGrades.map(s => s.final_grade_pct));
+      if (maxFinalGrade > 0) {
+        studentGrades.forEach(s => {
+          s.final_grade_pct = Math.round((s.final_grade_pct / maxFinalGrade) * 100 * 100) / 100;
+        });
+      }
 
       // Sort by final grade descending
       studentGrades.sort((a, b) => b.final_grade_pct - a.final_grade_pct);
