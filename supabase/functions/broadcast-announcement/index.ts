@@ -116,9 +116,8 @@ Deno.serve(async (req) => {
     // Step 2: Upload to AzuraCast media library
     const fileName = `announcement_${Date.now()}.mp3`;
     const formData = new FormData();
-    const file = new File([audioBuffer], fileName, { type: "audio/mpeg" });
-    formData.append("file", file, fileName);
-    formData.append("path", `announcements/${fileName}`);
+    const blob = new Blob([audioBuffer], { type: "audio/mpeg" });
+    formData.append("file", blob, fileName);
 
     const uploadUrl = "https://radio.gleeworld.org/api/station/glee_world_radio/files";
     console.log("Uploading to AzuraCast:", uploadUrl);
@@ -127,6 +126,7 @@ Deno.serve(async (req) => {
       method: "POST",
       headers: {
         "X-API-Key": AZURACAST_API_KEY,
+        "Accept": "application/json",
       },
       body: formData,
     });
