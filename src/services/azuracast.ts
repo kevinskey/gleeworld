@@ -270,6 +270,95 @@ class AzuraCastService {
     await this.makeProxyRequest(`/station/{stationId}/playlist/${playlistId}`, 'DELETE');
   }
 
+  // Get songs/media from a specific playlist
+  async getPlaylistMedia(playlistId: number): Promise<any[]> {
+    console.log('AzuraCast: Fetching media for playlist:', playlistId);
+    try {
+      // Get all media files
+      const allFiles = await this.makeProxyRequest(`/station/{stationId}/files/list`);
+      if (!Array.isArray(allFiles)) return [];
+      
+      // Filter to only media files that belong to this playlist
+      return allFiles.filter((file: any) => {
+        if (file.type !== 'media') return false;
+        const playlists = file.media?.playlists || file.playlists || [];
+        return playlists.some((p: any) => {
+          const pId = typeof p === 'number' ? p : p?.id;
+          return pId === playlistId;
+        });
+      });
+    } catch (error) {
+      console.error('AzuraCast: Error fetching playlist media:', error);
+      return [];
+    }
+  }
+
+  // Request a random song from a specific playlist (on-demand feature)
+  async requestSongFromPlaylist(playlistId: number): Promise<{ success: boolean; message: string; song?: any }> {
+    console.log('AzuraCast: Requesting random song from playlist:', playlistId);
+    
+    try {
+      // First, try to get requestable songs filtered by playlist
+      const requestableSongs = await this.getRequestableSongs();
+      
+      if (Array.isArray(requestableSongs) && requestableSongs.length > 0) {
+        // Filter songs that match this playlist
+        const playlistSongs = requestableSongs.filter((s: any) => {
+          const playlists = s.song?.playlists || [];
+          return playlists.some((p: any) => {
+            const pId = typeof p === 'number' ? p : p?.id;
+            return pId === playlistId;
+          });
+        });
+        
+        const songsToChooseFrom = playlistSongs.length > 0 ? playlistSongs : requestableSongs;
+        
+        // Pick a random song
+        const randomIndex = Math.floor(Math.random() * songsToChooseFrom.length);
+        const randomSong = songsToChooseFrom[randomIndex];
+        
+        if (randomSong?.request_id) {
+          console.log('AzuraCast: Requesting song:', randomSong.song?.title);
+          await this.makeProxyRequest(`/station/{stationId}/request/${randomSong.request_id}`, 'POST');
+          return {
+            success: true,
+            message: `Requested: ${randomSong.song?.title || 'Unknown'}`,
+            song: randomSong.song
+          };
+        }
+      }
+      
+      // Fallback: Try to get playlist media and queue directly
+      const playlistMedia = await this.getPlaylistMedia(playlistId);
+      if (playlistMedia.length > 0) {
+        const randomIndex = Math.floor(Math.random() * playlistMedia.length);
+        const randomFile = playlistMedia[randomIndex];
+        const mediaId = randomFile.media?.id || randomFile.id;
+        const title = randomFile.media?.title || randomFile.path;
+        
+        if (mediaId) {
+          await this.requestSong(mediaId, title);
+          return {
+            success: true,
+            message: `Queued: ${title}`,
+            song: randomFile.media
+          };
+        }
+      }
+      
+      return {
+        success: false,
+        message: 'No songs available in this playlist. Enable song requests in AzuraCast.'
+      };
+    } catch (error: any) {
+      console.error('AzuraCast: Error requesting song from playlist:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to request song'
+      };
+    }
+  }
+
   // FILE UPLOAD TO AZURACAST MEDIA LIBRARY
   async uploadFile(file: File, metadata?: {
     title?: string;

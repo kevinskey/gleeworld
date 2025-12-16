@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check, Bell, MapPin, Mic, Disc, Clock, Music } from 'lucide-react';
+import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check, Bell, MapPin, Mic, Disc, Clock, Music, Loader2 } from 'lucide-react';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels, type RadioChannel } from '@/hooks/useRadioChannels';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 // CSS class added to body when radio bar is open - used by other components to add padding
 const RADIO_OPEN_CLASS = 'radio-bar-open';
@@ -16,7 +17,7 @@ const RADIO_OPEN_CLASS = 'radio-bar-open';
 export const HeaderRadioControls = () => {
   try {
     const [isOpen, setIsOpen] = useState(false);
-    const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
+    const { channels, selectedChannel, selectChannel, requestSongFromChannel, isRequesting, lastRequestMessage, isLoading: channelsLoading } = useRadioChannels();
     const { themeName } = useTheme();
     
     // Theme-specific colors
@@ -61,10 +62,17 @@ export const HeaderRadioControls = () => {
 
     const isMuted = volume === 0;
 
-    const handleChannelChange = (channel: RadioChannel) => {
+    const handleChannelChange = async (channel: RadioChannel) => {
       selectChannel(channel);
-      if (switchStream) {
-        switchStream(channel.stream_url);
+      
+      // Request a song from the selected playlist (on-demand)
+      if (channel.azura_playlist_id) {
+        const result = await requestSongFromChannel(channel);
+        if (result.success) {
+          toast.success(result.message);
+        } else {
+          toast.error(result.message);
+        }
       }
     };
 
@@ -184,21 +192,28 @@ export const HeaderRadioControls = () => {
                       {channels.map((channel) => {
                         const IconComponent = getChannelIcon(channel.icon);
                         const isSelected = selectedChannel?.id === channel.id;
+                        const isThisRequesting = isRequesting && isSelected;
                         return (
                           <button
                             key={channel.id}
                             onClick={() => handleChannelChange(channel)}
+                            disabled={isRequesting}
                             className={cn(
                               "flex items-center gap-1 px-2 py-0.5 rounded-full transition-all whitespace-nowrap",
                               isSelected
                                 ? "bg-primary text-primary-foreground"
-                                : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                                : "bg-slate-700 text-slate-300 hover:bg-slate-600",
+                              isRequesting && "opacity-70 cursor-wait"
                             )}
                           >
-                            <IconComponent 
-                              className="h-3 w-3" 
-                              style={{ color: isSelected ? undefined : (channel.color || undefined) }}
-                            />
+                            {isThisRequesting ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <IconComponent 
+                                className="h-3 w-3" 
+                                style={{ color: isSelected ? undefined : (channel.color || undefined) }}
+                              />
+                            )}
                             <span className="text-[10px] font-medium">{channel.name}</span>
                           </button>
                         );
