@@ -117,10 +117,14 @@ export const useRadioPlayer = () => {
           // Start with default volume * MAX_GAIN to prevent clipping
           sharedGainNode.gain.value = 0.8 * MAX_GAIN;
           sharedGainNode.connect(sharedAudioContext.destination);
-          console.log('Created Web Audio gain node for mixer (MAX_GAIN:', MAX_GAIN, ')');
+          
+          // Connect audio element to gain node (must be done once per audio element)
+          sharedSourceNode = sharedAudioContext.createMediaElementSource(audio);
+          sharedSourceNode.connect(sharedGainNode);
+          console.log('Created Web Audio mixer with gain node (MAX_GAIN:', MAX_GAIN, ')');
         }
       } catch (e) {
-        console.warn('Could not create Web Audio context for mixer:', e);
+        console.warn('Could not create Web Audio mixer:', e);
       }
     } else {
       console.log('Reusing existing shared radio audio element');
@@ -395,18 +399,13 @@ export const useRadioPlayer = () => {
         audioRef.current.volume = 1.0; // Keep at 1.0, gain control via Web Audio
         audioRef.current.load();
         
-        // Connect to Web Audio gain node for proper mixing (prevents clipping)
-        if (sharedAudioContext && sharedGainNode && !sharedSourceNode) {
+        // Resume AudioContext if suspended (required after user interaction)
+        if (sharedAudioContext && sharedAudioContext.state === 'suspended') {
           try {
-            // Resume audio context if suspended (required after user interaction)
-            if (sharedAudioContext.state === 'suspended') {
-              await sharedAudioContext.resume();
-            }
-            sharedSourceNode = sharedAudioContext.createMediaElementSource(audioRef.current);
-            sharedSourceNode.connect(sharedGainNode);
-            console.log('Connected audio to Web Audio mixer gain node');
+            await sharedAudioContext.resume();
+            console.log('Resumed Web Audio context for mixer');
           } catch (e) {
-            console.warn('Could not connect to Web Audio mixer:', e);
+            console.warn('Could not resume Web Audio context:', e);
           }
         }
         
