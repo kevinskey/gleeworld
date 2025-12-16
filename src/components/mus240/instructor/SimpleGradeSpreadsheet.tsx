@@ -112,10 +112,22 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         midtermByStudent.set(m.user_id, m.grade || 0);
       });
 
+      // Find max midterm score for curve
+      let maxMidtermScore = 0;
+      midtermByStudent.forEach((score) => {
+        if (score > maxMidtermScore) maxMidtermScore = score;
+      });
+
       // Final exam scores by student  
       const finalByStudent = new Map<string, number>();
       finals.forEach((f: any) => {
         finalByStudent.set(f.student_id, f.total_score || 0);
+      });
+
+      // Find max final exam score for curve
+      let maxFinalScore = 0;
+      finalByStudent.forEach((score) => {
+        if (score > maxFinalScore) maxFinalScore = score;
       });
 
       // Poll counts by student (unique polls)
@@ -147,13 +159,17 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         const journalPoints = Math.min(journalsByStudent.get(studentId) || 0, 200);
         const assignmentsPct = (journalPoints / 200) * GRADE_WEIGHTS.assignments;
 
-        // Midterm: earned / 100 max
+        // Midterm: curved based on max score
         const midtermScore = midtermByStudent.get(studentId) || 0;
-        const midtermPct = (midtermScore / 100) * GRADE_WEIGHTS.midterm;
+        const midtermPct = maxMidtermScore > 0 
+          ? (midtermScore / maxMidtermScore) * GRADE_WEIGHTS.midterm 
+          : 0;
 
-        // Final Exam: earned / 100 max
+        // Final Exam: curved based on max score
         const finalScore = finalByStudent.get(studentId) || 0;
-        const finalExamPct = (finalScore / 100) * GRADE_WEIGHTS.finalExam;
+        const finalExamPct = maxFinalScore > 0 
+          ? (finalScore / maxFinalScore) * GRADE_WEIGHTS.finalExam 
+          : 0;
 
         // AI Project: Everyone gets 100% (full 25%)
         const aiProjectPct = GRADE_WEIGHTS.aiProject;
