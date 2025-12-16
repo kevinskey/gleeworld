@@ -22,7 +22,7 @@ export const GleeAcademyModule = ({ user, isFullPage = false }: ModuleProps) => 
         <div className="w-[80vw] mx-auto text-center">
           <h1 
             className="font-bold tracking-wider text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase"
-            style={{ fontSize: 'clamp(1.5rem, 8vw, 6rem)' }}
+            style={{ fontSize: 'clamp(7.5rem, 40vw, 30rem)' }}
           >
             Glee Academy
           </h1>
