@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Download, Search, RefreshCw } from 'lucide-react';
+import { Download, Search, RefreshCw, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -30,12 +30,16 @@ interface StudentGradeRow {
 }
 
 type GradeField = 'assignments_pct' | 'midterm_pct' | 'final_exam_pct' | 'ai_project_pct' | 'polls_pct';
+type SortField = 'student_name' | GradeField | 'final_grade';
+type SortDirection = 'asc' | 'desc';
 
 export const SimpleGradeSpreadsheet: React.FC = () => {
   const [students, setStudents] = useState<StudentGradeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [overrides, setOverrides] = useState<Record<string, Partial<Record<GradeField, number>>>>({});
+  const [sortField, setSortField] = useState<SortField>('final_grade');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
   const handleOverride = (studentId: string, field: GradeField, value: number) => {
     // Clamp value to max weight for that field
@@ -291,9 +295,49 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
     toast.success('Grades exported');
   };
 
-  const filteredStudents = students.filter(s =>
-    s.student_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('desc');
+    }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-50" />;
+    return sortDirection === 'asc' 
+      ? <ArrowUp className="h-3 w-3 ml-1" /> 
+      : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
+
+  const sortedAndFilteredStudents = useMemo(() => {
+    const filtered = students.filter(s =>
+      s.student_name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return filtered.sort((a, b) => {
+      let aVal: number | string;
+      let bVal: number | string;
+
+      if (sortField === 'student_name') {
+        aVal = a.student_name.toLowerCase();
+        bVal = b.student_name.toLowerCase();
+      } else if (sortField === 'final_grade') {
+        aVal = calculateTotal(a);
+        bVal = calculateTotal(b);
+      } else {
+        aVal = getEffectiveValue(a, sortField);
+        bVal = getEffectiveValue(b, sortField);
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [students, searchTerm, sortField, sortDirection, overrides]);
+
+  const filteredStudents = sortedAndFilteredStudents;
 
   return (
     <Card>
@@ -334,13 +378,62 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-foreground">Student Name</TableHead>
-                  <TableHead className="text-center text-foreground">Assignments ({GRADE_WEIGHTS.assignments}%)</TableHead>
-                  <TableHead className="text-center text-foreground">Midterm ({GRADE_WEIGHTS.midterm}%)</TableHead>
-                  <TableHead className="text-center text-foreground">Final Exam ({GRADE_WEIGHTS.finalExam}%)</TableHead>
-                  <TableHead className="text-center text-foreground">AI Project ({GRADE_WEIGHTS.aiProject}%)</TableHead>
-                  <TableHead className="text-center text-foreground">Polls ({GRADE_WEIGHTS.polls}%)</TableHead>
-                  <TableHead className="text-center text-foreground font-bold">Final Grade</TableHead>
+                  <TableHead 
+                    className="text-foreground cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('student_name')}
+                  >
+                    <div className="flex items-center">
+                      Student Name {getSortIcon('student_name')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('assignments_pct')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Assignments ({GRADE_WEIGHTS.assignments}%) {getSortIcon('assignments_pct')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('midterm_pct')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Midterm ({GRADE_WEIGHTS.midterm}%) {getSortIcon('midterm_pct')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('final_exam_pct')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Final Exam ({GRADE_WEIGHTS.finalExam}%) {getSortIcon('final_exam_pct')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('ai_project_pct')}
+                  >
+                    <div className="flex items-center justify-center">
+                      AI Project ({GRADE_WEIGHTS.aiProject}%) {getSortIcon('ai_project_pct')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('polls_pct')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Polls ({GRADE_WEIGHTS.polls}%) {getSortIcon('polls_pct')}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="text-center text-foreground font-bold cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('final_grade')}
+                  >
+                    <div className="flex items-center justify-center">
+                      Final Grade {getSortIcon('final_grade')}
+                    </div>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
