@@ -61,7 +61,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
     return overrides[student.student_id]?.[field] ?? student[field];
   };
 
-  const calculateTotal = (student: StudentGradeRow): number => {
+  const getRawTotal = (student: StudentGradeRow): number => {
     return (
       getEffectiveValue(student, 'assignments_pct') +
       getEffectiveValue(student, 'midterm_pct') +
@@ -69,6 +69,14 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       getEffectiveValue(student, 'ai_project_pct') +
       getEffectiveValue(student, 'polls_pct')
     );
+  };
+
+  // Calculate curved final grade - highest raw total gets 100%
+  const calculateTotal = (student: StudentGradeRow): number => {
+    const rawTotal = getRawTotal(student);
+    const maxRawTotal = Math.max(...students.map(s => getRawTotal(s)));
+    if (maxRawTotal <= 0) return 0;
+    return (rawTotal / maxRawTotal) * 100;
   };
 
   useEffect(() => {
