@@ -468,12 +468,14 @@ export const RadioScheduleTimeline = ({
           </div>
         ) : queueItems.length > 0 ? (
           <div className="space-y-1">
-            {queueItems.map((item, index) => (
-              <div 
-                key={item.id}
-                className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg group hover:bg-slate-800 transition-colors"
-              >
-                <GripVertical className="h-4 w-4 text-slate-500" />
+            {queueItems.map((item, index) => {
+              const key = String(getQueueItemId(item) ?? item.song?.id ?? index);
+              return (
+                <div 
+                  key={key}
+                  className="flex items-center gap-2 p-2 bg-slate-800/50 rounded-lg group hover:bg-slate-800 transition-colors"
+                >
+                  <GripVertical className="h-4 w-4 text-slate-500" />
                 <span className="text-xs text-slate-400 w-20 flex-shrink-0">
                   {formatTime(item.played_at)}
                 </span>
@@ -508,8 +510,9 @@ export const RadioScheduleTimeline = ({
                 >
                   <Trash2 className="h-3 w-3" />
                 </Button>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="text-center py-4 text-slate-500 text-sm">
