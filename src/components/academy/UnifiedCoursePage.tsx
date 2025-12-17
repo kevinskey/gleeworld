@@ -45,6 +45,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
   const [enrollmentLoading, setEnrollmentLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     checkEnrollmentAndRole();
   }, [user, course.id]);
