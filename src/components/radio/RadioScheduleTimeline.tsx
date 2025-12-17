@@ -259,6 +259,18 @@ export const RadioScheduleTimeline = ({
     }
   };
 
+  const removeQueueItem = async (queueItemId: number) => {
+    try {
+      await azuraCastService.removeFromQueue(queueItemId);
+      toast({ title: "Removed", description: "Track removed from queue" });
+      await loadQueue();
+      onRefresh?.();
+    } catch (error) {
+      console.error('Error removing from queue:', error);
+      toast({ title: "Error", description: "Failed to remove track from queue", variant: "destructive" });
+    }
+  };
+
   const remainingCurrentSong = Math.max(0, (currentSongDuration || 0) - (currentSongElapsed || 0));
   const totalQueueDuration = queueItems.reduce((acc, item) => acc + (item.duration || 0), 0);
 
@@ -358,6 +370,15 @@ export const RadioScheduleTimeline = ({
                 <span className="text-xs text-slate-500">
                   {formatDuration(item.duration)}
                 </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeQueueItem(item.id)}
+                  className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+                  title="Remove from queue"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
               </div>
             ))}
           </div>
