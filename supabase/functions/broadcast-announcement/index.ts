@@ -392,6 +392,30 @@ Deno.serve(async (req) => {
               for (let attempt = 1; attempt <= 6; attempt++) {
                 if (await isAnnouncementNowPlaying()) {
                   console.log("Announcement is now playing (confirmed via nowplaying)");
+                  
+                  // Remove from playlist so it doesn't rotate - announcements are one-time only
+                  console.log("Removing announcement from playlist to prevent rotation...");
+                  try {
+                    const removeFromPlaylistResponse = await fetch(updateFileUrl, {
+                      method: "PUT",
+                      headers: {
+                        "X-API-Key": AZURACAST_API_KEY,
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        playlists: [], // Empty array removes from all playlists
+                      }),
+                    });
+                    
+                    if (removeFromPlaylistResponse.ok) {
+                      console.log("Announcement removed from playlist - will not rotate");
+                    } else {
+                      console.warn("Could not remove from playlist:", removeFromPlaylistResponse.status);
+                    }
+                  } catch (err) {
+                    console.warn("Error removing from playlist:", err);
+                  }
+                  
                   break;
                 }
 
