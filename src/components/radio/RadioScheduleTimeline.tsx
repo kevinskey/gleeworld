@@ -25,9 +25,13 @@ import {
 interface QueueItem {
   id?: number;
   cue_id?: number;
+  queue_id?: number;
   cued_at: number;
   played_at: number;
   duration: number;
+  links?: {
+    self?: string;
+  };
   song: {
     id: string;
     title: string;
@@ -38,7 +42,17 @@ interface QueueItem {
 
 // Helper to extract queue item ID (AzuraCast may use different field names)
 const getQueueItemId = (item: QueueItem): number | undefined => {
-  return item.id ?? item.cue_id ?? (item as any).queue_id;
+  if (typeof item.id === 'number') return item.id;
+  if (typeof item.cue_id === 'number') return item.cue_id;
+  if (typeof item.queue_id === 'number') return item.queue_id;
+
+  const self = item.links?.self;
+  if (self) {
+    const match = self.match(/\/queue\/(\d+)/);
+    if (match?.[1]) return Number(match[1]);
+  }
+
+  return undefined;
 };
 
 interface AzuraCastMedia {
