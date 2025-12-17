@@ -66,7 +66,6 @@ export const DashboardHeroCarousel: React.FC = () => {
         const { data } = await supabase
           .from('gw_hero_slides')
           .select('*')
-          .eq('usage_context', 'homepage')
           .eq('is_active', true)
           .order('display_order', { ascending: true });
         setHeroSlides(data || []);
