@@ -9,13 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { EnhancedAppointmentCalendar } from './EnhancedAppointmentCalendar';
 import { AppointmentManager } from './AppointmentManager';
 import { AppointmentServiceManager } from './AppointmentServiceManager';
-import { ProviderProfileSelector } from './ProviderProfileSelector';
-import { ProviderManagement } from '@/components/admin/ProviderManagement';
-import { ProviderAvailabilityManager } from '@/components/providers/ProviderAvailabilityManager';
-import { ProviderSettings } from '@/components/providers/ProviderSettings';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday, isAfter, startOfDay, startOfWeek, addWeeks } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday, isAfter, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useUserRole } from '@/hooks/useUserRole';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -26,7 +21,6 @@ import {
   type Appointment 
 } from '@/hooks/useRealAppointments';
 import { useCalendars } from '@/hooks/useCalendars';
-import { useServiceProviders, useCurrentProvider } from '@/hooks/useServiceProviders';
 
 export const ComprehensiveAppointmentSystem = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -34,28 +28,19 @@ export const ComprehensiveAppointmentSystem = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming');
-  const [mainView, setMainView] = useState<'dashboard' | 'calendar' | 'management' | 'services' | 'providers' | 'admin' | 'availability' | 'settings'>('dashboard');
+  const [mainView, setMainView] = useState<'dashboard' | 'calendar' | 'management' | 'services'>('dashboard');
   const navigate = useNavigate();
   
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
-  const { isSuperAdmin, isWardrobeManager } = useUserRole();
-  const hasAdminAccess = isSuperAdmin() || isWardrobeManager();
   
   const { data: appointments = [], isLoading, error } = useRealAppointments();
   const { data: calendars = [] } = useCalendars();
-  const { data: providers = [] } = useServiceProviders();
-  const { data: currentProvider } = useCurrentProvider();
   const createMutation = useCreateRealAppointment();
   const updateMutation = useUpdateRealAppointment();
   const deleteMutation = useDeleteRealAppointment();
 
-  const [selectedProviderId, setSelectedProviderId] = useState<string>('');
-  const selectedProvider = providers.find(p => p.id === selectedProviderId);
-
-  const visibleAppointments = selectedProvider
-    ? appointments.filter(apt => selectedProvider.services_offered?.includes(apt.service))
-    : appointments;
+  const visibleAppointments = appointments;
 
   // Stats calculations
   const stats = useMemo(() => {
@@ -198,36 +183,6 @@ export const ComprehensiveAppointmentSystem = () => {
             />
           )}
           {mainView === 'services' && <AppointmentServiceManager />}
-          {mainView === 'availability' && currentProvider && <ProviderAvailabilityManager provider={currentProvider} />}
-          {mainView === 'settings' && currentProvider && <ProviderSettings provider={currentProvider} />}
-          {mainView === 'providers' && hasAdminAccess && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {providers.map(provider => (
-                <Card key={provider.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3 mb-4">
-                      {provider.profile_image_url ? (
-                        <img src={provider.profile_image_url} alt={provider.provider_name} className="w-12 h-12 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-primary" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="font-medium">{provider.title} {provider.provider_name}</h3>
-                        <p className="text-sm text-muted-foreground">{provider.department}</p>
-                      </div>
-                    </div>
-                    <p className="text-sm"><span className="font-medium">Email:</span> {provider.email}</p>
-                    <p className={`text-xs mt-2 px-2 py-1 rounded-full inline-block ${provider.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {provider.is_active ? 'Active' : 'Inactive'}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-          {mainView === 'admin' && hasAdminAccess && <ProviderManagement />}
         </div>
       </div>
     );
@@ -375,12 +330,6 @@ export const ComprehensiveAppointmentSystem = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Services
                 </Button>
-                {hasAdminAccess && (
-                  <Button variant="outline" className="w-full justify-start text-sm" onClick={() => setMainView('admin')}>
-                    <Users className="h-4 w-4 mr-2" />
-                    Provider Admin
-                  </Button>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -508,12 +457,6 @@ export const ComprehensiveAppointmentSystem = () => {
                 <Settings className="h-6 w-6 mb-2" />
                 <span className="text-xs">Services</span>
               </Button>
-              {hasAdminAccess && (
-                <Button variant="outline" className="h-auto py-4 flex-col" onClick={() => setMainView('admin')}>
-                  <Users className="h-6 w-6 mb-2" />
-                  <span className="text-xs">Admin</span>
-                </Button>
-              )}
             </div>
           </div>
         </div>
