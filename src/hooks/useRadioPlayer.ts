@@ -443,142 +443,120 @@ export const useRadioPlayer = () => {
       return;
     }
 
+    const audio = audioRef.current;
+    
     // Debug: log current audio state
-    console.log('useRadioPlayer: Audio debug:', {
-      stateVolume: state.volume,
-      gainNodeExists: !!sharedGainNode,
-      gainValue: sharedGainNode?.gain?.value,
-      audioContextState: sharedAudioContext?.state,
-      audioMuted: audioRef.current.muted,
-      audioVolume: audioRef.current.volume,
-      audioPaused: audioRef.current.paused,
+    console.log('useRadioPlayer: Audio state before play:', {
+      src: audio.src,
+      paused: audio.paused,
+      muted: audio.muted,
+      volume: audio.volume,
     });
 
-    // ALWAYS ensure gain is set to audible level when playing
-    // This fixes cases where gain was muted by another component
-    const targetVolume = state.volume > 0 ? state.volume : 0.8;
-    
-    if (sharedGainNode && sharedAudioContext) {
-      const actualGain = targetVolume * MAX_GAIN;
-      sharedGainNode.gain.setValueAtTime(actualGain, sharedAudioContext.currentTime);
-      console.log('useRadioPlayer: Mixer gain set to:', actualGain);
-    }
-    
-    // Also set element volume as fallback
-    audioRef.current.volume = targetVolume;
-    setState(prev => ({ ...prev, volume: targetVolume }));
-
-    const urls = streamUrls();
-    console.log('useRadioPlayer: Available stream URLs:', urls);
-
-    console.log('useRadioPlayer: Setting loading state and starting stream attempt...');
     setState(prev => ({ ...prev, isLoading: true }));
 
-    // Try each stream URL until one works
-    const allUrls = [...urls, azuraCastService.getPublicStreamUrl()];
-    console.log('All stream URLs to try:', allUrls);
-
-    for (let i = 0; i < allUrls.length; i++) {
-      const streamUrl = allUrls[i];
-      try {
-        console.log(`Attempting to play stream ${i + 1}/${allUrls.length}: ${streamUrl}`);
-
-        // IMPORTANT (iOS): keep this inside the user gesture as much as possible.
-        // Kick off AudioContext resume immediately (don’t wait for any timers first).
-        const resumePromise = (sharedAudioContext && sharedAudioContext.state === 'suspended')
-          ? sharedAudioContext.resume()
-          : Promise.resolve();
-
-        // Stop any previous stream
-        audioRef.current.pause();
-
-        // Ensure element isn't muted (some browsers persist muted state across route changes)
-        audioRef.current.muted = false;
-        (audioRef.current as any).defaultMuted = false;
-
-        // Set new source and attempt playback immediately.
-        // For live streams, waiting for canplay can break iOS user-gesture playback.
-        audioRef.current.src = withCacheBuster(streamUrl);
-        audioRef.current.volume = 1.0; // Keep at 1.0, gain control via Web Audio
-        audioRef.current.load();
-
+    try {
+      // ALWAYS ensure gain is set to audible level when playing
+      const targetVolume = state.volume > 0 ? state.volume : 0.8;
+      
+      // Set Web Audio gain if available
+      if (sharedGainNode && sharedAudioContext) {
         try {
-          await resumePromise;
-          if (sharedAudioContext) {
-            console.log('Web Audio context state:', sharedAudioContext.state);
-          }
-        } catch (e) {
-          console.warn('Could not resume Web Audio context:', e);
-        }
-
-        console.log('Calling play()...');
-
-        try {
-          await audioRef.current.play();
-        } catch (playError: any) {
-          console.error('Audio play error:', playError);
-
-          // Handle common autoplay restriction
-          if (playError?.name === 'NotAllowedError') {
-            throw new Error('Browser blocked audio playback. Please interact with the page first (tap/click anywhere), then press Play again.');
-          }
-
-          throw playError;
-        }
-
-        console.log('Successfully started playing stream:', streamUrl);
-        toast({
-          title: "Now Playing",
-          description: "Glee World Radio is now streaming",
-        });
-        return; // Success - exit the loop
-
-      } catch (error) {
-        console.error(`Failed to play stream ${streamUrl}:`, error);
-        console.error('Error details:', {
-          name: error instanceof Error ? error.name : 'Unknown',
-          message: error instanceof Error ? error.message : String(error),
-          code: (error as any)?.code,
-          target: (error as any)?.target,
-          type: (error as any)?.type,
-        });
-
-        // If this is an autoplay/user-gesture restriction, don't cycle through URLs.
-        // The browser will block ALL of them the same way.
-        const msg = error instanceof Error ? error.message : String(error);
-        if (msg.includes('Browser blocked audio playback')) {
-          setState(prev => ({
-            ...prev,
-            isLoading: false,
-            isPlaying: false,
-          }));
-          toast({
-            title: 'Tap to enable audio',
-            description: msg,
-            variant: 'destructive',
-          });
-          return;
-        }
-
-        // If this was the last URL, show error
-        if (i === allUrls.length - 1) {
-          console.error('All stream URLs failed, showing error to user');
-          setState(prev => ({
-            ...prev,
-            isLoading: false,
-            isPlaying: false,
-          }));
-          toast({
-            title: "Radio Unavailable",
-            description: "All radio streams are currently offline. Please try again later.",
-            variant: "destructive",
-          });
-        } else {
-          console.log(`Trying next stream URL (${i + 2}/${allUrls.length})...`);
+          const actualGain = targetVolume * MAX_GAIN;
+          sharedGainNode.gain.setValueAtTime(actualGain, sharedAudioContext.currentTime);
+          console.log('useRadioPlayer: Gain set to:', actualGain);
+        } catch (gainError) {
+          console.warn('useRadioPlayer: Could not set gain:', gainError);
         }
       }
+      
+      // Resume AudioContext if suspended
+      if (sharedAudioContext && sharedAudioContext.state === 'suspended') {
+        try {
+          await sharedAudioContext.resume();
+          console.log('useRadioPlayer: AudioContext resumed');
+        } catch (e) {
+          console.warn('useRadioPlayer: Could not resume AudioContext:', e);
+        }
+      }
+
+      // Ensure audio element is ready
+      audio.muted = false;
+      audio.volume = 1.0; // Web Audio controls actual volume
+      
+      // Get stream URLs
+      const urls = streamUrls();
+      const publicUrl = azuraCastService.getPublicStreamUrl();
+      const allUrls = [...urls, publicUrl].filter(Boolean);
+      console.log('useRadioPlayer: Stream URLs:', allUrls);
+
+      if (allUrls.length === 0) {
+        console.error('useRadioPlayer: No stream URLs available');
+        setState(prev => ({ ...prev, isLoading: false }));
+        toast({
+          title: "Radio Unavailable",
+          description: "No stream URLs configured",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Try each stream URL until one works
+      for (let i = 0; i < allUrls.length; i++) {
+        const streamUrl = allUrls[i];
+        console.log(`useRadioPlayer: Trying stream ${i + 1}/${allUrls.length}: ${streamUrl}`);
+        
+        try {
+          // Stop any previous stream
+          audio.pause();
+          
+          // Set new source with cache buster
+          const hasQuery = streamUrl.includes('?');
+          const sep = hasQuery ? '&' : '?';
+          audio.src = `${streamUrl}${sep}ts=${Date.now()}`;
+          audio.load();
+
+          console.log('useRadioPlayer: Calling audio.play()...');
+          await audio.play();
+          
+          console.log('useRadioPlayer: Successfully started playing:', streamUrl);
+          setState(prev => ({ ...prev, isLoading: false, isPlaying: true }));
+          toast({
+            title: "Now Playing",
+            description: "Glee World Radio is now streaming",
+          });
+          return; // Success - exit
+
+        } catch (playError: any) {
+          console.error(`useRadioPlayer: Failed stream ${i + 1}:`, playError?.name, playError?.message);
+          
+          // If autoplay blocked, don't try other URLs
+          if (playError?.name === 'NotAllowedError') {
+            setState(prev => ({ ...prev, isLoading: false }));
+            toast({
+              title: 'Tap to enable audio',
+              description: 'Browser blocked audio playback. Please tap/click and try again.',
+              variant: 'destructive',
+            });
+            return;
+          }
+          
+          // If last URL failed, show error
+          if (i === allUrls.length - 1) {
+            setState(prev => ({ ...prev, isLoading: false }));
+            toast({
+              title: "Radio Unavailable",
+              description: "Could not connect to radio stream. Please try again.",
+              variant: "destructive",
+            });
+          }
+        }
+      }
+    } catch (error) {
+      console.error('useRadioPlayer: Unexpected error in play():', error);
+      setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [state.volume, streamUrls, toast, withCacheBuster]);
+  }, [state.volume, streamUrls, toast]);
 
   const pause = useCallback(() => {
     if (audioRef.current) {
