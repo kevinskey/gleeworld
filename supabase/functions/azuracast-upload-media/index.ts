@@ -148,11 +148,14 @@ Deno.serve(async (req) => {
     }
 
     const uploadResult = await uploadResponse.json();
-    console.log('AzuraCast Upload: Success, media ID:', uploadResult.id);
+    console.log('AzuraCast Upload: Full response:', JSON.stringify(uploadResult));
+    // AzuraCast /files/upload returns { media: { id: ..., ... } } structure
+    const mediaId = uploadResult.id || uploadResult.media?.id || uploadResult.unique_id;
+    console.log('AzuraCast Upload: Success, media ID:', mediaId);
 
     // Update metadata if provided
-    if ((title || artist) && uploadResult.id) {
-      const metadataUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/file/${uploadResult.id}`;
+    if ((title || artist) && mediaId) {
+      const metadataUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/file/${mediaId}`;
       await fetch(metadataUrl, {
         method: 'PUT',
         headers: {
@@ -167,8 +170,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        media_id: uploadResult.id,
-        mediaId: uploadResult.id,
+        media_id: mediaId,
+        mediaId: mediaId,
         ...uploadResult,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
