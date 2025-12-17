@@ -124,14 +124,23 @@ export const RadioScheduleTimeline = ({
     try {
       setIsLoadingMedia(true);
       const media = await azuraCastService.getAllMedia();
-      const formatted = media.map((file: any) => ({
-        id: file.media?.id || 0,
-        title: file.media?.title || file.path_short || 'Unknown',
-        artist: file.media?.artist || '',
-        duration: file.media?.length || 0,
-        art: file.media?.art,
-        path: file.path
-      })).filter((m: AzuraCastMedia) => m.id > 0);
+      console.log('Raw media from AzuraCast:', media.length, 'items');
+      
+      const formatted = media.map((file: any, index: number) => {
+        // Handle different response formats from AzuraCast
+        const mediaInfo = file.media || file;
+        return {
+          // Use media.id, or unique_id, or generate from index as fallback
+          id: mediaInfo?.id || file.unique_id || file.id || (index + 1000000),
+          title: mediaInfo?.title || file.path_short || file.basename || file.path?.split('/').pop() || 'Unknown',
+          artist: mediaInfo?.artist || '',
+          duration: mediaInfo?.length || mediaInfo?.duration || 0,
+          art: mediaInfo?.art || file.art,
+          path: file.path || file.path_short || ''
+        };
+      });
+      
+      console.log('Formatted media:', formatted.length, 'items');
       setAvailableMedia(formatted);
     } catch (error) {
       console.error('Error loading media:', error);

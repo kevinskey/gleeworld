@@ -606,9 +606,29 @@ class AzuraCastService {
   // Get all media files from AzuraCast
   async getAllMedia(): Promise<any[]> {
     console.log('AzuraCast: Fetching all media...');
-    const files = await this.makeProxyRequest(`/station/{stationId}/files/list`);
-    if (!Array.isArray(files)) return [];
-    return files.filter((file: any) => file.type === 'media');
+    // Try files/list endpoint first (returns detailed file info)
+    try {
+      const files = await this.makeProxyRequest(`/station/{stationId}/files/list`);
+      if (Array.isArray(files) && files.length > 0) {
+        console.log('AzuraCast: Got', files.length, 'files from files/list');
+        return files.filter((file: any) => file.type === 'media' || file.media);
+      }
+    } catch (e) {
+      console.warn('AzuraCast: files/list failed, trying files endpoint');
+    }
+    
+    // Fallback to /files endpoint which may return more items
+    try {
+      const files = await this.makeProxyRequest(`/station/{stationId}/files`);
+      if (Array.isArray(files)) {
+        console.log('AzuraCast: Got', files.length, 'files from /files');
+        return files;
+      }
+    } catch (e) {
+      console.warn('AzuraCast: /files endpoint also failed');
+    }
+    
+    return [];
   }
 
   // MEDIA MANAGEMENT  
