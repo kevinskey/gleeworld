@@ -40,8 +40,8 @@ const handler = async (req: Request): Promise<Response> => {
       from: emailData.from
     });
 
-    // Default from address for GleeWorld Academy
-    const fromAddress = emailData.from || "GleeWorld Academy <onboarding@resend.dev>";
+    // Default from address for GleeWorld - use verified domain
+    const fromAddress = emailData.from || "GleeWorld <noreply@gleeworld.org>";
 
     const emailPayload: any = {
       from: fromAddress,
