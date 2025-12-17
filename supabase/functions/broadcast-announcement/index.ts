@@ -358,83 +358,30 @@ Deno.serve(async (req) => {
             });
 
             if (submitResponse.ok) {
-              console.log("Announcement requested for playback");
-
-              // AzuraCast AutoDJ can pre-cue multiple tracks, so a single skip may jump to the next pre-cued song
-              // instead of our request. We loop-skip until the request is actually Now Playing (or we give up).
-              const nowPlayingUrl = "https://radio.gleeworld.org/api/nowplaying/glee_world_radio";
-              const skipUrl = "https://radio.gleeworld.org/api/station/glee_world_radio/backend/skip";
-
-              const isAnnouncementNowPlaying = async (): Promise<boolean> => {
-                try {
-                  const npResp = await fetch(nowPlayingUrl, {
-                    method: "GET",
-                    headers: {
-                      "X-API-Key": AZURACAST_API_KEY,
-                      Accept: "application/json",
-                    },
-                  });
-
-                  if (!npResp.ok) return false;
-                  const np = await npResp.json();
-
-                  const isRequest = Boolean(np?.now_playing?.is_request);
-                  const text = String(np?.now_playing?.song?.text ?? "");
-
-                  // Our announcements normalize like: "announcement 1234567890"
-                  return isRequest && text.toLowerCase().includes("announcement");
-                } catch (err) {
-                  console.warn("Now playing check failed:", err);
-                  return false;
-                }
-              };
-
-              for (let attempt = 1; attempt <= 6; attempt++) {
-                if (await isAnnouncementNowPlaying()) {
-                  console.log("Announcement is now playing (confirmed via nowplaying)");
-                  
-                  // Remove from playlist so it doesn't rotate - announcements are one-time only
-                  console.log("Removing announcement from playlist to prevent rotation...");
-                  try {
-                    const removeFromPlaylistResponse = await fetch(updateFileUrl, {
-                      method: "PUT",
-                      headers: {
-                        "X-API-Key": AZURACAST_API_KEY,
-                        "Content-Type": "application/json",
-                      },
-                      body: JSON.stringify({
-                        playlists: [], // Empty array removes from all playlists
-                      }),
-                    });
-                    
-                    if (removeFromPlaylistResponse.ok) {
-                      console.log("Announcement removed from playlist - will not rotate");
-                    } else {
-                      console.warn("Could not remove from playlist:", removeFromPlaylistResponse.status);
-                    }
-                  } catch (err) {
-                    console.warn("Error removing from playlist:", err);
-                  }
-                  
-                  break;
-                }
-
-                console.log(`Skip attempt ${attempt}/6 to reach request...`);
-                const skipResponse = await fetch(skipUrl, {
-                  method: "POST",
+              console.log("Announcement requested for playback - will play after current track ends");
+              
+              // Remove from playlist immediately so it doesn't rotate after playing
+              // This is a one-time announcement, not a recurring jingle
+              console.log("Removing announcement from playlist to prevent rotation...");
+              try {
+                const removeFromPlaylistResponse = await fetch(updateFileUrl, {
+                  method: "PUT",
                   headers: {
                     "X-API-Key": AZURACAST_API_KEY,
-                    Accept: "application/json",
+                    "Content-Type": "application/json",
                   },
+                  body: JSON.stringify({
+                    playlists: [], // Empty array removes from all playlists
+                  }),
                 });
-
-                if (!skipResponse.ok) {
-                  console.warn("Could not skip track:", skipResponse.status);
-                  break;
+                
+                if (removeFromPlaylistResponse.ok) {
+                  console.log("Announcement removed from playlist - will not rotate");
+                } else {
+                  console.warn("Could not remove from playlist:", removeFromPlaylistResponse.status);
                 }
-
-                // Give AzuraCast a moment to transition / update nowplaying
-                await new Promise((resolve) => setTimeout(resolve, 900));
+              } catch (err) {
+                console.warn("Error removing from playlist:", err);
               }
             } else {
               const submitError = await submitResponse.text();
