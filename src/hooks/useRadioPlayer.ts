@@ -484,6 +484,10 @@ export const useRadioPlayer = () => {
         // Stop any previous stream
         audioRef.current.pause();
 
+        // Ensure element isn't muted (some browsers persist muted state across route changes)
+        audioRef.current.muted = false;
+        (audioRef.current as any).defaultMuted = false;
+
         // Set new source and attempt playback immediately.
         // For live streams, waiting for canplay can break iOS user-gesture playback.
         audioRef.current.src = withCacheBuster(streamUrl);
