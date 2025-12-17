@@ -46,6 +46,7 @@ export default function UnifiedBookingPage() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: providers = [], isLoading: providersLoading } = useServiceProviders();
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedSlot, setSelectedSlot] = useState<{ date: string; time: string; displayDate: string; displayTime: string } | null>(null);
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
@@ -63,6 +64,16 @@ export default function UnifiedBookingPage() {
   // Generate available time slots for any selected date
   const [allTimeSlots, setAllTimeSlots] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Auto-select provider if there's only one active provider
+  const activeProviders = providers.filter(p => p.is_active);
+  const hasSingleProvider = activeProviders.length === 1;
+
+  useEffect(() => {
+    if (hasSingleProvider && !selectedProvider) {
+      setSelectedProvider(activeProviders[0]);
+    }
+  }, [hasSingleProvider, activeProviders, selectedProvider]);
 
   // Load appointment types on mount
   useEffect(() => {
@@ -680,24 +691,26 @@ export default function UnifiedBookingPage() {
                 </Card>
               )}
               
-              {/* Provider Selection */}
-              <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80">
-                <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg border-b border-border/50">
-                  <CardTitle className="flex items-center text-xl md:text-2xl font-bold">
-                    <Users className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-primary" />
-                    Choose Your Provider
-                  </CardTitle>
-                  <p className="text-muted-foreground text-sm md:text-base">
-                    Select a provider to see their available appointment times.
-                  </p>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ProviderSelector
-                    selectedProviderId={selectedProvider?.id}
-                    onProviderSelect={setSelectedProvider}
-                  />
-                </CardContent>
-              </Card>
+              {/* Provider Selection - Only show if multiple providers */}
+              {!hasSingleProvider && (
+                <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80">
+                  <CardHeader className="bg-gradient-to-r from-muted/30 to-muted/10 rounded-t-lg border-b border-border/50">
+                    <CardTitle className="flex items-center text-xl md:text-2xl font-bold">
+                      <Users className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3 text-primary" />
+                      Choose Your Provider
+                    </CardTitle>
+                    <p className="text-muted-foreground text-sm md:text-base">
+                      Select a provider to see their available appointment times.
+                    </p>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <ProviderSelector
+                      selectedProviderId={selectedProvider?.id}
+                      onProviderSelect={setSelectedProvider}
+                    />
+                  </CardContent>
+                </Card>
+              )}
               
               {selectedProvider && (
                 <Card className="shadow-xl border border-border/50 backdrop-blur-sm bg-card/80 max-w-6xl mx-auto">
