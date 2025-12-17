@@ -167,24 +167,12 @@ export const useRadioPlayer = () => {
       sharedAudio = audio;
       console.log('Created new shared radio audio element');
       
-      // Set up Web Audio API for proper gain control (prevents clipping)
-      try {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        if (AudioContextClass && !sharedAudioContext) {
-          sharedAudioContext = new AudioContextClass();
-          sharedGainNode = sharedAudioContext.createGain();
-          // Start with default volume * MAX_GAIN to prevent clipping
-          sharedGainNode.gain.value = 0.8 * MAX_GAIN;
-          sharedGainNode.connect(sharedAudioContext.destination);
-          
-          // Connect audio element to gain node (must be done once per audio element)
-          sharedSourceNode = sharedAudioContext.createMediaElementSource(audio);
-          sharedSourceNode.connect(sharedGainNode);
-          console.log('Created Web Audio mixer with gain node (MAX_GAIN:', MAX_GAIN, ')');
-        }
-      } catch (e) {
-        console.warn('Could not create Web Audio mixer:', e);
-      }
+      // NOTE: Web Audio mixer disabled for cross-origin radio streams.
+      // Connecting a cross-origin stream to WebAudio without proper CORS can result in "playing but silent".
+      // We rely on the native HTMLAudioElement volume instead.
+      sharedAudioContext = null;
+      sharedGainNode = null;
+      sharedSourceNode = null;
     } else {
       console.log('Reusing existing shared radio audio element');
     }
@@ -192,14 +180,9 @@ export const useRadioPlayer = () => {
     const audio = sharedAudio!;
     audioRef.current = audio;
 
-    // Keep audio element volume at 1.0 - we control gain via Web Audio
-    audio.volume = 1.0;
+    // Use native element volume (WebAudio mixer disabled)
+    audio.volume = 0.8;
 
-    // Sync local volume state with the shared gain node (prevents "playing but silent" across multiple hook consumers)
-    if (sharedGainNode) {
-      const currentVolume = Math.max(0, Math.min(1, sharedGainNode.gain.value / MAX_GAIN));
-      setState(prev => ({ ...prev, volume: currentVolume }));
-    }
 
     const handleLoadStart = () => {
       console.log('Radio stream load start');
@@ -482,8 +465,8 @@ export const useRadioPlayer = () => {
 
       // Ensure audio element is ready
       audio.muted = false;
-      audio.volume = 1.0; // Web Audio controls actual volume
-      
+      audio.volume = targetVolume;
+
       // Get stream URLs
       const urls = streamUrls();
       const publicUrl = azuraCastService.getPublicStreamUrl();
@@ -576,18 +559,13 @@ export const useRadioPlayer = () => {
   const setVolume = useCallback((volume: number) => {
     const clampedVolume = Math.max(0, Math.min(1, volume));
     setState(prev => ({ ...prev, volume: clampedVolume }));
-    
-    // Use Web Audio gain node for proper mixing (prevents clipping)
-    if (sharedGainNode && sharedAudioContext) {
-      // Apply MAX_GAIN ceiling to prevent clipping from hot audio sources
-      const actualGain = clampedVolume * MAX_GAIN;
-      sharedGainNode.gain.setValueAtTime(actualGain, sharedAudioContext.currentTime);
-      console.log('Mixer gain set to:', actualGain, '(volume:', clampedVolume, ')');
-    } else if (audioRef.current) {
-      // Fallback to direct audio volume if Web Audio not available
-      audioRef.current.volume = clampedVolume * MAX_GAIN;
+
+    // WebAudio mixer is disabled; use native element volume.
+    if (audioRef.current) {
+      audioRef.current.volume = clampedVolume;
     }
   }, []);
+
 
   // Switch to a different stream URL (for channel switching)
   const switchStream = useCallback(async (newStreamUrl: string) => {
