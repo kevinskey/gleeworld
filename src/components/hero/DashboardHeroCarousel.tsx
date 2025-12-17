@@ -60,6 +60,13 @@ export const DashboardHeroCarousel: React.FC = () => {
     if (emblaApi) emblaApi.scrollNext();
   }, [emblaApi]);
 
+  // Reinitialize embla when slides load
+  useEffect(() => {
+    if (emblaApi && heroSlides.length > 0) {
+      emblaApi.reInit();
+    }
+  }, [emblaApi, heroSlides]);
+
   useEffect(() => {
     const fetchSlides = async () => {
       try {
