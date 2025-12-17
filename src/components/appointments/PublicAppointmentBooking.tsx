@@ -257,6 +257,28 @@ export const PublicAppointmentBooking = () => {
 
       setAppointmentId(appointment.id);
 
+      // Sync to Google Calendar
+      try {
+        await supabase.functions.invoke('sync-appointment-to-gcal', {
+          body: {
+            action: 'create',
+            appointment: {
+              id: appointment.id,
+              title: appointmentData.title,
+              description: appointmentData.description,
+              appointment_date: appointmentData.appointment_date,
+              duration_minutes: appointmentData.duration_minutes,
+              client_name: appointmentData.client_name,
+              client_email: appointmentData.client_email,
+            }
+          }
+        });
+        console.log('Appointment synced to Google Calendar');
+      } catch (gcalError) {
+        console.error('Google Calendar sync failed:', gcalError);
+        // Don't fail the appointment creation if calendar sync fails
+      }
+
       // Send SMS notifications
       try {
         // Send SMS to your specific number for approval
