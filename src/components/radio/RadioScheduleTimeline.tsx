@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { azuraCastService } from '@/services/azuracast';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import {
   Clock,
@@ -68,6 +69,8 @@ export const RadioScheduleTimeline = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [quickAddId, setQuickAddId] = useState('');
   const lastDraggedMediaRef = useRef<AzuraCastMedia | null>(null);
@@ -189,13 +192,25 @@ export const RadioScheduleTimeline = ({
     const types = Array.from(e.dataTransfer.types);
     console.log('Drop received, types:', types);
 
-    // Check if user is dragging files from outside the browser
+    // Handle external file drops
     if (types.includes('Files') && !types.includes('application/json') && !types.includes('text/plain')) {
-      toast({ 
-        title: "External Files Not Supported", 
-        description: "Drag tracks from the Media Library below, or click Load Library first.", 
-        variant: "destructive" 
-      });
+      const files = Array.from(e.dataTransfer.files);
+      const audioFiles = files.filter(f => 
+        f.type.startsWith('audio/') || 
+        /\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(f.name)
+      );
+      
+      if (audioFiles.length === 0) {
+        toast({ 
+          title: "Invalid File Type", 
+          description: "Please drop audio files (MP3, WAV, M4A, etc.)", 
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      // Upload and queue the first audio file
+      await uploadAndQueueFile(audioFiles[0]);
       return;
     }
 
@@ -218,7 +233,6 @@ export const RadioScheduleTimeline = ({
           await requestSong(track.mediaId, track.title);
           return;
         } else if (track.id) {
-          // Handle tracks with 'id' instead of 'mediaId'
           await requestSong(track.id, track.title);
           return;
         }
@@ -237,6 +251,82 @@ export const RadioScheduleTimeline = ({
     } catch (err) {
       console.error('Failed to parse track data:', err);
       toast({ title: "Drop Error", description: "Failed to process dropped track", variant: "destructive" });
+    }
+  };
+
+  const uploadAndQueueFile = async (file: File) => {
+    try {
+      setIsUploading(true);
+      setUploadStatus('Uploading to storage...');
+      
+      // Generate unique filename
+      const timestamp = Date.now();
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const storagePath = `radio-uploads/${timestamp}_${safeFileName}`;
+      
+      // Upload to Supabase storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('audio-recordings')
+        .upload(storagePath, file, { 
+          cacheControl: '3600',
+          upsert: false 
+        });
+      
+      if (uploadError) {
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
+      }
+      
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('audio-recordings')
+        .getPublicUrl(storagePath);
+      
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to get public URL');
+      }
+      
+      setUploadStatus('Uploading to AzuraCast...');
+      
+      // Extract title from filename
+      const title = file.name.replace(/\.[^/.]+$/, '').replace(/_/g, ' ');
+      
+      // Upload to AzuraCast
+      const result = await azuraCastService.uploadMediaFromUrl(
+        urlData.publicUrl,
+        safeFileName,
+        title,
+        '',
+        (status) => setUploadStatus(status)
+      );
+      
+      setUploadStatus('Queueing track...');
+      
+      // Queue the uploaded track
+      if (result?.media_id) {
+        await azuraCastService.requestSong(result.media_id, title);
+        toast({ 
+          title: "Uploaded & Queued", 
+          description: `"${title}" has been uploaded and added to queue` 
+        });
+      } else {
+        toast({ 
+          title: "Uploaded", 
+          description: `"${title}" uploaded to library. Load Library to queue it.` 
+        });
+      }
+      
+      await loadQueue();
+      onRefresh?.();
+    } catch (error: any) {
+      console.error('Error uploading file:', error);
+      toast({ 
+        title: "Upload Failed", 
+        description: error.message || "Failed to upload file", 
+        variant: "destructive" 
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadStatus('');
     }
   };
 
@@ -437,7 +527,7 @@ export const RadioScheduleTimeline = ({
             isDraggingOver 
               ? "border-emerald-500 bg-emerald-500/10" 
               : "border-slate-600 hover:border-slate-500 bg-slate-800/30",
-            isRequesting && "opacity-50 pointer-events-none"
+            (isRequesting || isUploading) && "opacity-50 pointer-events-none"
           )}
         >
           <div className="flex flex-col items-center gap-2">
@@ -445,7 +535,7 @@ export const RadioScheduleTimeline = ({
               "p-2 rounded-full transition-colors",
               isDraggingOver ? "bg-emerald-500/20" : "bg-slate-700"
             )}>
-              {isRequesting ? (
+              {(isRequesting || isUploading) ? (
                 <Loader2 className="h-5 w-5 text-slate-400 animate-spin" />
               ) : isDraggingOver ? (
                 <Plus className="h-5 w-5 text-emerald-400" />
@@ -457,8 +547,19 @@ export const RadioScheduleTimeline = ({
               "text-sm font-medium",
               isDraggingOver ? "text-emerald-400" : "text-slate-300"
             )}>
-              {isRequesting ? "Queueing..." : isDraggingOver ? "Drop to queue" : "Drop tracks here to queue"}
+              {isUploading 
+                ? uploadStatus || "Uploading..." 
+                : isRequesting 
+                  ? "Queueing..." 
+                  : isDraggingOver 
+                    ? "Drop to queue" 
+                    : "Drop tracks or audio files here"}
             </p>
+            {!isUploading && !isRequesting && !isDraggingOver && (
+              <p className="text-xs text-slate-500">
+                Supports MP3, WAV, M4A, OGG, FLAC
+              </p>
+            )}
           </div>
         </div>
 
