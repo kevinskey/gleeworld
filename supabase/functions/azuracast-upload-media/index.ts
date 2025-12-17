@@ -109,9 +109,11 @@ Deno.serve(async (req) => {
 
     // Upload to AzuraCast (multipart/form-data)
     // IMPORTANT: Let fetch generate the multipart boundary for us (manual boundary construction can break Symfony parsing)
+    // AzuraCast expects both `file` and `path` fields.
     const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
     const form = new FormData();
     form.append('file', fileBlob, fileName);
+    form.append('path', fileName);
 
     const uploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files';
     console.log('AzuraCast Upload: Uploading to:', uploadUrl, 'file size:', fileArrayBuffer.byteLength);
