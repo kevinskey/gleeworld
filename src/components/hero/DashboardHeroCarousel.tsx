@@ -43,12 +43,13 @@ export const DashboardHeroCarousel: React.FC = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Embla carousel with infinite loop
+  // Embla carousel with infinite loop and swipe support
   const [emblaRef, emblaApi] = useEmblaCarousel({ 
     loop: true,
     align: 'start',
     dragFree: true,
-    containScroll: false
+    skipSnaps: false,
+    watchDrag: true
   });
 
   const scrollPrev = useCallback(() => {
@@ -195,8 +196,8 @@ export const DashboardHeroCarousel: React.FC = () => {
         </div>
         
         {/* Embla Carousel with Infinite Loop */}
-        <div className="overflow-hidden" ref={emblaRef}>
-          <div className="flex gap-3 sm:gap-4">
+        <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
+          <div className="flex gap-3 sm:gap-4" style={{ touchAction: 'pan-y pinch-zoom' }}>
             {heroSlides.map((slide) => (
               <div 
                 key={slide.id} 
