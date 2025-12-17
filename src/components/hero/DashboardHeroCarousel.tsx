@@ -106,98 +106,106 @@ export const DashboardHeroCarousel: React.FC = () => {
 
   const slide = heroSlides[currentSlide];
 
+  // Get the two slides to display
+  const slide1 = heroSlides[currentSlide];
+  const slide2 = heroSlides[(currentSlide + 1) % heroSlides.length];
+
+  const renderSlide = (slideData: HeroSlide | undefined, index: number) => {
+    if (!slideData) {
+      return (
+        <div className="w-full h-full bg-muted flex items-center justify-center">
+          <p className="text-muted-foreground text-sm">No hero slides configured</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-[200px] sm:h-[240px] md:h-[280px] lg:h-[320px] relative overflow-hidden">
+        {/* Desktop */}
+        <img
+          src={slideData.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+          alt={slideData.title || 'GleeWorld hero image'}
+          className="hidden md:block w-full h-full object-cover transition-opacity duration-500"
+          onError={(e) => {
+            if (!e.currentTarget.src.includes('unsplash.com')) {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+            }
+          }}
+        />
+        {/* iPad */}
+        <img
+          src={slideData.ipad_image_url || slideData.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+          alt={slideData.title || 'GleeWorld hero image'}
+          className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500"
+          onError={(e) => {
+            if (!e.currentTarget.src.includes('unsplash.com')) {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+            }
+          }}
+        />
+        {/* Mobile */}
+        <img
+          src={slideData.mobile_image_url || slideData.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+          alt={slideData.title || 'GleeWorld hero image'}
+          className="block sm:hidden w-full h-full object-cover transition-opacity duration-500"
+          onError={(e) => {
+            if (!e.currentTarget.src.includes('unsplash.com')) {
+              e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
+            }
+          }}
+        />
+
+        {/* Subtle overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/20 to-transparent" />
+
+        {/* Title overlay */}
+        {slideData.title && (
+          <div
+            className={`absolute inset-0 flex ${getVerticalAlignment(slideData.title_position_vertical)} ${getHorizontalAlignment(slideData.title_position_horizontal)} px-3 sm:px-4 pointer-events-none`}
+          >
+            <div className="bg-foreground/60 backdrop-blur-sm rounded-lg p-2 sm:p-3 shadow-xl border border-background/20 pointer-events-auto">
+              <h4 className={`${getTitleSize(slideData.title_size)} font-bold text-background drop-shadow-lg`}>{slideData.title}</h4>
+            </div>
+          </div>
+        )}
+
+        {/* Action button */}
+        {slideData.action_button_enabled && slideData.action_button_text && slideData.action_button_url && (
+          <div className="absolute inset-0 flex justify-center items-end pb-3 sm:pb-4 px-3 pointer-events-none">
+            <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-background/20 shadow-xl text-xs">
+              <a href={slideData.action_button_url} target="_blank" rel="noopener noreferrer">
+                {slideData.action_button_text}
+              </a>
+            </Button>
+          </div>
+        )}
+        {!slideData.action_button_enabled && slideData.button_text && slideData.link_url && (
+          <div className="absolute inset-0 flex justify-center items-end pb-3 sm:pb-4 px-3 pointer-events-none">
+            <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-white/20 shadow-xl text-xs">
+              <a href={slideData.link_url} target="_blank" rel="noopener noreferrer">
+                {slideData.button_text}
+              </a>
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <section aria-label="Dashboard hero" className="animate-fade-in">
       <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg">
         <div className="px-4 pt-3 pb-2">
           <h4 className="text-xs sm:text-sm font-semibold tracking-wide uppercase text-foreground">Glee Cam</h4>
         </div>
-        <CardContent className="p-0">
-          <div className="h-[260px] sm:h-[320px] md:h-[380px] lg:h-[420px] relative overflow-hidden">
-            {slide ? (
-              <>
-                {/* Desktop */}
-                <img
-                  src={slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
-                  alt={slide.title || 'GleeWorld hero image'}
-                  className="hidden md:block w-full h-full object-contain transition-opacity duration-500"
-                  onError={(e) => {
-                    if (!e.currentTarget.src.includes('unsplash.com')) {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
-                    }
-                  }}
-                />
-                {/* iPad */}
-                <img
-                  src={slide.ipad_image_url || slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
-                  alt={slide.title || 'GleeWorld hero image'}
-                  className="hidden sm:block md:hidden w-full h-full object-contain transition-opacity duration-500"
-                  onError={(e) => {
-                    if (!e.currentTarget.src.includes('unsplash.com')) {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
-                    }
-                  }}
-                />
-                {/* Mobile */}
-                <img
-                  src={slide.mobile_image_url || slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
-                  alt={slide.title || 'GleeWorld hero image'}
-                  className="block sm:hidden w-full h-full object-contain transition-opacity duration-500"
-                  onError={(e) => {
-                    if (!e.currentTarget.src.includes('unsplash.com')) {
-                      e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
-                    }
-                  }}
-                />
-
-                {/* Subtle overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/20 to-transparent" />
-
-                {/* Title overlay */}
-                {slide.title && (
-                  <div
-                    className={`absolute inset-0 flex ${getVerticalAlignment(slide.title_position_vertical)} ${getHorizontalAlignment(slide.title_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
-                  >
-                    <div className="bg-foreground/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-background/20 pointer-events-auto">
-                      <h4 className={`${getTitleSize(slide.title_size)} font-bold text-background drop-shadow-lg`}>{slide.title}</h4>
-                    </div>
-                  </div>
-                )}
-
-                {/* Description overlay */}
-                {slide.description && (
-                  <div
-                    className={`absolute inset-0 flex ${getVerticalAlignment(slide.description_position_vertical)} ${getHorizontalAlignment(slide.description_position_horizontal)} px-4 sm:px-6 md:px-8 lg:px-12 pointer-events-none`}
-                  >
-                    <div className="bg-foreground/60 backdrop-blur-sm rounded-lg p-3 sm:p-4 shadow-xl border border-background/20 pointer-events-auto max-w-2xl">
-                      <p className={`${getDescriptionSize(slide.description_size)} text-background drop-shadow-md`}>{slide.description}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Action button (mirrors landing) */}
-                {slide.action_button_enabled && slide.action_button_text && slide.action_button_url && (
-                  <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 px-4 pointer-events-none">
-                    <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-background/20 shadow-xl">
-                      <a href={slide.action_button_url} target="_blank" rel="noopener noreferrer">
-                        {slide.action_button_text}
-                      </a>
-                    </Button>
-                  </div>
-                )}
-                {!slide.action_button_enabled && slide.button_text && slide.link_url && (
-                  <div className="absolute inset-0 flex justify-center items-end pb-4 sm:pb-6 md:pb-8 px-4 pointer-events-none">
-                    <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-white/20 shadow-xl">
-                      <a href={slide.link_url} target="_blank" rel="noopener noreferrer">
-                        {slide.button_text}
-                      </a>
-                    </Button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <p className="text-muted-foreground text-sm">No hero slides configured</p>
+        <CardContent className="p-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="rounded-lg overflow-hidden">
+              {renderSlide(slide1, 0)}
+            </div>
+            {heroSlides.length > 1 && (
+              <div className="rounded-lg overflow-hidden">
+                {renderSlide(slide2, 1)}
               </div>
             )}
           </div>
