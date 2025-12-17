@@ -24,7 +24,7 @@ import { Calendar, MapPin, ArrowRight, ChevronLeft, ChevronRight, Sparkles, X, M
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
-import { EndOfSemesterDocsCard } from "@/components/surveys/EndOfSemesterDocsCard";
+
 import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
 interface Event {
   id: string;
@@ -336,14 +336,6 @@ export const GleeWorldLanding = () => {
         </div>
       </section>
 
-      {/* End of Semester Docs - for authenticated users */}
-      {user && (
-        <section className="relative z-30 py-4 sm:py-6 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
-          <div className="w-full max-w-screen-2xl mx-auto">
-            <EndOfSemesterDocsCard />
-          </div>
-        </section>
-      )}
 
 
       {/* Upcoming Events Section */}
