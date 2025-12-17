@@ -1096,7 +1096,59 @@ export const RadioManagement = () => {
       </Tabs>
 
       {/* Media Library Dialog */}
-      <MediaLibraryDialog open={showMediaLibrary} onOpenChange={setShowMediaLibrary} onAddToPlaylist={(track) => { toast({ title: "Added", description: `"${track.title}" added` }); fetchTracks(); setShowMediaLibrary(false); }} />
+      <MediaLibraryDialog 
+        open={showMediaLibrary} 
+        onOpenChange={setShowMediaLibrary} 
+        onAddToPlaylist={async (track) => { 
+          try {
+            toast({ title: "Adding to queue...", description: `Searching for "${track.title}" in AzuraCast...` });
+            
+            // First, search for the track in AzuraCast media library by title
+            const azuraMedia = await azuraCastService.getAllMedia();
+            const normalizeTitle = (t: string) => (t || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+            const searchTitle = normalizeTitle(track.title);
+            
+            const matchedMedia = azuraMedia.find((m: any) => {
+              const mediaTitle = normalizeTitle(m.title || m.media?.title || '');
+              return mediaTitle === searchTitle || mediaTitle.includes(searchTitle) || searchTitle.includes(mediaTitle);
+            });
+            
+            if (matchedMedia && matchedMedia.id) {
+              // Track exists in AzuraCast - queue it directly
+              await azuraCastService.requestSong(matchedMedia.id, track.title);
+              toast({ title: "Queued", description: `"${track.title}" added to AzuraCast queue` });
+            } else {
+              // Track not in AzuraCast - upload it first, then queue
+              toast({ title: "Uploading...", description: `"${track.title}" not in AzuraCast, uploading now...` });
+              
+              const result = await azuraCastService.uploadMediaFromUrl(
+                track.file_url,
+                track.title.replace(/[^a-zA-Z0-9.-]/g, '_') + '.mp3',
+                track.title,
+                '',
+                (status) => console.log('Upload status:', status)
+              );
+              
+              if (result?.media_id) {
+                await azuraCastService.requestSong(result.media_id, track.title);
+                toast({ title: "Uploaded & Queued", description: `"${track.title}" uploaded and added to queue` });
+              } else {
+                toast({ title: "Uploaded", description: `"${track.title}" uploaded to AzuraCast library` });
+              }
+            }
+            
+            fetchTracks();
+            setShowMediaLibrary(false);
+          } catch (error: any) {
+            console.error('Error adding track to queue:', error);
+            toast({ 
+              title: "Error", 
+              description: error.message || "Failed to add track to queue", 
+              variant: "destructive" 
+            });
+          }
+        }} 
+      />
 
       {/* Edit Track Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
