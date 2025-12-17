@@ -67,6 +67,12 @@ const EmailComposerPage = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   
+  // SMS specific state
+  const [smsRecipients, setSmsRecipients] = useState<Array<{user_id: string, full_name: string, phone_number: string}>>([]);
+  const [smsSearchQuery, setSmsSearchQuery] = useState('');
+  const [smsSearchResults, setSmsSearchResults] = useState<any[]>([]);
+  const [sendToAll, setSendToAll] = useState(true);
+  
   // Search for members
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
@@ -86,6 +92,42 @@ const EmailComposerPage = () => {
       setSearchResults(data);
     }
     setIsSearching(false);
+  };
+  
+  // Search for SMS recipients (members with phone numbers)
+  const handleSMSSearch = async (query: string) => {
+    setSmsSearchQuery(query);
+    if (query.length < 2) {
+      setSmsSearchResults([]);
+      return;
+    }
+    
+    const { data, error } = await supabase
+      .from('gw_profiles')
+      .select('user_id, full_name, first_name, last_name, phone_number')
+      .not('phone_number', 'is', null)
+      .or(`full_name.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
+      .limit(10);
+    
+    if (!error && data) {
+      // Filter out already selected recipients
+      const filtered = data.filter(d => !smsRecipients.some(r => r.user_id === d.user_id));
+      setSmsSearchResults(filtered);
+    }
+  };
+  
+  // Add SMS recipient
+  const addSmsRecipient = (person: { user_id: string, full_name: string, phone_number: string }) => {
+    if (!smsRecipients.some(r => r.user_id === person.user_id)) {
+      setSmsRecipients([...smsRecipients, person]);
+    }
+    setSmsSearchQuery('');
+    setSmsSearchResults([]);
+  };
+  
+  // Remove SMS recipient
+  const removeSmsRecipient = (userId: string) => {
+    setSmsRecipients(smsRecipients.filter(r => r.user_id !== userId));
   };
   
   // Add recipient
@@ -257,10 +299,11 @@ const EmailComposerPage = () => {
   
   // Send SMS
   const handleSendSMS = async () => {
-    if (recipients.length === 0 && selectedGroups.length === 0) {
+    // Validate - need either sendToAll or individual recipients
+    if (!sendToAll && smsRecipients.length === 0) {
       toast({
         title: "No recipients",
-        description: "Please add at least one recipient",
+        description: "Please add at least one recipient or select 'Send to All Members'",
         variant: "destructive"
       });
       return;
@@ -278,23 +321,55 @@ const EmailComposerPage = () => {
     setIsSending(true);
     
     try {
-      // For SMS, we need phone numbers
-      const { data, error } = await supabase.functions.invoke('broadcast-sms', {
-        body: {
-          message: content,
-          senderUserId: user?.id,
-          senderName: userProfile?.full_name || 'GleeWorld'
+      if (sendToAll) {
+        // Broadcast to all members
+        const { data, error } = await supabase.functions.invoke('broadcast-sms', {
+          body: {
+            message: content,
+            senderUserId: user?.id,
+            senderName: userProfile?.full_name || 'GleeWorld'
+          }
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "SMS sent!",
+          description: data?.message || "Messages sent to all members",
+        });
+      } else {
+        // Send to individual recipients
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (const recipient of smsRecipients) {
+          const { error } = await supabase.functions.invoke('gw-send-sms', {
+            body: {
+              to: recipient.phone_number,
+              message: `${content}\n\n- ${userProfile?.full_name || 'GleeWorld'}`
+            }
+          });
+          
+          if (error) {
+            failCount++;
+            console.error(`Failed to send SMS to ${recipient.full_name}:`, error);
+          } else {
+            successCount++;
+          }
         }
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "SMS sent!",
-        description: data?.message || "Messages sent successfully",
-      });
+        
+        if (successCount > 0) {
+          toast({
+            title: "SMS sent!",
+            description: `Successfully sent to ${successCount} recipient${successCount > 1 ? 's' : ''}${failCount > 0 ? `, ${failCount} failed` : ''}`,
+          });
+        } else {
+          throw new Error('Failed to send SMS to all recipients');
+        }
+      }
       
       setContent('');
+      setSmsRecipients([]);
       
     } catch (error: any) {
       console.error('Failed to send SMS:', error);
@@ -593,10 +668,84 @@ const EmailComposerPage = () => {
                       Compose SMS
                     </CardTitle>
                     <CardDescription>
-                      Send SMS to all members with phone numbers or select groups
+                      Send SMS to individual members or broadcast to all
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {/* Send Mode Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={sendToAll}
+                          onCheckedChange={setSendToAll}
+                        />
+                        <Label className="text-sm font-medium">
+                          {sendToAll ? 'Send to All Members' : 'Send to Selected Recipients'}
+                        </Label>
+                      </div>
+                      {sendToAll && (
+                        <Badge variant="secondary" className="text-xs">
+                          Broadcasts to all members with phone numbers
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    {/* Individual Recipients (when not sending to all) */}
+                    {!sendToAll && (
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">To:</Label>
+                        <div className="flex flex-wrap gap-2 p-2 min-h-[44px] border rounded-lg bg-background">
+                          {smsRecipients.map((r) => (
+                            <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1">
+                              {r.full_name}
+                              <button onClick={() => removeSmsRecipient(r.user_id)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                          <Input
+                            value={smsSearchQuery}
+                            onChange={(e) => handleSMSSearch(e.target.value)}
+                            placeholder="Search members by name..."
+                            className="flex-1 min-w-[200px] border-0 shadow-none focus-visible:ring-0 p-0 h-8"
+                          />
+                        </div>
+                        {/* Search Results */}
+                        {smsSearchResults.length > 0 && (
+                          <Card className="z-50 w-full shadow-lg">
+                            <ScrollArea className="max-h-[200px]">
+                              {smsSearchResults.map((person) => (
+                                <button
+                                  key={person.user_id}
+                                  onClick={() => addSmsRecipient({
+                                    user_id: person.user_id,
+                                    full_name: person.full_name || `${person.first_name} ${person.last_name}`,
+                                    phone_number: person.phone_number
+                                  })}
+                                  className="w-full flex items-center gap-3 p-3 hover:bg-muted text-left"
+                                >
+                                  <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                                    {(person.full_name || person.first_name)?.[0]?.toUpperCase() || '?'}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">{person.full_name || `${person.first_name} ${person.last_name}`}</p>
+                                    <p className="text-xs text-muted-foreground">{person.phone_number}</p>
+                                  </div>
+                                </button>
+                              ))}
+                            </ScrollArea>
+                          </Card>
+                        )}
+                        {smsRecipients.length > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {smsRecipients.length} recipient{smsRecipients.length > 1 ? 's' : ''} selected
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    
+                    <Separator />
+                    
                     <Textarea
                       value={content}
                       onChange={(e) => setContent(e.target.value)}
@@ -618,7 +767,7 @@ const EmailComposerPage = () => {
                 <div className="flex justify-end">
                   <Button 
                     onClick={handleSendSMS}
-                    disabled={isSending || !content.trim()}
+                    disabled={isSending || !content.trim() || (!sendToAll && smsRecipients.length === 0)}
                     className="gap-2"
                   >
                     {isSending ? (
@@ -626,7 +775,7 @@ const EmailComposerPage = () => {
                     ) : (
                       <>
                         <Send className="h-4 w-4" />
-                        Send SMS to All Members
+                        {sendToAll ? 'Send SMS to All Members' : `Send SMS to ${smsRecipients.length} Recipient${smsRecipients.length !== 1 ? 's' : ''}`}
                       </>
                     )}
                   </Button>
