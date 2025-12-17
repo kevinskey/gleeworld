@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles, Plus, Mail } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles, Plus, Mail, Key } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
@@ -322,6 +322,22 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     type="button"
                   >
                     <Camera className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                  </Button>
+                </EnhancedTooltip>
+
+                {/* Quick Actions Button */}
+                <EnhancedTooltip content="Quick Actions">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => window.dispatchEvent(new CustomEvent('toggle-quick-actions'))}
+                    className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
+                    style={{ 
+                      color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                    }}
+                    type="button"
+                  >
+                    <Key className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                   </Button>
                 </EnhancedTooltip>
                 
