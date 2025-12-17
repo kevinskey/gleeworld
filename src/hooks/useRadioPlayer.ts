@@ -280,6 +280,13 @@ export const useRadioPlayer = () => {
     audio.addEventListener('suspend', handleSuspend);
     audio.addEventListener('waiting', handleWaiting);
 
+    // Sync state if audio is already playing (e.g., HeaderRadioPlayer mounts after RadioModule started playback)
+    if (!audio.paused && audio.src) {
+      console.log('useRadioPlayer: Audio already playing on mount, syncing state');
+      isPlayingRef.current = true;
+      setState(prev => ({ ...prev, isPlaying: true, isLoading: false }));
+    }
+
     return () => {
       console.log('useRadioPlayer: Cleaning up event listeners (not stopping audio)...');
       audio.removeEventListener('loadstart', handleLoadStart);
