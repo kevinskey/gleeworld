@@ -443,22 +443,30 @@ export const useRadioPlayer = () => {
       return;
     }
 
-    // If volume was muted elsewhere (e.g. radio bar), ensure header playback isn't silent.
-    // NOTE: state.volume may be stale across different hook instances, so also check the shared gain node.
-    const gainIsMuted = !!sharedGainNode && sharedGainNode.gain.value === 0;
-    if (state.volume === 0 || gainIsMuted) {
-      const unmutedVolume = 0.8;
-      console.log('useRadioPlayer: Volume is muted; restoring to', unmutedVolume);
-      setState(prev => ({ ...prev, volume: unmutedVolume }));
+    // Debug: log current audio state
+    console.log('useRadioPlayer: Audio debug:', {
+      stateVolume: state.volume,
+      gainNodeExists: !!sharedGainNode,
+      gainValue: sharedGainNode?.gain?.value,
+      audioContextState: sharedAudioContext?.state,
+      audioMuted: audioRef.current.muted,
+      audioVolume: audioRef.current.volume,
+      audioPaused: audioRef.current.paused,
+    });
 
-      if (sharedGainNode && sharedAudioContext) {
-        const actualGain = unmutedVolume * MAX_GAIN;
-        sharedGainNode.gain.setValueAtTime(actualGain, sharedAudioContext.currentTime);
-        console.log('useRadioPlayer: Mixer gain restored to:', actualGain);
-      } else {
-        audioRef.current.volume = unmutedVolume * MAX_GAIN;
-      }
+    // ALWAYS ensure gain is set to audible level when playing
+    // This fixes cases where gain was muted by another component
+    const targetVolume = state.volume > 0 ? state.volume : 0.8;
+    
+    if (sharedGainNode && sharedAudioContext) {
+      const actualGain = targetVolume * MAX_GAIN;
+      sharedGainNode.gain.setValueAtTime(actualGain, sharedAudioContext.currentTime);
+      console.log('useRadioPlayer: Mixer gain set to:', actualGain);
     }
+    
+    // Also set element volume as fallback
+    audioRef.current.volume = targetVolume;
+    setState(prev => ({ ...prev, volume: targetVolume }));
 
     const urls = streamUrls();
     console.log('useRadioPlayer: Available stream URLs:', urls);
