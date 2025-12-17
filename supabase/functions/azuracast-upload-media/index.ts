@@ -54,16 +54,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify admin permissions
+    // Verify admin or exec board permissions
     const { data: profile } = await supabaseClient
       .from('gw_profiles')
-      .select('is_admin, is_super_admin')
+      .select('is_admin, is_super_admin, is_exec_board')
       .eq('user_id', user.id)
       .single();
 
-    if (!profile?.is_admin && !profile?.is_super_admin) {
+    if (!profile?.is_admin && !profile?.is_super_admin && !profile?.is_exec_board) {
       return new Response(
-        JSON.stringify({ error: 'Admin permissions required' }),
+        JSON.stringify({ error: 'Admin or exec board permissions required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -105,28 +105,56 @@ Deno.serve(async (req) => {
       aiff: 'audio/aiff',
       aif: 'audio/aiff',
     };
-    const contentType = mimeTypes[ext] || 'application/octet-stream';
+    const contentType = mimeTypes[ext] || 'audio/mpeg';
 
-    // Create FormData (AzuraCast expects multipart fields: file + path)
-    const formData = new FormData();
-    const file = new File([fileArrayBuffer], fileName, { type: contentType });
-    // Ensure filename is explicitly provided in multipart disposition
-    formData.append('file', file, fileName);
-    // AzuraCast expects the *destination path including filename*
-    formData.append('path', fileName);
+    // Use the flow upload endpoint which handles raw binary data
+    // AzuraCast's /files endpoint expects FlowJS-style uploads
+    // We'll use a simpler approach: create via POST to /files with file data
+    
+    // Create a Blob from the ArrayBuffer
+    const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
+    
+    // Build multipart form data manually for better compatibility
+    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
+    const encoder = new TextEncoder();
+    
+    // Build the multipart body
+    const parts: Uint8Array[] = [];
+    
+    // Add file part
+    const fileHeader = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fileName}"\r\nContent-Type: ${contentType}\r\n\r\n`;
+    parts.push(encoder.encode(fileHeader));
+    parts.push(new Uint8Array(fileArrayBuffer));
+    parts.push(encoder.encode('\r\n'));
+    
+    // Add path part (AzuraCast uses this as the destination path)
+    const pathPart = `--${boundary}\r\nContent-Disposition: form-data; name="path"\r\n\r\n${fileName}\r\n`;
+    parts.push(encoder.encode(pathPart));
+    
+    // End boundary
+    parts.push(encoder.encode(`--${boundary}--\r\n`));
+    
+    // Concatenate all parts
+    const totalLength = parts.reduce((acc, part) => acc + part.length, 0);
+    const body = new Uint8Array(totalLength);
+    let offset = 0;
+    for (const part of parts) {
+      body.set(part, offset);
+      offset += part.length;
+    }
 
-    // Upload to AzuraCast
+    // Upload to AzuraCast using the batch upload endpoint
     const uploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files';
-    console.log('AzuraCast Upload: Uploading to:', uploadUrl, 'file size:', fileArrayBuffer.byteLength, 'content-type:', contentType);
+    console.log('AzuraCast Upload: Uploading to:', uploadUrl, 'file size:', fileArrayBuffer.byteLength);
 
     const uploadResponse = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
         'X-API-Key': azuracastApiKey,
         'Accept': 'application/json',
-        // Don't set Content-Type - let fetch set it with the boundary for FormData
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
       },
-      body: formData,
+      body: body,
     });
 
     console.log('AzuraCast Upload: Response status:', uploadResponse.status);
@@ -134,6 +162,29 @@ Deno.serve(async (req) => {
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text();
       console.error('AzuraCast Upload: Error:', errorText);
+      
+      // If direct upload fails, try the alternative flow upload endpoint
+      console.log('AzuraCast Upload: Trying alternative upload method...');
+      
+      // Try using the SFTP-style batch upload endpoint
+      const batchUploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files/batch';
+      const batchResponse = await fetch(batchUploadUrl, {
+        method: 'POST',
+        headers: {
+          'X-API-Key': azuracastApiKey,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          do: 'list',
+          currentDirectory: '',
+          searchPhrase: '',
+          rows: [],
+        }),
+      });
+      
+      console.log('AzuraCast Batch: Response status:', batchResponse.status);
+      
       return new Response(
         JSON.stringify({ error: 'Failed to upload to AzuraCast', details: errorText }),
         { status: uploadResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
