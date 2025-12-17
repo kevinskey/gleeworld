@@ -493,7 +493,9 @@ export const RadioScheduleTimeline = ({
         ) : queueItems.length > 0 ? (
           <div className="space-y-1">
             {queueItems.map((item, index) => {
-              const key = String(getQueueItemId(item) ?? item.song?.id ?? index);
+              const queueId = getQueueItemId(item);
+              // Ensure keys are always unique even when the same song appears multiple times
+              const key = `${queueId ?? 'no-id'}-${item.cued_at}-${item.played_at}-${index}`;
               return (
                 <div 
                   key={key}
