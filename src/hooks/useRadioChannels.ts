@@ -113,7 +113,8 @@ export const useRadioChannels = () => {
   };
 
   // Request a song from the selected playlist (on-demand feature)
-  const requestSongFromChannel = async (channel: RadioChannel): Promise<{ success: boolean; message: string }> => {
+  // Auto-retries with different songs if rejected due to "played too recently"
+  const requestSongFromChannel = async (channel: RadioChannel, maxRetries: number = 3): Promise<{ success: boolean; message: string }> => {
     if (!channel.azura_playlist_id) {
       return { success: false, message: 'No playlist ID available' };
     }
@@ -121,17 +122,57 @@ export const useRadioChannels = () => {
     setIsRequesting(true);
     setLastRequestMessage(null);
     
-    try {
-      const result = await azuraCastService.requestSongFromPlaylist(channel.azura_playlist_id);
-      setLastRequestMessage(result.message);
-      return result;
-    } catch (error: any) {
-      const message = error.message || 'Request failed';
-      setLastRequestMessage(message);
-      return { success: false, message };
-    } finally {
-      setIsRequesting(false);
+    let lastError = '';
+    const triedSongIds = new Set<string>();
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const result = await azuraCastService.requestSongFromPlaylist(channel.azura_playlist_id, triedSongIds);
+        
+        // Track which song we tried
+        if (result.song?.id) {
+          triedSongIds.add(String(result.song.id));
+        }
+        
+        if (result.success) {
+          setLastRequestMessage(result.message);
+          return result;
+        }
+        
+        // Check if it's a "played too recently" error
+        const isRecentlyPlayed = result.message?.toLowerCase().includes('recently') || 
+                                 result.message?.toLowerCase().includes('cooldown') ||
+                                 result.message?.toLowerCase().includes('wait');
+        
+        if (isRecentlyPlayed && attempt < maxRetries - 1) {
+          console.log(`Song rejected (attempt ${attempt + 1}/${maxRetries}), trying another...`);
+          lastError = result.message;
+          continue;
+        }
+        
+        lastError = result.message;
+        break;
+      } catch (error: any) {
+        lastError = error.message || 'Request failed';
+        
+        // Check if it's a cooldown error and we should retry
+        const isRecentlyPlayed = lastError.toLowerCase().includes('recently') || 
+                                 lastError.toLowerCase().includes('cooldown') ||
+                                 lastError.toLowerCase().includes('wait');
+        
+        if (isRecentlyPlayed && attempt < maxRetries - 1) {
+          console.log(`Request rejected (attempt ${attempt + 1}/${maxRetries}), trying another song...`);
+          continue;
+        }
+        break;
+      }
     }
+    
+    // All retries failed
+    const message = `All songs on cooldown. Try a different playlist or wait a moment.`;
+    setLastRequestMessage(message);
+    setIsRequesting(false);
+    return { success: false, message };
   };
 
   // Restore saved channel preference on mount

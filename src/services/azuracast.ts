@@ -294,8 +294,9 @@ class AzuraCastService {
   }
 
   // Request a random song from a specific playlist (on-demand feature)
-  async requestSongFromPlaylist(playlistId: number): Promise<{ success: boolean; message: string; song?: any }> {
-    console.log('AzuraCast: Requesting random song from playlist:', playlistId);
+  // excludeIds: Set of song IDs to skip (for retry logic when songs are on cooldown)
+  async requestSongFromPlaylist(playlistId: number, excludeIds?: Set<string>): Promise<{ success: boolean; message: string; song?: any }> {
+    console.log('AzuraCast: Requesting random song from playlist:', playlistId, excludeIds?.size ? `(excluding ${excludeIds.size} songs)` : '');
     
     try {
       // First, try to get requestable songs filtered by playlist
@@ -303,7 +304,7 @@ class AzuraCastService {
       
       if (Array.isArray(requestableSongs) && requestableSongs.length > 0) {
         // Filter songs that match this playlist
-        const playlistSongs = requestableSongs.filter((s: any) => {
+        let playlistSongs = requestableSongs.filter((s: any) => {
           const playlists = s.song?.playlists || [];
           return playlists.some((p: any) => {
             const pId = typeof p === 'number' ? p : p?.id;
@@ -311,7 +312,22 @@ class AzuraCastService {
           });
         });
         
-        const songsToChooseFrom = playlistSongs.length > 0 ? playlistSongs : requestableSongs;
+        let songsToChooseFrom = playlistSongs.length > 0 ? playlistSongs : requestableSongs;
+        
+        // Exclude already-tried songs
+        if (excludeIds && excludeIds.size > 0) {
+          songsToChooseFrom = songsToChooseFrom.filter((s: any) => {
+            const songId = String(s.song?.id || s.request_id || '');
+            return !excludeIds.has(songId);
+          });
+        }
+        
+        if (songsToChooseFrom.length === 0) {
+          return {
+            success: false,
+            message: 'All available songs have been tried or are on cooldown.'
+          };
+        }
         
         // Pick a random song
         const randomIndex = Math.floor(Math.random() * songsToChooseFrom.length);
@@ -331,8 +347,24 @@ class AzuraCastService {
       // Fallback: Try to get playlist media and queue directly
       const playlistMedia = await this.getPlaylistMedia(playlistId);
       if (playlistMedia.length > 0) {
-        const randomIndex = Math.floor(Math.random() * playlistMedia.length);
-        const randomFile = playlistMedia[randomIndex];
+        // Filter out excluded songs
+        let availableMedia = playlistMedia;
+        if (excludeIds && excludeIds.size > 0) {
+          availableMedia = playlistMedia.filter((f: any) => {
+            const mediaId = String(f.media?.id || f.id || '');
+            return !excludeIds.has(mediaId);
+          });
+        }
+        
+        if (availableMedia.length === 0) {
+          return {
+            success: false,
+            message: 'All available songs have been tried or are on cooldown.'
+          };
+        }
+        
+        const randomIndex = Math.floor(Math.random() * availableMedia.length);
+        const randomFile = availableMedia[randomIndex];
         const mediaId = randomFile.media?.id || randomFile.id;
         const title = randomFile.media?.title || randomFile.path;
         
@@ -341,7 +373,7 @@ class AzuraCastService {
           return {
             success: true,
             message: `Queued: ${title}`,
-            song: randomFile.media
+            song: { ...randomFile.media, id: mediaId }
           };
         }
       }
