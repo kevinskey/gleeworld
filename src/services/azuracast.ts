@@ -603,21 +603,52 @@ class AzuraCastService {
     });
   }
 
-  // Get all media files from AzuraCast
+  // Get all media files from AzuraCast (recursively walks the media directory)
   async getAllMedia(): Promise<any[]> {
-    console.log('AzuraCast: Fetching all media...');
-    // Try files/list endpoint first (returns detailed file info)
+    console.log('AzuraCast: Fetching all media (recursive)...');
+
+    const listPath = async (path: string) => {
+      const qs = path ? `?path=${encodeURIComponent(path)}` : '';
+      return await this.makeProxyRequest(`/station/{stationId}/files/list${qs}`);
+    };
+
     try {
-      const files = await this.makeProxyRequest(`/station/{stationId}/files/list`);
-      if (Array.isArray(files) && files.length > 0) {
-        console.log('AzuraCast: Got', files.length, 'files from files/list');
-        return files.filter((file: any) => file.type === 'media' || file.media);
+      const visited = new Set<string>();
+      // AzuraCast tends to expect an explicit root path; try both.
+      const toVisit: string[] = ['/', ''];
+      const all: any[] = [];
+
+      while (toVisit.length > 0) {
+        const current = toVisit.shift() ?? '';
+        if (visited.has(current)) continue;
+        visited.add(current);
+
+        const entries = await listPath(current);
+        if (!Array.isArray(entries)) continue;
+
+        for (const entry of entries) {
+          const type = String(entry?.type || '').toLowerCase();
+          const entryPath = entry?.path;
+          const isDir = type === 'dir' || type === 'directory' || entry?.is_dir === true;
+
+          if (isDir && typeof entryPath === 'string') {
+            toVisit.push(entryPath);
+            continue;
+          }
+
+          if (type === 'media' || entry?.media) {
+            all.push(entry);
+          }
+        }
       }
+
+      console.log('AzuraCast: Total media files found:', all.length);
+      return all;
     } catch (e) {
-      console.warn('AzuraCast: files/list failed, trying files endpoint');
+      console.warn('AzuraCast: Recursive files/list failed, falling back to /files', e);
     }
-    
-    // Fallback to /files endpoint which may return more items
+
+    // Fallback to /files endpoint which may return more items (depending on AzuraCast version)
     try {
       const files = await this.makeProxyRequest(`/station/{stationId}/files`);
       if (Array.isArray(files)) {
@@ -627,7 +658,7 @@ class AzuraCastService {
     } catch (e) {
       console.warn('AzuraCast: /files endpoint also failed');
     }
-    
+
     return [];
   }
 
