@@ -1,306 +1,329 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Search, Music, Clock, Users, MapPin } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ArrowLeft, Search, Music, Clock, Filter, ChevronDown, Star, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useServices } from '@/hooks/useServices';
-import { useServiceProviders } from '@/hooks/useProviderServices';
-import { useServiceProviders as useProviders } from '@/hooks/useServiceProviders';
+import { useNavigate } from 'react-router-dom';
+import { UniversalLayout } from '@/components/layout/UniversalLayout';
 
+type DurationFilter = 'all' | 'up-to-30' | '31-60' | '60-plus';
+type SortOption = 'recommended' | 'price-low' | 'price-high' | 'duration-short' | 'duration-long';
 
 export default function ServiceSelection() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedService, setSelectedService] = useState<string | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const [durationFilter, setDurationFilter] = useState<DurationFilter>('all');
+  const [sortOption, setSortOption] = useState<SortOption>('recommended');
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: services = [], isLoading: servicesLoading } = useServices();
-  const { data: providers = [], isLoading: providersLoading } = useProviders();
-  const { data: serviceProviders = [] } = useServiceProviders(selectedService || undefined);
 
-  const filteredServices = services.filter(service =>
-    service.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter and sort services
+  const filteredAndSortedServices = useMemo(() => {
+    let result = services.filter(service =>
+      service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-  // Get available providers for selected service
-  const availableProviders = selectedService 
-    ? serviceProviders.map(sp => sp.provider).filter(Boolean)
-    : [];
-
-  const handleServiceSelect = (serviceId: string) => {
-    setSelectedService(serviceId);
-    setSelectedProvider(null); // Reset provider when service changes
-  };
-
-  const handleProviderSelect = (providerId: string) => {
-    setSelectedProvider(providerId);
-  };
-
-  const handleContinue = () => {
-    if (!selectedService) return;
-    const params = new URLSearchParams();
-    params.set('service', selectedService);
-    if (selectedProvider) {
-      params.set('provider', selectedProvider);
+    // Apply duration filter
+    switch (durationFilter) {
+      case 'up-to-30':
+        result = result.filter(s => s.duration_minutes <= 30);
+        break;
+      case '31-60':
+        result = result.filter(s => s.duration_minutes > 30 && s.duration_minutes <= 60);
+        break;
+      case '60-plus':
+        result = result.filter(s => s.duration_minutes > 60);
+        break;
     }
-    window.location.href = `/booking/datetime?${params.toString()}`;
+
+    // Apply sorting
+    switch (sortOption) {
+      case 'price-low':
+        result = [...result].sort((a, b) => (a.price_amount || 0) - (b.price_amount || 0));
+        break;
+      case 'price-high':
+        result = [...result].sort((a, b) => (b.price_amount || 0) - (a.price_amount || 0));
+        break;
+      case 'duration-short':
+        result = [...result].sort((a, b) => a.duration_minutes - b.duration_minutes);
+        break;
+      case 'duration-long':
+        result = [...result].sort((a, b) => b.duration_minutes - a.duration_minutes);
+        break;
+      default:
+        // Keep original order for 'recommended'
+        break;
+    }
+
+    return result;
+  }, [services, searchTerm, durationFilter, sortOption]);
+
+  const handleBookNow = (serviceId: string) => {
+    navigate(`/booking/datetime?service=${serviceId}`);
   };
+
+  const handleViewDetails = (serviceId: string) => {
+    // Could open a modal or navigate to details page
+    navigate(`/booking/datetime?service=${serviceId}`);
+  };
+
+  const activeFiltersCount = (durationFilter !== 'all' ? 1 : 0) + (sortOption !== 'recommended' ? 1 : 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-primary/95 to-primary">
-      {/* Navigation Header */}
-      <div className="border-b border-white/20 bg-white/10 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <div className="text-primary-foreground font-bold text-xl">GleeWorld</div>
-              <nav className="hidden md:flex space-x-6">
-                <a href="/scheduling" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Services</a>
-                <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Instructors</a>
-                <a href="#" className="text-primary-foreground/80 hover:text-primary-foreground transition-colors">Locations</a>
-                <a href="#" className="text-secondary font-semibold border-b-2 border-secondary">Book Now</a>
-              </nav>
+    <UniversalLayout>
+      <div className="min-h-screen bg-background">
+        {/* Hero Header */}
+        <div className="relative bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground py-12 px-4">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm mx-auto mb-4 flex items-center justify-center">
+              <Music className="w-10 h-10 text-white" />
             </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-primary-foreground/80 text-sm">🇺🇸 English</span>
-              <Button variant="outline" className="border-white/30 text-primary-foreground hover:bg-white/10">
-                Log In
-              </Button>
-            </div>
+            <h1 className="text-4xl md:text-5xl font-bold mb-3">Book an Appointment</h1>
+            <p className="text-lg text-primary-foreground/80 max-w-xl mx-auto">
+              Schedule office hours, lessons, and consultations with our talented instructors
+            </p>
+            <Button 
+              size="lg" 
+              className="mt-6 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-8"
+              onClick={() => document.getElementById('services-list')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Book Now <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Service Selection */}
-          <div className="lg:col-span-2">
-            {/* Header */}
-            <div className="flex items-center mb-6">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-primary-foreground hover:bg-white/10 mr-4"
-                onClick={() => window.history.back()}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-              <h1 className="text-3xl font-bold text-primary-foreground">Choose Service</h1>
-            </div>
-
-            {/* Search Bar */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/60 h-5 w-5" />
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto px-4 py-8" id="services-list">
+          {/* Search and Filters Bar */}
+          <div className="mb-6 space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground h-5 w-5" />
               <Input
-                placeholder="Search services"
+                placeholder="Search services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-12 h-12 bg-white/10 border-white/30 text-primary-foreground placeholder:text-white/60 rounded-full"
+                className="pl-12 h-12 rounded-full border-2 focus:border-primary"
               />
             </div>
 
-            {/* Service Categories */}
-            <div className="space-y-6">
-              {/* Voice Lessons Category */}
-              <div>
-                <Card className="bg-white/10 border-white/20 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <Music className="h-5 w-5 text-secondary" />
-                        <div>
-                          <h3 className="text-lg font-semibold text-primary-foreground">Services</h3>
-                          <p className="text-sm text-primary-foreground/70">{filteredServices.length} Options</p>
-                        </div>
-                      </div>
-                    </div>
+            {/* Filter Pills */}
+            <div className="flex flex-wrap gap-2 items-center">
+              {/* Duration Filter */}
+              <Select value={durationFilter} onValueChange={(v) => setDurationFilter(v as DurationFilter)}>
+                <SelectTrigger className="w-auto min-w-[140px] h-10 rounded-full border-2 bg-card">
+                  <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="All durations" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All durations</SelectItem>
+                  <SelectItem value="up-to-30">Up to 30 min</SelectItem>
+                  <SelectItem value="31-60">31–60 min</SelectItem>
+                  <SelectItem value="60-plus">60+ min</SelectItem>
+                </SelectContent>
+              </Select>
 
-                    {/* Service Cards */}
-                    <div className="space-y-4">
-                      {servicesLoading ? (
-                        <div className="text-center py-8">
-                          <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full mx-auto"></div>
-                          <p className="text-primary-foreground/70 mt-2">Loading services...</p>
-                        </div>
-                      ) : filteredServices.length === 0 ? (
-                        <div className="text-center py-8">
-                          <p className="text-primary-foreground/70">No services found</p>
-                        </div>
-                      ) : (
-                        filteredServices.map((service) => (
-                          <Card 
-                            key={service.id} 
-                            className={`bg-white/5 border-white/20 hover:bg-white/10 transition-all cursor-pointer ${
-                              selectedService === service.id ? 'ring-2 ring-secondary' : ''
-                            }`}
-                            onClick={() => handleServiceSelect(service.id)}
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-16 h-16 rounded-lg bg-primary/20 flex items-center justify-center">
-                                  <Music className="w-8 h-8 text-primary-foreground" />
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-start justify-between mb-2">
-                                    <div>
-                                      <div className="flex items-center space-x-2 mb-1">
-                                        {service.badge_text && (
-                                          <Badge className="bg-blue-500 text-white text-xs">
-                                            {service.badge_text}
-                                          </Badge>
-                                        )}
-                                        <h4 className="text-primary-foreground font-semibold">{service.name}</h4>
-                                      </div>
-                                      <div className="flex items-center space-x-4 text-sm text-primary-foreground/70 mb-2">
-                                        <span>Duration: {service.duration_minutes}min</span>
-                                        <span>Category: {service.category}</span>
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="text-lg font-bold text-primary-foreground mb-2">{service.price_display}</div>
-                                      <Button 
-                                        className={`${selectedService === service.id ? 'bg-secondary hover:bg-secondary/90' : 'bg-blue-400 hover:bg-blue-500'} text-white`}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          handleServiceSelect(service.id);
-                                        }}
-                                      >
-                                        {selectedService === service.id ? 'Selected' : 'Choose'}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  <p className="text-sm text-primary-foreground/80 mb-3">{service.description}</p>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))
-                      )}
-                    </div>
+              {/* Sort Option */}
+              <Select value={sortOption} onValueChange={(v) => setSortOption(v as SortOption)}>
+                <SelectTrigger className="w-auto min-w-[180px] h-10 rounded-full border-2 bg-card">
+                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="recommended">Recommended</SelectItem>
+                  <SelectItem value="price-low">Price: low to high</SelectItem>
+                  <SelectItem value="price-high">Price: high to low</SelectItem>
+                  <SelectItem value="duration-short">Duration: shortest</SelectItem>
+                  <SelectItem value="duration-long">Duration: longest</SelectItem>
+                </SelectContent>
+              </Select>
 
-                    {/* Provider Selection */}
-                    {selectedService && availableProviders.length > 0 && (
-                      <div className="mt-6 pt-6 border-t border-white/20">
-                        <h3 className="text-lg font-semibold text-primary-foreground mb-4">Select Provider</h3>
-                        <div className="space-y-3">
-                          {availableProviders.map((provider) => (
-                            <Card 
-                              key={provider.id} 
-                              className={`bg-white/5 border-white/20 hover:bg-white/10 transition-all cursor-pointer ${
-                                selectedProvider === provider.id ? 'ring-2 ring-secondary' : ''
-                              }`}
-                              onClick={() => handleProviderSelect(provider.id)}
-                            >
-                              <CardContent className="p-4">
-                                <div className="flex items-center justify-between">
-                                  <div>
-                                    <h4 className="text-primary-foreground font-semibold">
-                                      {provider.title} {provider.provider_name}
-                                    </h4>
-                                    {provider.department && (
-                                      <p className="text-sm text-primary-foreground/70">{provider.department}</p>
-                                    )}
-                                  </div>
-                                  <Button 
-                                    size="sm"
-                                    className={`${selectedProvider === provider.id ? 'bg-secondary hover:bg-secondary/90' : 'bg-blue-400 hover:bg-blue-500'} text-white`}
-                                  >
-                                    {selectedProvider === provider.id ? 'Selected' : 'Select'}
-                                  </Button>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
+              {/* Active filters badge */}
+              {activeFiltersCount > 0 && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => { setDurationFilter('all'); setSortOption('recommended'); }}
+                  className="text-primary hover:text-primary/80"
+                >
+                  Clear filters ({activeFiltersCount})
+                </Button>
+              )}
             </div>
           </div>
 
-          {/* Right Column - Booking Details */}
-          <div className="lg:col-span-1">
-            <Card className="bg-white/10 border-white/20 backdrop-blur-sm sticky top-8">
-              <CardContent className="p-6">
-                <h2 className="text-2xl font-bold text-primary-foreground mb-6">Booking Details</h2>
-                
-                <div className="space-y-6">
-                  {/* Service */}
-                  <div>
-                    <label className="flex items-center text-sm font-medium text-primary-foreground/80 mb-2">
-                      <Music className="h-4 w-4 mr-2" />
-                      Service
-                    </label>
-                    <div className="p-3 bg-white/5 border border-white/20 rounded-lg">
-                      {selectedService ? (
-                        <span className="text-primary-foreground text-sm">
-                          {services.find(s => s.id === selectedService)?.name || 'Selected Service'}
-                        </span>
-                      ) : (
-                        <span className="text-primary-foreground/60 text-sm">Choose a service</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Provider */}
-                  {selectedService && availableProviders.length > 0 && (
-                    <div>
-                      <label className="flex items-center text-sm font-medium text-primary-foreground/80 mb-2">
-                        <Users className="h-4 w-4 mr-2" />
-                        Provider
-                      </label>
-                      <div className="p-3 bg-white/5 border border-white/20 rounded-lg">
-                        {selectedProvider ? (
-                          <span className="text-primary-foreground text-sm">
-                            {availableProviders.find(p => p.id === selectedProvider)?.provider_name || 'Selected Provider'}
-                          </span>
-                        ) : (
-                          <span className="text-primary-foreground/60 text-sm">Choose a provider</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Date & Time */}
-                  <div>
-                    <label className="flex items-center text-sm font-medium text-primary-foreground/80 mb-2">
-                      <Clock className="h-4 w-4 mr-2" />
-                      Date & Time
-                    </label>
-                    <div className="h-12 bg-white/5 border border-white/20 rounded-lg"></div>
-                  </div>
-
-                  {/* Continue Button */}
-                  <div className="pt-4">
-                    <Button 
-                      className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold"
-                      disabled={!selectedService}
-                      onClick={handleContinue}
-                    >
-                      Continue to Date & Time
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Results Count */}
+          <div className="mb-4 text-sm text-muted-foreground">
+            {filteredAndSortedServices.length} service{filteredAndSortedServices.length !== 1 ? 's' : ''} available
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="mt-16 text-center">
-          <p className="text-primary-foreground/60 mb-4">Talented musicians are training here!</p>
-          <div className="text-right text-primary-foreground/60">
-            <p className="font-semibold">Spelman Glee Club</p>
-            <p>350 Spelman Lane SW, Atlanta, GA</p>
-            <p>+1(404)270-5555</p>
-            <p>https://gleeworld.org/</p>
+          {/* Services List */}
+          <div className="space-y-4">
+            {servicesLoading ? (
+              <div className="text-center py-16">
+                <div className="animate-spin w-8 h-8 border-3 border-primary border-t-transparent rounded-full mx-auto"></div>
+                <p className="text-muted-foreground mt-4">Loading services...</p>
+              </div>
+            ) : filteredAndSortedServices.length === 0 ? (
+              <Card className="p-12 text-center">
+                <div className="text-muted-foreground">
+                  <Music className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p className="text-lg font-medium">No services found</p>
+                  <p className="text-sm mt-1">Try adjusting your filters or search term</p>
+                </div>
+              </Card>
+            ) : (
+              filteredAndSortedServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  service={service}
+                  onBookNow={() => handleBookNow(service.id)}
+                  onViewDetails={() => handleViewDetails(service.id)}
+                />
+              ))
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </UniversalLayout>
+  );
+}
+
+interface ServiceCardProps {
+  service: {
+    id: string;
+    name: string;
+    description?: string | null;
+    duration_minutes: number;
+    booking_buffer_minutes?: number | null;
+    price_amount?: number | null;
+    price_display?: string | null;
+    category?: string | null;
+    badge_text?: string | null;
+    image_url?: string | null;
+  };
+  onBookNow: () => void;
+  onViewDetails: () => void;
+}
+
+function ServiceCard({ service, onBookNow, onViewDetails }: ServiceCardProps) {
+  const isPremium = service.price_amount && service.price_amount > 0;
+  const isFree = !service.price_amount || service.price_amount === 0;
+
+  return (
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 group">
+      <CardContent className="p-0">
+        <div className="flex flex-col sm:flex-row">
+          {/* Service Image */}
+          <div className="sm:w-48 h-40 sm:h-auto bg-gradient-to-br from-primary/20 via-secondary/20 to-accent/20 flex items-center justify-center relative overflow-hidden">
+            {service.image_url ? (
+              <img 
+                src={service.image_url} 
+                alt={service.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-secondary/10">
+                <Music className="w-16 h-16 text-primary/40" />
+              </div>
+            )}
+            
+            {/* Premium Badge Overlay */}
+            {isPremium && (
+              <div className="absolute top-3 left-3">
+                <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 shadow-md">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Premium
+                </Badge>
+              </div>
+            )}
+          </div>
+
+          {/* Service Info */}
+          <div className="flex-1 p-5">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="flex-1">
+                {/* Badges Row */}
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {service.badge_text && (
+                    <Badge variant="secondary" className="text-xs">
+                      {service.badge_text}
+                    </Badge>
+                  )}
+                  {service.category && (
+                    <Badge variant="outline" className="text-xs capitalize">
+                      {service.category}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  {service.name}
+                </h3>
+
+                {/* Duration & Buffer */}
+                <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+                  <span className="flex items-center">
+                    <Clock className="w-4 h-4 mr-1" />
+                    Duration {service.duration_minutes} min
+                  </span>
+                  {service.booking_buffer_minutes && service.booking_buffer_minutes > 0 && (
+                    <span className="text-muted-foreground/70">
+                      • {service.booking_buffer_minutes} min buffer
+                    </span>
+                  )}
+                </div>
+
+                {/* Description */}
+                {service.description && (
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {service.description}
+                  </p>
+                )}
+              </div>
+
+              {/* Price & Actions */}
+              <div className="flex flex-col items-end gap-3 min-w-[120px]">
+                {/* Price */}
+                <div className="text-right">
+                  {isFree ? (
+                    <span className="text-lg font-bold text-green-600">Free</span>
+                  ) : (
+                    <span className="text-2xl font-bold text-foreground">
+                      {service.price_display || `$${((service.price_amount || 0) / 100).toFixed(2)}`}
+                    </span>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={onViewDetails}
+                    className="text-xs"
+                  >
+                    View details
+                  </Button>
+                  <Button 
+                    size="sm"
+                    onClick={onBookNow}
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                  >
+                    Book now
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
