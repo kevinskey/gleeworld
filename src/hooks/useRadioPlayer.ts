@@ -191,9 +191,15 @@ export const useRadioPlayer = () => {
 
     const audio = sharedAudio!;
     audioRef.current = audio;
-    
+
     // Keep audio element volume at 1.0 - we control gain via Web Audio
     audio.volume = 1.0;
+
+    // Sync local volume state with the shared gain node (prevents "playing but silent" across multiple hook consumers)
+    if (sharedGainNode) {
+      const currentVolume = Math.max(0, Math.min(1, sharedGainNode.gain.value / MAX_GAIN));
+      setState(prev => ({ ...prev, volume: currentVolume }));
+    }
 
     const handleLoadStart = () => {
       console.log('Radio stream load start');
@@ -438,9 +444,11 @@ export const useRadioPlayer = () => {
     }
 
     // If volume was muted elsewhere (e.g. radio bar), ensure header playback isn't silent.
-    if (state.volume === 0) {
+    // NOTE: state.volume may be stale across different hook instances, so also check the shared gain node.
+    const gainIsMuted = !!sharedGainNode && sharedGainNode.gain.value === 0;
+    if (state.volume === 0 || gainIsMuted) {
       const unmutedVolume = 0.8;
-      console.log('useRadioPlayer: Volume is 0; restoring to', unmutedVolume);
+      console.log('useRadioPlayer: Volume is muted; restoring to', unmutedVolume);
       setState(prev => ({ ...prev, volume: unmutedVolume }));
 
       if (sharedGainNode && sharedAudioContext) {
