@@ -87,6 +87,7 @@ export const RadioScheduleTimeline = ({
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [quickAddId, setQuickAddId] = useState('');
+  const [mediaLimit, setMediaLimit] = useState(50);
   const lastDraggedMediaRef = useRef<AzuraCastMedia | null>(null);
   const { toast } = useToast();
 
@@ -638,13 +639,16 @@ export const RadioScheduleTimeline = ({
                 <Input
                   placeholder="Search tracks..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setMediaLimit(50);
+                  }}
                   className="h-8 pl-7 bg-slate-900 border-slate-600 text-white text-sm"
                 />
               </div>
               <ScrollArea className="h-[200px]">
                 <div className="space-y-1 pr-4">
-                  {filteredMedia.slice(0, 50).map((media) => (
+                  {filteredMedia.slice(0, mediaLimit).map((media) => (
                     <div
                       key={media.id}
                       draggable
@@ -653,7 +657,7 @@ export const RadioScheduleTimeline = ({
                           mediaId: media.id,
                           title: media.title,
                           artist: media.artist,
-                          duration: media.duration
+                          duration: media.duration,
                         });
                         e.dataTransfer.setData('application/json', data);
                         e.dataTransfer.setData('text/plain', data);
@@ -680,6 +684,18 @@ export const RadioScheduleTimeline = ({
                       </span>
                     </div>
                   ))}
+
+                  {filteredMedia.length > mediaLimit && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setMediaLimit((prev) => prev + 100)}
+                      className="w-full h-8 text-xs mt-2"
+                    >
+                      Show more ({Math.min(mediaLimit, filteredMedia.length)} of {filteredMedia.length})
+                    </Button>
+                  )}
                 </div>
               </ScrollArea>
             </>
