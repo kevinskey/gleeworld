@@ -104,6 +104,9 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   const [isGeneratingTTS, setIsGeneratingTTS] = useState(false);
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('9wYX8b0wRvLUEYtGuzP5'); // Default to KeKe
+  const [eventPromoText, setEventPromoText] = useState("Don't miss our upcoming performances! Visit GleeWorld.org for tickets and event information. Glee World Radio, where music meets legacy.");
+  const [isEditingPromo, setIsEditingPromo] = useState(false);
+  const [promoEditText, setPromoEditText] = useState('');
 
   // ElevenLabs voice options
   const voiceOptions = [
@@ -152,6 +155,49 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
   useEffect(() => {
     fetchUpNext();
   }, [stationState.currentlyPlaying]);
+
+  // Load event promo text from dashboard_settings
+  useEffect(() => {
+    const loadEventPromo = async () => {
+      try {
+        const { data } = await supabase
+          .from('dashboard_settings')
+          .select('setting_value')
+          .eq('setting_name', 'event_promo_text')
+          .single();
+        
+        if (data?.setting_value) {
+          setEventPromoText(data.setting_value);
+        }
+      } catch (error) {
+        // Use default if not found
+        console.log('Using default event promo text');
+      }
+    };
+    loadEventPromo();
+  }, []);
+
+  // Save event promo text
+  const saveEventPromoText = async (text: string) => {
+    try {
+      const { error } = await supabase
+        .from('dashboard_settings')
+        .upsert({
+          setting_name: 'event_promo_text',
+          setting_value: text,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'setting_name' });
+      
+      if (error) throw error;
+      
+      setEventPromoText(text);
+      setIsEditingPromo(false);
+      toast({ title: "Saved", description: "Event promo text updated" });
+    } catch (error) {
+      console.error('Error saving promo text:', error);
+      toast({ title: "Error", description: "Failed to save promo text", variant: "destructive" });
+    }
+  };
 
   // Sync master volume slider with radio player volume
   useEffect(() => {
@@ -368,12 +414,12 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
     }
   };
 
-  // Pre-defined scripts for each insertion type
+  // Pre-defined scripts for each insertion type - promo-1 uses dynamic text
   const insertionScripts: Record<string, string> = {
     'station-id': "You're listening to Glee World Radio, the official voice of the Spelman College Glee Club. To amaze and inspire.",
     'break-bumper': "We'll be right back after this short break. Stay tuned to Glee World Radio.",
     'emergency': "Attention! This is an emergency alert from Glee World Radio. Please stand by for important information.",
-    'promo-1': "Don't miss our upcoming performances! Visit GleeWorld.org for tickets and event information. Glee World Radio, where music meets legacy.",
+    'promo-1': eventPromoText,
     'hey-glee': "Hey Glee! You're listening to the sounds of sisterhood on Glee World Radio.",
   };
 
@@ -989,7 +1035,58 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
               ))}
             </div>
 
-            {/* Insertion Queue */}
+            {/* Event Promo Editor */}
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-amber-400 text-xs font-medium flex items-center gap-2">
+                  <Zap className="h-3 w-3" />
+                  Event Promo Text
+                </Label>
+                {!isEditingPromo ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs text-amber-400 hover:bg-amber-500/20"
+                    onClick={() => {
+                      setPromoEditText(eventPromoText);
+                      setIsEditingPromo(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                ) : (
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs text-emerald-400 hover:bg-emerald-500/20"
+                      onClick={() => saveEventPromoText(promoEditText)}
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs text-slate-400 hover:bg-slate-500/20"
+                      onClick={() => setIsEditingPromo(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {isEditingPromo ? (
+                <textarea
+                  value={promoEditText}
+                  onChange={(e) => setPromoEditText(e.target.value)}
+                  className="w-full bg-slate-800 border border-amber-500/30 rounded p-2 text-xs text-white min-h-[80px] resize-none focus:outline-none focus:border-amber-500"
+                  placeholder="Enter your event promo text..."
+                />
+              ) : (
+                <p className="text-xs text-slate-300 italic">"{eventPromoText}"</p>
+              )}
+            </div>
+
             {insertionQueue.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-slate-300 text-xs">Queue</Label>
