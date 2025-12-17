@@ -107,43 +107,12 @@ Deno.serve(async (req) => {
     };
     const contentType = mimeTypes[ext] || 'audio/mpeg';
 
-    // Use the flow upload endpoint which handles raw binary data
-    // AzuraCast's /files endpoint expects FlowJS-style uploads
-    // We'll use a simpler approach: create via POST to /files with file data
-    
-    // Create a Blob from the ArrayBuffer
+    // Upload to AzuraCast (multipart/form-data)
+    // IMPORTANT: Let fetch generate the multipart boundary for us (manual boundary construction can break Symfony parsing)
     const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
-    
-    // Build multipart form data manually for better compatibility
-    const boundary = '----WebKitFormBoundary' + Math.random().toString(36).substring(2);
-    const encoder = new TextEncoder();
-    
-    // Build the multipart body
-    const parts: Uint8Array[] = [];
-    
-    // Add file part
-    const fileHeader = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fileName}"\r\nContent-Type: ${contentType}\r\n\r\n`;
-    parts.push(encoder.encode(fileHeader));
-    parts.push(new Uint8Array(fileArrayBuffer));
-    parts.push(encoder.encode('\r\n'));
-    
-    // Add path part (AzuraCast uses this as the destination path)
-    const pathPart = `--${boundary}\r\nContent-Disposition: form-data; name="path"\r\n\r\n${fileName}\r\n`;
-    parts.push(encoder.encode(pathPart));
-    
-    // End boundary
-    parts.push(encoder.encode(`--${boundary}--\r\n`));
-    
-    // Concatenate all parts
-    const totalLength = parts.reduce((acc, part) => acc + part.length, 0);
-    const body = new Uint8Array(totalLength);
-    let offset = 0;
-    for (const part of parts) {
-      body.set(part, offset);
-      offset += part.length;
-    }
+    const form = new FormData();
+    form.append('file', fileBlob, fileName);
 
-    // Upload to AzuraCast using the batch upload endpoint
     const uploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files';
     console.log('AzuraCast Upload: Uploading to:', uploadUrl, 'file size:', fileArrayBuffer.byteLength);
 
@@ -152,9 +121,9 @@ Deno.serve(async (req) => {
       headers: {
         'X-API-Key': azuracastApiKey,
         'Accept': 'application/json',
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        // NOTE: Do NOT set Content-Type here; fetch will set multipart boundary automatically.
       },
-      body: body,
+      body: form,
     });
 
     console.log('AzuraCast Upload: Response status:', uploadResponse.status);
@@ -162,29 +131,6 @@ Deno.serve(async (req) => {
     if (!uploadResponse.ok) {
       const errorText = await uploadResponse.text();
       console.error('AzuraCast Upload: Error:', errorText);
-      
-      // If direct upload fails, try the alternative flow upload endpoint
-      console.log('AzuraCast Upload: Trying alternative upload method...');
-      
-      // Try using the SFTP-style batch upload endpoint
-      const batchUploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files/batch';
-      const batchResponse = await fetch(batchUploadUrl, {
-        method: 'POST',
-        headers: {
-          'X-API-Key': azuracastApiKey,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          do: 'list',
-          currentDirectory: '',
-          searchPhrase: '',
-          rows: [],
-        }),
-      });
-      
-      console.log('AzuraCast Batch: Response status:', batchResponse.status);
-      
       return new Response(
         JSON.stringify({ error: 'Failed to upload to AzuraCast', details: errorText }),
         { status: uploadResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -209,7 +155,12 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, mediaId: uploadResult.id, ...uploadResult }),
+      JSON.stringify({
+        success: true,
+        media_id: uploadResult.id,
+        mediaId: uploadResult.id,
+        ...uploadResult,
+      }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
