@@ -159,15 +159,19 @@ export const DashboardHeroCarousel: React.FC = () => {
         </div>
         
         {/* Horizontal Scroll Carousel */}
-        <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4">
+        <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4 overflow-hidden">
           <div 
-            className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory pb-2"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}
           >
             {heroSlides.map((slide) => (
               <div 
                 key={slide.id} 
-                className="flex-shrink-0 w-[85%] sm:w-[70%] md:w-[48%] lg:w-[48%] snap-center"
+                className="flex-none w-[280px] sm:w-[320px] md:w-[400px] lg:w-[450px] snap-start"
               >
                 <HeroSlideThumbnail slide={slide} />
               </div>
