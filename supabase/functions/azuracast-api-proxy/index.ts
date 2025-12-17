@@ -134,62 +134,91 @@ Deno.serve(async (req) => {
     if (!azuracastResponse.ok) {
       const errorText = await azuracastResponse.text();
       console.error('AzuraCast Proxy: API error:', azuracastResponse.status, errorText);
-      
-      // For DELETE operations - 404 means already deleted (OK)
-      // For GET operations with StationUnsupportedException - return empty
-      // For POST operations - report actual errors so we know assignment failed
+
+      // Try to parse JSON error body when possible
+      let parsedError: any = null;
+      try {
+        parsedError = JSON.parse(errorText);
+      } catch {
+        parsedError = null;
+      }
+
+      const errorMessage = String(
+        parsedError?.formatted_message || parsedError?.message || errorText || 'Unknown error'
+      );
+      const errorType = String(parsedError?.type || parsedError?.extra_data?.class || 'AzuraCastError');
+
       const isDeleteOperation = method === 'DELETE';
       const isGetOperation = method === 'GET';
       const is404Or405 = azuracastResponse.status === 404 || azuracastResponse.status === 405;
-      const isUnsupportedException = errorText.includes('StationUnsupportedException') || 
-                                      errorText.includes('HttpMethodNotAllowedException');
-      
-      // Handle 405 Method Not Allowed for POST operations (e.g., queue disabled)
+      const isUnsupportedException =
+        errorText.includes('StationUnsupportedException') ||
+        errorText.includes('HttpMethodNotAllowedException');
+
+      // 1) DELETE: 404/405 means already removed (treat as OK)
+      // 2) GET: Unsupported feature errors should return empty arrays (treat as OK)
+      if ((isDeleteOperation && is404Or405) || (isGetOperation && isUnsupportedException)) {
+        console.log('AzuraCast Proxy: Returning graceful response for:', method, azuracastResponse.status);
+
+        const responseBody = isGetOperation ? [] : { success: true, message: 'Resource already removed' };
+
+        return new Response(JSON.stringify(responseBody), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // 3) Queue editing disabled / method not allowed: return a friendly error
+      // IMPORTANT: return 200 so supabase.functions.invoke does not throw a transport error.
       if (azuracastResponse.status === 405 && isUnsupportedException) {
         console.log('AzuraCast Proxy: Method not allowed for:', method, endpoint);
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: 'Feature not enabled on radio station',
-            details: 'This operation is not available. The queue/request feature may be disabled in AzuraCast station settings.',
-            success: false
+            details:
+              'This operation is not available. The queue/request feature may be disabled in AzuraCast station settings.',
+            success: false,
+            upstream_status: azuracastResponse.status,
           }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
         );
       }
-      
-      // Only mask errors gracefully for DELETE (already deleted) or unsupported GET features
-      if ((isDeleteOperation && is404Or405) || 
-          (isGetOperation && isUnsupportedException)) {
-        console.log('AzuraCast Proxy: Returning graceful response for:', method, azuracastResponse.status);
-        
-        const responseBody = isGetOperation 
-          ? [] 
-          : { success: true, message: 'Resource already removed' };
-        
+
+      // 4) Duplicate requests (CannotCompleteActionException) should not be treated as a hard failure
+      // AzuraCast commonly returns 500 here even though it's a logical conflict.
+      if (
+        errorType.includes('CannotCompleteActionException') ||
+        errorMessage.toLowerCase().includes('already requested')
+      ) {
         return new Response(
-          JSON.stringify(responseBody),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
+          JSON.stringify({
+            error: 'Song already requested',
+            details: errorMessage,
+            success: false,
+            upstream_status: azuracastResponse.status,
+          }),
+          {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          },
         );
       }
-      
-      // For POST/PUT errors (like playlist assignment), return actual error
-      console.error('AzuraCast Proxy: Returning error for', method, 'operation');
+
+      // Default: return the upstream status + message, but keep HTTP 200 to avoid blank-screen crashes.
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: `AzuraCast API error: ${azuracastResponse.status}`,
           details: errorText,
-          success: false
+          success: false,
+          upstream_status: azuracastResponse.status,
         }),
-        { 
-          status: azuracastResponse.status, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        },
       );
     }
 
