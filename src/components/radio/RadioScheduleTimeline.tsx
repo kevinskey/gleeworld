@@ -186,9 +186,21 @@ export const RadioScheduleTimeline = ({
     e.stopPropagation();
     setIsDraggingOver(false);
 
-    // Handle JSON track data from internal drag - try multiple MIME types for browser compatibility
+    const types = Array.from(e.dataTransfer.types);
+    console.log('Drop received, types:', types);
+
+    // Check if user is dragging files from outside the browser
+    if (types.includes('Files') && !types.includes('application/json') && !types.includes('text/plain')) {
+      toast({ 
+        title: "External Files Not Supported", 
+        description: "Drag tracks from the Media Library below, or click Load Library first.", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    // Handle JSON track data from internal drag
     try {
-      // Try application/json first, then text/plain as fallback
       let trackData = e.dataTransfer.getData('application/json');
       if (!trackData) {
         trackData = e.dataTransfer.getData('text/plain');
@@ -197,8 +209,7 @@ export const RadioScheduleTimeline = ({
         trackData = e.dataTransfer.getData('text');
       }
       
-      console.log('Drop received, trackData:', trackData);
-      console.log('Available types:', e.dataTransfer.types);
+      console.log('Drop trackData:', trackData);
       
       if (trackData) {
         const track = JSON.parse(trackData);
@@ -206,20 +217,23 @@ export const RadioScheduleTimeline = ({
         if (track.mediaId) {
           await requestSong(track.mediaId, track.title);
           return;
-        } else {
-          console.warn('No mediaId in dropped track data');
+        } else if (track.id) {
+          // Handle tracks with 'id' instead of 'mediaId'
+          await requestSong(track.id, track.title);
+          return;
         }
       }
 
-      // Fallback: use last dragged media from ref if available
+      // Fallback: use last dragged media from ref
       if (lastDraggedMediaRef.current) {
         const media = lastDraggedMediaRef.current;
         console.log('Using lastDraggedMediaRef fallback:', media);
         await requestSong(media.id, media.title);
-      } else {
-        console.warn('No track data in drop event and no last dragged media. Types:', e.dataTransfer.types);
-        toast({ title: "Drop Failed", description: "No track data received. Try clicking the track instead.", variant: "destructive" });
+        lastDraggedMediaRef.current = null;
+        return;
       }
+      
+      toast({ title: "Drop Failed", description: "Could not identify track. Try clicking the track instead.", variant: "destructive" });
     } catch (err) {
       console.error('Failed to parse track data:', err);
       toast({ title: "Drop Error", description: "Failed to process dropped track", variant: "destructive" });
@@ -517,6 +531,8 @@ export const RadioScheduleTimeline = ({
                         e.dataTransfer.setData('application/json', data);
                         e.dataTransfer.setData('text/plain', data);
                         e.dataTransfer.effectAllowed = 'copy';
+                        // Store as fallback for browsers that lose dataTransfer
+                        lastDraggedMediaRef.current = media;
                         console.log('Drag started for media:', media.id, media.title);
                       }}
                       onClick={() => requestSong(media.id, media.title)}
