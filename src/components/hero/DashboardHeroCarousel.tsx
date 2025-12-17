@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Camera } from 'lucide-react';
+import { Camera, ChevronLeft, ChevronRight } from 'lucide-react';
+import useEmblaCarousel from 'embla-carousel-react';
 
 interface HeroSlide {
   id: string;
@@ -42,6 +42,22 @@ const getTitleSize = (size: string | null) => {
 export const DashboardHeroCarousel: React.FC = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Embla carousel with infinite loop
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'start',
+    dragFree: true,
+    containScroll: false
+  });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
 
   useEffect(() => {
     const fetchSlides = async () => {
@@ -66,8 +82,8 @@ export const DashboardHeroCarousel: React.FC = () => {
     return (
       <div className="w-full">
         <div className="flex gap-3 sm:gap-4">
-          <div className="flex-shrink-0 w-[85%] sm:w-[70%] md:w-[48%] aspect-video bg-muted animate-pulse rounded-xl border border-border" />
-          <div className="flex-shrink-0 w-[85%] sm:w-[70%] md:w-[48%] aspect-video bg-muted animate-pulse rounded-xl border border-border" />
+          <div className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[400px] aspect-video bg-muted animate-pulse rounded-xl border border-border" />
+          <div className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[400px] aspect-video bg-muted animate-pulse rounded-xl border border-border" />
         </div>
       </div>
     );
@@ -151,45 +167,46 @@ export const DashboardHeroCarousel: React.FC = () => {
             <Camera className="h-5 w-5 text-primary" />
             Glee Cam
           </h2>
-          {heroSlides.length > 1 && (
-            <span className="text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground hidden sm:block">
               Swipe to browse
             </span>
-          )}
+            {heroSlides.length > 1 && (
+              <div className="flex gap-1">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 rounded-full"
+                  onClick={scrollPrev}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 rounded-full"
+                  onClick={scrollNext}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Horizontal Scroll Carousel */}
-        <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4 overflow-hidden">
-          <div 
-            className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory pb-2"
-            style={{ 
-              scrollbarWidth: 'none', 
-              msOverflowStyle: 'none',
-              WebkitOverflowScrolling: 'touch'
-            }}
-          >
+        {/* Embla Carousel with Infinite Loop */}
+        <div className="overflow-hidden" ref={emblaRef}>
+          <div className="flex gap-3 sm:gap-4">
             {heroSlides.map((slide) => (
               <div 
                 key={slide.id} 
-                className="flex-none w-[280px] sm:w-[320px] md:w-[400px] lg:w-[450px] snap-start"
+                className="flex-none w-[280px] sm:w-[320px] md:w-[400px] lg:w-[450px]"
               >
                 <HeroSlideThumbnail slide={slide} />
               </div>
             ))}
           </div>
         </div>
-
-        {/* Scroll Indicators (dots) */}
-        {heroSlides.length > 1 && (
-          <div className="flex justify-center gap-1.5 mt-3">
-            {heroSlides.map((slide) => (
-              <div 
-                key={slide.id}
-                className="w-2 h-2 rounded-full bg-muted-foreground/30"
-              />
-            ))}
-          </div>
-        )}
       </div>
     </section>
   );
