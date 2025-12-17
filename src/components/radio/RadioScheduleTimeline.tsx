@@ -22,7 +22,8 @@ import {
 } from 'lucide-react';
 
 interface QueueItem {
-  id: number;
+  id?: number;
+  cue_id?: number;
   cued_at: number;
   played_at: number;
   duration: number;
@@ -33,6 +34,11 @@ interface QueueItem {
     art: string;
   };
 }
+
+// Helper to extract queue item ID (AzuraCast may use different field names)
+const getQueueItemId = (item: QueueItem): number | undefined => {
+  return item.id ?? item.cue_id ?? (item as any).queue_id;
+};
 
 interface AzuraCastMedia {
   id: number;
@@ -76,8 +82,19 @@ export const RadioScheduleTimeline = ({
     try {
       setIsLoading(true);
       const queue = await azuraCastService.getQueue();
-      if (Array.isArray(queue)) {
+      if (Array.isArray(queue) && queue.length > 0) {
+        // Log the first item's keys to debug ID field name
+        const firstItem = queue[0];
+        console.log('AzuraCast queue item keys:', Object.keys(firstItem));
+        console.log('AzuraCast queue item sample:', { 
+          id: firstItem.id, 
+          cue_id: (firstItem as any).cue_id,
+          queue_id: (firstItem as any).queue_id,
+          song_id: firstItem.song?.id 
+        });
         setQueueItems(queue);
+      } else {
+        setQueueItems([]);
       }
     } catch (error) {
       console.error('Error loading queue:', error);
@@ -373,7 +390,15 @@ export const RadioScheduleTimeline = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => removeQueueItem(item.id)}
+                  onClick={() => {
+                    const queueId = getQueueItemId(item);
+                    if (queueId) {
+                      removeQueueItem(queueId);
+                    } else {
+                      console.error('No queue ID found for item:', item);
+                      toast({ title: "Error", description: "Cannot identify queue item", variant: "destructive" });
+                    }
+                  }}
                   className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
                   title="Remove from queue"
                 >
