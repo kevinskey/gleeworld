@@ -168,10 +168,16 @@ Deno.serve(async (req) => {
         });
       }
 
-      // 3) Queue editing disabled / method not allowed: return a friendly error
+      // 3) Queue editing disabled / feature not enabled: return a friendly error
       // IMPORTANT: return 200 so supabase.functions.invoke does not throw a transport error.
-      if (azuracastResponse.status === 405 && isUnsupportedException) {
-        console.log('AzuraCast Proxy: Method not allowed for:', method, endpoint);
+      const isFeatureNotEnabled =
+        errorMessage.toLowerCase().includes('feature not enabled') ||
+        errorMessage.toLowerCase().includes('operation is not available') ||
+        errorMessage.toLowerCase().includes('queue/request feature') ||
+        errorText.toLowerCase().includes('stationunsupportedexception');
+
+      if ((azuracastResponse.status === 400 || azuracastResponse.status === 405) && (isUnsupportedException || isFeatureNotEnabled)) {
+        console.log('AzuraCast Proxy: Feature not enabled for:', method, endpoint);
         return new Response(
           JSON.stringify({
             error: 'Feature not enabled on radio station',
@@ -187,15 +193,18 @@ Deno.serve(async (req) => {
         );
       }
 
-      // 4) Duplicate requests (CannotCompleteActionException) should not be treated as a hard failure
-      // AzuraCast commonly returns 500 here even though it's a logical conflict.
-      if (
+      // 4) Request rejected (CannotCompleteActionException) should not be treated as a hard failure
+      // AzuraCast commonly returns 500 here even though it's a logical conflict/cooldown.
+      const isRequestRejected =
         errorType.includes('CannotCompleteActionException') ||
-        errorMessage.toLowerCase().includes('already requested')
-      ) {
+        errorMessage.toLowerCase().includes('already requested') ||
+        errorMessage.toLowerCase().includes('played too recently') ||
+        errorMessage.toLowerCase().includes('wait a while');
+
+      if (isRequestRejected) {
         return new Response(
           JSON.stringify({
-            error: 'Song already requested',
+            error: 'Request rejected by station rules',
             details: errorMessage,
             success: false,
             upstream_status: azuracastResponse.status,
@@ -235,16 +244,20 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
+    // IMPORTANT: Never crash the client with a non-2xx response for upstream/runtime issues.
+    // Return a handled payload so the UI can show a toast instead of a blank screen.
     console.error('AzuraCast Proxy: Unexpected error:', error);
+
     return new Response(
-      JSON.stringify({ 
-        error: 'Internal server error', 
-        details: error instanceof Error ? error.message : 'Unknown error' 
+      JSON.stringify({
+        error: 'AzuraCast proxy error',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        success: false,
       }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      },
     );
   }
 });
