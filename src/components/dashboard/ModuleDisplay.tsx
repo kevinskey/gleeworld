@@ -43,6 +43,7 @@ import { TourManagerDashboard } from '../tour-manager/TourManagerDashboard';
 import TreeLightingSurveyModule from '../modules/TreeLightingSurveyModule';
 import ExitInterviewsModule from '../modules/ExitInterviewsModule';
 import { TheLabModule } from '@/components/modules/TheLabModule';
+import { ComprehensiveAppointmentSystem } from '@/components/appointments/ComprehensiveAppointmentSystem';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -157,6 +158,9 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <ExitInterviewsModule />;
       case 'the-lab':
         return <TheLabModule />;
+      case 'appointments':
+      case 'assignable-appointments':
+        return <ComprehensiveAppointmentSystem />;
       default:
         return (
           <div className="p-6">
