@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { Camera } from 'lucide-react';
 
 interface HeroSlide {
   id: string;
@@ -26,29 +27,6 @@ interface HeroSlide {
   is_active: boolean | null;
 }
 
-// Helpers mirroring landing page behavior
-const getHorizontalAlignment = (position: string | null) => {
-  switch ((position || 'center').toLowerCase()) {
-    case 'left':
-      return 'justify-start';
-    case 'right':
-      return 'justify-end';
-    default:
-      return 'justify-center';
-  }
-};
-
-const getVerticalAlignment = (position: string | null) => {
-  switch ((position || 'middle').toLowerCase()) {
-    case 'top':
-      return 'items-start';
-    case 'bottom':
-      return 'items-end';
-    default:
-      return 'items-center';
-  }
-};
-
 const getTitleSize = (size: string | null) => {
   switch ((size || 'large').toLowerCase()) {
     case 'small':
@@ -60,21 +38,10 @@ const getTitleSize = (size: string | null) => {
   }
 };
 
-const getDescriptionSize = (size: string | null) => {
-  switch ((size || 'medium').toLowerCase()) {
-    case 'small':
-      return 'text-sm sm:text-base';
-    case 'large':
-      return 'text-lg sm:text-xl';
-    default:
-      return 'text-base sm:text-lg';
-  }
-};
-
 // DashboardHeroCarousel - uses the same hero slides as the landing page (usage_context = 'homepage')
 export const DashboardHeroCarousel: React.FC = () => {
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSlides = async () => {
@@ -88,44 +55,37 @@ export const DashboardHeroCarousel: React.FC = () => {
         setHeroSlides(data || []);
       } catch (e) {
         console.error('Failed to load dashboard hero slides', e);
+      } finally {
+        setLoading(false);
       }
     };
     fetchSlides();
   }, []);
 
-  // Auto-advance like landing
-  useEffect(() => {
-    if (heroSlides.length <= 1) return;
-    const active = heroSlides[currentSlide];
-    const ms = ((active?.slide_duration_seconds ?? 10) as number) * 1000;
-    const t = setTimeout(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, ms);
-    return () => clearTimeout(t);
-  }, [currentSlide, heroSlides]);
-
-  const slide = heroSlides[currentSlide];
-
-  // Get the two slides to display
-  const slide1 = heroSlides[currentSlide];
-  const slide2 = heroSlides[(currentSlide + 1) % heroSlides.length];
-
-  const renderSlide = (slideData: HeroSlide | undefined, index: number) => {
-    if (!slideData) {
-      return (
-        <div className="w-full h-full bg-muted flex items-center justify-center">
-          <p className="text-muted-foreground text-sm">No hero slides configured</p>
-        </div>
-      );
-    }
-
+  if (loading) {
     return (
-      <div className="h-[200px] sm:h-[240px] md:h-[280px] lg:h-[320px] relative overflow-hidden">
+      <div className="w-full">
+        <div className="flex gap-3 sm:gap-4">
+          <div className="flex-shrink-0 w-[85%] sm:w-[70%] md:w-[48%] aspect-video bg-muted animate-pulse rounded-xl border border-border" />
+          <div className="flex-shrink-0 w-[85%] sm:w-[70%] md:w-[48%] aspect-video bg-muted animate-pulse rounded-xl border border-border" />
+        </div>
+      </div>
+    );
+  }
+
+  if (heroSlides.length === 0) {
+    return null;
+  }
+
+  // Hero slide thumbnail component
+  const HeroSlideThumbnail = ({ slide }: { slide: HeroSlide }) => {
+    return (
+      <div className="relative w-full aspect-video group cursor-pointer flex-shrink-0 rounded-lg overflow-hidden">
         {/* Desktop */}
         <img
-          src={slideData.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
-          alt={slideData.title || 'GleeWorld hero image'}
-          className="hidden md:block w-full h-full object-cover transition-opacity duration-500"
+          src={slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+          alt={slide.title || 'GleeWorld hero image'}
+          className="hidden md:block w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => {
             if (!e.currentTarget.src.includes('unsplash.com')) {
               e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
@@ -134,9 +94,9 @@ export const DashboardHeroCarousel: React.FC = () => {
         />
         {/* iPad */}
         <img
-          src={slideData.ipad_image_url || slideData.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
-          alt={slideData.title || 'GleeWorld hero image'}
-          className="hidden sm:block md:hidden w-full h-full object-cover transition-opacity duration-500"
+          src={slide.ipad_image_url || slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+          alt={slide.title || 'GleeWorld hero image'}
+          className="hidden sm:block md:hidden w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => {
             if (!e.currentTarget.src.includes('unsplash.com')) {
               e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
@@ -145,9 +105,9 @@ export const DashboardHeroCarousel: React.FC = () => {
         />
         {/* Mobile */}
         <img
-          src={slideData.mobile_image_url || slideData.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
-          alt={slideData.title || 'GleeWorld hero image'}
-          className="block sm:hidden w-full h-full object-cover transition-opacity duration-500"
+          src={slide.mobile_image_url || slide.image_url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80'}
+          alt={slide.title || 'GleeWorld hero image'}
+          className="block sm:hidden w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           onError={(e) => {
             if (!e.currentTarget.src.includes('unsplash.com')) {
               e.currentTarget.src = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
@@ -155,35 +115,24 @@ export const DashboardHeroCarousel: React.FC = () => {
           }}
         />
 
-        {/* Subtle overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/20 to-transparent" />
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-foreground/10 group-hover:bg-foreground/20 transition-colors duration-300" />
 
-        {/* Title overlay */}
-        {slideData.title && (
-          <div
-            className={`absolute inset-0 flex ${getVerticalAlignment(slideData.title_position_vertical)} ${getHorizontalAlignment(slideData.title_position_horizontal)} px-3 sm:px-4 pointer-events-none`}
-          >
-            <div className="bg-foreground/60 backdrop-blur-sm rounded-lg p-2 sm:p-3 shadow-xl border border-background/20 pointer-events-auto">
-              <h4 className={`${getTitleSize(slideData.title_size)} font-bold text-background drop-shadow-lg`}>{slideData.title}</h4>
-            </div>
+        {/* Title overlay - Bottom */}
+        {slide.title && (
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 via-foreground/40 to-transparent p-2 sm:p-3 z-10">
+            <h3 className={`${getTitleSize(slide.title_size)} font-bold text-background drop-shadow-lg truncate`}>
+              {slide.title}
+            </h3>
           </div>
         )}
 
         {/* Action button */}
-        {slideData.action_button_enabled && slideData.action_button_text && slideData.action_button_url && (
-          <div className="absolute inset-0 flex justify-center items-end pb-3 sm:pb-4 px-3 pointer-events-none">
-            <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-background/20 shadow-xl text-xs">
-              <a href={slideData.action_button_url} target="_blank" rel="noopener noreferrer">
-                {slideData.action_button_text}
-              </a>
-            </Button>
-          </div>
-        )}
-        {!slideData.action_button_enabled && slideData.button_text && slideData.link_url && (
-          <div className="absolute inset-0 flex justify-center items-end pb-3 sm:pb-4 px-3 pointer-events-none">
-            <Button size="sm" className="pointer-events-auto bg-primary text-primary-foreground border border-white/20 shadow-xl text-xs">
-              <a href={slideData.link_url} target="_blank" rel="noopener noreferrer">
-                {slideData.button_text}
+        {slide.action_button_enabled && slide.action_button_text && slide.action_button_url && (
+          <div className="absolute top-2 right-2 z-10">
+            <Button size="sm" className="bg-primary text-primary-foreground border border-background/20 shadow-xl text-xs">
+              <a href={slide.action_button_url} target="_blank" rel="noopener noreferrer">
+                {slide.action_button_text}
               </a>
             </Button>
           </div>
@@ -193,24 +142,51 @@ export const DashboardHeroCarousel: React.FC = () => {
   };
 
   return (
-    <section aria-label="Dashboard hero" className="animate-fade-in">
-      <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg">
-        <div className="px-4 pt-3 pb-2">
-          <h4 className="text-xs sm:text-sm font-semibold tracking-wide uppercase text-foreground">Glee Cam</h4>
+    <section aria-label="Dashboard hero" className="animate-fade-in w-full">
+      <div className="relative p-3 sm:p-4 bg-card/50 backdrop-blur-sm border border-border rounded-xl shadow-sm">
+        
+        {/* Header */}
+        <div className="relative mb-3 sm:mb-4 flex items-center justify-between">
+          <h2 className="text-lg sm:text-xl font-bold text-foreground flex items-center gap-2">
+            <Camera className="h-5 w-5 text-primary" />
+            Glee Cam
+          </h2>
+          {heroSlides.length > 1 && (
+            <span className="text-xs text-muted-foreground">
+              Swipe to browse
+            </span>
+          )}
         </div>
-        <CardContent className="p-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            <div className="rounded-lg overflow-hidden">
-              {renderSlide(slide1, 0)}
-            </div>
-            {heroSlides.length > 1 && (
-              <div className="rounded-lg overflow-hidden">
-                {renderSlide(slide2, 1)}
+        
+        {/* Horizontal Scroll Carousel */}
+        <div className="relative -mx-3 sm:-mx-4 px-3 sm:px-4">
+          <div 
+            className="flex gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-2"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            {heroSlides.map((slide) => (
+              <div 
+                key={slide.id} 
+                className="flex-shrink-0 w-[85%] sm:w-[70%] md:w-[48%] lg:w-[48%] snap-center"
+              >
+                <HeroSlideThumbnail slide={slide} />
               </div>
-            )}
+            ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Scroll Indicators (dots) */}
+        {heroSlides.length > 1 && (
+          <div className="flex justify-center gap-1.5 mt-3">
+            {heroSlides.map((slide) => (
+              <div 
+                key={slide.id}
+                className="w-2 h-2 rounded-full bg-muted-foreground/30"
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 };
