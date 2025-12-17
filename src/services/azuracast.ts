@@ -501,44 +501,13 @@ class AzuraCastService {
   }
 
   // Add a song to the queue.
-  // Prefer the admin queue endpoint when available; fall back to the Requests API when queue editing is disabled.
+  // Use Requests API first (more widely supported), fall back to admin queue endpoint if needed.
   async requestSong(mediaId: number, title?: string): Promise<any> {
     console.log('AzuraCast: Adding song to queue with media ID:', mediaId, 'title:', title);
 
-    // 1) Try admin queue endpoint (some stations disable POST /queue)
-    try {
-      const result = await this.makeProxyRequest(`/station/{stationId}/queue`, 'POST', {
-        media_id: mediaId,
-      });
-      console.log('AzuraCast: Successfully added to queue via admin endpoint:', result);
-      return result;
-    } catch (error: any) {
-      const msg = String(error?.message || error).toLowerCase();
-      console.log('AzuraCast: Queue endpoint error message:', msg);
-      
-      // Check for various indicators that queue is disabled/unsupported
-      const looksDisabled =
-        msg.includes('feature not enabled') ||
-        msg.includes('not enabled on radio') ||
-        msg.includes('400') ||
-        msg.includes('405') ||
-        msg.includes('method not allowed') ||
-        msg.includes('not available') ||
-        msg.includes('unsupported') ||
-        msg.includes('queue');
-
-      if (!looksDisabled) {
-        console.error('AzuraCast: Failed to add to queue via admin endpoint (non-recoverable):', error);
-        throw new Error(`Failed to add "${title || mediaId}" to queue: ${String(error?.message || error)}`);
-      }
-
-      console.warn('AzuraCast: Queue endpoint unavailable, will try Requests API fallback');
-    }
-
-    // 2) Fall back to Requests API - need title for matching
+    // 1) Get title if not provided (needed for Requests API matching)
     if (!title) {
-      console.warn('AzuraCast: No title provided, attempting to fetch from media library');
-      // Try to get the title from the media library
+      console.log('AzuraCast: No title provided, fetching from media library');
       try {
         const mediaFile = await this.getMediaFile(mediaId);
         title = mediaFile?.title || mediaFile?.media?.title || `Media ${mediaId}`;
@@ -549,61 +518,72 @@ class AzuraCastService {
       }
     }
 
-    console.log('AzuraCast: Falling back to Requests API for:', title);
-
+    // 2) Try Requests API first (works on most stations with include_in_requests enabled)
     try {
+      console.log('AzuraCast: Trying Requests API for:', title);
       const requestableSongs = await this.getRequestableSongs();
-      console.log('AzuraCast: Got', Array.isArray(requestableSongs) ? requestableSongs.length : 0, 'requestable songs');
       
-      if (!Array.isArray(requestableSongs) || requestableSongs.length === 0) {
-        throw new Error('No requestable songs available. Enable song requests in AzuraCast station settings and add songs to a requestable playlist.');
-      }
+      if (Array.isArray(requestableSongs) && requestableSongs.length > 0) {
+        console.log('AzuraCast: Got', requestableSongs.length, 'requestable songs');
+        
+        const normalizeTitle = (t: string) => (t || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+        const searchTitle = normalizeTitle(title);
 
-      const normalizeTitle = (t: string) => (t || '').toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-      const searchTitle = normalizeTitle(title);
-
-      // Try exact match first, then partial matches
-      let song = requestableSongs.find((s: any) => {
-        const songTitle = normalizeTitle(s.song?.title || '');
-        return songTitle === searchTitle;
-      });
-
-      if (!song) {
-        song = requestableSongs.find((s: any) => {
+        // Try exact match first
+        let song = requestableSongs.find((s: any) => {
           const songTitle = normalizeTitle(s.song?.title || '');
-          return songTitle.includes(searchTitle) || searchTitle.includes(songTitle);
+          return songTitle === searchTitle;
         });
-      }
 
-      // Also try matching by media ID if available
-      if (!song) {
-        song = requestableSongs.find((s: any) => {
-          return s.song?.id === String(mediaId) || s.track_id === mediaId;
-        });
-      }
+        // Try partial match
+        if (!song) {
+          song = requestableSongs.find((s: any) => {
+            const songTitle = normalizeTitle(s.song?.title || '');
+            return songTitle.includes(searchTitle) || searchTitle.includes(songTitle);
+          });
+        }
 
-      if (!song?.request_id) {
-        console.error('AzuraCast: Song not found in requestable list. Title:', title, 'Search:', searchTitle);
-        console.log('AzuraCast: Available songs sample:', requestableSongs.slice(0, 10).map((s: any) => ({ 
-          title: s.song?.title, 
-          request_id: s.request_id,
-          id: s.song?.id 
-        })));
+        // Try matching by media ID
+        if (!song) {
+          song = requestableSongs.find((s: any) => {
+            return s.song?.id === String(mediaId) || s.track_id === mediaId;
+          });
+        }
+
+        if (song?.request_id) {
+          console.log('AzuraCast: Found request_id:', song.request_id, 'for:', song.song?.title);
+          const result = await this.makeProxyRequest(`/station/{stationId}/request/${song.request_id}`, 'POST');
+          console.log('AzuraCast: Successfully requested song via Requests API');
+          return result;
+        } else {
+          console.warn('AzuraCast: Song not in requestable list, will try admin queue endpoint');
+        }
+      } else {
+        console.warn('AzuraCast: No requestable songs available, will try admin queue endpoint');
+      }
+    } catch (requestError: any) {
+      console.warn('AzuraCast: Requests API failed:', requestError.message, '- will try admin queue endpoint');
+    }
+
+    // 3) Fall back to admin queue endpoint (requires AutoDJ Queue Editing enabled)
+    try {
+      console.log('AzuraCast: Trying admin queue endpoint for media ID:', mediaId);
+      const result = await this.makeProxyRequest(`/station/{stationId}/queue`, 'POST', {
+        media_id: mediaId,
+      });
+      console.log('AzuraCast: Successfully added to queue via admin endpoint:', result);
+      return result;
+    } catch (queueError: any) {
+      const msg = String(queueError?.message || queueError).toLowerCase();
+      
+      // If queue endpoint is disabled, provide helpful error
+      if (msg.includes('feature not enabled') || msg.includes('405') || msg.includes('method not allowed')) {
         throw new Error(
-          `Song "${title}" is not currently requestable. Add it to a request-enabled playlist in AzuraCast, or wait for cooldowns to expire.`,
+          `Song "${title}" could not be queued. It may not be in a requestable playlist, or request cooldowns may be active.`
         );
       }
-
-      console.log('AzuraCast: Found request_id:', song.request_id, 'for title:', title, '-> matched:', song.song?.title);
-      const result = await this.makeProxyRequest(`/station/{stationId}/request/${song.request_id}`, 'POST');
-      console.log('AzuraCast: Successfully requested song via Requests API');
-      return result;
-    } catch (requestError: any) {
-      console.error('AzuraCast: Requests API fallback also failed:', requestError);
-      throw new Error(
-        `Could not add "${title}" to queue: ${requestError.message}. ` +
-        `Ensure "Allow Song Requests" is enabled and the song is in a requestable playlist.`
-      );
+      
+      throw new Error(`Failed to queue "${title}": ${queueError.message}`);
     }
   }
 
