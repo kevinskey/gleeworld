@@ -108,44 +108,32 @@ Deno.serve(async (req) => {
     const contentType = mimeTypes[ext] || 'audio/mpeg';
 
     // Upload to AzuraCast (multipart/form-data)
-    // AzuraCast's Symfony backend requires proper multipart parsing.
-    // Put the "file" field FIRST (required), then path as query param.
-    const boundary = `----WebKitFormBoundary${crypto.randomUUID().replace(/-/g, '').slice(0, 16)}`;
-    const encoder = new TextEncoder();
-    const fileBytes = new Uint8Array(fileArrayBuffer);
+    // IMPORTANT: AzuraCast's upload endpoint is /files/upload and requires BOTH fields:
+    // - path: "path/to/file.ext" (destination path inside media storage)
+    // - file: binary file
+    const fileBlob = new Blob([fileArrayBuffer], { type: contentType });
+    const form = new FormData();
+    form.append('path', fileName);
+    form.append('file', fileBlob, fileName);
 
-    // Build multipart body with file field ONLY
-    // Use WebKit-style boundary which is more widely compatible
-    const partFileHeader = encoder.encode(
-      `--${boundary}\r\n` +
-      `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n` +
-      `Content-Type: ${contentType}\r\n\r\n`
+    const uploadUrl = 'https://radio.gleeworld.org/api/station/glee_world_radio/files/upload';
+    console.log(
+      'AzuraCast Upload: Uploading to:',
+      uploadUrl,
+      'file size:',
+      fileArrayBuffer.byteLength,
+      'contentType:',
+      contentType,
     );
-
-    const partFileFooter = encoder.encode(`\r\n--${boundary}--\r\n`);
-
-    const bodyLength = partFileHeader.length + fileBytes.length + partFileFooter.length;
-
-    const body = new Uint8Array(bodyLength);
-    let offset = 0;
-    body.set(partFileHeader, offset);
-    offset += partFileHeader.length;
-    body.set(fileBytes, offset);
-    offset += fileBytes.length;
-    body.set(partFileFooter, offset);
-
-    // Use path as query parameter instead of form field
-    const uploadUrl = `https://radio.gleeworld.org/api/station/glee_world_radio/files?path=${encodeURIComponent(fileName)}`;
-    console.log('AzuraCast Upload: Uploading to:', uploadUrl, 'file size:', fileArrayBuffer.byteLength, 'body size:', body.byteLength);
 
     const uploadResponse = await fetch(uploadUrl, {
       method: 'POST',
       headers: {
         'X-API-Key': azuracastApiKey,
         'Accept': 'application/json',
-        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        // Do NOT set Content-Type; fetch will include the multipart boundary.
       },
-      body,
+      body: form,
     });
 
     console.log('AzuraCast Upload: Response status:', uploadResponse.status);
