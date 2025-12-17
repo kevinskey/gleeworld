@@ -197,6 +197,13 @@ export const MetalHeaderDashboard = ({
     toggleDarkMode
   } = useTheme();
 
+  // Listen for quick actions toggle from header
+  useEffect(() => {
+    const handleToggle = () => setIsQuickActionsOpen(prev => !prev);
+    window.addEventListener('toggle-quick-actions', handleToggle);
+    return () => window.removeEventListener('toggle-quick-actions', handleToggle);
+  }, []);
+
   // HBCU theme colors
   const isHbcuTheme = themeName === 'hbcu';
   const hbcuGold = '#FFDF00';
@@ -617,10 +624,6 @@ export const MetalHeaderDashboard = ({
       <DashboardHeroCarousel />
 
 
-      {/* Floating Quick Actions Button - Bottom Right */}
-      <button onClick={() => setIsQuickActionsOpen(!isQuickActionsOpen)} aria-label="Quick Actions" className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-primary hover:bg-primary/90 rounded-full border-2 border-primary-foreground/20 shadow-xl hover:shadow-2xl transition-all duration-200 flex items-center justify-center group">
-        <Key className={`h-6 w-6 text-primary-foreground transition-transform duration-300 ${isQuickActionsOpen ? 'rotate-90' : ''}`} />
-      </button>
 
       {/* Quick Actions Panel */}
       <QuickActionsPanel user={user} onModuleSelect={handleModuleSelect} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />
