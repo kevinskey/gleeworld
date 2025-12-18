@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -9,7 +9,6 @@ interface GleeCamPhoto {
   id: string;
   file_url: string;
   title: string | null;
-  created_at: string;
 }
 
 interface GleeCamCardProps {
@@ -24,26 +23,34 @@ const IMAGE_FILE_TYPES = [
   "image/heic",
 ];
 
+const SCROLL_SPEED = 0.5; // pixels per frame
+const ITEM_WIDTH = 108; // 100px image + 8px gap
+const ITEM_WIDTH_SM = 128; // 120px image + 8px gap
+
 export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
   const [photos, setPhotos] = useState<GleeCamPhoto[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  
+  const offsetRef = useRef(0);
+  const rafRef = useRef<number | null>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
 
+  // Fetch photos
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
-        // Landing/dashboard card: show any *photos* from any category, shuffled for variety.
         const { data, error } = await supabase
           .from("quick_capture_media")
-          .select("id, file_url, title, created_at")
+          .select("id, file_url, title")
           .in("file_type", IMAGE_FILE_TYPES)
           .eq("is_approved", true)
           .order("created_at", { ascending: false })
           .limit(24);
 
         if (error) throw error;
-
-        // Shuffle the photos for variety
+        // Shuffle for variety
         const shuffled = (data || []).sort(() => Math.random() - 0.5);
         setPhotos(shuffled);
       } catch (err) {
@@ -56,22 +63,43 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     fetchPhotos();
   }, []);
 
-  const shouldAnimate = photos.length >= 8;
+  // Animation loop
+  useEffect(() => {
+    if (photos.length < 4 || isPaused) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      return;
+    }
 
-  // Duplicate exactly once for a seamless loop.
-  const loopPhotos = useMemo(() => {
-    if (!shouldAnimate) return photos;
-    return [...photos, ...photos];
-  }, [photos, shouldAnimate]);
+    // Check for reduced motion preference
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
 
-  // A little faster when there are many items.
-  const durationSeconds = useMemo(() => {
-    if (!shouldAnimate) return 0;
-    if (photos.length >= 20) return 22;
-    if (photos.length >= 12) return 26;
-    return 30;
-  }, [photos.length, shouldAnimate]);
+    const totalWidth = photos.length * ITEM_WIDTH;
 
+    const animate = () => {
+      offsetRef.current -= SCROLL_SPEED;
+      
+      // Reset when we've scrolled past the first set
+      if (Math.abs(offsetRef.current) >= totalWidth) {
+        offsetRef.current = 0;
+      }
+
+      if (trackRef.current) {
+        trackRef.current.style.transform = `translateX(${offsetRef.current}px)`;
+      }
+
+      rafRef.current = requestAnimationFrame(animate);
+    };
+
+    rafRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [photos.length, isPaused]);
+
+  const handlePause = useCallback(() => setIsPaused(true), []);
+  const handleResume = useCallback(() => setIsPaused(false), []);
   const goToGallery = () => navigate("/glee-cam/glee-cam-pics");
 
   if (loading) {
@@ -106,21 +134,11 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     );
   }
 
+  // Duplicate photos for seamless loop
+  const displayPhotos = photos.length >= 4 ? [...photos, ...photos] : photos;
+
   return (
     <Card className={cn("bg-card", className)}>
-      {/* CSS marquee (no JS carousel). */}
-      <style>
-        {`
-          @keyframes gw-glee-cam-marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-          }
-          @media (prefers-reduced-motion: reduce) {
-            .gw-glee-cam-track { animation: none !important; transform: none !important; }
-          }
-        `}
-      </style>
-
       <CardHeader className="py-3 px-3 sm:px-4">
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Camera className="h-5 w-5 text-primary" />
@@ -139,23 +157,20 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
       </CardHeader>
 
       <CardContent className="px-3 pb-3 pt-0 sm:px-4">
-        <div className="overflow-hidden">
+        <div 
+          className="overflow-hidden"
+          onMouseEnter={handlePause}
+          onMouseLeave={handleResume}
+          onTouchStart={handlePause}
+          onTouchEnd={handleResume}
+        >
           <div
-            className={cn(
-              "gw-glee-cam-track flex w-max gap-2",
-              shouldAnimate && "will-change-transform",
-            )}
-            style={
-              shouldAnimate
-                ? {
-                    animation: `gw-glee-cam-marquee ${durationSeconds}s linear infinite`,
-                  }
-                : undefined
-            }
+            ref={trackRef}
+            className="flex gap-2 will-change-transform"
+            style={{ width: "max-content" }}
           >
-            {loopPhotos.map((photo, idx) => (
+            {displayPhotos.map((photo, idx) => (
               <button
-                // idx is intentional: we duplicate for the loop
                 key={`${photo.id}-${idx}`}
                 type="button"
                 onClick={goToGallery}
