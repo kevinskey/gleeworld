@@ -73,8 +73,8 @@ export const ContractItem = ({
         </Avatar>
         <FileText className="h-6 w-6 text-primary flex-shrink-0 mt-1 sm:mt-0" />
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-foreground truncate">{contract.title}</h3>
-          <p className="text-sm text-muted-foreground">Status: {getStatusText(contract.status)}</p>
+          <h3 className="font-semibold text-foreground text-sm truncate">{contract.title}</h3>
+          <p className="text-xs text-muted-foreground">Status: {getStatusText(contract.status)}</p>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Created: {new Date(contract.created_at).toLocaleDateString()}</span>
             {contract.updated_at !== contract.created_at && (
