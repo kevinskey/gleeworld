@@ -73,14 +73,18 @@ const profileSchema = z.object({
   // Academic & Personal fields
   academic_major: z.string().optional(),
   pronouns: z.string().optional(),
-  class_year: z.preprocess(
-    (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
-    z.number().min(1900).max(2050).optional()
-  ),
-  graduation_year: z.preprocess(
-    (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
-    z.number().min(1900).max(2050).optional()
-  ),
+  class_year: z.preprocess((val) => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    if (typeof val === "number" && !Number.isFinite(val)) return undefined;
+    const n = typeof val === "string" ? Number(val) : val;
+    return Number.isFinite(n) ? n : undefined;
+  }, z.number().min(1900).max(2050).optional()),
+  graduation_year: z.preprocess((val) => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    if (typeof val === "number" && !Number.isFinite(val)) return undefined;
+    const n = typeof val === "string" ? Number(val) : val;
+    return Number.isFinite(n) ? n : undefined;
+  }, z.number().min(1900).max(2050).optional()),
   
   // Health & Safety fields
   emergency_contact: z.string().optional(),
