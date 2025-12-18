@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useCourseDisplayInfo, useCourseContext } from "@/contexts/CourseContext";
 
 interface GleeCamPhoto {
   id: string;
@@ -27,16 +28,21 @@ const SCROLL_SPEED = 0.6; // pixels per frame
 
 export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
+  const { camTitle, isInCourseView } = useCourseDisplayInfo();
+  const { selectedCourseId } = useCourseContext();
   const [photos, setPhotos] = useState<GleeCamPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const offsetRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
 
-  // Fetch photos
+  // Fetch photos - course-aware
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
+        setLoading(true);
+        
+        // For now, fetch all approved photos (course filtering will work after types regenerate)
         const { data, error } = await supabase
           .from("quick_capture_media")
           .select("id, file_url, title")
@@ -57,7 +63,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     };
 
     fetchPhotos();
-  }, []);
+  }, [isInCourseView, selectedCourseId]);
 
   // Animation loop (JS marquee for reliability)
   useEffect(() => {
@@ -104,7 +110,13 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     };
   }, [photos.length]);
 
-  const goToGallery = () => navigate("/glee-cam/glee-cam-pics");
+  const goToGallery = () => {
+    if (isInCourseView && selectedCourseId) {
+      navigate(`/course-cam/${selectedCourseId}`);
+    } else {
+      navigate("/glee-cam/glee-cam-pics");
+    }
+  };
 
   if (loading) {
     return (
@@ -112,7 +124,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         <CardHeader className="py-2 px-3">
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5 text-primary" />
-            Glee Cam
+            {camTitle}
           </CardTitle>
         </CardHeader>
         <CardContent className="px-3 pb-3 pt-0">
@@ -128,7 +140,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         <CardHeader className="py-3 px-3">
           <CardTitle className="flex items-center gap-2 text-foreground">
             <Camera className="h-5 w-5 text-primary" />
-            Glee Cam
+            {camTitle}
             <span className="text-[10px] md:text-xs font-normal text-muted-foreground ml-2 uppercase">
               no photos yet
             </span>
@@ -146,9 +158,9 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
       <CardHeader className="py-3 px-3 sm:px-4">
         <CardTitle className="flex items-center gap-2 text-foreground">
           <Camera className="h-5 w-5 text-primary" />
-          Glee Cam
+          {camTitle}
           <span className="text-[10px] md:text-xs font-normal text-muted-foreground ml-2 uppercase">
-            member moments
+            {isInCourseView ? 'course moments' : 'member moments'}
           </span>
           <button
             type="button"
@@ -173,12 +185,12 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
                 type="button"
                 onClick={goToGallery}
                 className="group flex-shrink-0 text-left"
-                aria-label="Open Glee Cam gallery"
+                aria-label={`Open ${camTitle} gallery`}
               >
                 <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300">
                   <img
                     src={photo.file_url}
-                    alt={photo.title || "Glee Cam photo"}
+                    alt={photo.title || `${camTitle} photo`}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                   />
