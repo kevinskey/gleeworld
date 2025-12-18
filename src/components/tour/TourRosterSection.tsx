@@ -37,11 +37,11 @@ export const TourRosterSection = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch all members
+      // Fetch all members and admins who can be added to tour
       const { data: members, error: membersError } = await supabase
         .from('gw_profiles')
-        .select('user_id, full_name, email, voice_part, avatar_url')
-        .eq('role', 'member')
+        .select('user_id, full_name, email, voice_part, avatar_url, role')
+        .in('role', ['member', 'admin', 'super-admin'])
         .order('full_name');
 
       if (membersError) throw membersError;
