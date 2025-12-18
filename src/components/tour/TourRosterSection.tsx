@@ -311,8 +311,10 @@ export const TourRosterSection = () => {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="font-medium truncate">{member.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{member.voice_part || 'No voice part'}</p>
                   </div>
+                  <Badge variant={member.voice_part ? "secondary" : "outline"} className="text-xs font-medium">
+                    {member.voice_part || 'Unassigned'}
+                  </Badge>
                   <Select
                     value={member.status}
                     onValueChange={(value) => member.roster_id && updateStatus(member.roster_id, value)}
@@ -385,8 +387,10 @@ export const TourRosterSection = () => {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{member.full_name}</p>
-                    <p className="text-xs text-muted-foreground">{member.voice_part || member.email}</p>
                   </div>
+                  <Badge variant={member.voice_part ? "secondary" : "outline"} className="text-xs">
+                    {member.voice_part || 'Unassigned'}
+                  </Badge>
                   <Button
                     variant="outline"
                     size="sm"
