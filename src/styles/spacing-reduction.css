@@ -79,6 +79,7 @@
 
 /* =========================================
    TOUCH-FRIENDLY MOBILE UTILITIES
+   Ensures WCAG 2.1 Level AAA tap targets (44x44px minimum)
    ========================================= */
 
 .touch-target {
@@ -89,12 +90,21 @@
   @apply min-h-[36px] min-w-[36px];
 }
 
+.touch-target-lg {
+  @apply min-h-[48px] min-w-[48px];
+}
+
 .touch-hover {
   @apply transition-transform duration-200 active:scale-[0.98];
 }
 
 .touch-hover:hover {
   @apply md:scale-[1.02];
+}
+
+/* Ensure all interactive elements have proper spacing */
+.touch-spacing {
+  @apply p-2.5 sm:p-3;
 }
 
 /* =========================================
@@ -123,6 +133,12 @@
 
 .text-pretty {
   text-wrap: pretty;
+}
+
+/* Ensure text is readable with proper line height */
+.text-readable {
+  @apply leading-relaxed tracking-normal;
+  font-size: clamp(0.875rem, 2vw + 0.5rem, 1rem);
 }
 
 /* =========================================
@@ -195,9 +211,14 @@
   @apply cursor-pointer transition-colors duration-200 hover:bg-accent/50 active:bg-accent rounded-md;
 }
 
-/* Focus ring utility */
+/* Focus ring utility - Enhanced for accessibility */
 .focus-ring {
-  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+/* High contrast focus for critical elements */
+.focus-ring-high-contrast {
+  @apply focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background;
 }
 
 /* =========================================
@@ -259,6 +280,122 @@
 }
 
 /* =========================================
+   ACCESSIBILITY UTILITIES
+   ========================================= */
+
+/* Screen reader only - hides visually but accessible to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus visible skip link */
+.skip-link {
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: 0 0% 40%;
+  }
+  
+  .dark {
+    --border: 0 0% 60%;
+  }
+  
+  button, a, input, select, textarea {
+    border-width: 2px !important;
+  }
+}
+
+/* Color blindness friendly - add patterns/icons alongside color indicators */
+.status-indicator {
+  @apply inline-flex items-center gap-1.5;
+}
+
+.status-indicator::before {
+  content: '';
+  @apply w-2 h-2 rounded-full inline-block;
+}
+
+/* Ensure sufficient color contrast on all states */
+.contrast-safe {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+}
+
+.contrast-safe-inverse {
+  color: hsl(var(--background));
+  background-color: hsl(var(--foreground));
+}
+
+/* =========================================
+   RESPONSIVE OVERFLOW PREVENTION
+   ========================================= */
+
+.no-horizontal-scroll {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Responsive tables */
+.table-responsive {
+  @apply w-full overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0;
+}
+
+.table-responsive table {
+  @apply min-w-full;
+}
+
+/* Responsive modal/dialog content */
+.dialog-responsive {
+  @apply w-[calc(100vw-2rem)] max-w-lg sm:w-full;
+}
+
+/* Prevent content from breaking out of containers */
+.contain-content {
+  @apply max-w-full overflow-hidden;
+}
+
+.contain-content img,
+.contain-content video,
+.contain-content iframe {
+  @apply max-w-full h-auto;
+}
+
+/* =========================================
+   SAFE AREA INSETS (iOS notch support)
+   ========================================= */
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-all {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* =========================================
    ACCESSIBLE FOCUS STATES
    ========================================= */
 
@@ -270,4 +407,33 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* =========================================
+   FORM ACCESSIBILITY
+   ========================================= */
+
+/* Required field indicator */
+.required-field::after {
+  content: '*';
+  @apply text-destructive ml-0.5;
+}
+
+/* Error state styling */
+.input-error {
+  @apply border-destructive ring-2 ring-destructive/20;
+}
+
+.input-error-message {
+  @apply text-destructive text-sm mt-1 flex items-center gap-1;
+}
+
+/* Success state styling */
+.input-success {
+  @apply border-success ring-2 ring-success/20;
+}
+
+/* Disabled state - ensure proper contrast */
+.input-disabled {
+  @apply opacity-60 cursor-not-allowed bg-muted;
 }

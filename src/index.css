@@ -1768,3 +1768,297 @@ body.radio-bar-open main {
 .contract-preview b {
   color: #111827 !important;
 }
+
+/* ============================================
+   GLOBAL ACCESSIBILITY IMPROVEMENTS
+   WCAG 2.1 Level AA/AAA Compliance
+   ============================================ */
+
+/* Ensure all interactive elements have visible focus */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* High visibility focus for keyboard navigation */
+.keyboard-nav a:focus,
+.keyboard-nav button:focus,
+.keyboard-nav [role="button"]:focus {
+  outline: 3px solid hsl(var(--primary));
+  outline-offset: 3px;
+  box-shadow: 0 0 0 6px hsl(var(--primary) / 0.2);
+}
+
+/* Ensure disabled elements are visually distinct */
+[disabled],
+[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Improve link visibility with underlines */
+p a:not([class]),
+.prose a:not([class]) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+p a:not([class]):hover,
+.prose a:not([class]):hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Ensure form labels are properly visible */
+label {
+  font-weight: 500;
+  color: hsl(var(--foreground));
+}
+
+label.required::after {
+  content: ' *';
+  color: hsl(var(--destructive));
+}
+
+/* Error/success state colors with icons */
+.field-error {
+  border-color: hsl(var(--destructive)) !important;
+}
+
+.field-error-message {
+  color: hsl(var(--destructive));
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.field-success {
+  border-color: hsl(142 76% 36%) !important;
+}
+
+/* Ensure minimum contrast ratios */
+.text-contrast-high {
+  color: hsl(var(--foreground));
+}
+
+.bg-contrast-high {
+  background-color: hsl(var(--background));
+}
+
+/* Skip to main content link */
+.skip-to-main {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  padding: 0.75rem 1.5rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+  border-radius: 0 0 0.5rem 0.5rem;
+  transition: top 0.2s ease;
+}
+
+.skip-to-main:focus {
+  top: 0;
+}
+
+/* ============================================
+   RESPONSIVE IMPROVEMENTS
+   Better layout handling across breakpoints
+   ============================================ */
+
+/* Prevent horizontal overflow on all pages */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Responsive container with better padding */
+.container-responsive {
+  width: 100%;
+  max-width: 100%;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding-left: 2rem;
+    padding-right: 2rem;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Responsive text sizing */
+.responsive-heading {
+  font-size: clamp(1.5rem, 4vw + 0.5rem, 2.5rem);
+  line-height: 1.2;
+}
+
+.responsive-subheading {
+  font-size: clamp(1.125rem, 2.5vw + 0.5rem, 1.5rem);
+  line-height: 1.3;
+}
+
+.responsive-body {
+  font-size: clamp(0.875rem, 1.5vw + 0.5rem, 1rem);
+  line-height: 1.6;
+}
+
+/* Ensure tables are scrollable on mobile */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-container table {
+  min-width: 100%;
+}
+
+/* Stack form elements on mobile */
+@media (max-width: 640px) {
+  .form-row {
+    flex-direction: column !important;
+  }
+  
+  .form-row > * {
+    width: 100% !important;
+  }
+}
+
+/* Improve modal responsiveness */
+@media (max-width: 640px) {
+  [role="dialog"] {
+    width: calc(100vw - 2rem) !important;
+    max-width: none !important;
+    margin: 1rem !important;
+  }
+}
+
+/* ============================================
+   THEME CONTRAST FIXES
+   Ensure readability across all themes
+   ============================================ */
+
+/* Dark mode specific contrast improvements */
+.dark .text-muted-foreground {
+  color: hsl(0 0% 70%);
+}
+
+.dark .border {
+  border-color: hsl(0 0% 25%);
+}
+
+/* HBCU theme contrast improvements */
+.hbcu-theme .bg-card {
+  background: hsl(0 0% 10%);
+}
+
+.hbcu-theme .text-muted-foreground {
+  color: hsl(45 40% 65%);
+}
+
+/* Spelman Blue theme - ensure text on gradients is readable */
+.spelman-blue-theme .bg-primary {
+  background: hsl(208 100% 33%);
+}
+
+.spelman-blue-theme .text-primary-foreground {
+  color: hsl(0 0% 100%);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Ensure buttons have sufficient contrast */
+button.bg-primary,
+[role="button"].bg-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+button.bg-primary:hover,
+[role="button"].bg-primary:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+/* Fix low contrast on disabled states */
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  background-color: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+/* ============================================
+   ANIMATION ACCESSIBILITY
+   Respect reduced motion preferences
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .animate-marquee,
+  .animate-float,
+  .animate-pulse,
+  .animate-bounce {
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   PRINT STYLES
+   Accessible printing
+   ============================================ */
+
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  a {
+    text-decoration: underline;
+  }
+  
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
