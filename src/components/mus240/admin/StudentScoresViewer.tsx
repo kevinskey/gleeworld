@@ -11,6 +11,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { GraduationCap, Search, Download, Eye, TrendingUp, Award, RefreshCw, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { Mus240SemesterSelector } from './Mus240SemesterSelector';
 
 interface StudentScore {
   student_id: string;
@@ -41,6 +43,8 @@ interface AssignmentStats {
 }
 
 export const StudentScoresViewer = () => {
+  const { currentSemester } = useMus240SemesterSafe();
+  const [semester, setSemester] = useState(currentSemester);
   const [students, setStudents] = useState<StudentScore[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<StudentScore[]>([]);
   const [gradeDistribution, setGradeDistribution] = useState<GradeDistribution[]>([]);
@@ -53,9 +57,13 @@ export const StudentScoresViewer = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    setSemester(currentSemester);
+  }, [currentSemester]);
+
+  useEffect(() => {
     loadStudentScores();
     loadAssignmentStats();
-  }, []);
+  }, [semester]);
 
   useEffect(() => {
     filterAndSortStudents();
@@ -69,7 +77,7 @@ export const StudentScoresViewer = () => {
       const { data: summaryData, error: summaryError } = await supabase
         .from('mus240_grade_summaries')
         .select('*')
-        .eq('semester', 'Fall 2025')
+        .eq('semester', semester)
         .order('overall_percentage', { ascending: false });
 
       if (summaryError) throw summaryError;

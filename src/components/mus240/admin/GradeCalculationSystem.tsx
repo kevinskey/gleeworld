@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { GroupParticipationAnalyzer } from './GroupParticipationAnalyzer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { Mus240SemesterSelector } from './Mus240SemesterSelector';
 
 interface StudentGradeData {
   student_id: string;
@@ -67,9 +69,15 @@ const DEFAULT_WEIGHTS: GradeWeights = {
 };
 
 export const GradeCalculationSystem: React.FC = () => {
-  const [semester, setSemester] = useState('Fall 2025');
+  const { currentSemester } = useMus240SemesterSafe();
+  const [semester, setSemester] = useState(currentSemester);
   const [weights, setWeights] = useState<GradeWeights>(DEFAULT_WEIGHTS);
   const queryClient = useQueryClient();
+
+  // Sync with context when it changes
+  useEffect(() => {
+    setSemester(currentSemester);
+  }, [currentSemester]);
 
   const { data: studentGrades, isLoading, refetch } = useQuery({
     queryKey: ['student-grades', semester],

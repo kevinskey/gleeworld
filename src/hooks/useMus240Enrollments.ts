@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 export interface Mus240EnrollmentWithProfile {
   id: string;
@@ -19,7 +20,9 @@ export interface Mus240EnrollmentWithProfile {
   };
 }
 
-export const useMus240Enrollments = (semester: string = 'Fall 2025') => {
+export const useMus240Enrollments = (semesterOverride?: string) => {
+  const { currentSemester } = useMus240SemesterSafe();
+  const semester = semesterOverride || currentSemester;
   const [enrollments, setEnrollments] = useState<Mus240EnrollmentWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

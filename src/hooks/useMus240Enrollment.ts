@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 export interface Mus240Enrollment {
   id: string;
@@ -14,8 +15,10 @@ export interface Mus240Enrollment {
   updated_at: string;
 }
 
-export const useMus240Enrollment = () => {
+export const useMus240Enrollment = (semesterOverride?: string) => {
   const { user } = useAuth();
+  const { currentSemester } = useMus240SemesterSafe();
+  const semester = semesterOverride || currentSemester;
   const [enrollment, setEnrollment] = useState<Mus240Enrollment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +29,7 @@ export const useMus240Enrollment = () => {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, semester]);
 
   const checkEnrollment = async () => {
     if (!user) return;
@@ -39,7 +42,7 @@ export const useMus240Enrollment = () => {
         .from('mus240_enrollments')
         .select('*')
         .eq('student_id', user.id)
-        .eq('semester', 'Fall 2025')
+        .eq('semester', semester)
         .maybeSingle();
 
       if (supabaseError) {
