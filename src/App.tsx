@@ -857,7 +857,23 @@ const App = () => {
                     } 
                   />
                   <Route
+                    path="/admin/create-announcement" 
+                    element={
+                      <ProtectedRoute>
+                        <CreateAnnouncement />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route
                     path="/admin/announcements/edit/:id" 
+                    element={
+                      <ProtectedRoute>
+                        <EditAnnouncement />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route
+                    path="/admin/edit-announcement/:id" 
                     element={
                       <ProtectedRoute>
                         <EditAnnouncement />
