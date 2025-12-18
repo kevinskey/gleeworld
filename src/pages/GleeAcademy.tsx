@@ -65,25 +65,23 @@ const GleeAcademy = () => {
                         {course.description}
                       </p>
                       
-                      <div className="space-y-4 flex-1 flex flex-col">
-                        <div>
-                          <h4 className="font-semibold text-sm text-foreground mb-2">Course Highlights:</h4>
-                          <ul className="space-y-2">
-                            {course.highlights.map((highlight, index) => <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
-                                <ChevronRight className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                                <span>{highlight}</span>
-                              </li>)}
-                          </ul>
-                        </div>
-                        
-                        <Button className="w-full mt-auto bg-[#1a1a2e] hover:bg-[#16213e] text-white" size="default" onClick={e => {
-                      e.stopPropagation();
-                      handleCourseClick(course.route);
-                    }}>
-                          Enter {course.courseCode}
-                          <ChevronRight className="h-4 w-4 ml-2" />
-                        </Button>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm text-foreground mb-2">Course Highlights:</h4>
+                        <ul className="space-y-2">
+                          {course.highlights.map((highlight, index) => <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                              <ChevronRight className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                              <span>{highlight}</span>
+                            </li>)}
+                        </ul>
                       </div>
+                      
+                      <Button className="w-full mt-4 bg-[#1a1a2e] hover:bg-[#16213e] text-white" size="default" onClick={e => {
+                    e.stopPropagation();
+                    handleCourseClick(course.route);
+                  }}>
+                        Enter {course.courseCode}
+                        <ChevronRight className="h-4 w-4 ml-2" />
+                      </Button>
                     </CardContent>
                   </Card>;
             })}
