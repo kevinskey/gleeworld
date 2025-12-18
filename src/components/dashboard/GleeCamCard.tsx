@@ -1,32 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio, ChevronDown } from "lucide-react";
+import { Camera, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-interface GleeCamCategory {
+interface GleeCamPhoto {
   id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  icon: string;
-  icon_bg: string;
-  icon_color: string;
-  display_order: number;
-  is_active: boolean;
+  file_url: string;
+  title: string | null;
+  category: string;
+  created_at: string;
 }
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  Camera,
-  Video,
-  Mic,
-  Users,
-  Sparkles,
-  Image,
-  FileAudio
-};
 
 interface GleeCamCardProps {
   className?: string;
@@ -34,26 +20,34 @@ interface GleeCamCardProps {
 
 export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
-  const [categories, setCategories] = useState<GleeCamCategory[]>([]);
+  const [photos, setPhotos] = useState<GleeCamPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
+
   useEffect(() => {
-    fetchCategories();
+    fetchPhotos();
   }, []);
 
-  const fetchCategories = async () => {
+  const fetchPhotos = async () => {
     try {
+      // Fetch photos (not videos) from all categories, randomized
       const { data, error } = await supabase
-        .from('glee_cam_categories')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
+        .from('quick_capture_media')
+        .select('id, file_url, title, category, created_at')
+        .in('file_type', ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/heic'])
+        .eq('is_approved', true)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
       if (error) throw error;
-      setCategories(data || []);
+      
+      // Shuffle the photos for variety
+      const shuffled = (data || []).sort(() => Math.random() - 0.5);
+      setPhotos(shuffled);
     } catch (error) {
-      console.error('Error fetching glee cam categories:', error);
+      console.error('Error fetching glee cam photos:', error);
     } finally {
       setLoading(false);
     }
@@ -61,10 +55,9 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
 
   // Auto-scroll effect
   useEffect(() => {
-    if (!isOpen || isPaused || categories.length === 0) return;
+    if (!isOpen || isPaused || photos.length === 0) return;
 
     let intervalId: number | undefined;
-    let rafId: number | undefined;
 
     const start = () => {
       const container = scrollContainerRef.current;
@@ -77,31 +70,26 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
       intervalId = window.setInterval(() => {
         const maxScrollLeft = container.scrollWidth - container.clientWidth;
         container.scrollLeft = container.scrollLeft >= maxScrollLeft ? 0 : container.scrollLeft + scrollSpeed;
-      }, 20);
+      }, 30);
     };
 
-    // Wait a frame so CollapsibleContent has mounted and layout is measurable
-    rafId = window.requestAnimationFrame(() => {
-      window.setTimeout(start, 50);
-    });
+    // Wait for DOM to render
+    const timeoutId = window.setTimeout(start, 100);
 
     return () => {
-      if (rafId) window.cancelAnimationFrame(rafId);
+      window.clearTimeout(timeoutId);
       if (intervalId) window.clearInterval(intervalId);
     };
-  }, [isOpen, isPaused, categories.length]);
+  }, [isOpen, isPaused, photos.length]);
 
-  const handleCategoryClick = (category: GleeCamCategory) => {
-    navigate(`/glee-cam/${category.slug}`);
-  };
-
-  const getIconComponent = (iconName: string) => {
-    return ICON_MAP[iconName] || Camera;
+  const handlePhotoClick = (photo: GleeCamPhoto) => {
+    // Navigate to the glee cam gallery
+    navigate('/glee-cam/glee-cam-pics');
   };
 
   if (loading) {
     return (
-      <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
+      <Card className={cn("bg-card", className)}>
         <CardHeader className="py-2 px-3">
           <CardTitle className="flex items-center gap-2">
             <Camera className="h-5 w-5 text-primary" />
@@ -109,70 +97,72 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="px-3 pb-3 pt-0">
-          <div className="h-24 animate-pulse bg-muted" />
+          <div className="h-24 animate-pulse bg-muted rounded" />
         </CardContent>
       </Card>
     );
   }
 
-  if (categories.length === 0) {
-    return null;
+  if (photos.length === 0) {
+    return (
+      <Card className={cn("bg-card", className)}>
+        <CardHeader className="py-3 px-3">
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <Camera className="h-5 w-5 text-primary" />
+            Glee Cam
+            <span className="text-[10px] md:text-xs font-normal text-muted-foreground ml-2 uppercase">
+              no photos yet
+            </span>
+          </CardTitle>
+        </CardHeader>
+      </Card>
+    );
   }
 
   return (
     <Card className={cn("bg-card", className)}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <CardHeader className="py-3 px-3 sm:px-0 cursor-pointer hover:bg-primary/5 transition-colors">
-            <CardTitle className="flex items-center gap-2 !text-white pl-[10px]">
-              <Camera className="h-5 w-5 !text-white" />
+          <CardHeader className="py-3 px-3 sm:px-4 cursor-pointer hover:bg-primary/5 transition-colors">
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <Camera className="h-5 w-5 text-primary" />
               Glee Cam
-              <span className="text-[10px] md:text-xs font-normal !text-white/70 ml-2 uppercase">
+              <span className="text-[10px] md:text-xs font-normal text-muted-foreground ml-2 uppercase">
                 member moments
               </span>
               <ChevronDown className={cn(
-                "h-4 w-4 ml-auto mr-2 transition-transform duration-200 !text-white/70",
+                "h-4 w-4 ml-auto mr-2 transition-transform duration-200 text-muted-foreground",
                 isOpen && "rotate-180"
               )} />
             </CardTitle>
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-3 pb-3 pt-0 sm:px-[20px] text-secondary-foreground">
+          <CardContent className="px-3 pb-3 pt-0 sm:px-4">
             <div 
               ref={scrollContainerRef}
-              className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin"
+              className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin"
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
               onTouchStart={() => setIsPaused(true)}
               onTouchEnd={() => setIsPaused(false)}
             >
-              {categories.map(category => {
-                const IconComponent = getIconComponent(category.icon);
-                return (
-                  <div
-                    key={category.id}
-                    onClick={() => handleCategoryClick(category)}
-                    className="group cursor-pointer flex-shrink-0 w-[140px] sm:w-[160px] lg:w-[calc(25%-9px)]"
-                  >
-                    <div className={cn(
-                      "p-2 flex flex-col items-center text-center transition-all duration-300",
-                      "bg-card border border-border hover:border-primary/50",
-                      "shadow-lg hover:shadow-xl min-h-[140px] justify-center"
-                    )}>
-                      <div className="w-12 h-12 flex items-center justify-center mb-1.5 transition-transform group-hover:scale-110 bg-primary/20">
-                        <IconComponent className="h-7 w-7 text-primary" />
-                      </div>
-                      <h4 className="font-semibold text-xs sm:text-sm text-foreground mb-0.5 tracking-wide uppercase leading-tight line-clamp-1">
-                        {category.name}
-                      </h4>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2">
-                        {category.description}
-                      </p>
-                    </div>
+              {photos.map(photo => (
+                <div
+                  key={photo.id}
+                  onClick={() => handlePhotoClick(photo)}
+                  className="group cursor-pointer flex-shrink-0"
+                >
+                  <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300">
+                    <img 
+                      src={photo.file_url} 
+                      alt={photo.title || 'Glee Cam photo'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
                   </div>
-                );
-              })}
+                </div>
+              ))}
             </div>
           </CardContent>
         </CollapsibleContent>
