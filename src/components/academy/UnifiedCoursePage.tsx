@@ -22,7 +22,7 @@ import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
 import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
-import { CourseMessaging } from './CourseMessaging';
+
 import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
 import { Mus070AttendanceView } from '@/components/mus070/instructor/Mus070AttendanceView';
 
@@ -177,7 +177,6 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
               { icon: MessageSquare, label: 'Lounge', tab: 'lounge' },
               // MUS 240 specific: Resources
               ...(course.id === 'mus-240' ? [{ icon: Library, label: 'Resources', tab: 'resources' }] : []),
-              { icon: Mail, label: 'Mail Center', tab: 'mail' },
               { icon: Trophy, label: 'Grades', tab: 'grades' },
               { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
               { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
@@ -458,15 +457,11 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {activeTab === 'lounge' && (
-              <CourseLounge courseId={course.id} courseName={course.title} isEnrolled={isEnrolled} />
-            )}
-
-            {activeTab === 'mail' && (
-              <CourseMessaging
-                courseId={course.id}
-                courseName={course.title}
-                instructorEmail={course.instructor.email}
+              <CourseLounge 
+                courseId={course.id} 
+                courseName={course.title} 
                 isEnrolled={isEnrolled}
+                instructorEmail={course.instructor.email}
                 isAdmin={isAdmin}
               />
             )}
