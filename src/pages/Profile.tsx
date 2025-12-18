@@ -73,8 +73,14 @@ const profileSchema = z.object({
   // Academic & Personal fields
   academic_major: z.string().optional(),
   pronouns: z.string().optional(),
-  class_year: z.number().min(1900).max(2050).optional().or(z.literal("")),
-  graduation_year: z.number().min(1900).max(2050).optional().or(z.literal("")),
+  class_year: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
+    z.number().min(1900).max(2050).optional()
+  ),
+  graduation_year: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined ? undefined : Number(val)),
+    z.number().min(1900).max(2050).optional()
+  ),
   
   // Health & Safety fields
   emergency_contact: z.string().optional(),
@@ -232,8 +238,8 @@ const Profile = () => {
       setValue("visible_piercings", profile.visible_piercings || false);
       setValue("academic_major", profile.academic_major || "");
       setValue("pronouns", profile.pronouns || "");
-      setValue("class_year", profile.class_year || "");
-      setValue("graduation_year", profile.graduation_year || "");
+      setValue("class_year", profile.class_year || undefined);
+      setValue("graduation_year", profile.graduation_year || undefined);
       setValue("emergency_contact", profile.emergency_contact || "");
       setValue("allergies", profile.allergies || "");
       setValue("parent_guardian_contact", profile.parent_guardian_contact || "");
@@ -345,7 +351,7 @@ const Profile = () => {
         visible_piercings: data.visible_piercings,
         academic_major: data.academic_major,
         pronouns: data.pronouns,
-        class_year: data.class_year === "" ? null : Number(data.class_year),
+        class_year: data.class_year ?? null,
         emergency_contact: data.emergency_contact,
         dietary_restrictions: selectedDietaryRestrictions,
         allergies: data.allergies,
@@ -370,7 +376,7 @@ const Profile = () => {
       const adminOnlyUpdates = {
         student_number: data.student_number,
         voice_part: data.voice_part === "" ? null : (data.voice_part as any),
-        graduation_year: data.graduation_year === "" ? null : Number(data.graduation_year),
+        graduation_year: data.graduation_year ?? null,
         join_date: data.join_date === "" ? null : data.join_date,
       };
 
