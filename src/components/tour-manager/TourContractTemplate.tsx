@@ -161,8 +161,50 @@ const TOUR_CONTRACT_TEMPLATE = [
   "Date: _______________"
 ].join("\n");
 
-export const TourContractTemplate = () => {
-  const [variables, setVariables] = useState<TourContractVariables>(DEFAULT_VARIABLES);
+interface TourContractTemplateProps {
+  initialData?: {
+    host_name?: string;
+    host_location?: string;
+    host_signatory_name?: string;
+    host_signatory_title?: string;
+    host_department?: string;
+    venue_name?: string;
+    venue_address?: string;
+    venue_contact?: string;
+    venue_email?: string;
+    venue_phone?: string;
+    honorarium_amount?: number;
+    deposit_amount?: number;
+    start_date?: string;
+    title?: string;
+    location?: string;
+  };
+}
+
+export const TourContractTemplate = ({ initialData }: TourContractTemplateProps) => {
+  const [variables, setVariables] = useState<TourContractVariables>(() => {
+    if (initialData) {
+      const startDate = initialData.start_date ? new Date(initialData.start_date) : null;
+      return {
+        ...DEFAULT_VARIABLES,
+        HOST_NAME: initialData.host_name || '',
+        HOST_LOCATION: initialData.host_location || initialData.location || '',
+        HOST_CONTACT_NAME: initialData.venue_contact || '',
+        HOST_CONTACT_EMAIL: initialData.venue_email || '',
+        HOST_CONTACT_PHONE: initialData.venue_phone || '',
+        HOST_SIGNATORY_NAME: initialData.host_signatory_name || '',
+        HOST_SIGNATORY_TITLE: initialData.host_signatory_title || '',
+        HOST_DEPARTMENT: initialData.host_department || '',
+        PERFORMANCE_DATE: startDate ? startDate.toISOString().split('T')[0] : '',
+        START_TIME: startDate ? startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '',
+        VENUE_NAME: initialData.venue_name || '',
+        VENUE_ADDRESS: initialData.venue_address || '',
+        HONORARIUM_AMOUNT: initialData.honorarium_amount?.toFixed(2) || '5000.00',
+        DEPOSIT_AMOUNT: initialData.deposit_amount?.toFixed(2) || '2500.00',
+      };
+    }
+    return DEFAULT_VARIABLES;
+  });
   const [activeTab, setActiveTab] = useState('form');
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);

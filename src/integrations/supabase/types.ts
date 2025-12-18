@@ -15637,48 +15637,78 @@ export type Database = {
           budget_allocated: number | null
           created_at: string
           created_by: string
+          deposit_amount: number | null
           description: string | null
           end_date: string | null
+          event_type: string | null
+          honorarium_amount: number | null
+          host_department: string | null
+          host_location: string | null
+          host_name: string | null
+          host_signatory_name: string | null
+          host_signatory_title: string | null
           id: string
           location: string
           setlist_id: string | null
           start_date: string
           title: string
           updated_at: string
+          venue_address: string | null
           venue_contact: string | null
           venue_email: string | null
+          venue_name: string | null
           venue_phone: string | null
         }
         Insert: {
           budget_allocated?: number | null
           created_at?: string
           created_by: string
+          deposit_amount?: number | null
           description?: string | null
           end_date?: string | null
+          event_type?: string | null
+          honorarium_amount?: number | null
+          host_department?: string | null
+          host_location?: string | null
+          host_name?: string | null
+          host_signatory_name?: string | null
+          host_signatory_title?: string | null
           id?: string
           location: string
           setlist_id?: string | null
           start_date: string
           title: string
           updated_at?: string
+          venue_address?: string | null
           venue_contact?: string | null
           venue_email?: string | null
+          venue_name?: string | null
           venue_phone?: string | null
         }
         Update: {
           budget_allocated?: number | null
           created_at?: string
           created_by?: string
+          deposit_amount?: number | null
           description?: string | null
           end_date?: string | null
+          event_type?: string | null
+          honorarium_amount?: number | null
+          host_department?: string | null
+          host_location?: string | null
+          host_name?: string | null
+          host_signatory_name?: string | null
+          host_signatory_title?: string | null
           id?: string
           location?: string
           setlist_id?: string | null
           start_date?: string
           title?: string
           updated_at?: string
+          venue_address?: string | null
           venue_contact?: string | null
           venue_email?: string | null
+          venue_name?: string | null
           venue_phone?: string | null
         }
         Relationships: [

@@ -18,13 +18,30 @@ interface ContractManagerProps {
     full_name?: string;
     role?: string;
   };
+  initialContractData?: {
+    host_name?: string;
+    host_location?: string;
+    host_signatory_name?: string;
+    host_signatory_title?: string;
+    host_department?: string;
+    venue_name?: string;
+    venue_address?: string;
+    venue_contact?: string;
+    venue_email?: string;
+    venue_phone?: string;
+    honorarium_amount?: number;
+    deposit_amount?: number;
+    start_date?: string;
+    title?: string;
+    location?: string;
+  };
 }
 
-export const ContractManager = ({ user }: ContractManagerProps) => {
+export const ContractManager = ({ user, initialContractData }: ContractManagerProps) => {
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('tour-template');
+  const [activeTab, setActiveTab] = useState(initialContractData ? 'tour-template' : 'tour-template');
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
@@ -64,7 +81,7 @@ export const ContractManager = ({ user }: ContractManagerProps) => {
         </TabsList>
 
         <TabsContent value="tour-template" className="space-y-6">
-          <TourContractTemplate />
+          <TourContractTemplate initialData={initialContractData} />
         </TabsContent>
 
         <TabsContent value="all" className="space-y-6">
