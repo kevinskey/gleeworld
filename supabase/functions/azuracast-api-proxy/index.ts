@@ -70,33 +70,41 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify user has admin or exec board permissions
-    const { data: profile } = await supabaseClient
-      .from('gw_profiles')
-      .select('is_admin, is_super_admin, is_exec_board')
-      .eq('user_id', user.id)
-      .single();
-
-    const hasPermission = profile?.is_admin || profile?.is_super_admin || profile?.is_exec_board;
-    
-    if (!hasPermission) {
-      console.error('AzuraCast Proxy: User does not have required permissions. Profile:', profile);
-      return new Response(
-        JSON.stringify({ error: 'Admin or Exec Board permissions required' }),
-        { 
-          status: 403, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-    
-    console.log('AzuraCast Proxy: User authorized:', { userId: user.id, isAdmin: profile?.is_admin, isSuperAdmin: profile?.is_super_admin, isExecBoard: profile?.is_exec_board });
-
-    // Parse request data
+    // Parse request data early to check the method for permission logic
     const requestData: AzuraCastRequest = await req.json();
     console.log('AzuraCast Proxy: Request data:', requestData);
 
     const { endpoint, method = 'GET', body, stationId = 'glee_world_radio' } = requestData;
+
+    // Read-only endpoints (GET requests) are allowed for all authenticated users
+    // Write operations (POST, PUT, DELETE) require admin/exec board permissions
+    const isReadOnly = method === 'GET';
+    
+    if (!isReadOnly) {
+      // Verify user has admin or exec board permissions for write operations
+      const { data: profile } = await supabaseClient
+        .from('gw_profiles')
+        .select('is_admin, is_super_admin, is_exec_board')
+        .eq('user_id', user.id)
+        .single();
+
+      const hasPermission = profile?.is_admin || profile?.is_super_admin || profile?.is_exec_board;
+      
+      if (!hasPermission) {
+        console.error('AzuraCast Proxy: User does not have required permissions for write operation. Profile:', profile);
+        return new Response(
+          JSON.stringify({ error: 'Admin or Exec Board permissions required for this operation' }),
+          { 
+            status: 403, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      console.log('AzuraCast Proxy: Admin user authorized for write operation:', { userId: user.id, isAdmin: profile?.is_admin, isSuperAdmin: profile?.is_super_admin, isExecBoard: profile?.is_exec_board });
+    } else {
+      console.log('AzuraCast Proxy: User authorized for read-only operation:', { userId: user.id });
+    }
 
     // Build AzuraCast API URL
     const baseUrl = 'https://radio.gleeworld.org';
