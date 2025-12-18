@@ -35,6 +35,7 @@ import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQ
 
 import { GleeLoungeStrip } from "@/components/glee-lounge/GleeLoungeStrip";
 import { DashboardHeroCarousel } from "@/components/hero/DashboardHeroCarousel";
+import { GleeAcademyDashboardCard } from "@/components/user-dashboard/GleeAcademyDashboardCard";
 
 // Sortable Dashboard Card Component
 interface SortableDashboardCardProps {
@@ -620,7 +621,12 @@ export const MetalHeaderDashboard = ({
       {/* Glee Lounge Strip - Social Hub Access - TOP OF DASHBOARD */}
       <GleeLoungeStrip />
 
-      {/* Hero Carousel - Below Glee Lounge */}
+      {/* Glee Academy Card - Course shortcuts */}
+      <div className="px-4">
+        <GleeAcademyDashboardCard />
+      </div>
+
+      {/* Hero Carousel - Below Glee Academy */}
       <DashboardHeroCarousel />
 
 
