@@ -110,6 +110,10 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
   // Create tour mutation
   const createTourMutation = useMutation({
     mutationFn: async (routeData: { name: string; description: string; stops: TourStop[] }) => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError) throw authError;
+      if (!authData.user) throw new Error('You must be signed in to create a route.');
+
       // Calculate dates from stops
       const dates = routeData.stops.filter(s => s.date).map(s => new Date(s.date));
       const startDate = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : new Date();
@@ -122,9 +126,9 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
           name: routeData.name,
           description: routeData.description,
           status: 'planning',
-          created_by: user?.id,
+          created_by: authData.user.id,
           start_date: startDate.toISOString().split('T')[0],
-          end_date: endDate.toISOString().split('T')[0]
+          end_date: endDate.toISOString().split('T')[0],
         })
         .select()
         .single();
@@ -141,7 +145,7 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
             state_code: parts[1] || null,
             city_order: index + 1,
             arrival_date: stop.date || null,
-            city_notes: stop.venue
+            city_notes: stop.venue,
           };
         });
 
