@@ -1,16 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-import { Camera, ChevronDown } from "lucide-react";
+import { Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface GleeCamPhoto {
   id: string;
   file_url: string;
   title: string | null;
-  category: string;
   created_at: string;
 }
 
@@ -18,27 +16,27 @@ interface GleeCamCardProps {
   className?: string;
 }
 
+const IMAGE_FILE_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/heic",
+];
+
 export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
   const [photos, setPhotos] = useState<GleeCamPhoto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
-        // Fetch photos (not videos) from all categories, randomized
+        // Landing/dashboard card: show any *photos* from any category, shuffled for variety.
         const { data, error } = await supabase
           .from("quick_capture_media")
-          .select("id, file_url, title, category, created_at")
-          .in("file_type", [
-            "image/jpeg",
-            "image/png",
-            "image/gif",
-            "image/webp",
-            "image/heic",
-          ])
+          .select("id, file_url, title, created_at")
+          .in("file_type", IMAGE_FILE_TYPES)
           .eq("is_approved", true)
           .order("created_at", { ascending: false })
           .limit(24);
@@ -48,8 +46,8 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         // Shuffle the photos for variety
         const shuffled = (data || []).sort(() => Math.random() - 0.5);
         setPhotos(shuffled);
-      } catch (error) {
-        console.error("Error fetching glee cam photos:", error);
+      } catch (err) {
+        console.error("Error fetching glee cam photos:", err);
       } finally {
         setLoading(false);
       }
@@ -58,14 +56,23 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     fetchPhotos();
   }, []);
 
-  const marqueePhotos = useMemo(() => {
-    // Duplicate for seamless loop
-    return photos.length > 0 ? [...photos, ...photos] : [];
-  }, [photos]);
+  const shouldAnimate = photos.length >= 8;
 
-  const handlePhotoClick = () => {
-    navigate("/glee-cam/glee-cam-pics");
-  };
+  // Duplicate exactly once for a seamless loop.
+  const loopPhotos = useMemo(() => {
+    if (!shouldAnimate) return photos;
+    return [...photos, ...photos];
+  }, [photos, shouldAnimate]);
+
+  // A little faster when there are many items.
+  const durationSeconds = useMemo(() => {
+    if (!shouldAnimate) return 0;
+    if (photos.length >= 20) return 22;
+    if (photos.length >= 12) return 26;
+    return 30;
+  }, [photos.length, shouldAnimate]);
+
+  const goToGallery = () => navigate("/glee-cam/glee-cam-pics");
 
   if (loading) {
     return (
@@ -101,78 +108,73 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
 
   return (
     <Card className={cn("bg-card", className)}>
-      {/* Local CSS marquee (reliable, no JS carousel needed) */}
+      {/* CSS marquee (no JS carousel). */}
       <style>
         {`
-          @keyframes gw-marquee-x {
+          @keyframes gw-glee-cam-marquee {
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
           }
           @media (prefers-reduced-motion: reduce) {
-            .gw-marquee-track { animation: none !important; }
+            .gw-glee-cam-track { animation: none !important; transform: none !important; }
           }
         `}
       </style>
 
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="py-3 px-3 sm:px-4 cursor-pointer hover:bg-primary/5 transition-colors">
-            <CardTitle className="flex items-center gap-2 text-foreground">
-              <Camera className="h-5 w-5 text-primary" />
-              Glee Cam
-              <span className="text-[10px] md:text-xs font-normal text-muted-foreground ml-2 uppercase">
-                member moments
-              </span>
-              <ChevronDown
-                className={cn(
-                  "h-4 w-4 ml-auto mr-2 transition-transform duration-200 text-muted-foreground",
-                  isOpen && "rotate-180",
-                )}
-              />
-            </CardTitle>
-          </CardHeader>
-        </CollapsibleTrigger>
+      <CardHeader className="py-3 px-3 sm:px-4">
+        <CardTitle className="flex items-center gap-2 text-foreground">
+          <Camera className="h-5 w-5 text-primary" />
+          Glee Cam
+          <span className="text-[10px] md:text-xs font-normal text-muted-foreground ml-2 uppercase">
+            member moments
+          </span>
+          <button
+            type="button"
+            onClick={goToGallery}
+            className="ml-auto text-xs text-primary hover:underline"
+          >
+            View
+          </button>
+        </CardTitle>
+      </CardHeader>
 
-        <CollapsibleContent>
-          <CardContent className="px-3 pb-3 pt-0 sm:px-4">
-            <div
-              className="overflow-hidden"
-              onPointerDown={() => setIsPaused(true)}
-              onPointerUp={() => setIsPaused(false)}
-              onPointerCancel={() => setIsPaused(false)}
-              onTouchStart={() => setIsPaused(true)}
-              onTouchEnd={() => setIsPaused(false)}
-            >
-              <div
-                className="gw-marquee-track flex w-max gap-2"
-                style={{
-                  animation: "gw-marquee-x 28s linear infinite",
-                  animationPlayState: isPaused ? "paused" : "running",
-                }}
+      <CardContent className="px-3 pb-3 pt-0 sm:px-4">
+        <div className="overflow-hidden">
+          <div
+            className={cn(
+              "gw-glee-cam-track flex w-max gap-2",
+              shouldAnimate && "will-change-transform",
+            )}
+            style={
+              shouldAnimate
+                ? {
+                    animation: `gw-glee-cam-marquee ${durationSeconds}s linear infinite`,
+                  }
+                : undefined
+            }
+          >
+            {loopPhotos.map((photo, idx) => (
+              <button
+                // idx is intentional: we duplicate for the loop
+                key={`${photo.id}-${idx}`}
+                type="button"
+                onClick={goToGallery}
+                className="group flex-shrink-0 text-left"
+                aria-label="Open Glee Cam gallery"
               >
-                {marqueePhotos.map((photo, idx) => (
-                  <button
-                    // idx is fine here because we intentionally duplicate items
-                    key={`${photo.id}-${idx}`}
-                    type="button"
-                    onClick={handlePhotoClick}
-                    className="group flex-shrink-0 text-left"
-                  >
-                    <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300">
-                      <img
-                        src={photo.file_url}
-                        alt={photo.title || "Glee Cam photo"}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
+                <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300">
+                  <img
+                    src={photo.file_url}
+                    alt={photo.title || "Glee Cam photo"}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                  />
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </CardContent>
     </Card>
   );
 };
