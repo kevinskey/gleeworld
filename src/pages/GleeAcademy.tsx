@@ -7,24 +7,19 @@ import { ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import academyHeroImage from '@/assets/glee-world-academy-hero.jpg';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
-
 const GleeAcademy = () => {
   const navigate = useNavigate();
-  
   const handleCourseClick = (route: string) => {
     navigate(route);
   };
-
-  return (
-    <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
+  return <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Hero Section - Horizontal Banner */}
         <div className="relative w-full bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f3460] py-6 sm:py-8">
           <div className="w-[80vw] mx-auto text-center">
-            <h1 
-              className="font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase leading-none"
-              style={{ fontSize: 'clamp(4rem, 18vw, 16rem)' }}
-            >
+            <h1 className="font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-b from-[#FFD700] via-[#DAA520] to-[#B8860B] uppercase leading-none" style={{
+            fontSize: 'clamp(4rem, 18vw, 16rem)'
+          }}>
               Glee Academy
             </h1>
           </div>
@@ -37,18 +32,13 @@ const GleeAcademy = () => {
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
                 Our Course Offerings
               </h2>
-              <p className="text-muted-foreground">Spring 2026 Semester</p>
+              <p className="text-muted-foreground text-center py-[5px] px-0">Spring 2026 Semester</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {ACADEMY_COURSES.map(course => {
-                const IconComponent = course.icon;
-                return (
-                  <Card 
-                    key={course.id} 
-                    className="group hover:shadow-xl transition-all duration-300 bg-card border border-border h-full flex flex-col cursor-pointer"
-                    onClick={() => handleCourseClick(course.route)}
-                  >
+              const IconComponent = course.icon;
+              return <Card key={course.id} className="group hover:shadow-xl transition-all duration-300 bg-card border border-border h-full flex flex-col cursor-pointer" onClick={() => handleCourseClick(course.route)}>
                     <CardHeader className="pb-4">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-3">
@@ -77,28 +67,24 @@ const GleeAcademy = () => {
                         <div>
                           <h4 className="font-semibold text-sm text-foreground mb-2">Course Highlights:</h4>
                           <ul className="space-y-2">
-                            {course.highlights.map((highlight, index) => (
-                              <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            {course.highlights.map((highlight, index) => <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
                                 <ChevronRight className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
                                 <span>{highlight}</span>
-                              </li>
-                            ))}
+                              </li>)}
                           </ul>
                         </div>
                         
-                        <Button 
-                          className="w-full mt-auto bg-[#1a1a2e] hover:bg-[#16213e] text-white" 
-                          size="default"
-                          onClick={(e) => { e.stopPropagation(); handleCourseClick(course.route); }}
-                        >
+                        <Button className="w-full mt-auto bg-[#1a1a2e] hover:bg-[#16213e] text-white" size="default" onClick={e => {
+                      e.stopPropagation();
+                      handleCourseClick(course.route);
+                    }}>
                           Enter {course.courseCode}
                           <ChevronRight className="h-4 w-4 ml-2" />
                         </Button>
                       </div>
                     </CardContent>
-                  </Card>
-                );
-              })}
+                  </Card>;
+            })}
             </div>
           </div>
         </div>
@@ -114,27 +100,16 @@ const GleeAcademy = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-sm sm:text-base"
-                onClick={() => navigate('/booking')}
-              >
+              <Button size="lg" className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-sm sm:text-base" onClick={() => navigate('/booking')}>
                 Apply Now
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="text-sm sm:text-base border-2 border-primary text-primary hover:bg-primary hover:text-white"
-                onClick={() => navigate('/booking')}
-              >
+              <Button size="lg" variant="outline" className="text-sm sm:text-base border-2 border-primary text-primary hover:bg-primary hover:text-white" onClick={() => navigate('/booking')}>
                 Schedule a Consultation
               </Button>
             </div>
           </div>
         </div>
       </div>
-    </UniversalLayout>
-  );
+    </UniversalLayout>;
 };
-
 export default GleeAcademy;
