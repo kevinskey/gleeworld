@@ -29,22 +29,42 @@ export const GleeAcademyDashboardCard = () => {
     courseId: string;
   }>({ open: false, courseCode: '', courseName: '', courseId: '' });
 
+  const [courseDialog, setCourseDialog] = React.useState<{
+    open: boolean;
+    course: typeof ACADEMY_COURSES[0] | null;
+  }>({ open: false, course: null });
+
   const handleCourseClick = async (course: typeof ACADEMY_COURSES[0]) => {
     if (!user) {
       toast.error('Please log in to access courses');
       return;
     }
 
+    // Open the course dialog
+    setCourseDialog({ open: true, course });
+  };
+
+  const handleEnterCourse = () => {
+    if (!courseDialog.course) return;
+    
+    const course = courseDialog.course;
+    
     // MUS 070 (Glee Club) - always accessible to members, just clear selection
     if (course.id === 'a0000000-0000-0000-0000-000000000070') {
       clearCourseSelection();
-      return;
+    } else {
+      // For other courses, set the course context
+      selectCourse(course.id);
+      toast.success(`Switched to ${course.courseCode}`);
     }
+    
+    setCourseDialog({ open: false, course: null });
+  };
 
-    // For other courses, we need to check enrollment
-    // Set the course context - the components will handle showing appropriate content
-    selectCourse(course.id);
-    toast.success(`Switched to ${course.courseCode}`);
+  const handleViewCoursePage = () => {
+    if (!courseDialog.course) return;
+    navigate(courseDialog.course.route);
+    setCourseDialog({ open: false, course: null });
   };
 
   const handleRequestAccess = () => {
@@ -151,6 +171,63 @@ export const GleeAcademyDashboardCard = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Course Details Dialog */}
+      <Dialog open={courseDialog.open} onOpenChange={(open) => setCourseDialog(prev => ({ ...prev, open }))}>
+        <DialogContent className="sm:max-w-md">
+          {courseDialog.course && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-lg bg-primary/10">
+                    {React.createElement(courseDialog.course.icon, { className: "h-6 w-6 text-primary" })}
+                  </div>
+                  <div>
+                    <DialogTitle className="text-lg">{courseDialog.course.courseCode}</DialogTitle>
+                    <DialogDescription className="text-sm">{courseDialog.course.title}</DialogDescription>
+                  </div>
+                </div>
+              </DialogHeader>
+              
+              <div className="space-y-4 mt-4">
+                <p className="text-sm text-muted-foreground">
+                  {courseDialog.course.description}
+                </p>
+                
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-muted/50 rounded-lg p-2">
+                    <span className="text-muted-foreground">Level:</span>
+                    <span className="ml-1 font-medium">{courseDialog.course.level}</span>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-2">
+                    <span className="text-muted-foreground">Duration:</span>
+                    <span className="ml-1 font-medium">{courseDialog.course.duration}</span>
+                  </div>
+                </div>
+                
+                <div className="flex flex-wrap gap-1">
+                  {courseDialog.course.highlights.map((highlight) => (
+                    <span key={highlight} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                      {highlight}
+                    </span>
+                  ))}
+                </div>
+                
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" className="flex-1" onClick={handleViewCoursePage}>
+                    <ArrowRight className="h-4 w-4 mr-1" />
+                    Course Page
+                  </Button>
+                  <Button className="flex-1" onClick={handleEnterCourse}>
+                    <GraduationCap className="h-4 w-4 mr-1" />
+                    Enter Course
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>
