@@ -986,7 +986,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: ExitInterviewsModule,
     dbFunctionName: "exit-interviews",
-    requiredRoles: ["admin", "super-admin"]
+    requiredRoles: ["admin", "super-admin", "tour_manager", "secretary"]
   },
   {
     id: "exec-board-interviews",
