@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseDisplayInfo, useCourseContext } from '@/contexts/CourseContext';
+import { ACADEMY_COURSES } from '@/config/academyCourses';
 
 interface OnlineUser {
   user_id: string;
@@ -127,7 +128,13 @@ export const GleeLoungeStrip = () => {
 
   const handleClick = () => {
     if (isInCourseView && selectedCourseId) {
-      navigate(`/course-lounge/${selectedCourseId}`);
+      // Find the course by ID to get the correct route
+      const course = ACADEMY_COURSES.find(c => c.id === selectedCourseId);
+      if (course) {
+        navigate(course.route);
+      } else {
+        navigate('/glee-lounge');
+      }
     } else {
       navigate('/glee-lounge');
     }

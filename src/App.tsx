@@ -40,6 +40,7 @@ import Mus001Page from "./pages/courses/Mus001Page";
 import Mus000Page from "./pages/courses/Mus000Page";
 import Glee101Page from "./pages/courses/Glee101Page";
 import AcademyCoursePage from "./pages/academy/AcademyCoursePage";
+import CourseLoungeRedirect from "./pages/CourseLoungeRedirect";
 
 import Index from "./pages/Index";
 import DirectoryPage from "./pages/DirectoryPage";
@@ -463,6 +464,9 @@ const App = () => {
                   </PublicRoute>
                 }
               />
+              
+              {/* Course Lounge Redirect - maps course IDs to academy routes */}
+              <Route path="/course-lounge/:courseId" element={<CourseLoungeRedirect />} />
               
               {/* Legacy redirects to new academy structure */}
               <Route path="/glee-club-course" element={<Navigate to="/academy/mus-070" replace />} />
