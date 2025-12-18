@@ -124,7 +124,6 @@ export const UserDetailPanel = ({
   const [academicMajor, setAcademicMajor] = useState("");
   const [pronouns, setPronouns] = useState("");
   const [classYear, setClassYear] = useState("");
-  const [graduationYear, setGraduationYear] = useState("");
   
   // Health & Safety fields
   const [emergencyContact, setEmergencyContact] = useState("");
@@ -193,7 +192,6 @@ export const UserDetailPanel = ({
         setAcademicMajor(profileData.academic_major || "");
         setPronouns(profileData.pronouns || "");
         setClassYear(profileData.class_year ? profileData.class_year.toString() : "");
-        setGraduationYear(""); // Will be set if field exists
         
         // Health & Safety
         setEmergencyContact(profileData.emergency_contact || "");
@@ -320,7 +318,6 @@ export const UserDetailPanel = ({
           academic_major: academicMajor,
           pronouns: pronouns,
           class_year: classYear === "" ? null : Number(classYear),
-          graduation_year: graduationYear === "" ? null : Number(graduationYear),
           
           // Health & Safety fields
           emergency_contact: emergencyContact,
@@ -374,7 +371,6 @@ export const UserDetailPanel = ({
           academic_major: academicMajor,
           pronouns: pronouns,
           class_year: classYear === "" ? null : Number(classYear),
-          graduation_year: graduationYear === "" ? null : Number(graduationYear),
           emergency_contact: emergencyContact,
           dietary_restrictions: selectedDietaryRestrictions,
           allergies: allergies,
@@ -447,7 +443,6 @@ export const UserDetailPanel = ({
         academic_major: academicMajor,
         pronouns: pronouns,
         class_year: classYear === "" ? null : Number(classYear),
-        graduation_year: graduationYear === "" ? null : Number(graduationYear),
         emergency_contact: emergencyContact,
         dietary_restrictions: selectedDietaryRestrictions,
         allergies: allergies,
@@ -721,19 +716,6 @@ export const UserDetailPanel = ({
                             type="number"
                             value={classYear}
                             onChange={(e) => setClassYear(e.target.value)}
-                            placeholder="2024"
-                            min="1900"
-                            max="2050"
-                            disabled={loading}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="editGraduationYear">Graduation Year</Label>
-                          <Input
-                            id="editGraduationYear"
-                            type="number"
-                            value={graduationYear}
-                            onChange={(e) => setGraduationYear(e.target.value)}
                             placeholder="2024"
                             min="1900"
                             max="2050"

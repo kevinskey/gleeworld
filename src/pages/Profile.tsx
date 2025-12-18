@@ -79,12 +79,7 @@ const profileSchema = z.object({
     const n = typeof val === "string" ? Number(val) : val;
     return Number.isFinite(n) ? n : undefined;
   }, z.number().min(1900).max(2050).optional()),
-  graduation_year: z.preprocess((val) => {
-    if (val === "" || val === null || val === undefined) return undefined;
-    if (typeof val === "number" && !Number.isFinite(val)) return undefined;
-    const n = typeof val === "string" ? Number(val) : val;
-    return Number.isFinite(n) ? n : undefined;
-  }, z.number().min(1900).max(2050).optional()),
+  
   
   // Health & Safety fields
   emergency_contact: z.string().optional(),
@@ -243,7 +238,7 @@ const Profile = () => {
       setValue("academic_major", profile.academic_major || "");
       setValue("pronouns", profile.pronouns || "");
       setValue("class_year", (profile.class_year ? String(profile.class_year) : "") as any);
-      setValue("graduation_year", (profile.graduation_year ? String(profile.graduation_year) : "") as any);
+      
       setValue("emergency_contact", profile.emergency_contact || "");
       setValue("allergies", profile.allergies || "");
       setValue("parent_guardian_contact", profile.parent_guardian_contact || "");
@@ -380,7 +375,6 @@ const Profile = () => {
       const adminOnlyUpdates = {
         student_number: data.student_number,
         voice_part: data.voice_part === "" ? null : (data.voice_part as any),
-        graduation_year: data.graduation_year ?? null,
         join_date: data.join_date === "" ? null : data.join_date,
       };
 
@@ -878,26 +872,6 @@ const Profile = () => {
                     min="1900"
                     max="2050"
                   />
-                </div>
-                <div>
-                  <Label htmlFor="graduation_year">Graduation Year</Label>
-                  <Input
-                    id="graduation_year"
-                    type="number"
-                    {...register("graduation_year")}
-                    disabled={!isEditing || !isAdmin}
-                    className="mt-1"
-                    placeholder="2024"
-                    min="1900"
-                    max="2050"
-                  />
-                  {!isAdmin && (
-                    <p className="mt-2 text-sm text-muted-foreground inline-flex items-center gap-2">
-                      <Lock className="h-4 w-4" />
-                      Graduation year is managed by administrators.
-                      <Button variant="link" size="sm" className="px-0 h-auto" onClick={() => openRequestChange("Graduation Year", (watch("graduation_year") as any) || "")}>Request change</Button>
-                    </p>
-                  )}
                 </div>
                 <div>
                   <Label htmlFor="student_number">Student Number</Label>
