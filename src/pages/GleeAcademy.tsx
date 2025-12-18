@@ -61,7 +61,7 @@ const GleeAcademy = () => {
                       <span className="text-sm text-muted-foreground">{course.duration}</span>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col pt-0">
-                      <p className="text-muted-foreground mb-6 text-sm">
+                      <p className="text-muted-foreground mb-6 text-sm pt-4">
                         {course.description}
                       </p>
                       
