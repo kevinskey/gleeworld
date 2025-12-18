@@ -71,8 +71,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled}
-            className="min-h-[40px] max-h-32 resize-none text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-2 placeholder:text-muted-foreground"
-            style={{ color: '#000000' }}
+            className="min-h-[40px] max-h-32 resize-none text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-2 placeholder:text-muted-foreground text-[hsl(var(--message-received-fg))]"
             rows={1}
           />
         </div>
