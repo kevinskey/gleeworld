@@ -27,6 +27,7 @@ import { UniversalHeader } from '@/components/layout/UniversalHeader';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 
 interface ManagementTool {
   id: string;
@@ -266,9 +267,12 @@ export default function InstructorAdmin() {
             Back
           </Button>
           
-          <div className="flex items-center gap-4 mb-2">
-            <Settings className="h-8 w-8 text-primary" />
-            <h1 className="text-4xl font-bold">Instructor Control Center</h1>
+          <div className="flex items-center justify-between gap-4 mb-2">
+            <div className="flex items-center gap-4">
+              <Settings className="h-8 w-8 text-primary" />
+              <h1 className="text-4xl font-bold">Instructor Control Center</h1>
+            </div>
+            <Mus240SemesterSelector />
           </div>
           <p className="text-muted-foreground text-lg">
             {courseId ? `Managing: ${courseId.toUpperCase()}` : 'Manage all aspects of your courses from this central hub'}
