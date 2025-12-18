@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Camera, Mic, Video, Users, Sparkles, Image, FileAudio, ChevronDown } from "lucide-react";
@@ -37,7 +37,8 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const [categories, setCategories] = useState<GleeCamCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
   useEffect(() => {
     fetchCategories();
   }, []);
@@ -57,6 +58,25 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
       setLoading(false);
     }
   };
+
+  // Auto-scroll effect
+  useEffect(() => {
+    if (!isOpen || isPaused || categories.length === 0) return;
+    
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const scrollSpeed = 1;
+    const scrollInterval = setInterval(() => {
+      if (container.scrollLeft >= container.scrollWidth - container.clientWidth) {
+        container.scrollLeft = 0;
+      } else {
+        container.scrollLeft += scrollSpeed;
+      }
+    }, 30);
+
+    return () => clearInterval(scrollInterval);
+  }, [isOpen, isPaused, categories.length]);
 
   const handleCategoryClick = (category: GleeCamCategory) => {
     navigate(`/glee-cam/${category.slug}`);
@@ -106,7 +126,14 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="px-3 pb-3 pt-0 sm:px-[20px] text-secondary-foreground">
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+            <div 
+              ref={scrollContainerRef}
+              className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={() => setIsPaused(true)}
+              onTouchEnd={() => setIsPaused(false)}
+            >
               {categories.map(category => {
                 const IconComponent = getIconComponent(category.icon);
                 return (
