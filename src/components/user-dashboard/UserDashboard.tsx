@@ -207,19 +207,33 @@ const UserDashboard = React.memo(() => {
 
   // Get user's actual name from profile, fallback to email username
   const displayName = profile?.full_name || user.email?.split('@')[0] || 'Member';
-  const isHonesty = user.email === 'onnestypeele@spelman.edu' || 
+  
+  // Check if user is a tour manager (Onnesty or Aliyah)
+  const isOnnesty = user.email === 'onnestypeele@spelman.edu' || 
                    user.email?.toLowerCase().includes('onnestypeele') ||
                    profile?.email === 'onnestypeele@spelman.edu' ||
                    profile?.email?.toLowerCase().includes('onnestypeele') ||
                    profile?.first_name?.toLowerCase() === 'onnesty' ||
                    profile?.full_name?.toLowerCase().includes('onnesty');
   
+  const isAliyah = user.email === 'aliyahdeere@spelman.edu' || 
+                   user.email?.toLowerCase().includes('aliyahdeere') ||
+                   profile?.email === 'aliyahdeere@spelman.edu' ||
+                   profile?.email?.toLowerCase().includes('aliyahdeere') ||
+                   profile?.first_name?.toLowerCase() === 'aliyah' ||
+                   (profile?.full_name?.toLowerCase().includes('aliyah') && profile?.full_name?.toLowerCase().includes('deere'));
+  
+  const isTourManager = isOnnesty || isAliyah;
+  const isHonesty = isTourManager; // Keep for backward compatibility
+  
   console.log('UserDashboard: Debug info for user:', {
     userEmail: user.email,
     profileEmail: profile?.email,
     firstName: profile?.first_name,
     fullName: profile?.full_name,
-    isHonesty,
+    isOnnesty,
+    isAliyah,
+    isTourManager,
     profileData: profile
   });
 
