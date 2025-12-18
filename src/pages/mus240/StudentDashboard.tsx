@@ -41,16 +41,48 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 
 export const StudentDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentSemester, setCurrentSemester, availableSemesters } = useMus240SemesterSafe();
   const { submissions, loading: submissionsLoading } = useStudentSubmissions();
   const { gradeSummary, participationGrade, loading: progressLoading } = useMus240Progress();
   
   // Check if user is admin
   const [isAdmin, setIsAdmin] = useState(false);
+  const [semesterSynced, setSemesterSynced] = useState(false);
+  
+  // Fetch student's enrollments to determine available semesters
+  const { data: studentEnrollments = [] } = useQuery({
+    queryKey: ['student-enrollments', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('mus240_enrollments')
+        .select('semester, enrollment_status')
+        .eq('student_id', user.id)
+        .eq('enrollment_status', 'enrolled');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Auto-sync semester to student's enrolled semester on first load
+  useEffect(() => {
+    if (studentEnrollments.length > 0 && !semesterSynced) {
+      const enrolledSemesters = studentEnrollments.map(e => e.semester);
+      // If current semester is not in enrolled semesters, switch to first enrolled semester
+      if (!enrolledSemesters.includes(currentSemester)) {
+        setCurrentSemester(enrolledSemesters[0]);
+      }
+      setSemesterSynced(true);
+    }
+  }, [studentEnrollments, currentSemester, setCurrentSemester, semesterSynced]);
   
   useEffect(() => {
     const checkAdmin = async () => {
@@ -230,7 +262,8 @@ export const StudentDashboard = () => {
             <h1 className="text-2xl sm:text-3xl font-bold">MUS 240 Dashboard</h1>
             <p className="text-muted-foreground text-sm sm:text-base">Survey of African American Music</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Mus240SemesterSelector showLabel={false} />
             <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={() => navigate('/mus-240')}>
               <Home className="h-4 w-4 mr-2" />
               <span className="hidden xs:inline">Back to </span>MUS 240
