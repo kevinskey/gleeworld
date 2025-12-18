@@ -373,9 +373,9 @@ export const GleeWorldLanding = () => {
                   scrollBehavior: 'smooth',
                   WebkitOverflowScrolling: 'touch'
                 }}>
-                      {events.map(event => <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 h-[580px] relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-72 lg:w-80 flex flex-col">
+                      {events.map(event => <Card key={event.id} className="hover:shadow-2xl transition-all duration-300 relative group bg-card border-2 border-border hover:border-accent flex-shrink-0 w-64 lg:w-72 flex flex-col">
                           {/* Hover overlay button */}
-                          <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                             <Button size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg font-semibold border border-white/30" asChild>
                               <Link to="/public-calendar">
                                 View All <ArrowRight className="ml-1 h-4 w-4" />
@@ -383,27 +383,25 @@ export const GleeWorldLanding = () => {
                             </Button>
                           </div>
                           
-                          <div className="h-48 md:h-56 lg:h-64 bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden">
-                            <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-contain p-4 rounded-t-lg brightness-95 contrast-100" onError={e => {
+                          <div className="h-36 lg:h-40 bg-muted rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                            <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-cover rounded-t-lg brightness-95 contrast-100" onError={e => {
                         console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                         e.currentTarget.src = getDefaultEventImage(event.id);
                       }} />
                           </div>
-                          <CardContent className="p-1 lg:p-2 flex flex-col">
-                            <h3 className="text-lg lg:text-xl font-semibold text-card-foreground mb-3 lg:mb-4 line-clamp-2">{event.title}</h3>
-                            <div className="space-y-2 text-muted-foreground">
+                          <CardContent className="p-3 lg:p-4 flex flex-col gap-2">
+                            <h3 className="text-base lg:text-lg font-semibold text-card-foreground line-clamp-2">{event.title}</h3>
+                            <div className="space-y-1 text-muted-foreground text-sm">
                               <div className="flex items-center">
-                                <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-                                <span className="text-sm">{formatDate(event.start_date)}</span>
+                                <Calendar className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                                <span>{formatDate(event.start_date)}</span>
                               </div>
                               {event.location && <div className="flex items-center">
-                                  <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span className="text-sm line-clamp-1">{event.location}</span>
+                                  <MapPin className="h-3.5 w-3.5 mr-2 flex-shrink-0" />
+                                  <span className="line-clamp-1">{event.location}</span>
                                 </div>}
                             </div>
-                            <div className="flex-1">
-                              {event.description && <p className="text-muted-foreground mt-3 line-clamp-2 text-sm">{event.description}</p>}
-                            </div>
+                            {event.description && <p className="text-muted-foreground line-clamp-2 text-xs">{event.description}</p>}
                           </CardContent>
                         </Card>)}
                     </div>
@@ -412,11 +410,11 @@ export const GleeWorldLanding = () => {
                   {/* Mobile/Tablet view - Carousel */}
                   <div className="md:hidden">
                     <Carousel className="w-full">
-                      <CarouselContent className="-ml-2 sm:-ml-4 h-[600px] sm:h-[650px]">
-                        {events.map(event => <CarouselItem key={event.id} className="pl-2 sm:pl-4 basis-full h-full">
-                            <Card className="hover:shadow-2xl transition-all duration-300 h-full w-full relative group bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30 flex flex-col">
+                      <CarouselContent className="-ml-2 sm:-ml-4">
+                        {events.map(event => <CarouselItem key={event.id} className="pl-2 sm:pl-4 basis-[85%] sm:basis-[70%]">
+                            <Card className="hover:shadow-2xl transition-all duration-300 relative group bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30 flex flex-col">
                               {/* Hover overlay button */}
-                              <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                 <Button size="sm" className="bg-primary/90 backdrop-blur-md text-primary-foreground hover:bg-primary shadow-lg border border-border/30" asChild>
                                   <Link to="/public-calendar">
                                     View All <ArrowRight className="ml-1 h-4 w-4" />
@@ -424,27 +422,25 @@ export const GleeWorldLanding = () => {
                                 </Button>
                               </div>
                               
-                              <div className="h-56 sm:h-64 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
-                                <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-contain p-4 rounded-t-lg brightness-95 contrast-100" onError={e => {
+                              <div className="h-40 sm:h-44 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-t-lg flex items-center justify-center backdrop-blur-sm relative overflow-hidden">
+                                <img src={event.image_url || getDefaultEventImage(event.id)} alt={event.title} className="w-full h-full object-cover rounded-t-lg brightness-95 contrast-100" onError={e => {
                             console.log('Image failed to load:', event.image_url, 'for event:', event.title);
                             e.currentTarget.src = getDefaultEventImage(event.id);
                           }} />
                               </div>
-                              <CardContent className="p-4 sm:p-6 flex-1 flex flex-col">
-                                <h3 className="text-xl sm:text-2xl font-semibold text-foreground mb-3 sm:mb-4 line-clamp-2">{event.title}</h3>
-                                <div className="space-y-2 text-muted-foreground">
+                              <CardContent className="p-4 flex flex-col gap-2">
+                                <h3 className="text-lg font-semibold text-foreground line-clamp-2">{event.title}</h3>
+                                <div className="space-y-1 text-muted-foreground text-sm">
                                   <div className="flex items-center">
-                                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 flex-shrink-0" />
-                                    <span className="text-sm sm:text-base lg:text-lg">{formatDate(event.start_date)}</span>
+                                    <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
+                                    <span>{formatDate(event.start_date)}</span>
                                   </div>
                                   {event.location && <div className="flex items-center">
-                                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mr-2 sm:mr-3 flex-shrink-0" />
-                                      <span className="text-sm sm:text-base lg:text-lg line-clamp-1">{event.location}</span>
+                                      <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                                      <span className="line-clamp-1">{event.location}</span>
                                     </div>}
                                 </div>
-                                <div className="flex-1">
-                                  {event.description && <p className="text-muted-foreground mt-3 sm:mt-4 line-clamp-3 text-sm sm:text-base lg:text-lg">{event.description}</p>}
-                                </div>
+                                {event.description && <p className="text-muted-foreground line-clamp-2 text-sm">{event.description}</p>}
                               </CardContent>
                             </Card>
                           </CarouselItem>)}
