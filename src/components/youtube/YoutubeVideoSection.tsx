@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { Youtube, Play, ExternalLink, RotateCcw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Youtube, Play, ExternalLink } from "lucide-react";
 
 interface YouTubeVideo {
   id: string;
@@ -29,9 +27,6 @@ export const YoutubeVideoSection = () => {
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [channel, setChannel] = useState<YouTubeChannel | null>(null);
   const [loading, setLoading] = useState(true);
-  const [syncLoading, setSyncLoading] = useState(false);
-  const [channelInput, setChannelInput] = useState("");
-  const { toast } = useToast();
 
   useEffect(() => {
     loadYouTubeData();
@@ -70,44 +65,6 @@ export const YoutubeVideoSection = () => {
     }
   };
 
-  const syncYouTubeVideos = async () => {
-    if (!channelInput.trim()) {
-      toast({
-        title: "Channel Input Required",
-        description: "Please enter a YouTube channel URL or @handle",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      setSyncLoading(true);
-      const { data, error } = await supabase.functions.invoke('sync-youtube-videos', {
-        body: { channelInput: channelInput.trim(), maxResults: 10 }
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: "Sync Successful",
-        description: `Synced ${data?.videosCount || 0} videos from the channel`,
-      });
-
-      // Refresh the data
-      await loadYouTubeData();
-      setChannelInput("");
-    } catch (error) {
-      console.error('Error syncing YouTube videos:', error);
-      toast({
-        title: "Sync Failed",
-        description: error instanceof Error ? error.message : "Failed to sync YouTube videos",
-        variant: "destructive",
-      });
-    } finally {
-      setSyncLoading(false);
-    }
-  };
-
   const formatViewCount = (count: number) => {
     if (count >= 1000000) {
       return (count / 1000000).toFixed(1) + 'M';
@@ -121,18 +78,18 @@ export const YoutubeVideoSection = () => {
     return (
       <div className="space-y-8">
         {/* Featured Video Skeleton */}
-        <Card className="overflow-hidden bg-white/20 backdrop-blur-md border border-white/30 shadow-xl animate-pulse">
-          <div className="aspect-video bg-gray-200/50"></div>
+        <Card className="overflow-hidden bg-card/20 backdrop-blur-md border border-border/30 shadow-xl animate-pulse">
+          <div className="aspect-video bg-muted/50"></div>
         </Card>
         
         {/* Video Grid Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[...Array(3)].map((_, index) => (
-            <Card key={index} className="bg-white/20 backdrop-blur-md border border-white/30 animate-pulse">
-              <div className="aspect-video bg-gray-200/50"></div>
-              <CardContent className="p-4 space-y-2">
-                <div className="h-4 bg-gray-200/50 rounded"></div>
-                <div className="h-3 bg-gray-200/50 rounded w-2/3"></div>
+            <Card key={index} className="bg-card/20 backdrop-blur-md border border-border/30 animate-pulse">
+              <div className="aspect-video bg-muted/50"></div>
+              <CardContent className="p-3 sm:p-4 space-y-2">
+                <div className="h-4 bg-muted/50 rounded"></div>
+                <div className="h-3 bg-muted/50 rounded w-2/3"></div>
               </CardContent>
             </Card>
           ))}
@@ -141,61 +98,36 @@ export const YoutubeVideoSection = () => {
     );
   }
 
+  // Empty state - show nice public-facing message with link to channel
   if (!videos.length) {
     return (
-      <div className="text-center py-12 space-y-6">
-        <Youtube className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No videos available</h3>
-        <p className="text-gray-600 mb-4">
-          {channel ? 
-            "No featured videos have been set up yet." :
-            "YouTube channel hasn't been configured yet. Sync your channel to get started!"
-          }
-        </p>
+      <div className="text-center py-8 sm:py-12 space-y-6">
+        <div className="bg-destructive/10 rounded-full p-6 w-fit mx-auto">
+          <Youtube className="h-10 w-10 sm:h-12 sm:w-12 text-destructive mx-auto" />
+        </div>
+        <div className="space-y-2">
+          <h3 className="text-lg sm:text-xl font-semibold text-foreground">Watch Our Performances</h3>
+          <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
+            Visit our YouTube channel to watch our latest performances, concerts, and behind-the-scenes content.
+          </p>
+        </div>
         
-        {/* YouTube Sync Interface */}
-        <Card className="max-w-md mx-auto p-6 bg-white/30 backdrop-blur-md border border-white/40">
-          <h4 className="text-lg font-semibold mb-4">Sync YouTube Channel</h4>
-          <div className="space-y-4">
-            <div>
-              <Input
-                placeholder="Enter channel URL or @handle"
-                value={channelInput}
-                onChange={(e) => setChannelInput(e.target.value)}
-                className="mb-3"
-              />
-              <p className="text-sm text-gray-600 mb-3">
-                Examples: https://youtube.com/@spelmangleeclub or @spelmangleeclub
-              </p>
-            </div>
-            <Button 
-              onClick={syncYouTubeVideos}
-              disabled={syncLoading}
-              className="w-full bg-red-500 hover:bg-red-600 text-white"
-            >
-              {syncLoading ? (
-                <>
-                  <RotateCcw className="h-4 w-4 mr-2 animate-spin" />
-                  Syncing...
-                </>
-              ) : (
-                <>
-                  <Youtube className="h-4 w-4 mr-2" />
-                  Sync Channel
-                </>
-              )}
-            </Button>
-          </div>
-        </Card>
-        
-        {channel && (
-          <Button asChild className="bg-red-500 hover:bg-red-600 text-white">
-            <a href={channel.channel_url} target="_blank" rel="noopener noreferrer">
-              <Youtube className="h-4 w-4 mr-2" />
-              Visit Our Channel
-            </a>
-          </Button>
-        )}
+        <Button 
+          size="lg" 
+          className="bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg transition-all duration-300 hover:scale-105"
+          asChild
+        >
+          <a 
+            href={channel?.channel_url || "https://youtube.com/@spelmancollegegleeclub"} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2"
+          >
+            <Youtube className="h-5 w-5" />
+            Visit Our Channel
+            <ExternalLink className="h-4 w-4" />
+          </a>
+        </Button>
       </div>
     );
   }
@@ -204,28 +136,28 @@ export const YoutubeVideoSection = () => {
   const otherVideos = videos.slice(1, 4); // Show up to 3 additional videos
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Featured Video */}
       {featuredVideo && (
-        <Card className="overflow-hidden bg-white/20 backdrop-blur-md border border-white/30 shadow-xl">
-          <div className="aspect-video bg-gradient-to-br from-red-100/50 to-pink-100/50 flex items-center justify-center relative group cursor-pointer hover:bg-red-100/70 transition-colors duration-300">
+        <Card className="overflow-hidden bg-card/20 backdrop-blur-md border border-border/30 shadow-xl">
+          <div className="aspect-video bg-gradient-to-br from-destructive/10 to-primary/10 flex items-center justify-center relative group cursor-pointer hover:from-destructive/20 hover:to-primary/20 transition-colors duration-300">
             <img 
               src={featuredVideo.thumbnail_url}
               alt={featuredVideo.title}
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-              <div className="text-center">
-                <div className="bg-red-500/90 backdrop-blur-md rounded-full p-6 mb-4 group-hover:bg-red-600 transition-colors duration-300">
-                  <Play className="h-12 w-12 text-white" />
+            <div className="absolute inset-0 bg-foreground/30 group-hover:bg-foreground/40 transition-colors duration-300 flex items-center justify-center">
+              <div className="text-center px-4">
+                <div className="bg-destructive/90 backdrop-blur-md rounded-full p-4 sm:p-6 mb-3 sm:mb-4 group-hover:bg-destructive transition-colors duration-300 mx-auto w-fit">
+                  <Play className="h-8 w-8 sm:h-12 sm:w-12 text-destructive-foreground" />
                 </div>
-                <h3 className="text-2xl font-semibold text-white mb-2 line-clamp-2 max-w-2xl">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-white mb-1 sm:mb-2 line-clamp-2 max-w-2xl">
                   {featuredVideo.title}
                 </h3>
-                <p className="text-white/90 text-lg">{formatViewCount(featuredVideo.view_count)} views</p>
+                <p className="text-white/90 text-sm sm:text-base md:text-lg">{formatViewCount(featuredVideo.view_count)} views</p>
               </div>
             </div>
-            <div className="absolute top-4 right-4 bg-black/70 text-white text-sm px-3 py-1 rounded">
+            <div className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-foreground/70 text-background text-xs sm:text-sm px-2 sm:px-3 py-1 rounded">
               {featuredVideo.duration}
             </div>
             <a 
@@ -240,21 +172,21 @@ export const YoutubeVideoSection = () => {
 
       {/* Additional Videos Grid */}
       {otherVideos.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {otherVideos.map((video) => (
-            <Card key={video.id} className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-white/20 backdrop-blur-md border border-white/30 hover:bg-white/30 group cursor-pointer">
-              <div className="aspect-video bg-gradient-to-br from-red-100/50 to-pink-100/50 flex items-center justify-center relative overflow-hidden">
+            <Card key={video.id} className="hover:shadow-2xl transition-all duration-300 hover:scale-105 bg-card/20 backdrop-blur-md border border-border/30 hover:bg-card/30 group cursor-pointer">
+              <div className="aspect-video bg-gradient-to-br from-destructive/10 to-primary/10 flex items-center justify-center relative overflow-hidden">
                 <img 
                   src={video.thumbnail_url}
                   alt={video.title}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-3 right-3 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-foreground/70 text-background text-xs px-2 py-1 rounded">
                   {video.duration}
                 </div>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
-                  <div className="bg-red-500/80 backdrop-blur-md rounded-full p-4 group-hover:bg-red-600 transition-colors duration-300 opacity-0 group-hover:opacity-100">
-                    <Play className="h-8 w-8 text-white" />
+                <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/30 transition-colors duration-300 flex items-center justify-center">
+                  <div className="bg-destructive/80 backdrop-blur-md rounded-full p-3 sm:p-4 group-hover:bg-destructive transition-colors duration-300 opacity-0 group-hover:opacity-100">
+                    <Play className="h-6 w-6 sm:h-8 sm:w-8 text-destructive-foreground" />
                   </div>
                 </div>
                 <a 
@@ -264,9 +196,9 @@ export const YoutubeVideoSection = () => {
                   className="absolute inset-0"
                 />
               </div>
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2">{video.title}</h3>
-                <p className="text-sm text-gray-600">{formatViewCount(video.view_count)} views</p>
+              <CardContent className="p-3 sm:p-4">
+                <h3 className="font-semibold text-foreground mb-1 line-clamp-2 text-sm sm:text-base">{video.title}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">{formatViewCount(video.view_count)} views</p>
               </CardContent>
             </Card>
           ))}
@@ -277,11 +209,11 @@ export const YoutubeVideoSection = () => {
       <div className="text-center">
         <Button 
           size="lg" 
-          className="bg-red-500 hover:bg-red-600 text-white shadow-lg transition-all duration-300 hover:scale-105"
+          className="bg-destructive hover:bg-destructive/90 text-destructive-foreground shadow-lg transition-all duration-300 hover:scale-105"
           asChild
         >
           <a 
-            href={channel?.channel_url || "https://youtube.com/@spelmangleeclub"} 
+            href={channel?.channel_url || "https://youtube.com/@spelmancollegegleeclub"} 
             target="_blank" 
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2"
