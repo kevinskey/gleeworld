@@ -22,6 +22,7 @@ import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
 import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
+import { CourseTestsSection } from './CourseTestsSection';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
@@ -387,24 +388,18 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {activeTab === 'tests' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tests & Quizzes</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {course.id === 'a0000000-0000-0000-0000-000000000240' ? (
-                    <div className="space-y-4">
-                      <p className="text-muted-foreground">Access all MUS 240 tests and exams from your student dashboard.</p>
-                      <Button onClick={() => navigate('/mus-240/student/dashboard')}>
-                        <FileCheck className="h-4 w-4 mr-2" />
-                        Go to Student Dashboard
-                      </Button>
-                    </div>
-                  ) : (
+              course.id === 'a0000000-0000-0000-0000-000000000240' ? (
+                <CourseTestsSection courseId={course.id} legacyCourseId="mus240" />
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Tests & Quizzes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
                     <p className="text-muted-foreground">Tests will be available here when published.</p>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )
             )}
 
             {activeTab === 'polls' && (
