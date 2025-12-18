@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { 
@@ -67,7 +67,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
         {/* Clean Tabs Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <Card className="p-2">
-            <div className="flex flex-wrap gap-1">
+            <TabsList className="flex flex-wrap gap-1 bg-transparent h-auto">
               {/* Main Actions */}
               <TabsTrigger 
                 value="booking-requests" 
@@ -111,99 +111,49 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                 <MapPin className="h-4 w-4" />
                 <span>Routes</span>
               </TabsTrigger>
-              
-              {/* Secondary */}
-              <div className="hidden md:flex items-center gap-1 ml-2 pl-2 border-l border-border">
-                <TabsTrigger 
-                  value="rooming" 
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <Bed className="h-4 w-4" />
-                  <span className="hidden lg:inline">Rooms</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="crew" 
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <Package className="h-4 w-4" />
-                  <span className="hidden lg:inline">Crew</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="bus-buddies" 
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <Bus className="h-4 w-4" />
-                  <span className="hidden lg:inline">Bus</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="documents" 
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <ClipboardList className="h-4 w-4" />
-                  <span className="hidden lg:inline">Docs</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="wardrobe" 
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <Shirt className="h-4 w-4" />
-                  <span className="hidden lg:inline">Wardrobe</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="stipends" 
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-                >
-                  <DollarSign className="h-4 w-4" />
-                  <span className="hidden lg:inline">Stipends</span>
-                </TabsTrigger>
-              </div>
-            </div>
-            
-            {/* Mobile overflow tabs */}
-            <div className="flex md:hidden flex-wrap gap-1 mt-2 pt-2 border-t border-border">
               <TabsTrigger 
                 value="rooming" 
-                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <Bed className="h-3 w-3" />
-                <span>Rooms</span>
+                <Bed className="h-4 w-4" />
+                <span className="hidden sm:inline">Rooms</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="crew" 
-                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <Package className="h-3 w-3" />
-                <span>Crew</span>
+                <Package className="h-4 w-4" />
+                <span className="hidden sm:inline">Crew</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="bus-buddies" 
-                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <Bus className="h-3 w-3" />
-                <span>Bus</span>
+                <Bus className="h-4 w-4" />
+                <span className="hidden sm:inline">Bus</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="documents" 
-                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <ClipboardList className="h-3 w-3" />
-                <span>Docs</span>
+                <ClipboardList className="h-4 w-4" />
+                <span className="hidden sm:inline">Docs</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="wardrobe" 
-                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <Shirt className="h-3 w-3" />
-                <span>Wardrobe</span>
+                <Shirt className="h-4 w-4" />
+                <span className="hidden sm:inline">Wardrobe</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="stipends" 
-                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <DollarSign className="h-3 w-3" />
-                <span>Stipends</span>
+                <DollarSign className="h-4 w-4" />
+                <span className="hidden sm:inline">Stipends</span>
               </TabsTrigger>
-            </div>
+            </TabsList>
           </Card>
 
           {/* Admin Tabs Content */}
