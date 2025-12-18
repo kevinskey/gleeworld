@@ -17,7 +17,8 @@ import {
   AlertCircle,
   CheckCircle,
   Trash2,
-  Loader2
+  Loader2,
+  Pencil
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -53,6 +54,7 @@ interface AIRoutePlannerProps {
 
 export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
   const [isCreating, setIsCreating] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<TourRoute | null>(null);
   const [newRoute, setNewRoute] = useState({
     name: '',
     description: '',
@@ -195,10 +197,88 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
     }
   });
 
+  // Update tour mutation
+  const updateTourMutation = useMutation({
+    mutationFn: async (routeData: { id: string; name: string; description: string; stops: TourStop[] }) => {
+      const { error: tourError } = await supabase
+        .from('gw_tours')
+        .update({
+          name: routeData.name,
+          description: routeData.description,
+        })
+        .eq('id', routeData.id);
+
+      if (tourError) throw tourError;
+
+      // Delete existing cities and re-add
+      const { error: deleteError } = await supabase
+        .from('gw_tour_cities')
+        .delete()
+        .eq('tour_id', routeData.id);
+
+      if (deleteError) throw deleteError;
+
+      if (routeData.stops.length > 0) {
+        const cities = routeData.stops.map((stop, index) => {
+          const parts = stop.city.split(',').map(p => p.trim());
+          return {
+            tour_id: routeData.id,
+            city_name: parts[0],
+            state_code: parts[1] || null,
+            city_order: index + 1,
+            arrival_date: stop.date || null,
+            city_notes: stop.venue,
+          };
+        });
+
+        const { error: citiesError } = await supabase
+          .from('gw_tour_cities')
+          .insert(cities);
+
+        if (citiesError) throw citiesError;
+      }
+
+      return routeData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-routes'] });
+      setEditingRoute(null);
+      setNewRoute({ name: '', description: '', stops: [] });
+      toast({
+        title: "Route updated",
+        description: "Tour route has been saved.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error updating route",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const startEditing = (route: TourRoute) => {
+    setEditingRoute(route);
+    setNewRoute({
+      name: route.name,
+      description: route.description,
+      stops: route.stops
+    });
+    setMultipleCities(['']);
+    setCurrentStop({ city: '', venue: '', date: '', address: '' });
+  };
+
+  const cancelEditing = () => {
+    setEditingRoute(null);
+    setNewRoute({ name: '', description: '', stops: [] });
+    setMultipleCities(['']);
+    setCurrentStop({ city: '', venue: '', date: '', address: '' });
+  };
+
   // Optimize route mutation
   const optimizeMutation = useMutation({
     mutationFn: async (tourId: string) => {
-      // Simulate optimization - in production would call Google Maps API
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const optimizedData = {
@@ -276,7 +356,7 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
     }));
   };
 
-  const createRoute = () => {
+  const saveRoute = () => {
     if (!newRoute.name.trim()) {
       toast({
         title: "Invalid route",
@@ -293,7 +373,12 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
       });
       return;
     }
-    createTourMutation.mutate(newRoute);
+    
+    if (editingRoute) {
+      updateTourMutation.mutate({ id: editingRoute.id, ...newRoute });
+    } else {
+      createTourMutation.mutate(newRoute);
+    }
   };
 
   const getStatusColor = (status: TourRoute['status']) => {
@@ -468,7 +553,7 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                 <Button variant="outline" onClick={() => setIsCreating(false)}>
                   Cancel
                 </Button>
-                <Button onClick={createRoute} disabled={createTourMutation.isPending}>
+                <Button onClick={saveRoute} disabled={createTourMutation.isPending}>
                   {createTourMutation.isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -476,6 +561,127 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                     </>
                   ) : (
                     'Create Route'
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Dialog */}
+        <Dialog open={!!editingRoute} onOpenChange={(open) => !open && cancelEditing()}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Tour Route</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Route Name</label>
+                  <Input
+                    placeholder="e.g., Southeast Regional Tour 2024"
+                    value={newRoute.name}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <Input
+                    placeholder="Brief description of the tour"
+                    value={newRoute.description}
+                    onChange={(e) => setNewRoute(prev => ({ ...prev, description: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h4 className="font-medium">Add Tour Stops</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Cities</label>
+                    <Button type="button" variant="outline" size="sm" onClick={addCityInput}>
+                      <Plus className="h-3 w-3 mr-1" />
+                      Add City
+                    </Button>
+                  </div>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {multipleCities.map((city, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          placeholder="e.g., Atlanta, GA"
+                          value={city}
+                          onChange={(e) => updateCity(index, e.target.value)}
+                          className="flex-1"
+                        />
+                        {multipleCities.length > 1 && (
+                          <Button type="button" variant="ghost" size="sm" onClick={() => removeCityInput(index)}>
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Venue (optional)</label>
+                    <Input
+                      placeholder="Performance venue"
+                      value={currentStop.venue}
+                      onChange={(e) => setCurrentStop(prev => ({ ...prev, venue: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Date (optional)</label>
+                    <Input
+                      type="date"
+                      value={currentStop.date}
+                      onChange={(e) => setCurrentStop(prev => ({ ...prev, date: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                
+                <Button onClick={addStop} variant="outline" size="sm">
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Stop(s)
+                </Button>
+              </div>
+
+              {newRoute.stops.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium">Tour Stops ({newRoute.stops.length})</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {newRoute.stops.map((stop, index) => (
+                      <div key={stop.id} className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline">{index + 1}</Badge>
+                          <div>
+                            <p className="font-medium text-sm">{stop.city} {stop.venue !== 'TBD' && `- ${stop.venue}`}</p>
+                            {stop.date && <p className="text-xs text-muted-foreground">{new Date(stop.date).toLocaleDateString()}</p>}
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={() => removeStop(stop.id)}>
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={cancelEditing}>
+                  Cancel
+                </Button>
+                <Button onClick={saveRoute} disabled={updateTourMutation.isPending}>
+                  {updateTourMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Changes'
                   )}
                 </Button>
               </div>
@@ -514,6 +720,13 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                     {getStatusIcon(route.status)}
                     {route.status.charAt(0).toUpperCase() + route.status.slice(1)}
                   </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => startEditing(route)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
