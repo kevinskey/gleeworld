@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -24,6 +24,8 @@ import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
 import { ExecutiveBoardDropdown } from "@/components/navigation/ExecutiveBoardDropdown";
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
+import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
+import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
@@ -46,6 +48,28 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   // Quick Capture state
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
+  
+  // Quick Actions state
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  const {
+    quickActions: memberQuickActions,
+    loading: quickActionsLoading,
+    canUseQuickActions,
+    addQuickAction,
+    removeQuickAction,
+    isInQuickActions,
+  } = useMemberQuickActions(user?.id, userProfile?.role || 'member');
+  
+  // Memoize quickActions prop
+  const memoizedQuickActions = useMemo(() => {
+    if (!canUseQuickActions) return undefined;
+    return {
+      quickActions: memberQuickActions,
+      addQuickAction,
+      removeQuickAction,
+      isInQuickActions
+    };
+  }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, isInQuickActions]);
   
   // Theme-specific styling
   const isHbcuTheme = themeName === 'hbcu';
@@ -326,11 +350,11 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 </EnhancedTooltip>
 
                 {/* Quick Actions Button */}
-                <EnhancedTooltip content="Quick Actions">
+                <EnhancedTooltip content="Members Quick Access">
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => window.dispatchEvent(new CustomEvent('toggle-quick-actions'))}
+                    onClick={() => setIsQuickActionsOpen(prev => !prev)}
                     className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
                     style={{ 
                       color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
@@ -442,6 +466,27 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             setSelectedCategory(null);
             setShowCategorySelector(true);
           }}
+        />
+      )}
+
+      {/* Quick Actions Panel */}
+      {user && (
+        <QuickActionsPanel
+          user={{
+            id: user.id,
+            email: user.email || '',
+            full_name: userProfile?.full_name || user.email || '',
+            role: userProfile?.role || 'member',
+            exec_board_role: userProfile?.exec_board_role || undefined,
+            is_exec_board: userProfile?.is_exec_board || false,
+          }}
+          onModuleSelect={(moduleId) => {
+            navigate(`/dashboard?module=${moduleId}`);
+            setIsQuickActionsOpen(false);
+          }}
+          isOpen={isQuickActionsOpen}
+          onClose={() => setIsQuickActionsOpen(false)}
+          quickActions={memoizedQuickActions}
         />
       )}
     </>
