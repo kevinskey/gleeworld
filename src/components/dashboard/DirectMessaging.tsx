@@ -147,7 +147,8 @@ export const DirectMessaging = () => {
               placeholder="Search members..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-8 h-8 text-xs"
+              className="pl-8 h-8 text-xs !text-foreground"
+              style={{ color: 'hsl(var(--foreground))' }}
             />
           </div>
         </div>
@@ -270,7 +271,8 @@ export const DirectMessaging = () => {
                 }
               }}
               disabled={sending}
-              className="flex-1 min-w-0 h-10 resize-none"
+              className="flex-1 min-w-0 h-10 resize-none !text-foreground"
+              style={{ color: 'hsl(var(--foreground))' }}
             />
             <Button 
               onClick={handleSendMessage}

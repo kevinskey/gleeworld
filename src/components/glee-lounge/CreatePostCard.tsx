@@ -1596,7 +1596,8 @@ export function CreatePostCard({
               id="post-textarea"
               value={content} 
               onChange={e => setContent(e.target.value)} 
-              className="min-h-[80px] resize-none border border-border bg-background text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-1" 
+              className="min-h-[80px] resize-none border border-border bg-background !text-foreground placeholder:text-muted-foreground/70 focus-visible:ring-1" 
+              style={{ color: 'hsl(var(--foreground))' }}
               placeholder="Share what's happening..." 
               autoFocus
             />
@@ -1608,7 +1609,8 @@ export function CreatePostCard({
                   placeholder="Add location (e.g., Miami Beach 🌴)" 
                   value={locationTag} 
                   onChange={e => setLocationTag(e.target.value)} 
-                  className="h-8 text-sm bg-background text-foreground" 
+                  className="h-8 text-sm bg-background !text-foreground" 
+                  style={{ color: 'hsl(var(--foreground))' }}
                 />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                   setShowLocation(false);

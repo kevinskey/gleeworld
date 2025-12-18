@@ -50,7 +50,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="flex items-end gap-2 bg-card rounded-2xl border border-border p-2">
+      <div className="flex items-end gap-2 bg-background rounded-2xl border border-border p-2">
         <EnhancedTooltip content="Attach file">
           <Button
             type="button"
@@ -71,7 +71,8 @@ export const MessageInput: React.FC<MessageInputProps> = ({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             disabled={disabled}
-            className="min-h-[40px] max-h-32 resize-none text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-2 text-foreground placeholder:text-muted-foreground"
+            className="min-h-[40px] max-h-32 resize-none text-sm border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-2 py-2 !text-foreground placeholder:text-muted-foreground"
+            style={{ color: 'hsl(var(--foreground))' }}
             rows={1}
           />
         </div>
