@@ -25,61 +25,7 @@ interface TourDocument {
   dueDate?: string;
 }
 
-const tourDocuments: TourDocument[] = [
-  {
-    id: '1',
-    name: 'Absence Excuse Letter',
-    description: 'Official excuse letter for class absences during tour dates',
-    type: 'required',
-    status: 'submitted',
-    icon: <FileText className="h-5 w-5" />,
-    downloadUrl: '#',
-  },
-  {
-    id: '2',
-    name: 'Tour Contract & Agreement',
-    description: 'Behavioral expectations and tour participation agreement',
-    type: 'required',
-    status: 'pending',
-    icon: <ScrollText className="h-5 w-5" />,
-    dueDate: 'March 1, 2026',
-  },
-  {
-    id: '3',
-    name: 'Dietary Restrictions Form',
-    description: 'Food allergies, dietary preferences, and special meal requirements',
-    type: 'required',
-    status: 'submitted',
-    icon: <Utensils className="h-5 w-5" />,
-  },
-  {
-    id: '4',
-    name: 'Tour Itinerary',
-    description: 'Complete daily schedule with times, locations, and activities',
-    type: 'reference',
-    status: 'submitted',
-    icon: <ClipboardList className="h-5 w-5" />,
-    downloadUrl: '#',
-  },
-  {
-    id: '5',
-    name: 'Emergency Contact Form',
-    description: 'Emergency contact information and medical details',
-    type: 'required',
-    status: 'not_started',
-    icon: <AlertCircle className="h-5 w-5" />,
-    dueDate: 'February 28, 2026',
-  },
-  {
-    id: '6',
-    name: 'Packing Checklist',
-    description: 'Recommended items and required concert attire',
-    type: 'reference',
-    status: 'submitted',
-    icon: <FileCheck className="h-5 w-5" />,
-    downloadUrl: '#',
-  },
-];
+const tourDocuments: TourDocument[] = [];
 
 const getStatusBadge = (status: TourDocument['status']) => {
   switch (status) {
@@ -111,6 +57,15 @@ export const TourDocumentsSection = () => {
   const requiredDocs = tourDocuments.filter(d => d.type === 'required');
   const completedRequired = requiredDocs.filter(d => d.status === 'submitted').length;
 
+  if (tourDocuments.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+        <p className="text-muted-foreground">No tour documents available yet.</p>
+      </Card>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Progress Card */}
@@ -125,14 +80,14 @@ export const TourDocumentsSection = () => {
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-primary">
-                {Math.round((completedRequired / requiredDocs.length) * 100)}%
+                {requiredDocs.length > 0 ? Math.round((completedRequired / requiredDocs.length) * 100) : 0}%
               </p>
             </div>
           </div>
           <div className="mt-3 h-2 bg-primary/20 rounded-full overflow-hidden">
             <div 
               className="h-full bg-primary rounded-full transition-all"
-              style={{ width: `${(completedRequired / requiredDocs.length) * 100}%` }}
+              style={{ width: `${requiredDocs.length > 0 ? (completedRequired / requiredDocs.length) * 100 : 0}%` }}
             />
           </div>
         </CardContent>

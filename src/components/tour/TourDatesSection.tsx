@@ -11,15 +11,7 @@ interface TourStop {
   type: 'performance' | 'rehearsal' | 'travel' | 'free';
 }
 
-const tourStops: TourStop[] = [
-  { id: '1', date: '2026-03-15', city: 'Atlanta, GA', venue: 'Departure from Spelman', time: '6:00 AM', type: 'travel' },
-  { id: '2', date: '2026-03-15', city: 'Nashville, TN', venue: 'Fisk Memorial Chapel', time: '7:00 PM', type: 'performance' },
-  { id: '3', date: '2026-03-16', city: 'Nashville, TN', venue: 'Community Outreach', time: '10:00 AM', type: 'rehearsal' },
-  { id: '4', date: '2026-03-17', city: 'St. Louis, MO', venue: 'Powell Symphony Hall', time: '7:30 PM', type: 'performance' },
-  { id: '5', date: '2026-03-18', city: 'Chicago, IL', venue: 'Symphony Center', time: '8:00 PM', type: 'performance' },
-  { id: '6', date: '2026-03-19', city: 'Chicago, IL', venue: 'Free Day - Sightseeing', time: 'All Day', type: 'free' },
-  { id: '7', date: '2026-03-20', city: 'Detroit, MI', venue: 'Orchestra Hall', time: '7:00 PM', type: 'performance' },
-];
+const tourStops: TourStop[] = [];
 
 const getTypeColor = (type: TourStop['type']) => {
   switch (type) {
@@ -64,49 +56,56 @@ export const TourDatesSection = () => {
       </div>
 
       <div className="space-y-4">
-        {tourStops.map((stop) => (
-          <Card key={stop.id} className="overflow-hidden hover:shadow-md transition-shadow">
-            <div className="flex">
-              <div className={`w-2 ${getTypeColor(stop.type)}`} />
-              <div className="flex-1 p-4">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge className={getTypeColor(stop.type)}>
-                        {getTypeLabel(stop.type)}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {new Date(stop.date).toLocaleDateString('en-US', { 
-                          weekday: 'short', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </span>
+        {tourStops.length === 0 ? (
+          <Card className="p-8 text-center">
+            <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No tour dates scheduled yet.</p>
+          </Card>
+        ) : (
+          tourStops.map((stop) => (
+            <Card key={stop.id} className="overflow-hidden hover:shadow-md transition-shadow">
+              <div className="flex">
+                <div className={`w-2 ${getTypeColor(stop.type)}`} />
+                <div className="flex-1 p-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge className={getTypeColor(stop.type)}>
+                          {getTypeLabel(stop.type)}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(stop.date).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </span>
+                      </div>
+                      <h3 className="font-semibold text-lg">{stop.venue}</h3>
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {stop.city}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {stop.time}
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-lg">{stop.venue}</h3>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {stop.city}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {stop.time}
-                      </span>
-                    </div>
+                    {stop.type === 'performance' && (
+                      <div className="flex items-center gap-2">
+                        <Music className="h-5 w-5 text-primary" />
+                        <span className="text-sm font-medium text-primary">Concert</span>
+                      </div>
+                    )}
                   </div>
-                  {stop.type === 'performance' && (
-                    <div className="flex items-center gap-2">
-                      <Music className="h-5 w-5 text-primary" />
-                      <span className="text-sm font-medium text-primary">Concert</span>
-                    </div>
-                  )}
                 </div>
               </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

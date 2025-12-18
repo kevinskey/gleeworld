@@ -23,42 +23,7 @@ interface LivePerformance {
   thumbnail?: string;
 }
 
-const livePerformances: LivePerformance[] = [
-  {
-    id: '1',
-    title: 'Nashville - Fisk Memorial Chapel',
-    date: 'March 15, 2026 • 7:00 PM EST',
-    location: 'Nashville, TN',
-    status: 'upcoming',
-    streamUrl: '#',
-  },
-  {
-    id: '2',
-    title: 'St. Louis - Powell Symphony Hall',
-    date: 'March 17, 2026 • 7:30 PM CST',
-    location: 'St. Louis, MO',
-    status: 'upcoming',
-    streamUrl: '#',
-  },
-  {
-    id: '3',
-    title: 'Chicago - Symphony Center',
-    date: 'March 18, 2026 • 8:00 PM CST',
-    location: 'Chicago, IL',
-    status: 'upcoming',
-    streamUrl: '#',
-  },
-  {
-    id: '4',
-    title: '2025 Spring Tour - Atlanta Concert',
-    date: 'April 20, 2025',
-    location: 'Atlanta, GA',
-    status: 'recorded',
-    viewCount: 1234,
-    recordingUrl: '#',
-    thumbnail: '/placeholder.svg',
-  },
-];
+const livePerformances: LivePerformance[] = [];
 
 const getStatusBadge = (status: LivePerformance['status']) => {
   switch (status) {
@@ -86,44 +51,51 @@ export const LivePerformancesSection = () => {
           Upcoming Livestreams
         </h3>
         
-        <div className="grid gap-4 md:grid-cols-2">
-          {upcomingPerformances.map((performance) => (
-            <Card key={performance.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative">
-                <Video className="h-12 w-12 text-primary/40" />
-                <div className="absolute top-3 right-3">
-                  {getStatusBadge(performance.status)}
+        {upcomingPerformances.length === 0 ? (
+          <Card className="p-8 text-center">
+            <Video className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No upcoming livestreams scheduled.</p>
+          </Card>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {upcomingPerformances.map((performance) => (
+              <Card key={performance.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative">
+                  <Video className="h-12 w-12 text-primary/40" />
+                  <div className="absolute top-3 right-3">
+                    {getStatusBadge(performance.status)}
+                  </div>
                 </div>
-              </div>
-              <CardContent className="p-4">
-                <h4 className="font-semibold mb-2">{performance.title}</h4>
-                <div className="space-y-1 text-sm text-muted-foreground mb-4">
-                  <p className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {performance.date}
-                  </p>
-                  <p className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    {performance.location}
-                  </p>
-                </div>
-                <Button className="w-full" disabled={performance.status === 'upcoming'}>
-                  {performance.status === 'live' ? (
-                    <>
-                      <Play className="h-4 w-4 mr-2" />
-                      Watch Live
-                    </>
-                  ) : (
-                    <>
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Set Reminder
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2">{performance.title}</h4>
+                  <div className="space-y-1 text-sm text-muted-foreground mb-4">
+                    <p className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      {performance.date}
+                    </p>
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      {performance.location}
+                    </p>
+                  </div>
+                  <Button className="w-full" disabled={performance.status === 'upcoming'}>
+                    {performance.status === 'live' ? (
+                      <>
+                        <Play className="h-4 w-4 mr-2" />
+                        Watch Live
+                      </>
+                    ) : (
+                      <>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Set Reminder
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Past Recordings Section */}
