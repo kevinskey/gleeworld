@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -23,16 +23,12 @@ const IMAGE_FILE_TYPES = [
   "image/heic",
 ];
 
-const SCROLL_SPEED = 0.5; // pixels per frame
-const ITEM_WIDTH = 108; // 100px image + 8px gap
-const ITEM_WIDTH_SM = 128; // 120px image + 8px gap
+const SCROLL_SPEED = 0.6; // pixels per frame
 
 export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
   const [photos, setPhotos] = useState<GleeCamPhoto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isPaused, setIsPaused] = useState(false);
-  
   const offsetRef = useRef(0);
   const rafRef = useRef<number | null>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -63,24 +59,34 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     fetchPhotos();
   }, []);
 
-  // Animation loop
+  // Animation loop (JS marquee for reliability)
   useEffect(() => {
-    if (photos.length < 4 || isPaused) {
+    if (photos.length < 4) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       return;
     }
 
-    // Check for reduced motion preference
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     if (prefersReducedMotion) return;
 
-    const totalWidth = photos.length * ITEM_WIDTH;
+    // Measure half of the duplicated track width (one full set of photos)
+    const getLoopWidth = () => {
+      const el = trackRef.current;
+      if (!el) return 0;
+      return el.scrollWidth / 2;
+    };
+
+    let loopWidth = getLoopWidth();
 
     const animate = () => {
+      // If images load after mount, our width can change; keep it fresh.
+      if (!loopWidth) loopWidth = getLoopWidth();
+
       offsetRef.current -= SCROLL_SPEED;
-      
-      // Reset when we've scrolled past the first set
-      if (Math.abs(offsetRef.current) >= totalWidth) {
+
+      if (loopWidth && Math.abs(offsetRef.current) >= loopWidth) {
         offsetRef.current = 0;
       }
 
@@ -96,10 +102,8 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [photos.length, isPaused]);
+  }, [photos.length]);
 
-  const handlePause = useCallback(() => setIsPaused(true), []);
-  const handleResume = useCallback(() => setIsPaused(false), []);
   const goToGallery = () => navigate("/glee-cam/glee-cam-pics");
 
   if (loading) {
@@ -157,13 +161,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
       </CardHeader>
 
       <CardContent className="px-3 pb-3 pt-0 sm:px-4">
-        <div 
-          className="overflow-hidden"
-          onMouseEnter={handlePause}
-          onMouseLeave={handleResume}
-          onTouchStart={handlePause}
-          onTouchEnd={handleResume}
-        >
+        <div className="overflow-hidden">
           <div
             ref={trackRef}
             className="flex gap-2 will-change-transform"
