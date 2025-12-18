@@ -22,6 +22,7 @@ import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
 import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
 import { Mus070AttendanceView } from '@/components/mus070/instructor/Mus070AttendanceView';
@@ -41,6 +42,7 @@ interface UnifiedCoursePageProps {
 export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { currentSemester } = useMus240SemesterSafe();
   const [activeTab, setActiveTab] = useState('home');
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [enrollmentLoading, setEnrollmentLoading] = useState(true);
@@ -53,7 +55,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
   useEffect(() => {
     checkEnrollmentAndRole();
-  }, [user, course.id]);
+  }, [user, course.id, currentSemester]);
 
   const checkEnrollmentAndRole = async () => {
     if (!user) {
@@ -78,6 +80,21 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
           setEnrollmentLoading(false);
           return;
         }
+      }
+
+      // For MUS 240, check the mus240_enrollments table with current semester
+      if (course.id === 'a0000000-0000-0000-0000-000000000240') {
+        const { data: mus240Enrollment } = await supabase
+          .from('mus240_enrollments')
+          .select('*')
+          .eq('student_id', user.id)
+          .eq('semester', currentSemester)
+          .eq('enrollment_status', 'enrolled')
+          .maybeSingle();
+
+        setIsEnrolled(!!mus240Enrollment || profile?.is_admin || profile?.is_super_admin);
+        setEnrollmentLoading(false);
+        return;
       }
 
       // Check enrollment for other courses
@@ -156,7 +173,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
         {/* Left Sidebar - Navigation */}
         <div className="w-[15%] min-w-[180px] bg-card border-r border-border flex-shrink-0 hidden lg:block">
           <div className="p-4 border-b border-border">
-            <div className="text-xs font-bold text-muted-foreground mb-1">SPRING 2026</div>
+            <div className="text-xs font-bold text-muted-foreground mb-1">{currentSemester.toUpperCase()}</div>
             <div className="text-lg font-bold text-foreground">{course.courseCode}</div>
             <div className="text-sm text-muted-foreground">{course.title}</div>
           </div>
