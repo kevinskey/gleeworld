@@ -63,19 +63,31 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   useEffect(() => {
     if (!isOpen || isPaused || categories.length === 0) return;
     
-    const container = scrollContainerRef.current;
-    if (!container) return;
+    // Small delay to allow CollapsibleContent to render
+    const startTimeout = setTimeout(() => {
+      const container = scrollContainerRef.current;
+      if (!container) return;
 
-    const scrollSpeed = 1;
-    const scrollInterval = setInterval(() => {
-      if (container.scrollLeft >= container.scrollWidth - container.clientWidth) {
-        container.scrollLeft = 0;
-      } else {
-        container.scrollLeft += scrollSpeed;
+      const scrollSpeed = 1;
+      const scrollInterval = setInterval(() => {
+        if (container.scrollLeft >= container.scrollWidth - container.clientWidth) {
+          container.scrollLeft = 0;
+        } else {
+          container.scrollLeft += scrollSpeed;
+        }
+      }, 30);
+
+      // Store interval ID for cleanup
+      (container as any)._scrollInterval = scrollInterval;
+    }, 100);
+
+    return () => {
+      clearTimeout(startTimeout);
+      const container = scrollContainerRef.current;
+      if (container && (container as any)._scrollInterval) {
+        clearInterval((container as any)._scrollInterval);
       }
-    }, 30);
-
-    return () => clearInterval(scrollInterval);
+    };
   }, [isOpen, isPaused, categories.length]);
 
   const handleCategoryClick = (category: GleeCamCategory) => {
