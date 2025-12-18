@@ -1,6 +1,7 @@
 import { Navigate, useParams } from 'react-router-dom';
 import { ACADEMY_COURSES } from '@/config/academyCourses';
 
+// Redirects /course-lounge/:courseId to the appropriate academy route
 const CourseLoungeRedirect = () => {
   const { courseId } = useParams<{ courseId: string }>();
   
