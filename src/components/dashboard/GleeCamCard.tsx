@@ -62,31 +62,32 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   // Auto-scroll effect
   useEffect(() => {
     if (!isOpen || isPaused || categories.length === 0) return;
-    
-    // Small delay to allow CollapsibleContent to render
-    const startTimeout = setTimeout(() => {
+
+    let intervalId: number | undefined;
+    let rafId: number | undefined;
+
+    const start = () => {
       const container = scrollContainerRef.current;
       if (!container) return;
 
-      const scrollSpeed = 1;
-      const scrollInterval = setInterval(() => {
-        if (container.scrollLeft >= container.scrollWidth - container.clientWidth) {
-          container.scrollLeft = 0;
-        } else {
-          container.scrollLeft += scrollSpeed;
-        }
-      }, 30);
+      // Only auto-scroll when there is actual overflow
+      if (container.scrollWidth <= container.clientWidth) return;
 
-      // Store interval ID for cleanup
-      (container as any)._scrollInterval = scrollInterval;
-    }, 100);
+      const scrollSpeed = 1;
+      intervalId = window.setInterval(() => {
+        const maxScrollLeft = container.scrollWidth - container.clientWidth;
+        container.scrollLeft = container.scrollLeft >= maxScrollLeft ? 0 : container.scrollLeft + scrollSpeed;
+      }, 20);
+    };
+
+    // Wait a frame so CollapsibleContent has mounted and layout is measurable
+    rafId = window.requestAnimationFrame(() => {
+      window.setTimeout(start, 50);
+    });
 
     return () => {
-      clearTimeout(startTimeout);
-      const container = scrollContainerRef.current;
-      if (container && (container as any)._scrollInterval) {
-        clearInterval((container as any)._scrollInterval);
-      }
+      if (rafId) window.cancelAnimationFrame(rafId);
+      if (intervalId) window.clearInterval(intervalId);
     };
   }, [isOpen, isPaused, categories.length]);
 
