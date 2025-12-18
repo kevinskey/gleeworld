@@ -16,7 +16,6 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { CalendarIcon, Clock, MapPin, Users, Music, Settings, Plane } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-
 const bookingFormSchema = z.object({
   // Contact Information
   organization_name: z.string().min(1, 'Organization name is required'),
@@ -25,11 +24,12 @@ const bookingFormSchema = z.object({
   contact_email: z.string().email('Invalid email format'),
   contact_phone: z.string().min(1, 'Phone number is required'),
   website: z.string().optional(),
-
   // Event Details
   event_name: z.string().min(1, 'Event name is required'),
   event_description: z.string().optional(),
-  event_date_start: z.date({ required_error: 'Event date is required' }),
+  event_date_start: z.date({
+    required_error: 'Event date is required'
+  }),
   event_date_end: z.date().optional(),
   performance_time: z.string().optional(),
   performance_duration: z.enum(['15-30 min', '30-60 min', 'Full concert']),
@@ -38,7 +38,6 @@ const bookingFormSchema = z.object({
   venue_type: z.enum(['Auditorium', 'Church', 'Stadium', 'Outdoor', 'Other']),
   expected_attendance: z.number().optional(),
   theme_occasion: z.string().optional(),
-
   // Technical & Logistical Info
   stage_dimensions: z.string().optional(),
   sound_system_available: z.boolean().default(false),
@@ -51,7 +50,6 @@ const bookingFormSchema = z.object({
   rehearsal_time_provided: z.string().optional(),
   load_in_soundcheck_time: z.string().optional(),
   av_capabilities: z.string().optional(),
-
   // Hospitality & Travel
   honorarium_offered: z.boolean().default(false),
   honorarium_amount: z.number().optional(),
@@ -61,26 +59,23 @@ const bookingFormSchema = z.object({
   meals_provided: z.boolean().default(false),
   dietary_restrictions: z.string().optional(),
   preferred_arrival_point: z.string().optional(),
-
   // Permissions & Media
   event_recorded_livestreamed: z.boolean().default(false),
   recording_description: z.string().optional(),
   photo_video_permission: z.boolean().default(false),
   promotional_assets_requested: z.array(z.string()).default([]),
   formal_contract_required: z.boolean().default(false),
-
   // Additional
   notes_for_director: z.string().optional(),
   notes_for_choir: z.string().optional(),
-  how_heard_about_us: z.string().optional(),
+  how_heard_about_us: z.string().optional()
 });
-
 type BookingFormData = z.infer<typeof bookingFormSchema>;
-
 export const BookingForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const form = useForm<BookingFormData>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
@@ -95,10 +90,9 @@ export const BookingForm: React.FC = () => {
       photo_video_permission: false,
       formal_contract_required: false,
       travel_expenses_covered: [],
-      promotional_assets_requested: [],
-    },
+      promotional_assets_requested: []
+    }
   });
-
   const watchSoundSystem = form.watch('sound_system_available');
   const watchLighting = form.watch('lighting_available');
   const watchPiano = form.watch('piano_available');
@@ -106,11 +100,9 @@ export const BookingForm: React.FC = () => {
   const watchLodging = form.watch('lodging_provided');
   const watchMeals = form.watch('meals_provided');
   const watchRecording = form.watch('event_recorded_livestreamed');
-
   const onSubmit = async (data: BookingFormData) => {
     try {
       setIsSubmitting(true);
-
       const payload = {
         organization_name: data.organization_name,
         contact_person_name: data.contact_person_name,
@@ -155,36 +147,30 @@ export const BookingForm: React.FC = () => {
         formal_contract_required: data.formal_contract_required,
         notes_for_director: data.notes_for_director,
         notes_for_choir: data.notes_for_choir,
-        how_heard_about_us: data.how_heard_about_us,
+        how_heard_about_us: data.how_heard_about_us
       };
-
-      const { error } = await supabase
-        .from('gw_booking_requests')
-        .insert([payload]);
-
+      const {
+        error
+      } = await supabase.from('gw_booking_requests').insert([payload]);
       if (error) throw error;
-
       toast({
         title: 'Booking Request Submitted',
         description: 'Thank you for your interest! We will review your request and contact you soon.',
-        variant: 'default',
+        variant: 'default'
       });
-
       form.reset();
     } catch (error: any) {
       console.error('Error submitting booking request:', error);
       toast({
         title: 'Submission Failed',
         description: error.message || 'Please try again or contact us directly.',
-        variant: 'destructive',
+        variant: 'destructive'
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <div className="bg-background py-4 px-4 min-h-[calc(100vh-64px)]">
+  return <div className="bg-background py-4 px-4 min-h-[calc(100vh-64px)]">
       <div className="max-w-4xl mx-auto pb-8">
         {/* Header */}
         <div className="text-center mb-6">
@@ -192,7 +178,7 @@ export const BookingForm: React.FC = () => {
             <h1 className="text-2xl font-bold text-primary-foreground mb-1">
               Spelman College Glee Club
             </h1>
-            <h2 className="text-lg font-medium text-primary-foreground/90 mb-2">Book Our Performance</h2>
+            <h2 className="text-lg font-medium text-primary-foreground/90 mb-2 py-[20px] font-sans">Book Our Performance</h2>
             <p className="text-primary-foreground/70 text-sm max-w-xl mx-auto">
               Complete this form to request a performance booking.
             </p>
@@ -214,89 +200,65 @@ export const BookingForm: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="organization_name"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                <FormField control={form.control} name="organization_name" render={({
+                field
+              }) => <FormItem className="md:col-span-2">
                       <FormLabel>Organization/Institution Name *</FormLabel>
                       <FormControl>
                         <Input placeholder="Your Organization Name" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="contact_person_name"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="contact_person_name" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Contact Person Full Name *</FormLabel>
                       <FormControl>
                         <Input placeholder="John Smith" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="contact_title"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="contact_title" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Title/Role</FormLabel>
                       <FormControl>
                         <Input placeholder="Event Coordinator" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="contact_email"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="contact_email" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Email Address *</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="contact@organization.org" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="contact_phone"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="contact_phone" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Phone Number *</FormLabel>
                       <FormControl>
                         <Input placeholder="(555) 123-4567" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="website"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                <FormField control={form.control} name="website" render={({
+                field
+              }) => <FormItem className="md:col-span-2">
                       <FormLabel>Website (Optional)</FormLabel>
                       <FormControl>
                         <Input placeholder="https://www.organization.org" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
               </CardContent>
             </Card>
 
@@ -312,139 +274,79 @@ export const BookingForm: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={form.control}
-                  name="event_name"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                <FormField control={form.control} name="event_name" render={({
+                field
+              }) => <FormItem className="md:col-span-2">
                       <FormLabel>Event Name *</FormLabel>
                       <FormControl>
                         <Input placeholder="Annual Charity Gala" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="event_description"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                <FormField control={form.control} name="event_description" render={({
+                field
+              }) => <FormItem className="md:col-span-2">
                       <FormLabel>Event Description</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Describe your event, its purpose, and atmosphere..."
-                          className="min-h-[100px]"
-                          {...field} 
-                        />
+                        <Textarea placeholder="Describe your event, its purpose, and atmosphere..." className="min-h-[100px]" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="event_date_start"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="event_date_start" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Event Date *</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
+                            <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                              {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                            className="pointer-events-auto"
-                          />
+                          <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date < new Date()} initialFocus className="pointer-events-auto" />
                         </PopoverContent>
                       </Popover>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="event_date_end"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="event_date_end" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>End Date (if multi-day)</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Optional end date</span>
-                              )}
+                            <Button variant="outline" className={cn("w-full pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
+                              {field.value ? format(field.value, "PPP") : <span>Optional end date</span>}
                               <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                            className="pointer-events-auto"
-                          />
+                          <Calendar mode="single" selected={field.value} onSelect={field.onChange} disabled={date => date < new Date()} initialFocus className="pointer-events-auto" />
                         </PopoverContent>
                       </Popover>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="performance_time"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="performance_time" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Requested Performance Time</FormLabel>
                       <FormControl>
                         <Input type="time" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="performance_duration"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="performance_duration" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Performance Duration *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -459,43 +361,31 @@ export const BookingForm: React.FC = () => {
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="venue_name"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="venue_name" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Venue Name *</FormLabel>
                       <FormControl>
                         <Input placeholder="Atlanta Symphony Hall" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="venue_address"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="venue_address" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Venue Address *</FormLabel>
                       <FormControl>
                         <Input placeholder="123 Main St, Atlanta, GA 30309" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="venue_type"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="venue_type" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Venue Type *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -512,42 +402,27 @@ export const BookingForm: React.FC = () => {
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="expected_attendance"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="expected_attendance" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Expected Attendance</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          placeholder="500" 
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        />
+                        <Input type="number" placeholder="500" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="theme_occasion"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
+                <FormField control={form.control} name="theme_occasion" render={({
+                field
+              }) => <FormItem className="md:col-span-2">
                       <FormLabel>Theme/Occasion</FormLabel>
                       <FormControl>
                         <Input placeholder="Holiday celebration, graduation, fundraiser..." {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
               </CardContent>
             </Card>
 
@@ -563,120 +438,80 @@ export const BookingForm: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="stage_dimensions"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="stage_dimensions" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Stage Dimensions</FormLabel>
                       <FormControl>
                         <Input placeholder="20ft x 15ft" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="sound_system_available"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="sound_system_available" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Sound System Available?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    {watchSoundSystem && (
-                      <FormField
-                        control={form.control}
-                        name="sound_system_description"
-                        render={({ field }) => (
-                          <FormItem>
+                    {watchSoundSystem && <FormField control={form.control} name="sound_system_description" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Sound System Description</FormLabel>
                             <FormControl>
                               <Textarea placeholder="Describe the sound system capabilities..." {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
                   </div>
 
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="lighting_available"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="lighting_available" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Lighting Available?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    {watchLighting && (
-                      <FormField
-                        control={form.control}
-                        name="lighting_description"
-                        render={({ field }) => (
-                          <FormItem>
+                    {watchLighting && <FormField control={form.control} name="lighting_description" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Lighting Description</FormLabel>
                             <FormControl>
                               <Textarea placeholder="Describe the lighting setup..." {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="piano_available"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="piano_available" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Piano/Keyboard Onsite?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    {watchPiano && (
-                      <FormField
-                        control={form.control}
-                        name="piano_type"
-                        render={({ field }) => (
-                          <FormItem>
+                    {watchPiano && <FormField control={form.control} name="piano_type" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Piano Type</FormLabel>
                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                               <FormControl>
@@ -691,77 +526,52 @@ export const BookingForm: React.FC = () => {
                               </SelectContent>
                             </Select>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="dressing_rooms_available"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormField control={form.control} name="dressing_rooms_available" render={({
+                  field
+                }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                         <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                         <div className="space-y-1 leading-none">
                           <FormLabel>Dressing Rooms Available?</FormLabel>
                         </div>
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <FormField
-                    control={form.control}
-                    name="rehearsal_time_provided"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="rehearsal_time_provided" render={({
+                  field
+                }) => <FormItem>
                         <FormLabel>Rehearsal Time Provided</FormLabel>
                         <FormControl>
                           <Input type="datetime-local" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
 
-                  <FormField
-                    control={form.control}
-                    name="load_in_soundcheck_time"
-                    render={({ field }) => (
-                      <FormItem>
+                  <FormField control={form.control} name="load_in_soundcheck_time" render={({
+                  field
+                }) => <FormItem>
                         <FormLabel>Load-in & Soundcheck Time</FormLabel>
                         <FormControl>
                           <Input placeholder="2 hours before performance" {...field} />
                         </FormControl>
                         <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                      </FormItem>} />
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="av_capabilities"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="av_capabilities" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>A/V Capabilities</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Describe recording capabilities, live streaming setup, etc..."
-                          {...field} 
-                        />
+                        <Textarea placeholder="Describe recording capabilities, live streaming setup, etc..." {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
               </CardContent>
             </Card>
 
@@ -779,178 +589,106 @@ export const BookingForm: React.FC = () => {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="honorarium_offered"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="honorarium_offered" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Honorarium or Fee Offered?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    {watchHonorarium && (
-                      <FormField
-                        control={form.control}
-                        name="honorarium_amount"
-                        render={({ field }) => (
-                          <FormItem>
+                    {watchHonorarium && <FormField control={form.control} name="honorarium_amount" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Honorarium Amount ($)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="5000" 
-                                {...field}
-                                onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                              />
+                              <Input type="number" placeholder="5000" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
                   </div>
 
                   <div className="space-y-4">
                     <FormLabel>Travel Expenses Covered</FormLabel>
                     <div className="space-y-3">
-                      {['Airfare', 'Ground Transport', 'Per Diem', 'Not Covered'].map((expense) => (
-                        <FormField
-                          key={expense}
-                          control={form.control}
-                          name="travel_expenses_covered"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={expense}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
+                      {['Airfare', 'Ground Transport', 'Per Diem', 'Not Covered'].map(expense => <FormField key={expense} control={form.control} name="travel_expenses_covered" render={({
+                      field
+                    }) => {
+                      return <FormItem key={expense} className="flex flex-row items-start space-x-3 space-y-0">
                                 <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(expense)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, expense])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== expense
-                                            )
-                                          )
-                                    }}
-                                  />
+                                  <Checkbox checked={field.value?.includes(expense)} onCheckedChange={checked => {
+                            return checked ? field.onChange([...field.value, expense]) : field.onChange(field.value?.filter(value => value !== expense));
+                          }} />
                                 </FormControl>
                                 <FormLabel className="font-normal">
                                   {expense}
                                 </FormLabel>
-                              </FormItem>
-                            )
-                          }}
-                        />
-                      ))}
+                              </FormItem>;
+                    }} />)}
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="lodging_provided"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="lodging_provided" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Lodging Provided?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    {watchLodging && (
-                      <FormField
-                        control={form.control}
-                        name="lodging_nights"
-                        render={({ field }) => (
-                          <FormItem>
+                    {watchLodging && <FormField control={form.control} name="lodging_nights" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Nights Covered</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                placeholder="2" 
-                                {...field}
-                                onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                              />
+                              <Input type="number" placeholder="2" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
                   </div>
 
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="meals_provided"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="meals_provided" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Meals Provided?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    {watchMeals && (
-                      <FormField
-                        control={form.control}
-                        name="dietary_restrictions"
-                        render={({ field }) => (
-                          <FormItem>
+                    {watchMeals && <FormField control={form.control} name="dietary_restrictions" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Dietary Restrictions Accommodation</FormLabel>
                             <FormControl>
                               <Textarea placeholder="Vegetarian, vegan, gluten-free options available..." {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
                   </div>
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="preferred_arrival_point"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="preferred_arrival_point" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Preferred Point of Arrival</FormLabel>
                       <FormControl>
                         <Input placeholder="Hartsfield-Jackson Atlanta International Airport" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
               </CardContent>
             </Card>
 
@@ -968,116 +706,70 @@ export const BookingForm: React.FC = () => {
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="event_recorded_livestreamed"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="event_recorded_livestreamed" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Event Being Recorded or Livestreamed?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    {watchRecording && (
-                      <FormField
-                        control={form.control}
-                        name="recording_description"
-                        render={({ field }) => (
-                          <FormItem>
+                    {watchRecording && <FormField control={form.control} name="recording_description" render={({
+                    field
+                  }) => <FormItem>
                             <FormLabel>Recording Description</FormLabel>
                             <FormControl>
                               <Textarea placeholder="Describe recording/streaming plans..." {...field} />
                             </FormControl>
                             <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                          </FormItem>} />}
                   </div>
 
                   <div className="space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="photo_video_permission"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="photo_video_permission" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Permission to Use Photos/Videos for Promotion?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
 
-                    <FormField
-                      control={form.control}
-                      name="formal_contract_required"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormField control={form.control} name="formal_contract_required" render={({
+                    field
+                  }) => <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                           <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                           <div className="space-y-1 leading-none">
                             <FormLabel>Formal Contract Required?</FormLabel>
                           </div>
-                        </FormItem>
-                      )}
-                    />
+                        </FormItem>} />
                   </div>
                 </div>
 
                 <div>
                   <FormLabel>Promotional Assets Requested</FormLabel>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
-                    {['Bio', 'Logo', 'Photos', 'Media Kit'].map((asset) => (
-                      <FormField
-                        key={asset}
-                        control={form.control}
-                        name="promotional_assets_requested"
-                        render={({ field }) => {
-                          return (
-                            <FormItem
-                              key={asset}
-                              className="flex flex-row items-start space-x-3 space-y-0"
-                            >
+                    {['Bio', 'Logo', 'Photos', 'Media Kit'].map(asset => <FormField key={asset} control={form.control} name="promotional_assets_requested" render={({
+                    field
+                  }) => {
+                    return <FormItem key={asset} className="flex flex-row items-start space-x-3 space-y-0">
                               <FormControl>
-                                <Checkbox
-                                  checked={field.value?.includes(asset)}
-                                  onCheckedChange={(checked) => {
-                                    return checked
-                                      ? field.onChange([...field.value, asset])
-                                      : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== asset
-                                          )
-                                        )
-                                  }}
-                                />
+                                <Checkbox checked={field.value?.includes(asset)} onCheckedChange={checked => {
+                          return checked ? field.onChange([...field.value, asset]) : field.onChange(field.value?.filter(value => value !== asset));
+                        }} />
                               </FormControl>
                               <FormLabel className="font-normal">
                                 {asset}
                               </FormLabel>
-                            </FormItem>
-                          )
-                        }}
-                      />
-                    ))}
+                            </FormItem>;
+                  }} />)}
                   </div>
                 </div>
               </CardContent>
@@ -1095,47 +787,29 @@ export const BookingForm: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="notes_for_director"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="notes_for_director" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Notes for the Director</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Special requests, preferred repertoire, specific themes..."
-                          className="min-h-[100px]"
-                          {...field} 
-                        />
+                        <Textarea placeholder="Special requests, preferred repertoire, specific themes..." className="min-h-[100px]" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="notes_for_choir"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="notes_for_choir" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>Notes for Choir Members</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="Dress code, arrival instructions, special considerations..."
-                          className="min-h-[100px]"
-                          {...field} 
-                        />
+                        <Textarea placeholder="Dress code, arrival instructions, special considerations..." className="min-h-[100px]" {...field} />
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
 
-                <FormField
-                  control={form.control}
-                  name="how_heard_about_us"
-                  render={({ field }) => (
-                    <FormItem>
+                <FormField control={form.control} name="how_heard_about_us" render={({
+                field
+              }) => <FormItem>
                       <FormLabel>How Did You Hear About Us?</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
@@ -1152,19 +826,13 @@ export const BookingForm: React.FC = () => {
                         </SelectContent>
                       </Select>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    </FormItem>} />
               </CardContent>
             </Card>
 
             {/* Submit Button */}
             <div className="text-center">
-              <Button 
-                type="submit" 
-                disabled={isSubmitting}
-                className="w-full md:w-auto px-8 py-3 text-lg bg-brand-600 hover:bg-brand-700 text-white border-0 shadow-glass-lg"
-              >
+              <Button type="submit" disabled={isSubmitting} className="w-full md:w-auto px-8 py-3 text-lg bg-brand-600 hover:bg-brand-700 text-white border-0 shadow-glass-lg">
                 {isSubmitting ? 'Submitting Request...' : 'Submit Booking Request'}
               </Button>
               <p className="text-sm text-muted-foreground mt-4">
@@ -1174,6 +842,5 @@ export const BookingForm: React.FC = () => {
           </form>
         </Form>
       </div>
-    </div>
-  );
+    </div>;
 };
