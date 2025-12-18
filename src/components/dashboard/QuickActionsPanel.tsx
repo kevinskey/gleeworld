@@ -146,9 +146,9 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
         />
       )}
       
-      {/* Steel Dropdown Panel - slides out from underneath header */}
+      {/* Steel Dropdown Panel - fixed under the global header */}
       <div 
-        className={`absolute top-16 left-0 right-0 z-50 transition-all duration-300 ease-out ${
+        className={`fixed top-14 sm:top-16 left-0 right-0 z-50 transition-all duration-300 ease-out ${
           isOpen 
             ? 'translate-y-0 opacity-100 scale-100' 
             : '-translate-y-4 opacity-0 scale-95 pointer-events-none'
