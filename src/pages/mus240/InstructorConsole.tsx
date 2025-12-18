@@ -35,6 +35,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
+import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 export const InstructorConsole = () => {
   const {
     isAdmin,
@@ -222,6 +223,7 @@ export const InstructorConsole = () => {
               </div>
               
               <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 w-full md:w-auto justify-between md:justify-end">
+                <Mus240SemesterSelector className="hidden sm:flex" />
                 <Button variant="outline" size="sm" onClick={() => setSidebarOpen(true)} className="lg:hidden flex items-center gap-1 sm:gap-2 h-7 sm:h-8 text-xs sm:text-sm">
                   <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Menu</span>
