@@ -155,9 +155,9 @@ export const TourRosterSection = () => {
       toast.success(`${selectedMembers.size} members added to roster`);
       setSelectedMembers(new Set());
       fetchData();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding members:', error);
-      toast.error('Failed to add members');
+      toast.error(error?.message || 'Failed to add members');
     }
   };
 
