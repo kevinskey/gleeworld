@@ -60,7 +60,12 @@ const profileSetupSchema = z.object({
   // Academic & Personal fields
   academic_major: z.string().optional(),
   pronouns: z.string().optional(),
-  class_year: z.number().min(1900).max(2050).optional().or(z.literal("")),
+  class_year: z.preprocess((val) => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    if (typeof val === "number" && !Number.isFinite(val)) return undefined;
+    const n = typeof val === "string" ? Number(val) : val;
+    return Number.isFinite(n) ? n : undefined;
+  }, z.number().min(1900).max(2050).optional()),
   
   // Health & Safety fields
   emergency_contact: z.string().optional(),
@@ -258,7 +263,7 @@ const ProfileSetup = () => {
           visible_piercings: data.visible_piercings,
           academic_major: data.academic_major,
           pronouns: data.pronouns,
-          class_year: data.class_year === "" ? null : Number(data.class_year),
+          class_year: (data.class_year ?? null) as any,
           emergency_contact: data.emergency_contact,
           dietary_restrictions: selectedDietaryRestrictions,
           allergies: data.allergies,
@@ -418,7 +423,7 @@ const ProfileSetup = () => {
                   <Input
                     id="class_year"
                     type="number"
-                    {...register("class_year", { valueAsNumber: true })}
+                    {...register("class_year")}
                     className="mt-1"
                     placeholder="2024"
                     min="1900"
