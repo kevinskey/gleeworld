@@ -149,10 +149,9 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
           <CardContent className="px-3 pb-3 pt-0 sm:px-4">
             <div
               className="overflow-hidden"
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
               onPointerDown={() => setIsPaused(true)}
               onPointerUp={() => setIsPaused(false)}
+              onPointerCancel={() => setIsPaused(false)}
               onTouchStart={() => setIsPaused(true)}
               onTouchEnd={() => setIsPaused(false)}
               ref={emblaRef}
