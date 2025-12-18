@@ -277,10 +277,18 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
   };
 
   const createRoute = () => {
-    if (!newRoute.name || newRoute.stops.length < 2) {
+    if (!newRoute.name.trim()) {
       toast({
         title: "Invalid route",
-        description: "Route must have a name and at least 2 stops.",
+        description: "Please enter a route name.",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (newRoute.stops.length === 0) {
+      toast({
+        title: "Invalid route",
+        description: "Please add at least one stop to the route.",
         variant: "destructive"
       });
       return;
