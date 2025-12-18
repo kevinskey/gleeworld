@@ -7,6 +7,7 @@ import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
 import { EventHoverCard } from "./EventHoverCard";
+import { EventContextMenu } from "./EventContextMenu";
 import { CreateEventDialog } from "./CreateEventDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -254,32 +255,46 @@ export const MonthlyCalendar = ({ events, onEventUpdated }: MonthlyCalendarProps
                      userPermissions.isAdmin || 
                      user.id === event.created_by
                    );
+                   const canDelete = user && userPermissions && (
+                     userPermissions.isSuperAdmin || 
+                     userPermissions.isAdmin
+                   );
                    console.log('Can edit?', canEdit, 'User:', user?.id, 'Event creator:', event.created_by, 'User permissions:', userPermissions);
                   const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
                    return (
-                     <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
-                       <div
-                         className={`
-                           text-[10px] sm:text-xs p-1 rounded-sm cursor-pointer 
-                           transition-colors duration-200 min-h-[16px] sm:min-h-[18px]
-                           touch-manipulation border-l-2 border-l-current
-                           ${isSelected 
-                             ? 'ring-1 ring-primary ring-offset-1' 
-                             : 'hover:opacity-80 active:opacity-60'
-                           }
-                           ${getEventTypeColor(event.event_type)}
-                         `}
-                         onClick={(e) => {
-                           e.stopPropagation();
-                           handleEventClick(event);
-                         }}
-                         title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
-                       >
-                         <div className="truncate font-medium leading-tight">
-                           {event.title}
+                     <EventContextMenu
+                       key={event.id}
+                       event={event}
+                       canEdit={!!canEdit}
+                       canDelete={!!canDelete}
+                       onView={() => setSelectedEvent(event)}
+                       onEdit={() => setEditingEvent(event)}
+                       onDeleted={onEventUpdated}
+                     >
+                       <EventHoverCard event={event} canEdit={canEdit}>
+                         <div
+                           className={`
+                             text-[10px] sm:text-xs p-1 rounded-sm cursor-pointer 
+                             transition-colors duration-200 min-h-[16px] sm:min-h-[18px]
+                             touch-manipulation border-l-2 border-l-current
+                             ${isSelected 
+                               ? 'ring-1 ring-primary ring-offset-1' 
+                               : 'hover:opacity-80 active:opacity-60'
+                             }
+                             ${getEventTypeColor(event.event_type)}
+                           `}
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             handleEventClick(event);
+                           }}
+                           title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}${canDelete ? ' • Right-click to delete' : ''}`}
+                         >
+                           <div className="truncate font-medium leading-tight">
+                             {event.title}
+                           </div>
                          </div>
-                       </div>
-                     </EventHoverCard>
+                       </EventHoverCard>
+                     </EventContextMenu>
                    );
                 })}
                 {dayEvents.length > (isMobile ? 2 : 3) && (
