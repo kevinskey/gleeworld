@@ -209,9 +209,22 @@ export const TourRosterSection = () => {
     );
   }
 
+  // Calculate section stats for confirmed members
+  const confirmedMembers = rosterMembers.filter(m => m.status === 'confirmed');
+  const sectionStats = {
+    S1: confirmedMembers.filter(m => m.voice_part?.toLowerCase() === 's1' || m.voice_part?.toLowerCase() === 'soprano 1').length,
+    S2: confirmedMembers.filter(m => m.voice_part?.toLowerCase() === 's2' || m.voice_part?.toLowerCase() === 'soprano 2').length,
+    A1: confirmedMembers.filter(m => m.voice_part?.toLowerCase() === 'a1' || m.voice_part?.toLowerCase() === 'alto 1').length,
+    A2: confirmedMembers.filter(m => m.voice_part?.toLowerCase() === 'a2' || m.voice_part?.toLowerCase() === 'alto 2').length,
+  };
+  const unassigned = confirmedMembers.filter(m => 
+    !m.voice_part || 
+    !['s1', 's2', 'a1', 'a2', 'soprano 1', 'soprano 2', 'alto 1', 'alto 2'].includes(m.voice_part?.toLowerCase())
+  ).length;
+
   return (
     <div className="space-y-6">
-      {/* Stats */}
+      {/* Status Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-green-500/10 border-green-500/20">
           <CardContent className="p-4 text-center">
@@ -238,6 +251,40 @@ export const TourRosterSection = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Section Stats (Voice Parts) */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Section Mix (Confirmed Members)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-5 gap-3">
+            <div className="text-center p-3 rounded-lg bg-pink-500/10 border border-pink-500/20">
+              <p className="text-xl font-bold text-pink-600">{sectionStats.S1}</p>
+              <p className="text-xs text-muted-foreground font-medium">S1</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
+              <p className="text-xl font-bold text-rose-600">{sectionStats.S2}</p>
+              <p className="text-xs text-muted-foreground font-medium">S2</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+              <p className="text-xl font-bold text-purple-600">{sectionStats.A1}</p>
+              <p className="text-xs text-muted-foreground font-medium">A1</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
+              <p className="text-xl font-bold text-violet-600">{sectionStats.A2}</p>
+              <p className="text-xs text-muted-foreground font-medium">A2</p>
+            </div>
+            <div className="text-center p-3 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xl font-bold text-muted-foreground">{unassigned}</p>
+              <p className="text-xs text-muted-foreground font-medium">Other</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Tour Roster */}
