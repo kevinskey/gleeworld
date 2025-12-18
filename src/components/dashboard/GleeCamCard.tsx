@@ -87,7 +87,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   }
 
   return (
-    <Card className={cn("bg-background/95 backdrop-blur-sm", className)}>
+    <Card className={cn("bg-card", className)}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
           <CardHeader className="py-3 px-3 sm:px-0 cursor-pointer hover:bg-primary/5 transition-colors">
