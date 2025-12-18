@@ -15632,6 +15632,156 @@ export type Database = {
           },
         ]
       }
+      gw_tour_crew: {
+        Row: {
+          assigned_by: string | null
+          created_at: string
+          crew_type: string
+          id: string
+          notes: string | null
+          role: string | null
+          tour_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string
+          crew_type: string
+          id?: string
+          notes?: string | null
+          role?: string | null
+          tour_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string
+          crew_type?: string
+          id?: string
+          notes?: string | null
+          role?: string | null
+          tour_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_crew_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_tour_crew_meetings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          crew_type: string
+          description: string | null
+          id: string
+          is_virtual: boolean | null
+          location: string | null
+          meeting_date: string
+          meeting_link: string | null
+          title: string
+          tour_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          crew_type: string
+          description?: string | null
+          id?: string
+          is_virtual?: boolean | null
+          location?: string | null
+          meeting_date: string
+          meeting_link?: string | null
+          title: string
+          tour_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          crew_type?: string
+          description?: string | null
+          id?: string
+          is_virtual?: boolean | null
+          location?: string | null
+          meeting_date?: string
+          meeting_link?: string | null
+          title?: string
+          tour_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_crew_meetings_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_tour_crew_tasks: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string | null
+          crew_type: string
+          description: string | null
+          due_date: string | null
+          id: string
+          priority: string | null
+          status: string
+          title: string
+          tour_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          crew_type: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string
+          title: string
+          tour_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string | null
+          crew_type?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          priority?: string | null
+          status?: string
+          title?: string
+          tour_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_crew_tasks_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_events: {
         Row: {
           budget_allocated: number | null
