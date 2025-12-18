@@ -249,6 +249,7 @@ import { Mus240PollPage } from "./pages/Mus240PollPage";
 import MySubmissionsPage from "./pages/student/MySubmissionsPage";
 import JazzPage from "./pages/mus240/JazzPage";
 import Tour2026Page from "./pages/Tour2026Page";
+import BusInformation from "./pages/BusInformation";
 import ExecutiveBoardWorkshopPage from "./pages/ExecutiveBoardWorkshopPage";
 import ExecBoardTrainingVideosPage from "./pages/ExecBoardTrainingVideosPage";
 import MeetingAgendasPage from "./pages/exec-board/MeetingAgendasPage";
@@ -976,6 +977,14 @@ const App = () => {
                   element={
                     <ProtectedRoute>
                       <Tour2026Page />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/bus-information" 
+                  element={
+                    <ProtectedRoute>
+                      <BusInformation />
                     </ProtectedRoute>
                   } 
                 />

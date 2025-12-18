@@ -303,3 +303,6 @@ verify_jwt = false
 
 [functions.sync-appointment-to-gcal]
 verify_jwt = true
+
+[functions.search-bus-companies]
+verify_jwt = false
