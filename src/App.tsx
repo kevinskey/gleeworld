@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { MusicPlayerProvider } from "@/contexts/MusicPlayerContext";
 import { Mus240SemesterProvider } from "@/contexts/Mus240SemesterContext";
+import { CourseProvider } from "@/contexts/CourseContext";
 import { GlobalMusicPlayer } from "@/components/music/GlobalMusicPlayer";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { supabase } from "@/integrations/supabase/client";
@@ -331,6 +332,7 @@ const App = () => {
               <CustomTooltipProvider>
                 <MusicPlayerProvider>
                   <Mus240SemesterProvider>
+                  <CourseProvider>
                   <SplashWrapper>
                   <div>
                   <Toaster />
@@ -2331,6 +2333,7 @@ const App = () => {
                     <PWAInstallPrompt />
                    </div>
                    </SplashWrapper>
+                  </CourseProvider>
                   </Mus240SemesterProvider>
                   </MusicPlayerProvider>
                 </CustomTooltipProvider>

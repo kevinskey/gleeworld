@@ -4,6 +4,7 @@ import { Sofa, Users, MessageCircle, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCourseDisplayInfo, useCourseContext } from '@/contexts/CourseContext';
 
 interface OnlineUser {
   user_id: string;
@@ -14,56 +15,89 @@ interface OnlineUser {
 export const GleeLoungeStrip = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { loungeTitle, isInCourseView } = useCourseDisplayInfo();
+  const { selectedCourseId } = useCourseContext();
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [postCount, setPostCount] = useState(0);
   const [recentActivity, setRecentActivity] = useState<string | null>(null);
 
-  // Fetch recent post count
+  // Fetch recent post count - course-aware
   useEffect(() => {
     const fetchPostCount = async () => {
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      const { count } = await supabase
-        .from('gw_social_posts')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', twentyFourHoursAgo)
-        .eq('is_hidden', false);
       
-      setPostCount(count || 0);
+      if (isInCourseView && selectedCourseId) {
+        // Query course-specific lounge posts
+        const { count } = await supabase
+          .from('gw_course_lounge_posts')
+          .select('*', { count: 'exact', head: true })
+          .eq('course_id', selectedCourseId)
+          .gte('created_at', twentyFourHoursAgo)
+          .eq('is_hidden', false);
+        
+        setPostCount(count || 0);
+      } else {
+        // Query general Glee Lounge posts
+        const { count } = await supabase
+          .from('gw_social_posts')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', twentyFourHoursAgo)
+          .eq('is_hidden', false);
+        
+        setPostCount(count || 0);
+      }
     };
 
     const fetchRecentActivity = async () => {
-      const { data } = await supabase
-        .from('gw_social_posts')
-        .select('content, created_at')
-        .eq('is_hidden', false)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      if (data?.content) {
-        const truncated = data.content.length > 50 
-          ? data.content.substring(0, 50) + '...' 
-          : data.content;
-        setRecentActivity(truncated);
+      if (isInCourseView && selectedCourseId) {
+        // Query course-specific lounge posts
+        const { data } = await supabase
+          .from('gw_course_lounge_posts')
+          .select('content, created_at')
+          .eq('course_id', selectedCourseId)
+          .eq('is_hidden', false)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (data?.content) {
+          const truncated = data.content.length > 50 
+            ? data.content.substring(0, 50) + '...' 
+            : data.content;
+          setRecentActivity(truncated);
+        } else {
+          setRecentActivity(null);
+        }
+      } else {
+        // Query general Glee Lounge posts
+        const { data } = await supabase
+          .from('gw_social_posts')
+          .select('content, created_at')
+          .eq('is_hidden', false)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        if (data?.content) {
+          const truncated = data.content.length > 50 
+            ? data.content.substring(0, 50) + '...' 
+            : data.content;
+          setRecentActivity(truncated);
+        }
       }
     };
 
     fetchPostCount();
     fetchRecentActivity();
-  }, []);
+  }, [isInCourseView, selectedCourseId]);
 
   // Subscribe to presence to see who's in the lounge (but don't track - only lounge page tracks)
   useEffect(() => {
-    const channel = supabase.channel('glee-lounge-presence-viewer', {
-      config: {
-        presence: {
-          key: 'viewer',
-        },
-      },
-    });
-
-    // Subscribe to the actual lounge presence channel to read state
-    const loungeChannel = supabase.channel('glee-lounge-presence');
+    const channelName = isInCourseView && selectedCourseId 
+      ? `course-lounge-presence-${selectedCourseId}`
+      : 'glee-lounge-presence';
+    
+    const loungeChannel = supabase.channel(channelName);
     
     loungeChannel
       .on('presence', { event: 'sync' }, () => {
@@ -89,11 +123,19 @@ export const GleeLoungeStrip = () => {
     return () => {
       supabase.removeChannel(loungeChannel);
     };
-  }, []);
+  }, [isInCourseView, selectedCourseId]);
+
+  const handleClick = () => {
+    if (isInCourseView && selectedCourseId) {
+      navigate(`/course-lounge/${selectedCourseId}`);
+    } else {
+      navigate('/glee-lounge');
+    }
+  };
 
   return (
     <div 
-      onClick={() => navigate('/glee-lounge')}
+      onClick={handleClick}
       className="bg-card border border-border p-3 sm:p-4 cursor-pointer hover:border-primary/50 transition-all group"
     >
       <div className="flex items-center justify-between">
@@ -104,9 +146,9 @@ export const GleeLoungeStrip = () => {
           </div>
           <div>
             <h3 className="font-semibold text-foreground flex items-center gap-2">
-              Glee Lounge
+              {loungeTitle}
               <span className="text-xs px-2 py-0.5 bg-primary/20 text-primary rounded-full">
-                Social Hub
+                {isInCourseView ? 'Course Hub' : 'Social Hub'}
               </span>
             </h3>
             {recentActivity && (

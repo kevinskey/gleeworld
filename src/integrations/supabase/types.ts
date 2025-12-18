@@ -20706,6 +20706,7 @@ export type Database = {
       quick_capture_media: {
         Row: {
           category: string
+          course_id: string | null
           created_at: string
           description: string | null
           duration_seconds: number | null
@@ -20723,6 +20724,7 @@ export type Database = {
         }
         Insert: {
           category: string
+          course_id?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
@@ -20740,6 +20742,7 @@ export type Database = {
         }
         Update: {
           category?: string
+          course_id?: string | null
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
@@ -20755,7 +20758,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "quick_capture_media_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "glee_academy_courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       radio_playlist_tracks: {
         Row: {
