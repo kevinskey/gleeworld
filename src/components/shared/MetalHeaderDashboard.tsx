@@ -622,9 +622,7 @@ export const MetalHeaderDashboard = ({
       <GleeLoungeStrip />
 
       {/* Glee Academy Card - Course shortcuts */}
-      <div className="px-4">
-        <GleeAcademyDashboardCard />
-      </div>
+      <GleeAcademyDashboardCard />
 
       {/* Hero Carousel - Below Glee Academy */}
       <DashboardHeroCarousel />
