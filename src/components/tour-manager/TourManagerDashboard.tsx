@@ -146,8 +146,8 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-left",
                     activeSection === item.value
-                      ? "bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-foreground/70 hover:text-foreground hover:bg-muted/50"
                   )}
                 >
                   <item.icon className="h-4 w-4 flex-shrink-0" />
