@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   MapPin, 
@@ -14,12 +14,10 @@ import {
   Clock, 
   DollarSign,
   Navigation,
-  Car,
-  Plane,
-  Hotel,
-  Calendar,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Trash2,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -29,7 +27,7 @@ interface TourStop {
   venue: string;
   date: string;
   address: string;
-  coordinates?: { lat: number; lng: number };
+  city_order: number;
 }
 
 interface TourRoute {
@@ -54,26 +52,6 @@ interface AIRoutePlannerProps {
 }
 
 export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
-  const [routes, setRoutes] = useState<TourRoute[]>([
-    {
-      id: '1',
-      name: 'Southeast Regional Tour 2024',
-      description: 'Spring tour covering major cities in the Southeast',
-      stops: [
-        { id: '1', city: 'Atlanta, GA', venue: 'Spelman College', date: '2024-04-01', address: '350 Spelman Ln SW, Atlanta, GA 30314' },
-        { id: '2', city: 'Birmingham, AL', venue: 'Birmingham Museum of Art', date: '2024-04-03', address: '2000 Rev Abraham Woods Jr Blvd, Birmingham, AL 35203' },
-        { id: '3', city: 'Nashville, TN', venue: 'Fisk University', date: '2024-04-05', address: '1000 17th Ave N, Nashville, TN 37208' },
-        { id: '4', city: 'Charlotte, NC', venue: 'Johnson C. Smith University', date: '2024-04-07', address: '100 Beatties Ford Rd, Charlotte, NC 28216' }
-      ],
-      status: 'optimized',
-      totalDistance: 892,
-      estimatedDuration: '3 days, 4 hours',
-      estimatedCost: 12500,
-      created_at: '2024-01-15T10:00:00Z'
-    }
-  ]);
-
-  const [selectedRoute, setSelectedRoute] = useState<TourRoute | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [newRoute, setNewRoute] = useState({
     name: '',
@@ -90,6 +68,158 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
   const [isOptimizing, setIsOptimizing] = useState(false);
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Fetch tours with their cities from database
+  const { data: routes = [], isLoading } = useQuery({
+    queryKey: ['tour-routes'],
+    queryFn: async () => {
+      const { data: tours, error } = await supabase
+        .from('gw_tours')
+        .select(`
+          *,
+          gw_tour_cities(*)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (tours || []).map(tour => ({
+        id: tour.id,
+        name: tour.name,
+        description: tour.description || '',
+        stops: (tour.gw_tour_cities || [])
+          .sort((a: any, b: any) => a.city_order - b.city_order)
+          .map((city: any) => ({
+            id: city.id,
+            city: city.city_name + (city.state_code ? `, ${city.state_code}` : ''),
+            venue: city.city_notes || 'TBD',
+            date: city.arrival_date || '',
+            address: '',
+            city_order: city.city_order
+          })),
+        status: tour.status as 'planning' | 'optimized' | 'approved',
+        totalDistance: tour.total_distance || 0,
+        estimatedDuration: tour.estimated_duration || 'Not calculated',
+        estimatedCost: tour.estimated_cost || 0,
+        created_at: tour.created_at
+      })) as TourRoute[];
+    }
+  });
+
+  // Create tour mutation
+  const createTourMutation = useMutation({
+    mutationFn: async (routeData: { name: string; description: string; stops: TourStop[] }) => {
+      // Calculate dates from stops
+      const dates = routeData.stops.filter(s => s.date).map(s => new Date(s.date));
+      const startDate = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : new Date();
+      const endDate = dates.length > 0 ? new Date(Math.max(...dates.map(d => d.getTime()))) : new Date();
+
+      // Create the tour first
+      const { data: tour, error: tourError } = await supabase
+        .from('gw_tours')
+        .insert({
+          name: routeData.name,
+          description: routeData.description,
+          status: 'planning',
+          created_by: user?.id,
+          start_date: startDate.toISOString().split('T')[0],
+          end_date: endDate.toISOString().split('T')[0]
+        })
+        .select()
+        .single();
+
+      if (tourError) throw tourError;
+
+      // Add cities
+      if (routeData.stops.length > 0) {
+        const cities = routeData.stops.map((stop, index) => {
+          const parts = stop.city.split(',').map(p => p.trim());
+          return {
+            tour_id: tour.id,
+            city_name: parts[0],
+            state_code: parts[1] || null,
+            city_order: index + 1,
+            arrival_date: stop.date || null,
+            city_notes: stop.venue
+          };
+        });
+
+        const { error: citiesError } = await supabase
+          .from('gw_tour_cities')
+          .insert(cities);
+
+        if (citiesError) throw citiesError;
+      }
+
+      return tour;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-routes'] });
+      setIsCreating(false);
+      setNewRoute({ name: '', description: '', stops: [] });
+      toast({
+        title: "Route created",
+        description: "Tour route has been saved to the database.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error creating route",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete tour mutation
+  const deleteTourMutation = useMutation({
+    mutationFn: async (tourId: string) => {
+      const { error } = await supabase
+        .from('gw_tours')
+        .delete()
+        .eq('id', tourId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-routes'] });
+      toast({
+        title: "Route deleted",
+        description: "Tour route has been removed.",
+      });
+    }
+  });
+
+  // Optimize route mutation
+  const optimizeMutation = useMutation({
+    mutationFn: async (tourId: string) => {
+      // Simulate optimization - in production would call Google Maps API
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const optimizedData = {
+        status: 'optimized',
+        total_distance: Math.floor(Math.random() * 1000) + 500,
+        estimated_duration: `${Math.floor(Math.random() * 5) + 2} days, ${Math.floor(Math.random() * 8) + 1} hours`,
+        estimated_cost: Math.floor(Math.random() * 10000) + 8000
+      };
+
+      const { error } = await supabase
+        .from('gw_tours')
+        .update(optimizedData)
+        .eq('id', tourId);
+
+      if (error) throw error;
+      return optimizedData;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tour-routes'] });
+      toast({
+        title: "Route optimized",
+        description: "AI has optimized the route for minimum travel time and cost.",
+      });
+    }
+  });
 
   const addCityInput = () => {
     setMultipleCities(prev => [...prev, '']);
@@ -108,22 +238,22 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
   const addStop = () => {
     const validCities = multipleCities.filter(city => city.trim() !== '');
     
-    if (validCities.length === 0 || !currentStop.venue || !currentStop.date) {
+    if (validCities.length === 0) {
       toast({
         title: "Missing information",
-        description: "Please fill in at least one city, venue, and date.",
+        description: "Please enter at least one city.",
         variant: "destructive"
       });
       return;
     }
 
-    // Create stops for each city
-    const newStops: TourStop[] = validCities.map(city => ({
-      id: `${Date.now()}-${Math.random()}`,
+    const newStops: TourStop[] = validCities.map((city, idx) => ({
+      id: `${Date.now()}-${idx}`,
       city: city.trim(),
-      venue: currentStop.venue,
+      venue: currentStop.venue || 'TBD',
       date: currentStop.date,
-      address: currentStop.address
+      address: currentStop.address,
+      city_order: newRoute.stops.length + idx + 1
     }));
 
     setNewRoute(prev => ({
@@ -131,7 +261,6 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
       stops: [...prev.stops, ...newStops]
     }));
 
-    // Reset form
     setCurrentStop({ city: '', venue: '', date: '', address: '' });
     setMultipleCities(['']);
   };
@@ -143,42 +272,6 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
     }));
   };
 
-  const optimizeRoute = async (routeId?: string) => {
-    setIsOptimizing(true);
-    
-    try {
-      // Simulate AI optimization process
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      if (routeId) {
-        setRoutes(prev => prev.map(route => 
-          route.id === routeId 
-            ? { 
-                ...route, 
-                status: 'optimized',
-                totalDistance: Math.floor(Math.random() * 1000) + 500,
-                estimatedDuration: `${Math.floor(Math.random() * 5) + 2} days, ${Math.floor(Math.random() * 8) + 1} hours`,
-                estimatedCost: Math.floor(Math.random() * 10000) + 8000
-              }
-            : route
-        ));
-      }
-
-      toast({
-        title: "Route optimized",
-        description: "AI has optimized the route for minimum travel time and cost.",
-      });
-    } catch (error) {
-      toast({
-        title: "Optimization failed",
-        description: "Could not optimize route. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsOptimizing(false);
-    }
-  };
-
   const createRoute = () => {
     if (!newRoute.name || newRoute.stops.length < 2) {
       toast({
@@ -188,25 +281,7 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
       });
       return;
     }
-
-    const route: TourRoute = {
-      id: Date.now().toString(),
-      ...newRoute,
-      status: 'planning',
-      totalDistance: 0,
-      estimatedDuration: 'Not calculated',
-      estimatedCost: 0,
-      created_at: new Date().toISOString()
-    };
-
-    setRoutes(prev => [route, ...prev]);
-    setIsCreating(false);
-    setNewRoute({ name: '', description: '', stops: [] });
-
-    toast({
-      title: "Route created",
-      description: "Tour route has been created successfully.",
-    });
+    createTourMutation.mutate(newRoute);
   };
 
   const getStatusColor = (status: TourRoute['status']) => {
@@ -235,6 +310,14 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header with Create Button */}
@@ -242,7 +325,7 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
         <div>
           <h3 className="text-lg font-semibold">AI Route Planning</h3>
           <p className="text-sm text-muted-foreground">
-            Plan optimal tour routes using AI-powered optimization with Google Maps integration
+            Plan optimal tour routes using AI-powered optimization
           </p>
         </div>
         <Dialog open={isCreating} onOpenChange={setIsCreating}>
@@ -320,7 +403,7 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                 {/* Other inputs */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Venue</label>
+                    <label className="text-sm font-medium">Venue (optional)</label>
                     <Input
                       placeholder="Performance venue"
                       value={currentStop.venue}
@@ -328,22 +411,13 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Date</label>
+                    <label className="text-sm font-medium">Date (optional)</label>
                     <Input
                       type="date"
                       value={currentStop.date}
                       onChange={(e) => setCurrentStop(prev => ({ ...prev, date: e.target.value }))}
                     />
                   </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Address</label>
-                  <Input
-                    placeholder="Full address (will be applied to all cities)"
-                    value={currentStop.address}
-                    onChange={(e) => setCurrentStop(prev => ({ ...prev, address: e.target.value }))}
-                  />
                 </div>
                 
                 <Button onClick={addStop} variant="outline" size="sm">
@@ -361,8 +435,8 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                         <div className="flex items-center gap-3">
                           <Badge variant="outline">{index + 1}</Badge>
                           <div>
-                            <p className="font-medium text-sm">{stop.city} - {stop.venue}</p>
-                            <p className="text-xs text-muted-foreground">{new Date(stop.date).toLocaleDateString()}</p>
+                            <p className="font-medium text-sm">{stop.city} {stop.venue !== 'TBD' && `- ${stop.venue}`}</p>
+                            {stop.date && <p className="text-xs text-muted-foreground">{new Date(stop.date).toLocaleDateString()}</p>}
                           </div>
                         </div>
                         <Button 
@@ -382,14 +456,36 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                 <Button variant="outline" onClick={() => setIsCreating(false)}>
                   Cancel
                 </Button>
-                <Button onClick={createRoute}>
-                  Create Route
+                <Button onClick={createRoute} disabled={createTourMutation.isPending}>
+                  {createTourMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    'Create Route'
+                  )}
                 </Button>
               </div>
             </div>
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Empty State */}
+      {routes.length === 0 && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Route className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">No tour routes yet</h3>
+            <p className="text-muted-foreground mb-4">Create your first tour route to get started</p>
+            <Button onClick={() => setIsCreating(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Route
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Routes List */}
       <div className="grid gap-6">
@@ -401,10 +497,20 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                   <CardTitle className="text-lg">{route.name}</CardTitle>
                   <p className="text-sm text-muted-foreground">{route.description}</p>
                 </div>
-                <Badge className={`${getStatusColor(route.status)} gap-1`}>
-                  {getStatusIcon(route.status)}
-                  {route.status.charAt(0).toUpperCase() + route.status.slice(1)}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className={`${getStatusColor(route.status)} gap-1`}>
+                    {getStatusIcon(route.status)}
+                    {route.status.charAt(0).toUpperCase() + route.status.slice(1)}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteTourMutation.mutate(route.id)}
+                    disabled={deleteTourMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -429,29 +535,36 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
               </div>
 
               {/* Route Stops */}
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm">Tour Stops</h4>
-                <div className="grid gap-2">
-                  {route.stops.map((stop, index) => (
-                    <div key={stop.id} className="flex items-center gap-3 p-2 bg-muted rounded">
-                      <Badge variant="outline" className="text-xs">
-                        {index + 1}
-                      </Badge>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{stop.city}</span>
-                          <span className="text-xs text-muted-foreground">•</span>
-                          <span className="text-sm">{stop.venue}</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>{new Date(stop.date).toLocaleDateString()}</span>
-                          <span>{stop.address}</span>
+              {route.stops.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm">Tour Stops</h4>
+                  <div className="grid gap-2">
+                    {route.stops.map((stop, index) => (
+                      <div key={stop.id} className="flex items-center gap-3 p-2 bg-muted rounded">
+                        <Badge variant="outline" className="text-xs">
+                          {index + 1}
+                        </Badge>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm">{stop.city}</span>
+                            {stop.venue && stop.venue !== 'TBD' && (
+                              <>
+                                <span className="text-xs text-muted-foreground">•</span>
+                                <span className="text-sm">{stop.venue}</span>
+                              </>
+                            )}
+                          </div>
+                          {stop.date && (
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(stop.date).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex justify-between items-center pt-4 border-t">
@@ -462,24 +575,33 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
                   {route.status === 'planning' && (
                     <Button 
                       size="sm" 
-                      onClick={() => optimizeRoute(route.id)}
-                      disabled={isOptimizing}
+                      onClick={() => optimizeMutation.mutate(route.id)}
+                      disabled={optimizeMutation.isPending}
                     >
-                      <Zap className="h-4 w-4 mr-1" />
-                      {isOptimizing ? 'Optimizing...' : 'AI Optimize'}
+                      {optimizeMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Zap className="h-4 w-4 mr-1" />
+                      )}
+                      {optimizeMutation.isPending ? 'Optimizing...' : 'AI Optimize'}
                     </Button>
                   )}
                   {route.status === 'optimized' && (
-                    <>
-                      <Button variant="outline" size="sm">
-                        <Car className="h-4 w-4 mr-1" />
-                        View Map
-                      </Button>
-                      <Button size="sm">
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-                    </>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={async () => {
+                        await supabase
+                          .from('gw_tours')
+                          .update({ status: 'approved' })
+                          .eq('id', route.id);
+                        queryClient.invalidateQueries({ queryKey: ['tour-routes'] });
+                        toast({ title: "Route approved" });
+                      }}
+                    >
+                      <CheckCircle className="h-4 w-4 mr-1" />
+                      Approve Route
+                    </Button>
                   )}
                 </div>
               </div>
@@ -487,20 +609,6 @@ export const AIRoutePlanner = ({ user }: AIRoutePlannerProps) => {
           </Card>
         ))}
       </div>
-
-      {routes.length === 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <Route className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No routes planned yet</h3>
-              <p className="text-muted-foreground">
-                Create your first tour route to get started with AI-powered planning.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

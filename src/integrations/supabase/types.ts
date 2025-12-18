@@ -15944,39 +15944,51 @@ export type Database = {
           budget: number | null
           created_at: string | null
           created_by: string
+          description: string | null
           end_date: string
+          estimated_cost: number | null
+          estimated_duration: string | null
           id: string
           name: string
           notes: string | null
           number_of_singers: number | null
           start_date: string
           status: string | null
+          total_distance: number | null
           updated_at: string | null
         }
         Insert: {
           budget?: number | null
           created_at?: string | null
           created_by: string
+          description?: string | null
           end_date: string
+          estimated_cost?: number | null
+          estimated_duration?: string | null
           id?: string
           name: string
           notes?: string | null
           number_of_singers?: number | null
           start_date: string
           status?: string | null
+          total_distance?: number | null
           updated_at?: string | null
         }
         Update: {
           budget?: number | null
           created_at?: string | null
           created_by?: string
+          description?: string | null
           end_date?: string
+          estimated_cost?: number | null
+          estimated_duration?: string | null
           id?: string
           name?: string
           notes?: string | null
           number_of_singers?: number | null
           start_date?: string
           status?: string | null
+          total_distance?: number | null
           updated_at?: string | null
         }
         Relationships: []
