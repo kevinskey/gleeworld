@@ -133,15 +133,18 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-2 md:p-6">
+      <DialogContent 
+        className="max-w-5xl max-h-[95vh] overflow-y-auto p-2 md:p-6"
+        style={{ backgroundColor: '#ffffff', color: '#1a1a1a' }}
+      >
         <DialogHeader className="px-4 md:px-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg md:text-xl">{enhancedContract.title}</DialogTitle>
+            <DialogTitle className="text-lg md:text-xl" style={{ color: '#1a1a1a' }}>{enhancedContract.title}</DialogTitle>
             <Badge className={getStatusColor(enhancedContract.status)}>
               {getStatusText(enhancedContract.status)}
             </Badge>
           </div>
-          <DialogDescription className="text-sm md:text-base">
+          <DialogDescription className="text-sm md:text-base" style={{ color: '#4b5563' }}>
             Created: {new Date(enhancedContract.created_at).toLocaleDateString()}
             {enhancedContract.updated_at && enhancedContract.updated_at !== enhancedContract.created_at && (
               <span className="ml-2 md:ml-4">
@@ -151,7 +154,7 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
           </DialogDescription>
         </DialogHeader>
         
-        <div className="mt-4">
+        <div className="mt-4" style={{ backgroundColor: '#ffffff' }}>
           <ResponsiveContractViewerContent contract={enhancedContract} />
         </div>
       </DialogContent>

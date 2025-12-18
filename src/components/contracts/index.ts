@@ -3,6 +3,8 @@ export { ContractCard } from './ContractCard';
 export { ContractList } from './ContractList';
 export { ContractStats } from './ContractStats';
 export { ContractFilters } from './ContractFilters';
+export { ElectronicSignature } from './ElectronicSignature';
+export type { SignatureData } from './ElectronicSignature';
 
 // Re-export types for convenience
 export type {

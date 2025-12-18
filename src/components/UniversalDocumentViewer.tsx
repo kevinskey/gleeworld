@@ -183,28 +183,34 @@ export const UniversalDocumentViewer = ({
         `
       }} />
       
-      <div className={`
-        max-w-4xl w-full mx-auto bg-white shadow-lg rounded-lg overflow-hidden
-        lg:max-w-4xl md:max-w-[90vw] sm:max-w-[95vw] sm:rounded-md
-        print:max-w-none print:w-[8.5in] print:shadow-none print:rounded-none
-        ${className}
-      `}>
+      <div 
+        className={`
+          max-w-4xl w-full mx-auto shadow-lg rounded-lg overflow-hidden
+          lg:max-w-4xl md:max-w-[90vw] sm:max-w-[95vw] sm:rounded-md
+          print:max-w-none print:w-[8.5in] print:shadow-none print:rounded-none
+          ${className}
+        `}
+        style={{ backgroundColor: '#ffffff', color: '#1a1a1a' }}
+      >
         {(title || subtitle) && (
-          <div className="border-b border-gray-200 p-4 md:p-6">
+          <div className="border-b p-4 md:p-6" style={{ borderColor: '#e5e7eb', backgroundColor: '#ffffff' }}>
             {title && (
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl md:text-2xl font-bold mb-2" style={{ color: '#111827' }}>
                 {title}
               </h1>
             )}
             {subtitle && (
-              <p className="text-sm md:text-base text-gray-600">
+              <p className="text-sm md:text-base" style={{ color: '#4b5563' }}>
                 {subtitle}
               </p>
             )}
           </div>
         )}
         
-        <div className="p-4 md:p-6 lg:p-8 print:p-12 max-w-none overflow-x-auto">
+        <div 
+          className="p-4 md:p-6 lg:p-8 print:p-12 max-w-none overflow-x-auto"
+          style={{ backgroundColor: '#ffffff' }}
+        >
           <div className={`
             universal-document-viewer 
             doc-type-${documentType}
