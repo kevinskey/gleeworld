@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 import { 
   Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, 
-  ClipboardList, Shirt, DollarSign, UserCheck
+  ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X
 } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
@@ -33,237 +35,216 @@ interface TourManagerDashboardProps {
   };
 }
 
+const navItems = [
+  { value: 'booking-requests', label: 'Requests', icon: Mail },
+  { value: 'contracts', label: 'Contracts', icon: FileText },
+  { value: 'hosts', label: 'Hosts', icon: Building2 },
+  { value: 'tour-dates', label: 'Dates', icon: Calendar },
+  { value: 'roster', label: 'Roster', icon: UserCheck },
+  { value: 'route-planning', label: 'Routes', icon: MapPin },
+  { value: 'rooming', label: 'Rooms', icon: Bed },
+  { value: 'bus-buddies', label: 'Bus', icon: Bus },
+  { value: 'documents', label: 'Docs', icon: ClipboardList },
+  { value: 'wardrobe', label: 'Wardrobe', icon: Shirt },
+];
+
+const contentConfig: Record<string, { title: string; description: string }> = {
+  'booking-requests': { title: 'Requests', description: 'Manage incoming performance requests and inquiries' },
+  'contracts': { title: 'Contracts', description: 'Create, manage, and track contract signatures' },
+  'hosts': { title: 'Hosts', description: 'Manage performance venues and host relationships' },
+  'tour-dates': { title: 'Dates', description: 'View all tour dates, venues, and locations' },
+  'roster': { title: 'Roster', description: 'Manage which members are going on tour' },
+  'route-planning': { title: 'Routes', description: 'Optimize tour routes with intelligent planning' },
+  'rooming': { title: 'Rooms', description: 'View and manage hotel room assignments' },
+  'bus-buddies': { title: 'Bus', description: 'Assign bus buddies and seating arrangements' },
+  'documents': { title: 'Documents', description: 'Manage important tour documentation' },
+  'wardrobe': { title: 'Wardrobe', description: 'Track uniforms, costumes, and wardrobe items' },
+};
+
 export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('booking-requests');
+  const [activeSection, setActiveSection] = useState('booking-requests');
   const [contractEventData, setContractEventData] = useState<any>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleGenerateContract = (event: any) => {
     setContractEventData(event);
-    setActiveTab('contracts');
+    setActiveSection('contracts');
   };
 
-  const tabs = [
-    { value: 'booking-requests', label: 'Requests', icon: Mail },
-    { value: 'contracts', label: 'Contracts', icon: FileText },
-    { value: 'hosts', label: 'Hosts', icon: Building2 },
-    { value: 'tour-dates', label: 'Dates', icon: Calendar },
-    { value: 'roster', label: 'Roster', icon: UserCheck },
-    { value: 'route-planning', label: 'Routes', icon: MapPin },
-    { value: 'rooming', label: 'Rooms', icon: Bed },
-    { value: 'crew', label: 'Crew', icon: Package },
-    { value: 'bus-buddies', label: 'Bus', icon: Bus },
-    { value: 'documents', label: 'Docs', icon: ClipboardList },
-    { value: 'wardrobe', label: 'Wardrobe', icon: Shirt },
-    { value: 'stipends', label: 'Stipends', icon: DollarSign },
-  ];
+  const currentContent = contentConfig[activeSection] || contentConfig['booking-requests'];
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'booking-requests':
+        return <BookingRequestManager user={user} />;
+      case 'contracts':
+        return <ContractManager user={user} />;
+      case 'hosts':
+        return <HostManager user={user} />;
+      case 'tour-dates':
+        return <TourDatesSection onGenerateContract={handleGenerateContract} />;
+      case 'roster':
+        return <TourRosterSection />;
+      case 'route-planning':
+        return <AIRoutePlanner user={user} />;
+      case 'rooming':
+        return <RoomingAssignmentsSection />;
+      case 'bus-buddies':
+        return <BusBuddiesSection />;
+      case 'documents':
+        return <TourDocumentsSection />;
+      case 'wardrobe':
+        return <WardrobeMistressHub />;
+      default:
+        return <BookingRequestManager user={user} />;
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Clean Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-border">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Tour Manager</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage tours, contracts, and logistics</p>
-          </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="gap-2"
-            onClick={() => navigate('/bus-information')}
-          >
-            <Bus className="h-4 w-4" />
-            Bus Info
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background flex">
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 lg:hidden"
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+      >
+        {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+      </Button>
 
-        {/* Clean Tabs Navigation */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <div className="bg-card border border-border rounded-lg p-2">
-            <TabsList className="flex flex-wrap gap-1 bg-transparent h-auto w-full justify-start">
-              {tabs.map((tab) => (
-                <TabsTrigger 
-                  key={tab.value}
-                  value={tab.value} 
-                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-colors"
+      {/* Sidebar */}
+      <aside 
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-56 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        <div className="flex flex-col h-full">
+          {/* Sidebar Header */}
+          <div className="p-4 border-b border-border">
+            <div className="flex items-center gap-2">
+              <div className="flex gap-1">
+                <span className="w-3 h-3 rounded-full bg-red-400" />
+                <span className="w-3 h-3 rounded-full bg-amber-400" />
+                <span className="w-3 h-3 rounded-full bg-green-400" />
+              </div>
+              <h1 className="text-base font-semibold text-foreground ml-2">Tour Manager</h1>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <ScrollArea className="flex-1 py-2">
+            <nav className="px-2 space-y-0.5">
+              {navItems.map((item) => (
+                <button
+                  key={item.value}
+                  onClick={() => {
+                    setActiveSection(item.value);
+                    setSidebarOpen(false);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-left",
+                    activeSection === item.value
+                      ? "bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-100"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
                 >
-                  <tab.icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </TabsTrigger>
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </button>
               ))}
-            </TabsList>
+            </nav>
+          </ScrollArea>
+
+          {/* Sidebar Footer */}
+          <div className="p-3 border-t border-border">
+            <button className="w-full flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground hover:text-foreground rounded-md hover:bg-muted/50 transition-colors">
+              <Search className="h-4 w-4" />
+              <span>Search</span>
+            </button>
           </div>
+        </div>
+      </aside>
 
-          {/* Tab Content - Clean Cards */}
-          <TabsContent value="booking-requests" className="space-y-6">
-            <ContentCard 
-              title="Booking Requests" 
-              description="Manage incoming performance requests and bookings"
-              icon={Mail}
-            >
-              <BookingRequestManager user={user} />
-            </ContentCard>
-          </TabsContent>
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-          <TabsContent value="hosts" className="space-y-6">
-            <ContentCard 
-              title="Host Database" 
-              description="Manage performance venues, contacts, and host relationships"
-              icon={Building2}
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-20 bg-background border-b border-border">
+          <div className="flex items-center justify-between px-4 lg:px-6 h-14">
+            <div className="flex items-center gap-4 pl-10 lg:pl-0">
+              <div className="relative w-64 hidden sm:block">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search" 
+                  className="pl-9 h-9 bg-muted/30 border-0 focus-visible:ring-1"
+                />
+              </div>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 text-sm"
+              onClick={() => navigate('/bus-information')}
             >
-              <HostManager user={user} />
-            </ContentCard>
-          </TabsContent>
+              <Bus className="h-4 w-4" />
+              <span className="hidden sm:inline">Bus Info</span>
+            </Button>
+          </div>
+        </header>
 
-          <TabsContent value="correspondence" className="space-y-6">
-            <ContentCard 
-              title="Public Correspondence" 
-              description="Manage communications with organizations and media"
-              icon={Users}
-            >
-              <TourCorrespondence user={user} />
-            </ContentCard>
-          </TabsContent>
+        {/* Content Area */}
+        <div className="flex-1 overflow-auto">
+          <div className="p-4 lg:p-6 max-w-5xl">
+            {/* Section Header */}
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-foreground">{currentContent.title}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{currentContent.description}</p>
+            </div>
 
-          <TabsContent value="contracts" className="space-y-6">
-            <ContentCard 
-              title="Performer Contracts" 
-              description="Create, manage, and track contract signatures"
-              icon={FileText}
-            >
-              <ContractManager user={user} />
-            </ContentCard>
-          </TabsContent>
+            {/* Content */}
+            <div className="space-y-4">
+              {renderContent()}
+            </div>
+          </div>
+        </div>
+      </main>
 
-          <TabsContent value="route-planning" className="space-y-6">
-            <ContentCard 
-              title="Route Planning" 
-              description="Optimize tour routes with intelligent AI planning"
-              icon={MapPin}
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-30">
+        <div className="flex items-center justify-around h-16 px-2">
+          {navItems.slice(0, 4).map((item) => (
+            <button
+              key={item.value}
+              onClick={() => setActiveSection(item.value)}
+              className={cn(
+                "flex flex-col items-center gap-1 px-3 py-2 rounded-md transition-colors",
+                activeSection === item.value
+                  ? "text-primary"
+                  : "text-muted-foreground"
+              )}
             >
-              <AIRoutePlanner user={user} />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="roster" className="space-y-6">
-            <ContentCard 
-              title="Tour Roster" 
-              description="Manage which members are going on tour"
-              icon={UserCheck}
-            >
-              <TourRosterSection />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="tour-dates" className="space-y-6">
-            <ContentCard 
-              title="Tour Schedule" 
-              description="View all tour dates, venues, and locations"
-              icon={Calendar}
-            >
-              <TourDatesSection onGenerateContract={handleGenerateContract} />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="rooming" className="space-y-6">
-            <ContentCard 
-              title="Rooming Assignments" 
-              description="View and manage hotel room assignments"
-              icon={Bed}
-            >
-              <RoomingAssignmentsSection />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="crew" className="space-y-6">
-            <ContentCard 
-              title="Crew Assignments" 
-              description="Manage setup, merch, and technical crews"
-              icon={Package}
-            >
-              <CrewAssignmentsSection />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="bus-buddies" className="space-y-6">
-            <ContentCard 
-              title="Bus Seating" 
-              description="Assign bus buddies and seating arrangements"
-              icon={Bus}
-            >
-              <BusBuddiesSection />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="documents" className="space-y-6">
-            <ContentCard 
-              title="Tour Documents" 
-              description="Manage important tour documentation"
-              icon={ClipboardList}
-            >
-              <TourDocumentsSection />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="live-performances" className="space-y-6">
-            <ContentCard 
-              title="Live Performances" 
-              description="Track and manage live performance recordings"
-              icon={Users}
-            >
-              <LivePerformancesSection />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="wardrobe" className="space-y-6">
-            <ContentCard 
-              title="Wardrobe Management" 
-              description="Track uniforms, costumes, and wardrobe items"
-              icon={Shirt}
-            >
-              <WardrobeMistressHub />
-            </ContentCard>
-          </TabsContent>
-
-          <TabsContent value="stipends" className="space-y-6">
-            <ContentCard 
-              title="Tour Stipends" 
-              description="Manage tour payments and stipends"
-              icon={DollarSign}
-            >
-              <TourStipends />
-            </ContentCard>
-          </TabsContent>
-        </Tabs>
-      </div>
+              <item.icon className="h-5 w-5" />
+              <span className="text-xs font-medium">{item.label}</span>
+            </button>
+          ))}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex flex-col items-center gap-1 px-3 py-2 text-muted-foreground"
+          >
+            <Menu className="h-5 w-5" />
+            <span className="text-xs font-medium">More</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };
-
-// Clean Content Card Component
-interface ContentCardProps {
-  title: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  children: React.ReactNode;
-}
-
-const ContentCard = ({ title, description, icon: Icon, children }: ContentCardProps) => (
-  <div className="bg-card border border-border rounded-lg">
-    <div className="p-6 border-b border-border">
-      <div className="flex items-start gap-3">
-        <div className="p-2 bg-muted rounded-lg">
-          <Icon className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
-        </div>
-      </div>
-    </div>
-    <div className="p-6">
-      {children}
-    </div>
-  </div>
-);
