@@ -271,7 +271,7 @@ export const DirectMessaging = () => {
                 }
               }}
               disabled={sending}
-              className="flex-1 min-w-0 h-10 resize-none text-[hsl(var(--message-received-fg))]"
+              className="flex-1 min-w-0 h-10 resize-none bg-background !text-[hsl(var(--message-received-fg))] placeholder:text-muted-foreground"
             />
             <Button 
               onClick={handleSendMessage}
