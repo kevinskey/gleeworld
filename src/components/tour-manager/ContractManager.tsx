@@ -58,26 +58,26 @@ export const ContractManager = ({ user, initialContractData }: ContractManagerPr
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-lg font-semibold">Tour Contracts</h3>
-          <p className="text-sm text-muted-foreground">
+          <h3 className="text-base font-semibold">Tour Contracts</h3>
+          <p className="text-xs text-muted-foreground">
             Manage contracts for performers, venues, and vendors
           </p>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="tour-template" className="flex items-center gap-1">
-            <Route className="h-4 w-4" />
-            <span className="hidden sm:inline">Tour Template</span>
+        <TabsList className="flex flex-wrap gap-1 bg-muted/50 p-1 h-auto">
+          <TabsTrigger value="tour-template" className="flex items-center gap-1.5 text-xs px-3 py-1.5">
+            <Route className="h-3.5 w-3.5" />
+            <span>Tour Template</span>
           </TabsTrigger>
-          <TabsTrigger value="all">All Contracts</TabsTrigger>
-          <TabsTrigger value="user">My Contracts</TabsTrigger>
-          <TabsTrigger value="templates">Templates</TabsTrigger>
-          <TabsTrigger value="create">Create New</TabsTrigger>
+          <TabsTrigger value="all" className="text-xs px-3 py-1.5">All Contracts</TabsTrigger>
+          <TabsTrigger value="user" className="text-xs px-3 py-1.5">My Contracts</TabsTrigger>
+          <TabsTrigger value="templates" className="text-xs px-3 py-1.5">Templates</TabsTrigger>
+          <TabsTrigger value="create" className="text-xs px-3 py-1.5">Create New</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tour-template" className="space-y-6">

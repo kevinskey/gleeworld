@@ -290,127 +290,135 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
   const v = variables;
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
         <div>
-          <h3 className="text-xl font-semibold flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" />
+          <h3 className="text-base font-semibold flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" />
             Tour Performance Agreement
           </h3>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-0.5">
             Official Spelman College Glee Club contract format
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleCopyContract}>
-            {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-            {copied ? 'Copied!' : 'Copy'}
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleCopyContract}>
+            {copied ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
+            {copied ? 'Copied' : 'Copy'}
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDownloadContract}>
-            <Download className="h-4 w-4 mr-2" />
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={handleDownloadContract}>
+            <Download className="h-3.5 w-3.5 mr-1" />
             Download
           </Button>
-          <Button onClick={handleSaveContract} disabled={isSaving}>
-            {isSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileText className="h-4 w-4 mr-2" />}
+          <Button size="sm" className="h-8 text-xs" onClick={handleSaveContract} disabled={isSaving}>
+            {isSaving ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <FileText className="h-3.5 w-3.5 mr-1" />}
             Save Contract
           </Button>
         </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="form" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
+        <TabsList className="grid w-full grid-cols-2 h-9">
+          <TabsTrigger value="form" className="flex items-center gap-1.5 text-xs">
+            <FileText className="h-3.5 w-3.5" />
             Edit Fields
           </TabsTrigger>
-          <TabsTrigger value="preview" className="flex items-center gap-2">
-            <Eye className="h-4 w-4" />
+          <TabsTrigger value="preview" className="flex items-center gap-1.5 text-xs">
+            <Eye className="h-3.5 w-3.5" />
             Preview Contract
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="form" className="space-y-6 mt-6">
+        <TabsContent value="form" className="space-y-4 mt-4">
           {/* Host Information */}
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Building className="h-5 w-5 text-blue-500" />
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Building className="h-4 w-4 text-blue-500" />
                 Host Information
               </CardTitle>
-              <CardDescription>Organization hosting the performance</CardDescription>
+              <CardDescription className="text-xs">Organization hosting the performance</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="host-name">Host Organization Name *</Label>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4 pb-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="host-name" className="text-xs font-medium">Host Organization Name *</Label>
                 <Input
                   id="host-name"
                   value={v.HOST_NAME}
                   onChange={(e) => handleVariableChange('HOST_NAME', e.target.value)}
                   placeholder="e.g., Huntsville Area Chapter of the NAASC"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="host-location">Location (City, State) *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="host-location" className="text-xs font-medium">Location (City, State) *</Label>
                 <Input
                   id="host-location"
                   value={v.HOST_LOCATION}
                   onChange={(e) => handleVariableChange('HOST_LOCATION', e.target.value)}
                   placeholder="e.g., Huntsville, Alabama"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="signatory-name">Signatory Name</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="signatory-name" className="text-xs font-medium">Signatory Name</Label>
                 <Input
                   id="signatory-name"
                   value={v.HOST_SIGNATORY_NAME}
                   onChange={(e) => handleVariableChange('HOST_SIGNATORY_NAME', e.target.value)}
                   placeholder="Person who will sign the contract"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="signatory-title">Signatory Title</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="signatory-title" className="text-xs font-medium">Signatory Title</Label>
                 <Input
                   id="signatory-title"
                   value={v.HOST_SIGNATORY_TITLE}
                   onChange={(e) => handleVariableChange('HOST_SIGNATORY_TITLE', e.target.value)}
                   placeholder="e.g., Chapter President"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="department" className="text-xs font-medium">Department</Label>
                 <Input
                   id="department"
                   value={v.HOST_DEPARTMENT}
                   onChange={(e) => handleVariableChange('HOST_DEPARTMENT', e.target.value)}
                   placeholder="e.g., Special Events"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-name">Contact Name</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="contact-name" className="text-xs font-medium">Contact Name</Label>
                 <Input
                   id="contact-name"
                   value={v.HOST_CONTACT_NAME}
                   onChange={(e) => handleVariableChange('HOST_CONTACT_NAME', e.target.value)}
                   placeholder="Primary contact person"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-email">Contact Email</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="contact-email" className="text-xs font-medium">Contact Email</Label>
                 <Input
                   id="contact-email"
                   type="email"
                   value={v.HOST_CONTACT_EMAIL}
                   onChange={(e) => handleVariableChange('HOST_CONTACT_EMAIL', e.target.value)}
                   placeholder="contact@organization.com"
+                  className="h-8 text-sm"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-phone">Contact Phone</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="contact-phone" className="text-xs font-medium">Contact Phone</Label>
                 <Input
                   id="contact-phone"
                   value={v.HOST_CONTACT_PHONE}
                   onChange={(e) => handleVariableChange('HOST_CONTACT_PHONE', e.target.value)}
                   placeholder="(555) 123-4567"
+                  className="h-8 text-sm"
                 />
               </div>
             </CardContent>
@@ -418,158 +426,97 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
 
           {/* Performance Details */}
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Music className="h-5 w-5 text-purple-500" />
-                Article 1: Performance Details
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Music className="h-4 w-4 text-purple-500" />
+                Performance Details
               </CardTitle>
-              <CardDescription>Date, time, and venue information</CardDescription>
+              <CardDescription className="text-xs">Date, time, and venue</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="performance-date">Performance Date *</Label>
-                <Input
-                  id="performance-date"
-                  value={v.PERFORMANCE_DATE}
-                  onChange={(e) => handleVariableChange('PERFORMANCE_DATE', e.target.value)}
-                  placeholder="e.g., March 7th, 2025"
-                />
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3 px-4 pb-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="performance-date" className="text-xs font-medium">Performance Date *</Label>
+                <Input id="performance-date" value={v.PERFORMANCE_DATE} onChange={(e) => handleVariableChange('PERFORMANCE_DATE', e.target.value)} placeholder="e.g., March 7th, 2025" className="h-8 text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="start-time">Start Time *</Label>
-                <Input
-                  id="start-time"
-                  value={v.START_TIME}
-                  onChange={(e) => handleVariableChange('START_TIME', e.target.value)}
-                  placeholder="e.g., 4:00 PM"
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="start-time" className="text-xs font-medium">Start Time *</Label>
+                <Input id="start-time" value={v.START_TIME} onChange={(e) => handleVariableChange('START_TIME', e.target.value)} placeholder="e.g., 4:00 PM" className="h-8 text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="end-time">End Time *</Label>
-                <Input
-                  id="end-time"
-                  value={v.END_TIME}
-                  onChange={(e) => handleVariableChange('END_TIME', e.target.value)}
-                  placeholder="e.g., 5:30 PM"
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="end-time" className="text-xs font-medium">End Time *</Label>
+                <Input id="end-time" value={v.END_TIME} onChange={(e) => handleVariableChange('END_TIME', e.target.value)} placeholder="e.g., 5:30 PM" className="h-8 text-sm" />
               </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="venue-name">Venue Name *</Label>
-                <Input
-                  id="venue-name"
-                  value={v.VENUE_NAME}
-                  onChange={(e) => handleVariableChange('VENUE_NAME', e.target.value)}
-                  placeholder="e.g., Church Street Cumberland Presbyterian Church"
-                />
+              <div className="space-y-1.5 md:col-span-2">
+                <Label htmlFor="venue-name" className="text-xs font-medium">Venue Name *</Label>
+                <Input id="venue-name" value={v.VENUE_NAME} onChange={(e) => handleVariableChange('VENUE_NAME', e.target.value)} placeholder="e.g., Church Street Cumberland Presbyterian Church" className="h-8 text-sm" />
               </div>
-              <div className="space-y-2 md:col-span-3">
-                <Label htmlFor="venue-address">Venue Address *</Label>
-                <Input
-                  id="venue-address"
-                  value={v.VENUE_ADDRESS}
-                  onChange={(e) => handleVariableChange('VENUE_ADDRESS', e.target.value)}
-                  placeholder="e.g., 228 Church Street NW, Huntsville, AL 35801"
-                />
+              <div className="space-y-1.5 md:col-span-3">
+                <Label htmlFor="venue-address" className="text-xs font-medium">Venue Address *</Label>
+                <Input id="venue-address" value={v.VENUE_ADDRESS} onChange={(e) => handleVariableChange('VENUE_ADDRESS', e.target.value)} placeholder="e.g., 228 Church Street NW, Huntsville, AL 35801" className="h-8 text-sm" />
               </div>
             </CardContent>
           </Card>
 
           {/* Financial Terms */}
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-green-500" />
-                Article 2: Financial Terms
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-green-500" />
+                Financial Terms
               </CardTitle>
-              <CardDescription>Honorarium and payment details</CardDescription>
+              <CardDescription className="text-xs">Honorarium and payment</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="honorarium">Honorarium Amount (USD) *</Label>
-                <Input
-                  id="honorarium"
-                  value={v.HONORARIUM_AMOUNT}
-                  onChange={(e) => handleVariableChange('HONORARIUM_AMOUNT', e.target.value)}
-                  placeholder="e.g., 5,000"
-                />
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4 pb-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="honorarium" className="text-xs font-medium">Honorarium (USD) *</Label>
+                <Input id="honorarium" value={v.HONORARIUM_AMOUNT} onChange={(e) => handleVariableChange('HONORARIUM_AMOUNT', e.target.value)} placeholder="e.g., 5,000" className="h-8 text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="deposit">Deposit Amount (50% - Auto-calculated)</Label>
-                <Input
-                  id="deposit"
-                  value={v.DEPOSIT_AMOUNT}
-                  readOnly
-                  className="bg-muted"
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="deposit" className="text-xs font-medium">Deposit (50% - Auto)</Label>
+                <Input id="deposit" value={v.DEPOSIT_AMOUNT} readOnly className="h-8 text-sm bg-muted" />
               </div>
             </CardContent>
           </Card>
 
           {/* Accommodations */}
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Hotel className="h-5 w-5 text-orange-500" />
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Hotel className="h-4 w-4 text-orange-500" />
                 Accommodations
               </CardTitle>
-              <CardDescription>Hotel and meal requirements</CardDescription>
+              <CardDescription className="text-xs">Hotel and meal requirements</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="performer-count">Number of Performers</Label>
-                <Input
-                  id="performer-count"
-                  type="number"
-                  value={v.PERFORMER_COUNT}
-                  onChange={(e) => handleVariableChange('PERFORMER_COUNT', e.target.value)}
-                />
+            <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3 px-4 pb-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="performer-count" className="text-xs font-medium">Performers</Label>
+                <Input id="performer-count" type="number" value={v.PERFORMER_COUNT} onChange={(e) => handleVariableChange('PERFORMER_COUNT', e.target.value)} className="h-8 text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="room-count">Rooms (2 queen beds)</Label>
-                <Input
-                  id="room-count"
-                  type="number"
-                  value={v.ROOM_COUNT}
-                  onChange={(e) => handleVariableChange('ROOM_COUNT', e.target.value)}
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="room-count" className="text-xs font-medium">Rooms</Label>
+                <Input id="room-count" type="number" value={v.ROOM_COUNT} onChange={(e) => handleVariableChange('ROOM_COUNT', e.target.value)} className="h-8 text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="director-rooms">Director/Staff Rooms</Label>
-                <Input
-                  id="director-rooms"
-                  type="number"
-                  value={v.DIRECTOR_ROOMS}
-                  onChange={(e) => handleVariableChange('DIRECTOR_ROOMS', e.target.value)}
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="director-rooms" className="text-xs font-medium">Staff Rooms</Label>
+                <Input id="director-rooms" type="number" value={v.DIRECTOR_ROOMS} onChange={(e) => handleVariableChange('DIRECTOR_ROOMS', e.target.value)} className="h-8 text-sm" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="sound-check">Sound Check (hours before)</Label>
-                <Input
-                  id="sound-check"
-                  type="number"
-                  value={v.SOUND_CHECK_HOURS}
-                  onChange={(e) => handleVariableChange('SOUND_CHECK_HOURS', e.target.value)}
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="sound-check" className="text-xs font-medium">Sound Check (hrs)</Label>
+                <Input id="sound-check" type="number" value={v.SOUND_CHECK_HOURS} onChange={(e) => handleVariableChange('SOUND_CHECK_HOURS', e.target.value)} className="h-8 text-sm" />
               </div>
             </CardContent>
           </Card>
 
           {/* Special Notes */}
           <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <FileText className="h-5 w-5 text-muted-foreground" />
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
                 Special Notes
               </CardTitle>
-              <CardDescription>Any additional terms or conditions</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Textarea
-                value={v.SPECIAL_NOTES}
-                onChange={(e) => handleVariableChange('SPECIAL_NOTES', e.target.value)}
-                placeholder="Add any special requirements, conditions, or notes..."
-                rows={4}
-              />
+            <CardContent className="px-4 pb-4">
+              <Textarea value={v.SPECIAL_NOTES} onChange={(e) => handleVariableChange('SPECIAL_NOTES', e.target.value)} placeholder="Additional requirements or notes..." rows={3} className="text-sm" />
             </CardContent>
           </Card>
         </TabsContent>

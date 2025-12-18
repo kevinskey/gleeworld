@@ -116,20 +116,20 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
       {/* Sidebar */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-56 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 w-48 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-border">
+          <div className="px-3 py-3 border-b border-border">
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
-                <span className="w-3 h-3 rounded-full bg-red-400" />
-                <span className="w-3 h-3 rounded-full bg-amber-400" />
-                <span className="w-3 h-3 rounded-full bg-green-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-green-400" />
               </div>
-              <h1 className="text-base font-semibold text-foreground ml-2">Tour Manager</h1>
+              <span className="text-sm font-medium text-foreground whitespace-nowrap">Tour Manager</span>
             </div>
           </div>
 
