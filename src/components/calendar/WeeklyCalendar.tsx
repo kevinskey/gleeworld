@@ -6,8 +6,10 @@ import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay, addWeeks,
 import { GleeWorldEvent } from "@/hooks/useGleeWorldEvents";
 import { EventDetailDialog } from "./EventDetailDialog";
 import { EditEventDialog } from "./EditEventDialog";
+import { EventContextMenu } from "./EventContextMenu";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventHoverCard } from "./EventHoverCard";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WeeklyCalendarProps {
   events: GleeWorldEvent[];
@@ -20,6 +22,37 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
   const [selectedEvent, setSelectedEvent] = useState<GleeWorldEvent | null>(null);
   const [editingEvent, setEditingEvent] = useState<GleeWorldEvent | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [userPermissions, setUserPermissions] = useState<{isAdmin: boolean, isSuperAdmin: boolean} | null>(null);
+
+  // Fetch user permissions
+  useEffect(() => {
+    const fetchUserPermissions = async () => {
+      if (!user) {
+        setUserPermissions(null);
+        return;
+      }
+
+      try {
+        const { data: userProfile } = await supabase
+          .from('gw_profiles')
+          .select('is_admin, is_super_admin, role')
+          .eq('user_id', user.id)
+          .single();
+
+        if (userProfile) {
+          setUserPermissions({
+            isAdmin: userProfile.is_admin || userProfile.role === 'admin',
+            isSuperAdmin: userProfile.is_super_admin || userProfile.role === 'super-admin'
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching user permissions:', error);
+        setUserPermissions(null);
+      }
+    };
+
+    fetchUserPermissions();
+  }, [user]);
 
   // Handle responsive behavior
   useEffect(() => {
@@ -158,58 +191,76 @@ export const WeeklyCalendar = ({ events, onEventUpdated }: WeeklyCalendarProps) 
                 {dayEvents.length > 0 ? (
                   <>
                     {dayEvents.slice(0, isMobile ? 2 : 4).map(event => {
-                      const canEdit = user && (user.id === event.created_by || user.role === 'admin' || user.role === 'super-admin');
+                      const canEdit = user && userPermissions && (
+                        userPermissions.isSuperAdmin || 
+                        userPermissions.isAdmin || 
+                        user.id === event.created_by
+                      );
+                      const canDelete = user && userPermissions && (
+                        userPermissions.isSuperAdmin || 
+                        userPermissions.isAdmin
+                      );
                       const isSelected = (editingEvent?.id === event.id) || (selectedEvent?.id === event.id);
                       
                       return (
-                        <EventHoverCard key={event.id} event={event} canEdit={canEdit}>
-                          <div
-                            className={`
-                              p-2 rounded-md cursor-pointer transition-all duration-200 border border-transparent
-                              ${isSelected 
-                                ? 'ring-2 ring-primary ring-offset-1 scale-[1.02] shadow-md' 
-                                : 'hover:scale-[1.02] active:scale-[0.98] hover:shadow-md'
-                              }
-                              touch-manipulation
-                              ${getEventTypeColor(event.event_type)}
-                            `}
-                            onClick={() => handleEventClick(event)}
-                            title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}`}
-                          >
-                            {/* Mobile layout - stacked */}
-                            <div className="space-y-1 sm:hidden">
-                              <div className="flex items-center justify-between">
-                                <div className="text-xs font-medium truncate flex-1">
+                        <EventContextMenu
+                          key={event.id}
+                          event={event}
+                          canEdit={!!canEdit}
+                          canDelete={!!canDelete}
+                          onView={() => setSelectedEvent(event)}
+                          onEdit={() => setEditingEvent(event)}
+                          onDeleted={onEventUpdated}
+                        >
+                          <EventHoverCard event={event} canEdit={canEdit}>
+                            <div
+                              className={`
+                                p-2 rounded-md cursor-pointer transition-all duration-200 border border-transparent
+                                ${isSelected 
+                                  ? 'ring-2 ring-primary ring-offset-1 scale-[1.02] shadow-md' 
+                                  : 'hover:scale-[1.02] active:scale-[0.98] hover:shadow-md'
+                                }
+                                touch-manipulation
+                                ${getEventTypeColor(event.event_type)}
+                              `}
+                              onClick={() => handleEventClick(event)}
+                              title={`${event.title}${canEdit ? ' (Tap to edit)' : ' (Tap for details)'}${canDelete ? ' • Right-click to delete' : ''}`}
+                            >
+                              {/* Mobile layout - stacked */}
+                              <div className="space-y-1 sm:hidden">
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xs font-medium truncate flex-1">
+                                    {event.title}
+                                  </div>
+                                  {canEdit && (
+                                    <div className="w-1.5 h-1.5 bg-primary rounded-full ml-1" />
+                                  )}
+                                </div>
+                                <div className="text-[10px] opacity-70">
+                                  {format(new Date(event.start_date), 'h:mm a')}
+                                  {event.end_date && (
+                                    <> - {format(new Date(event.end_date), 'h:mm a')}</>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Desktop layout - side by side */}
+                              <div className="hidden sm:block">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 shrink-0">
+                                    {format(new Date(event.start_date), 'h:mm a')}
+                                  </Badge>
+                                  {canEdit && (
+                                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                                  )}
+                                </div>
+                                <div className="text-xs font-medium line-clamp-2 leading-tight">
                                   {event.title}
                                 </div>
-                                {canEdit && (
-                                  <div className="w-1.5 h-1.5 bg-primary rounded-full ml-1" />
-                                )}
-                              </div>
-                              <div className="text-[10px] opacity-70">
-                                {format(new Date(event.start_date), 'h:mm a')}
-                                {event.end_date && (
-                                  <> - {format(new Date(event.end_date), 'h:mm a')}</>
-                                )}
                               </div>
                             </div>
-
-                            {/* Desktop layout - side by side */}
-                            <div className="hidden sm:block">
-                              <div className="flex items-center gap-2 mb-1">
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5 shrink-0">
-                                  {format(new Date(event.start_date), 'h:mm a')}
-                                </Badge>
-                                {canEdit && (
-                                  <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                                )}
-                              </div>
-                              <div className="text-xs font-medium line-clamp-2 leading-tight">
-                                {event.title}
-                              </div>
-                            </div>
-                          </div>
-                        </EventHoverCard>
+                          </EventHoverCard>
+                        </EventContextMenu>
                       );
                     })}
                     
