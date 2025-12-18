@@ -19,7 +19,7 @@ import {
   Trash2,
   Loader2
 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface TourStop {
   id: string;
