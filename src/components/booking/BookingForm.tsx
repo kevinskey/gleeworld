@@ -184,20 +184,19 @@ export const BookingForm: React.FC = () => {
   };
 
   return (
-    <div className="bg-gradient-to-br from-brand-50 via-background to-brand-100 py-6 px-4 min-h-[calc(100vh-64px)]">
+    <div className="bg-background py-6 px-4 min-h-[calc(100vh-64px)]">
       <div className="max-w-4xl mx-auto pb-8">
         {/* Header */}
         <div className="text-center mb-8 relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-brand-400/20 via-brand-600/10 to-brand-400/20 rounded-3xl blur-3xl"></div>
-          <div className="relative bg-card/90 backdrop-blur-sm border-2 border-brand-300 rounded-3xl p-10 shadow-glass">
+          <div className="relative bg-primary rounded-3xl p-10 shadow-lg">
             <div className="mb-6">
-              <h1 className="text-5xl font-dancing font-bold text-brand-600 mb-2">
+              <h1 className="text-5xl font-dancing font-bold text-primary-foreground mb-2">
                 Spelman College Glee Club
               </h1>
-              <div className="w-24 h-1 bg-gradient-to-r from-brand-400 to-brand-600 mx-auto rounded-full"></div>
+              <div className="w-24 h-1 bg-primary-foreground/50 mx-auto rounded-full"></div>
             </div>
-            <h2 className="text-3xl font-bold text-brand-500 mb-6">Book Our Performance</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed text-lg">
+            <h2 className="text-3xl font-bold text-primary-foreground mb-6">Book Our Performance</h2>
+            <p className="text-primary-foreground/80 max-w-2xl mx-auto leading-relaxed text-lg">
               Thank you for your interest in booking the Spelman College Glee Club. 
               Please complete this form with as much detail as possible to help us 
               provide you with the best possible experience.
@@ -209,13 +208,13 @@ export const BookingForm: React.FC = () => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             
             {/* Contact Information */}
-            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
-                <CardTitle className="flex items-center gap-2 text-brand-600">
-                  <Users className="h-5 w-5 text-brand-500" />
+            <Card className="border shadow-md bg-card">
+              <CardHeader className="bg-muted/50 border-b">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Users className="h-5 w-5 text-primary" />
                   Contact Information
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription>
                   Primary contact details for this booking request
                 </CardDescription>
               </CardHeader>
@@ -307,13 +306,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Event Details */}
-            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
-                <CardTitle className="flex items-center gap-2 text-brand-600">
-                  <Music className="h-5 w-5 text-brand-500" />
+            <Card className="border shadow-md bg-card">
+              <CardHeader className="bg-muted/50 border-b">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Music className="h-5 w-5 text-primary" />
                   Event Details
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription>
                   Information about your event and performance requirements
                 </CardDescription>
               </CardHeader>
@@ -558,13 +557,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Technical & Logistical Info */}
-            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
-                <CardTitle className="flex items-center gap-2 text-brand-600">
-                  <Settings className="h-5 w-5 text-brand-500" />
+            <Card className="border shadow-md bg-card">
+              <CardHeader className="bg-muted/50 border-b">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Settings className="h-5 w-5 text-primary" />
                   Technical & Logistical Information
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription>
                   Details about venue facilities and technical requirements
                 </CardDescription>
               </CardHeader>
@@ -772,13 +771,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Hospitality & Travel */}
-            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
-                <CardTitle className="flex items-center gap-2 text-brand-600">
-                  <Plane className="h-5 w-5 text-brand-500" />
+            <Card className="border shadow-md bg-card">
+              <CardHeader className="bg-muted/50 border-b">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Plane className="h-5 w-5 text-primary" />
                   Hospitality & Travel
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription>
                   Information about compensation, travel, and accommodations
                 </CardDescription>
               </CardHeader>
@@ -961,13 +960,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Permissions & Media */}
-            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
-                <CardTitle className="flex items-center gap-2 text-brand-600">
-                  <MapPin className="h-5 w-5 text-brand-500" />
+            <Card className="border shadow-md bg-card">
+              <CardHeader className="bg-muted/50 border-b">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <MapPin className="h-5 w-5 text-primary" />
                   Permissions & Media
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription>
                   Recording permissions and promotional material requests
                 </CardDescription>
               </CardHeader>
@@ -1090,13 +1089,13 @@ export const BookingForm: React.FC = () => {
             </Card>
 
             {/* Additional Information */}
-            <Card className="border-brand-200 shadow-glass bg-card/95 backdrop-blur-sm">
-              <CardHeader className="bg-gradient-to-r from-brand-50 to-brand-100/50 border-b border-brand-200">
-                <CardTitle className="flex items-center gap-2 text-brand-600">
-                  <Clock className="h-5 w-5 text-brand-500" />
+            <Card className="border shadow-md bg-card">
+              <CardHeader className="bg-muted/50 border-b">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Clock className="h-5 w-5 text-primary" />
                   Additional Information
                 </CardTitle>
-                <CardDescription className="text-muted-foreground">
+                <CardDescription>
                   Any additional details or special requests
                 </CardDescription>
               </CardHeader>
