@@ -6,8 +6,9 @@ import { UserContractsList } from '@/components/user-dashboard/UserContractsList
 import { ContractViewer } from '@/components/ContractViewer';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { ContractTemplates } from '@/components/ContractTemplates';
+import { TourContractTemplate } from './TourContractTemplate';
 import { useContracts } from '@/hooks/useContracts';
-import { FileText, Plus } from 'lucide-react';
+import { FileText, Plus, Route } from 'lucide-react';
 import type { Contract } from '@/hooks/useContracts';
 
 interface ContractManagerProps {
@@ -23,7 +24,7 @@ export const ContractManager = ({ user }: ContractManagerProps) => {
   const { contracts, loading, error, deleteContract, refetch } = useContracts();
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [contractViewerOpen, setContractViewerOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('tour-template');
 
   const handleViewContract = (contract: Contract) => {
     setSelectedContract(contract);
@@ -51,12 +52,20 @@ export const ContractManager = ({ user }: ContractManagerProps) => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="tour-template" className="flex items-center gap-1">
+            <Route className="h-4 w-4" />
+            <span className="hidden sm:inline">Tour Template</span>
+          </TabsTrigger>
           <TabsTrigger value="all">All Contracts</TabsTrigger>
           <TabsTrigger value="user">My Contracts</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
           <TabsTrigger value="create">Create New</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="tour-template" className="space-y-6">
+          <TourContractTemplate />
+        </TabsContent>
 
         <TabsContent value="all" className="space-y-6">
           <ContractsList
