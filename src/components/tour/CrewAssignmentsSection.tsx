@@ -20,60 +20,20 @@ interface CrewGroup {
   members: CrewMember[];
 }
 
-const crewGroups: CrewGroup[] = [
-  {
-    id: 'merch',
-    name: 'Merchandise Crew',
-    icon: <ShoppingBag className="h-5 w-5" />,
-    description: 'Handles merchandise setup, sales, and inventory during tour stops.',
-    lead: 'Member Lead Name',
-    members: [
-      { name: 'Member 1', role: 'Table Setup', voicePart: 'Soprano I' },
-      { name: 'Member 2', role: 'Cash Handler', voicePart: 'Alto I' },
-      { name: 'Member 3', role: 'Inventory', voicePart: 'Soprano II' },
-      { name: 'Member 4', role: 'Customer Service', voicePart: 'Alto II' },
-    ]
-  },
-  {
-    id: 'setup',
-    name: 'Setup Crew',
-    icon: <Settings className="h-5 w-5" />,
-    description: 'Responsible for stage setup, risers, and equipment arrangement.',
-    lead: 'Setup Lead Name',
-    members: [
-      { name: 'Member 5', role: 'Riser Setup', voicePart: 'Alto I' },
-      { name: 'Member 6', role: 'Riser Setup', voicePart: 'Soprano II' },
-      { name: 'Member 7', role: 'Equipment', voicePart: 'Alto II' },
-      { name: 'Member 8', role: 'Equipment', voicePart: 'Soprano I' },
-    ]
-  },
-  {
-    id: 'wardrobe',
-    name: 'Wardrobe Crew',
-    icon: <Shirt className="h-5 w-5" />,
-    description: 'Manages concert attire distribution and organization.',
-    lead: 'Wardrobe Lead Name',
-    members: [
-      { name: 'Member 9', role: 'Attire Check', voicePart: 'Soprano I' },
-      { name: 'Member 10', role: 'Accessories', voicePart: 'Alto I' },
-    ]
-  },
-  {
-    id: 'music',
-    name: 'Music Crew',
-    icon: <Music className="h-5 w-5" />,
-    description: 'Handles music folder distribution and organization.',
-    lead: 'Librarian Name',
-    members: [
-      { name: 'Member 11', role: 'Folder Distribution', voicePart: 'Alto II' },
-      { name: 'Member 12', role: 'Music Stand Setup', voicePart: 'Soprano II' },
-    ]
-  },
-];
+const crewGroups: CrewGroup[] = [];
 
 export const CrewAssignmentsSection = () => {
+  if (crewGroups.length === 0) {
+    return (
+      <Card className="p-8 text-center">
+        <Settings className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+        <p className="text-muted-foreground">No crew assignments available yet.</p>
+      </Card>
+    );
+  }
+
   return (
-    <Tabs defaultValue="merch" className="space-y-6">
+    <Tabs defaultValue={crewGroups[0]?.id} className="space-y-6">
       <TabsList className="grid grid-cols-2 md:grid-cols-4 h-auto gap-2 bg-transparent p-0">
         {crewGroups.map((group) => (
           <TabsTrigger

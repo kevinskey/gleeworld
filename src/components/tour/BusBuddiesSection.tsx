@@ -20,28 +20,7 @@ interface BusAssignment {
   pairs: BusBuddyPair[];
 }
 
-const busAssignments: BusAssignment[] = [
-  {
-    busNumber: 1,
-    busName: 'Bus A - "Harmony Express"',
-    capacity: 56,
-    pairs: [
-      { id: '1', seatNumber: '1-2', buddies: [{ name: 'Member 1', voicePart: 'Soprano I' }, { name: 'Member 2', voicePart: 'Soprano I' }] },
-      { id: '2', seatNumber: '3-4', buddies: [{ name: 'Member 3', voicePart: 'Soprano II' }, { name: 'Member 4', voicePart: 'Soprano II' }] },
-      { id: '3', seatNumber: '5-6', buddies: [{ name: 'Member 5', voicePart: 'Alto I' }, { name: 'Member 6', voicePart: 'Alto I' }] },
-      { id: '4', seatNumber: '7-8', buddies: [{ name: 'Member 7', voicePart: 'Alto II' }, { name: 'Member 8', voicePart: 'Alto II' }] },
-    ]
-  },
-  {
-    busNumber: 2,
-    busName: 'Bus B - "Melody Cruiser"',
-    capacity: 56,
-    pairs: [
-      { id: '5', seatNumber: '1-2', buddies: [{ name: 'Member 9', voicePart: 'Soprano I' }, { name: 'Member 10', voicePart: 'Alto I' }] },
-      { id: '6', seatNumber: '3-4', buddies: [{ name: 'Member 11', voicePart: 'Soprano II' }, { name: 'Member 12', voicePart: 'Alto II' }] },
-    ]
-  }
-];
+const busAssignments: BusAssignment[] = [];
 
 export const BusBuddiesSection = () => {
   return (
@@ -61,60 +40,67 @@ export const BusBuddiesSection = () => {
         </CardContent>
       </Card>
 
-      <div className="space-y-6">
-        {busAssignments.map((bus) => (
-          <Card key={bus.busNumber}>
-            <CardHeader className="bg-muted/30">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Bus className="h-5 w-5 text-primary" />
-                  {bus.busName}
-                </CardTitle>
-                <Badge variant="outline">
-                  <Users className="h-3 w-3 mr-1" />
-                  {bus.pairs.length * 2} / {bus.capacity}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {bus.pairs.map((pair) => (
-                  <div 
-                    key={pair.id} 
-                    className="p-3 rounded-lg border bg-card hover:border-primary/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 mb-3">
-                      <Badge className="bg-primary/10 text-primary border-primary/20">
-                        Seats {pair.seatNumber}
-                      </Badge>
+      {busAssignments.length === 0 ? (
+        <Card className="p-8 text-center">
+          <Bus className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+          <p className="text-muted-foreground">No bus assignments available yet.</p>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {busAssignments.map((bus) => (
+            <Card key={bus.busNumber}>
+              <CardHeader className="bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Bus className="h-5 w-5 text-primary" />
+                    {bus.busName}
+                  </CardTitle>
+                  <Badge variant="outline">
+                    <Users className="h-3 w-3 mr-1" />
+                    {bus.pairs.length * 2} / {bus.capacity}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {bus.pairs.map((pair) => (
+                    <div 
+                      key={pair.id} 
+                      className="p-3 rounded-lg border bg-card hover:border-primary/30 transition-colors"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Badge className="bg-primary/10 text-primary border-primary/20">
+                          Seats {pair.seatNumber}
+                        </Badge>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {pair.buddies.map((buddy, idx) => (
+                          <div key={idx} className="flex-1 flex flex-col items-center text-center">
+                            <Avatar className="h-10 w-10 mb-1">
+                              <AvatarImage src={buddy.avatar} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {buddy.name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <p className="text-sm font-medium truncate w-full">{buddy.name}</p>
+                            <p className="text-xs text-muted-foreground">{buddy.voicePart}</p>
+                            {idx === 0 && pair.buddies.length > 1 && (
+                              <div className="absolute left-1/2 transform -translate-x-1/2">
+                                <ArrowRight className="h-3 w-3 text-muted-foreground hidden" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center gap-2">
-                      {pair.buddies.map((buddy, idx) => (
-                        <div key={idx} className="flex-1 flex flex-col items-center text-center">
-                          <Avatar className="h-10 w-10 mb-1">
-                            <AvatarImage src={buddy.avatar} />
-                            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {buddy.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <p className="text-sm font-medium truncate w-full">{buddy.name}</p>
-                          <p className="text-xs text-muted-foreground">{buddy.voicePart}</p>
-                          {idx === 0 && pair.buddies.length > 1 && (
-                            <div className="absolute left-1/2 transform -translate-x-1/2">
-                              <ArrowRight className="h-3 w-3 text-muted-foreground hidden" />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
