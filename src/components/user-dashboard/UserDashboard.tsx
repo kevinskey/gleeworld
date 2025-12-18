@@ -22,6 +22,7 @@ import { NotificationsSection } from "./sections/NotificationsSection";
 import { TasksSection } from "./sections/TasksSection";
 import { BookingRequestManager } from "@/components/tour-manager/BookingRequestManager";
 import { ExecBoardMemberModules } from "@/components/executive/ExecBoardMemberModules";
+import { GleeAcademyDashboardCard } from "./GleeAcademyDashboardCard";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useMergedProfile } from "@/hooks/useMergedProfile";
@@ -321,7 +322,12 @@ const UserDashboard = React.memo(() => {
           />
         </div>
 
-        {/* Add spacing between WelcomeCard and Community Hub */}
+        {/* Glee Academy Card - Course shortcuts */}
+        <div className="w-full">
+          <GleeAcademyDashboardCard />
+        </div>
+
+        {/* Add spacing between sections */}
         <div className="mb-4 sm:mb-8 md:mb-12"></div>
 
         {/* Community Hub and Quick Actions */}
