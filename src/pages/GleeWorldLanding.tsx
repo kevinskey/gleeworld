@@ -24,6 +24,7 @@ import { Calendar, MapPin, ArrowRight, ChevronLeft, ChevronRight, Sparkles, X, M
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
+import { SmartCoverImage } from "@/components/ui/SmartCoverImage";
 
 import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
 interface Event {
@@ -264,30 +265,29 @@ export const GleeWorldLanding = () => {
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
             <div className="h-[280px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] 2xl:h-[800px] relative overflow-hidden">
               {heroSlides.length > 0 ? <>
-                  {/* Desktop Image */}
-                  <img src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden md:block w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100" onError={e => {
-                  console.log('Hero image failed to load, using fallback');
-                  // Only fallback if the current src is not already the fallback
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }} />
+                  {/* Desktop Image - Smart Cover */}
+                  <SmartCoverImage 
+                    src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} 
+                    alt="Hero Background" 
+                    className="hidden md:block w-full h-full brightness-95 contrast-100"
+                    fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                  />
                   
-                  {/* iPad Image */}
-                  <img src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden sm:block md:hidden w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100" onError={e => {
-                  console.log('iPad hero image failed to load, using fallback');
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }} />
+                  {/* iPad Image - Smart Cover */}
+                  <SmartCoverImage 
+                    src={currentHeroSlide?.ipad_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} 
+                    alt="Hero Background" 
+                    className="hidden sm:block md:hidden w-full h-full brightness-95 contrast-100"
+                    fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                  />
                   
-                  {/* Mobile Image */}
-                  <img src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="block sm:hidden w-full h-full object-contain object-center transition-opacity duration-500 brightness-95 contrast-100" onError={e => {
-                  console.log('Mobile hero image failed to load, using fallback');
-                  if (!e.currentTarget.src.includes('unsplash.com')) {
-                    e.currentTarget.src = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
-                  }
-                }} />
+                  {/* Mobile Image - Smart Cover */}
+                  <SmartCoverImage 
+                    src={currentHeroSlide?.mobile_image_url || currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} 
+                    alt="Hero Background" 
+                    className="block sm:hidden w-full h-full brightness-95 contrast-100"
+                    fallbackSrc="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-primary/20"></div>
                   
                   {/* Content overlay - positioned elements */}
