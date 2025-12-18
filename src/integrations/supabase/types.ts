@@ -9878,6 +9878,7 @@ export type Database = {
       gw_message_groups: {
         Row: {
           avatar_url: string | null
+          course_id: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -9894,6 +9895,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          course_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -9910,6 +9912,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          course_id?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
