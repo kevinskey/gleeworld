@@ -575,21 +575,21 @@ Note: All documentation and deposits can be mailed to Spelman College, Departmen
         </TabsContent>
 
         <TabsContent value="preview" className="mt-6">
-          <Card className="bg-white">
-            <CardContent className="p-0">
-              <ScrollArea className="h-[700px]">
-                {/* Contract Document Preview */}
-                <div className="p-8 max-w-4xl mx-auto text-black font-serif">
+          <Card className="border-border shadow-lg overflow-hidden" style={{ backgroundColor: '#ffffff' }}>
+            <CardContent className="p-0" style={{ backgroundColor: '#ffffff' }}>
+              <ScrollArea className="h-[700px]" style={{ backgroundColor: '#ffffff' }}>
+                {/* Contract Document Preview - forced light styling for paper appearance */}
+                <div className="contract-preview p-8 max-w-4xl mx-auto font-serif">
                   {/* Header */}
-                  <div className="text-center mb-8 border-b-2 border-blue-900 pb-6">
+                  <div className="text-center mb-8 border-b-2 pb-6" style={{ borderColor: '#1e3a5f' }}>
                     <div className="flex items-center justify-center gap-4 mb-2">
-                      <div className="text-3xl font-bold text-blue-900 tracking-wide">Spelman</div>
-                      <div className="text-xl text-blue-900">College</div>
+                      <div className="text-3xl font-bold tracking-wide" style={{ color: '#1e3a5f' }}>Spelman</div>
+                      <div className="text-xl" style={{ color: '#1e3a5f' }}>College</div>
                     </div>
-                    <p className="text-sm italic text-blue-800">A Choice to Change the World</p>
+                    <p className="text-sm italic" style={{ color: '#2c5282' }}>A Choice to Change the World</p>
                   </div>
 
-                  <h1 className="text-xl font-bold text-center mb-6 uppercase tracking-wide">
+                  <h1 className="text-xl font-bold text-center mb-6 uppercase tracking-wide" style={{ color: '#1a1a1a' }}>
                     The Spelman College Glee Club Performance Agreement
                   </h1>
 
