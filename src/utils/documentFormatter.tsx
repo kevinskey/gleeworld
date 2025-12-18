@@ -42,7 +42,7 @@ export const processDocumentContent = (content: string, documentType: 'contract'
           !line.includes('_') &&
           !line.match(/^\d/)) {
         processedElements.push(
-          <h1 key={`title-${elementIndex++}`} className="text-center font-bold text-xl md:text-2xl lg:text-3xl mb-8 mt-8 first:mt-0 break-words">
+          <h1 key={`title-${elementIndex++}`} className="text-center font-bold text-xl md:text-2xl lg:text-3xl mb-8 mt-8 first:mt-0 break-words" style={{ color: '#000000' }}>
             {line}
           </h1>
         );
@@ -52,7 +52,7 @@ export const processDocumentContent = (content: string, documentType: 'contract'
       // Article headers
       if (line.match(/^Article \d+\./)) {
         processedElements.push(
-          <h2 key={`article-${elementIndex++}`} className="font-bold text-lg md:text-xl mb-4 mt-8 break-words">
+          <h2 key={`article-${elementIndex++}`} className="font-bold text-lg md:text-xl mb-4 mt-8 break-words" style={{ color: '#000000' }}>
             {line}
           </h2>
         );
@@ -62,7 +62,7 @@ export const processDocumentContent = (content: string, documentType: 'contract'
       // Section headers (lines ending with colon)
       if (line.endsWith(':') && line.length < 80) {
         processedElements.push(
-          <h3 key={`section-${elementIndex++}`} className="font-semibold text-base md:text-lg mb-3 mt-6 break-words">
+          <h3 key={`section-${elementIndex++}`} className="font-semibold text-base md:text-lg mb-3 mt-6 break-words" style={{ color: '#000000' }}>
             {line}
           </h3>
         );
@@ -84,7 +84,7 @@ export const processDocumentContent = (content: string, documentType: 'contract'
       // Exhibit sections
       if (line.match(/^Exhibit [A-Z]/)) {
         processedElements.push(
-          <h2 key={`exhibit-${elementIndex++}`} className="font-bold text-lg md:text-xl mb-6 mt-8 text-center break-words">
+          <h2 key={`exhibit-${elementIndex++}`} className="font-bold text-lg md:text-xl mb-6 mt-8 text-center break-words" style={{ color: '#000000' }}>
             {line}
           </h2>
         );
