@@ -69,28 +69,16 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
 
   const fetchHeroSlides = async () => {
     try {
-      // Fetch from gw_media_library where is_hero = true
-      // @ts-expect-error - Supabase types too complex
       const { data, error } = await supabase
-        .from('gw_media_library')
-        .select('id, title, description, file_url, created_at')
-        .eq('is_hero', true)
-        .order('created_at', { ascending: false });
+        .from('dashboard_hero_slides')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
       
       if (error) throw error;
-      
-      // Map media library items to slide format
-      const heroSlides: HeroSlide[] = ((data as any[]) || []).map((item, index) => ({
-        id: item.id,
-        title: item.title || undefined,
-        description: item.description || undefined,
-        image_url: item.file_url,
-        display_order: index + 1
-      }));
-      
-      setSlides(heroSlides);
+      setSlides(data || []);
     } catch (error) {
-      console.error('Error fetching hero images:', error);
+      console.error('Error fetching dashboard hero slides:', error);
     } finally {
       setLoading(false);
     }
