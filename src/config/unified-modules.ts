@@ -112,6 +112,7 @@ import { NotificationSoundsModule } from '@/components/admin/NotificationSoundsM
 import RehearsalTranscriptionModule from '@/components/modules/RehearsalTranscriptionModule';
 import VoiceConversationAgent from '@/components/assistant/VoiceConversationAgent';
 import { TheLabModule } from '@/components/modules/TheLabModule';
+import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -163,6 +164,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: AttendanceModule,
     dbFunctionName: "attendance"
+  },
+  {
+    id: "section-assignment",
+    name: "section-assignment",
+    title: "Section Assignment",
+    description: "Assign voice parts (S1, S2, A1, A2) to choir members",
+    icon: Music,
+    iconColor: "purple",
+    category: "member-management",
+    isActive: true,
+    component: SectionAssignmentModule,
+    dbFunctionName: "section-assignment",
+    requiredRoles: ['admin', 'super-admin', 'exec-board', 'chief_of_staff']
   },
 
   // Communications modules
