@@ -245,11 +245,11 @@ export const GleeWorldLanding = () => {
   // };
 
   if (loading || authLoading) {
-    return <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
+    return <div className="min-h-screen flex items-center justify-center spelman-blue-theme" style={{ background: 'linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)' }}>
         <LoadingSpinner size="lg" text="Loading GleeWorld..." className="text-white" />
       </div>;
   }
-  return <div className="min-h-screen w-full relative" style={{ background: 'linear-gradient(180deg, #0056a6 0%, #0073c9 40%, #55bbee 100%)' }}>
+  return <div className="min-h-screen w-full relative spelman-blue-theme" style={{ background: 'linear-gradient(180deg, hsl(208 100% 33%) 0%, hsl(203 100% 40%) 40%, hsl(197 80% 63%) 100%)' }}>
       <div className="absolute inset-0 -z-10 opacity-20 mix-blend-overlay" style={{
       backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/><feComponentTransfer><feFuncA type='linear' slope='0.08'/></feComponentTransfer></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")"
     }} aria-hidden="true" />
