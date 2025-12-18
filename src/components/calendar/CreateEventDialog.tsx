@@ -198,9 +198,12 @@ export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDi
   useEffect(() => {
     if (open) {
       loadCalendars();
-      // Pre-fill date if initialDate is provided
+      // Pre-fill date if initialDate is provided, defaulting to 12:00 AM
       if (initialDate) {
-        const dateString = initialDate.toISOString().slice(0, 16);
+        const year = initialDate.getFullYear();
+        const month = String(initialDate.getMonth() + 1).padStart(2, '0');
+        const day = String(initialDate.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}T00:00`;
         setFormData(prev => ({ ...prev, start_date: dateString }));
       }
     }
