@@ -401,7 +401,7 @@ export const GleeWorldLanding = () => {
                                   <span className="line-clamp-1">{event.location}</span>
                                 </div>}
                             </div>
-                            {event.description && <p className="text-muted-foreground line-clamp-2 text-xs">{event.description}</p>}
+                            {event.description && <p className="text-card-foreground/80 line-clamp-2 text-sm">{event.description}</p>}
                           </CardContent>
                         </Card>)}
                     </div>
@@ -440,7 +440,7 @@ export const GleeWorldLanding = () => {
                                       <span className="line-clamp-1">{event.location}</span>
                                     </div>}
                                 </div>
-                                {event.description && <p className="text-muted-foreground line-clamp-2 text-sm">{event.description}</p>}
+                                {event.description && <p className="text-foreground/80 line-clamp-2 text-sm">{event.description}</p>}
                               </CardContent>
                             </Card>
                           </CarouselItem>)}
