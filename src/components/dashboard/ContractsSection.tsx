@@ -94,13 +94,13 @@ export const ContractsSection = ({ onViewContract }: ContractsSectionProps) => {
           {recentContracts.map((contract) => (
             <div 
               key={contract.id}
-              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors gap-3"
+              className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-border rounded-lg hover:bg-accent/50 transition-colors gap-3 bg-card/50"
             >
               <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
-                <FileText className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+                <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5 sm:mt-0" />
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-gray-900 truncate text-sm sm:text-base leading-tight">{contract.title}</h4>
-                  <div className="flex flex-col gap-1 mt-1 text-xs text-gray-600">
+                  <h4 className="font-medium text-foreground truncate text-sm sm:text-base leading-tight">{contract.title}</h4>
+                  <div className="flex flex-col gap-1 mt-1 text-xs text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-3 w-3 flex-shrink-0" />
                       <span>Created {new Date(contract.created_at).toLocaleDateString()}</span>
