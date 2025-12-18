@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, 
   CheckCircle2, ArrowRight, Building2, Bed, Bus, Video, Package, 
-  ClipboardList, Shirt, DollarSign
+  ClipboardList, Shirt, DollarSign, UserCheck
 } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
@@ -22,6 +22,7 @@ import { CrewAssignmentsSection } from '@/components/tour/CrewAssignmentsSection
 import { BusBuddiesSection } from '@/components/tour/BusBuddiesSection';
 import { TourDocumentsSection } from '@/components/tour/TourDocumentsSection';
 import { LivePerformancesSection } from '@/components/tour/LivePerformancesSection';
+import { TourRosterSection } from '@/components/tour/TourRosterSection';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TourManagerDashboardProps {
@@ -266,7 +267,11 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               
               {/* Tour Info Center Row */}
               <p className="text-xs text-muted-foreground px-2 py-1 font-medium border-t border-border/30 pt-2">Tour Information</p>
-              <TabsList className="grid w-full grid-cols-6 bg-transparent mb-2">
+              <TabsList className="grid w-full grid-cols-7 bg-transparent mb-2">
+                <TabsTrigger value="roster" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/10 data-[state=active]:to-emerald-600/10 data-[state=active]:text-emerald-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                  <UserCheck className="h-4 w-4" />
+                  <span className="hidden lg:inline font-medium">Roster</span>
+                </TabsTrigger>
                 <TabsTrigger value="tour-dates" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-indigo-600/10 data-[state=active]:text-indigo-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
                   <Calendar className="h-4 w-4" />
                   <span className="hidden lg:inline font-medium">Dates</span>
@@ -440,6 +445,32 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
           </TabsContent>
 
           {/* Tour Information Tabs Content */}
+          <TabsContent value="roster" className="space-y-6 animate-fade-in">
+            <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <CardHeader className="bg-gradient-to-r from-emerald-500/10 to-emerald-600/5 border-b border-border/50">
+                <CardTitle className="flex items-center gap-3 text-xl">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-emerald-500/20 rounded-lg blur-md"></div>
+                    <div className="relative bg-emerald-500/10 p-2 rounded-lg">
+                      <UserCheck className="h-5 w-5 text-emerald-600" />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
+                      Tour Roster
+                    </span>
+                    <p className="text-sm font-normal text-muted-foreground mt-1">
+                      Manage which members are going on tour
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <TourRosterSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="tour-dates" className="space-y-6 animate-fade-in">
             <Card className="border-0 shadow-xl bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
               <CardHeader className="bg-gradient-to-r from-indigo-500/10 to-indigo-600/5 border-b border-border/50">

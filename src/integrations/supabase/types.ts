@@ -15845,6 +15845,47 @@ export type Database = {
           },
         ]
       }
+      gw_tour_roster: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          status: string
+          tour_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          tour_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          tour_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_tour_roster_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "gw_tour_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_tour_tasks: {
         Row: {
           assignee_id: string | null
