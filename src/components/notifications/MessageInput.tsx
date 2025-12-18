@@ -56,7 +56,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
       <div className={cn(
         'flex-1 flex items-end gap-1.5 p-1.5 rounded-2xl border transition-all',
-        isFocused ? 'border-[hsl(var(--message-header))]/50 bg-background shadow-sm' : 'border-border bg-muted/30'
+        isFocused ? 'border-[hsl(var(--message-header))]/50 bg-background shadow-sm' : 'border-border bg-card'
       )}>
         <div className="flex-1 relative">
           <Textarea

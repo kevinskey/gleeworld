@@ -50,7 +50,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="flex items-end gap-2 bg-muted/30 rounded-2xl border border-border p-2">
+      <div className="flex items-end gap-2 bg-card rounded-2xl border border-border p-2">
         <EnhancedTooltip content="Attach file">
           <Button
             type="button"
