@@ -234,7 +234,7 @@ export const EnhancedUserManagement = ({ users, loading, error, onRefetch }: Enh
             </div>
             
             {/* Enhanced Search and Filter Controls */}
-            <div className="bg-muted/30 p-4 rounded-lg border border-primary/10">
+            <div className="bg-card p-4 rounded-lg border border-border">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Search Input */}
                 <div className="relative">

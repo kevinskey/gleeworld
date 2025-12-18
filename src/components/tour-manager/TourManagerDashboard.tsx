@@ -185,7 +185,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Search" 
-                  className="pl-9 h-9 bg-muted/30 border-0 focus-visible:ring-1"
+                  className="pl-9 h-9 bg-background border focus-visible:ring-1"
                 />
               </div>
             </div>
