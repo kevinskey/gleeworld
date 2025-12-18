@@ -1738,3 +1738,33 @@ body.radio-bar-open main {
   padding-top: 44px; /* Height of the compact radio bar */
   transition: padding-top 0.2s ease-out;
 }
+
+/* Contract Preview - Force light styling regardless of theme */
+.contract-preview {
+  background-color: #ffffff !important;
+  color: #1a1a1a !important;
+  color-scheme: light;
+}
+
+.contract-preview * {
+  color: inherit;
+}
+
+.contract-preview h1,
+.contract-preview h2,
+.contract-preview h3,
+.contract-preview h4 {
+  color: #111827 !important;
+}
+
+.contract-preview p,
+.contract-preview li,
+.contract-preview span {
+  color: #374151 !important;
+}
+
+.contract-preview .font-semibold,
+.contract-preview strong,
+.contract-preview b {
+  color: #111827 !important;
+}
