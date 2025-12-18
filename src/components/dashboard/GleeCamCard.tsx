@@ -22,7 +22,7 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const navigate = useNavigate();
   const [photos, setPhotos] = useState<GleeCamPhoto[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
 
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -73,12 +73,21 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
 
   useEffect(() => {
     if (!emblaApi) return;
+    if (!isOpen) return;
 
-    // Kick once on open/after photos load, then autoplay handles the rest
-    if (isOpen) emblaApi.reInit();
+    // Delay start until after collapsible content has mounted and layout is measurable
+    const t = window.setTimeout(() => {
+      emblaApi.reInit();
+      const stop = startAutoplay();
+      (window as any).__gw_gleeCamStop = stop;
+    }, 200);
 
-    const stop = startAutoplay();
-    return () => stop?.();
+    return () => {
+      window.clearTimeout(t);
+      const stop = (window as any).__gw_gleeCamStop as undefined | (() => void);
+      stop?.();
+      (window as any).__gw_gleeCamStop = undefined;
+    };
   }, [emblaApi, isOpen, photos.length, startAutoplay]);
 
   const handlePhotoClick = (photo: GleeCamPhoto) => {
