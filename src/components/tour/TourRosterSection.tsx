@@ -37,7 +37,6 @@ export const TourRosterSection = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch all members and admins who can be added to tour
       const { data: members, error: membersError } = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, email, voice_part, avatar_url, role')
@@ -46,7 +45,6 @@ export const TourRosterSection = () => {
 
       if (membersError) throw membersError;
 
-      // Fetch tour roster (without tour_id filter for now - general roster)
       const { data: roster, error: rosterError } = await supabase
         .from('gw_tour_roster')
         .select('*');
@@ -55,7 +53,6 @@ export const TourRosterSection = () => {
 
       setAllMembers(members || []);
       
-      // Map roster to members
       const rosterMap = new Map(roster?.map(r => [r.user_id, r]) || []);
       const rosterMembersList: RosterMember[] = (members || [])
         .filter(m => rosterMap.has(m.user_id))
@@ -178,18 +175,33 @@ export const TourRosterSection = () => {
      m.email?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const getStatusBadge = (status: string) => {
+  const getStatusIcon = (status: string) => {
     switch (status) {
       case 'confirmed':
-        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20"><Check className="h-3 w-3 mr-1" />Confirmed</Badge>;
+        return <Check className="h-3.5 w-3.5" />;
       case 'pending':
-        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return <Clock className="h-3.5 w-3.5" />;
       case 'declined':
-        return <Badge className="bg-red-500/10 text-red-600 border-red-500/20"><X className="h-3 w-3 mr-1" />Declined</Badge>;
+        return <X className="h-3.5 w-3.5" />;
       case 'waitlist':
-        return <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/20"><AlertCircle className="h-3 w-3 mr-1" />Waitlist</Badge>;
+        return <AlertCircle className="h-3.5 w-3.5" />;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return null;
+    }
+  };
+
+  const getStatusStyles = (status: string) => {
+    switch (status) {
+      case 'confirmed':
+        return 'text-emerald-700 dark:text-emerald-400';
+      case 'pending':
+        return 'text-amber-600 dark:text-amber-400';
+      case 'declined':
+        return 'text-red-600 dark:text-red-400';
+      case 'waitlist':
+        return 'text-slate-500 dark:text-slate-400';
+      default:
+        return 'text-muted-foreground';
     }
   };
 
@@ -200,12 +212,12 @@ export const TourRosterSection = () => {
 
   if (loading) {
     return (
-      <Card className="p-8 text-center">
+      <div className="p-8 text-center">
         <div className="animate-pulse space-y-4">
           <div className="h-4 bg-muted rounded w-1/3 mx-auto"></div>
           <div className="h-4 bg-muted rounded w-1/2 mx-auto"></div>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -222,104 +234,115 @@ export const TourRosterSection = () => {
     !['s1', 's2', 'a1', 'a2', 'soprano 1', 'soprano 2', 'alto 1', 'alto 2'].includes(m.voice_part?.toLowerCase())
   ).length;
 
+  const statusCounts = {
+    confirmed: rosterMembers.filter(m => m.status === 'confirmed').length,
+    pending: rosterMembers.filter(m => m.status === 'pending').length,
+    waitlist: rosterMembers.filter(m => m.status === 'waitlist').length,
+    total: rosterMembers.length
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Status Stats */}
+    <div className="space-y-8">
+      {/* Status Summary - Clean flat cards with high contrast */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-green-500/10 border-green-500/20">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{rosterMembers.filter(m => m.status === 'confirmed').length}</p>
-            <p className="text-sm text-muted-foreground">Confirmed</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-yellow-500/10 border-yellow-500/20">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-600">{rosterMembers.filter(m => m.status === 'pending').length}</p>
-            <p className="text-sm text-muted-foreground">Pending</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-blue-500/10 border-blue-500/20">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-blue-600">{rosterMembers.filter(m => m.status === 'waitlist').length}</p>
-            <p className="text-sm text-muted-foreground">Waitlist</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-primary/10 border-primary/20">
-          <CardContent className="p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{rosterMembers.length}</p>
-            <p className="text-sm text-muted-foreground">Total on Tour</p>
-          </CardContent>
-        </Card>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Check className="h-4 w-4 text-emerald-600" />
+            <span className="text-sm font-medium text-muted-foreground">Confirmed</span>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{statusCounts.confirmed}</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Clock className="h-4 w-4 text-amber-600" />
+            <span className="text-sm font-medium text-muted-foreground">Pending</span>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{statusCounts.pending}</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <AlertCircle className="h-4 w-4 text-slate-500" />
+            <span className="text-sm font-medium text-muted-foreground">Waitlist</span>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{statusCounts.waitlist}</p>
+        </div>
+        <div className="bg-card border border-border rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-1">
+            <Users className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-muted-foreground">Total</span>
+          </div>
+          <p className="text-3xl font-bold text-foreground">{statusCounts.total}</p>
+        </div>
       </div>
 
-      {/* Section Stats (Voice Parts) */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Section Mix (Confirmed Members)
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-5 gap-3">
-            <div className="text-center p-3 rounded-lg bg-pink-500/10 border border-pink-500/20">
-              <p className="text-xl font-bold text-pink-600">{sectionStats.S1}</p>
-              <p className="text-xs text-muted-foreground font-medium">S1</p>
+      {/* Section Mix - Clean cards with readable text */}
+      <div className="bg-card border border-border rounded-lg p-6">
+        <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground" />
+          Voice Part Distribution
+          <span className="text-sm font-normal text-muted-foreground">({confirmedMembers.length} confirmed)</span>
+        </h3>
+        <div className="grid grid-cols-5 gap-4">
+          {[
+            { label: 'S1', count: sectionStats.S1 },
+            { label: 'S2', count: sectionStats.S2 },
+            { label: 'A1', count: sectionStats.A1 },
+            { label: 'A2', count: sectionStats.A2 },
+            { label: 'Other', count: unassigned },
+          ].map((section) => (
+            <div key={section.label} className="text-center p-4 bg-muted/30 border border-border rounded-lg">
+              <p className="text-2xl font-bold text-foreground">{section.count}</p>
+              <p className="text-sm font-medium text-muted-foreground">{section.label}</p>
             </div>
-            <div className="text-center p-3 rounded-lg bg-rose-500/10 border border-rose-500/20">
-              <p className="text-xl font-bold text-rose-600">{sectionStats.S2}</p>
-              <p className="text-xs text-muted-foreground font-medium">S2</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-              <p className="text-xl font-bold text-purple-600">{sectionStats.A1}</p>
-              <p className="text-xs text-muted-foreground font-medium">A1</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-violet-500/10 border border-violet-500/20">
-              <p className="text-xl font-bold text-violet-600">{sectionStats.A2}</p>
-              <p className="text-xs text-muted-foreground font-medium">A2</p>
-            </div>
-            <div className="text-center p-3 rounded-lg bg-muted/50 border border-border">
-              <p className="text-xl font-bold text-muted-foreground">{unassigned}</p>
-              <p className="text-xs text-muted-foreground font-medium">Other</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          ))}
+        </div>
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Two Column Layout */}
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Tour Roster */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-primary" />
-              Tour Roster ({rosterMembers.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 max-h-[500px] overflow-y-auto">
+        <div className="bg-card border border-border rounded-lg">
+          <div className="p-4 border-b border-border">
+            <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              Tour Roster
+              <Badge variant="secondary" className="ml-auto">{rosterMembers.length}</Badge>
+            </h3>
+          </div>
+          <div className="p-4 space-y-2 max-h-[500px] overflow-y-auto">
             {rosterMembers.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
+              <p className="text-center text-muted-foreground py-8 text-sm">
                 No members added to tour roster yet
               </p>
             ) : (
               rosterMembers.map((member) => (
-                <div key={member.user_id} className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
-                  <Avatar className="h-10 w-10">
+                <div 
+                  key={member.user_id} 
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors"
+                >
+                  <Avatar className="h-9 w-9 flex-shrink-0">
                     <AvatarImage src={member.avatar_url || ''} />
-                    <AvatarFallback className="bg-primary/10 text-primary">
+                    <AvatarFallback className="bg-muted text-foreground text-xs font-medium">
                       {getInitials(member.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{member.full_name}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{member.full_name}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className={`flex items-center gap-1 text-xs font-medium ${getStatusStyles(member.status)}`}>
+                        {getStatusIcon(member.status)}
+                        <span className="capitalize">{member.status}</span>
+                      </span>
+                    </div>
                   </div>
-                  <Badge variant={member.voice_part ? "secondary" : "outline"} className="text-xs font-medium">
-                    {member.voice_part || 'Unassigned'}
+                  <Badge variant="outline" className="text-xs font-medium flex-shrink-0">
+                    {member.voice_part || 'N/A'}
                   </Badge>
                   <Select
                     value={member.status}
                     onValueChange={(value) => member.roster_id && updateStatus(member.roster_id, value)}
                   >
-                    <SelectTrigger className="w-32 h-8">
+                    <SelectTrigger className="w-28 h-8 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -332,7 +355,7 @@ export const TourRosterSection = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
                     onClick={() => member.roster_id && removeFromRoster(member.roster_id)}
                   >
                     <X className="h-4 w-4" />
@@ -340,17 +363,17 @@ export const TourRosterSection = () => {
                 </div>
               ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Available Members */}
-        <Card>
-          <CardHeader>
+        <div className="bg-card border border-border rounded-lg">
+          <div className="p-4 border-b border-border space-y-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <UserPlus className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-muted-foreground" />
                 Add Members
-              </CardTitle>
+              </h3>
               {selectedMembers.size > 0 && (
                 <Button size="sm" onClick={addSelectedToRoster}>
                   Add {selectedMembers.size} Selected
@@ -363,37 +386,41 @@ export const TourRosterSection = () => {
                 placeholder="Search members..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="pl-9 bg-background"
               />
             </div>
-          </CardHeader>
-          <CardContent className="space-y-2 max-h-[400px] overflow-y-auto">
+          </div>
+          <div className="p-4 space-y-2 max-h-[400px] overflow-y-auto">
             {availableMembers.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">
+              <p className="text-center text-muted-foreground py-8 text-sm">
                 {searchTerm ? 'No matching members found' : 'All members are on the roster'}
               </p>
             ) : (
               availableMembers.map((member) => (
-                <div key={member.user_id} className="flex items-center gap-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                <div 
+                  key={member.user_id} 
+                  className="flex items-center gap-3 p-3 rounded-lg border border-border bg-background hover:bg-muted/50 transition-colors"
+                >
                   <Checkbox
                     checked={selectedMembers.has(member.user_id)}
                     onCheckedChange={() => toggleMemberSelection(member.user_id)}
                   />
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarImage src={member.avatar_url || ''} />
-                    <AvatarFallback className="bg-muted text-xs">
+                    <AvatarFallback className="bg-muted text-foreground text-xs">
                       {getInitials(member.full_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{member.full_name}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{member.full_name}</p>
                   </div>
-                  <Badge variant={member.voice_part ? "secondary" : "outline"} className="text-xs">
-                    {member.voice_part || 'Unassigned'}
+                  <Badge variant="outline" className="text-xs flex-shrink-0">
+                    {member.voice_part || 'N/A'}
                   </Badge>
                   <Button
                     variant="outline"
                     size="sm"
+                    className="flex-shrink-0"
                     onClick={() => addToRoster(member.user_id)}
                   >
                     <UserPlus className="h-3 w-3 mr-1" />
@@ -402,8 +429,8 @@ export const TourRosterSection = () => {
                 </div>
               ))
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
