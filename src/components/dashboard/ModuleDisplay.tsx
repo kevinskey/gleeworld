@@ -44,6 +44,7 @@ import TreeLightingSurveyModule from '../modules/TreeLightingSurveyModule';
 import ExitInterviewsModule from '../modules/ExitInterviewsModule';
 import { TheLabModule } from '@/components/modules/TheLabModule';
 import { ComprehensiveAppointmentSystem } from '@/components/appointments/ComprehensiveAppointmentSystem';
+import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -161,6 +162,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'appointments':
       case 'assignable-appointments':
         return <ComprehensiveAppointmentSystem />;
+      case 'section-assignment':
+        return <SectionAssignmentModule />;
       default:
         return (
           <div className="p-6">
