@@ -29,9 +29,9 @@ const GleeAcademy = () => {
         <div className="py-12 sm:py-16 lg:py-20 bg-background">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 -mt-4">
+              <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 -mt-4">
                 Our Course Offerings
-              </h2>
+              </h1>
               <div className="w-full flex items-center justify-center py-[5px]">
                 <span className="text-muted-foreground">Spring 2026 Semester</span>
               </div>
