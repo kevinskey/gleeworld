@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, ChevronRight, X, Camera } from "lucide-react";
@@ -7,6 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import useEmblaCarousel from 'embla-carousel-react';
+
 interface HeroSlide {
   id: string;
   title?: string;
@@ -18,6 +20,7 @@ interface HeroSlide {
   link_url?: string;
   link_target?: string;
 }
+
 interface DashboardHeroCarouselProps {
   className?: string;
 }
@@ -25,12 +28,35 @@ interface DashboardHeroCarouselProps {
 export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps) => {
   const navigate = useNavigate();
   const [slides, setSlides] = useState<HeroSlide[]>([]);
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [scrollSpeed, setScrollSpeed] = useState(5000);
   const [expandedSlide, setExpandedSlide] = useState<HeroSlide | null>(null);
   const isMobile = useIsMobile();
   const { themeName } = useTheme();
+  
+  // Embla carousel with swipe support on all devices
+  const [emblaRef, emblaApi] = useEmblaCarousel({ 
+    loop: true,
+    align: 'start',
+    dragFree: true,
+    skipSnaps: false,
+    watchDrag: true,
+    containScroll: 'trimSnaps'
+  });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
+
+  // Reinitialize embla when slides load
+  useEffect(() => {
+    if (emblaApi && slides.length > 0) {
+      emblaApi.reInit();
+    }
+  }, [emblaApi, slides]);
   
   // HBCU theme colors
   const isHbcuTheme = themeName === 'hbcu';
@@ -39,85 +65,37 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
 
   useEffect(() => {
     fetchHeroSlides();
-    fetchScrollSettings();
   }, []);
-  useEffect(() => {
-    if (slides.length > 1) {
-      const timer = setInterval(() => {
-        setCurrentSlide(prev => (prev + 1) % slides.length);
-      }, scrollSpeed);
-      return () => clearInterval(timer);
-    }
-  }, [slides.length, scrollSpeed]);
-  const fetchScrollSettings = async () => {
-    try {
-      const {
-        data,
-        error
-      } = await supabase.from('dashboard_hero_settings').select('scroll_speed_seconds, auto_scroll_enabled').limit(1).single();
-      if (error && error.code !== 'PGRST116') throw error;
-      if (data && data.auto_scroll_enabled) {
-        setScrollSpeed(data.scroll_speed_seconds * 1000); // Convert to milliseconds
-      }
-    } catch (error) {
-      console.error('Error fetching scroll settings:', error);
-    }
-  };
+
   const fetchHeroSlides = async () => {
     try {
-      const {
-        data,
-        error
-      } = await supabase.from('dashboard_hero_slides').select('*').eq('is_active', true).order('display_order', {
-        ascending: true
-      });
+      const { data, error } = await supabase
+        .from('dashboard_hero_slides')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
       if (error) throw error;
       setSlides(data || []);
-      console.log('DashboardHeroCarousel: slides fetched', {
-        count: (data || []).length,
-        sample: (data || []).slice(0, 3)
-      });
     } catch (error) {
       console.error('Error fetching dashboard hero slides:', error);
     } finally {
       setLoading(false);
-      console.log('DashboardHeroCarousel: loading complete');
     }
-  };
-  const nextSlide = () => {
-    setCurrentSlide(prev => (prev + 1) % slides.length);
-  };
-  const prevSlide = () => {
-    setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
   };
 
   // Determine which image to use based on screen size
   const getImageUrl = (slide: HeroSlide) => {
     const width = window.innerWidth;
-
-    // Mobile: 1 image
     if (width < 768) {
       return slide.mobile_image_url || slide.image_url;
     }
-
-    // iPad: 2 images (we'll handle this with grid)
     if (width >= 768 && width < 1024) {
       return slide.ipad_image_url || slide.image_url;
     }
-
-    // Desktop: 3 images
     return slide.image_url;
   };
 
-  // Calculate how many slides to show
-  const getSlidesToShow = () => {
-    const width = window.innerWidth;
-    if (width < 768) return 2;
-    if (width >= 768 && width < 1024) return 3;
-    return 4;
-  };
   const handleSlideClick = (slide: HeroSlide, e: React.MouseEvent) => {
-    // If it's a link, navigate; otherwise expand the image
     if (slide.link_url) {
       if (slide.link_target === 'external') {
         window.open(slide.link_url, '_blank', 'noopener,noreferrer');
@@ -125,16 +103,31 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
         navigate(slide.link_url);
       }
     } else {
-      // Expand the image
       setExpandedSlide(slide);
     }
   };
-  const slidesToShow = getSlidesToShow();
+
   if (loading) {
-    return <div className="w-full h-80 bg-muted animate-pulse rounded-lg" />;
+    return (
+      <Card className="bg-background/95 backdrop-blur-sm">
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="flex items-center gap-2">
+            <Camera className="h-5 w-5 text-primary" />
+            Glee Cam
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3 pt-0">
+          <div className="flex gap-3">
+            <div className="flex-shrink-0 w-40 sm:w-48 h-32 bg-muted animate-pulse rounded-lg" />
+            <div className="flex-shrink-0 w-40 sm:w-48 h-32 bg-muted animate-pulse rounded-lg" />
+            <div className="flex-shrink-0 w-40 sm:w-48 h-32 bg-muted animate-pulse rounded-lg" />
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
+
   if (slides.length === 0) {
-    // Fallback: show sample slides from public images so the section is always visible
     const fallbackSlides: HeroSlide[] = [{
       id: 'fallback-1',
       title: 'Spelman Glee Club — Live in Concert',
@@ -154,138 +147,155 @@ export const DashboardHeroCarousel = ({ className }: DashboardHeroCarouselProps)
       image_url: '/images/hero-glee-3.jpg',
       display_order: 3
     }];
-    const visibleFallback = fallbackSlides.slice(0, slidesToShow);
-    return <Card className="bg-background/95 backdrop-blur-sm">
-          <CardHeader className="py-2 px-3">
-            <CardTitle className="flex items-center gap-2">
-              <Camera className="h-5 w-5 text-primary" />
-              Glee Cam
-              <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
-                member moments
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3 pt-0">
-          <div className="relative w-full rounded-lg overflow-hidden group">
-            <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
-              {visibleFallback.map((slide, idx) => <div 
-                key={`${slide.id}-${idx}`} 
-                className="relative w-full h-40 rounded-lg overflow-hidden hero-carousel-bg"
-                style={{
-                  backgroundImage: `url(${slide.image_url})`
-                }}
-              >
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent" />
 
-                  {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
-                      {slide.title && <h3 
-                        className="text-sm sm:text-base font-serif font-bold mb-0.5 drop-shadow-lg line-clamp-1"
-                        style={{ color: isHbcuTheme ? hbcuGold : '#ffffff' }}
-                      >{slide.title}</h3>}
-                      {slide.description && <p 
-                        className="text-[10px] sm:text-xs line-clamp-1 drop-shadow-md"
-                        style={{ color: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.95)', opacity: isHbcuTheme ? 0.9 : 1 }}
-                      >{slide.description}</p>}
-                    </div>}
-                </div>)}
+    return (
+      <Card className="bg-background/95 backdrop-blur-sm">
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="flex items-center gap-2">
+            <Camera className="h-5 w-5 text-primary" />
+            Glee Cam
+            <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
+              member moments
+            </span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="px-3 pb-3 pt-0">
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex gap-3">
+              {fallbackSlides.map((slide) => (
+                <SlideItem 
+                  key={slide.id} 
+                  slide={slide} 
+                  getImageUrl={getImageUrl}
+                  isHbcuTheme={isHbcuTheme}
+                  hbcuGold={hbcuGold}
+                  onClick={handleSlideClick}
+                />
+              ))}
             </div>
           </div>
-          </CardContent>
-        </Card>;
+        </CardContent>
+      </Card>
+    );
   }
 
-  // Get visible slides for the carousel
-  const getVisibleSlides = () => {
-    const visible = [];
-    for (let i = 0; i < slidesToShow; i++) {
-      visible.push(slides[(currentSlide + i) % slides.length]);
-    }
-    return visible;
-  };
-  const visibleSlides = getVisibleSlides();
-  return <Card className={`bg-background/95 backdrop-blur-sm ${className || ''}`}>
-    <CardHeader className="py-2 px-3">
-      <CardTitle className="flex items-center gap-2">
-        <Camera className="h-5 w-5 text-primary" />
-        Glee Cam
-        <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
-          member moments
-        </span>
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="px-3 pb-3 pt-0">
-        <div className="relative w-full rounded-lg overflow-hidden group">
-          <div className={`grid gap-4 w-full ${slidesToShow === 2 ? 'grid-cols-2' : slidesToShow === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
-            {visibleSlides.map((slide, idx) => <div 
-              key={`${slide.id}-${idx}`} 
-              className={`relative w-full h-40 rounded-lg overflow-hidden hero-carousel-bg cursor-pointer ${slide.link_url ? 'group' : ''}`}
-              onClick={(e) => handleSlideClick(slide, e)}
-              style={{
-                backgroundImage: `url(${getImageUrl(slide)})`
-              }}
-            >
-                <div className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-transparent transition-all duration-500 ${slide.link_url ? 'group-hover:scale-105' : ''}`} />
-
-                {/* Content Overlay */}
-                {(slide.title || slide.description) && <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3">
-                    {slide.title && <h3 
-                      className="text-sm sm:text-base font-serif font-bold mb-0.5 drop-shadow-lg line-clamp-1"
-                      style={{ color: isHbcuTheme ? hbcuGold : '#ffffff' }}
-                    >{slide.title}</h3>}
-                    {slide.description && <p 
-                      className="text-[10px] sm:text-xs line-clamp-1 drop-shadow-md"
-                      style={{ color: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.95)', opacity: isHbcuTheme ? 0.9 : 1 }}
-                    >{slide.description}</p>}
-                  </div>}
-              </div>)}
+  return (
+    <Card className={`bg-background/95 backdrop-blur-sm ${className || ''}`}>
+      <CardHeader className="py-2 px-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Camera className="h-5 w-5 text-primary" />
+            Glee Cam
+            <span className="text-[10px] md:text-xs font-normal text-foreground/70 ml-2 uppercase">
+              member moments
+            </span>
+          </CardTitle>
+          {slides.length > 3 && (
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={scrollPrev}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={scrollNext}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="px-3 pb-3 pt-0">
+        <div className="overflow-hidden cursor-grab active:cursor-grabbing" ref={emblaRef}>
+          <div className="flex gap-3">
+            {slides.map((slide) => (
+              <SlideItem 
+                key={slide.id} 
+                slide={slide} 
+                getImageUrl={getImageUrl}
+                isHbcuTheme={isHbcuTheme}
+                hbcuGold={hbcuGold}
+                onClick={handleSlideClick}
+              />
+            ))}
           </div>
-
-          {/* Navigation Buttons - Only show if more slides than visible */}
-          {slides.length > slidesToShow && <>
-              <Button variant="ghost" size="icon" className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={prevSlide}>
-                <ChevronLeft className="h-6 w-6" />
-              </Button>
-              <Button variant="ghost" size="icon" className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white opacity-0 group-hover:opacity-100 transition-opacity z-10" onClick={nextSlide}>
-                <ChevronRight className="h-6 w-6" />
-              </Button>
-
-              {/* Dots Indicator */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                {slides.map((_, index) => <button key={index} onClick={() => setCurrentSlide(index)} className={`w-2 h-2 rounded-full transition-all ${index === currentSlide ? 'bg-white w-8' : 'bg-white/50 hover:bg-white/75'}`} aria-label={`Go to slide ${index + 1}`} />)}
-              </div>
-            </>}
         </div>
 
-      {/* Expanded Image Modal */}
-      <Dialog open={!!expandedSlide} onOpenChange={(open) => !open && setExpandedSlide(null)}>
-        <DialogContent className="p-0 border-0 bg-transparent shadow-none w-full max-w-[100vw] md:max-w-[85vw] lg:max-w-[70vw]">
-          <div className="relative w-full">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full"
-              onClick={() => setExpandedSlide(null)}
-            >
-              <X className="h-5 w-5" />
-            </Button>
-            {expandedSlide && (
-              <img
-                src={getImageUrl(expandedSlide)}
-                alt={expandedSlide.title || 'Hero image'}
-                className="w-full h-auto rounded-lg object-contain max-h-[90vh]"
-              />
-            )}
-            {expandedSlide?.title && (
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent rounded-b-lg">
-                <h4 className="text-white text-lg md:text-xl font-bold">{expandedSlide.title}</h4>
-                {expandedSlide.description && (
-                  <p className="text-white/90 text-sm md:text-base mt-1">{expandedSlide.description}</p>
-                )}
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-    </CardContent>
-  </Card>;
+        {/* Expanded Image Modal */}
+        <Dialog open={!!expandedSlide} onOpenChange={(open) => !open && setExpandedSlide(null)}>
+          <DialogContent className="p-0 border-0 bg-transparent shadow-none w-full max-w-[100vw] md:max-w-[85vw] lg:max-w-[70vw]">
+            <div className="relative w-full">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 z-50 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                onClick={() => setExpandedSlide(null)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+              {expandedSlide && (
+                <img
+                  src={getImageUrl(expandedSlide)}
+                  alt={expandedSlide.title || 'Hero image'}
+                  className="w-full h-auto rounded-lg object-contain max-h-[90vh]"
+                />
+              )}
+              {expandedSlide?.title && (
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent rounded-b-lg">
+                  <h4 className="text-white text-lg md:text-xl font-bold">{expandedSlide.title}</h4>
+                  {expandedSlide.description && (
+                    <p className="text-white/90 text-sm md:text-base mt-1">{expandedSlide.description}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
 };
+
+// Extracted slide component for cleaner code
+const SlideItem = ({ 
+  slide, 
+  getImageUrl, 
+  isHbcuTheme, 
+  hbcuGold, 
+  onClick 
+}: { 
+  slide: HeroSlide; 
+  getImageUrl: (slide: HeroSlide) => string;
+  isHbcuTheme: boolean;
+  hbcuGold: string;
+  onClick: (slide: HeroSlide, e: React.MouseEvent) => void;
+}) => (
+  <div 
+    className="flex-shrink-0 w-40 sm:w-48 md:w-56 relative h-32 sm:h-36 rounded-lg overflow-hidden cursor-pointer group"
+    onClick={(e) => onClick(slide, e)}
+  >
+    <img 
+      src={getImageUrl(slide)} 
+      alt={slide.title || 'Glee Cam'} 
+      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+    />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+    {(slide.title || slide.description) && (
+      <div className="absolute bottom-0 left-0 right-0 p-2">
+        {slide.title && (
+          <h3 
+            className="text-xs sm:text-sm font-serif font-bold mb-0.5 drop-shadow-lg line-clamp-1"
+            style={{ color: isHbcuTheme ? hbcuGold : '#ffffff' }}
+          >
+            {slide.title}
+          </h3>
+        )}
+        {slide.description && (
+          <p 
+            className="text-[9px] sm:text-[10px] line-clamp-1 drop-shadow-md"
+            style={{ color: isHbcuTheme ? hbcuGold : 'rgba(255,255,255,0.95)', opacity: isHbcuTheme ? 0.9 : 1 }}
+          >
+            {slide.description}
+          </p>
+        )}
+      </div>
+    )}
+  </div>
+);
