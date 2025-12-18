@@ -297,307 +297,203 @@ export const BookingRequestManager = ({ user }: BookingRequestManagerProps) => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        {Object.entries(statusCounts).map(([status, count]) => (
-          <Card key={status} className="text-center">
-            <CardContent className="pt-4">
-              <div className="text-2xl font-bold text-foreground">{count}</div>
-              <div className="text-sm text-muted-foreground capitalize">
-                {status === 'all' ? 'Total' : status}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
+    <div className="space-y-4">
+      {/* Compact Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search organizations, contacts, or event types..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+            className="pl-9 h-9 bg-background border-border"
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[200px]">
+          <SelectTrigger className="w-full sm:w-[160px] h-9">
             <Filter className="h-4 w-4 mr-2" />
-            <SelectValue placeholder="Filter by status" />
+            <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="reviewed">Reviewed</SelectItem>
-            <SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="declined">Declined</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="all">All ({statusCounts.all})</SelectItem>
+            <SelectItem value="new">New ({statusCounts.new})</SelectItem>
+            <SelectItem value="reviewed">Reviewed ({statusCounts.reviewed})</SelectItem>
+            <SelectItem value="approved">Approved ({statusCounts.approved})</SelectItem>
+            <SelectItem value="declined">Declined ({statusCounts.declined})</SelectItem>
+            <SelectItem value="completed">Completed ({statusCounts.completed})</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Requests List */}
-      <div className="grid gap-6">
+      {/* Requests List - Clean Cards */}
+      <div className="space-y-3">
         {filteredRequests.map((request) => (
-          <Card key={request.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-4">
-              <div className="flex justify-between items-start">
-                <div className="space-y-2">
-                  <CardTitle className="text-lg">{request.organization_name}</CardTitle>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Building className="h-4 w-4" />
-                      {request.contact_name}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Mail className="h-4 w-4" />
-                      {request.contact_email}
-                    </div>
-                    {request.contact_phone && (
-                      <div className="flex items-center gap-1">
-                        <Phone className="h-4 w-4" />
-                        {request.contact_phone}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <Badge className={`${getStatusColor(request.status)} gap-1`}>
-                  {getStatusIcon(request.status)}
-                  {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{formatDate(request.event_date)}</span>
-                    <Clock className="h-4 w-4 text-muted-foreground ml-2" />
-                    <span>{formatTime(request.event_time)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{request.event_location}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span>{request.event_type}</span>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                    <span>{request.estimated_audience} expected attendees</span>
-                  </div>
-                  {request.budget_range && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      <span>{request.budget_range}</span>
-                    </div>
+          <div 
+            key={request.id} 
+            className="bg-card border border-border rounded-lg p-4 hover:border-primary/30 transition-colors"
+          >
+            {/* Compact Request Row */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground truncate">{request.organization_name}</h3>
+                <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    {new Date(request.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                    {request.event_time && ` at ${formatTime(request.event_time)}`}
+                  </span>
+                  {request.estimated_audience > 0 && (
+                    <span className="flex items-center gap-1">
+                      <DollarSign className="h-3.5 w-3.5" />
+                      {request.estimated_audience} attendees
+                    </span>
                   )}
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm">Event Description</h4>
-                <p className="text-sm text-muted-foreground">{request.event_description}</p>
+              <div className="flex items-center gap-3">
+                <Badge 
+                  variant="outline" 
+                  className={`${getStatusColor(request.status)} text-xs font-medium px-2.5 py-0.5`}
+                >
+                  {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                </Badge>
+                {request.budget_range && (
+                  <span className="text-primary font-semibold text-sm whitespace-nowrap">
+                    {request.budget_range}
+                  </span>
+                )}
               </div>
-
-              {request.special_requests && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Special Requests</h4>
-                  <p className="text-sm text-muted-foreground">{request.special_requests}</p>
-                </div>
-              )}
-
-              {request.notes && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm">Notes</h4>
-                  <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">
-                    {request.notes}
+            </div>
+            
+            {/* Expandable Details - Only show on click/hover */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mt-3 h-7 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  <Eye className="h-3.5 w-3.5 mr-1" />
+                  View Details
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>{request.organization_name}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 pt-4">
+                  {/* Contact Info */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Contact:</span>
+                      <p className="font-medium">{request.contact_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>
+                      <p className="font-medium">{request.contact_email}</p>
+                    </div>
+                    {request.contact_phone && (
+                      <div>
+                        <span className="text-muted-foreground">Phone:</span>
+                        <p className="font-medium">{request.contact_phone}</p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="text-muted-foreground">Event Type:</span>
+                      <p className="font-medium">{request.event_type}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Event Details */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Event Details</h4>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span>{formatDate(request.event_date)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span>{formatTime(request.event_time)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span>{request.event_location}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <span>{request.estimated_audience} attendees</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-sm">Description</h4>
+                    <p className="text-sm text-muted-foreground">{request.event_description}</p>
+                  </div>
+                  
+                  {request.special_requests && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Special Requests</h4>
+                      <p className="text-sm text-muted-foreground">{request.special_requests}</p>
+                    </div>
+                  )}
+                  
+                  {request.notes && (
+                    <div className="space-y-2">
+                      <h4 className="font-medium text-sm">Notes</h4>
+                      <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md whitespace-pre-wrap">
+                        {request.notes}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Actions */}
+                  <div className="flex flex-wrap gap-2 pt-4 border-t">
+                    <Select 
+                      value={request.status} 
+                      onValueChange={(value) => updateRequestStatus(request.id, value as BookingRequest['status'])}
+                    >
+                      <SelectTrigger className="w-[140px] h-8 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="reviewed">Reviewed</SelectItem>
+                        <SelectItem value="approved">Approved</SelectItem>
+                        <SelectItem value="declined">Declined</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="sm" className="h-8 text-xs">
+                      <StickyNote className="h-3.5 w-3.5 mr-1" />
+                      Note
+                    </Button>
+                    <Button variant="outline" size="sm" className="h-8 text-xs">
+                      <MessageSquare className="h-3.5 w-3.5 mr-1" />
+                      Respond
+                    </Button>
                   </div>
                 </div>
-              )}
-
-              <div className="flex justify-between items-center pt-4 border-t">
-                <div className="text-xs text-muted-foreground">
-                  Submitted {formatDate(request.created_at)}
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  {/* Add Note Dialog */}
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
-                        <StickyNote className="h-4 w-4 mr-1" />
-                        Add Note
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Add Note to {request.organization_name}</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Note</label>
-                          <Textarea
-                            placeholder="Add your note about this booking request..."
-                            value={newNote}
-                            onChange={(e) => setNewNote(e.target.value)}
-                            rows={4}
-                          />
-                        </div>
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="outline" onClick={() => {
-                            setSelectedRequest(null);
-                            setNewNote('');
-                          }}>
-                            Cancel
-                          </Button>
-                          <Button onClick={() => {
-                            if (selectedRequest && newNote.trim()) {
-                              addNoteToRequest(selectedRequest.id, newNote);
-                              setSelectedRequest(null);
-                              setNewNote('');
-                            }
-                          }}>
-                            <PlusCircle className="h-4 w-4 mr-1" />
-                            Add Note
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* Forward to Dr Johnson Dialog */}
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
-                        <Forward className="h-4 w-4 mr-1" />
-                        Forward to Dr. Johnson
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Forward to Dr. Johnson</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Note for Dr. Johnson</label>
-                          <Textarea
-                            placeholder="Add a note for Dr. Johnson about this booking request..."
-                            value={forwardNote}
-                            onChange={(e) => setForwardNote(e.target.value)}
-                            rows={4}
-                          />
-                        </div>
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="outline" onClick={() => {
-                            setSelectedRequest(null);
-                            setForwardNote('');
-                          }}>
-                            Cancel
-                          </Button>
-                          <Button onClick={() => {
-                            if (selectedRequest && forwardNote.trim()) {
-                              forwardToDrJohnson(selectedRequest, forwardNote);
-                              setSelectedRequest(null);
-                              setForwardNote('');
-                            }
-                          }}>
-                            <Forward className="h-4 w-4 mr-1" />
-                            Forward Request
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  {/* Response Dialog */}
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedRequest(request)}>
-                        <MessageSquare className="h-4 w-4 mr-1" />
-                        Respond
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                      <DialogHeader>
-                        <DialogTitle>Respond to {request.organization_name}</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">Response Message</label>
-                          <Textarea
-                            placeholder="Type your response to the organization..."
-                            value={responseMessage}
-                            onChange={(e) => setResponseMessage(e.target.value)}
-                            rows={6}
-                          />
-                        </div>
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="outline" onClick={() => setSelectedRequest(null)}>
-                            Cancel
-                          </Button>
-                          <Button onClick={() => selectedRequest && sendResponse(selectedRequest)}>
-                            <Send className="h-4 w-4 mr-1" />
-                            Send Response
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  
-                  {request.status === 'new' && (
-                    <>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => updateRequestStatus(request.id, 'reviewed')}
-                      >
-                        Mark Reviewed
-                      </Button>
-                      <Button 
-                        size="sm"
-                        onClick={() => updateRequestStatus(request.id, 'approved')}
-                      >
-                        <CheckCircle className="h-4 w-4 mr-1" />
-                        Approve
-                      </Button>
-                    </>
-                  )}
-                  
-                  {request.status === 'approved' && (
-                    <Button size="sm" variant="outline">
-                      <FileSignature className="h-4 w-4 mr-1" />
-                      Create Contract
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </DialogContent>
+            </Dialog>
+          </div>
         ))}
       </div>
 
       {filteredRequests.length === 0 && (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No booking requests found</h3>
-              <p className="text-muted-foreground">
-                {searchTerm || statusFilter !== 'all' 
-                  ? 'Try adjusting your search or filter criteria.'
-                  : 'Booking requests will appear here when organizations submit performance inquiries.'
-                }
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="border border-dashed border-border rounded-lg p-8 text-center">
+          <FileText className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+          <h3 className="font-medium text-foreground mb-1">No booking requests found</h3>
+          <p className="text-sm text-muted-foreground">
+            {searchTerm || statusFilter !== 'all' 
+              ? 'Try adjusting your search or filter.'
+              : 'Booking requests will appear here when organizations submit performance inquiries.'
+            }
+          </p>
+        </div>
       )}
     </div>
   );
