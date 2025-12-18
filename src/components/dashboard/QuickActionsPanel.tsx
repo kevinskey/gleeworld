@@ -8,6 +8,23 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { UNIFIED_MODULES } from "@/config/unified-modules";
 import { 
+  DndContext, 
+  closestCenter, 
+  KeyboardSensor, 
+  PointerSensor, 
+  useSensor, 
+  useSensors,
+  DragEndEvent 
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { 
   Zap, 
   Shield, 
   Calendar, 
@@ -30,7 +47,8 @@ import {
   Star,
   Globe,
   Home,
-  MessageSquare
+  MessageSquare,
+  GripVertical
 } from "lucide-react";
 
 interface QuickAction {
@@ -56,9 +74,90 @@ interface QuickActionsPanelProps {
     quickActions: QuickAction[];
     addQuickAction: (moduleId: string) => Promise<boolean>;
     removeQuickAction: (moduleId: string) => Promise<boolean>;
+    reorderQuickActions?: (moduleIds: string[]) => Promise<void>;
     isInQuickActions: (moduleId: string) => boolean;
   };
 }
+
+// Available icons for quick actions
+const availableIcons = {
+  Zap, Shield, Calendar, Clock, Users, BarChart3, Music, FileText, Mail, 
+  Camera, Mic, BookOpen, Heart, Star, Globe, Home, MessageSquare, Settings, GripVertical
+};
+
+interface SortableActionItemProps {
+  action: {
+    id: string;
+    moduleId: string;
+    title: string;
+    description: string;
+    icon: string;
+  };
+  isManaging: boolean;
+  onActionClick: (moduleId: string) => void;
+  onDelete: (moduleId: string) => void;
+}
+
+const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: SortableActionItemProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: action.moduleId });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const IconComponent = availableIcons[action.icon as keyof typeof availableIcons] || Zap;
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2">
+      {isManaging && (
+        <button
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-slate-400/20 dark:hover:bg-slate-600/20 rounded"
+        >
+          <GripVertical className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+        </button>
+      )}
+      <Button
+        variant="ghost"
+        className="flex-1 justify-start h-auto p-3 hover:bg-slate-400/20 dark:hover:bg-slate-600/20 group border border-transparent hover:border-slate-500 dark:hover:border-slate-400 rounded-lg transition-all duration-200"
+        onClick={() => onActionClick(action.moduleId)}
+      >
+        <div className="flex items-center gap-3 w-full">
+          <div 
+            className={`w-10 h-10 rounded-lg bg-slate-400/30 dark:bg-slate-600/30 flex items-center justify-center group-hover:scale-110 transition-transform border border-slate-500 dark:border-slate-400`}
+          >
+            <IconComponent className={`h-5 w-5 text-slate-800 dark:text-slate-100`} />
+          </div>
+          <div className="flex-1 text-left">
+            <div className="font-semibold text-sm text-slate-800 dark:text-slate-100 font-mono">{action.title}</div>
+            <div className="text-xs text-slate-600 dark:text-slate-300 font-mono">{action.description}</div>
+          </div>
+          <ChevronRight className="h-4 w-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100 transition-colors" />
+        </div>
+      </Button>
+      {isManaging && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-10 w-10 p-0 hover:bg-red-500/20 text-red-600 hover:text-red-700"
+          onClick={() => onDelete(action.moduleId)}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  );
+};
 
 export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quickActions }: QuickActionsPanelProps) => {
   const navigate = useNavigate();
@@ -78,11 +177,17 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
     category: module.category
   }));
 
-  // Available icons for quick actions
-  const availableIcons = {
-    Zap, Shield, Calendar, Clock, Users, BarChart3, Music, FileText, Mail, 
-    Camera, Mic, BookOpen, Heart, Star, Globe, Home, MessageSquare, Settings
-  };
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   // Build display actions from database-backed quickActions
   const allActions = useMemo(() => {
@@ -132,8 +237,20 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
     }
   };
 
-  const getIconComponent = (iconName: string) => {
-    return availableIcons[iconName as keyof typeof availableIcons] || Zap;
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = allActions.findIndex((a) => a.moduleId === active.id);
+      const newIndex = allActions.findIndex((a) => a.moduleId === over.id);
+      
+      const newOrder = arrayMove(allActions, oldIndex, newIndex);
+      const moduleIds = newOrder.map(a => a.moduleId);
+      
+      if (quickActions?.reorderQuickActions) {
+        await quickActions.reorderQuickActions(moduleIds);
+      }
+    }
   };
 
   return (
@@ -229,49 +346,47 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                 size="sm"
                 className="h-7 w-7 p-0 hover:bg-slate-400/20 dark:hover:bg-slate-600/20"
                 onClick={() => setIsManaging(!isManaging)}
+                title={isManaging ? "Done editing" : "Edit & reorder"}
               >
-                <Settings className="h-3 w-3 text-slate-800 dark:text-slate-100" />
+                <Settings className={`h-3 w-3 text-slate-800 dark:text-slate-100 ${isManaging ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </div>
 
-          {/* Actions Grid */}
+          {/* Actions Grid with DnD */}
           <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
-            {allActions.map((action) => {
-              const IconComponent = getIconComponent(action.icon);
-              return (
-                <div key={action.id} className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    className="flex-1 justify-start h-auto p-3 hover:bg-slate-400/20 dark:hover:bg-slate-600/20 group border border-transparent hover:border-slate-500 dark:hover:border-slate-400 rounded-lg transition-all duration-200"
-                    onClick={() => handleActionClick(action.moduleId)}
-                  >
-                    <div className="flex items-center gap-3 w-full">
-                      <div 
-                        className={`w-10 h-10 rounded-lg bg-slate-400/30 dark:bg-slate-600/30 flex items-center justify-center group-hover:scale-110 transition-transform border border-slate-500 dark:border-slate-400`}
-                      >
-                        <IconComponent className={`h-5 w-5 text-slate-800 dark:text-slate-100`} />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <div className="font-semibold text-sm text-slate-800 dark:text-slate-100 font-mono">{action.title}</div>
-                        <div className="text-xs text-slate-600 dark:text-slate-300 font-mono">{action.description}</div>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-slate-600 dark:text-slate-300 group-hover:text-slate-800 dark:group-hover:text-slate-100 transition-colors" />
-                    </div>
-                  </Button>
-                  {isManaging && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 w-10 p-0 hover:bg-red-500/20 text-red-600 hover:text-red-700"
-                      onClick={() => handleDeleteAction(action.moduleId)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              );
-            })}
+            {isManaging ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={allActions.map(a => a.moduleId)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {allActions.map((action) => (
+                    <SortableActionItem
+                      key={action.moduleId}
+                      action={action}
+                      isManaging={isManaging}
+                      onActionClick={handleActionClick}
+                      onDelete={handleDeleteAction}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            ) : (
+              allActions.map((action) => (
+                <SortableActionItem
+                  key={action.moduleId}
+                  action={action}
+                  isManaging={false}
+                  onActionClick={handleActionClick}
+                  onDelete={handleDeleteAction}
+                />
+              ))
+            )}
             {allActions.length === 0 && (
               <div className="text-center py-8 text-slate-600 dark:text-slate-300">
                 <p className="text-sm font-mono mb-2">No quick actions configured</p>
@@ -294,7 +409,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
             
             <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 font-mono pt-2">
               <span>
-                {isManaging ? 'Managing Mode' : 'Click outside to close'}
+                {isManaging ? 'Drag to reorder • Click ✕ to delete' : 'Click outside to close'}
               </span>
               <span>
                 {allActions.length} action{allActions.length !== 1 ? 's' : ''}
