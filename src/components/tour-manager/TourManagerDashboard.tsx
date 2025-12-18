@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
   Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, 
   CheckCircle2, ArrowRight, Building2, Bed, Bus, Video, Package, 
-  ClipboardList, Shirt, DollarSign, UserCheck
+  ClipboardList, Shirt, DollarSign, UserCheck, ExternalLink
 } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
@@ -47,6 +48,7 @@ interface DashboardStats {
 }
 
 export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('booking-requests');
   const [contractEventData, setContractEventData] = useState<any>(null);
   const [stats, setStats] = useState<DashboardStats>({
@@ -129,6 +131,16 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                 <p className="text-muted-foreground">
                   Here's your tour management overview for today
                 </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3 gap-2"
+                  onClick={() => navigate('/bus-information')}
+                >
+                  <Bus className="h-4 w-4" />
+                  Bus Information
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
               </div>
               <div className="text-right text-sm text-muted-foreground">
                 <p>{new Date().toLocaleDateString('en-US', { 
