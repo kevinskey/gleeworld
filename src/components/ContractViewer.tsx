@@ -139,7 +139,7 @@ export const ContractViewer = ({ contract, open, onOpenChange }: ContractViewerP
       >
         <DialogHeader className="px-4 md:px-0">
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-lg md:text-xl" style={{ color: '#1a1a1a' }}>{enhancedContract.title}</DialogTitle>
+            <DialogTitle className="text-lg md:text-xl font-bold" style={{ color: '#000000' }}>{enhancedContract.title}</DialogTitle>
             <Badge className={getStatusColor(enhancedContract.status)}>
               {getStatusText(enhancedContract.status)}
             </Badge>
