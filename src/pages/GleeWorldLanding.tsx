@@ -259,10 +259,10 @@ export const GleeWorldLanding = () => {
       {/* Concert Ticket Request Hero Banner - REMOVED: Concerts are over */}
 
       {/* Hero Section */}
-      <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-4 sm:py-6 md:py-10 lg:py-12 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="overflow-hidden bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl rounded-lg sm:rounded-xl md:rounded-2xl">
-            <div className="h-[350px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] 2xl:h-[900px] relative overflow-hidden">
+            <div className="h-[280px] sm:h-[400px] md:h-[500px] lg:h-[600px] xl:h-[700px] 2xl:h-[800px] relative overflow-hidden">
               {heroSlides.length > 0 ? <>
                   {/* Desktop Image */}
                   <img src={currentHeroSlide?.image_url || "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"} alt="Hero Background" className="hidden md:block w-full h-full object-contain transition-opacity duration-500 brightness-95 contrast-100" onError={e => {
@@ -339,16 +339,16 @@ export const GleeWorldLanding = () => {
 
 
       {/* Upcoming Events Section */}
-      <section className="relative z-30 py-8 sm:py-10 md:py-12 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section id="events" className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-            <div className="text-center mb-4 sm:mb-6 md:mb-8">
+          <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+            <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-foreground mb-2">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-secondary animate-pulse" />
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-dancing font-bold text-foreground mb-2">
                   Upcoming Events
                 </h2>
-                <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-primary animate-pulse" />
               </div>
             </div>
               
@@ -485,17 +485,17 @@ export const GleeWorldLanding = () => {
       </section>
 
       {/* Featured Products Section */}
-      <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+          <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             {/* The Glee Store Title */}
-            <div className="text-center mb-4 sm:mb-6 md:mb-8">
+            <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-foreground mb-2">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-secondary animate-pulse" />
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-dancing font-bold text-foreground mb-2">
                   The Glee Store
                 </h2>
-                <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-primary animate-pulse" />
               </div>
             </div>
             
@@ -506,18 +506,18 @@ export const GleeWorldLanding = () => {
 
       {/* Albums Section - Fan Only */}
       {albums.length > 0 && <FanOnlyMusicSection albumCount={albums.length}>
-          <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+          <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
             <div className="w-full max-w-screen-2xl mx-auto">
-              <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-                <div className="text-center mb-4 sm:mb-6 md:mb-8">
+              <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+                <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
                   <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                    <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-secondary animate-pulse" />
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-foreground mb-2">
+                    <AlbumIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-secondary animate-pulse" />
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-dancing font-bold text-foreground mb-2">
                       Our Music
                     </h2>
-                    <AlbumIcon className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-primary animate-pulse" />
+                    <AlbumIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-primary animate-pulse" />
                   </div>
-                  <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Discover our musical journey through our album collection</p>
+                  <p className="text-muted-foreground text-xs sm:text-sm md:text-base lg:text-lg">Discover our musical journey through our album collection</p>
                 </div>
                 
                 {/* Horizontal Scroll for All Devices */}
@@ -563,18 +563,18 @@ export const GleeWorldLanding = () => {
       <AlbumModal album={selectedAlbum} isOpen={isAlbumModalOpen} onClose={handleCloseAlbumModal} />
 
       {/* YouTube Section */}
-      <section className="relative z-30 py-[27.5px] sm:py-16 md:py-20 px-4 sm:px-4 md:px-6 lg:px-8 w-full">
+      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
         <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="p-4 sm:p-6 md:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
-            <div className="text-center mb-4 sm:mb-6 md:mb-8">
+          <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+            <div className="text-center mb-3 sm:mb-4 md:mb-6 lg:mb-8">
               <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
-                <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-destructive animate-pulse" />
-                <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-dancing font-bold text-foreground mb-2">
+                <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-destructive animate-pulse" />
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-dancing font-bold text-foreground mb-2">
                   YouTube Channel
                 </h2>
-                <Youtube className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10 text-destructive animate-pulse" />
+                <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-10 lg:w-10 text-destructive animate-pulse" />
               </div>
-              <p className="text-muted-foreground text-sm sm:text-base lg:text-lg">Experience our performances and behind-the-scenes moments</p>
+              <p className="text-muted-foreground text-xs sm:text-sm md:text-base lg:text-lg">Experience our performances and behind-the-scenes moments</p>
             </div>
             
             <YoutubeVideoSection />
@@ -584,10 +584,10 @@ export const GleeWorldLanding = () => {
 
 
       {/* Footer */}
-      <section className="relative z-30 pt-16 sm:pt-20 md:pt-24 pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
+      <section className="relative z-30 pt-8 sm:pt-12 md:pt-16 lg:pt-20 pb-4 sm:pb-6 px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="w-full max-w-screen-2xl mx-auto">
-          <Card className="bg-primary text-primary-foreground p-6 sm:p-8 md:p-12 border-2 border-border shadow-xl">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          <Card className="bg-primary text-primary-foreground p-4 sm:p-6 md:p-8 lg:p-12 border-2 border-border shadow-xl">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="text-base sm:text-lg font-semibold">Spelman College Glee Club</h3>
                 <p className="text-primary-foreground/60 text-sm">
