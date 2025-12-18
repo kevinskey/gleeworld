@@ -102,10 +102,14 @@ export const GleeWorldLanding = () => {
         // Add shorter timeout to prevent hanging
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Data fetch timeout')), 3000));
 
+        // Get start of today for event filtering (so today's events still show)
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
         // Fetch hero slides and events in parallel with timeout
         const fetchPromises = Promise.all([supabase.from('gw_hero_slides').select('*').eq('usage_context', 'homepage').eq('is_active', true).order('display_order', {
           ascending: true
-        }), supabase.from('gw_events').select('*').gte('start_date', new Date().toISOString()).eq('is_public', true).order('start_date', {
+        }), supabase.from('gw_events').select('*').gte('start_date', startOfToday.toISOString()).eq('is_public', true).order('start_date', {
           ascending: true
         }).limit(6)]);
         const results = (await Promise.race([fetchPromises, timeoutPromise])) as any;
