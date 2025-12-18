@@ -185,15 +185,15 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
               { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
               // MUS 240 specific: Journals
-              ...(course.id === 'mus-240' ? [{ icon: PenLine, label: 'Journals', tab: 'journals' }] : []),
+              ...(course.id === 'a0000000-0000-0000-0000-000000000240' ? [{ icon: PenLine, label: 'Journals', tab: 'journals' }] : []),
               { icon: FileCheck, label: 'Tests', tab: 'tests' },
               { icon: BarChart, label: 'Polls', tab: 'polls' },
               // MUS 240 specific: AI Group Project
-              ...(course.id === 'mus-240' ? [{ icon: Brain, label: 'AI Groups', tab: 'ai-groups' }] : []),
+              ...(course.id === 'a0000000-0000-0000-0000-000000000240' ? [{ icon: Brain, label: 'AI Groups', tab: 'ai-groups' }] : []),
               { icon: Users, label: 'Groups', tab: 'groups' },
               { icon: MessageSquare, label: 'Lounge', tab: 'lounge' },
               // MUS 240 specific: Resources
-              ...(course.id === 'mus-240' ? [{ icon: Library, label: 'Resources', tab: 'resources' }] : []),
+              ...(course.id === 'a0000000-0000-0000-0000-000000000240' ? [{ icon: Library, label: 'Resources', tab: 'resources' }] : []),
               { icon: Trophy, label: 'Grades', tab: 'grades' },
               { icon: UserCheck, label: 'Attendance', tab: 'attendance' },
               { icon: Ruler, label: 'Rubrics', tab: 'rubrics' },
@@ -364,7 +364,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {/* MUS 240 Journals Tab */}
-            {activeTab === 'journals' && course.id === 'mus-240' && (
+            {activeTab === 'journals' && course.id === 'a0000000-0000-0000-0000-000000000240' && (
               <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading journals...</CardContent></Card>}>
                 <Card>
                   <CardHeader>
@@ -392,7 +392,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                   <CardTitle>Tests & Quizzes</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {course.id === 'mus-240' ? (
+                  {course.id === 'a0000000-0000-0000-0000-000000000240' ? (
                     <div className="space-y-4">
                       <p className="text-muted-foreground">Access all MUS 240 tests and exams from your student dashboard.</p>
                       <Button onClick={() => navigate('/mus-240/student/dashboard')}>
@@ -408,7 +408,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {activeTab === 'polls' && (
-              course.id === 'mus-240' ? (
+              course.id === 'a0000000-0000-0000-0000-000000000240' ? (
                 <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading polls...</CardContent></Card>}>
                   <Mus240PollSystem />
                 </React.Suspense>
@@ -425,7 +425,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {/* MUS 240 AI Groups Tab */}
-            {activeTab === 'ai-groups' && course.id === 'mus-240' && (
+            {activeTab === 'ai-groups' && course.id === 'a0000000-0000-0000-0000-000000000240' && (
               <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading groups...</CardContent></Card>}>
                 <Card>
                   <CardHeader>
@@ -453,7 +453,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {/* MUS 240 Resources Tab */}
-            {activeTab === 'resources' && course.id === 'mus-240' && (
+            {activeTab === 'resources' && course.id === 'a0000000-0000-0000-0000-000000000240' && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -486,7 +486,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             {activeTab === 'grades' && (
               course.id === 'a0000000-0000-0000-0000-000000000070' && isAdmin ? (
                 <Mus070GradeSpreadsheet />
-              ) : course.id === 'mus-240' && isAdmin ? (
+              ) : course.id === 'a0000000-0000-0000-0000-000000000240' && isAdmin ? (
                 <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading grades...</CardContent></Card>}>
                   <GradesAdmin />
                 </React.Suspense>
