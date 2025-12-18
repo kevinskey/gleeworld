@@ -86,7 +86,7 @@ const GleeAcademy = () => {
                         </ul>
                       </div>
                       
-                      <Button className="w-full mt-4 bg-[#1a1a2e] hover:bg-[#16213e] text-white" size="default" onClick={e => {
+                      <Button className="w-full mt-4 bg-primary hover:bg-primary/90 text-primary-foreground" size="default" onClick={e => {
                     e.stopPropagation();
                     handleCourseClick(course.route);
                   }}>
