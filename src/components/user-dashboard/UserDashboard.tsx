@@ -223,7 +223,9 @@ const UserDashboard = React.memo(() => {
                    profile?.first_name?.toLowerCase() === 'aliyah' ||
                    (profile?.full_name?.toLowerCase().includes('aliyah') && profile?.full_name?.toLowerCase().includes('deere'));
   
-  const isTourManager = isOnnesty || isAliyah;
+  // Include admins in tour manager access
+  const hasAdminAccess = profile?.is_admin || profile?.is_super_admin;
+  const isTourManager = isOnnesty || isAliyah || hasAdminAccess;
   const isHonesty = isTourManager; // Keep for backward compatibility
   
   console.log('UserDashboard: Debug info for user:', {
