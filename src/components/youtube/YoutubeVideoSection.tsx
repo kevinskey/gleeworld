@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 
 const CHANNEL_URL = 'https://www.youtube.com/@SpelmanCollegeGleeClub';
-const CHANNEL_INPUT = '@SpelmanCollegeGleeClub';
+const UPLOADS_PLAYLIST_ID = 'UUZYTClx2T1of7BRZ86-8fow';
 
 interface YouTubeVideo {
   id: string;
@@ -19,6 +19,7 @@ export const YoutubeVideoSection: React.FC = () => {
   const [videos, setVideos] = useState<YouTubeVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
+  const [showPlaylist, setShowPlaylist] = useState(false);
 
   useEffect(() => {
     fetchVideos();
@@ -26,57 +27,22 @@ export const YoutubeVideoSection: React.FC = () => {
 
   const fetchVideos = async () => {
     try {
-      // First try to get videos from database
+      // Only fetch from database - don't auto-sync to avoid quota issues
       const { data: videosData, error } = await supabase
         .from('youtube_videos')
         .select('id, video_id, title, thumbnail_url, duration, view_count')
         .order('published_at', { ascending: false })
         .limit(6);
 
-      if (error) {
-        console.error('Error fetching videos:', error);
-        setLoading(false);
-        return;
-      }
-
-      if (videosData && videosData.length > 0) {
+      if (!error && videosData && videosData.length > 0) {
         setVideos(videosData);
-        setLoading(false);
-        return;
-      }
-
-      // If no videos in DB, trigger sync
-      await syncVideos();
-    } catch (err) {
-      console.error('Error:', err);
-      setLoading(false);
-    }
-  };
-
-  const syncVideos = async () => {
-    try {
-      const { error } = await supabase.functions.invoke('sync-youtube-videos', {
-        body: { channelInput: CHANNEL_INPUT, maxResults: 12 }
-      });
-
-      if (error) {
-        console.error('Sync error:', error);
-        setLoading(false);
-        return;
-      }
-
-      // Refetch videos after sync
-      const { data: videosData } = await supabase
-        .from('youtube_videos')
-        .select('id, video_id, title, thumbnail_url, duration, view_count')
-        .order('published_at', { ascending: false })
-        .limit(6);
-
-      if (videosData) {
-        setVideos(videosData);
+      } else {
+        // No videos in DB - show playlist embed fallback
+        setShowPlaylist(true);
       }
     } catch (err) {
-      console.error('Sync error:', err);
+      console.error('Error fetching videos:', err);
+      setShowPlaylist(true);
     } finally {
       setLoading(false);
     }
@@ -131,9 +97,9 @@ export const YoutubeVideoSection: React.FC = () => {
           </Button>
         </div>
 
-        {/* Video Grid */}
-        {videos.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Video Grid from Database */}
+        {videos.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
             {videos.map((video) => (
               <div
                 key={video.id}
@@ -184,25 +150,32 @@ export const YoutubeVideoSection: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : (
-          <div className="text-center py-8 sm:py-12 space-y-6">
-            <div className="bg-destructive/10 rounded-full p-6 w-fit mx-auto">
-              <Youtube className="h-10 w-10 sm:h-12 sm:w-12 text-destructive mx-auto" />
+        )}
+
+        {/* Playlist Embed Fallback - shows when no videos in DB or as additional content */}
+        {(showPlaylist || videos.length === 0) && (
+          <div className="rounded-xl overflow-hidden bg-card/30 backdrop-blur-sm border border-border/30">
+            <div className="p-3 sm:p-4 border-b border-border/30 flex items-center justify-between">
+              <h3 className="font-semibold text-foreground">Latest Videos</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => window.open(CHANNEL_URL, '_blank')}
+              >
+                View All
+                <ExternalLink className="h-3 w-3 ml-1" />
+              </Button>
             </div>
-            <div className="space-y-2">
-              <h3 className="text-lg sm:text-xl font-semibold text-foreground">Watch Our Performances</h3>
-              <p className="text-muted-foreground text-sm sm:text-base max-w-md mx-auto">
-                Visit our YouTube channel to watch our latest performances.
-              </p>
+            <div className="aspect-video max-h-[450px]">
+              <iframe
+                src={`https://www.youtube.com/embed/videoseries?list=${UPLOADS_PLAYLIST_ID}&rel=0`}
+                title="Spelman College Glee Club Videos"
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
             </div>
-            <Button 
-              size="lg" 
-              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-              onClick={() => window.open(CHANNEL_URL, '_blank')}
-            >
-              <Youtube className="h-5 w-5 mr-2" />
-              Visit Our Channel
-            </Button>
           </div>
         )}
 
