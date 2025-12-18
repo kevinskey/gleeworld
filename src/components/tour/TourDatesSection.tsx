@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar, MapPin, Clock, Music, Loader2, Plus, Trash2, Edit } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Calendar, MapPin, Clock, Music, Loader2, Plus, Trash2, Edit, FileText, Building, DollarSign, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +21,18 @@ interface TourEvent {
   end_date: string | null;
   description: string | null;
   event_type?: string;
+  host_name?: string;
+  host_location?: string;
+  host_signatory_name?: string;
+  host_signatory_title?: string;
+  host_department?: string;
+  venue_name?: string;
+  venue_address?: string;
+  venue_contact?: string;
+  venue_email?: string;
+  venue_phone?: string;
+  honorarium_amount?: number;
+  deposit_amount?: number;
 }
 
 type EventType = 'performance' | 'rehearsal' | 'travel' | 'free';
@@ -64,12 +78,15 @@ interface AddDateFormProps {
   onSuccess: () => void;
   onClose: () => void;
   editingEvent?: TourEvent | null;
+  onGenerateContract?: (event: TourEvent) => void;
 }
 
-const AddDateForm = ({ onSuccess, onClose, editingEvent }: AddDateFormProps) => {
+const AddDateForm = ({ onSuccess, onClose, editingEvent, onGenerateContract }: AddDateFormProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
   const [formData, setFormData] = useState({
+    // Basic Info
     title: editingEvent?.title || '',
     location: editingEvent?.location || '',
     start_date: editingEvent?.start_date ? editingEvent.start_date.split('T')[0] : '',
@@ -77,25 +94,39 @@ const AddDateForm = ({ onSuccess, onClose, editingEvent }: AddDateFormProps) => 
     end_date: editingEvent?.end_date ? editingEvent.end_date.split('T')[0] : '',
     end_time: editingEvent?.end_date ? new Date(editingEvent.end_date).toTimeString().slice(0, 5) : '',
     description: editingEvent?.description || '',
-    event_type: editingEvent?.event_type || 'performance'
+    event_type: editingEvent?.event_type || 'performance',
+    // Host Info
+    host_name: editingEvent?.host_name || '',
+    host_location: editingEvent?.host_location || '',
+    host_signatory_name: editingEvent?.host_signatory_name || '',
+    host_signatory_title: editingEvent?.host_signatory_title || '',
+    host_department: editingEvent?.host_department || '',
+    // Venue Info
+    venue_name: editingEvent?.venue_name || '',
+    venue_address: editingEvent?.venue_address || '',
+    venue_contact: editingEvent?.venue_contact || '',
+    venue_email: editingEvent?.venue_email || '',
+    venue_phone: editingEvent?.venue_phone || '',
+    // Financial
+    honorarium_amount: editingEvent?.honorarium_amount?.toString() || '5000',
+    deposit_amount: editingEvent?.deposit_amount?.toString() || '2500'
   });
+
+  // Auto-calculate deposit when honorarium changes
+  const handleHonorariumChange = (value: string) => {
+    const honorarium = parseFloat(value) || 0;
+    setFormData(prev => ({
+      ...prev,
+      honorarium_amount: value,
+      deposit_amount: (honorarium / 2).toFixed(2)
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      const startDateTime = formData.start_time 
-        ? `${formData.start_date}T${formData.start_time}:00`
-        : `${formData.start_date}T00:00:00`;
-      
-      const endDateTime = formData.end_date && formData.end_time
-        ? `${formData.end_date}T${formData.end_time}:00`
-        : formData.end_date 
-          ? `${formData.end_date}T23:59:59`
-          : null;
-
-      // Get current user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         toast({
@@ -106,17 +137,39 @@ const AddDateForm = ({ onSuccess, onClose, editingEvent }: AddDateFormProps) => 
         return;
       }
 
+      const startDateTime = formData.start_time 
+        ? `${formData.start_date}T${formData.start_time}:00`
+        : `${formData.start_date}T00:00:00`;
+      
+      const endDateTime = formData.end_date && formData.end_time
+        ? `${formData.end_date}T${formData.end_time}:00`
+        : formData.end_date 
+          ? `${formData.end_date}T23:59:59`
+          : null;
+
       const eventData = {
         title: formData.title,
         location: formData.location,
         start_date: startDateTime,
         end_date: endDateTime,
-        description: formData.description ? `[${formData.event_type}] ${formData.description}` : `[${formData.event_type}]`,
+        description: formData.description || null,
+        event_type: formData.event_type,
+        host_name: formData.host_name || null,
+        host_location: formData.host_location || null,
+        host_signatory_name: formData.host_signatory_name || null,
+        host_signatory_title: formData.host_signatory_title || null,
+        host_department: formData.host_department || null,
+        venue_name: formData.venue_name || null,
+        venue_address: formData.venue_address || null,
+        venue_contact: formData.venue_contact || null,
+        venue_email: formData.venue_email || null,
+        venue_phone: formData.venue_phone || null,
+        honorarium_amount: parseFloat(formData.honorarium_amount) || 0,
+        deposit_amount: parseFloat(formData.deposit_amount) || 0,
         created_by: user.id
       };
 
       if (editingEvent) {
-        // Don't update created_by on edit
         const { created_by, ...updateData } = eventData;
         const { error } = await supabase
           .from('gw_tour_events')
@@ -150,118 +203,303 @@ const AddDateForm = ({ onSuccess, onClose, editingEvent }: AddDateFormProps) => 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="title">Event Title *</Label>
-          <Input
-            id="title"
-            value={formData.title}
-            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="e.g., Concert at Symphony Hall"
-            required
-          />
-        </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="basic" className="text-xs sm:text-sm">
+            <Calendar className="h-4 w-4 mr-1 hidden sm:inline" />
+            Basic
+          </TabsTrigger>
+          <TabsTrigger value="host" className="text-xs sm:text-sm">
+            <Building className="h-4 w-4 mr-1 hidden sm:inline" />
+            Host
+          </TabsTrigger>
+          <TabsTrigger value="venue" className="text-xs sm:text-sm">
+            <MapPin className="h-4 w-4 mr-1 hidden sm:inline" />
+            Venue
+          </TabsTrigger>
+          <TabsTrigger value="financial" className="text-xs sm:text-sm">
+            <DollarSign className="h-4 w-4 mr-1 hidden sm:inline" />
+            Financial
+          </TabsTrigger>
+        </TabsList>
 
-        <div className="space-y-2">
-          <Label htmlFor="event_type">Event Type *</Label>
-          <Select
-            value={formData.event_type}
-            onValueChange={(value) => setFormData(prev => ({ ...prev, event_type: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="performance">Performance</SelectItem>
-              <SelectItem value="rehearsal">Rehearsal</SelectItem>
-              <SelectItem value="travel">Travel</SelectItem>
-              <SelectItem value="free">Free Day</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <TabsContent value="basic" className="space-y-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="title">Event Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="e.g., Concert at Symphony Hall"
+                required
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="location">Location *</Label>
-          <Input
-            id="location"
-            value={formData.location}
-            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-            placeholder="e.g., Atlanta, GA"
-            required
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="event_type">Event Type *</Label>
+              <Select
+                value={formData.event_type}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, event_type: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="performance">Performance</SelectItem>
+                  <SelectItem value="rehearsal">Rehearsal</SelectItem>
+                  <SelectItem value="travel">Travel</SelectItem>
+                  <SelectItem value="free">Free Day</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="start_date">Start Date *</Label>
-          <Input
-            id="start_date"
-            type="date"
-            value={formData.start_date}
-            onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-            required
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="location">City/Location *</Label>
+              <Input
+                id="location"
+                value={formData.location}
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="e.g., Atlanta, GA"
+                required
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="start_time">Start Time</Label>
-          <Input
-            id="start_time"
-            type="time"
-            value={formData.start_time}
-            onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="start_date">Start Date *</Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                required
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="end_date">End Date</Label>
-          <Input
-            id="end_date"
-            type="date"
-            value={formData.end_date}
-            onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="start_time">Start Time</Label>
+              <Input
+                id="start_time"
+                type="time"
+                value={formData.start_time}
+                onChange={(e) => setFormData(prev => ({ ...prev, start_time: e.target.value }))}
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="end_time">End Time</Label>
-          <Input
-            id="end_time"
-            type="time"
-            value={formData.end_time}
-            onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
-          />
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="end_date">End Date</Label>
+              <Input
+                id="end_date"
+                type="date"
+                value={formData.end_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+              />
+            </div>
 
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            placeholder="Additional details about this event..."
-            rows={3}
-          />
-        </div>
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="end_time">End Time</Label>
+              <Input
+                id="end_time"
+                type="time"
+                value={formData.end_time}
+                onChange={(e) => setFormData(prev => ({ ...prev, end_time: e.target.value }))}
+              />
+            </div>
 
-      <div className="flex justify-end gap-2 pt-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Additional details about this event..."
+                rows={3}
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="host" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">Host organization information for contract generation</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="host_name">Host Organization Name</Label>
+              <Input
+                id="host_name"
+                value={formData.host_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, host_name: e.target.value }))}
+                placeholder="e.g., Art Farm at Serenbe"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="host_location">Host Location</Label>
+              <Input
+                id="host_location"
+                value={formData.host_location}
+                onChange={(e) => setFormData(prev => ({ ...prev, host_location: e.target.value }))}
+                placeholder="e.g., Palmetto, GA"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="host_signatory_name">Signatory Name</Label>
+              <Input
+                id="host_signatory_name"
+                value={formData.host_signatory_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, host_signatory_name: e.target.value }))}
+                placeholder="Person who will sign the contract"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="host_signatory_title">Signatory Title</Label>
+              <Input
+                id="host_signatory_title"
+                value={formData.host_signatory_title}
+                onChange={(e) => setFormData(prev => ({ ...prev, host_signatory_title: e.target.value }))}
+                placeholder="e.g., Event Director"
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="host_department">Department</Label>
+              <Input
+                id="host_department"
+                value={formData.host_department}
+                onChange={(e) => setFormData(prev => ({ ...prev, host_department: e.target.value }))}
+                placeholder="e.g., Special Events"
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="venue" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">Venue and contact details</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="venue_name">Venue Name</Label>
+              <Input
+                id="venue_name"
+                value={formData.venue_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, venue_name: e.target.value }))}
+                placeholder="e.g., Symphony Hall"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="venue_contact">Contact Person</Label>
+              <Input
+                id="venue_contact"
+                value={formData.venue_contact}
+                onChange={(e) => setFormData(prev => ({ ...prev, venue_contact: e.target.value }))}
+                placeholder="Primary contact name"
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="venue_address">Venue Address</Label>
+              <Textarea
+                id="venue_address"
+                value={formData.venue_address}
+                onChange={(e) => setFormData(prev => ({ ...prev, venue_address: e.target.value }))}
+                placeholder="Full venue address"
+                rows={2}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="venue_email">Contact Email</Label>
+              <Input
+                id="venue_email"
+                type="email"
+                value={formData.venue_email}
+                onChange={(e) => setFormData(prev => ({ ...prev, venue_email: e.target.value }))}
+                placeholder="contact@venue.com"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="venue_phone">Contact Phone</Label>
+              <Input
+                id="venue_phone"
+                value={formData.venue_phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, venue_phone: e.target.value }))}
+                placeholder="(555) 123-4567"
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="financial" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">Financial terms for the performance</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="honorarium_amount">Honorarium Amount ($)</Label>
+              <Input
+                id="honorarium_amount"
+                type="number"
+                step="0.01"
+                value={formData.honorarium_amount}
+                onChange={(e) => handleHonorariumChange(e.target.value)}
+                placeholder="5000.00"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deposit_amount">Deposit Amount (50%)</Label>
+              <Input
+                id="deposit_amount"
+                value={`$${formData.deposit_amount}`}
+                disabled
+                className="bg-muted"
+              />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      <Separator />
+
+      <div className="flex justify-between gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Saving...
-            </>
-          ) : editingEvent ? 'Update Date' : 'Add Date'}
-        </Button>
+        <div className="flex gap-2">
+          {editingEvent && formData.host_name && onGenerateContract && (
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => onGenerateContract({
+                ...editingEvent,
+                ...formData,
+                honorarium_amount: parseFloat(formData.honorarium_amount),
+                deposit_amount: parseFloat(formData.deposit_amount)
+              } as TourEvent)}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Contract
+            </Button>
+          )}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : editingEvent ? 'Update Date' : 'Add Date'}
+          </Button>
+        </div>
       </div>
     </form>
   );
 };
 
-export const TourDatesSection = () => {
+interface TourDatesSectionProps {
+  onGenerateContract?: (event: TourEvent) => void;
+}
+
+export const TourDatesSection = ({ onGenerateContract }: TourDatesSectionProps) => {
   const [tourEvents, setTourEvents] = useState<TourEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -276,7 +514,7 @@ export const TourDatesSection = () => {
     try {
       const { data, error } = await supabase
         .from('gw_tour_events')
-        .select('id, title, location, start_date, end_date, description')
+        .select('*')
         .order('start_date', { ascending: true });
 
       if (error) throw error;
@@ -355,7 +593,7 @@ export const TourDatesSection = () => {
               Add Tour Date
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingEvent ? 'Edit Tour Date' : 'Add New Tour Date'}
@@ -368,6 +606,7 @@ export const TourDatesSection = () => {
                 setIsAddDialogOpen(false);
                 setEditingEvent(null);
               }}
+              onGenerateContract={onGenerateContract}
             />
           </DialogContent>
         </Dialog>
@@ -390,9 +629,9 @@ export const TourDatesSection = () => {
                 <div className="flex">
                   <div className={`w-2 ${getTypeColor(eventType)}`} />
                   <div className="flex-1 p-4">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
                       <div className="space-y-1 flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Badge className={getTypeColor(eventType)}>
                             {getTypeLabel(eventType)}
                           </Badge>
@@ -404,9 +643,15 @@ export const TourDatesSection = () => {
                               day: 'numeric' 
                             })}
                           </span>
+                          {event.honorarium_amount && event.honorarium_amount > 0 && (
+                            <Badge variant="outline" className="text-green-600 border-green-300">
+                              <DollarSign className="h-3 w-3 mr-1" />
+                              {event.honorarium_amount.toLocaleString()}
+                            </Badge>
+                          )}
                         </div>
                         <h3 className="font-semibold text-lg">{event.title}</h3>
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             {event.location}
@@ -420,16 +665,32 @@ export const TourDatesSection = () => {
                             })}
                           </span>
                         </div>
+                        {event.host_name && (
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                            <Building className="h-3 w-3" />
+                            Host: {event.host_name}
+                          </div>
+                        )}
                         {event.description && (
                           <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
                         )}
                       </div>
                       <div className="flex items-center gap-2">
                         {eventType === 'performance' && (
-                          <div className="flex items-center gap-2 mr-4">
+                          <div className="flex items-center gap-2 mr-2">
                             <Music className="h-5 w-5 text-primary" />
-                            <span className="text-sm font-medium text-primary">Concert</span>
                           </div>
+                        )}
+                        {event.host_name && onGenerateContract && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="gap-1"
+                            onClick={() => onGenerateContract(event)}
+                          >
+                            <FileText className="h-4 w-4" />
+                            Contract
+                          </Button>
                         )}
                         <Button
                           variant="ghost"

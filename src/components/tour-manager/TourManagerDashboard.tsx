@@ -47,6 +47,7 @@ interface DashboardStats {
 
 export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
   const [activeTab, setActiveTab] = useState('booking-requests');
+  const [contractEventData, setContractEventData] = useState<any>(null);
   const [stats, setStats] = useState<DashboardStats>({
     newRequests: 0,
     activeContracts: 0,
@@ -55,6 +56,11 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
     totalHosts: 0,
     upcomingTours: 0
   });
+
+  const handleGenerateContract = (event: any) => {
+    setContractEventData(event);
+    setActiveTab('contracts');
+  };
 
   useEffect(() => {
     fetchDashboardStats();
@@ -455,7 +461,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                <TourDatesSection />
+                <TourDatesSection onGenerateContract={handleGenerateContract} />
               </CardContent>
             </Card>
           </TabsContent>
