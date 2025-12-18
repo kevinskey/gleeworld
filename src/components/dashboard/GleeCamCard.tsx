@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Camera, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-
 interface GleeCamPhoto {
   id: string;
   file_url: string;
@@ -23,13 +23,17 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
   const [photos, setPhotos] = useState<GleeCamPhoto[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel({
+    loop: true,
+    align: "start",
+    dragFree: true,
+  });
 
   useEffect(() => {
     fetchPhotos();
   }, []);
-
   const fetchPhotos = async () => {
     try {
       // Fetch photos (not videos) from all categories, randomized
@@ -53,34 +57,29 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
     }
   };
 
-  // Auto-scroll effect
-  useEffect(() => {
+  const startAutoplay = useCallback(() => {
+    if (!emblaApi) return;
     if (!isOpen || isPaused || photos.length === 0) return;
 
-    let intervalId: number | undefined;
+    // Ensure Embla measurements are up to date (images/layout can change width)
+    emblaApi.reInit();
 
-    const start = () => {
-      const container = scrollContainerRef.current;
-      if (!container) return;
+    const id = window.setInterval(() => {
+      emblaApi.scrollNext();
+    }, 1200);
 
-      // Only auto-scroll when there is actual overflow
-      if (container.scrollWidth <= container.clientWidth) return;
+    return () => window.clearInterval(id);
+  }, [emblaApi, isOpen, isPaused, photos.length]);
 
-      const scrollSpeed = 1;
-      intervalId = window.setInterval(() => {
-        const maxScrollLeft = container.scrollWidth - container.clientWidth;
-        container.scrollLeft = container.scrollLeft >= maxScrollLeft ? 0 : container.scrollLeft + scrollSpeed;
-      }, 30);
-    };
+  useEffect(() => {
+    if (!emblaApi) return;
 
-    // Wait for DOM to render
-    const timeoutId = window.setTimeout(start, 100);
+    // Kick once on open/after photos load, then autoplay handles the rest
+    if (isOpen) emblaApi.reInit();
 
-    return () => {
-      window.clearTimeout(timeoutId);
-      if (intervalId) window.clearInterval(intervalId);
-    };
-  }, [isOpen, isPaused, photos.length]);
+    const stop = startAutoplay();
+    return () => stop?.();
+  }, [emblaApi, isOpen, photos.length, startAutoplay]);
 
   const handlePhotoClick = (photo: GleeCamPhoto) => {
     // Navigate to the glee cam gallery
@@ -139,30 +138,37 @@ export const GleeCamCard = ({ className }: GleeCamCardProps) => {
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="px-3 pb-3 pt-0 sm:px-4">
-            <div 
-              ref={scrollContainerRef}
-              className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin"
+            <div
+              className="overflow-hidden"
               onMouseEnter={() => setIsPaused(true)}
               onMouseLeave={() => setIsPaused(false)}
+              onPointerDown={() => setIsPaused(true)}
+              onPointerUp={() => setIsPaused(false)}
               onTouchStart={() => setIsPaused(true)}
               onTouchEnd={() => setIsPaused(false)}
+              ref={emblaRef}
             >
-              {photos.map(photo => (
-                <div
-                  key={photo.id}
-                  onClick={() => handlePhotoClick(photo)}
-                  className="group cursor-pointer flex-shrink-0"
-                >
-                  <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300">
-                    <img 
-                      src={photo.file_url} 
-                      alt={photo.title || 'Glee Cam photo'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
+              <div className="flex gap-2">
+                {photos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="flex-[0_0_auto]"
+                    style={{ width: "120px" }}
+                    onClick={() => handlePhotoClick(photo)}
+                  >
+                    <div className="group cursor-pointer">
+                      <div className="relative w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] overflow-hidden rounded-lg border border-border hover:border-primary/50 transition-all duration-300">
+                        <img
+                          src={photo.file_url}
+                          alt={photo.title || "Glee Cam photo"}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </CardContent>
         </CollapsibleContent>
