@@ -10,6 +10,7 @@ import { Navigate, Link } from "react-router-dom";
 import { UniversalHeader } from "@/components/layout/UniversalHeader";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { toast } from "sonner";
+import { GleeAcademyDashboardCard } from "@/components/user-dashboard/GleeAcademyDashboardCard";
 
 
 interface FanStats {
@@ -144,6 +145,9 @@ export default function FanDashboard() {
       
       <div className="container mx-auto px-4 py-6 space-y-6">
         
+        {/* Glee Academy Card - Course shortcuts */}
+        <GleeAcademyDashboardCard />
+
         {/* Welcome Section */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold text-primary">Welcome Back, Fan!</h1>
