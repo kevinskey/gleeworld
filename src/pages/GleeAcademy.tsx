@@ -32,7 +32,7 @@ const GleeAcademy = () => {
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
                 Our Course Offerings
               </h2>
-              <p className="text-muted-foreground text-center py-[5px] px-0">Spring 2026 Semester</p>
+              <p className="text-muted-foreground text-center py-[5px] px-0 w-full">Spring 2026 Semester</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
