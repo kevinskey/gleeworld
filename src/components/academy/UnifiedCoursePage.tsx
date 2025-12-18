@@ -22,6 +22,7 @@ import { CourseGradebook } from './CourseGradebook';
 import { CourseAttendance } from './CourseAttendance';
 import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
+import { CourseMessaging } from './CourseMessaging';
 import { Mus070GradeSpreadsheet } from '@/components/mus070/instructor/Mus070GradeSpreadsheet';
 import { Mus070AttendanceView } from '@/components/mus070/instructor/Mus070AttendanceView';
 
@@ -461,17 +462,13 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             )}
 
             {activeTab === 'mail' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Mail Center</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Button onClick={() => navigate('/compose')}>
-                    <Mail className="h-4 w-4 mr-2" />
-                    Compose Message to Instructor
-                  </Button>
-                </CardContent>
-              </Card>
+              <CourseMessaging
+                courseId={course.id}
+                courseName={course.title}
+                instructorEmail={course.instructor.email}
+                isEnrolled={isEnrolled}
+                isAdmin={isAdmin}
+              />
             )}
 
             {activeTab === 'grades' && (
