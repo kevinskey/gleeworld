@@ -57,6 +57,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
     canUseQuickActions,
     addQuickAction,
     removeQuickAction,
+    reorderQuickActions,
     isInQuickActions,
   } = useMemberQuickActions(user?.id, userProfile?.role || 'member');
   
@@ -67,9 +68,10 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
       quickActions: memberQuickActions,
       addQuickAction,
       removeQuickAction,
+      reorderQuickActions,
       isInQuickActions
     };
-  }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, isInQuickActions]);
+  }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, reorderQuickActions, isInQuickActions]);
   
   // Theme-specific styling
   const isHbcuTheme = themeName === 'hbcu';
