@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface InstructorStats {
   activeAssignments: number;
@@ -10,7 +11,9 @@ interface InstructorStats {
   averageGrade: number;
 }
 
-export const useMus240InstructorStats = () => {
+export const useMus240InstructorStats = (semesterOverride?: string) => {
+  const { currentSemester } = useMus240SemesterSafe();
+  const semester = semesterOverride || currentSemester;
   const [stats, setStats] = useState<InstructorStats>({
     activeAssignments: 0,
     totalJournals: 0,
@@ -24,7 +27,7 @@ export const useMus240InstructorStats = () => {
 
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [semester]);
 
   const fetchStats = async () => {
     try {
@@ -43,7 +46,7 @@ export const useMus240InstructorStats = () => {
       const { data: enrollments, error: enrollmentsError } = await supabase
         .from('mus240_enrollments')
         .select('student_id')
-        .eq('semester', 'Fall 2025')
+        .eq('semester', semester)
         .eq('enrollment_status', 'enrolled');
 
       if (enrollmentsError) throw enrollmentsError;

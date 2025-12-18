@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAttendance } from './useAttendance';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface Mus240GradeSummary {
   id: string;
@@ -41,8 +42,10 @@ interface AssignmentSubmission {
   feedback: string | null;
 }
 
-export const useMus240Progress = () => {
+export const useMus240Progress = (semesterOverride?: string) => {
   const { user } = useAuth();
+  const { currentSemester } = useMus240SemesterSafe();
+  const semester = semesterOverride || currentSemester;
   const { attendance, getAttendanceStats } = useAttendance();
   const [gradeSummary, setGradeSummary] = useState<Mus240GradeSummary | null>(null);
   const [participationGrade, setParticipationGrade] = useState<Mus240ParticipationGrade | null>(null);
@@ -62,7 +65,7 @@ export const useMus240Progress = () => {
         .from('mus240_grade_summaries')
         .select('*')
         .eq('student_id', user.id)
-        .eq('semester', 'Fall 2024')
+        .eq('semester', semester)
         .maybeSingle();
 
       if (summaryError) throw summaryError;
@@ -72,7 +75,7 @@ export const useMus240Progress = () => {
         .from('mus240_participation_grades')
         .select('*')
         .eq('student_id', user.id)
-        .eq('semester', 'Fall 2024')
+        .eq('semester', semester)
         .maybeSingle();
 
       if (participationError) throw participationError;
@@ -94,7 +97,7 @@ export const useMus240Progress = () => {
       if (!summaryData) {
         const { data: calculatedData, error: calcError } = await supabase.rpc(
           'calculate_mus240_grade_summary',
-          { student_id_param: user.id, semester_param: 'Fall 2024' }
+          { student_id_param: user.id, semester_param: semester }
         );
 
         if (calcError) {
@@ -105,7 +108,7 @@ export const useMus240Progress = () => {
             .from('mus240_grade_summaries')
             .select('*')
             .eq('student_id', user.id)
-            .eq('semester', 'Fall 2024')
+            .eq('semester', semester)
             .maybeSingle();
           
           setGradeSummary(updatedSummary);
