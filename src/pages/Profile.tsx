@@ -242,8 +242,8 @@ const Profile = () => {
       setValue("visible_piercings", profile.visible_piercings || false);
       setValue("academic_major", profile.academic_major || "");
       setValue("pronouns", profile.pronouns || "");
-      setValue("class_year", profile.class_year || undefined);
-      setValue("graduation_year", profile.graduation_year || undefined);
+      setValue("class_year", (profile.class_year ? String(profile.class_year) : "") as any);
+      setValue("graduation_year", (profile.graduation_year ? String(profile.graduation_year) : "") as any);
       setValue("emergency_contact", profile.emergency_contact || "");
       setValue("allergies", profile.allergies || "");
       setValue("parent_guardian_contact", profile.parent_guardian_contact || "");
@@ -871,7 +871,7 @@ const Profile = () => {
                   <Input
                     id="class_year"
                     type="number"
-                    {...register("class_year", { valueAsNumber: true })}
+                    {...register("class_year")}
                     disabled={!isEditing}
                     className="mt-1"
                     placeholder="2024"
@@ -884,7 +884,7 @@ const Profile = () => {
                   <Input
                     id="graduation_year"
                     type="number"
-                    {...register("graduation_year", { valueAsNumber: true })}
+                    {...register("graduation_year")}
                     disabled={!isEditing || !isAdmin}
                     className="mt-1"
                     placeholder="2024"
