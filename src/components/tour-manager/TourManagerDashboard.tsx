@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { 
-  Route, Mail, FileText, MapPin, Calendar, Users, TrendingUp, Activity, 
-  CheckCircle2, ArrowRight, Building2, Bed, Bus, Video, Package, 
-  ClipboardList, Shirt, DollarSign, UserCheck, ExternalLink
+  Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Video, Package, 
+  ClipboardList, Shirt, DollarSign, UserCheck
 } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
@@ -24,7 +21,6 @@ import { BusBuddiesSection } from '@/components/tour/BusBuddiesSection';
 import { TourDocumentsSection } from '@/components/tour/TourDocumentsSection';
 import { LivePerformancesSection } from '@/components/tour/LivePerformancesSection';
 import { TourRosterSection } from '@/components/tour/TourRosterSection';
-import { supabase } from '@/integrations/supabase/client';
 
 interface TourManagerDashboardProps {
   user?: {
@@ -38,292 +34,177 @@ interface TourManagerDashboardProps {
   };
 }
 
-interface DashboardStats {
-  newRequests: number;
-  activeContracts: number;
-  signedContracts: number;
-  pendingContracts: number;
-  totalHosts: number;
-  upcomingTours: number;
-}
-
 export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('booking-requests');
   const [contractEventData, setContractEventData] = useState<any>(null);
-  const [stats, setStats] = useState<DashboardStats>({
-    newRequests: 0,
-    activeContracts: 0,
-    signedContracts: 0,
-    pendingContracts: 0,
-    totalHosts: 0,
-    upcomingTours: 0
-  });
 
   const handleGenerateContract = (event: any) => {
     setContractEventData(event);
     setActiveTab('contracts');
   };
 
-  useEffect(() => {
-    fetchDashboardStats();
-  }, []);
-
-  const fetchDashboardStats = async () => {
-    try {
-      // Fetch booking requests count
-      const { count: newRequestsCount } = await supabase
-        .from('booking_requests')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'new');
-
-      // Fetch contracts stats
-      const { data: contracts } = await supabase
-        .from('contracts_v2')
-        .select('status');
-
-      const activeContracts = contracts?.filter(c => c.status === 'active' || c.status === 'pending').length || 0;
-      const signedContracts = contracts?.filter(c => c.status === 'completed' || c.status === 'signed').length || 0;
-      const pendingContracts = contracts?.filter(c => c.status === 'pending' || c.status === 'sent').length || 0;
-
-      // Fetch hosts count
-      const { count: hostsCount } = await supabase
-        .from('hosts')
-        .select('*', { count: 'exact', head: true });
-
-      // Fetch upcoming tours/events
-      const { count: upcomingToursCount } = await supabase
-        .from('events')
-        .select('*', { count: 'exact', head: true })
-        .gte('start_date', new Date().toISOString().split('T')[0]);
-
-      setStats({
-        newRequests: newRequestsCount || 0,
-        activeContracts,
-        signedContracts,
-        pendingContracts,
-        totalHosts: hostsCount || 0,
-        upcomingTours: upcomingToursCount || 0
-      });
-    } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
-    }
-  };
-
-  const getUserInitials = (name?: string) => {
-    if (!name) return 'TM';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-muted/30">
-      {/* Main Content */}
-      <div className="container mx-auto px-6 py-6 space-y-6">
-        {/* Welcome Section */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-3xl blur-3xl"></div>
-          <div className="relative bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm border border-border/50 rounded-2xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">
-                  Welcome back, {user?.full_name?.split(' ')[0] || 'Tour Manager'}!
-                </h2>
-                <p className="text-muted-foreground">
-                  Here's your tour management overview for today
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-3 gap-2"
-                  onClick={() => navigate('/bus-information')}
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-4 space-y-4">
+        {/* Simplified Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Tour Manager</h1>
+            <p className="text-sm text-muted-foreground">Manage tours, contracts, and logistics</p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2"
+            onClick={() => navigate('/bus-information')}
+          >
+            <Bus className="h-4 w-4" />
+            Bus Info
+          </Button>
+        </div>
+
+        {/* Clean Tabs Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <Card className="p-2">
+            <div className="flex flex-wrap gap-1">
+              {/* Main Actions */}
+              <TabsTrigger 
+                value="booking-requests" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Mail className="h-4 w-4" />
+                <span>Requests</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="contracts" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <FileText className="h-4 w-4" />
+                <span>Contracts</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="hosts" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Building2 className="h-4 w-4" />
+                <span>Hosts</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="tour-dates" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Calendar className="h-4 w-4" />
+                <span>Dates</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="roster" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <UserCheck className="h-4 w-4" />
+                <span>Roster</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="route-planning" 
+                className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <MapPin className="h-4 w-4" />
+                <span>Routes</span>
+              </TabsTrigger>
+              
+              {/* Secondary */}
+              <div className="hidden md:flex items-center gap-1 ml-2 pl-2 border-l border-border">
+                <TabsTrigger 
+                  value="rooming" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <Bed className="h-4 w-4" />
+                  <span className="hidden lg:inline">Rooms</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="crew" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <Package className="h-4 w-4" />
+                  <span className="hidden lg:inline">Crew</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="bus-buddies" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
                 >
                   <Bus className="h-4 w-4" />
-                  Bus Information
-                  <ExternalLink className="h-3 w-3" />
-                </Button>
-              </div>
-              <div className="text-right text-sm text-muted-foreground">
-                <p>{new Date().toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}</p>
-                <p className="text-xs mt-1">Last updated: {new Date().toLocaleTimeString()}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-blue-50/80 to-blue-100/60 dark:from-blue-950/20 dark:to-blue-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="relative p-3">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 truncate">{stats.newRequests}</p>
-                  <p className="text-xs text-blue-600/80 dark:text-blue-400/80 font-medium">New Requests</p>
-                </div>
-                <div className="relative flex-shrink-0 ml-2">
-                  <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-lg"></div>
-                  <div className="relative bg-blue-500/10 p-2 rounded-full">
-                    <Mail className="h-5 w-5 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-1 text-xs">
-                <TrendingUp className="h-3 w-3 text-green-500 flex-shrink-0" />
-                <span className="text-muted-foreground truncate">booking requests</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-green-50/80 to-green-100/60 dark:from-green-950/20 dark:to-green-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <div className="absolute inset-0 bg-gradient-to-br from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="relative p-3">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300 truncate">{stats.activeContracts}</p>
-                  <p className="text-xs text-green-600/80 dark:text-green-400/80 font-medium">Active Contracts</p>
-                </div>
-                <div className="relative flex-shrink-0 ml-2">
-                  <div className="absolute inset-0 bg-green-500/20 rounded-full blur-lg"></div>
-                  <div className="relative bg-green-500/10 p-2 rounded-full">
-                    <FileText className="h-5 w-5 text-green-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-1 text-xs">
-                <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
-                <span className="text-green-600 font-medium">{stats.signedContracts} signed</span>
-                <span className="text-muted-foreground truncate">{stats.pendingContracts} pending</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-purple-50/80 to-purple-100/60 dark:from-purple-950/20 dark:to-purple-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="relative p-3">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-purple-700 dark:text-purple-300 truncate">{stats.totalHosts}</p>
-                  <p className="text-xs text-purple-600/80 dark:text-purple-400/80 font-medium">Performance Hosts</p>
-                </div>
-                <div className="relative flex-shrink-0 ml-2">
-                  <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-lg"></div>
-                  <div className="relative bg-purple-500/10 p-2 rounded-full">
-                    <Building2 className="h-5 w-5 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-1 text-xs">
-                <Activity className="h-3 w-3 text-purple-500 flex-shrink-0" />
-                <span className="text-muted-foreground truncate">venues & organizations</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="group relative overflow-hidden border-0 bg-gradient-to-br from-orange-50/80 to-orange-100/60 dark:from-orange-950/20 dark:to-orange-900/20 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <CardContent className="relative p-3">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1 min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-orange-700 dark:text-orange-300 truncate">{stats.upcomingTours}</p>
-                  <p className="text-xs text-orange-600/80 dark:text-orange-400/80 font-medium">Upcoming Events</p>
-                </div>
-                <div className="relative flex-shrink-0 ml-2">
-                  <div className="absolute inset-0 bg-orange-500/20 rounded-full blur-lg"></div>
-                  <div className="relative bg-orange-500/10 p-2 rounded-full">
-                    <Calendar className="h-5 w-5 text-orange-600" />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-2 flex items-center gap-1 text-xs">
-                <Calendar className="h-3 w-3 text-orange-500 flex-shrink-0" />
-                <span className="text-muted-foreground truncate">tours & performances</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Enhanced Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl blur-xl"></div>
-            <div className="relative bg-card/50 backdrop-blur-sm border border-border/50 p-2 rounded-2xl shadow-lg">
-              {/* Admin Functions Row */}
-              <p className="text-xs text-muted-foreground px-2 py-1 font-medium">Admin & Booking</p>
-              <TabsList className="grid w-full grid-cols-5 bg-transparent mb-2">
-                <TabsTrigger value="booking-requests" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500/10 data-[state=active]:to-blue-600/10 data-[state=active]:text-blue-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <Mail className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Requests</span>
+                  <span className="hidden lg:inline">Bus</span>
                 </TabsTrigger>
-                <TabsTrigger value="hosts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500/10 data-[state=active]:to-cyan-600/10 data-[state=active]:text-cyan-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <Building2 className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Hosts</span>
-                </TabsTrigger>
-                <TabsTrigger value="correspondence" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500/10 data-[state=active]:to-purple-600/10 data-[state=active]:text-purple-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <Users className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Messages</span>
-                </TabsTrigger>
-                <TabsTrigger value="contracts" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500/10 data-[state=active]:to-green-600/10 data-[state=active]:text-green-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <FileText className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Contracts</span>
-                </TabsTrigger>
-                <TabsTrigger value="route-planning" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500/10 data-[state=active]:to-orange-600/10 data-[state=active]:text-orange-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <MapPin className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Routes</span>
-                </TabsTrigger>
-              </TabsList>
-              
-              {/* Tour Info Center Row */}
-              <p className="text-xs text-muted-foreground px-2 py-1 font-medium border-t border-border/30 pt-2">Tour Information</p>
-              <TabsList className="grid w-full grid-cols-7 bg-transparent mb-2">
-                <TabsTrigger value="roster" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/10 data-[state=active]:to-emerald-600/10 data-[state=active]:text-emerald-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <UserCheck className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Roster</span>
-                </TabsTrigger>
-                <TabsTrigger value="tour-dates" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500/10 data-[state=active]:to-indigo-600/10 data-[state=active]:text-indigo-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <Calendar className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Dates</span>
-                </TabsTrigger>
-                <TabsTrigger value="rooming" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500/10 data-[state=active]:to-pink-600/10 data-[state=active]:text-pink-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <Bed className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Rooms</span>
-                </TabsTrigger>
-                <TabsTrigger value="crew" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500/10 data-[state=active]:to-amber-600/10 data-[state=active]:text-amber-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <Package className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Crew</span>
-                </TabsTrigger>
-                <TabsTrigger value="bus-buddies" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500/10 data-[state=active]:to-teal-600/10 data-[state=active]:text-teal-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <Bus className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Bus</span>
-                </TabsTrigger>
-                <TabsTrigger value="documents" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-slate-500/10 data-[state=active]:to-slate-600/10 data-[state=active]:text-slate-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                <TabsTrigger 
+                  value="documents" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <ClipboardList className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Docs</span>
+                  <span className="hidden lg:inline">Docs</span>
                 </TabsTrigger>
-                <TabsTrigger value="live-performances" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500/10 data-[state=active]:to-red-600/10 data-[state=active]:text-red-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
-                  <Video className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Live</span>
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Operations Row */}
-              <p className="text-xs text-muted-foreground px-2 py-1 font-medium border-t border-border/30 pt-2">Operations</p>
-              <TabsList className="grid w-full grid-cols-2 bg-transparent">
-                <TabsTrigger value="wardrobe" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500/10 data-[state=active]:to-violet-600/10 data-[state=active]:text-violet-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                <TabsTrigger 
+                  value="wardrobe" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <Shirt className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Wardrobe</span>
+                  <span className="hidden lg:inline">Wardrobe</span>
                 </TabsTrigger>
-                <TabsTrigger value="stipends" className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500/10 data-[state=active]:to-emerald-600/10 data-[state=active]:text-emerald-700 data-[state=active]:shadow-md rounded-xl transition-all duration-300">
+                <TabsTrigger 
+                  value="stipends" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
                   <DollarSign className="h-4 w-4" />
-                  <span className="hidden lg:inline font-medium">Stipends</span>
+                  <span className="hidden lg:inline">Stipends</span>
                 </TabsTrigger>
-              </TabsList>
+              </div>
             </div>
-          </div>
+            
+            {/* Mobile overflow tabs */}
+            <div className="flex md:hidden flex-wrap gap-1 mt-2 pt-2 border-t border-border">
+              <TabsTrigger 
+                value="rooming" 
+                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Bed className="h-3 w-3" />
+                <span>Rooms</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="crew" 
+                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Package className="h-3 w-3" />
+                <span>Crew</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="bus-buddies" 
+                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Bus className="h-3 w-3" />
+                <span>Bus</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="documents" 
+                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <ClipboardList className="h-3 w-3" />
+                <span>Docs</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="wardrobe" 
+                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <Shirt className="h-3 w-3" />
+                <span>Wardrobe</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="stipends" 
+                className="flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <DollarSign className="h-3 w-3" />
+                <span>Stipends</span>
+              </TabsTrigger>
+            </div>
+          </Card>
 
           {/* Admin Tabs Content */}
           <TabsContent value="booking-requests" className="space-y-6 animate-fade-in">
