@@ -51,31 +51,31 @@ export const ContractItem = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-brand-200/30 rounded-lg hover:shadow-md transition-all duration-200 gap-3 bg-white/95 backdrop-blur-sm shadow-sm">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border border-border rounded-lg hover:shadow-md transition-all duration-200 gap-3 bg-card/80 backdrop-blur-sm shadow-sm">
       <div className="flex items-start sm:items-center space-x-3 min-w-0 flex-1">
         <Checkbox 
           checked={isSelected}
           onCheckedChange={(checked) => onSelect(contract.id, checked as boolean)}
-          className="border-brand-300 data-[state=checked]:bg-brand-400 data-[state=checked]:border-brand-400 mt-1 sm:mt-0"
+          className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary mt-1 sm:mt-0"
         />
-        <Avatar className="h-10 w-10 border-2 border-brand-200/50 shadow-sm flex-shrink-0">
+        <Avatar className="h-10 w-10 border-2 border-border shadow-sm flex-shrink-0">
           <AvatarImage 
             src={recipientProfile?.avatar_url || "/placeholder.svg"} 
             alt={recipientProfile?.full_name || "User"} 
             className="object-cover"
           />
-          <AvatarFallback className="bg-gradient-to-br from-brand-100 to-brand-200 text-brand-700">
+          <AvatarFallback className="bg-muted text-muted-foreground">
             {recipientProfile?.full_name ? 
               recipientProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
               <User className="h-4 w-4" />
             }
           </AvatarFallback>
         </Avatar>
-        <FileText className="h-6 w-6 text-brand-500 flex-shrink-0 mt-1 sm:mt-0" />
+        <FileText className="h-6 w-6 text-primary flex-shrink-0 mt-1 sm:mt-0" />
         <div className="min-w-0 flex-1">
-          <h3 className="font-semibold text-brand-800 truncate">{contract.title}</h3>
-          <p className="text-sm text-brand-600">Status: {getStatusText(contract.status)}</p>
-          <div className="flex items-center gap-2 text-xs text-brand-500">
+          <h3 className="font-semibold text-foreground truncate">{contract.title}</h3>
+          <p className="text-sm text-muted-foreground">Status: {getStatusText(contract.status)}</p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Created: {new Date(contract.created_at).toLocaleDateString()}</span>
             {contract.updated_at !== contract.created_at && (
               <span>• Updated: {new Date(contract.updated_at).toLocaleDateString()}</span>
@@ -88,7 +88,7 @@ export const ContractItem = ({
       </div>
       
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 flex-shrink-0">
-        <Badge className={`${getStatusColor(contract.status)} border-brand-200/50 text-xs`}>
+        <Badge className={`${getStatusColor(contract.status)} border-border text-xs`}>
           {getStatusText(contract.status)}
         </Badge>
         
@@ -98,7 +98,7 @@ export const ContractItem = ({
             size="sm"
             onClick={() => onView(contract)}
             title="View Contract"
-            className="border-brand-300 text-brand-700 hover:bg-brand-50 h-8 w-8 p-0"
+            className="h-8 w-8 p-0"
           >
             <Eye className="h-3 w-3" />
           </Button>
@@ -132,7 +132,7 @@ export const ContractItem = ({
             size="sm"
             onClick={handleSendClick}
             title={hasBeenSent ? "Resend Contract" : "Send Contract"}
-            className={hasBeenSent ? "border-orange-300 text-orange-700 hover:bg-orange-50 h-8 w-8 p-0" : "border-brand-300 text-brand-700 hover:bg-brand-50 h-8 w-8 p-0"}
+            className={hasBeenSent ? "border-orange-500 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950 h-8 w-8 p-0" : "h-8 w-8 p-0"}
           >
             {hasBeenSent ? (
               <RotateCcw className="h-3 w-3" />
