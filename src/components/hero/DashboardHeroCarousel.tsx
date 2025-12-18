@@ -8,35 +8,16 @@ interface HeroSlide {
   id: string;
   title: string | null;
   description: string | null;
-  image_url: string | null;
+  image_url: string;
   mobile_image_url: string | null;
   ipad_image_url: string | null;
-  button_text: string | null;
   link_url: string | null;
-  display_order: number | null;
-  slide_duration_seconds: number | null;
-  title_position_horizontal: string | null;
-  title_position_vertical: string | null;
-  description_position_horizontal: string | null;
-  description_position_vertical: string | null;
-  title_size: string | null;
-  description_size: string | null;
-  action_button_text: string | null;
-  action_button_url: string | null;
-  action_button_enabled: boolean | null;
-  is_active: boolean | null;
+  link_target: string | null;
+  display_order: number;
+  is_active: boolean;
 }
 
-const getTitleSize = (size: string | null) => {
-  switch ((size || 'large').toLowerCase()) {
-    case 'small':
-      return 'text-[10px] sm:text-xs';
-    case 'medium':
-      return 'text-xs sm:text-sm';
-    default:
-      return 'text-sm sm:text-base';
-  }
-};
+const getTitleSize = () => 'text-sm sm:text-base';
 
 // DashboardHeroCarousel - uses the same hero slides as the landing page (usage_context = 'homepage')
 export const DashboardHeroCarousel: React.FC = () => {
@@ -71,7 +52,7 @@ export const DashboardHeroCarousel: React.FC = () => {
     const fetchSlides = async () => {
       try {
         const { data } = await supabase
-          .from('gw_hero_slides')
+          .from('dashboard_hero_slides')
           .select('*')
           .eq('is_active', true)
           .order('display_order', { ascending: true });
@@ -144,20 +125,23 @@ export const DashboardHeroCarousel: React.FC = () => {
         {/* Title overlay - Bottom */}
         {slide.title && (
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/80 via-foreground/40 to-transparent p-2 sm:p-3 z-10">
-            <h3 className={`${getTitleSize(slide.title_size)} font-bold text-background drop-shadow-lg truncate`}>
+            <h3 className={`${getTitleSize()} font-bold text-background drop-shadow-lg truncate`}>
               {slide.title}
             </h3>
           </div>
         )}
 
-        {/* Action button */}
-        {slide.action_button_enabled && slide.action_button_text && slide.action_button_url && (
+        {/* Link indicator */}
+        {slide.link_url && (
           <div className="absolute top-2 right-2 z-10">
-            <Button size="sm" className="bg-primary text-primary-foreground border border-background/20 shadow-xl text-xs">
-              <a href={slide.action_button_url} target="_blank" rel="noopener noreferrer">
-                {slide.action_button_text}
-              </a>
-            </Button>
+            <a 
+              href={slide.link_url} 
+              target={slide.link_target === 'external' ? '_blank' : '_self'} 
+              rel="noopener noreferrer"
+              className="bg-primary/80 text-primary-foreground px-2 py-1 rounded text-xs"
+            >
+              View
+            </a>
           </div>
         )}
       </div>
