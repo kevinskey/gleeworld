@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, CheckCircle, XCircle, TrendingUp, Edit, Eye, Trash2, ArrowLeft } from 'lucide-react';
 import { ManualGradingDialog } from './ManualGradingDialog';
+import { SubmissionDetailDialog } from './SubmissionDetailDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,8 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
   const [deleteSubmissionDialogOpen, setDeleteSubmissionDialogOpen] = useState(false);
   const [submissionToDelete, setSubmissionToDelete] = useState<any>(null);
   const [deletingSubmission, setDeletingSubmission] = useState(false);
+  const [viewDetailDialogOpen, setViewDetailDialogOpen] = useState(false);
+  const [selectedViewSubmission, setSelectedViewSubmission] = useState<any>(null);
 
   useEffect(() => {
     loadScores();
@@ -385,6 +388,16 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedViewSubmission(submission);
+                          setViewDetailDialogOpen(true);
+                        }}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleGradeSubmission(submission)}
@@ -467,6 +480,13 @@ export const TestScoresView = ({ testId }: TestScoresViewProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SubmissionDetailDialog
+        open={viewDetailDialogOpen}
+        onOpenChange={setViewDetailDialogOpen}
+        submission={selectedViewSubmission}
+        test={test}
+      />
     </div>
   );
 };
