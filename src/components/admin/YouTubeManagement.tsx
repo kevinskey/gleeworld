@@ -12,6 +12,7 @@ import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
 import { supabase } from "@/integrations/supabase/client";
 import { YouTubeVideoPicker } from "@/components/youtube/YouTubeVideoPicker";
 import { CoursePlaylistManager } from "@/components/modules/CoursePlaylistManager";
+import { YouTubeVideoModal } from "@/components/youtube/YouTubeVideoModal";
 import { 
   Youtube, 
   Plus, 
@@ -22,7 +23,6 @@ import {
   ArrowLeft,
   ArrowRight,
   RefreshCw,
-  ExternalLink,
   Download,
   LayoutGrid,
   List
@@ -53,6 +53,8 @@ export const YouTubeManagement = () => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [showManualUpload, setShowManualUpload] = useState(false);
   const [channelInput, setChannelInput] = useState('');
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [selectedVideoTitle, setSelectedVideoTitle] = useState<string>('');
   const [manualVideo, setManualVideo] = useState({
     youtube_id: '',
     title: '',
@@ -563,12 +565,13 @@ export const YouTubeManagement = () => {
                             variant="outline"
                             size="sm"
                             className="w-full"
-                            asChild
+                            onClick={() => {
+                              setSelectedVideoId(video.youtube_id);
+                              setSelectedVideoTitle(video.title);
+                            }}
                           >
-                            <a href={`https://www.youtube.com/watch?v=${video.youtube_id}`} target="_blank" rel="noopener noreferrer">
-                              <ExternalLink className="h-3 w-3 mr-2" />
-                              View on YouTube
-                            </a>
+                            <Play className="h-3 w-3 mr-2" />
+                            Watch Video
                           </Button>
                         </div>
                       </CardContent>
@@ -624,6 +627,16 @@ export const YouTubeManagement = () => {
           <FeaturedVideoManager />
         </TabsContent>
       </Tabs>
+      
+      <YouTubeVideoModal
+        isOpen={!!selectedVideoId}
+        onClose={() => {
+          setSelectedVideoId(null);
+          setSelectedVideoTitle('');
+        }}
+        videoId={selectedVideoId || ''}
+        title={selectedVideoTitle}
+      />
     </div>
   );
 };
