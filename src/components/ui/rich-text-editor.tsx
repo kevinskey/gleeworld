@@ -67,14 +67,30 @@ interface MediaItem {
 }
 
 const FONT_FAMILIES = [
+  // System Fonts
   { value: 'Arial, sans-serif', label: 'Arial' },
   { value: 'Georgia, serif', label: 'Georgia' },
   { value: 'Times New Roman, serif', label: 'Times New Roman' },
   { value: 'Verdana, sans-serif', label: 'Verdana' },
-  { value: 'Trebuchet MS, sans-serif', label: 'Trebuchet MS' },
   { value: 'Courier New, monospace', label: 'Courier New' },
-  { value: 'Palatino, serif', label: 'Palatino' },
-  { value: 'Garamond, serif', label: 'Garamond' },
+  // Google Fonts - Sans Serif
+  { value: 'Montserrat, sans-serif', label: 'Montserrat' },
+  { value: 'Open Sans, sans-serif', label: 'Open Sans' },
+  { value: 'Lato, sans-serif', label: 'Lato' },
+  { value: 'Poppins, sans-serif', label: 'Poppins' },
+  { value: 'Raleway, sans-serif', label: 'Raleway' },
+  { value: 'Oswald, sans-serif', label: 'Oswald' },
+  { value: 'Roboto, sans-serif', label: 'Roboto' },
+  // Google Fonts - Serif
+  { value: 'Playfair Display, serif', label: 'Playfair Display' },
+  { value: 'Merriweather, serif', label: 'Merriweather' },
+  { value: 'Libre Baskerville, serif', label: 'Libre Baskerville' },
+  { value: 'Cormorant Garamond, serif', label: 'Cormorant Garamond' },
+  { value: 'Cinzel, serif', label: 'Cinzel' },
+  // Google Fonts - Display/Script
+  { value: 'Dancing Script, cursive', label: 'Dancing Script' },
+  { value: 'Bebas Neue, sans-serif', label: 'Bebas Neue' },
+  { value: 'Graduate, serif', label: 'Graduate' },
 ];
 
 const FONT_SIZES = [
@@ -413,12 +429,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           
           {/* Font Family */}
           <Select onValueChange={(val) => exec('fontName', val)}>
-            <SelectTrigger className="h-8 w-32 text-xs">
-              <SelectValue placeholder="Font" />
+            <SelectTrigger className="h-8 w-40 text-xs">
+              <SelectValue placeholder="Font Family" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-80">
               {FONT_FAMILIES.map((font) => (
-                <SelectItem key={font.value} value={font.value} style={{ fontFamily: font.value }}>
+                <SelectItem key={font.value} value={font.value} style={{ fontFamily: font.value }} className="text-sm">
                   {font.label}
                 </SelectItem>
               ))}
