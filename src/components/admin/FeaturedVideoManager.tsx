@@ -14,7 +14,8 @@ import {
   ArrowUp,
   ArrowDown,
   Eye,
-  EyeOff
+  EyeOff,
+  RefreshCw
 } from 'lucide-react';
 
 interface FeaturedVideo {
@@ -43,6 +44,7 @@ export const FeaturedVideoManager: React.FC = () => {
   const [featuredVideos, setFeaturedVideos] = useState<FeaturedVideo[]>([]);
   const [availableVideos, setAvailableVideos] = useState<AvailableVideo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
 
   useEffect(() => {
@@ -88,6 +90,25 @@ export const FeaturedVideoManager: React.FC = () => {
       setAvailableVideos(data || []);
     } catch (err) {
       console.error('Error fetching available videos:', err);
+    }
+  };
+
+  const handleSyncFromChannel = async () => {
+    try {
+      setSyncing(true);
+      toast({ title: 'Syncing videos from YouTube channel...' });
+      
+      await supabase.functions.invoke('sync-youtube-videos', {
+        body: { channelInput: '@SpelmanCollegeGleeClub', maxResults: 50 }
+      });
+      
+      await fetchAvailableVideos();
+      toast({ title: 'Videos synced successfully!' });
+    } catch (err) {
+      console.error('Error syncing videos:', err);
+      toast({ title: 'Failed to sync videos', variant: 'destructive' });
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -203,10 +224,20 @@ export const FeaturedVideoManager: React.FC = () => {
                 Manage videos displayed on the public landing page carousel
               </CardDescription>
             </div>
-            <Button onClick={() => setShowAddDialog(!showAddDialog)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Video
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleSyncFromChannel}
+                disabled={syncing}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync Channel'}
+              </Button>
+              <Button onClick={() => setShowAddDialog(!showAddDialog)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Video
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
