@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AdvertisingHeroManager } from "@/components/admin/AdvertisingHeroManager";
 interface HeroSlide {
   id: string;
   title: string | null;
@@ -556,6 +557,9 @@ export const DashboardHeroManagerModule = () => {
       </Card>;
   }
   return <div className="space-y-6">
+      {/* Advertising Hero Manager - Top Priority */}
+      <AdvertisingHeroManager />
+
       {/* Glee Cam Sync Alert */}
       <Alert className="border-primary/30 bg-primary/10">
         <Camera className="h-4 w-4 text-foreground" />
