@@ -125,29 +125,36 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   // and pushing page content down by the measured header height.
   const headerRef = useRef<HTMLElement | null>(null);
   const lastHeaderHeightRef = useRef<number>(0);
+  const isInitializedRef = useRef(false);
 
   useEffect(() => {
-    const update = () => {
+    const update = (force = false) => {
       const el = headerRef.current;
       if (!el) return;
 
-      // Avoid sub-pixel jitter causing layout "bump" when interacting with header controls.
       const height = Math.round(el.getBoundingClientRect().height);
-      if (Math.abs(height - lastHeaderHeightRef.current) < 1) return;
+      
+      // Only update on initial mount or if height changes significantly (> 2px)
+      // This prevents dropdown interactions from causing layout shifts
+      if (!force && isInitializedRef.current && Math.abs(height - lastHeaderHeightRef.current) <= 2) {
+        return;
+      }
 
       lastHeaderHeightRef.current = height;
       document.documentElement.style.setProperty('--gw-header-height', `${height}px`);
+      isInitializedRef.current = true;
     };
 
-    // Initialize once; subsequent updates only happen when height meaningfully changes.
-    update();
-    const ro = new ResizeObserver(update);
-    if (headerRef.current) ro.observe(headerRef.current);
-    window.addEventListener('resize', update);
+    // Initialize once on mount
+    update(true);
+    
+    // Only update on window resize, not on internal ResizeObserver changes
+    // This prevents dropdowns/popups from triggering layout recalculations
+    const handleResize = () => update(true);
+    window.addEventListener('resize', handleResize);
 
     return () => {
-      window.removeEventListener('resize', update);
-      ro.disconnect();
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 
