@@ -162,7 +162,7 @@ export const ExecutiveBoardDropdown = () => {
           <Crown className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7 text-yellow-600" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 bg-background border border-border shadow-lg z-[200]" align="end">
+      <DropdownMenuContent className="w-56 bg-background border border-border shadow-lg z-[200]" align="end" sideOffset={20}>
         <DropdownMenuLabel className="flex items-center gap-2">
           <Crown className="h-4 w-4 text-yellow-600" />
           Executive Board
