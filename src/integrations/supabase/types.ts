@@ -7325,6 +7325,98 @@ export type Database = {
           },
         ]
       }
+      gw_course_playlist_videos: {
+        Row: {
+          added_at: string | null
+          added_by: string | null
+          display_order: number | null
+          id: string
+          playlist_id: string | null
+          video_id: string | null
+        }
+        Insert: {
+          added_at?: string | null
+          added_by?: string | null
+          display_order?: number | null
+          id?: string
+          playlist_id?: string | null
+          video_id?: string | null
+        }
+        Update: {
+          added_at?: string | null
+          added_by?: string | null
+          display_order?: number | null
+          id?: string
+          playlist_id?: string | null
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_playlist_videos_playlist_id_fkey"
+            columns: ["playlist_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_playlists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_playlist_videos_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "youtube_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_playlists: {
+        Row: {
+          course_id: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_featured: boolean | null
+          is_public: boolean | null
+          playlist_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          playlist_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_featured?: boolean | null
+          is_public?: boolean | null
+          playlist_url?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_playlists_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_course_rubrics: {
         Row: {
           assignment_type: string | null
@@ -8680,6 +8772,56 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "gw_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_featured_videos: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description_override: string | null
+          display_order: number | null
+          end_date: string | null
+          id: string
+          is_active: boolean | null
+          start_date: string | null
+          title_override: string | null
+          updated_at: string | null
+          video_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description_override?: string | null
+          display_order?: number | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          start_date?: string | null
+          title_override?: string | null
+          updated_at?: string | null
+          video_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description_override?: string | null
+          display_order?: number | null
+          end_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          start_date?: string | null
+          title_override?: string | null
+          updated_at?: string | null
+          video_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_featured_videos_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "youtube_videos"
             referencedColumns: ["id"]
           },
         ]
