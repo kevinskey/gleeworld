@@ -129,7 +129,7 @@ const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: Sor
       )}
       <Button
         variant="ghost"
-        className="flex-1 justify-start h-auto py-5 px-4 hover:bg-card/90 group border border-border/50 bg-card/80 backdrop-blur-sm rounded-xl transition-all duration-200 hover:border-primary/30 hover:shadow-md"
+        className="flex-1 justify-start h-auto py-5 px-4 hover:bg-muted group border border-border/50 bg-background rounded-xl transition-all duration-200 hover:border-primary/30 hover:shadow-md"
         onClick={() => onActionClick(action.moduleId)}
       >
         <div className="flex items-center gap-4 w-full">
