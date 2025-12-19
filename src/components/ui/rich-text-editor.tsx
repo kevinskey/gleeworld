@@ -563,34 +563,29 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                <div className="rounded-lg border border-border bg-background">
-                  <div className="px-3 py-2 border-b border-border">
-                    <p className="text-sm font-medium">Select an image</p>
-                    <p className="text-xs text-muted-foreground">If thumbnails are blocked, you can still insert by clicking a filename.</p>
-                  </div>
-                  <div className="divide-y divide-border">
-                    {filteredMedia.slice(0, 100).map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => insertImage(item.file_url)}
-                        className="w-full flex items-start gap-3 px-3 py-2 text-left hover:bg-muted/40"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate text-foreground">{item.title || 'Untitled image'}</p>
-                          <p className="text-xs text-muted-foreground truncate">{item.file_type}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Debug (visible) */}
-                <div className="rounded-lg border border-border p-3 bg-muted/20">
-                  <p className="text-xs font-medium text-foreground">Debug</p>
-                  <pre className="text-[11px] text-muted-foreground whitespace-pre-wrap break-words mt-2">
-{JSON.stringify({ total: mediaItems.length, filtered: filteredMedia.length, sample: filteredMedia.slice(0, 3).map((m) => ({ id: m.id, title: m.title, url: m.file_url })) }, null, 2)}
-                  </pre>
+              <div className="space-y-4">
+                {/* Thumbnail Grid */}
+                <div className="grid grid-cols-4 gap-3">
+                  {filteredMedia.slice(0, 60).map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => insertImage(item.file_url)}
+                      className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/20 transition-all bg-muted/30"
+                      title={item.title}
+                    >
+                      <img
+                        src={item.file_url}
+                        alt={item.title || 'Media image'}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
+                        <p className="text-[11px] font-medium truncate text-white">
+                          {item.title || 'Untitled'}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
