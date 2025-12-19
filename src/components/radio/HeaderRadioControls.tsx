@@ -140,31 +140,33 @@ export const HeaderRadioControls = () => {
                   <ChevronUp className="h-4 w-4" />
                 </Button>
 
-                {/* Top Row: All Channel Buttons */}
-                <div className="flex flex-wrap gap-1.5 pr-8">
-                  {channels.length > 0 && channels.map((channel) => {
-                    const isSelected = selectedChannel?.id === channel.id;
-                    const isThisLoading = isLoading && isSelected;
-                    return (
-                      <button
-                        key={channel.id}
-                        onClick={() => handleChannelChange(channel)}
-                        disabled={isLoading}
-                        className={cn(
-                          "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all",
-                          isSelected
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
-                          isLoading && "opacity-70 cursor-wait"
-                        )}
-                      >
-                        {isThisLoading ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : null}
-                        {channel.name}
-                      </button>
-                    );
-                  })}
+                {/* Top Row: Channel Scroller - Single Line */}
+                <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-popover-foreground/20 scrollbar-track-transparent pr-8">
+                  <div className="flex items-center gap-1.5 pb-1">
+                    {channels.length > 0 && channels.map((channel) => {
+                      const isSelected = selectedChannel?.id === channel.id;
+                      const isThisLoading = isLoading && isSelected;
+                      return (
+                        <button
+                          key={channel.id}
+                          onClick={() => handleChannelChange(channel)}
+                          disabled={isLoading}
+                          className={cn(
+                            "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0",
+                            isSelected
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
+                            isLoading && "opacity-70 cursor-wait"
+                          )}
+                        >
+                          {isThisLoading ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : null}
+                          {channel.name}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Bottom Row: Logo, Status, Play Button, Listener Count, Now Playing, Volume */}
