@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Save, Trash2, Eye, Image, Monitor, Tablet, Smartphone, ExternalLink, Megaphone } from "lucide-react";
+import { Upload, Save, Trash2, Eye, Image, Monitor, Tablet, Smartphone, ExternalLink, Megaphone, ShoppingCart, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -38,7 +38,8 @@ export const AdvertisingHeroManager = () => {
     ipad_image_url: "",
     link_url: "",
     link_target: "_self",
-    is_active: true
+    is_active: true,
+    amazon_affiliate_tag: ""
   });
 
   useEffect(() => {
@@ -67,7 +68,8 @@ export const AdvertisingHeroManager = () => {
           ipad_image_url: heroData.ipad_image_url || "",
           link_url: heroData.link_url || "",
           link_target: heroData.link_target || "_self",
-          is_active: heroData.is_active
+          is_active: heroData.is_active,
+          amazon_affiliate_tag: (heroData as any).amazon_affiliate_tag || ""
         });
       }
     } catch (error) {
@@ -135,15 +137,27 @@ export const AdvertisingHeroManager = () => {
 
     setSaving(true);
     try {
+      // Build final link URL with Amazon affiliate tag if applicable
+      let finalLinkUrl = formData.link_url || null;
+      if (finalLinkUrl && formData.amazon_affiliate_tag) {
+        const isAmazonUrl = /amazon\.(com|co\.uk|ca|de|fr|es|it|in|jp|com\.au|com\.br|com\.mx)/i.test(finalLinkUrl);
+        if (isAmazonUrl) {
+          const url = new URL(finalLinkUrl);
+          url.searchParams.set('tag', formData.amazon_affiliate_tag);
+          finalLinkUrl = url.toString();
+        }
+      }
+
       const payload = {
         title: formData.title || null,
         description: formData.description || null,
         image_url: formData.image_url,
         mobile_image_url: formData.mobile_image_url || null,
         ipad_image_url: formData.ipad_image_url || null,
-        link_url: formData.link_url || null,
+        link_url: finalLinkUrl,
         link_target: formData.link_target,
-        is_active: formData.is_active
+        is_active: formData.is_active,
+        amazon_affiliate_tag: formData.amazon_affiliate_tag || null
       };
 
       if (hero) {
@@ -203,7 +217,8 @@ export const AdvertisingHeroManager = () => {
         ipad_image_url: "",
         link_url: "",
         link_target: "_self",
-        is_active: true
+        is_active: true,
+        amazon_affiliate_tag: ""
       });
 
       toast({
@@ -317,6 +332,33 @@ export const AdvertisingHeroManager = () => {
             placeholder="Enter hero description"
             rows={2}
           />
+        </div>
+
+        {/* Amazon Affiliate Section */}
+        <div className="p-4 border-2 border-orange-200 bg-orange-50/50 dark:bg-orange-950/20 dark:border-orange-800 rounded-lg space-y-4">
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="h-5 w-5 text-orange-600" />
+            <Label className="font-semibold text-orange-800 dark:text-orange-400">Amazon Affiliate</Label>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="amazon_tag">Your Amazon Affiliate Tag</Label>
+            <Input
+              id="amazon_tag"
+              value={formData.amazon_affiliate_tag}
+              onChange={(e) => setFormData(prev => ({ ...prev, amazon_affiliate_tag: e.target.value }))}
+              placeholder="e.g., gleeworld-20"
+              className="max-w-xs"
+            />
+            <p className="text-xs text-muted-foreground">
+              When you enter an Amazon URL above, your affiliate tag will be automatically appended.
+            </p>
+          </div>
+          {formData.link_url && formData.amazon_affiliate_tag && /amazon\.(com|co\.uk|ca|de|fr|es|it|in|jp|com\.au|com\.br|com\.mx)/i.test(formData.link_url) && (
+            <div className="flex items-center gap-2 p-2 bg-green-100 dark:bg-green-900/30 rounded text-sm text-green-800 dark:text-green-400">
+              <Link2 className="h-4 w-4" />
+              <span>Affiliate tag will be added to this Amazon link!</span>
+            </div>
+          )}
         </div>
 
         {/* Link Target */}
