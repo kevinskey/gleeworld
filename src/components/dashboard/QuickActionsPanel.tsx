@@ -129,7 +129,7 @@ const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: Sor
       )}
       <Button
         variant="ghost"
-        className="flex-1 justify-start h-auto p-3 hover:bg-accent group border border-transparent hover:border-border rounded-lg transition-all duration-200"
+        className="flex-1 justify-start h-auto p-3 hover:bg-muted group border border-border bg-card rounded-lg transition-all duration-200"
         onClick={() => onActionClick(action.moduleId)}
       >
         <div className="flex items-center gap-3 w-full">
@@ -271,7 +271,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
             : '-translate-y-4 opacity-0 scale-95 pointer-events-none'
         }`}
       >
-        <div className="bg-popover rounded-b-lg border-x border-b border-border shadow-2xl mx-4">
+        <div className="bg-card rounded-b-lg border-x border-b border-border shadow-2xl mx-4 backdrop-blur-none">
           
           {/* Header with management controls */}
           <div className="p-3 border-b border-border flex items-center justify-between">
