@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,6 @@ import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels, type RadioChannel } from '@/hooks/useRadioChannels';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
-import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -17,8 +17,10 @@ const RADIO_OPEN_CLASS = 'radio-bar-open';
 export const HeaderRadioControls = () => {
   try {
     const [isOpen, setIsOpen] = useState(false);
+    const [headerHeight, setHeaderHeight] = useState(0);
     const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
     const { themeName } = useTheme();
+    const radioBarRef = useRef<HTMLDivElement>(null);
     
     // Theme-specific colors
     const isHbcuTheme = themeName === 'hbcu';
@@ -78,6 +80,29 @@ export const HeaderRadioControls = () => {
       }
     };
 
+    // Calculate header height dynamically
+    useEffect(() => {
+      const updateHeaderHeight = () => {
+        const header = document.querySelector('header');
+        if (header) {
+          setHeaderHeight(header.getBoundingClientRect().height);
+        }
+      };
+      
+      updateHeaderHeight();
+      window.addEventListener('resize', updateHeaderHeight);
+      
+      // Also observe for DOM changes
+      const observer = new ResizeObserver(updateHeaderHeight);
+      const header = document.querySelector('header');
+      if (header) observer.observe(header);
+      
+      return () => {
+        window.removeEventListener('resize', updateHeaderHeight);
+        observer.disconnect();
+      };
+    }, []);
+
     // Add/remove body class when radio bar opens/closes
     useEffect(() => {
       if (isOpen) {
@@ -123,10 +148,11 @@ export const HeaderRadioControls = () => {
             
             {/* Horizontal Radio Bar - Connected directly to header */}
             <div 
+              ref={radioBarRef}
               className={cn(
                 "fixed left-0 right-0 z-[9999] bg-popover border-b-2 border-primary/40 shadow-lg"
               )}
-              style={{ top: '60px' }} // Directly below header, no gap
+              style={{ top: `${headerHeight}px` }}
             >
               <div className="max-w-7xl mx-auto px-3 py-1.5 relative">
                 {/* Close Button - Top Right */}
