@@ -171,19 +171,39 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const insertVideo = useCallback(() => {
     if (videoUrl) {
-      let embedUrl = videoUrl;
+      let videoId = '';
+      let platform = '';
+      let thumbnailUrl = '';
+      
       const youtubeMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
       const vimeoMatch = videoUrl.match(/vimeo\.com\/(\d+)/);
       
       if (youtubeMatch) {
-        embedUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+        videoId = youtubeMatch[1];
+        platform = 'YouTube';
+        thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
       } else if (vimeoMatch) {
-        embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+        videoId = vimeoMatch[1];
+        platform = 'Vimeo';
+        thumbnailUrl = ''; // Vimeo requires API for thumbnails
       }
+
+      // Insert a visual placeholder that will be converted to iframe on send
+      const embedUrl = platform === 'YouTube' 
+        ? `https://www.youtube.com/embed/${videoId}`
+        : `https://player.vimeo.com/video/${videoId}`;
       
       exec('insertHTML', `
-        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 16px 0; border-radius: 8px;">
-          <iframe src="${embedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 8px;" allowfullscreen></iframe>
+        <div class="video-embed" data-embed-url="${embedUrl}" style="position: relative; max-width: 560px; margin: 16px 0; border-radius: 8px; overflow: hidden; background: #000;">
+          ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="${platform} video" style="width: 100%; display: block;" />` : `<div style="padding: 56.25% 0 0 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>`}
+          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3);">
+            <div style="width: 68px; height: 48px; background: #ff0000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+              <div style="width: 0; height: 0; border-left: 20px solid white; border-top: 12px solid transparent; border-bottom: 12px solid transparent; margin-left: 4px;"></div>
+            </div>
+          </div>
+          <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+            ${platform} Video
+          </div>
         </div>
       `);
       setVideoUrl('');
