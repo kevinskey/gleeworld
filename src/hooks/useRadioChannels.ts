@@ -25,52 +25,7 @@ export const useRadioChannels = () => {
   useEffect(() => {
     const fetchChannels = async () => {
       try {
-        // Fetch all stations from AzuraCast (public API)
-        try {
-          const stations = await azuraCastService.getAllStations();
-          console.log('AzuraCast stations fetched:', stations);
-          
-          if (Array.isArray(stations) && stations.length > 0) {
-            // Convert AzuraCast stations to RadioChannel format
-            const stationChannels: RadioChannel[] = stations
-              .filter((s: any) => s.is_public !== false)
-              .map((station: any, index: number) => ({
-                id: `station-${station.id}`,
-                name: station.name,
-                description: station.description || `${station.short_name} station`,
-                // Build stream URL from station's short_name (mount point)
-                stream_url: `https://radio.gleeworld.org/listen/${station.short_name}/radio.mp3`,
-                icon: getStationIcon(station.name),
-                color: getStationColor(station.name, index),
-                sort_order: index,
-                is_active: true,
-                is_default: station.short_name === 'glee_world_radio',
-              }));
-
-            setChannels(stationChannels);
-            
-            // Set default channel
-            const savedChannelId = localStorage.getItem('gleeworld-radio-channel');
-            const savedChannel = savedChannelId 
-              ? stationChannels.find(c => c.id === savedChannelId)
-              : null;
-            
-            if (savedChannel) {
-              setSelectedChannel(savedChannel);
-            } else {
-              // Default to Glee World Radio or first station
-              const defaultStation = stationChannels.find(c => c.is_default) || stationChannels[0];
-              if (defaultStation) setSelectedChannel(defaultStation);
-            }
-            
-            setIsLoading(false);
-            return;
-          }
-        } catch (error) {
-          console.log('Could not fetch AzuraCast stations, falling back to database:', error);
-        }
-
-        // Fallback: fetch from static database channels
+        // Fetch from database (stations are synced from AzuraCast)
         const { data, error } = await supabase
           .from('gw_radio_channels')
           .select('*')
@@ -82,12 +37,20 @@ export const useRadioChannels = () => {
           return;
         }
 
+        console.log('Radio channels fetched:', data);
         setChannels(data || []);
         
-        // Set default channel or first available
-        const defaultChannel = data?.find(c => c.is_default) || data?.[0];
-        if (defaultChannel && !selectedChannel) {
-          setSelectedChannel(defaultChannel);
+        // Set default channel from localStorage or find default
+        const savedChannelId = localStorage.getItem('gleeworld-radio-channel');
+        const savedChannel = savedChannelId 
+          ? data?.find(c => c.id === savedChannelId)
+          : null;
+        
+        if (savedChannel) {
+          setSelectedChannel(savedChannel);
+        } else {
+          const defaultChannel = data?.find(c => c.is_default) || data?.[0];
+          if (defaultChannel) setSelectedChannel(defaultChannel);
         }
       } catch (error) {
         console.error('Error fetching radio channels:', error);
