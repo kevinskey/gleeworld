@@ -67,16 +67,97 @@ export const MessengerModal: React.FC = () => {
   const [sendToAll, setSendToAll] = useState(false);
   const [smsRecipients, setSmsRecipients] = useState<Array<{user_id: string, full_name: string, phone_number: string}>>([]);
 
-  // Quick recipient groups
-  const recipientGroups: RecipientGroup[] = [
-    { id: 'exec', name: 'Executive Board', count: 12 },
-    { id: 'section-leaders', name: 'Section Leaders', count: 4 },
-    { id: 'all', name: 'All Members', count: 85 },
-    { id: 'freshman', name: 'Freshman', count: 22 },
-    { id: 'sophomore', name: 'Sophomore', count: 20 },
-    { id: 'junior', name: 'Junior', count: 18 },
-    { id: 'senior', name: 'Senior', count: 25 },
-  ];
+  // Groups from database
+  const [recipientGroups, setRecipientGroups] = useState<RecipientGroup[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(false);
+  const [addingGroup, setAddingGroup] = useState<string | null>(null);
+
+  // Fetch messenger groups from database
+  useEffect(() => {
+    const fetchGroups = async () => {
+      setLoadingGroups(true);
+      try {
+        const { data, error } = await supabase
+          .from('messenger_groups' as any)
+          .select('id, name, member_count')
+          .eq('is_active', true)
+          .order('name');
+        
+        if (error) throw error;
+        
+        setRecipientGroups((data || []).map((g: any) => ({
+          id: g.id,
+          name: g.name,
+          count: g.member_count || 0
+        })));
+      } catch (err) {
+        console.error('Error fetching groups:', err);
+      } finally {
+        setLoadingGroups(false);
+      }
+    };
+    
+    if (isOpen) {
+      fetchGroups();
+    }
+  }, [isOpen]);
+
+  // Add group members to recipients
+  const handleAddGroup = async (group: RecipientGroup) => {
+    setAddingGroup(group.id);
+    try {
+      // Fetch group members with their profiles
+      const { data: members, error } = await supabase
+        .from('messenger_group_members' as any)
+        .select(`
+          user_id,
+          gw_profiles!inner(full_name, email, phone_number)
+        `)
+        .eq('group_id', group.id);
+      
+      if (error) throw error;
+      
+      if (!members || members.length === 0) {
+        toast({ title: 'No members', description: `${group.name} has no members yet`, variant: 'destructive' });
+        return;
+      }
+
+      if (composerMode === 'email') {
+        // Add emails to recipients
+        const emails = members
+          .map((m: any) => m.gw_profiles?.email)
+          .filter((e: string) => e && !recipients.includes(e));
+        
+        if (emails.length > 0) {
+          setRecipients([...recipients, ...emails]);
+          toast({ title: 'Added!', description: `Added ${emails.length} email(s) from ${group.name}` });
+        } else {
+          toast({ title: 'Already added', description: 'All members from this group are already in recipients' });
+        }
+      } else {
+        // Add phone numbers to SMS recipients
+        const newRecipients = members
+          .filter((m: any) => m.gw_profiles?.phone_number && !smsRecipients.find(r => r.user_id === m.user_id))
+          .map((m: any) => ({
+            user_id: m.user_id,
+            full_name: m.gw_profiles?.full_name || 'Unknown',
+            phone_number: m.gw_profiles?.phone_number
+          }));
+        
+        if (newRecipients.length > 0) {
+          setSmsRecipients([...smsRecipients, ...newRecipients]);
+          toast({ title: 'Added!', description: `Added ${newRecipients.length} recipient(s) from ${group.name}` });
+        } else {
+          toast({ title: 'No new recipients', description: 'All members with phone numbers are already added' });
+        }
+      }
+    } catch (err: any) {
+      console.error('Error adding group:', err);
+      toast({ title: 'Error', description: 'Failed to load group members', variant: 'destructive' });
+    } finally {
+      setAddingGroup(null);
+    }
+  };
 
   // Track unsaved changes
   useEffect(() => {
@@ -471,24 +552,35 @@ export const MessengerModal: React.FC = () => {
             <div className="border-l bg-muted/30 p-4 overflow-y-auto">
               <h3 className="font-semibold mb-3 flex items-center gap-2">
                 <Users className="h-4 w-4" />
-                Quick Add
+                Quick Add Groups
               </h3>
               <div className="space-y-2">
-                {recipientGroups.map((group) => (
-                  <Button
-                    key={group.id}
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start text-left"
-                    onClick={() => {
-                      // For demo, just show toast - in real implementation, fetch group members
-                      toast({ title: `Add ${group.name}`, description: `Would add ${group.count} members` });
-                    }}
-                  >
-                    <span className="flex-1">{group.name}</span>
-                    <Badge variant="secondary" className="ml-2">{group.count}</Badge>
-                  </Button>
-                ))}
+                {loadingGroups ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : recipientGroups.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No groups available. Create groups in Messenger Admin.
+                  </p>
+                ) : (
+                  recipientGroups.map((group) => (
+                    <Button
+                      key={group.id}
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start text-left"
+                      disabled={addingGroup === group.id}
+                      onClick={() => handleAddGroup(group)}
+                    >
+                      {addingGroup === group.id ? (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      ) : null}
+                      <span className="flex-1">{group.name}</span>
+                      <Badge variant="secondary" className="ml-2">{group.count}</Badge>
+                    </Button>
+                  ))
+                )}
               </div>
 
               {/* Preview Section */}
