@@ -114,6 +114,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [mediaSearch, setMediaSearch] = useState('');
   const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
   const [imageWidth, setImageWidth] = useState('300');
+  const [imageAlign, setImageAlign] = useState<'inline' | 'left' | 'center' | 'right'>('inline');
 
   // Fetch media library images when dialog opens
   useEffect(() => {
@@ -191,6 +192,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       const img = target as HTMLImageElement;
       setSelectedImage(img);
       setImageWidth(String(img.width || 300));
+      // Detect current alignment
+      const float = img.style.float;
+      const margin = img.style.marginLeft;
+      if (float === 'left') setImageAlign('left');
+      else if (float === 'right') setImageAlign('right');
+      else if (margin === 'auto') setImageAlign('center');
+      else setImageAlign('inline');
       img.classList.add('rte-image-selected');
     } else {
       // Deselect if clicking elsewhere
@@ -200,6 +208,40 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       }
     }
   }, [selectedImage]);
+
+  // Apply alignment to selected image
+  const applyImageAlignment = useCallback((align: 'inline' | 'left' | 'center' | 'right') => {
+    if (selectedImage) {
+      // Reset styles
+      selectedImage.style.float = '';
+      selectedImage.style.marginLeft = '';
+      selectedImage.style.marginRight = '';
+      selectedImage.style.display = 'block';
+      
+      switch (align) {
+        case 'left':
+          selectedImage.style.float = 'left';
+          selectedImage.style.marginRight = '16px';
+          selectedImage.style.marginBottom = '8px';
+          break;
+        case 'right':
+          selectedImage.style.float = 'right';
+          selectedImage.style.marginLeft = '16px';
+          selectedImage.style.marginBottom = '8px';
+          break;
+        case 'center':
+          selectedImage.style.marginLeft = 'auto';
+          selectedImage.style.marginRight = 'auto';
+          break;
+        case 'inline':
+        default:
+          selectedImage.style.display = 'block';
+          break;
+      }
+      setImageAlign(align);
+      handleInput();
+    }
+  }, [selectedImage, handleInput]);
 
   // Apply resize to selected image
   const applyImageResize = useCallback((width: number) => {
@@ -510,21 +552,47 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <ToolbarButton onClick={() => exec('removeFormat')} icon={RemoveFormatting} title="Clear Formatting" />
         </div>
 
-        {/* Image Resize Controls */}
+        {/* Image Formatting Controls */}
         {selectedImage && (
-          <div className="flex items-center gap-2 px-3 py-2 border-t bg-muted/50">
-            <span className="text-xs text-muted-foreground">Resize:</span>
-            <Input
-              type="number"
-              value={imageWidth}
-              onChange={(e) => setImageWidth(e.target.value)}
-              className="w-20 h-7 text-xs"
-              min={50}
-              max={1200}
-            />
-            <span className="text-xs text-muted-foreground">px</span>
-            <div className="flex gap-1 ml-2">
-              {[150, 300, 450, 600].map((w) => (
+          <div className="flex flex-wrap items-center gap-3 px-3 py-2 border-t bg-muted/50">
+            {/* Alignment */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground mr-1">Wrap:</span>
+              {[
+                { value: 'inline', label: 'Block', title: 'Image on its own line' },
+                { value: 'left', label: '◧ Left', title: 'Float left, text wraps right' },
+                { value: 'center', label: '◉ Center', title: 'Centered' },
+                { value: 'right', label: '◨ Right', title: 'Float right, text wraps left' },
+              ].map((opt) => (
+                <Button
+                  key={opt.value}
+                  type="button"
+                  variant={imageAlign === opt.value ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => applyImageAlignment(opt.value as typeof imageAlign)}
+                  title={opt.title}
+                >
+                  {opt.label}
+                </Button>
+              ))}
+            </div>
+
+            <div className="w-px h-5 bg-border" />
+
+            {/* Size */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground mr-1">Size:</span>
+              <Input
+                type="number"
+                value={imageWidth}
+                onChange={(e) => setImageWidth(e.target.value)}
+                className="w-16 h-7 text-xs"
+                min={50}
+                max={1200}
+              />
+              <span className="text-xs text-muted-foreground">px</span>
+              {[150, 300, 450].map((w) => (
                 <Button
                   key={w}
                   type="button"
@@ -536,16 +604,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   {w}
                 </Button>
               ))}
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => applyImageResize(Number(imageWidth) || 300)}
+              >
+                Apply
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              className="h-7 px-3 text-xs ml-2"
-              onClick={() => applyImageResize(Number(imageWidth) || 300)}
-            >
-              Apply
-            </Button>
           </div>
         )}
 
