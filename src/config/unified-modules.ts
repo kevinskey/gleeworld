@@ -115,6 +115,7 @@ import VoiceConversationAgent from '@/components/assistant/VoiceConversationAgen
 import { TheLabModule } from '@/components/modules/TheLabModule';
 import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
+import { MessengerAdminModule } from '@/components/modules/MessengerAdminModule';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -205,6 +206,20 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: EmailManagementModule,
     dbFunctionName: "email-management"
+  },
+  {
+    id: "messenger-admin",
+    name: "messenger-admin",
+    title: "Messenger Admin",
+    description: "Manage messenger groups, recipients, and communication settings",
+    icon: MessageSquare,
+    iconColor: "cyan",
+    category: "communications",
+    isActive: true,
+    isNew: true,
+    component: MessengerAdminModule,
+    dbFunctionName: "messenger-admin",
+    requiredRoles: ["admin", "super-admin", "exec-board"]
   },
   {
     id: "buckets-of-love",
