@@ -133,6 +133,51 @@ export type Database = {
           },
         ]
       }
+      advertising_hero: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string
+          ipad_image_url: string | null
+          is_active: boolean
+          link_target: string | null
+          link_url: string | null
+          mobile_image_url: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url: string
+          ipad_image_url?: string | null
+          is_active?: boolean
+          link_target?: string | null
+          link_url?: string | null
+          mobile_image_url?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string
+          ipad_image_url?: string | null
+          is_active?: boolean
+          link_target?: string | null
+          link_url?: string | null
+          mobile_image_url?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       alumnae_audio_stories: {
         Row: {
           audio_url: string
