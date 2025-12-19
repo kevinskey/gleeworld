@@ -26,7 +26,14 @@ import {
   Play,
   ExternalLink
 } from 'lucide-react';
-import { ACADEMY_COURSES } from '@/config/academyCourses';
+
+interface Course {
+  id: string;
+  course_code: string | null;
+  code: string | null;
+  title: string;
+  is_active: boolean;
+}
 
 interface Playlist {
   id: string;
@@ -68,6 +75,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   const { toast } = useToast();
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [availableVideos, setAvailableVideos] = useState<Video[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
@@ -86,7 +94,23 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   useEffect(() => {
     fetchPlaylists();
     fetchAvailableVideos();
+    fetchCourses();
   }, [selectedCourseFilter]);
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gw_courses')
+        .select('id, course_code, code, title, is_active')
+        .eq('is_active', true)
+        .order('title');
+      
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (err) {
+      console.error('Error fetching courses:', err);
+    }
+  };
 
   const fetchPlaylists = async () => {
     try {
@@ -225,8 +249,8 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
 
   const getCourseName = (courseId: string | null) => {
     if (!courseId) return 'General';
-    const course = ACADEMY_COURSES.find(c => c.id === courseId);
-    return course ? course.courseCode : 'Unknown Course';
+    const course = courses.find(c => c.id === courseId);
+    return course ? (course.course_code || course.code || course.title) : 'Unknown Course';
   };
 
   return (
@@ -252,9 +276,9 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Courses</SelectItem>
-                    {ACADEMY_COURSES.filter(c => c.isActive).map(course => (
+                    {courses.map(course => (
                       <SelectItem key={course.id} value={course.id}>
-                        {course.courseCode}
+                        {course.course_code || course.code || course.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -290,9 +314,9 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">General (No Course)</SelectItem>
-                          {ACADEMY_COURSES.filter(c => c.isActive).map(course => (
+                          {courses.map(course => (
                             <SelectItem key={course.id} value={course.id}>
-                              {course.courseCode} - {course.title}
+                              {course.course_code || course.code || course.title} - {course.title}
                             </SelectItem>
                           ))}
                         </SelectContent>
