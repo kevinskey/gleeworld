@@ -189,7 +189,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           <div className="flex-1 md:hidden"></div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 lg:gap-5">
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2.5 lg:gap-5">
             <HeaderRadioControls />
             <MusicalToolkit />
             
@@ -200,13 +200,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                   variant="ghost" 
                   size="sm" 
                   onClick={toggleMessenger}
-                  className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10 ${isMessengerOpen ? 'bg-white/20' : ''}`}
+                  className={`h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 ${isMessengerOpen ? 'bg-white/20' : ''}`}
                   style={{ 
                     color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
                   }}
                   type="button"
                 >
-                  <Mail className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                  <Mail className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                 </Button>
               </EnhancedTooltip>
             )}
@@ -220,11 +220,11 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
+                        className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10"
                         style={{ color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b' }}
                         type="button"
                       >
-                        <LayoutDashboard className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                        <LayoutDashboard className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                       </Button>
                    </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-popover text-popover-foreground border border-border shadow-2xl z-[1100]" align="end">
@@ -343,13 +343,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       console.log('Camera button clicked - showing category selector');
                       setShowCategorySelector(true);
                     }}
-                    className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
+                    className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10"
                     style={{ 
                       color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
                     }}
                     type="button"
                   >
-                    <Camera className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                    <Camera className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                   </Button>
                 </EnhancedTooltip>
 
@@ -359,13 +359,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     variant="ghost" 
                     size="sm" 
                     onClick={() => setIsQuickActionsOpen(prev => !prev)}
-                    className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
+                    className="h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10"
                     style={{ 
                       color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
                     }}
                     type="button"
                   >
-                    <Key className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
+                    <Key className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6" />
                   </Button>
                 </EnhancedTooltip>
                 
