@@ -284,26 +284,29 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       platform = 'Video';
     }
 
-    const embedUrl = platform === 'YouTube' 
-      ? `https://www.youtube.com/embed/${videoId}`
+    const watchUrl = platform === 'YouTube' 
+      ? `https://www.youtube.com/watch?v=${videoId}`
       : platform === 'Vimeo'
-      ? `https://player.vimeo.com/video/${videoId}`
+      ? `https://vimeo.com/${videoId}`
       : videoUrl;
     
-    const htmlToInsert = `<div contenteditable="false" style="position: relative; max-width: 560px; margin: 16px 0; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 2px solid #333;">
-      ${thumbnailUrl 
-        ? `<img src="${thumbnailUrl}" alt="${platform} video" style="width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover;" onerror="this.style.display='none'" />` 
-        : ''
-      }
-      <div style="aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3a5f 0%, #0056a6 100%); ${thumbnailUrl ? 'position: absolute; inset: 0;' : ''}">
-        <div style="width: 80px; height: 56px; background: rgba(255,0,0,0.9); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
-          <div style="width: 0; height: 0; border-left: 24px solid white; border-top: 14px solid transparent; border-bottom: 14px solid transparent; margin-left: 6px;"></div>
+    // Wrap in anchor tag so it's clickable in emails
+    const htmlToInsert = `<a href="${watchUrl}" target="_blank" rel="noopener noreferrer" style="display: block; text-decoration: none; max-width: 560px; margin: 16px 0;">
+      <div contenteditable="false" style="position: relative; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 2px solid #333;">
+        ${thumbnailUrl 
+          ? `<img src="${thumbnailUrl}" alt="${platform} video" style="width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover;" />` 
+          : `<div style="aspect-ratio: 16/9; background: linear-gradient(135deg, #1e3a5f 0%, #0056a6 100%);"></div>`
+        }
+        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;">
+          <div style="width: 80px; height: 56px; background: rgba(255,0,0,0.9); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+            <div style="width: 0; height: 0; border-left: 24px solid white; border-top: 14px solid transparent; border-bottom: 14px solid transparent; margin-left: 6px;"></div>
+          </div>
+        </div>
+        <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(0,0,0,0.8); color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;">
+          ▶ Watch on ${platform}
         </div>
       </div>
-      <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(0,0,0,0.8); color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;">
-        ▶ ${platform} Video
-      </div>
-    </div>&nbsp;`;
+    </a>&nbsp;`;
     
     console.log('Inserting HTML');
     
