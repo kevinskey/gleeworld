@@ -573,9 +573,12 @@ export const MessengerModal: React.FC = () => {
                     <Users className="h-4 w-4" />
                     Quick Add Groups
                   </h3>
-                  <Button variant="ghost" size="icon" onClick={() => setShowGroupsPanel(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <button 
+                    onClick={() => setShowGroupsPanel(false)}
+                    className="p-2 hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
                 </div>
                 <div className="space-y-2">
                   {loadingGroups ? (
