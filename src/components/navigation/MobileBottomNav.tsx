@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Camera, Bot } from 'lucide-react';
+import { Camera, Mic } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from '@/components/quick-capture/QuickCaptureCategorySelector';
@@ -71,7 +71,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            <Bot className="h-6 w-6" />
+            <Mic className="h-6 w-6" />
             {assistantActive && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background animate-ping" />
             )}
