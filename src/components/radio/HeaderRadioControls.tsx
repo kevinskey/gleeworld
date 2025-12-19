@@ -140,38 +140,31 @@ export const HeaderRadioControls = () => {
                   <ChevronUp className="h-4 w-4" />
                 </Button>
 
-                {/* Top Row: Channel Scroller */}
-                <div className="flex items-center gap-3 pr-8">
-                  {/* Channel Selector - Scrollable Buttons */}
-                  {channels.length > 0 && (
-                    <div className="flex-1 flex items-center overflow-x-auto scrollbar-thin scrollbar-thumb-popover-foreground/20 scrollbar-track-transparent">
-                      <div className="flex items-center gap-1.5 px-1 py-0.5">
-                        {channels.map((channel) => {
-                          const isSelected = selectedChannel?.id === channel.id;
-                          const isThisLoading = isLoading && isSelected;
-                          return (
-                            <button
-                              key={channel.id}
-                              onClick={() => handleChannelChange(channel)}
-                              disabled={isLoading}
-                              className={cn(
-                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all shrink-0",
-                                isSelected
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
-                                isLoading && "opacity-70 cursor-wait"
-                              )}
-                            >
-                              {isThisLoading ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : null}
-                              {channel.name}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                {/* Top Row: All Channel Buttons */}
+                <div className="flex flex-wrap gap-1 pr-8">
+                  {channels.length > 0 && channels.map((channel) => {
+                    const isSelected = selectedChannel?.id === channel.id;
+                    const isThisLoading = isLoading && isSelected;
+                    return (
+                      <button
+                        key={channel.id}
+                        onClick={() => handleChannelChange(channel)}
+                        disabled={isLoading}
+                        className={cn(
+                          "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-medium whitespace-nowrap transition-all",
+                          isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
+                          isLoading && "opacity-70 cursor-wait"
+                        )}
+                      >
+                        {isThisLoading ? (
+                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                        ) : null}
+                        {channel.name}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Bottom Row: Logo, Status, Play Button, Listener Count, Now Playing, Volume */}
