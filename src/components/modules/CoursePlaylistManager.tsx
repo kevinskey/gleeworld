@@ -75,7 +75,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   
   // Form state
   const [formData, setFormData] = useState({
-    course_id: courseId || '',
+    course_id: courseId || 'none',
     title: '',
     description: '',
     playlist_url: '',
@@ -128,7 +128,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
     try {
       const payload = {
         ...formData,
-        course_id: formData.course_id || null,
+        course_id: formData.course_id === 'none' ? null : (formData.course_id || null),
         created_by: user?.id
       };
 
@@ -200,7 +200,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
 
   const resetForm = () => {
     setFormData({
-      course_id: courseId || '',
+      course_id: courseId || 'none',
       title: '',
       description: '',
       playlist_url: '',
@@ -213,7 +213,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   const openEditDialog = (playlist: Playlist) => {
     setEditingPlaylist(playlist);
     setFormData({
-      course_id: playlist.course_id || '',
+      course_id: playlist.course_id || 'none',
       title: playlist.title,
       description: playlist.description || '',
       playlist_url: playlist.playlist_url || '',
@@ -289,7 +289,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                           <SelectValue placeholder="Select a course (or leave for general)" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">General (No Course)</SelectItem>
+                          <SelectItem value="none">General (No Course)</SelectItem>
                           {ACADEMY_COURSES.filter(c => c.isActive).map(course => (
                             <SelectItem key={course.id} value={course.id}>
                               {course.courseCode} - {course.title}
