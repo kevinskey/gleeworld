@@ -129,20 +129,20 @@ const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: Sor
       )}
       <Button
         variant="ghost"
-        className="flex-1 justify-start h-auto py-5 px-4 hover:bg-muted group border border-border/50 bg-background rounded-xl transition-all duration-200 hover:border-primary/30 hover:shadow-md"
+        className="flex-1 justify-start h-auto py-5 px-4 hover:bg-[#1a2744] group border border-white/10 bg-[#0f1a2e] rounded-xl transition-all duration-200 hover:border-primary/40 hover:shadow-lg"
         onClick={() => onActionClick(action.moduleId)}
       >
         <div className="flex items-center gap-4 w-full">
           <div 
-            className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-transform border border-primary/20"
+            className="w-11 h-11 rounded-xl bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform border border-primary/30"
           >
             <IconComponent className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 text-left">
-            <div className="font-semibold text-sm text-foreground">{action.title}</div>
-            <div className="text-xs text-muted-foreground mt-0.5">{action.description}</div>
+            <div className="font-semibold text-sm text-white">{action.title}</div>
+            <div className="text-xs text-white/70 mt-0.5">{action.description}</div>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          <ChevronRight className="h-4 w-4 text-white/50 group-hover:text-primary transition-colors" />
         </div>
       </Button>
       {isManaging && (
