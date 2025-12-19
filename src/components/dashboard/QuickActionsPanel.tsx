@@ -256,15 +256,15 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
         />
       )}
       
-      {/* Themed Dropdown Panel - fixed under the global header */}
+      {/* Themed Dropdown Panel - centered in upper portion */}
       <div 
-        className={`fixed top-14 sm:top-16 right-4 z-50 transition-all duration-300 ease-out ${
+        className={`fixed top-[15%] left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out ${
           isOpen 
             ? 'translate-y-0 opacity-100 scale-100' 
             : '-translate-y-4 opacity-0 scale-95 pointer-events-none'
         }`}
       >
-        <div className="bg-popover text-popover-foreground border border-border shadow-2xl rounded-none w-80 sm:w-96">
+        <div className="bg-popover text-popover-foreground border border-border shadow-2xl rounded-lg w-80 sm:w-96">
           
           {/* Header with management controls */}
           <div className="px-2 py-1.5 border-b border-white/20 flex items-center justify-between">
