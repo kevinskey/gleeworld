@@ -191,13 +191,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             <HeaderRadioControls />
             <MusicalToolkit />
             
-            {/* Email Composer - Available to all authenticated users */}
+            {/* Messages Toggle - Available to all authenticated users */}
             {user && (
-              <EnhancedTooltip content="Send Email/SMS">
+              <EnhancedTooltip content="Messages">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigate('/compose')}
+                  onClick={() => window.dispatchEvent(new CustomEvent('toggle-messages'))}
                   className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
                   style={{ 
                     color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
