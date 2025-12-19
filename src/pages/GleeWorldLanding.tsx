@@ -25,6 +25,7 @@ import { PublicLayout } from "@/components/layout/PublicLayout";
 import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger, navigationMenuTriggerStyle } from "@/components/ui/navigation-menu";
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { SmartCoverImage } from "@/components/ui/SmartCoverImage";
+import { FeaturedVideoCarousel } from "@/components/public/FeaturedVideoCarousel";
 
 import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
 interface Event {
@@ -483,6 +484,15 @@ export const GleeWorldLanding = () => {
                       </CarouselItem>)}
                   </CarouselContent>
                 </Carousel>}
+          </Card>
+        </div>
+      </section>
+
+      {/* Featured Videos Section */}
+      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+        <div className="w-full max-w-screen-2xl mx-auto">
+          <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+            <FeaturedVideoCarousel maxVideos={6} showTitle={true} />
           </Card>
         </div>
       </section>
