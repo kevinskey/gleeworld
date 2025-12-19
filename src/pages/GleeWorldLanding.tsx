@@ -622,7 +622,7 @@ export const GleeWorldLanding = () => {
                   <div><a href="https://www.facebook.com/SpelmanGlee" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">Facebook</a></div>
                   <div><a href="https://www.instagram.com/spelmanglee" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">Instagram</a></div>
                   <div><a href="https://x.com/spelmanglee" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">X</a></div>
-                  <div><a href="https://www.youtube.com/@spelmancollegegleeclub" target="_blank" rel="noopener noreferrer" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">YouTube</a></div>
+                  <div><Link to="/youtube" className="text-primary-foreground/60 hover:text-primary-foreground transition-colors">YouTube</Link></div>
                 </div>
               </div>
               <div className="space-y-3 sm:space-y-4">
