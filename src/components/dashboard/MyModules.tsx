@@ -31,9 +31,9 @@ export const MyModules = ({ userProfile }: MyModulesProps) => {
   const { getAccessibleModules, loading } = useSimplifiedModuleAccess(userProfile.user_id);
   
   const accessibleModules = getAccessibleModules();
+  const isSuperAdmin = userProfile.is_super_admin || userProfile.is_admin;
 
-  // Filter to show only a reasonable number of modules in the quick-access card
-  // Prioritize by matching with UNIFIED_MODULES to get proper icons and titles
+  // For super admins, show all modules; for others, show up to 12
   const modulesWithDetails = accessibleModules
     .map(module => {
       const unifiedModule = UNIFIED_MODULES.find(u => u.id === module.id);
@@ -45,7 +45,7 @@ export const MyModules = ({ userProfile }: MyModulesProps) => {
         route: `/dashboard?module=${module.id}`
       };
     })
-    .slice(0, 12); // Show max 12 modules in quick access
+    .slice(0, isSuperAdmin ? 100 : 12); // Super admins see all, others see max 12
 
   // Admin always gets admin settings
   const showAdminSettings = userProfile.is_admin || userProfile.is_super_admin;
