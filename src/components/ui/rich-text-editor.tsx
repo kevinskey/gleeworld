@@ -112,6 +112,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [loadingMedia, setLoadingMedia] = useState(false);
   const [mediaSearch, setMediaSearch] = useState('');
+  const [selectedImage, setSelectedImage] = useState<HTMLImageElement | null>(null);
+  const [imageWidth, setImageWidth] = useState('300');
 
   // Fetch media library images when dialog opens
   useEffect(() => {
@@ -182,6 +184,34 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange]);
 
+  // Handle click on images for resize
+  const handleEditorClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'IMG') {
+      const img = target as HTMLImageElement;
+      setSelectedImage(img);
+      setImageWidth(String(img.width || 300));
+      img.classList.add('rte-image-selected');
+    } else {
+      // Deselect if clicking elsewhere
+      if (selectedImage) {
+        selectedImage.classList.remove('rte-image-selected');
+        setSelectedImage(null);
+      }
+    }
+  }, [selectedImage]);
+
+  // Apply resize to selected image
+  const applyImageResize = useCallback((width: number) => {
+    if (selectedImage) {
+      selectedImage.style.width = `${width}px`;
+      selectedImage.style.maxWidth = `${width}px`;
+      selectedImage.classList.remove('rte-image-selected');
+      setSelectedImage(null);
+      handleInput();
+    }
+  }, [selectedImage, handleInput]);
+
   const exec = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
     editorRef.current?.focus();
@@ -209,7 +239,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         }
       }
 
-      const imgHtml = `<img src="${imageUrl}" alt="Email image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" />`;
+      const imgHtml = `<img src="${imageUrl}" alt="Email image" class="rte-image" style="max-width: 300px; width: 300px; height: auto; border-radius: 8px; margin: 8px 0; display: block; cursor: pointer;" />`;
 
       // Try inserting at cursor
       const success = document.execCommand('insertHTML', false, `${imgHtml}&nbsp;`);
@@ -477,6 +507,45 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           <ToolbarButton onClick={() => exec('removeFormat')} icon={RemoveFormatting} title="Clear Formatting" />
         </div>
 
+        {/* Image Resize Controls */}
+        {selectedImage && (
+          <div className="flex items-center gap-2 px-3 py-2 border-t bg-muted/50">
+            <span className="text-xs text-muted-foreground">Resize:</span>
+            <Input
+              type="number"
+              value={imageWidth}
+              onChange={(e) => setImageWidth(e.target.value)}
+              className="w-20 h-7 text-xs"
+              min={50}
+              max={1200}
+            />
+            <span className="text-xs text-muted-foreground">px</span>
+            <div className="flex gap-1 ml-2">
+              {[150, 300, 450, 600].map((w) => (
+                <Button
+                  key={w}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => applyImageResize(w)}
+                >
+                  {w}
+                </Button>
+              ))}
+            </div>
+            <Button
+              type="button"
+              variant="default"
+              size="sm"
+              className="h-7 px-3 text-xs ml-2"
+              onClick={() => applyImageResize(Number(imageWidth) || 300)}
+            >
+              Apply
+            </Button>
+          </div>
+        )}
+
         {/* Editor */}
         <div
           ref={editorRef}
@@ -487,6 +556,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           suppressContentEditableWarning
           onInput={handleInput}
           onBlur={handleInput}
+          onClick={handleEditorClick}
           data-placeholder={placeholder}
           className="p-4 focus:outline-none prose prose-sm max-w-none dark:prose-invert overflow-y-auto"
           style={{ 
@@ -513,6 +583,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             max-width: 100%;
             height: auto;
             border-radius: 8px;
+            cursor: pointer;
+            transition: outline 0.15s ease;
+          }
+          [contenteditable] img.rte-image-selected {
+            outline: 3px solid hsl(var(--primary));
+            outline-offset: 2px;
           }
           [contenteditable] a {
             color: hsl(var(--primary));
