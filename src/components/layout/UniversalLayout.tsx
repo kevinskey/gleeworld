@@ -34,9 +34,7 @@ export const UniversalLayout = ({
       background: 'var(--theme-background, hsl(var(--background)))'
     }}>
       {showHeader && (
-        <div className="sticky top-0 z-50">
-          {shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />}
-        </div>
+        shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />
       )}
       <main className={`w-full ${className}`}>
         {containerized ? (
