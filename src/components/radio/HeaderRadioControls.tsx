@@ -190,8 +190,8 @@ export const HeaderRadioControls = () => {
 
                   {/* Channel Selector - Scrollable Buttons */}
                   {channels.length > 0 && (
-                    <div className="flex items-center overflow-x-auto max-w-[200px] lg:max-w-[300px] scrollbar-hide">
-                      <div className="flex items-center gap-1 px-1">
+                    <div className="flex items-center overflow-x-auto max-w-[280px] lg:max-w-[400px] xl:max-w-[500px] scrollbar-thin scrollbar-thumb-popover-foreground/20 scrollbar-track-transparent">
+                      <div className="flex items-center gap-1.5 px-1 py-0.5">
                         {channels.map((channel) => {
                           const isSelected = selectedChannel?.id === channel.id;
                           const isThisLoading = isLoading && isSelected;
@@ -201,7 +201,7 @@ export const HeaderRadioControls = () => {
                               onClick={() => handleChannelChange(channel)}
                               disabled={isLoading}
                               className={cn(
-                                "flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0",
+                                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-all shrink-0",
                                 isSelected
                                   ? "bg-primary text-primary-foreground"
                                   : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
