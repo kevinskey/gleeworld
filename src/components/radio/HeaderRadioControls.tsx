@@ -186,6 +186,40 @@ export const HeaderRadioControls = () => {
                   {/* Divider */}
                   <div className="hidden lg:block h-5 w-px bg-popover-foreground/20" />
 
+                  {/* Channel Selector - Minimal Icon Buttons */}
+                  {channels.length > 0 && (
+                    <div className="flex items-center gap-0.5">
+                      {channels.map((channel) => {
+                        const IconComponent = getChannelIcon(channel.icon);
+                        const isSelected = selectedChannel?.id === channel.id;
+                        const isThisRequesting = isRequesting && isSelected;
+                        return (
+                          <button
+                            key={channel.id}
+                            onClick={() => handleChannelChange(channel)}
+                            disabled={isRequesting}
+                            title={channel.name}
+                            className={cn(
+                              "flex items-center justify-center w-6 h-6 rounded transition-all",
+                              isSelected
+                                ? "bg-primary/20 text-primary"
+                                : "text-popover-foreground/50 hover:text-popover-foreground hover:bg-popover-foreground/10",
+                              isRequesting && "opacity-70 cursor-wait"
+                            )}
+                          >
+                            {isThisRequesting ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <IconComponent 
+                                className="h-3.5 w-3.5" 
+                                style={{ color: isSelected ? undefined : (channel.color || undefined) }}
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Scrolling Now Playing Ticker - After Channel Pills */}
                   {currentTrack && isOnline && (
