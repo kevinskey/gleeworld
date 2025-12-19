@@ -133,7 +133,7 @@ const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: Sor
       >
         <IconComponent className="h-3 w-3 mr-1.5 text-popover-foreground/70" />
         <div className="flex-1 text-left">
-          <div className="font-medium text-popover-foreground">{action.title}</div>
+          <div className="font-normal text-popover-foreground">{action.title}</div>
           <div className="text-[10px] text-popover-foreground/60">{action.description}</div>
         </div>
         <ChevronRight className="h-3 w-3 text-popover-foreground/50" />
