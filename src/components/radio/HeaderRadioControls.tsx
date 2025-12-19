@@ -141,7 +141,7 @@ export const HeaderRadioControls = () => {
                 </Button>
 
                 {/* Top Row: All Channel Buttons */}
-                <div className="flex flex-wrap gap-1 pr-8">
+                <div className="flex flex-wrap gap-1.5 pr-8">
                   {channels.length > 0 && channels.map((channel) => {
                     const isSelected = selectedChannel?.id === channel.id;
                     const isThisLoading = isLoading && isSelected;
@@ -151,7 +151,7 @@ export const HeaderRadioControls = () => {
                         onClick={() => handleChannelChange(channel)}
                         disabled={isLoading}
                         className={cn(
-                          "flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-medium whitespace-nowrap transition-all",
+                          "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all",
                           isSelected
                             ? "bg-primary text-primary-foreground"
                             : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
@@ -159,7 +159,7 @@ export const HeaderRadioControls = () => {
                         )}
                       >
                         {isThisLoading ? (
-                          <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                          <Loader2 className="h-3 w-3 animate-spin" />
                         ) : null}
                         {channel.name}
                       </button>
