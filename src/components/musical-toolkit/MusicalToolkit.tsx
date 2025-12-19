@@ -86,7 +86,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
 
       {/* Metronome */}
       <Dialog open={open.metronome} onOpenChange={(v) => setOpen((o) => ({ ...o, metronome: v }))}>
-        <DialogContent className="sm:max-w-md bg-background border border-border">
+        <DialogContent className="sm:max-w-md bg-background border border-border top-[15%] translate-y-0 sm:top-[20%]">
           <DialogHeader>
             <DialogTitle className="text-base">Metronome</DialogTitle>
           </DialogHeader>
@@ -96,7 +96,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
 
       {/* Pitch Pipe */}
       <Dialog open={open.pitch} onOpenChange={(v) => setOpen((o) => ({ ...o, pitch: v }))}>
-        <DialogContent className="sm:max-w-md bg-background border border-border">
+        <DialogContent className="sm:max-w-md bg-background border border-border top-[15%] translate-y-0 sm:top-[20%]">
           <DialogHeader>
             <DialogTitle className="text-base">Pitch Pipe</DialogTitle>
           </DialogHeader>
@@ -111,7 +111,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
 
       {/* Small Piano */}
       <Dialog open={open.pianoSmall} onOpenChange={(v) => setOpen((o) => ({ ...o, pianoSmall: v }))}>
-        <DialogContent className="sm:max-w-[720px] bg-background border border-border">
+        <DialogContent className="sm:max-w-[720px] bg-background border border-border top-[15%] translate-y-0 sm:top-[20%]">
           <DialogHeader>
             <DialogTitle className="text-base">Small Piano</DialogTitle>
           </DialogHeader>
@@ -123,7 +123,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
 
       {/* Tuner */}
       <Dialog open={open.tuner} onOpenChange={(v) => setOpen((o) => ({ ...o, tuner: v }))}>
-        <DialogContent className="sm:max-w-md bg-background border border-border">
+        <DialogContent className="sm:max-w-md bg-background border border-border top-[15%] translate-y-0 sm:top-[20%]">
           <DialogHeader>
             <DialogTitle className="text-base">Instrument Tuner</DialogTitle>
           </DialogHeader>
