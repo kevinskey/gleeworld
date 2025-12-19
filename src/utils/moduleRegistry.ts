@@ -215,7 +215,7 @@ ModuleRegistry.registerModule({
 
 // Register Glee Cam Manager
 import { GleeCamManagerModule } from '@/components/dashboard/modules/GleeCamManagerModule';
-import { Camera } from 'lucide-react';
+import { Camera, Youtube } from 'lucide-react';
 
 ModuleRegistry.registerModule({
   id: 'glee-cam-manager',
@@ -225,5 +225,19 @@ ModuleRegistry.registerModule({
   iconColor: 'blue',
   category: 'media',
   component: GleeCamManagerModule,
+  requiredPermissions: ['admin', 'super-admin']
+});
+
+// Register YouTube Management
+import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
+
+ModuleRegistry.registerModule({
+  id: 'youtube-management',
+  title: 'YouTube Management',
+  description: 'Manage YouTube video content and playlists',
+  icon: Youtube,
+  iconColor: 'red',
+  category: 'media',
+  component: YouTubeManagement,
   requiredPermissions: ['admin', 'super-admin']
 });
