@@ -122,7 +122,7 @@ export const HeaderRadioControls = () => {
             {/* Horizontal Radio Bar - Connected directly to header */}
             <div 
               className={cn(
-                "fixed left-0 right-0 z-[9999] bg-slate-900 border-b-2 border-primary/40 shadow-lg"
+                "fixed left-0 right-0 z-[9999] bg-popover border-b-2 border-primary/40 shadow-lg"
               )}
               style={{ top: '60px' }} // Directly below header, no gap
             >
@@ -132,7 +132,7 @@ export const HeaderRadioControls = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsOpen(false)}
-                  className="absolute top-1 right-2 h-5 w-5 p-0 text-white/70 hover:text-white hover:bg-white/10"
+                  className="absolute top-1 right-2 h-5 w-5 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10"
                   type="button"
                 >
                   <ChevronUp className="h-4 w-4" />
@@ -149,7 +149,7 @@ export const HeaderRadioControls = () => {
                       className={cn(
                         "text-[9px] h-4 px-1.5",
                         isLive ? "bg-red-500 hover:bg-red-600 text-white" : 
-                        isOnline ? "bg-green-500 hover:bg-green-600 text-white" : "bg-slate-700 text-slate-300"
+                        isOnline ? "bg-green-500 hover:bg-green-600 text-white" : "bg-popover-foreground/20 text-popover-foreground/70"
                       )}
                     >
                       {isLive ? 'LIVE' : isOnline ? 'ON' : 'OFF'}
@@ -177,14 +177,14 @@ export const HeaderRadioControls = () => {
                       )}
                     </Button>
 
-                    <span className="text-[10px] text-slate-400 items-center gap-0.5 hidden sm:flex">
+                    <span className="text-[10px] text-popover-foreground/60 items-center gap-0.5 hidden sm:flex">
                       <Users className="h-2.5 w-2.5" />
                       {listenerCount}
                     </span>
                   </div>
 
                   {/* Divider */}
-                  <div className="hidden lg:block h-5 w-px bg-slate-700" />
+                  <div className="hidden lg:block h-5 w-px bg-popover-foreground/20" />
 
                   {/* Channel Selector - Horizontal Pills */}
                   {channels.length > 0 && (
@@ -202,7 +202,7 @@ export const HeaderRadioControls = () => {
                               "flex items-center gap-1 px-2 py-0.5 rounded-full transition-all whitespace-nowrap",
                               isSelected
                                 ? "bg-primary text-primary-foreground"
-                                : "bg-slate-700 text-slate-300 hover:bg-slate-600",
+                                : "bg-popover-foreground/20 text-popover-foreground hover:bg-popover-foreground/30",
                               isRequesting && "opacity-70 cursor-wait"
                             )}
                           >
@@ -214,7 +214,7 @@ export const HeaderRadioControls = () => {
                                 style={{ color: isSelected ? undefined : (channel.color || undefined) }}
                               />
                             )}
-                            <span className="text-[10px] font-medium">{channel.name}</span>
+                            <span className="text-[10px] font-normal">{channel.name}</span>
                           </button>
                         );
                       })}
@@ -223,45 +223,45 @@ export const HeaderRadioControls = () => {
 
                   {/* Scrolling Now Playing Ticker - After Channel Pills */}
                   {currentTrack && isOnline && (
-                    <div className="relative overflow-hidden w-[50%] h-6 bg-slate-800/50 px-2">
+                    <div className="relative overflow-hidden w-[50%] h-6 bg-popover-foreground/10 px-2">
                       <div 
                         className="absolute whitespace-nowrap flex items-center h-full gap-8"
                         style={{ animation: 'marquee 90s linear infinite' }}
                       >
                         <span className="text-xs">
                           <span className="text-primary font-semibold">Now Playing:</span>{' '}
-                          <span className="text-white">{currentTrack.title}</span>
-                          {currentTrack.artist && <span className="text-slate-400"> — {currentTrack.artist}</span>}
+                          <span className="text-popover-foreground">{currentTrack.title}</span>
+                          {currentTrack.artist && <span className="text-popover-foreground/60"> — {currentTrack.artist}</span>}
                         </span>
-                        <span className="text-xs text-slate-500">•</span>
+                        <span className="text-xs text-popover-foreground/40">•</span>
                         <span className="text-xs">
                           <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
-                          <span className="text-slate-400">More from {selectedChannel?.name || 'Glee World Radio'}</span>
+                          <span className="text-popover-foreground/60">More from {selectedChannel?.name || 'Glee World Radio'}</span>
                         </span>
-                        <span className="text-xs text-slate-500">•</span>
+                        <span className="text-xs text-popover-foreground/40">•</span>
                         <span className="text-xs">
                           <span className="text-primary font-semibold">Now Playing:</span>{' '}
-                          <span className="text-white">{currentTrack.title}</span>
-                          {currentTrack.artist && <span className="text-slate-400"> — {currentTrack.artist}</span>}
+                          <span className="text-popover-foreground">{currentTrack.title}</span>
+                          {currentTrack.artist && <span className="text-popover-foreground/60"> — {currentTrack.artist}</span>}
                         </span>
-                        <span className="text-xs text-slate-500">•</span>
+                        <span className="text-xs text-popover-foreground/40">•</span>
                         <span className="text-xs">
                           <span className="text-primary/70 font-semibold">Up Next:</span>{' '}
-                          <span className="text-slate-400">More from {selectedChannel?.name || 'Glee World Radio'}</span>
+                          <span className="text-popover-foreground/60">More from {selectedChannel?.name || 'Glee World Radio'}</span>
                         </span>
                       </div>
                     </div>
                   )}
 
                   {/* Divider */}
-                  <div className="hidden lg:block h-5 w-px bg-slate-700" />
+                  <div className="hidden lg:block h-5 w-px bg-popover-foreground/20" />
 
                   {/* Volume Control */}
                   <div className="items-center gap-1.5 hidden sm:flex ml-auto">
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 text-white/70 hover:text-white hover:bg-white/10"
+                      className="h-6 w-6 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
