@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -121,10 +121,34 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
     return email.charAt(0).toUpperCase();
   };
 
+  // Ensure the header stays fixed across all scroll containers by using a fixed header
+  // and pushing page content down by the measured header height.
+  const headerRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const update = () => {
+      const el = headerRef.current;
+      if (!el) return;
+      const height = el.getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--gw-header-height', `${height}px`);
+    };
+
+    update();
+    const ro = new ResizeObserver(update);
+    if (headerRef.current) ro.observe(headerRef.current);
+    window.addEventListener('resize', update);
+
+    return () => {
+      window.removeEventListener('resize', update);
+      ro.disconnect();
+      document.documentElement.style.setProperty('--gw-header-height', '0px');
+    };
+  }, []);
+
   return (
     <>
-        <div className="w-full m-0 p-0 sticky top-0 z-50">
+        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50">
           <header 
+            ref={headerRef}
             className={`border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden`}
             style={{ 
               backgroundColor: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.primary : '#ffffff',
