@@ -127,29 +127,22 @@ const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: Sor
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </button>
       )}
-      <Button
-        variant="ghost"
-        className="flex-1 justify-start h-auto py-2.5 px-4 hover:bg-[#1a2744]/80 group border border-white/10 bg-[#0f1a2e]/70 rounded-xl transition-all duration-200 hover:border-primary/40 hover:shadow-lg"
+      <button
+        className="flex-1 flex items-center px-3 py-2 text-sm rounded-none transition-colors text-popover-foreground hover:bg-accent hover:text-accent-foreground"
         onClick={() => onActionClick(action.moduleId)}
       >
-        <div className="flex items-center gap-4 w-full">
-          <div 
-            className="w-11 h-11 rounded-xl bg-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform border border-primary/30"
-          >
-            <IconComponent className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1 text-left">
-            <div className="font-semibold text-sm text-white">{action.title}</div>
-            <div className="text-xs text-white/70 mt-0.5">{action.description}</div>
-          </div>
-          <ChevronRight className="h-4 w-4 text-white/50 group-hover:text-primary transition-colors" />
+        <IconComponent className="h-4 w-4 mr-3 text-muted-foreground" />
+        <div className="flex-1 text-left">
+          <div className="font-medium">{action.title}</div>
+          <div className="text-xs text-muted-foreground">{action.description}</div>
         </div>
-      </Button>
+        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      </button>
       {isManaging && (
         <Button
           variant="ghost"
           size="sm"
-          className="h-10 w-10 p-0 hover:bg-destructive/20 text-destructive hover:text-destructive"
+          className="h-8 w-8 p-0 hover:bg-destructive/20 text-destructive hover:text-destructive"
           onClick={() => onDelete(action.moduleId)}
         >
           <Trash2 className="h-4 w-4" />
@@ -271,10 +264,10 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
             : '-translate-y-4 opacity-0 scale-95 pointer-events-none'
         }`}
       >
-        <div className="bg-card rounded-b-lg border-x border-b border-border shadow-2xl mx-4 backdrop-blur-none">
+        <div className="bg-popover text-popover-foreground border border-border shadow-2xl mx-4 rounded-none">
           
           {/* Header with management controls */}
-          <div className="p-3 border-b border-border flex items-center justify-between">
+          <div className="px-3 py-2 border-b border-muted flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold text-foreground">
@@ -354,7 +347,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
           </div>
 
           {/* Actions Grid with DnD */}
-          <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
+          <div className="p-1 space-y-0.5 max-h-80 overflow-y-auto">
             {isManaging ? (
               <DndContext
                 sensors={sensors}
@@ -388,18 +381,18 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
               ))
             )}
             {allActions.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                <p className="text-sm mb-2">No quick actions configured</p>
-                <p className="text-xs">Click the + button above to add modules</p>
+              <div className="text-center py-6 text-muted-foreground">
+                <p className="text-sm mb-1">No quick actions configured</p>
+                <p className="text-xs">Click + to add modules</p>
               </div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-border bg-muted/30">
+          <div className="px-3 py-2 border-t border-muted">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>
-                {isManaging ? 'Drag to reorder • Click ✕ to delete' : 'Click outside to close'}
+                {isManaging ? 'Drag to reorder' : 'Click outside to close'}
               </span>
               <span>
                 {allActions.length} action{allActions.length !== 1 ? 's' : ''}
