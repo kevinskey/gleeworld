@@ -555,13 +555,19 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   <button
                     key={item.id}
                     onClick={() => insertImage(item.file_url)}
-                    className="group relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-all"
+                    className="group relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-all bg-muted/20"
                   >
                     <img
                       src={item.file_url}
                       alt={item.title || 'Media library image'}
                       className="w-full h-full object-cover"
                       loading="lazy"
+                      referrerPolicy="no-referrer"
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        console.log('Media image failed to load:', item.file_url);
+                        e.currentTarget.src = '/placeholder.svg';
+                      }}
                     />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                       <span className="text-white text-xs font-medium truncate w-full">
