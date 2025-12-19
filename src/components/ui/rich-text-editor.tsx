@@ -1,9 +1,24 @@
-import React, { useRef, useCallback, useEffect } from 'react';
+import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Bold,
   Italic,
   Underline,
+  Strikethrough,
   List,
   ListOrdered,
   AlignLeft,
@@ -12,6 +27,16 @@ import {
   Link as LinkIcon,
   Undo,
   Redo,
+  Image,
+  Video,
+  Quote,
+  Minus,
+  Type,
+  Palette,
+  RemoveFormatting,
+  Heading1,
+  Heading2,
+  Heading3,
 } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -22,6 +47,35 @@ interface RichTextEditorProps {
   minHeight?: string;
 }
 
+const FONT_FAMILIES = [
+  { value: 'Arial, sans-serif', label: 'Arial' },
+  { value: 'Georgia, serif', label: 'Georgia' },
+  { value: 'Times New Roman, serif', label: 'Times New Roman' },
+  { value: 'Verdana, sans-serif', label: 'Verdana' },
+  { value: 'Trebuchet MS, sans-serif', label: 'Trebuchet MS' },
+  { value: 'Courier New, monospace', label: 'Courier New' },
+  { value: 'Palatino, serif', label: 'Palatino' },
+  { value: 'Garamond, serif', label: 'Garamond' },
+];
+
+const FONT_SIZES = [
+  { value: '1', label: '10px' },
+  { value: '2', label: '13px' },
+  { value: '3', label: '16px' },
+  { value: '4', label: '18px' },
+  { value: '5', label: '24px' },
+  { value: '6', label: '32px' },
+  { value: '7', label: '48px' },
+];
+
+const COLORS = [
+  '#000000', '#434343', '#666666', '#999999', '#b7b7b7', '#cccccc', '#d9d9d9', '#efefef', '#f3f3f3', '#ffffff',
+  '#980000', '#ff0000', '#ff9900', '#ffff00', '#00ff00', '#00ffff', '#4a86e8', '#0000ff', '#9900ff', '#ff00ff',
+  '#e6b8af', '#f4cccc', '#fce5cd', '#fff2cc', '#d9ead3', '#d0e0e3', '#c9daf8', '#cfe2f3', '#d9d2e9', '#ead1dc',
+  '#dd7e6b', '#ea9999', '#f9cb9c', '#ffe599', '#b6d7a8', '#a2c4c9', '#a4c2f4', '#9fc5e8', '#b4a7d6', '#d5a6bd',
+  '#cc4125', '#e06666', '#f6b26b', '#ffd966', '#93c47d', '#76a5af', '#6d9eeb', '#6fa8dc', '#8e7cc3', '#c27ba0',
+];
+
 export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   value,
   onChange,
@@ -31,8 +85,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const isInternalChange = useRef(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
+  const [showImagePopover, setShowImagePopover] = useState(false);
+  const [showVideoPopover, setShowVideoPopover] = useState(false);
+  const [showLinkPopover, setShowLinkPopover] = useState(false);
 
-  // Sync external value changes to editor
   useEffect(() => {
     if (editorRef.current && !isInternalChange.current) {
       if (editorRef.current.innerHTML !== value) {
@@ -55,25 +114,59 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange]);
 
-  const insertLink = useCallback(() => {
-    const url = prompt('Enter URL:');
-    if (url) {
-      exec('createLink', url);
+  const insertImage = useCallback(() => {
+    if (imageUrl) {
+      exec('insertHTML', `<img src="${imageUrl}" alt="Image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0;" />`);
+      setImageUrl('');
+      setShowImagePopover(false);
     }
-  }, [exec]);
+  }, [imageUrl, exec]);
+
+  const insertVideo = useCallback(() => {
+    if (videoUrl) {
+      // Convert YouTube/Vimeo URLs to embed format
+      let embedUrl = videoUrl;
+      const youtubeMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+      const vimeoMatch = videoUrl.match(/vimeo\.com\/(\d+)/);
+      
+      if (youtubeMatch) {
+        embedUrl = `https://www.youtube.com/embed/${youtubeMatch[1]}`;
+      } else if (vimeoMatch) {
+        embedUrl = `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+      }
+      
+      exec('insertHTML', `
+        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 16px 0; border-radius: 8px;">
+          <iframe src="${embedUrl}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 8px;" allowfullscreen></iframe>
+        </div>
+      `);
+      setVideoUrl('');
+      setShowVideoPopover(false);
+    }
+  }, [videoUrl, exec]);
+
+  const insertLink = useCallback(() => {
+    if (linkUrl) {
+      exec('createLink', linkUrl);
+      setLinkUrl('');
+      setShowLinkPopover(false);
+    }
+  }, [linkUrl, exec]);
 
   const ToolbarButton = ({ 
     onClick, 
     icon: Icon, 
-    title 
+    title,
+    active = false,
   }: { 
     onClick: () => void; 
     icon: React.ElementType; 
     title: string;
+    active?: boolean;
   }) => (
     <Button
       type="button"
-      variant="ghost"
+      variant={active ? "secondary" : "ghost"}
       size="sm"
       className="h-8 w-8 p-0"
       onClick={onClick}
@@ -83,25 +176,166 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     </Button>
   );
 
+  const ToolbarDivider = () => <div className="w-px h-6 bg-border mx-1" />;
+
   return (
     <div className={`border rounded-lg overflow-hidden bg-background ${className}`}>
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 p-2 border-b bg-muted/30">
+      {/* Toolbar Row 1 - History, Font, Size */}
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
         <ToolbarButton onClick={() => exec('undo')} icon={Undo} title="Undo" />
         <ToolbarButton onClick={() => exec('redo')} icon={Redo} title="Redo" />
-        <div className="w-px h-6 bg-border mx-1" />
-        <ToolbarButton onClick={() => exec('bold')} icon={Bold} title="Bold" />
-        <ToolbarButton onClick={() => exec('italic')} icon={Italic} title="Italic" />
-        <ToolbarButton onClick={() => exec('underline')} icon={Underline} title="Underline" />
-        <div className="w-px h-6 bg-border mx-1" />
+        <ToolbarDivider />
+        
+        {/* Font Family */}
+        <Select onValueChange={(val) => exec('fontName', val)}>
+          <SelectTrigger className="h-8 w-32 text-xs">
+            <SelectValue placeholder="Font" />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_FAMILIES.map((font) => (
+              <SelectItem key={font.value} value={font.value} style={{ fontFamily: font.value }}>
+                {font.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Font Size */}
+        <Select onValueChange={(val) => exec('fontSize', val)}>
+          <SelectTrigger className="h-8 w-20 text-xs">
+            <SelectValue placeholder="Size" />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_SIZES.map((size) => (
+              <SelectItem key={size.value} value={size.value}>
+                {size.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <ToolbarDivider />
+
+        {/* Headings */}
+        <ToolbarButton onClick={() => exec('formatBlock', 'h1')} icon={Heading1} title="Heading 1" />
+        <ToolbarButton onClick={() => exec('formatBlock', 'h2')} icon={Heading2} title="Heading 2" />
+        <ToolbarButton onClick={() => exec('formatBlock', 'h3')} icon={Heading3} title="Heading 3" />
+        <ToolbarButton onClick={() => exec('formatBlock', 'p')} icon={Type} title="Paragraph" />
+      </div>
+
+      {/* Toolbar Row 2 - Formatting */}
+      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
+        <ToolbarButton onClick={() => exec('bold')} icon={Bold} title="Bold (Ctrl+B)" />
+        <ToolbarButton onClick={() => exec('italic')} icon={Italic} title="Italic (Ctrl+I)" />
+        <ToolbarButton onClick={() => exec('underline')} icon={Underline} title="Underline (Ctrl+U)" />
+        <ToolbarButton onClick={() => exec('strikeThrough')} icon={Strikethrough} title="Strikethrough" />
+        
+        <ToolbarDivider />
+
+        {/* Text Color */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Text Color">
+              <Palette className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-2" align="start">
+            <div className="grid grid-cols-10 gap-1">
+              {COLORS.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => exec('foreColor', color)}
+                  className="w-5 h-5 rounded border border-border hover:scale-110 transition-transform"
+                  style={{ backgroundColor: color }}
+                  title={color}
+                />
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <ToolbarDivider />
+
         <ToolbarButton onClick={() => exec('insertUnorderedList')} icon={List} title="Bullet List" />
         <ToolbarButton onClick={() => exec('insertOrderedList')} icon={ListOrdered} title="Numbered List" />
-        <div className="w-px h-6 bg-border mx-1" />
+        <ToolbarButton onClick={() => exec('formatBlock', 'blockquote')} icon={Quote} title="Quote" />
+        
+        <ToolbarDivider />
+
         <ToolbarButton onClick={() => exec('justifyLeft')} icon={AlignLeft} title="Align Left" />
         <ToolbarButton onClick={() => exec('justifyCenter')} icon={AlignCenter} title="Align Center" />
         <ToolbarButton onClick={() => exec('justifyRight')} icon={AlignRight} title="Align Right" />
-        <div className="w-px h-6 bg-border mx-1" />
-        <ToolbarButton onClick={insertLink} icon={LinkIcon} title="Insert Link" />
+        
+        <ToolbarDivider />
+
+        {/* Link */}
+        <Popover open={showLinkPopover} onOpenChange={setShowLinkPopover}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Insert Link">
+              <LinkIcon className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Insert Link</Label>
+              <Input
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://example.com"
+                onKeyDown={(e) => e.key === 'Enter' && insertLink()}
+              />
+              <Button size="sm" onClick={insertLink} className="w-full">Insert Link</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Image */}
+        <Popover open={showImagePopover} onOpenChange={setShowImagePopover}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Insert Image">
+              <Image className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Insert Image</Label>
+              <Input
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://example.com/image.jpg"
+                onKeyDown={(e) => e.key === 'Enter' && insertImage()}
+              />
+              <Button size="sm" onClick={insertImage} className="w-full">Insert Image</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        {/* Video */}
+        <Popover open={showVideoPopover} onOpenChange={setShowVideoPopover}>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Insert Video">
+              <Video className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80" align="start">
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Insert Video</Label>
+              <p className="text-xs text-muted-foreground">Paste YouTube or Vimeo URL</p>
+              <Input
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://youtube.com/watch?v=..."
+                onKeyDown={(e) => e.key === 'Enter' && insertVideo()}
+              />
+              <Button size="sm" onClick={insertVideo} className="w-full">Insert Video</Button>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <ToolbarDivider />
+
+        <ToolbarButton onClick={() => exec('insertHorizontalRule')} icon={Minus} title="Horizontal Line" />
+        <ToolbarButton onClick={() => exec('removeFormat')} icon={RemoveFormatting} title="Clear Formatting" />
       </div>
 
       {/* Editor */}
@@ -115,7 +349,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         onInput={handleInput}
         onBlur={handleInput}
         data-placeholder={placeholder}
-        className="p-3 focus:outline-none prose prose-sm max-w-none dark:prose-invert"
+        className="p-4 focus:outline-none prose prose-sm max-w-none dark:prose-invert overflow-y-auto"
         style={{ 
           minHeight,
           position: 'relative',
@@ -128,6 +362,22 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           color: hsl(var(--muted-foreground));
           pointer-events: none;
           position: absolute;
+        }
+        [contenteditable] blockquote {
+          border-left: 4px solid hsl(var(--primary));
+          padding-left: 16px;
+          margin: 16px 0;
+          font-style: italic;
+          color: hsl(var(--muted-foreground));
+        }
+        [contenteditable] img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+        }
+        [contenteditable] a {
+          color: hsl(var(--primary));
+          text-decoration: underline;
         }
       `}</style>
     </div>
