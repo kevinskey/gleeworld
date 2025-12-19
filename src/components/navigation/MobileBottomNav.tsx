@@ -46,27 +46,11 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
       )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="flex items-center justify-around h-14 px-4">
-          {/* Home */}
-          <button
-            onClick={() => navigate('/dashboard')}
-            className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-full transition-all",
-              isActive('/dashboard') 
-                ? "text-primary bg-primary/10" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            )}
-          >
-            <Home className="h-5 w-5" />
-          </button>
-
-          {/* Modules */}
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
-            className="flex items-center justify-center w-12 h-12 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
-          >
-            <LayoutGrid className="h-5 w-5" />
-          </button>
+        <div className="flex items-center justify-around h-14 px-8">
+          {/* Musical Toolkit */}
+          <div className="flex items-center justify-center w-12 h-12">
+            <MusicalToolkit className="!p-0" />
+          </div>
 
           {/* Glee Cam - Highlighted Center */}
           <button
@@ -75,11 +59,6 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
           >
             <Camera className="h-6 w-6" />
           </button>
-
-          {/* Musical Toolkit */}
-          <div className="flex items-center justify-center w-12 h-12">
-            <MusicalToolkit className="!p-0" />
-          </div>
 
           {/* Voice Assistant Toggle */}
           <button
