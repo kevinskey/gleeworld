@@ -1731,11 +1731,9 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Radio bar open state - push content down */
-body.radio-bar-open .dashboard-content,
-body.radio-bar-open .glee-lounge-strip,
-body.radio-bar-open main {
-  padding-top: 44px; /* Height of the compact radio bar */
+/* Radio bar open state - push content down using dynamic height */
+body.radio-bar-open {
+  padding-top: calc(var(--gw-header-height) + var(--gw-radio-bar-height, 0px) + env(safe-area-inset-top));
   transition: padding-top 0.2s ease-out;
 }
 
@@ -1883,6 +1881,7 @@ label.required::after {
 /* Prevent horizontal overflow on all pages */
 :root {
   --gw-header-height: 0px;
+  --gw-radio-bar-height: 0px;
 }
 
 html, body {

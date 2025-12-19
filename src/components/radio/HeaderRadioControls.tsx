@@ -103,15 +103,30 @@ export const HeaderRadioControls = () => {
       };
     }, []);
 
-    // Add/remove body class when radio bar opens/closes
+    // Add/remove body class and set CSS variable for radio bar height when it opens/closes
     useEffect(() => {
       if (isOpen) {
         document.body.classList.add(RADIO_OPEN_CLASS);
+        // Measure radio bar height after render and set CSS variable
+        const updateRadioBarHeight = () => {
+          if (radioBarRef.current) {
+            const height = radioBarRef.current.getBoundingClientRect().height;
+            document.documentElement.style.setProperty('--gw-radio-bar-height', `${height}px`);
+          }
+        };
+        // Delay to ensure the bar is rendered
+        requestAnimationFrame(updateRadioBarHeight);
+        window.addEventListener('resize', updateRadioBarHeight);
+        return () => {
+          window.removeEventListener('resize', updateRadioBarHeight);
+        };
       } else {
         document.body.classList.remove(RADIO_OPEN_CLASS);
+        document.documentElement.style.setProperty('--gw-radio-bar-height', '0px');
       }
       return () => {
         document.body.classList.remove(RADIO_OPEN_CLASS);
+        document.documentElement.style.setProperty('--gw-radio-bar-height', '0px');
       };
     }, [isOpen]);
 
