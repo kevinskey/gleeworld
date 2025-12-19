@@ -9,6 +9,7 @@ import { VirtualPiano } from '@/components/sight-singing/VirtualPiano';
 import { Tuner } from '@/components/tuner/Tuner';
 import { useTheme } from '@/contexts/ThemeContext';
 import { forceUnlockAudio, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Static chromatic ranges
 const FULL_PIANO_RANGE = [
@@ -29,6 +30,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
   const [tempo, setTempo] = useState(96);
   const [isMetroPlaying, setIsMetroPlaying] = useState(false);
   const { themeName } = useTheme();
+  const isMobile = useIsMobile();
   
   // Theme-specific colors
   const isHbcuTheme = themeName === 'hbcu';
@@ -63,7 +65,11 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             <TuningForkIcon className="h-5 w-5 md:h-6 md:w-6" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-52 bg-popover text-popover-foreground border border-border shadow-2xl z-[9999]" sideOffset={8}>
+        <DropdownMenuContent 
+          align={isMobile ? "center" : "end"} 
+          className="w-52 bg-popover text-popover-foreground border border-border shadow-2xl z-[9999]" 
+          sideOffset={isMobile ? 16 : 8}
+        >
           <DropdownMenuLabel className="flex items-center gap-2"><Music2 className="h-4 w-4" /> Musical Toolkit</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="cursor-pointer" onClick={() => { forceUnlockAudio(); setOpen((o) => ({ ...o, metronome: true })); }}>
