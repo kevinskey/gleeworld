@@ -135,6 +135,7 @@ export type Database = {
       }
       advertising_hero: {
         Row: {
+          amazon_affiliate_tag: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -149,6 +150,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          amazon_affiliate_tag?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -163,6 +165,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          amazon_affiliate_tag?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
