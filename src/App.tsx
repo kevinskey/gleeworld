@@ -179,7 +179,7 @@ import { MemberSightReadingStudioPage } from "./pages/MemberSightReadingStudioPa
 import SchedulingPage from "./pages/SchedulingPage";
 import BookingPage from "./pages/BookingPage";
 import { MessagingInterface } from "./components/messaging/MessagingInterface";
-import CommunityHub from "./pages/CommunityHub";
+
 import UnifiedBookingPage from "./pages/UnifiedBookingPage";
 import ServiceSelection from "./pages/booking/ServiceSelection";
 import DateTimeSelection from "./pages/booking/DateTimeSelection";
@@ -564,12 +564,28 @@ const App = () => {
                   </ProtectedRoute>
                 } 
               />
-              {/* Legacy Glee Lounge - redirect to Community Hub */}
+              {/* Legacy routes - redirect to dashboard */}
               <Route 
                 path="/glee-lounge" 
                 element={
                   <ProtectedRoute>
-                    <Navigate to="/community-hub" replace />
+                    <Navigate to="/dashboard" replace />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/community-hub" 
+                element={
+                  <ProtectedRoute>
+                    <Navigate to="/dashboard" replace />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/community" 
+                element={
+                  <ProtectedRoute>
+                    <Navigate to="/dashboard" replace />
                   </ProtectedRoute>
                 } 
               />
@@ -812,22 +828,6 @@ const App = () => {
                    element={
                      <ProtectedRoute>
                        <SendNotificationPage />
-                     </ProtectedRoute>
-                   } 
-                  />
-                 <Route
-                   path="/community-hub" 
-                   element={
-                     <ProtectedRoute>
-                       <CommunityHub />
-                     </ProtectedRoute>
-                   } 
-                  />
-                 <Route
-                   path="/community" 
-                   element={
-                     <ProtectedRoute>
-                       <CommunityHub />
                      </ProtectedRoute>
                    } 
                   />

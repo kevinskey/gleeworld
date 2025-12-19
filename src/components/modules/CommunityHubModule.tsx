@@ -9,15 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Sparkles, Activity, Heart } from 'lucide-react';
 
 export const CommunityHubModule = ({ user, isFullPage = false }: ModuleProps) => {
-  if (isFullPage) {
-    // Render the full CommunityHub page when in full-page mode
-    const CommunityHub = React.lazy(() => import('@/pages/CommunityHub'));
-    return (
-      <React.Suspense fallback={<div>Loading...</div>}>
-        <CommunityHub />
-      </React.Suspense>
-    );
-  }
+  // Community Hub is now integrated into the Messenger panel
+  // This module renders the compact dashboard view
 
   // Render a compact dashboard view for inline/module mode
   return (

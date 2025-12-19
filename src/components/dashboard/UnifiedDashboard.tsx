@@ -16,7 +16,6 @@ import { ModuleDisplay } from './ModuleDisplay';
 import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
 import { ConcertTicketBanner } from '@/components/shared/ConcertTicketBanner';
 import { PollReminderPopup } from '@/components/polls/PollReminderPopup';
-import { CompactCommunityHub } from './CompactCommunityHub';
 import { MyModules } from './MyModules';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -356,13 +355,10 @@ export const UnifiedDashboard = () => {
       <ConcertTicketBanner />
       
       <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
-        {/* Section 1: Community Hub */}
-        <CompactCommunityHub />
-        
-        {/* Section 2: Role-Based Module */}
+        {/* Section 1: Role-Based Module */}
         {renderRoleBasedModule()}
         
-        {/* Section 3: My Modules (assigned modules based on exec role) */}
+        {/* Section 2: My Modules (assigned modules based on exec role) */}
         <MyModules userProfile={{
           user_id: profile.user_id,
           role: profile.role,

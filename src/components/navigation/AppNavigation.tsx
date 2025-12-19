@@ -98,12 +98,6 @@ export const AppNavigation = () => {
       icon: LayoutDashboard,
       permission: null
     },
-    {
-      label: "Glee Lounge",
-      href: "/glee-lounge",
-      icon: Sofa,
-      permission: null
-    },
   ];
 
   const filteredItems = navigationItems.filter(item => {
