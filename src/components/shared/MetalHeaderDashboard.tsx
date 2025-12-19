@@ -619,7 +619,7 @@ export const MetalHeaderDashboard = ({
     }
   }
   // All users get the full metal header dashboard experience
-  return <div className="space-y-4 relative min-h-screen w-full m-0 p-0 pt-4">
+  return <div className="space-y-4 relative min-h-screen w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
       {/* Glee Lounge Strip - Social Hub Access - TOP OF DASHBOARD */}
       <GleeLoungeStrip />
 
