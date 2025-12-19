@@ -73,15 +73,18 @@ async function extractChannelId(channelInput: string, apiKey: string): Promise<s
       return channelInput
     }
     
-    // Known channel IDs for testing
+    // Known channel IDs - Spelman College Glee Club official channel
+    const SPELMAN_GLEE_CLUB_CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw'
+    
     const knownChannels: { [key: string]: string } = {
       'mkbhd': 'UCBJycsmduvYEL83R_U4JriQ',
       '@mkbhd': 'UCBJycsmduvYEL83R_U4JriQ',
-      'spelmancollegegleeclub': 'UCZYTClx2T1of7BRZ86-8fow',
-      '@spelmancollegegleeclub': 'UCZYTClx2T1of7BRZ86-8fow',
-      'spelmangleeclub': 'UCZYTClx2T1of7BRZ86-8fow',
-      '@spelmangleeclub': 'UCZYTClx2T1of7BRZ86-8fow',
-      'spelman glee club': 'UCZYTClx2T1of7BRZ86-8fow'
+      'spelmancollegegleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
+      '@spelmancollegegleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
+      'spelmangleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
+      '@spelmangleeclub': SPELMAN_GLEE_CLUB_CHANNEL_ID,
+      'spelman glee club': SPELMAN_GLEE_CLUB_CHANNEL_ID,
+      'spelman college glee club': SPELMAN_GLEE_CLUB_CHANNEL_ID,
     }
     
     // Extract handle from various input formats
