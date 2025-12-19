@@ -88,7 +88,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
         <div className="flex items-center gap-2 md:gap-3 lg:gap-5">
           {/* Notifications */}
           <Button variant="ghost" size="sm" className="relative shrink-0">
-            <Bell className="w-5 h-5" />
+            <Bell className="w-7 h-7 stroke-[1.5]" />
             <Badge className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 flex items-center justify-center text-xs">
               3
             </Badge>
@@ -102,7 +102,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
               onClick={onToggleMessages}
               className={`shrink-0 ${showMessages ? "bg-primary/10" : ""}`}
             >
-              <MessageSquare className="w-5 h-5" />
+              <MessageSquare className="w-7 h-7 stroke-[1.5]" />
             </Button>
           )}
 
