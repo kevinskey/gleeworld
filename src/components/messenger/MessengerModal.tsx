@@ -30,7 +30,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, Smartphone, X, Send, Users, Search, Loader2 } from 'lucide-react';
+import { Mail, Smartphone, X, Send, Users, Search, Loader2, Maximize2, Minimize2 } from 'lucide-react';
 
 interface RecipientGroup {
   id: string;
@@ -72,6 +72,7 @@ export const MessengerModal: React.FC = () => {
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [addingGroup, setAddingGroup] = useState<string | null>(null);
   const [showGroupsPanel, setShowGroupsPanel] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Fetch messenger groups from database
   useEffect(() => {
@@ -346,7 +347,11 @@ export const MessengerModal: React.FC = () => {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && requestClose()}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 gap-0 bg-background">
+        <DialogContent className={`p-0 gap-0 bg-background transition-all duration-300 ${
+          isFullscreen 
+            ? 'max-w-[100vw] w-[100vw] h-[100vh] max-h-[100vh] rounded-none' 
+            : 'max-w-4xl max-h-[90vh]'
+        }`}>
           <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-primary/10 via-background to-primary/5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -358,10 +363,19 @@ export const MessengerModal: React.FC = () => {
                   <p className="text-sm text-muted-foreground">Send branded emails and SMS to members or anyone</p>
                 </div>
               </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen mode"}
+                className="mr-8"
+              >
+                {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+              </Button>
             </div>
           </DialogHeader>
 
-          <div className="relative max-h-[calc(90vh-100px)] overflow-hidden">
+          <div className={`relative overflow-hidden ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'max-h-[calc(90vh-100px)]'}`}>
             {/* Edge-attached Toggle Tab */}
             {!showGroupsPanel && (
               <button
@@ -375,7 +389,7 @@ export const MessengerModal: React.FC = () => {
             )}
 
             {/* Main Composer - Full Width */}
-            <div className="p-6 pr-10 overflow-y-auto max-h-[calc(90vh-100px)]">
+            <div className={`p-6 pr-10 overflow-y-auto ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'max-h-[calc(90vh-100px)]'}`}>
               <Tabs value={composerMode} onValueChange={(v) => setComposerMode(v as 'email' | 'sms')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="email" className="gap-2">
@@ -449,8 +463,8 @@ export const MessengerModal: React.FC = () => {
                         <RichTextEditor
                           value={content}
                           onChange={setContent}
-                          placeholder="Type your message..."
-                          minHeight="200px"
+                          placeholder="Compose your email with rich formatting..."
+                          minHeight={isFullscreen ? "calc(100vh - 450px)" : "250px"}
                         />
                       </div>
 
