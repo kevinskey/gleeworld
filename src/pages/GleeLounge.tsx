@@ -11,12 +11,9 @@ import { GleeLoungeWithMusicLibrary } from '@/components/glee-lounge/GleeLoungeW
 import { LiveVideoSession } from '@/components/glee-lounge/LiveVideoSession';
 import { CreateVideoSessionDialog } from '@/components/glee-lounge/video-sessions/CreateVideoSessionDialog';
 import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/VideoSessionViewer';
-import { DirectMessaging } from '@/components/dashboard/DirectMessaging';
-import { MessagingInterface } from '@/components/messaging/MessagingInterface';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Sofa, Plus, Users, ArrowLeft, Music, Radio, Video, MessageSquare, Mail, Bell } from 'lucide-react';
+import { Loader2, Sofa, Plus, Users, ArrowLeft, Music, Radio, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfile {
@@ -40,7 +37,6 @@ export default function GleeLounge() {
   const [showLiveVideo, setShowLiveVideo] = useState(false);
   const [showCreateVideoSession, setShowCreateVideoSession] = useState(false);
   const [activeVideoSession, setActiveVideoSession] = useState<ActiveSession | null>(null);
-  const [activeTab, setActiveTab] = useState('feed');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { onlineUsers, isConnected } = useGleeLoungePresence();
@@ -81,15 +77,11 @@ export default function GleeLounge() {
       title: `👋 Waved at ${user?.full_name || 'someone'}!`,
       description: 'They know you said hi',
     });
-    // TODO: Connect to messaging system for actual wave notification
   };
 
   const handleMessage = (userId: string) => {
-    // TODO: Open DM with user via existing messaging system
-    toast({
-      title: 'Opening message...',
-      description: 'Direct messaging will be connected soon',
-    });
+    // Navigate to messaging with the user
+    navigate('/glee-messages');
   };
 
   if (isLoading) {
@@ -258,93 +250,57 @@ export default function GleeLounge() {
           </Sheet>
         </div>
 
-        {/* Communication Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="feed" className="gap-1">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden sm:inline">Feed</span>
-            </TabsTrigger>
-            <TabsTrigger value="messages" className="gap-1">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Messages</span>
-            </TabsTrigger>
-            <TabsTrigger value="dms" className="gap-1">
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">DMs</span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Feed Tab */}
-          <TabsContent value="feed" className="mt-0">
-            <div className="flex gap-6">
-              {/* Main content */}
-              <div className="flex-1 max-w-2xl mx-auto lg:mx-0">
-                {/* Desktop: Create post card */}
-                <div className="hidden lg:block">
-                  <CreatePostCard userProfile={userProfile} onPostCreated={handlePostCreated} />
-                </div>
-
-                {/* Mobile: Create post sheet */}
-                <div className="lg:hidden">
-                  <Sheet open={showMobileCreate} onOpenChange={setShowMobileCreate}>
-                    <SheetContent 
-                      side="bottom" 
-                      className="h-auto max-h-[85vh] rounded-t-2xl px-4 pb-safe"
-                    >
-                      <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto mt-2 mb-4" />
-                      <MobileCreatePost
-                        userProfile={userProfile}
-                        onPostCreated={handlePostCreated}
-                        onClose={() => setShowMobileCreate(false)}
-                      />
-                    </SheetContent>
-                  </Sheet>
-                </div>
-
-                {/* Feed */}
-                <SocialFeed ref={feedRef} userProfile={userProfile} compact={false} />
-              </div>
-
-              {/* Desktop: Online sidebar */}
-              <div className="hidden lg:block w-80 flex-shrink-0">
-                <OnlineSidebar
-                  users={onlineUsers}
-                  onWave={handleWave}
-                  onMessage={handleMessage}
-                />
-              </div>
+        {/* Social Feed */}
+        <div className="flex gap-6">
+          {/* Main content */}
+          <div className="flex-1 max-w-2xl mx-auto lg:mx-0">
+            {/* Desktop: Create post card */}
+            <div className="hidden lg:block">
+              <CreatePostCard userProfile={userProfile} onPostCreated={handlePostCreated} />
             </div>
-          </TabsContent>
 
-          {/* Messages Tab - Group Messaging */}
-          <TabsContent value="messages" className="mt-0">
-            <div className="h-[calc(100vh-280px)] min-h-[500px] bg-card rounded-lg border">
-              <MessagingInterface embedded />
+            {/* Mobile: Create post sheet */}
+            <div className="lg:hidden">
+              <Sheet open={showMobileCreate} onOpenChange={setShowMobileCreate}>
+                <SheetContent 
+                  side="bottom" 
+                  className="h-auto max-h-[85vh] rounded-t-2xl px-4 pb-safe"
+                >
+                  <div className="w-12 h-1 bg-muted-foreground/30 rounded-full mx-auto mt-2 mb-4" />
+                  <MobileCreatePost
+                    userProfile={userProfile}
+                    onPostCreated={handlePostCreated}
+                    onClose={() => setShowMobileCreate(false)}
+                  />
+                </SheetContent>
+              </Sheet>
             </div>
-          </TabsContent>
 
-          {/* DMs Tab - Direct Messaging */}
-          <TabsContent value="dms" className="mt-0">
-            <div className="h-[calc(100vh-280px)] min-h-[500px] bg-card rounded-lg border overflow-hidden">
-              <DirectMessaging />
-            </div>
-          </TabsContent>
-        </Tabs>
+            {/* Feed */}
+            <SocialFeed ref={feedRef} userProfile={userProfile} compact={false} />
+          </div>
+
+          {/* Desktop: Online sidebar */}
+          <div className="hidden lg:block w-80 flex-shrink-0">
+            <OnlineSidebar
+              users={onlineUsers}
+              onWave={handleWave}
+              onMessage={handleMessage}
+            />
+          </div>
+        </div>
       </main>
 
-      {/* Mobile: Floating Action Button - only show on Feed tab */}
-      {activeTab === 'feed' && (
-        <div className="lg:hidden fixed bottom-6 right-6 z-50">
-          <Button
-            size="lg"
-            className="h-14 w-14 rounded-full shadow-lg"
-            onClick={() => setShowMobileCreate(true)}
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        </div>
-      )}
+      {/* Mobile: Floating Action Button */}
+      <div className="lg:hidden fixed bottom-6 right-6 z-50">
+        <Button
+          size="lg"
+          className="h-14 w-14 rounded-full shadow-lg"
+          onClick={() => setShowMobileCreate(true)}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   );
 
