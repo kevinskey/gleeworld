@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check, Bell, MapPin, Mic, Disc, Clock, Music, Loader2 } from 'lucide-react';
+import { Radio, Play, Pause, Volume2, VolumeX, Users, X, ChevronUp, Music2, Church, Sparkles, Check, Bell, MapPin, Mic, Disc, Clock, Music, Loader2, Shield, Heart, Star, Globe, Film } from 'lucide-react';
 import { useRadioPlayer } from '@/hooks/useRadioPlayer';
 import { useRadioChannels, type RadioChannel } from '@/hooks/useRadioChannels';
 import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
@@ -43,6 +43,12 @@ export const HeaderRadioControls = () => {
         case 'Disc': return Disc;
         case 'Clock': return Clock;
         case 'Music': return Music;
+        case 'Users': return Users;
+        case 'Shield': return Shield;
+        case 'Heart': return Heart;
+        case 'Star': return Star;
+        case 'Globe': return Globe;
+        case 'Film': return Film;
         default: return Radio;
       }
     };

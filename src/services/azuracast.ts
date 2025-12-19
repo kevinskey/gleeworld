@@ -130,6 +130,23 @@ class AzuraCastService {
     }
   }
 
+  // Fetch all stations from AzuraCast (public API, no auth required)
+  async getAllStations(): Promise<any[]> {
+    try {
+      console.log('AzuraCast: Fetching all stations...');
+      const response = await fetch(`${this.baseUrl}/api/stations`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch stations: ${response.status}`);
+      }
+      const stations = await response.json();
+      console.log('AzuraCast stations:', stations);
+      return stations;
+    } catch (error) {
+      console.error('Error fetching AzuraCast stations:', error);
+      return [];
+    }
+  }
+
   getStreamUrl(): string {
     return this.directStreamUrl;
   }

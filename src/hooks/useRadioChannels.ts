@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { azuraCastService } from '@/services/azuracast';
-import { useAuth } from '@/contexts/AuthContext';
 
 export interface RadioChannel {
   id: string;
@@ -19,7 +18,6 @@ export interface RadioChannel {
 }
 
 export const useRadioChannels = () => {
-  const { user } = useAuth();
   const [channels, setChannels] = useState<RadioChannel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedChannel, setSelectedChannel] = useState<RadioChannel | null>(null);
@@ -27,51 +25,49 @@ export const useRadioChannels = () => {
   useEffect(() => {
     const fetchChannels = async () => {
       try {
-        // Try to fetch AzuraCast playlists first (for authorized users)
-        if (user) {
-          try {
-            const playlists = await azuraCastService.getPlaylists();
-            console.log('AzuraCast playlists fetched:', playlists);
-            
-            if (Array.isArray(playlists) && playlists.length > 0) {
-              // Convert AzuraCast playlists to RadioChannel format
-              const playlistChannels: RadioChannel[] = playlists
-                .filter((p: any) => p.is_enabled !== false)
-                .map((playlist: any, index: number) => ({
-                  id: `azura-${playlist.id}`,
-                  name: playlist.name,
-                  description: playlist.description || `${playlist.type || 'default'} playlist`,
-                  // Main stream URL - all playlists play through the main stream
-                  stream_url: 'https://radio.gleeworld.org/listen/glee_world_radio/radio.mp3',
-                  icon: getPlaylistIcon(playlist.name, playlist.type),
-                  color: getPlaylistColor(playlist.name, index),
-                  sort_order: playlist.weight || index,
-                  is_active: playlist.is_enabled !== false,
-                  is_default: index === 0,
-                  azura_playlist_id: playlist.id,
-                  type: playlist.type,
-                }));
+        // Fetch all stations from AzuraCast (public API)
+        try {
+          const stations = await azuraCastService.getAllStations();
+          console.log('AzuraCast stations fetched:', stations);
+          
+          if (Array.isArray(stations) && stations.length > 0) {
+            // Convert AzuraCast stations to RadioChannel format
+            const stationChannels: RadioChannel[] = stations
+              .filter((s: any) => s.is_public !== false)
+              .map((station: any, index: number) => ({
+                id: `station-${station.id}`,
+                name: station.name,
+                description: station.description || `${station.short_name} station`,
+                // Build stream URL from station's short_name (mount point)
+                stream_url: `https://radio.gleeworld.org/listen/${station.short_name}/radio.mp3`,
+                icon: getStationIcon(station.name),
+                color: getStationColor(station.name, index),
+                sort_order: index,
+                is_active: true,
+                is_default: station.short_name === 'glee_world_radio',
+              }));
 
-              setChannels(playlistChannels);
-              
-              // Set default channel
-              const savedChannelId = localStorage.getItem('gleeworld-radio-channel');
-              const savedChannel = savedChannelId 
-                ? playlistChannels.find(c => c.id === savedChannelId)
-                : null;
-              
-              if (savedChannel) {
-                setSelectedChannel(savedChannel);
-              } else if (playlistChannels.length > 0) {
-                setSelectedChannel(playlistChannels[0]);
-              }
-              
-              setIsLoading(false);
-              return;
+            setChannels(stationChannels);
+            
+            // Set default channel
+            const savedChannelId = localStorage.getItem('gleeworld-radio-channel');
+            const savedChannel = savedChannelId 
+              ? stationChannels.find(c => c.id === savedChannelId)
+              : null;
+            
+            if (savedChannel) {
+              setSelectedChannel(savedChannel);
+            } else {
+              // Default to Glee World Radio or first station
+              const defaultStation = stationChannels.find(c => c.is_default) || stationChannels[0];
+              if (defaultStation) setSelectedChannel(defaultStation);
             }
-          } catch (error) {
-            console.log('Could not fetch AzuraCast playlists, falling back to static channels:', error);
+            
+            setIsLoading(false);
+            return;
           }
+        } catch (error) {
+          console.log('Could not fetch AzuraCast stations, falling back to database:', error);
         }
 
         // Fallback: fetch from static database channels
@@ -101,7 +97,7 @@ export const useRadioChannels = () => {
     };
 
     fetchChannels();
-  }, [user]);
+  }, []);
 
   const [isRequesting, setIsRequesting] = useState(false);
   const [lastRequestMessage, setLastRequestMessage] = useState<string | null>(null);
@@ -198,36 +194,50 @@ export const useRadioChannels = () => {
   };
 };
 
-// Helper functions to assign icons and colors based on playlist name/type
-function getPlaylistIcon(name: string, type?: string): string {
+// Helper functions to assign icons and colors based on station name
+function getStationIcon(name: string): string {
   const nameLower = name.toLowerCase();
   
-  if (nameLower.includes('gospel') || nameLower.includes('spiritual')) return 'Church';
+  if (nameLower.includes('gospel')) return 'Church';
+  if (nameLower.includes('spiritual')) return 'Church';
   if (nameLower.includes('christmas') || nameLower.includes('carol')) return 'Sparkles';
   if (nameLower.includes('classical')) return 'Music2';
   if (nameLower.includes('jazz')) return 'Music';
-  if (nameLower.includes('jingle')) return 'Bell';
   if (nameLower.includes('tour')) return 'MapPin';
-  if (nameLower.includes('podcast')) return 'Mic';
-  if (nameLower.includes('hip hop') || nameLower.includes('hiphop')) return 'Disc';
-  
-  if (type === 'jingle_mode') return 'Bell';
-  if (type === 'scheduled') return 'Clock';
+  if (nameLower.includes('interview')) return 'Mic';
+  if (nameLower.includes('hip hop') || nameLower.includes('mass')) return 'Disc';
+  if (nameLower.includes('rehearsal')) return 'Clock';
+  if (nameLower.includes('alumni') || nameLower.includes('archive')) return 'Users';
+  if (nameLower.includes('exec') || nameLower.includes('board')) return 'Shield';
+  if (nameLower.includes('conducting')) return 'Music';
+  if (nameLower.includes('sisters')) return 'Heart';
+  if (nameLower.includes('special') || nameLower.includes('live')) return 'Star';
+  if (nameLower.includes('survey') || nameLower.includes('african')) return 'Globe';
+  if (nameLower.includes('serenbe') || nameLower.includes('film')) return 'Film';
+  if (nameLower.includes('1973') || nameLower.includes('glee')) return 'Radio';
+  if (nameLower.includes('amaze') || nameLower.includes('inspire')) return 'Sparkles';
   
   return 'Radio';
 }
 
-function getPlaylistColor(name: string, index: number): string {
+function getStationColor(name: string, index: number): string {
   const nameLower = name.toLowerCase();
   
-  if (nameLower.includes('gospel') || nameLower.includes('spiritual')) return '#9333ea'; // purple
+  if (nameLower.includes('gospel')) return '#9333ea'; // purple
+  if (nameLower.includes('spiritual')) return '#7c3aed'; // violet
   if (nameLower.includes('christmas') || nameLower.includes('carol')) return '#dc2626'; // red
   if (nameLower.includes('classical')) return '#059669'; // emerald
   if (nameLower.includes('jazz')) return '#d97706'; // amber
-  if (nameLower.includes('jingle')) return '#f59e0b'; // yellow
   if (nameLower.includes('tour')) return '#3b82f6'; // blue
-  if (nameLower.includes('podcast')) return '#8b5cf6'; // violet
-  if (nameLower.includes('hip hop') || nameLower.includes('hiphop')) return '#ec4899'; // pink
+  if (nameLower.includes('interview')) return '#8b5cf6'; // violet
+  if (nameLower.includes('hip hop') || nameLower.includes('mass')) return '#ec4899'; // pink
+  if (nameLower.includes('rehearsal')) return '#f59e0b'; // yellow
+  if (nameLower.includes('alumni') || nameLower.includes('archive')) return '#06b6d4'; // cyan
+  if (nameLower.includes('exec') || nameLower.includes('board')) return '#ef4444'; // red
+  if (nameLower.includes('sisters')) return '#f472b6'; // pink
+  if (nameLower.includes('special') || nameLower.includes('live')) return '#fbbf24'; // amber
+  if (nameLower.includes('survey') || nameLower.includes('african')) return '#10b981'; // emerald
+  if (nameLower.includes('serenbe') || nameLower.includes('film')) return '#6366f1'; // indigo
   
   // Default colors cycling
   const colors = ['#7BAFD4', '#9333ea', '#059669', '#ea580c', '#3b82f6', '#ec4899', '#f59e0b', '#8b5cf6'];
