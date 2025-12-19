@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -351,11 +352,11 @@ export const MessengerModal: React.FC = () => {
                       {/* Content */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Message:</Label>
-                        <Textarea
+                        <RichTextEditor
                           value={content}
-                          onChange={(e) => setContent(e.target.value)}
+                          onChange={setContent}
                           placeholder="Type your message..."
-                          className="min-h-[200px] resize-none"
+                          minHeight="200px"
                         />
                       </div>
 
