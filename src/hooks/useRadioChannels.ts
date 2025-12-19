@@ -136,6 +136,7 @@ export const useRadioChannels = () => {
         
         if (result.success) {
           setLastRequestMessage(result.message);
+          setIsRequesting(false);
           return result;
         }
         
