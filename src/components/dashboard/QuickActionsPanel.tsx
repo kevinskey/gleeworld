@@ -129,20 +129,20 @@ const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: Sor
       )}
       <Button
         variant="ghost"
-        className="flex-1 justify-start h-auto p-3 hover:bg-muted group border border-border bg-card rounded-lg transition-all duration-200"
+        className="flex-1 justify-start h-auto py-5 px-4 hover:bg-card/90 group border border-border/50 bg-card/80 backdrop-blur-sm rounded-xl transition-all duration-200 hover:border-primary/30 hover:shadow-md"
         onClick={() => onActionClick(action.moduleId)}
       >
-        <div className="flex items-center gap-3 w-full">
+        <div className="flex items-center gap-4 w-full">
           <div 
-            className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform border border-border"
+            className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center group-hover:scale-110 transition-transform border border-primary/20"
           >
             <IconComponent className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1 text-left">
             <div className="font-semibold text-sm text-foreground">{action.title}</div>
-            <div className="text-xs text-muted-foreground">{action.description}</div>
+            <div className="text-xs text-muted-foreground mt-0.5">{action.description}</div>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
       </Button>
       {isManaging && (
@@ -354,7 +354,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
           </div>
 
           {/* Actions Grid with DnD */}
-          <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
+          <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
             {isManaging ? (
               <DndContext
                 sensors={sensors}
