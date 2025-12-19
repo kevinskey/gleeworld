@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles, Plus, Mail, Key } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
@@ -38,6 +39,7 @@ interface UniversalHeaderProps {
 
 export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderProps) => {
   const { user, signOut } = useAuth();
+  const { toggleMessenger, isOpen: isMessengerOpen } = useMessenger();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -191,14 +193,14 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             <HeaderRadioControls />
             <MusicalToolkit />
             
-            {/* Email Composer - Available to all authenticated users */}
+            {/* Email/SMS Messenger Toggle - Available to all authenticated users */}
             {user && (
-              <EnhancedTooltip content="Send Email/SMS">
+              <EnhancedTooltip content={isMessengerOpen ? "Close Messenger" : "Send Email/SMS"}>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigate('/compose')}
-                  className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10"
+                  onClick={toggleMessenger}
+                  className={`h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 p-0 hover:bg-white/10 ${isMessengerOpen ? 'bg-white/20' : ''}`}
                   style={{ 
                     color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
                   }}

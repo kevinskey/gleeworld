@@ -20,6 +20,8 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { SplashWrapper } from "@/components/splash/SplashWrapper";
 import { LiveInvitePopup } from "@/components/glee-lounge/LiveInvitePopup";
 import { GleeAssistant } from "@/components/assistant/GleeAssistant";
+import { MessengerProvider } from "@/contexts/MessengerContext";
+import { MessengerModal } from "@/components/messenger/MessengerModal";
 
 import { HomeRoute } from "@/components/routing/HomeRoute";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
@@ -335,12 +337,14 @@ const App = () => {
                 <MusicPlayerProvider>
                   <Mus240SemesterProvider>
                   <CourseProvider>
+                  <MessengerProvider>
                   <SplashWrapper>
                   <div>
                   <Toaster />
                   <Sonner />
                   <LiveInvitePopup />
                   <GleeAssistant />
+                  <MessengerModal />
                   <DesignSystemEnforcer />
                   <Suspense fallback={<LoadingSpinner size="lg" text="Loading..." />}>
                     <Routes>
@@ -2362,6 +2366,7 @@ const App = () => {
                     <PWAInstallPrompt />
                    </div>
                    </SplashWrapper>
+                  </MessengerProvider>
                   </CourseProvider>
                   </Mus240SemesterProvider>
                   </MusicPlayerProvider>
