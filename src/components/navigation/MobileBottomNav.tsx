@@ -42,7 +42,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
       {/* Bottom Navigation Bar */}
       <nav 
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-[9999] bg-background border-t border-border shadow-2xl",
+          "fixed bottom-0 left-0 right-0 z-[99999] bg-background border-t border-border shadow-2xl",
           className
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}

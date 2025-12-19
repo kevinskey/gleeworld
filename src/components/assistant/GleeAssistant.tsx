@@ -533,34 +533,7 @@ export const GleeAssistant = () => {
         </div>
       )}
 
-      {/* Floating Button Group */}
-      <div className={cn("fixed bottom-6 right-6 flex flex-col items-center gap-2", isOpen && "hidden")} style={{ zIndex: 9999 }}>
-        {/* Wake Word Toggle */}
-        <Button
-          onClick={toggleWakeWord}
-          size="sm"
-          variant={isWakeWordActive ? "default" : "outline"}
-          className={cn(
-            "rounded-full h-8 w-8 p-0 shadow-md",
-            isWakeWordActive && "bg-green-600 hover:bg-green-700"
-          )}
-        >
-          <Mic className={cn("h-4 w-4", isWakeWordActive && "animate-pulse")} />
-        </Button>
-        
-        {/* Main Assistant Button */}
-        <Button
-          onClick={() => setIsOpen(true)}
-          className={cn(
-            "rounded-full shadow-lg",
-            "bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
-            "transition-all duration-300 hover:scale-110"
-          )}
-          style={{ padding: 0, overflow: 'hidden', width: '72px', height: '72px' }}
-        >
-          <img src={gleeAssistantAvatar} alt="Glee Assistant" className="h-full w-full object-cover" />
-        </Button>
-      </div>
+      {/* Floating buttons removed - using bottom nav Bot icon instead */}
 
       {/* Chat Panel */}
       {isOpen && (
