@@ -65,13 +65,19 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
           <button
             onClick={toggleAssistant}
             className={cn(
-              "flex items-center justify-center w-12 h-12 rounded-full transition-all",
+              "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
               assistantActive 
                 ? "text-white bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg animate-pulse" 
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
             <Bot className="h-6 w-6" />
+            {assistantActive && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background animate-ping" />
+            )}
+            {assistantActive && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background" />
+            )}
           </button>
         </div>
       </nav>
