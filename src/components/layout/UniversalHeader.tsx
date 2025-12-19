@@ -180,7 +180,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
               </div>
             )}
 
-            <div className="w-full max-w-7xl mx-auto px-1 sm:px-2 md:px-4">
+            <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 lg:py-3">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0">
