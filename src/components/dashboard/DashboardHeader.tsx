@@ -77,7 +77,7 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
           onClick={onToggleMessages}
           className={`relative h-9 px-6 ${showMessages ? 'bg-muted' : ''}`}
         >
-          <MessageCircle className="w-5 h-5 mr-2" />
+          <MessageCircle className="w-6 h-6 mr-2 stroke-[1.5]" />
           Messages
           <Badge variant="destructive" className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 flex items-center justify-center text-xs">
             3
@@ -85,11 +85,11 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
         </Button>
 
         <Button variant="ghost" size="sm">
-          <Bell className="w-5 h-5" />
+          <Bell className="w-6 h-6 stroke-[1.5]" />
         </Button>
 
         <Button variant="ghost" size="sm">
-          <Settings className="w-5 h-5" />
+          <Settings className="w-6 h-6 stroke-[1.5]" />
         </Button>
 
         <div className="flex items-center gap-3 pl-4 border-l border-border">
