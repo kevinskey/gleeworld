@@ -142,19 +142,25 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     item.title?.toLowerCase().includes(mediaSearch.toLowerCase())
   );
 
-  useEffect(() => {
-    if (editorRef.current && !isInternalChange.current) {
-      if (editorRef.current.innerHTML !== value) {
-        editorRef.current.innerHTML = value;
+  // Store selection range to restore after dialog closes
+  const savedSelection = useRef<Range | null>(null);
+
+  const saveSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      savedSelection.current = selection.getRangeAt(0).cloneRange();
+    }
+  }, []);
+
+  const restoreSelection = useCallback(() => {
+    if (savedSelection.current && editorRef.current) {
+      editorRef.current.focus();
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(savedSelection.current);
       }
     }
-    isInternalChange.current = false;
-  }, [value]);
-
-  const exec = useCallback((command: string, value?: string) => {
-    document.execCommand(command, false, value);
-    editorRef.current?.focus();
-    handleInput();
   }, []);
 
   const handleInput = useCallback(() => {
@@ -164,10 +170,41 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   }, [onChange]);
 
+  const exec = useCallback((command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
+    handleInput();
+  }, [handleInput]);
+
   const insertImage = useCallback((imageUrl: string) => {
-    exec('insertHTML', `<img src="${imageUrl}" alt="Image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0;" />`);
+    console.log('Inserting image:', imageUrl);
+    
+    // Restore focus and selection
+    if (editorRef.current) {
+      editorRef.current.focus();
+      
+      // If we have a saved selection, restore it
+      if (savedSelection.current) {
+        const selection = window.getSelection();
+        if (selection) {
+          selection.removeAllRanges();
+          selection.addRange(savedSelection.current);
+        }
+      }
+    }
+    
+    const imgHtml = `<img src="${imageUrl}" alt="Image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" />&nbsp;`;
+    const success = document.execCommand('insertHTML', false, imgHtml);
+    console.log('Image insert success:', success);
+    
+    // Manually update state
+    if (editorRef.current) {
+      isInternalChange.current = true;
+      onChange(editorRef.current.innerHTML);
+    }
+    
     setShowMediaLibrary(false);
-  }, [exec]);
+  }, [onChange]);
 
   const insertVideo = useCallback(() => {
     if (!videoUrl) {
@@ -385,7 +422,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
           {/* Image - Opens Media Library */}
           <ToolbarButton 
-            onClick={() => setShowMediaLibrary(true)} 
+            onClick={() => {
+              saveSelection();
+              setShowMediaLibrary(true);
+            }} 
             icon={Image} 
             title="Insert Image from Media Library" 
           />
