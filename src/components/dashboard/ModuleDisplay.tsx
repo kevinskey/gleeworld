@@ -45,6 +45,7 @@ import ExitInterviewsModule from '../modules/ExitInterviewsModule';
 import { TheLabModule } from '@/components/modules/TheLabModule';
 import { ComprehensiveAppointmentSystem } from '@/components/appointments/ComprehensiveAppointmentSystem';
 import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
+import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -147,6 +148,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
       case 'hero-management':
       case 'hero-manager':
         return <DashboardHeroManagerModule />;
+      case 'youtube-management':
+        return <YouTubeManagement />;
       case 'glee-ledger':
         return <GleeLedgerModule />;
       case 'announcements':
