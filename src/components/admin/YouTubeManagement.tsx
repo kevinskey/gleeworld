@@ -5,9 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
 import { supabase } from "@/integrations/supabase/client";
+import { YouTubeVideoPicker } from "@/components/youtube/YouTubeVideoPicker";
 import { 
   Youtube, 
   Plus, 
@@ -19,7 +21,9 @@ import {
   ArrowRight,
   RefreshCw,
   ExternalLink,
-  Download
+  Download,
+  LayoutGrid,
+  List
 } from "lucide-react";
 
 interface YouTubeVideo {
@@ -409,6 +413,45 @@ export const YouTubeManagement = () => {
       </Card>
 
 
+      {/* Video Picker / Collection Tabs */}
+      <Tabs defaultValue="picker" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="picker" className="flex items-center gap-2">
+            <LayoutGrid className="h-4 w-4" />
+            Video Picker
+          </TabsTrigger>
+          <TabsTrigger value="list" className="flex items-center gap-2">
+            <List className="h-4 w-4" />
+            List View
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Video Picker Tab */}
+        <TabsContent value="picker">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <LayoutGrid className="h-5 w-5 mr-2" />
+                Select Videos from Channel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <YouTubeVideoPicker
+                multiSelect
+                maxHeight="600px"
+                onMultiSelect={(selectedVideos) => {
+                  toast({
+                    title: `${selectedVideos.length} video(s) selected`,
+                    description: selectedVideos.map(v => v.title).slice(0, 3).join(', ') + (selectedVideos.length > 3 ? '...' : ''),
+                  });
+                }}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* List View Tab */}
+        <TabsContent value="list">
       {/* Video Collection */}
       {videos.length > 0 && (
         <Card>
@@ -543,7 +586,7 @@ export const YouTubeManagement = () => {
         </Card>
       )}
 
-      {/* Empty State */}
+      {/* Empty State for List View */}
       {videos.length === 0 && !loading && (
         <Card>
           <CardContent className="text-center py-12">
@@ -559,6 +602,8 @@ export const YouTubeManagement = () => {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
