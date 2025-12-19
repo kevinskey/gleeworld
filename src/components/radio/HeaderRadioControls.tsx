@@ -188,38 +188,34 @@ export const HeaderRadioControls = () => {
                   {/* Divider */}
                   <div className="hidden lg:block h-5 w-px bg-popover-foreground/20" />
 
-                  {/* Channel Selector - Minimal Icon Buttons */}
+                  {/* Channel Selector - Scrollable Buttons */}
                   {channels.length > 0 && (
-                    <div className="flex items-center gap-0.5">
-                      {channels.map((channel) => {
-                        const IconComponent = getChannelIcon(channel.icon);
-                        const isSelected = selectedChannel?.id === channel.id;
-                        const isThisLoading = isLoading && isSelected;
-                        return (
-                          <button
-                            key={channel.id}
-                            onClick={() => handleChannelChange(channel)}
-                            disabled={isLoading}
-                            title={channel.name}
-                            className={cn(
-                              "flex items-center justify-center w-6 h-6 rounded transition-all",
-                              isSelected
-                                ? "bg-primary/20 text-primary"
-                                : "text-popover-foreground/50 hover:text-popover-foreground hover:bg-popover-foreground/10",
-                              isLoading && "opacity-70 cursor-wait"
-                            )}
-                          >
-                            {isThisLoading ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <IconComponent 
-                                className="h-3.5 w-3.5" 
-                                style={{ color: isSelected ? undefined : (channel.color || undefined) }}
-                              />
-                            )}
-                          </button>
-                        );
-                      })}
+                    <div className="flex items-center overflow-x-auto max-w-[200px] lg:max-w-[300px] scrollbar-hide">
+                      <div className="flex items-center gap-1 px-1">
+                        {channels.map((channel) => {
+                          const isSelected = selectedChannel?.id === channel.id;
+                          const isThisLoading = isLoading && isSelected;
+                          return (
+                            <button
+                              key={channel.id}
+                              onClick={() => handleChannelChange(channel)}
+                              disabled={isLoading}
+                              className={cn(
+                                "flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0",
+                                isSelected
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
+                                isLoading && "opacity-70 cursor-wait"
+                              )}
+                            >
+                              {isThisLoading ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : null}
+                              {channel.name}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
