@@ -40,13 +40,14 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   return (
     <>
       {/* Bottom Navigation Bar */}
-      <nav className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border shadow-lg",
-        className
-      )}
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      <nav 
+        className={cn(
+          "fixed bottom-0 left-0 right-0 z-[9999] bg-background border-t border-border shadow-2xl",
+          className
+        )}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="flex items-center justify-around h-14 px-8">
+        <div className="flex items-center justify-center gap-8 h-16 px-8 bg-background">
           {/* Musical Toolkit */}
           <div className="flex items-center justify-center w-12 h-12">
             <MusicalToolkit className="!p-0" />
@@ -55,9 +56,9 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
           {/* Glee Cam - Highlighted Center */}
           <button
             onClick={() => setShowCategorySelector(true)}
-            className="flex items-center justify-center w-14 h-14 -mt-4 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+            className="flex items-center justify-center w-16 h-16 -mt-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all border-4 border-background"
           >
-            <Camera className="h-6 w-6" />
+            <Camera className="h-7 w-7" />
           </button>
 
           {/* Voice Assistant Toggle */}
@@ -71,9 +72,9 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
             )}
           >
             {assistantActive ? (
-              <Mic className="h-5 w-5" />
+              <Mic className="h-6 w-6" />
             ) : (
-              <MicOff className="h-5 w-5" />
+              <MicOff className="h-6 w-6" />
             )}
           </button>
         </div>
