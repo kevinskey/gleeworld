@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FeaturedVideoManager } from "./FeaturedVideoManager";
 import { useToast } from "@/hooks/use-toast";
 import { useYouTubeVideos } from "@/hooks/useYouTubeVideos";
 import { supabase } from "@/integrations/supabase/client";
@@ -425,6 +426,14 @@ export const YouTubeManagement = () => {
             <List className="h-4 w-4" />
             List View
           </TabsTrigger>
+          <TabsTrigger value="playlists" className="flex items-center gap-2">
+            <Youtube className="h-4 w-4" />
+            Course Playlists
+          </TabsTrigger>
+          <TabsTrigger value="featured" className="flex items-center gap-2">
+            <Play className="h-4 w-4" />
+            Featured Carousel
+          </TabsTrigger>
         </TabsList>
 
         {/* Video Picker Tab */}
@@ -603,6 +612,16 @@ export const YouTubeManagement = () => {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+
+        {/* Course Playlists Tab */}
+        <TabsContent value="playlists">
+          <CoursePlaylistManager isFullPage />
+        </TabsContent>
+
+        {/* Featured Carousel Tab */}
+        <TabsContent value="featured">
+          <FeaturedVideoManager />
         </TabsContent>
       </Tabs>
     </div>

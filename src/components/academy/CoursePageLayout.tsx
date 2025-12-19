@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseResourcesList } from './CourseResourcesList';
 import { MusicLibrary } from '@/components/music-library/MusicLibrary';
+import { CoursePlaylistDisplay } from '@/components/public/CoursePlaylistDisplay';
 interface CoursePageLayoutProps {
   courseId: string;
   courseSemester: string;
@@ -69,6 +70,10 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
     icon: BarChart,
     label: 'Polls',
     section: 'polls'
+  }, {
+    icon: Video,
+    label: 'Videos',
+    section: 'videos'
   }, {
     icon: MessageSquare,
     label: 'Discussions',
@@ -325,6 +330,10 @@ export const CoursePageLayout: React.FC<CoursePageLayoutProps> = ({
                   <p className="text-muted-foreground">Course help resources and support information.</p>
                 </CardContent>
               </Card>
+            )}
+
+            {activeSection === 'videos' && (
+              <CoursePlaylistDisplay courseId={courseId} className="bg-card/50 border-border" />
             )}
 
             {activeSection === 'video-library' && (
