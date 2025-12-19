@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Shield, User, BarChart3, Home } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Shield, User, BarChart3, Home, Youtube, Settings, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { isAdmin } from "@/constants/permissions";
@@ -74,6 +74,27 @@ export const DashboardSwitcher = () => {
                 Current
               </Badge>
             )}
+          </Link>
+        </DropdownMenuItem>
+        
+        {/* Quick Admin Tools */}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/dashboard?module=youtube-management" className="flex items-center cursor-pointer">
+            <Youtube className="mr-2 h-4 w-4 text-red-500" />
+            YouTube Management
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/dashboard?module=hero-management" className="flex items-center cursor-pointer">
+            <Star className="mr-2 h-4 w-4 text-yellow-500" />
+            Hero Management
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/dashboard?module=dashboard-settings" className="flex items-center cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            Dashboard Settings
           </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
