@@ -24,8 +24,10 @@ import {
   EyeOff,
   Star,
   Play,
-  ExternalLink
+  ExternalLink,
+  ListVideo
 } from 'lucide-react';
+import { PlaylistVideoManager } from './PlaylistVideoManager';
 
 interface Course {
   id: string;
@@ -82,6 +84,8 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingPlaylist, setEditingPlaylist] = useState<Playlist | null>(null);
   const [selectedCourseFilter, setSelectedCourseFilter] = useState<string>(courseId || 'all');
+  const [videoManagerOpen, setVideoManagerOpen] = useState(false);
+  const [selectedPlaylistForVideos, setSelectedPlaylistForVideos] = useState<Playlist | null>(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -478,6 +482,17 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                         <Button
                           variant="ghost"
                           size="icon"
+                          onClick={() => {
+                            setSelectedPlaylistForVideos(playlist);
+                            setVideoManagerOpen(true);
+                          }}
+                          title="Manage videos"
+                        >
+                          <ListVideo className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => toggleVisibility(playlist, 'is_public')}
                           title={playlist.is_public ? 'Make private' : 'Make public'}
                         >
@@ -519,6 +534,16 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* Video Manager Dialog */}
+      {selectedPlaylistForVideos && (
+        <PlaylistVideoManager
+          playlistId={selectedPlaylistForVideos.id}
+          playlistTitle={selectedPlaylistForVideos.title}
+          open={videoManagerOpen}
+          onOpenChange={setVideoManagerOpen}
+        />
+      )}
     </div>
   );
 };
