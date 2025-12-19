@@ -30,7 +30,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, Smartphone, X, Send, Users, Search, Loader2 } from 'lucide-react';
+import { Mail, Smartphone, X, Send, Users, Search, Loader2, PanelRightOpen, PanelRightClose } from 'lucide-react';
 
 interface RecipientGroup {
   id: string;
@@ -71,6 +71,7 @@ export const MessengerModal: React.FC = () => {
   const [recipientGroups, setRecipientGroups] = useState<RecipientGroup[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [addingGroup, setAddingGroup] = useState<string | null>(null);
+  const [showGroupsPanel, setShowGroupsPanel] = useState(false);
 
   // Fetch messenger groups from database
   useEffect(() => {
@@ -360,9 +361,23 @@ export const MessengerModal: React.FC = () => {
             </div>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 max-h-[calc(90vh-100px)] overflow-hidden">
-            {/* Main Composer */}
-            <div className="lg:col-span-2 p-6 overflow-y-auto">
+          <div className="relative max-h-[calc(90vh-100px)] overflow-hidden">
+            {/* Toggle Groups Panel Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="absolute top-2 right-2 z-10"
+              onClick={() => setShowGroupsPanel(!showGroupsPanel)}
+            >
+              {showGroupsPanel ? (
+                <><PanelRightClose className="h-4 w-4 mr-2" /> Hide Groups</>
+              ) : (
+                <><PanelRightOpen className="h-4 w-4 mr-2" /> Add Groups</>
+              )}
+            </Button>
+
+            {/* Main Composer - Full Width */}
+            <div className="p-6 pt-12 overflow-y-auto max-h-[calc(90vh-100px)]">
               <Tabs value={composerMode} onValueChange={(v) => setComposerMode(v as 'email' | 'sms')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="email" className="gap-2">
@@ -548,57 +563,68 @@ export const MessengerModal: React.FC = () => {
               </Tabs>
             </div>
 
-            {/* Sidebar - Quick Actions */}
-            <div className="border-l bg-muted/30 p-4 overflow-y-auto">
-              <h3 className="font-semibold mb-3 flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Quick Add Groups
-              </h3>
-              <div className="space-y-2">
-                {loadingGroups ? (
-                  <div className="flex items-center justify-center py-4">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            {/* Flyout Groups Panel */}
+            <div 
+              className={`absolute top-0 right-0 h-full w-72 bg-background border-l shadow-xl transform transition-transform duration-300 ease-in-out z-20 ${
+                showGroupsPanel ? 'translate-x-0' : 'translate-x-full'
+              }`}
+            >
+              <div className="p-4 overflow-y-auto h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Quick Add Groups
+                  </h3>
+                  <Button variant="ghost" size="icon" onClick={() => setShowGroupsPanel(false)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {loadingGroups ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : recipientGroups.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No groups available. Create groups in Messenger Admin.
+                    </p>
+                  ) : (
+                    recipientGroups.map((group) => (
+                      <Button
+                        key={group.id}
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-left"
+                        disabled={addingGroup === group.id}
+                        onClick={() => handleAddGroup(group)}
+                      >
+                        {addingGroup === group.id ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : null}
+                        <span className="flex-1 truncate">{group.name}</span>
+                        <Badge variant="secondary" className="ml-2 shrink-0">{group.count}</Badge>
+                      </Button>
+                    ))
+                  )}
+                </div>
+
+                {/* Preview Section */}
+                {composerMode === 'email' && subject && (
+                  <div className="mt-6">
+                    <h3 className="font-semibold mb-3">Preview</h3>
+                    <div className="bg-gradient-to-br from-primary to-primary/70 rounded-t-lg p-4 text-center">
+                      <h4 className="text-primary-foreground font-bold">✨ GleeWorld</h4>
+                      <p className="text-primary-foreground/80 text-xs">Spelman College Glee Club</p>
+                    </div>
+                    <div className="bg-background border border-t-0 rounded-b-lg p-4">
+                      <h5 className="font-semibold text-sm mb-2">{subject || 'Your Subject'}</h5>
+                      <p className="text-xs text-muted-foreground line-clamp-3">
+                        {content || 'Your message will appear here with beautiful branding...'}
+                      </p>
+                    </div>
                   </div>
-                ) : recipientGroups.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No groups available. Create groups in Messenger Admin.
-                  </p>
-                ) : (
-                  recipientGroups.map((group) => (
-                    <Button
-                      key={group.id}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start text-left"
-                      disabled={addingGroup === group.id}
-                      onClick={() => handleAddGroup(group)}
-                    >
-                      {addingGroup === group.id ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : null}
-                      <span className="flex-1">{group.name}</span>
-                      <Badge variant="secondary" className="ml-2">{group.count}</Badge>
-                    </Button>
-                  ))
                 )}
               </div>
-
-              {/* Preview Section */}
-              {composerMode === 'email' && subject && (
-                <div className="mt-6">
-                  <h3 className="font-semibold mb-3">Preview</h3>
-                  <div className="bg-gradient-to-br from-primary to-primary/70 rounded-t-lg p-4 text-center">
-                    <h4 className="text-primary-foreground font-bold">✨ GleeWorld</h4>
-                    <p className="text-primary-foreground/80 text-xs">Spelman College Glee Club</p>
-                  </div>
-                  <div className="bg-background border border-t-0 rounded-b-lg p-4">
-                    <h5 className="font-semibold text-sm mb-2">{subject || 'Your Subject'}</h5>
-                    <p className="text-xs text-muted-foreground line-clamp-3">
-                      {content || 'Your message will appear here with beautiful branding...'}
-                    </p>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </DialogContent>
