@@ -223,7 +223,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
           {/* Right side actions - Mobile-optimized icon bar */}
           <div className="flex items-center gap-0.5 sm:gap-1.5 md:gap-2.5 lg:gap-5">
             <HeaderRadioControls />
-            <MusicalToolkit />
+            <div className="hidden sm:block">
+              <MusicalToolkit />
+            </div>
             
             {/* Email/SMS Messenger Toggle - Available to all authenticated users */}
             {user && (
@@ -364,26 +366,28 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                   </EnhancedTooltip>
                 )}
 
-                {/* Glee Cam Quick Capture - Available to all authenticated users */}
-                <EnhancedTooltip content="Glee Cam - Quick Capture">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Camera button clicked - showing category selector');
-                      setShowCategorySelector(true);
-                    }}
-                    className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full"
-                    style={{ 
-                      color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
-                    }}
-                    type="button"
-                  >
-                    <Camera className="h-5 w-5 md:h-6 md:w-6" />
-                  </Button>
-                </EnhancedTooltip>
+                {/* Glee Cam Quick Capture - Hidden on mobile (available in bottom nav) */}
+                <div className="hidden sm:block">
+                  <EnhancedTooltip content="Glee Cam - Quick Capture">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Camera button clicked - showing category selector');
+                        setShowCategorySelector(true);
+                      }}
+                      className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full"
+                      style={{ 
+                        color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                      }}
+                      type="button"
+                    >
+                      <Camera className="h-5 w-5 md:h-6 md:w-6" />
+                    </Button>
+                  </EnhancedTooltip>
+                </div>
 
                 {/* Quick Actions Button */}
                 <EnhancedTooltip content="Members Quick Access">
