@@ -30,7 +30,7 @@ export const UniversalLayout = ({
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
   return (
-    <div className="min-h-screen flex flex-col w-full relative" style={{
+    <div className="min-h-screen w-full relative" style={{
       background: 'var(--theme-background, hsl(var(--background)))'
     }}>
       {showHeader && (
@@ -38,7 +38,7 @@ export const UniversalLayout = ({
           {shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />}
         </div>
       )}
-      <main className={`flex-1 w-full overflow-x-hidden ${className}`}>
+      <main className={`w-full ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-[5px]">
             {children}
