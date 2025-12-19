@@ -411,7 +411,20 @@ export const MessengerModal: React.FC = () => {
                     <CardContent className="p-0 sm:p-4 space-y-3 sm:space-y-4">
                       {/* Recipients */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">To:</Label>
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">To:</Label>
+                          {isMobile && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowGroupsPanel(true)}
+                              className="h-7 text-xs gap-1"
+                            >
+                              <Users className="h-3 w-3" />
+                              Groups
+                            </Button>
+                          )}
+                        </div>
                         <div className="flex flex-wrap gap-2 p-2 min-h-[44px] border rounded-lg bg-background">
                           {recipients.map((r, i) => (
                             <Badge key={i} variant="secondary" className="gap-1 pr-1">
@@ -505,7 +518,20 @@ export const MessengerModal: React.FC = () => {
                       {/* Individual Recipients (when not sending to all) */}
                       {!sendToAll && (
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium">Recipients:</Label>
+                          <div className="flex items-center justify-between">
+                            <Label className="text-sm font-medium">Recipients:</Label>
+                            {isMobile && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowGroupsPanel(true)}
+                                className="h-7 text-xs gap-1"
+                              >
+                                <Users className="h-3 w-3" />
+                                Groups
+                              </Button>
+                            )}
+                          </div>
                           <div className="flex flex-wrap gap-2 p-2 min-h-[44px] border rounded-lg bg-background">
                             {smsRecipients.map((r) => (
                               <Badge key={r.user_id} variant="secondary" className="gap-1 pr-1">
@@ -579,9 +605,11 @@ export const MessengerModal: React.FC = () => {
               </Tabs>
             </div>
 
-            {/* Flyout Groups Panel */}
+            {/* Flyout Groups Panel - Full screen on mobile */}
             <div 
-              className={`absolute top-0 right-0 h-full w-72 bg-background border-l shadow-xl transform transition-transform duration-300 ease-in-out z-20 ${
+              className={`absolute top-0 right-0 h-full bg-background border-l shadow-xl transform transition-transform duration-300 ease-in-out z-20 ${
+                isMobile ? 'w-full' : 'w-72'
+              } ${
                 showGroupsPanel ? 'translate-x-0' : 'translate-x-full'
               }`}
             >
