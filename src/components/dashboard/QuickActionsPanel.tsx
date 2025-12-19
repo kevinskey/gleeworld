@@ -122,27 +122,27 @@ const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: Sor
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded"
+          className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded"
         >
-          <GripVertical className="h-4 w-4 text-muted-foreground" />
+          <GripVertical className="h-4 w-4 text-popover-foreground/60" />
         </button>
       )}
       <button
-        className="flex-1 flex items-center px-3 py-2 text-sm rounded-none transition-colors text-popover-foreground hover:bg-accent hover:text-accent-foreground"
+        className="flex-1 flex items-center px-3 py-2 text-sm rounded-none transition-colors text-popover-foreground hover:bg-white/10"
         onClick={() => onActionClick(action.moduleId)}
       >
-        <IconComponent className="h-4 w-4 mr-3 text-muted-foreground" />
+        <IconComponent className="h-4 w-4 mr-3 text-popover-foreground/70" />
         <div className="flex-1 text-left">
-          <div className="font-medium">{action.title}</div>
-          <div className="text-xs text-muted-foreground">{action.description}</div>
+          <div className="font-medium text-popover-foreground">{action.title}</div>
+          <div className="text-xs text-popover-foreground/70">{action.description}</div>
         </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        <ChevronRight className="h-4 w-4 text-popover-foreground/50" />
       </button>
       {isManaging && (
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 w-8 p-0 hover:bg-destructive/20 text-destructive hover:text-destructive"
+          className="h-8 w-8 p-0 hover:bg-red-500/20 text-red-300 hover:text-red-200"
           onClick={() => onDelete(action.moduleId)}
         >
           <Trash2 className="h-4 w-4" />
@@ -267,10 +267,10 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
         <div className="bg-popover text-popover-foreground border border-border shadow-2xl mx-4 rounded-none">
           
           {/* Header with management controls */}
-          <div className="px-3 py-2 border-b border-muted flex items-center justify-between">
+          <div className="px-3 py-2 border-b border-white/20 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-foreground">
+              <Zap className="h-4 w-4 text-white/80" />
+              <span className="text-sm font-semibold text-popover-foreground">
                 Quick Actions
               </span>
             </div>
@@ -280,12 +280,12 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 hover:bg-accent"
+                    className="h-7 w-7 p-0 hover:bg-white/10"
                   >
-                    <Plus className="h-3 w-3 text-foreground" />
+                    <Plus className="h-3 w-3 text-popover-foreground" />
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
+                <DialogContent className="sm:max-w-md bg-card">
                   <DialogHeader>
                     <DialogTitle>Add Quick Action</DialogTitle>
                     <DialogDescription>
@@ -299,7 +299,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
                         <SelectTrigger className="bg-background border-border">
                           <SelectValue placeholder="Choose a module to add" />
                         </SelectTrigger>
-                        <SelectContent className="bg-popover border-border max-h-60 overflow-y-auto">
+                        <SelectContent className="bg-card border-border max-h-60 overflow-y-auto">
                           {availableModules
                             .filter(module => {
                               if (quickActions) {
@@ -337,11 +337,11 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 hover:bg-accent"
+                className="h-7 w-7 p-0 hover:bg-white/10"
                 onClick={() => setIsManaging(!isManaging)}
                 title={isManaging ? "Done editing" : "Edit & reorder"}
               >
-                <Settings className={`h-3 w-3 text-foreground ${isManaging ? 'animate-spin' : ''}`} />
+                <Settings className={`h-3 w-3 text-popover-foreground ${isManaging ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </div>
@@ -381,7 +381,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
               ))
             )}
             {allActions.length === 0 && (
-              <div className="text-center py-6 text-muted-foreground">
+              <div className="text-center py-6 text-popover-foreground/70">
                 <p className="text-sm mb-1">No quick actions configured</p>
                 <p className="text-xs">Click + to add modules</p>
               </div>
@@ -389,8 +389,8 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
           </div>
 
           {/* Footer */}
-          <div className="px-3 py-2 border-t border-muted">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="px-3 py-2 border-t border-white/20">
+            <div className="flex items-center justify-between text-xs text-popover-foreground/60">
               <span>
                 {isManaging ? 'Drag to reorder' : 'Click outside to close'}
               </span>
