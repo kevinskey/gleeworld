@@ -550,32 +550,63 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
               </div>
             ) : (
-              <div className="grid grid-cols-4 gap-3 p-1">
-                {filteredMedia.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => insertImage(item.file_url)}
-                    className="group relative aspect-square rounded-lg overflow-hidden border-2 border-transparent hover:border-primary transition-all bg-muted/20"
-                  >
-                    <div className="w-full h-full">
+              <div className="space-y-3">
+                {/* Thumbnail Grid */}
+                <div className="grid grid-cols-4 gap-3 p-1">
+                  {filteredMedia.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => insertImage(item.file_url)}
+                      className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-colors bg-muted/20"
+                      title={item.title}
+                    >
                       <div
-                        className="w-full h-full bg-muted/30"
+                        className="absolute inset-0"
                         style={{
                           backgroundImage: `url(${item.file_url})`,
                           backgroundSize: 'cover',
                           backgroundPosition: 'center',
                         }}
                       />
-                      {/* Fallback text (always present) */}
-                      <span className="sr-only">{item.title || 'Media library image'}</span>
-                    </div>
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                      <span className="text-white text-xs font-medium truncate w-full">
-                        {item.title}
-                      </span>
-                    </div>
-                  </button>
-                ))}
+                      {/* Always-visible label so tiles aren't blank */}
+                      <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-sm border-t border-border px-2 py-1">
+                        <p className="text-[11px] font-medium truncate text-foreground">
+                          {item.title || 'Untitled image'}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* If images still don't render in this environment, user can still pick by name */}
+                <div className="rounded-lg border border-border">
+                  <div className="px-3 py-2 border-b border-border">
+                    <p className="text-sm font-medium">Image list (click to insert)</p>
+                    <p className="text-xs text-muted-foreground">Use this if thumbnails don’t render.</p>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {filteredMedia.slice(0, 30).map((item) => (
+                      <button
+                        key={`${item.id}-row`}
+                        onClick={() => insertImage(item.file_url)}
+                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-muted/40"
+                      >
+                        <div className="h-10 w-10 rounded-md border border-border bg-muted/30 overflow-hidden shrink-0">
+                          <img
+                            src={item.file_url}
+                            alt={item.title || 'Media library image'}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{item.title || 'Untitled image'}</p>
+                          <p className="text-xs text-muted-foreground truncate">{item.file_type}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             )}
           </ScrollArea>
