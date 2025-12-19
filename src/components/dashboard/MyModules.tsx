@@ -1,7 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LayoutGrid, ArrowRight, Briefcase, Calendar, Users, FileText, Settings } from 'lucide-react';
+import { LayoutGrid, Settings, Loader2 } from 'lucide-react';
+import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
+import { UNIFIED_MODULES } from '@/config/unified-modules';
+import * as Icons from 'lucide-react';
 
 interface MyModulesProps {
   userProfile: {
@@ -14,55 +17,58 @@ interface MyModulesProps {
   };
 }
 
-// Define assigned modules based on exec board role
-const getExecBoardModules = (role: string | null | undefined) => {
-  const modules: { id: string; title: string; icon: any; route: string }[] = [];
-  
-  if (!role) return modules;
-
-  const roleModules: Record<string, { id: string; title: string; icon: any; route: string }[]> = {
-    'President': [
-      { id: 'exec-overview', title: 'Executive Overview', icon: Briefcase, route: '/dashboard?module=exec-overview' },
-      { id: 'approvals', title: 'Approvals', icon: FileText, route: '/dashboard?module=approvals' },
-    ],
-    'Vice President': [
-      { id: 'event-planning', title: 'Event Planning', icon: Calendar, route: '/dashboard?module=event-planning' },
-    ],
-    'Secretary': [
-      { id: 'attendance', title: 'Attendance', icon: Users, route: '/dashboard?module=attendance' },
-      { id: 'meeting-minutes', title: 'Meeting Minutes', icon: FileText, route: '/dashboard?module=meeting-minutes' },
-    ],
-    'Treasurer': [
-      { id: 'budget', title: 'Budget Management', icon: Briefcase, route: '/dashboard?module=budget' },
-    ],
-    'Chaplain': [
-      { id: 'chaplain', title: 'Chaplain Dashboard', icon: Users, route: '/dashboard?module=chaplain' },
-    ],
-    'Historian': [
-      { id: 'media-library', title: 'Media Library', icon: LayoutGrid, route: '/dashboard?module=media-library' },
-    ],
-    'Social Chair': [
-      { id: 'social-events', title: 'Social Events', icon: Calendar, route: '/dashboard?module=social-events' },
-    ],
-  };
-
-  return roleModules[role] || [];
+// Helper to get icon component from string name or LucideIcon
+const getIconComponent = (iconName: string | Icons.LucideIcon) => {
+  if (typeof iconName === 'function') {
+    return iconName;
+  }
+  const IconComponent = (Icons as any)[iconName];
+  return IconComponent || Icons.LayoutGrid;
 };
 
 export const MyModules = ({ userProfile }: MyModulesProps) => {
   const navigate = useNavigate();
+  const { getAccessibleModules, loading } = useSimplifiedModuleAccess(userProfile.user_id);
   
-  // Get exec board modules if user has an exec role
-  const execModules = getExecBoardModules(userProfile.exec_board_role);
-  
-  // Admin gets admin settings module
-  const adminModules = (userProfile.is_admin || userProfile.is_super_admin) ? [
-    { id: 'admin-settings', title: 'Admin Settings', icon: Settings, route: '/dashboard?module=admin-settings' },
-  ] : [];
+  const accessibleModules = getAccessibleModules();
 
-  const allModules = [...execModules, ...adminModules];
+  // Filter to show only a reasonable number of modules in the quick-access card
+  // Prioritize by matching with UNIFIED_MODULES to get proper icons and titles
+  const modulesWithDetails = accessibleModules
+    .map(module => {
+      const unifiedModule = UNIFIED_MODULES.find(u => u.id === module.id);
+      return {
+        id: module.id,
+        title: unifiedModule?.title || module.title || module.id,
+        icon: unifiedModule?.icon || 'LayoutGrid',
+        iconColor: unifiedModule?.iconColor || 'blue',
+        route: `/dashboard?module=${module.id}`
+      };
+    })
+    .slice(0, 12); // Show max 12 modules in quick access
 
-  if (allModules.length === 0) {
+  // Admin always gets admin settings
+  const showAdminSettings = userProfile.is_admin || userProfile.is_super_admin;
+
+  if (loading) {
+    return (
+      <Card className="border border-border bg-card">
+        <CardHeader className="pb-2 px-4">
+          <div className="flex items-center gap-2">
+            <LayoutGrid className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg font-semibold">My Modules</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (modulesWithDetails.length === 0 && !showAdminSettings) {
     return null; // Don't render if no assigned modules
   }
 
@@ -83,8 +89,8 @@ export const MyModules = ({ userProfile }: MyModulesProps) => {
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {allModules.map((module) => {
-            const IconComponent = module.icon;
+          {modulesWithDetails.map((module) => {
+            const IconComponent = getIconComponent(module.icon);
             return (
               <Button
                 key={module.id}
@@ -97,6 +103,16 @@ export const MyModules = ({ userProfile }: MyModulesProps) => {
               </Button>
             );
           })}
+          {showAdminSettings && (
+            <Button
+              variant="outline"
+              className="h-auto py-3 flex flex-col items-center gap-2 hover:bg-primary/10 hover:border-primary/30"
+              onClick={() => navigate('/dashboard?module=admin-settings')}
+            >
+              <Settings className="h-5 w-5 text-primary" />
+              <span className="text-xs text-center leading-tight">Admin Settings</span>
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>
