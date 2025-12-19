@@ -115,6 +115,8 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Fetch media library images when dialog opens
   useEffect(() => {
     if (showMediaLibrary) {
+      // Reset search each time you open
+      setMediaSearch('');
       fetchMediaImages();
     }
   }, [showMediaLibrary]);
@@ -130,17 +132,26 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
         .limit(100);
 
       if (error) throw error;
-      setMediaItems(data || []);
+      const rows = (data ?? []) as MediaItem[];
+      console.log('Media library images loaded:', rows.length);
+      setMediaItems(rows);
     } catch (err) {
       console.error('Error fetching media:', err);
+      setMediaItems([]);
     } finally {
       setLoadingMedia(false);
     }
   };
 
-  const filteredMedia = mediaItems.filter(item =>
-    item.title?.toLowerCase().includes(mediaSearch.toLowerCase())
-  );
+  const filteredMedia = (() => {
+    const needle = mediaSearch.trim().toLowerCase();
+    if (!needle) return mediaItems;
+    return mediaItems.filter((item) => {
+      const title = (item.title ?? '').toLowerCase();
+      const url = (item.file_url ?? '').toLowerCase();
+      return title.includes(needle) || url.includes(needle);
+    });
+  })();
 
   // Store selection range to restore after dialog closes
   const savedSelection = useRef<Range | null>(null);
@@ -526,10 +537,17 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               <div className="flex items-center justify-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
               </div>
-            ) : filteredMedia.length === 0 ? (
+            ) : mediaItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
                 <Image className="h-12 w-12 mb-2 opacity-50" />
-                <p>No images found in media library</p>
+                <p>No images found in the media library</p>
+                <p className="text-xs text-muted-foreground mt-1">(Nothing returned from gw_media_library)</p>
+              </div>
+            ) : filteredMedia.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground">
+                <Search className="h-10 w-10 mb-2 opacity-50" />
+                <p>No matches</p>
+                <p className="text-xs text-muted-foreground mt-1">Try a different search term</p>
               </div>
             ) : (
               <div className="grid grid-cols-4 gap-3 p-1">
@@ -541,8 +559,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                   >
                     <img
                       src={item.file_url}
-                      alt={item.title}
+                      alt={item.title || 'Media library image'}
                       className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
                       <span className="text-white text-xs font-medium truncate w-full">
