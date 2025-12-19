@@ -78,13 +78,13 @@ const FONT_FAMILIES = [
 ];
 
 const FONT_SIZES = [
-  { value: '1', label: '10px' },
-  { value: '2', label: '13px' },
-  { value: '3', label: '16px' },
-  { value: '4', label: '18px' },
-  { value: '5', label: '24px' },
-  { value: '6', label: '32px' },
-  { value: '7', label: '48px' },
+  { value: '1', label: 'Tiny (10px)' },
+  { value: '2', label: 'Small (13px)' },
+  { value: '3', label: 'Normal (16px)' },
+  { value: '4', label: 'Medium (18px)' },
+  { value: '5', label: 'Large (24px)' },
+  { value: '6', label: 'X-Large (32px)' },
+  { value: '7', label: 'Huge (48px)' },
 ];
 
 const COLORS = [
@@ -427,12 +427,12 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
           {/* Font Size */}
           <Select onValueChange={(val) => exec('fontSize', val)}>
-            <SelectTrigger className="h-8 w-20 text-xs">
-              <SelectValue placeholder="Size" />
+            <SelectTrigger className="h-8 w-28 text-xs">
+              <SelectValue placeholder="Text Size" />
             </SelectTrigger>
             <SelectContent>
               {FONT_SIZES.map((size) => (
-                <SelectItem key={size.value} value={size.value}>
+                <SelectItem key={size.value} value={size.value} className="text-xs">
                   {size.label}
                 </SelectItem>
               ))}
