@@ -49,8 +49,8 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
       >
         <div className="flex items-center justify-evenly w-full h-16 px-4 bg-background">
           {/* Musical Toolkit */}
-          <div className="flex items-center justify-center w-12 h-12">
-            <MusicalToolkit className="!p-0" />
+          <div className="flex items-center justify-center w-12 h-12 text-white">
+            <MusicalToolkit className="!p-0 text-white" />
           </div>
 
           {/* Glee Cam - Highlighted Center */}
@@ -68,7 +68,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
               "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
               assistantActive 
                 ? "text-white bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg animate-pulse" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                : "text-white hover:bg-white/10"
             )}
           >
             <Mic className="h-6 w-6" />
