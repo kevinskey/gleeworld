@@ -24530,6 +24530,7 @@ export type Database = {
         Returns: Json
       }
       sync_auditioner_names_from_applications: { Args: never; Returns: number }
+      sync_exec_board_messenger_group: { Args: never; Returns: undefined }
       toggle_love_message_like: {
         Args: { message_id_param: string }
         Returns: Json
