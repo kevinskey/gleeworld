@@ -80,7 +80,7 @@ export const PWAInstallPrompt = () => {
             </h3>
             <p className="text-sm text-muted-foreground mb-3">
               {isIosSafari
-                ? "On iPhone, tap the share icon 606 then choose 'Add to Home Screen' to install GleeWorld."
+                ? "Tap the Share button (□↑) at the bottom of Safari, then select 'Add to Home Screen' to install GleeWorld."
                 : "Install our app for quick access, offline support, and a better experience!"}
             </p>
             <div className="flex gap-2">
