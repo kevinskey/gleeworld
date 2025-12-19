@@ -43,6 +43,7 @@ import AcademyCoursePage from "./pages/academy/AcademyCoursePage";
 import CourseLoungeRedirect from "./pages/CourseLoungeRedirect";
 
 import Index from "./pages/Index";
+import YouTubeChannel from "./pages/YouTubeChannel";
 import DirectoryPage from "./pages/DirectoryPage";
 import Auth from "./pages/Auth";
 import AuthPage from "./pages/AuthPage";
@@ -988,6 +989,14 @@ const App = () => {
                     </PublicRoute>
                   } 
                  />
+                <Route 
+                  path="/youtube" 
+                  element={
+                    <PublicRoute>
+                      <YouTubeChannel />
+                    </PublicRoute>
+                  } 
+                />
                 <Route 
                   path="/about" 
                   element={
