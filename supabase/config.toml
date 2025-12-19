@@ -309,3 +309,6 @@ verify_jwt = false
 
 [functions.sync-youtube-videos]
 verify_jwt = false
+
+[functions.send-branded-email]
+verify_jwt = false
