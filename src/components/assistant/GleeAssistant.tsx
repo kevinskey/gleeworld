@@ -541,12 +541,11 @@ export const GleeAssistant = () => {
           size="sm"
           variant={isWakeWordActive ? "default" : "outline"}
           className={cn(
-            "rounded-full h-8 px-3 text-xs shadow-md",
+            "rounded-full h-8 w-8 p-0 shadow-md",
             isWakeWordActive && "bg-green-600 hover:bg-green-700"
           )}
         >
-          <Mic className={cn("h-3 w-3 mr-1", isWakeWordActive && "animate-pulse")} />
-          {isWakeWordActive ? "Hey Glee On" : "Hey Glee"}
+          <Mic className={cn("h-4 w-4", isWakeWordActive && "animate-pulse")} />
         </Button>
         
         {/* Main Assistant Button */}
