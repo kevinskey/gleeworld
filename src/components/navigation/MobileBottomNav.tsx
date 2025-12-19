@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { Home, Camera, Music2, User, LayoutGrid } from 'lucide-react';
+import { Home, Camera, Music2, Mic, MicOff, LayoutGrid } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from '@/components/quick-capture/QuickCaptureCategorySelector';
 import { CategorizedQuickCapture } from '@/components/quick-capture/CategorizedQuickCapture';
 import { MusicalToolkit } from '@/components/musical-toolkit/MusicalToolkit';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface MobileBottomNavProps {
   className?: string;
@@ -15,48 +16,26 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
+  const [assistantActive, setAssistantActive] = useState(false);
 
   // Only show on mobile
   if (!isMobile) return null;
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = [
-    {
-      id: 'home',
-      label: 'Home',
-      icon: Home,
-      action: () => navigate('/dashboard'),
-      isActive: isActive('/dashboard'),
-    },
-    {
-      id: 'modules',
-      label: 'Modules',
-      icon: LayoutGrid,
-      action: () => {
-        window.dispatchEvent(new CustomEvent('open-command-palette'));
-      },
-      isActive: false,
-    },
-    {
-      id: 'camera',
-      label: 'Glee Cam',
-      icon: Camera,
-      action: () => setShowCategorySelector(true),
-      isActive: false,
-      highlight: true,
-    },
-    {
-      id: 'profile',
-      label: 'Profile',
-      icon: User,
-      action: () => navigate('/profile'),
-      isActive: isActive('/profile'),
-    },
-  ];
+  const toggleAssistant = () => {
+    const newState = !assistantActive;
+    setAssistantActive(newState);
+    toast({
+      title: newState ? "Assistant Active" : "Assistant Off",
+      description: newState ? "Listening for voice commands..." : "Voice assistant disabled",
+      duration: 2000,
+    });
+  };
 
   return (
     <>
@@ -67,43 +46,57 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
       )}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="flex items-center justify-around h-16 px-2">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={item.action}
-              className={cn(
-                "flex flex-col items-center justify-center flex-1 h-full py-1 px-1 rounded-lg transition-all",
-                item.isActive 
-                  ? "text-primary" 
-                  : "text-muted-foreground hover:text-foreground",
-                item.highlight && "relative"
-              )}
-            >
-              {item.highlight ? (
-                <div className="w-12 h-12 -mt-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white shadow-lg">
-                  <item.icon className="h-6 w-6" />
-                </div>
-              ) : (
-                <item.icon className={cn(
-                  "h-5 w-5 mb-0.5",
-                  item.isActive && "text-primary"
-                )} />
-              )}
-              <span className={cn(
-                "text-[10px] font-medium",
-                item.highlight && "mt-1"
-              )}>
-                {item.label}
-              </span>
-            </button>
-          ))}
-          
-          {/* Musical Toolkit - integrated as dropdown */}
-          <div className="flex flex-col items-center justify-center flex-1 h-full">
+        <div className="flex items-center justify-around h-14 px-4">
+          {/* Home */}
+          <button
+            onClick={() => navigate('/dashboard')}
+            className={cn(
+              "flex items-center justify-center w-12 h-12 rounded-full transition-all",
+              isActive('/dashboard') 
+                ? "text-primary bg-primary/10" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            )}
+          >
+            <Home className="h-5 w-5" />
+          </button>
+
+          {/* Modules */}
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+            className="flex items-center justify-center w-12 h-12 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+          >
+            <LayoutGrid className="h-5 w-5" />
+          </button>
+
+          {/* Glee Cam - Highlighted Center */}
+          <button
+            onClick={() => setShowCategorySelector(true)}
+            className="flex items-center justify-center w-14 h-14 -mt-4 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+          >
+            <Camera className="h-6 w-6" />
+          </button>
+
+          {/* Musical Toolkit */}
+          <div className="flex items-center justify-center w-12 h-12">
             <MusicalToolkit className="!p-0" />
-            <span className="text-[10px] font-medium text-muted-foreground -mt-1">Toolkit</span>
           </div>
+
+          {/* Voice Assistant Toggle */}
+          <button
+            onClick={toggleAssistant}
+            className={cn(
+              "flex items-center justify-center w-12 h-12 rounded-full transition-all",
+              assistantActive 
+                ? "text-white bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg animate-pulse" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            )}
+          >
+            {assistantActive ? (
+              <Mic className="h-5 w-5" />
+            ) : (
+              <MicOff className="h-5 w-5" />
+            )}
+          </button>
         </div>
       </nav>
 
