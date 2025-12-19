@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 
 const CHANNEL_URL = 'https://www.youtube.com/@SpelmanCollegeGleeClub';
-const UPLOADS_PLAYLIST_ID = 'UUZYTClx2T1of7BRZ86-8fow';
+const CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw';
+const UPLOADS_PLAYLIST_ID = `UU${CHANNEL_ID.slice(2)}`;
 
 interface YouTubeVideo {
   id: string;
@@ -28,9 +29,26 @@ export const YoutubeVideoSection: React.FC = () => {
   const fetchVideos = async () => {
     try {
       // Only fetch from database - don't auto-sync to avoid quota issues
+      const { data: channelRow, error: channelError } = await supabase
+        .from('youtube_channels')
+        .select('id')
+        .eq('channel_id', CHANNEL_ID)
+        .limit(1)
+        .maybeSingle();
+
+      if (channelError) {
+        console.warn('Error fetching YouTube channel row:', channelError);
+      }
+
+      if (!channelRow?.id) {
+        setShowPlaylist(true);
+        return;
+      }
+
       const { data: videosData, error } = await supabase
         .from('youtube_videos')
         .select('id, video_id, title, thumbnail_url, duration, view_count')
+        .eq('channel_id', channelRow.id)
         .order('published_at', { ascending: false })
         .limit(6);
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { GLEE_CLUB_CHANNEL_ID } from '@/utils/youtubeUtils';
 
 interface YouTubeVideo {
   id: string;
@@ -34,26 +35,33 @@ export const useYouTubeVideos = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch featured videos
-      const { data: videosData, error: videosError } = await supabase
+      // Fetch channel info (official Spelman College Glee Club)
+      const { data: channelData, error: channelError } = await supabase
+        .from('youtube_channels')
+        .select('*')
+        .eq('channel_id', GLEE_CLUB_CHANNEL_ID)
+        .limit(1)
+        .maybeSingle();
+
+      if (channelError) {
+        console.warn('Channel query error:', channelError);
+      }
+
+      // Fetch latest videos for this channel (if available)
+      let videosQuery = supabase
         .from('youtube_videos')
         .select('*')
         .order('published_at', { ascending: false })
         .limit(6);
 
-      if (videosError) {
-        throw videosError;
+      if (channelData?.id) {
+        videosQuery = videosQuery.eq('channel_id', channelData.id);
       }
 
-      // Fetch channel info
-      const { data: channelData, error: channelError } = await supabase
-        .from('youtube_channels')
-        .select('*')
-        .limit(1)
-        .single();
+      const { data: videosData, error: videosError } = await videosQuery;
 
-      if (channelError && channelError.code !== 'PGRST116') {
-        console.warn('No channel data found:', channelError);
+      if (videosError) {
+        throw videosError;
       }
 
       setVideos(videosData || []);

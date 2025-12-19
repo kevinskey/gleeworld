@@ -1,8 +1,10 @@
 // YouTube utility functions for Glee Lounge
 
 // Spelman College Glee Club YouTube channel
-export const GLEE_CLUB_CHANNEL_ID = 'UCSpelmanCollegeGleeClub'; // Channel handle
-export const GLEE_CLUB_CHANNEL_URL = 'https://www.youtube.com/c/spelmancollegegleeclub';
+export const GLEE_CLUB_CHANNEL_ID = 'UCK7x9GxnHNiw4H82upcxmcw';
+export const GLEE_CLUB_CHANNEL_URL = 'https://www.youtube.com/@SpelmanCollegeGleeClub';
+export const GLEE_CLUB_UPLOADS_PLAYLIST_ID = `UU${GLEE_CLUB_CHANNEL_ID.slice(2)}`;
+
 
 // Extract YouTube video ID from various URL formats
 export function extractYouTubeVideoId(input: string): string | null {
