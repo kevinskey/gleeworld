@@ -17,7 +17,7 @@ const RADIO_OPEN_CLASS = 'radio-bar-open';
 export const HeaderRadioControls = () => {
   try {
     const [isOpen, setIsOpen] = useState(false);
-    const { channels, selectedChannel, selectChannel, requestSongFromChannel, isRequesting, lastRequestMessage, isLoading: channelsLoading } = useRadioChannels();
+    const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
     const { themeName } = useTheme();
     
     // Theme-specific colors
@@ -65,14 +65,10 @@ export const HeaderRadioControls = () => {
     const handleChannelChange = async (channel: RadioChannel) => {
       selectChannel(channel);
       
-      // Request a song from the selected playlist (on-demand)
-      if (channel.azura_playlist_id) {
-        const result = await requestSongFromChannel(channel);
-        if (result.success) {
-          toast.success(result.message);
-        } else {
-          toast.error(result.message);
-        }
+      // Switch to the channel's stream URL to play that station
+      if (channel.stream_url) {
+        await switchStream(channel.stream_url);
+        toast.success(`Switched to ${channel.name}`);
       }
     };
 
@@ -192,22 +188,22 @@ export const HeaderRadioControls = () => {
                       {channels.map((channel) => {
                         const IconComponent = getChannelIcon(channel.icon);
                         const isSelected = selectedChannel?.id === channel.id;
-                        const isThisRequesting = isRequesting && isSelected;
+                        const isThisLoading = isLoading && isSelected;
                         return (
                           <button
                             key={channel.id}
                             onClick={() => handleChannelChange(channel)}
-                            disabled={isRequesting}
+                            disabled={isLoading}
                             title={channel.name}
                             className={cn(
                               "flex items-center justify-center w-6 h-6 rounded transition-all",
                               isSelected
                                 ? "bg-primary/20 text-primary"
                                 : "text-popover-foreground/50 hover:text-popover-foreground hover:bg-popover-foreground/10",
-                              isRequesting && "opacity-70 cursor-wait"
+                              isLoading && "opacity-70 cursor-wait"
                             )}
                           >
-                            {isThisRequesting ? (
+                            {isThisLoading ? (
                               <Loader2 className="h-3.5 w-3.5 animate-spin" />
                             ) : (
                               <IconComponent 
