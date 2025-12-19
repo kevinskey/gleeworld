@@ -10,10 +10,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator 
 } from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const ExecutiveBoardDropdown: React.FC = () => {
   const navigate = useNavigate();
   const { members, loading } = useExecutiveBoardMembers();
+  const isMobile = useIsMobile();
 
   if (loading) {
     return (
@@ -47,7 +49,7 @@ export const ExecutiveBoardDropdown: React.FC = () => {
           <ChevronDown className="h-4 w-4" />
         </DropdownMenuItem>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-64 bg-popover text-popover-foreground border border-border shadow-2xl z-[1200]" side="right" align="start">
+      <DropdownMenuContent className="w-64 bg-popover text-popover-foreground border border-border shadow-2xl z-[1200]" side={isMobile ? "bottom" : "right"} align={isMobile ? "center" : "start"} sideOffset={isMobile ? 16 : 8}>
         {/* Overview Dashboard */}
         <DropdownMenuItem 
           onClick={() => navigate('/admin/executive-board')}
