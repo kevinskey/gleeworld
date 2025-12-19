@@ -33,6 +33,8 @@ interface Course {
   code: string | null;
   title: string;
   is_active: boolean;
+  created_by: string | null;
+  instructor_id: string | null;
 }
 
 interface Playlist {
@@ -92,16 +94,22 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
   });
 
   useEffect(() => {
-    fetchPlaylists();
-    fetchAvailableVideos();
     fetchCourses();
-  }, [selectedCourseFilter]);
+    fetchAvailableVideos();
+  }, []);
+
+  // Refetch playlists when courses load or filter changes
+  useEffect(() => {
+    if (courses.length > 0 || selectedCourseFilter === 'all') {
+      fetchPlaylists();
+    }
+  }, [selectedCourseFilter, courses, user?.id]);
 
   const fetchCourses = async () => {
     try {
       const { data, error } = await supabase
         .from('gw_courses')
-        .select('id, course_code, code, title, is_active')
+        .select('id, course_code, code, title, is_active, created_by, instructor_id')
         .eq('is_active', true)
         .order('title');
       
@@ -111,6 +119,18 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
       console.error('Error fetching courses:', err);
     }
   };
+
+  // Filter courses to only those the current user teaches (unless admin)
+  const getInstructorCourses = () => {
+    if (!user) return courses;
+    // Check if user is the instructor (via created_by or instructor_id)
+    return courses.filter(c => 
+      c.created_by === user.id || c.instructor_id === user.id
+    );
+  };
+
+  const instructorCourses = getInstructorCourses();
+  const instructorCourseIds = instructorCourses.map(c => c.id);
 
   const fetchPlaylists = async () => {
     try {
@@ -125,7 +145,19 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
 
       const { data, error } = await query;
       if (error) throw error;
-      setPlaylists(data || []);
+      
+      // Filter playlists to only show those for courses this instructor teaches
+      // or general playlists they created
+      const filteredPlaylists = (data || []).filter(playlist => {
+        // If no course_id, only show if user created it
+        if (!playlist.course_id) {
+          return playlist.created_by === user?.id;
+        }
+        // Otherwise, show if it's for a course they teach
+        return instructorCourseIds.includes(playlist.course_id);
+      });
+      
+      setPlaylists(filteredPlaylists);
     } catch (err) {
       console.error('Error fetching playlists:', err);
     } finally {
@@ -275,8 +307,8 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                     <SelectValue placeholder="Filter by course" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Courses</SelectItem>
-                    {courses.map(course => (
+                    <SelectItem value="all">All My Courses</SelectItem>
+                    {instructorCourses.map(course => (
                       <SelectItem key={course.id} value={course.id}>
                         {course.course_code || course.code || course.title}
                       </SelectItem>
@@ -314,7 +346,7 @@ export const CoursePlaylistManager: React.FC<CoursePlaylistManagerProps> = ({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="none">General (No Course)</SelectItem>
-                          {courses.map(course => (
+                          {instructorCourses.map(course => (
                             <SelectItem key={course.id} value={course.id}>
                               {course.course_code || course.code || course.title} - {course.title}
                             </SelectItem>
