@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Save, Trash2, Eye, Image, Monitor, Tablet, Smartphone, ExternalLink, Megaphone, ShoppingCart, Link2 } from "lucide-react";
+import { Upload, Save, Trash2, Eye, Monitor, Tablet, Smartphone, Megaphone, ShoppingCart, Link2, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,6 +28,7 @@ export const AdvertisingHeroManager = () => {
   const [hero, setHero] = useState<AdvertisingHero | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [fetchingProduct, setFetchingProduct] = useState(false);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -41,6 +42,63 @@ export const AdvertisingHeroManager = () => {
     is_active: true,
     amazon_affiliate_tag: ""
   });
+
+  const isAmazonUrl = (url: string) => /amazon\.(com|co\.uk|ca|de|fr|es|it|in|jp|com\.au|com\.br|com\.mx)/i.test(url);
+
+  const fetchAmazonProduct = async () => {
+    if (!formData.link_url || !isAmazonUrl(formData.link_url)) {
+      toast({
+        title: "Invalid URL",
+        description: "Please enter a valid Amazon product URL first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setFetchingProduct(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-amazon-product', {
+        body: { amazonUrl: formData.link_url }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.product) {
+        const product = data.product;
+        
+        setFormData(prev => ({
+          ...prev,
+          title: product.title || prev.title,
+          description: product.description || prev.description,
+          image_url: product.imageUrl || prev.image_url,
+          link_url: product.affiliateUrl || prev.link_url
+        }));
+
+        if (product.requiresManualEntry) {
+          toast({
+            title: "Partial Success",
+            description: "ASIN extracted. Please enter title and description manually, then upload an image.",
+          });
+        } else {
+          toast({
+            title: "Product Loaded!",
+            description: `"${product.title}" has been loaded with affiliate link`,
+          });
+        }
+      } else {
+        throw new Error(data?.error || 'Failed to fetch product');
+      }
+    } catch (error) {
+      console.error('Error fetching Amazon product:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to fetch product data",
+        variant: "destructive"
+      });
+    } finally {
+      setFetchingProduct(false);
+    }
+  };
 
   useEffect(() => {
     fetchHero();
@@ -336,10 +394,34 @@ export const AdvertisingHeroManager = () => {
 
         {/* Amazon Affiliate Section */}
         <div className="p-4 border-2 border-orange-200 bg-orange-50/50 dark:bg-orange-950/20 dark:border-orange-800 rounded-lg space-y-4">
-          <div className="flex items-center gap-2">
-            <ShoppingCart className="h-5 w-5 text-orange-600" />
-            <Label className="font-semibold text-orange-800 dark:text-orange-400">Amazon Affiliate</Label>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShoppingCart className="h-5 w-5 text-orange-600" />
+              <Label className="font-semibold text-orange-800 dark:text-orange-400">Amazon Affiliate</Label>
+            </div>
+            {formData.link_url && isAmazonUrl(formData.link_url) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchAmazonProduct}
+                disabled={fetchingProduct}
+                className="bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-800"
+              >
+                {fetchingProduct ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Fetching...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Fetch Product Info
+                  </>
+                )}
+              </Button>
+            )}
           </div>
+          
           <div className="space-y-2">
             <Label htmlFor="amazon_tag">Your Amazon Affiliate Tag</Label>
             <Input
@@ -350,13 +432,14 @@ export const AdvertisingHeroManager = () => {
               className="max-w-xs"
             />
             <p className="text-xs text-muted-foreground">
-              When you enter an Amazon URL above, your affiliate tag will be automatically appended.
+              Enter your affiliate tag, then paste an Amazon URL above and click "Fetch Product Info" to auto-fill title, description, and image.
             </p>
           </div>
-          {formData.link_url && formData.amazon_affiliate_tag && /amazon\.(com|co\.uk|ca|de|fr|es|it|in|jp|com\.au|com\.br|com\.mx)/i.test(formData.link_url) && (
+          
+          {formData.link_url && isAmazonUrl(formData.link_url) && (
             <div className="flex items-center gap-2 p-2 bg-green-100 dark:bg-green-900/30 rounded text-sm text-green-800 dark:text-green-400">
               <Link2 className="h-4 w-4" />
-              <span>Affiliate tag will be added to this Amazon link!</span>
+              <span>Amazon link detected! {formData.amazon_affiliate_tag ? 'Affiliate tag will be added.' : 'Add your affiliate tag above.'}</span>
             </div>
           )}
         </div>
