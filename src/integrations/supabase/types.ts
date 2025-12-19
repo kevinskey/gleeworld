@@ -24529,6 +24529,7 @@ export type Database = {
         Args: { p_budget_id: string }
         Returns: Json
       }
+      sync_all_messenger_groups: { Args: never; Returns: undefined }
       sync_auditioner_names_from_applications: { Args: never; Returns: number }
       sync_exec_board_messenger_group: { Args: never; Returns: undefined }
       toggle_love_message_like: {
