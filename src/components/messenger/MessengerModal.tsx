@@ -30,7 +30,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, Smartphone, X, Send, Users, Search, Loader2, PanelRightOpen, PanelRightClose } from 'lucide-react';
+import { Mail, Smartphone, X, Send, Users, Search, Loader2 } from 'lucide-react';
 
 interface RecipientGroup {
   id: string;
@@ -362,22 +362,20 @@ export const MessengerModal: React.FC = () => {
           </DialogHeader>
 
           <div className="relative max-h-[calc(90vh-100px)] overflow-hidden">
-            {/* Toggle Groups Panel Button */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="absolute top-2 right-2 z-10"
-              onClick={() => setShowGroupsPanel(!showGroupsPanel)}
-            >
-              {showGroupsPanel ? (
-                <><PanelRightClose className="h-4 w-4 mr-2" /> Hide Groups</>
-              ) : (
-                <><PanelRightOpen className="h-4 w-4 mr-2" /> Add Groups</>
-              )}
-            </Button>
+            {/* Edge-attached Toggle Tab */}
+            {!showGroupsPanel && (
+              <button
+                onClick={() => setShowGroupsPanel(true)}
+                className="absolute top-1/2 -translate-y-1/2 right-0 z-30 bg-primary text-primary-foreground px-1.5 py-6 rounded-l-lg shadow-lg hover:bg-primary/90 transition-colors flex flex-col items-center gap-1 writing-mode-vertical"
+                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+              >
+                <Users className="h-4 w-4 rotate-90" />
+                <span className="text-xs font-medium tracking-wide">Groups</span>
+              </button>
+            )}
 
             {/* Main Composer - Full Width */}
-            <div className="p-6 pt-12 overflow-y-auto max-h-[calc(90vh-100px)]">
+            <div className="p-6 pr-10 overflow-y-auto max-h-[calc(90vh-100px)]">
               <Tabs value={composerMode} onValueChange={(v) => setComposerMode(v as 'email' | 'sms')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="email" className="gap-2">
