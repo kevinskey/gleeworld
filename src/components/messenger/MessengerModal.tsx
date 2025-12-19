@@ -30,7 +30,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Mail, Smartphone, X, Send, Users, Search, Loader2, Maximize2, Minimize2 } from 'lucide-react';
+import { Mail, Smartphone, X, Send, Users, Search, Loader2, Maximize2, Minimize2, Sparkles } from 'lucide-react';
+import { ActivityFeed } from '@/components/community/ActivityFeed';
+import { QuickActions } from '@/components/community/QuickActions';
+import { BucketsOfLoveWidget } from '@/components/shared/BucketsOfLoveWidget';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RecipientGroup {
@@ -54,7 +57,7 @@ export const MessengerModal: React.FC = () => {
   const isMobile = useIsMobile();
 
   // Composer state
-  const [composerMode, setComposerMode] = useState<'email' | 'sms'>('email');
+  const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'community'>('email');
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
   const [recipients, setRecipients] = useState<string[]>([]);
@@ -394,15 +397,19 @@ export const MessengerModal: React.FC = () => {
 
             {/* Main Composer - Full Width */}
             <div className={`overflow-y-auto ${isMobile ? 'p-3 h-[calc(100dvh-70px)]' : `p-6 pr-10 ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'max-h-[calc(90vh-100px)]'}`}`}>
-              <Tabs value={composerMode} onValueChange={(v) => setComposerMode(v as 'email' | 'sms')} className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-4">
+              <Tabs value={composerMode} onValueChange={(v) => setComposerMode(v as 'email' | 'sms' | 'community')} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
                   <TabsTrigger value="email" className="gap-2">
                     <Mail className="h-4 w-4" />
-                    Email
+                    <span className="hidden sm:inline">Email</span>
                   </TabsTrigger>
                   <TabsTrigger value="sms" className="gap-2">
                     <Smartphone className="h-4 w-4" />
-                    SMS
+                    <span className="hidden sm:inline">SMS</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="community" className="gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    <span className="hidden sm:inline">Community</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -601,6 +608,22 @@ export const MessengerModal: React.FC = () => {
                       </Button>
                     </CardContent>
                   </Card>
+                </TabsContent>
+
+                {/* Community Hub Tab */}
+                <TabsContent value="community" className="space-y-4 mt-0">
+                  <div className="space-y-4">
+                    {/* Quick Actions */}
+                    <QuickActions />
+                    
+                    {/* Activity Feed */}
+                    <div className="max-h-[400px] overflow-y-auto">
+                      <ActivityFeed />
+                    </div>
+                    
+                    {/* Buckets of Love Widget */}
+                    <BucketsOfLoveWidget />
+                  </div>
                 </TabsContent>
               </Tabs>
             </div>
