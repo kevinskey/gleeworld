@@ -38,7 +38,8 @@ import {
   Gavel,
   FileText,
   Headphones,
-  GraduationCap
+  GraduationCap,
+  Youtube
 } from "lucide-react";
 
 export const DashboardModulesSection = () => {
@@ -158,6 +159,7 @@ export const DashboardModulesSection = () => {
         { name: "Notifications", description: "View all notifications", icon: Bell, route: "/notifications" },
         { name: "Mass Communications", description: "Send group messages", icon: Bell, route: "/notifications/send" },
         { name: "PR & Media Hub", description: "Manage publicity", icon: Camera, route: "/dashboard/pr-hub", requiresPRAccess: true },
+        { name: "YouTube Management", description: "Manage video content", icon: Youtube, route: "/dashboard?module=youtube-management", requiresAdmin: true },
         { name: "Alumnae Portal", description: "Alumni engagement & mentorship", icon: GraduationCap, route: "/alumnae", requiresAdmin: true },
         { name: "Newsletter Management", description: "Create newsletters", icon: MessageSquare, route: "/newsletter" },
         { name: "Announcements", description: "Read updates", icon: MessageSquare, route: "/announcements" },
@@ -185,7 +187,6 @@ export const DashboardModulesSection = () => {
         { name: "Dashboard Settings", description: "Configure dashboard", icon: Settings, route: "/dashboard?module=dashboard-settings", requiresAdmin: true },
         { name: "System Settings", description: "Global settings", icon: Settings, route: "/settings" },
         { name: "Hero Management", description: "Manage hero content", icon: Star, route: "/dashboard?module=hero-management", requiresAdmin: true },
-        { name: "YouTube Management", description: "Manage video content", icon: Camera, route: "/dashboard?module=youtube-management", requiresAdmin: true },
         { name: "Spotlight Management", description: "Feature highlights", icon: Star, route: "/dashboard?module=spotlight-management", requiresAdmin: true },
         { name: "Permissions Panel", description: "Advanced permissions control", icon: ShieldCheck, route: "/dashboard?module=permissions-panel", requiresAdmin: true }
       ]
