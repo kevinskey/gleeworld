@@ -577,28 +577,38 @@ export const useRadioPlayer = () => {
     }
 
     const audio = audioRef.current;
-
-    // Stop current stream immediately
-    audio.pause();
+    const proxyBaseUrl = 'https://oopmlreysjzuxzylyheb.functions.supabase.co/radio-proxy';
     
-    // Set new source with cache buster
-    const hasQuery = newStreamUrl.includes('?');
-    const sep = hasQuery ? '&' : '?';
-    audio.src = `${newStreamUrl}${sep}ts=${Date.now()}`;
+    // Try direct URL first, then proxied URL
+    const directUrl = `${newStreamUrl}?ts=${Date.now()}`;
+    const proxiedUrl = `${proxyBaseUrl}?url=${encodeURIComponent(newStreamUrl)}&ts=${Date.now()}`;
+    const urlsToTry = [directUrl, proxiedUrl];
 
-    try {
-      // Start playing immediately
-      await audio.play();
-      setState(prev => ({ ...prev, isPlaying: true }));
-    } catch (error: any) {
-      console.error('Failed to switch stream:', error);
-      setState(prev => ({ ...prev, isPlaying: false }));
-      toast({
-        title: 'Channel Unavailable',
-        description: 'Could not connect to this channel. Try another.',
-        variant: 'destructive',
-      });
+    // Stop current stream
+    audio.pause();
+
+    for (const url of urlsToTry) {
+      try {
+        console.log('Trying stream URL:', url);
+        audio.src = url;
+        await audio.play();
+        console.log('Successfully switched to:', url);
+        setState(prev => ({ ...prev, isPlaying: true }));
+        return; // Success
+      } catch (error) {
+        console.log('Failed with URL:', url, error);
+        continue; // Try next URL
+      }
     }
+
+    // All URLs failed
+    console.error('All stream URLs failed');
+    setState(prev => ({ ...prev, isPlaying: false }));
+    toast({
+      title: 'Channel Unavailable',
+      description: 'This station may be offline. Try another.',
+      variant: 'destructive',
+    });
   }, [toast]);
 
   // Health check watchdog to auto-reconnect if playback stalls
