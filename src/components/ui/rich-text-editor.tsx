@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -515,9 +516,14 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
       {/* Media Library Dialog */}
       <Dialog open={showMediaLibrary} onOpenChange={setShowMediaLibrary}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[80vh] bg-background text-foreground">
           <DialogHeader>
             <DialogTitle>Select Image from Media Library</DialogTitle>
+            <DialogDescription>
+              {loadingMedia
+                ? 'Loading…'
+                : `${mediaItems.length} image(s) loaded${mediaItems[0]?.title ? ` • First: ${mediaItems[0].title}` : ''}`}
+            </DialogDescription>
           </DialogHeader>
           
           {/* Search */}
@@ -532,7 +538,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </div>
 
           {/* Image Grid */}
-          <ScrollArea className="h-[500px]">
+          <ScrollArea className="h-[55vh] pr-3">
             {loadingMedia ? (
               <div className="flex items-center justify-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
