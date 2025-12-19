@@ -117,35 +117,35 @@ const SortableActionItem = ({ action, isManaging, onActionClick, onDelete }: Sor
   const IconComponent = availableIcons[action.icon as keyof typeof availableIcons] || Zap;
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2">
+    <div ref={setNodeRef} style={style} className="flex items-center gap-1.5">
       {isManaging && (
         <button
           {...attributes}
           {...listeners}
           className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded"
         >
-          <GripVertical className="h-4 w-4 text-popover-foreground/60" />
+          <GripVertical className="h-3 w-3 text-popover-foreground/60" />
         </button>
       )}
       <button
-        className="flex-1 flex items-center px-3 py-2 text-sm rounded-none transition-colors text-popover-foreground hover:bg-white/10"
+        className="flex-1 flex items-center px-2 py-1.5 text-xs rounded-none transition-colors text-popover-foreground hover:bg-white/10"
         onClick={() => onActionClick(action.moduleId)}
       >
-        <IconComponent className="h-4 w-4 mr-3 text-popover-foreground/70" />
+        <IconComponent className="h-3 w-3 mr-1.5 text-popover-foreground/70" />
         <div className="flex-1 text-left">
           <div className="font-medium text-popover-foreground">{action.title}</div>
-          <div className="text-xs text-popover-foreground/70">{action.description}</div>
+          <div className="text-[10px] text-popover-foreground/60">{action.description}</div>
         </div>
-        <ChevronRight className="h-4 w-4 text-popover-foreground/50" />
+        <ChevronRight className="h-3 w-3 text-popover-foreground/50" />
       </button>
       {isManaging && (
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 w-8 p-0 hover:bg-red-500/20 text-red-300 hover:text-red-200"
+          className="h-6 w-6 p-0 hover:bg-red-500/20 text-red-300 hover:text-red-200"
           onClick={() => onDelete(action.moduleId)}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3 w-3" />
         </Button>
       )}
     </div>
@@ -267,20 +267,20 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
         <div className="bg-popover text-popover-foreground border border-border shadow-2xl rounded-none w-80 sm:w-96">
           
           {/* Header with management controls */}
-          <div className="px-3 py-2 border-b border-white/20 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Zap className="h-4 w-4 text-white/80" />
-              <span className="text-sm font-semibold text-popover-foreground">
+          <div className="px-2 py-1.5 border-b border-white/20 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Zap className="h-3 w-3 text-white/80" />
+              <span className="text-xs font-semibold text-popover-foreground">
                 Quick Actions
               </span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                 <DialogTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 w-7 p-0 hover:bg-white/10"
+                    className="h-5 w-5 p-0 hover:bg-white/10"
                   >
                     <Plus className="h-3 w-3 text-popover-foreground" />
                   </Button>
@@ -337,7 +337,7 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0 hover:bg-white/10"
+                className="h-5 w-5 p-0 hover:bg-white/10"
                 onClick={() => setIsManaging(!isManaging)}
                 title={isManaging ? "Done editing" : "Edit & reorder"}
               >
@@ -381,16 +381,16 @@ export const QuickActionsPanel = ({ user, onModuleSelect, isOpen, onClose, quick
               ))
             )}
             {allActions.length === 0 && (
-              <div className="text-center py-6 text-popover-foreground/70">
-                <p className="text-sm mb-1">No quick actions configured</p>
-                <p className="text-xs">Click + to add modules</p>
+              <div className="text-center py-4 text-popover-foreground/70">
+                <p className="text-xs mb-1">No quick actions configured</p>
+                <p className="text-[10px]">Click + to add modules</p>
               </div>
             )}
           </div>
 
           {/* Footer */}
-          <div className="px-3 py-2 border-t border-white/20">
-            <div className="flex items-center justify-between text-xs text-popover-foreground/60">
+          <div className="px-2 py-1.5 border-t border-white/20">
+            <div className="flex items-center justify-between text-[10px] text-popover-foreground/60">
               <span>
                 {isManaging ? 'Drag to reorder' : 'Click outside to close'}
               </span>
