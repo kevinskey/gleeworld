@@ -104,7 +104,7 @@ export const QuickCaptureCategorySelector = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md sm:max-w-lg p-0 gap-0 overflow-hidden top-[15%] translate-y-0 sm:top-[20%]">
+      <DialogContent className="max-w-md sm:max-w-lg p-0 gap-0 overflow-hidden top-[25%] translate-y-0 sm:top-[25%]">
         <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 border-b bg-muted/30">
           <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
             {selectedType && (
