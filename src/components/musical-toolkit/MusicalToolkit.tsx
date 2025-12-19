@@ -49,6 +49,10 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
     forceUnlockAudio();
   };
 
+  // Piano key layout for 1 octave (C to B)
+  const whiteKeys = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+  const blackKeyPositions = [0, 1, 3, 4, 5]; // After C, D, F, G, A
+
   return (
     <div className={className}>
       <DropdownMenu>
@@ -57,12 +61,29 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             aria-label="Musical Toolkit"
             onClick={handleDropdownClick}
             onTouchStart={handleDropdownClick}
-            className="inline-flex items-center justify-center h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 transition-colors hover:bg-white/10 rounded-full"
-            style={{ 
-              color: isHbcuTheme ? hbcuGold : isSpelmanBlue ? spelmanWhite : '#1e293b'
-            }}
+            className="relative flex items-end h-12 rounded-md overflow-hidden border border-border/50 shadow-md hover:shadow-lg transition-shadow bg-white"
           >
-            <TuningForkIcon className="h-5 w-5 md:h-6 md:w-6" />
+            {/* White keys */}
+            {whiteKeys.map((key, i) => (
+              <div
+                key={key}
+                className="relative w-4 h-12 bg-white border-r border-gray-300 last:border-r-0 hover:bg-gray-100 transition-colors"
+                style={{ 
+                  boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.1)'
+                }}
+              />
+            ))}
+            {/* Black keys */}
+            {blackKeyPositions.map((pos, i) => (
+              <div
+                key={`black-${i}`}
+                className="absolute top-0 w-2.5 h-7 bg-gray-900 rounded-b-sm z-10"
+                style={{ 
+                  left: `${(pos * 16) + 10}px`,
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.4)'
+                }}
+              />
+            ))}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
