@@ -46,6 +46,7 @@ import { TheLabModule } from '@/components/modules/TheLabModule';
 import { ComprehensiveAppointmentSystem } from '@/components/appointments/ComprehensiveAppointmentSystem';
 import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
+import { MessengerAdminModule } from '../modules/MessengerAdminModule';
 
 interface ModuleDisplayProps {
   selectedModule: string;
@@ -167,6 +168,8 @@ export const ModuleDisplay = ({ selectedModule }: ModuleDisplayProps) => {
         return <ComprehensiveAppointmentSystem />;
       case 'section-assignment':
         return <SectionAssignmentModule />;
+      case 'messenger-admin':
+        return <MessengerAdminModule />;
       default:
         return (
           <div className="p-6">
