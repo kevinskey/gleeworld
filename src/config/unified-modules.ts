@@ -42,6 +42,7 @@ import {
   TreePine,
   Armchair,
   Wand2,
+  Youtube,
 } from 'lucide-react';
 
 // Import core module components
@@ -113,6 +114,7 @@ import RehearsalTranscriptionModule from '@/components/modules/RehearsalTranscri
 import VoiceConversationAgent from '@/components/assistant/VoiceConversationAgent';
 import { TheLabModule } from '@/components/modules/TheLabModule';
 import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentModule';
+import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
@@ -744,6 +746,19 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: HeroManagerModule,
     dbFunctionName: "hero-manager"
+  },
+  {
+    id: "youtube-management",
+    name: "youtube-management",
+    title: "YouTube Management",
+    description: "Manage YouTube video content and playlists",
+    icon: Youtube,
+    iconColor: "red",
+    category: "communications",
+    isActive: true,
+    requiredRoles: ["admin", "super-admin"],
+    component: YouTubeManagement,
+    dbFunctionName: "youtube-management"
   },
   {
     id: "press-kits",
