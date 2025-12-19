@@ -40,7 +40,7 @@ export const PublicHeader = () => {
     }} />
       <header className={`bg-transparent border-b border-white/20 sticky top-0 z-50 backdrop-blur-sm ${hideForAnnotation ? 'hidden' : ''}`}>
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 lg:h-20 min-w-0 gap-4">
+          <div className="flex items-center justify-between h-16 lg:h-20 min-w-0">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 lg:gap-3 min-w-0 flex-shrink-0">
               <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-8 h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 flex-shrink-0" />
@@ -49,8 +49,8 @@ export const PublicHeader = () => {
               </div>
             </Link>
             
-            {/* Center Navigation */}
-            <div className="hidden lg:flex">
+            {/* Center Navigation - flex-1 to take remaining space and center content */}
+            <div className="hidden lg:flex flex-1 justify-center">
               <ResponsiveNavigation variant="spelman-blue" />
             </div>
 
