@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { azuraCastService } from '@/services/azuracast';
 import { cn } from '@/lib/utils';
+import { useRadioChannels } from '@/hooks/useRadioChannels';
 import { 
   Radio, Music, Play, Pause, Plus, Edit, Trash2, Users, Volume2, Clock, Settings,
   BarChart3, Search, X, GripVertical, ListMusic, Wifi, Upload, Camera, Mic, Library,
@@ -62,6 +63,9 @@ export const RadioManagement = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const { toast } = useToast();
+  
+  // Use shared radio channels hook for station selection
+  const { channels, selectedChannel, selectChannel, isLoading: channelsLoading } = useRadioChannels();
 
   // Radio stats
   const [radioStats, setRadioStats] = useState<RadioStats>({
@@ -659,7 +663,44 @@ export const RadioManagement = () => {
 
         {/* DASHBOARD */}
         <TabsContent value="dashboard" className="space-y-4 mt-4">
-          <DJTransportControl stationState={{ isOnline: radioStats.isOnline, isLive: radioStats.isLive, streamerName: radioStats.streamerName, currentlyPlaying: radioStats.currentlyPlaying, currentArtist: radioStats.currentArtist, listenerCount: radioStats.totalListeners }} onRefresh={handleSync} />
+          {/* Station Selector for DJ Transport Control */}
+          {channels.length > 1 && (
+            <div className="flex items-center gap-2 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+              <Radio className="h-4 w-4 text-primary" />
+              <span className="text-sm text-muted-foreground">Controlling:</span>
+              <Select
+                value={selectedChannel?.id || ''}
+                onValueChange={(id) => {
+                  const channel = channels.find(c => c.id === id);
+                  if (channel) selectChannel(channel);
+                }}
+              >
+                <SelectTrigger className="w-[200px] h-8 bg-slate-900 border-slate-600">
+                  <SelectValue placeholder="Select station..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {channels.map((channel) => (
+                    <SelectItem key={channel.id} value={channel.id}>
+                      {channel.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <DJTransportControl 
+            stationState={{ 
+              isOnline: radioStats.isOnline, 
+              isLive: radioStats.isLive, 
+              streamerName: radioStats.streamerName, 
+              currentlyPlaying: radioStats.currentlyPlaying, 
+              currentArtist: radioStats.currentArtist, 
+              listenerCount: radioStats.totalListeners 
+            }} 
+            stationId={selectedChannel?.id || 'glee_world_radio'}
+            stationName={selectedChannel?.name || 'Glee World Radio'}
+            onRefresh={handleSync} 
+          />
           <RadioScheduleTimeline onRefresh={handleSync} currentSongElapsed={radioStats.currentElapsed} currentSongDuration={radioStats.currentDuration} currentSongTitle={radioStats.currentlyPlaying} />
         </TabsContent>
 

@@ -62,6 +62,8 @@ interface DJTransportControlProps {
     currentArtist: string | null;
     listenerCount: number;
   };
+  stationId: string; // The station_id to control (e.g., 'glee_world_radio')
+  stationName?: string; // Display name for the station
   onRefresh: () => void;
 }
 
@@ -74,7 +76,7 @@ interface LiveInsertion {
   duration?: number;
 }
 
-export const DJTransportControl = ({ stationState, onRefresh }: DJTransportControlProps) => {
+export const DJTransportControl = ({ stationState, stationId, stationName, onRefresh }: DJTransportControlProps) => {
   // Use the shared radio player hook - same as header
   const { 
     isPlaying, 
@@ -264,9 +266,9 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
         streamer_name: djName,
         last_event_type: 'live_streamer_connected',
         last_updated: new Date().toISOString()
-      }).eq('station_id', 'glee_world_radio');
+      }).eq('station_id', stationId);
 
-      toast({ 
+      toast({
         title: "You're Live!", 
         description: `Broadcasting as ${djName}`,
       });
@@ -296,7 +298,7 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
         streamer_name: null,
         last_event_type: 'live_streamer_disconnected',
         last_updated: new Date().toISOString()
-      }).eq('station_id', 'glee_world_radio');
+      }).eq('station_id', stationId);
 
       toast({ title: "Broadcast Ended", description: "You are no longer live" });
       onRefresh();
@@ -663,7 +665,11 @@ export const DJTransportControl = ({ stationState, onRefresh }: DJTransportContr
                 )}
               </CardTitle>
               <p className="text-xs text-slate-400 mt-0.5">
-                {isLiveMode ? `Broadcasting as ${djName}` : 'Real-time broadcast control'}
+                {isLiveMode 
+                  ? `Broadcasting as ${djName}` 
+                  : stationName 
+                    ? `Controlling: ${stationName}` 
+                    : 'Real-time broadcast control'}
               </p>
             </div>
           </div>
