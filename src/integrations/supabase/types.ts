@@ -18126,6 +18126,20 @@ export type Database = {
             referencedRelation: "messenger_groups"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "messenger_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "gw_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "messenger_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_dashboard_data"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       messenger_groups: {
