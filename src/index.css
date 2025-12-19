@@ -1731,10 +1731,11 @@ button[style*="background-color: rgb(217, 119, 6)"]:hover,
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Radio bar open state - push content down using dynamic height */
-body.radio-bar-open {
-  padding-top: calc(var(--gw-header-height) + var(--gw-radio-bar-height, 0px) + env(safe-area-inset-top));
-  transition: padding-top 0.2s ease-out;
+/* Radio bar open state - push main content down using dynamic height */
+body.radio-bar-open main,
+body.radio-bar-open .dashboard-content {
+  margin-top: var(--gw-radio-bar-height, 0px);
+  transition: margin-top 0.2s ease-out;
 }
 
 /* Contract Preview - Force light styling regardless of theme */
