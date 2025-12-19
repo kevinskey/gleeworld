@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { supabase } from '@/integrations/supabase/client';
 import {
   Bold,
@@ -538,7 +538,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           </div>
 
           {/* Image Grid */}
-          <ScrollArea className="h-[55vh] pr-3">
+          <div className="h-[55vh] overflow-auto pr-3">
             {loadingMedia ? (
               <div className="flex items-center justify-center h-40">
                 <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -557,65 +557,37 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
               </div>
             ) : (
               <div className="space-y-3">
-                {/* Thumbnail Grid */}
-                <div className="grid grid-cols-4 gap-3 p-1">
-                  {filteredMedia.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => insertImage(item.file_url)}
-                      className="group relative aspect-square rounded-lg overflow-hidden border border-border hover:border-primary transition-colors bg-muted/20"
-                      title={item.title}
-                    >
-                      <div
-                        className="absolute inset-0"
-                        style={{
-                          backgroundImage: `url(${item.file_url})`,
-                          backgroundSize: 'cover',
-                          backgroundPosition: 'center',
-                        }}
-                      />
-                      {/* Always-visible label so tiles aren't blank */}
-                      <div className="absolute inset-x-0 bottom-0 bg-background/80 backdrop-blur-sm border-t border-border px-2 py-1">
-                        <p className="text-[11px] font-medium truncate text-foreground">
-                          {item.title || 'Untitled image'}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                {/* If images still don't render in this environment, user can still pick by name */}
-                <div className="rounded-lg border border-border">
+                <div className="rounded-lg border border-border bg-background">
                   <div className="px-3 py-2 border-b border-border">
-                    <p className="text-sm font-medium">Image list (click to insert)</p>
-                    <p className="text-xs text-muted-foreground">Use this if thumbnails don’t render.</p>
+                    <p className="text-sm font-medium">Select an image</p>
+                    <p className="text-xs text-muted-foreground">If thumbnails are blocked, you can still insert by clicking a filename.</p>
                   </div>
                   <div className="divide-y divide-border">
-                    {filteredMedia.slice(0, 30).map((item) => (
+                    {filteredMedia.slice(0, 100).map((item) => (
                       <button
-                        key={`${item.id}-row`}
+                        key={item.id}
                         onClick={() => insertImage(item.file_url)}
-                        className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-muted/40"
+                        className="w-full flex items-start gap-3 px-3 py-2 text-left hover:bg-muted/40"
                       >
-                        <div className="h-10 w-10 rounded-md border border-border bg-muted/30 overflow-hidden shrink-0">
-                          <img
-                            src={item.file_url}
-                            alt={item.title || 'Media library image'}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
-                          />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{item.title || 'Untitled image'}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate text-foreground">{item.title || 'Untitled image'}</p>
                           <p className="text-xs text-muted-foreground truncate">{item.file_type}</p>
                         </div>
                       </button>
                     ))}
                   </div>
                 </div>
+
+                {/* Debug (visible) */}
+                <div className="rounded-lg border border-border p-3 bg-muted/20">
+                  <p className="text-xs font-medium text-foreground">Debug</p>
+                  <pre className="text-[11px] text-muted-foreground whitespace-pre-wrap break-words mt-2">
+{JSON.stringify({ total: mediaItems.length, filtered: filteredMedia.length, sample: filteredMedia.slice(0, 3).map((m) => ({ id: m.id, title: m.title, url: m.file_url })) }, null, 2)}
+                  </pre>
+                </div>
               </div>
             )}
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </>
