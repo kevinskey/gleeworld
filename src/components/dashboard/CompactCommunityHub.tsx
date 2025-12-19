@@ -1,13 +1,12 @@
-import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSocialFeed } from '@/hooks/useSocialFeed';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sofa, ArrowRight, MessageCircle, Heart, Loader2 } from 'lucide-react';
+import { Users, ArrowRight, MessageCircle, Heart, Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-export const CompactLounge = () => {
+export const CompactCommunityHub = () => {
   const navigate = useNavigate();
   const { posts, isLoading } = useSocialFeed();
 
@@ -28,16 +27,16 @@ export const CompactLounge = () => {
       <CardHeader className="pb-2 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sofa className="h-5 w-5 text-primary" />
-            <CardTitle className="text-lg font-semibold">Glee Lounge</CardTitle>
+            <Users className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg font-semibold">Community Hub</CardTitle>
           </div>
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => navigate('/glee-lounge')}
+            onClick={() => navigate('/community-hub')}
             className="text-primary hover:text-primary/80 gap-1"
           >
-            View Lounge <ArrowRight className="h-4 w-4" />
+            View All <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
       </CardHeader>
@@ -52,10 +51,10 @@ export const CompactLounge = () => {
             <Button 
               variant="default" 
               size="sm" 
-              onClick={() => navigate('/glee-lounge')}
+              onClick={() => navigate('/community-hub')}
               className="mt-3"
             >
-              Go to Lounge
+              Go to Hub
             </Button>
           </div>
         ) : (
@@ -64,7 +63,7 @@ export const CompactLounge = () => {
               <div 
                 key={post.id} 
                 className="flex gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer"
-                onClick={() => navigate('/glee-lounge')}
+                onClick={() => navigate('/community-hub')}
               >
                 <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarImage src={post.author?.avatar_url || ''} />
