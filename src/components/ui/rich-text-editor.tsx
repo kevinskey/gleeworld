@@ -190,11 +190,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 
   const insertImage = useCallback((imageUrl: string) => {
     console.log('Inserting image:', imageUrl);
-    
-    // Restore focus and selection
-    if (editorRef.current) {
+
+    // Close the picker first so focus can reliably return
+    setShowMediaLibrary(false);
+
+    // Defer insertion to the next tick so the Dialog unmount doesn’t steal focus
+    window.setTimeout(() => {
+      if (!editorRef.current) return;
+
       editorRef.current.focus();
-      
+
       // If we have a saved selection, restore it
       if (savedSelection.current) {
         const selection = window.getSelection();
@@ -203,19 +208,21 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           selection.addRange(savedSelection.current);
         }
       }
-    }
-    
-    const imgHtml = `<img src="${imageUrl}" alt="Image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" />&nbsp;`;
-    const success = document.execCommand('insertHTML', false, imgHtml);
-    console.log('Image insert success:', success);
-    
-    // Manually update state
-    if (editorRef.current) {
+
+      const imgHtml = `<img src="${imageUrl}" alt="Email image" style="max-width: 100%; height: auto; border-radius: 8px; margin: 8px 0; display: block;" />`;
+
+      // Try inserting at cursor
+      const success = document.execCommand('insertHTML', false, `${imgHtml}&nbsp;`);
+      console.log('Image insert success:', success);
+
+      // Fallback: append to end if execCommand fails
+      if (!success) {
+        editorRef.current.innerHTML = `${editorRef.current.innerHTML}${imgHtml}<br/>`;
+      }
+
       isInternalChange.current = true;
       onChange(editorRef.current.innerHTML);
-    }
-    
-    setShowMediaLibrary(false);
+    }, 0);
   }, [onChange]);
 
   const insertVideo = useCallback(() => {
