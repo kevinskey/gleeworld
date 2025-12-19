@@ -227,7 +227,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         <LayoutDashboard className="h-4 w-4 sm:h-4 sm:w-4 md:h-5 md:w-5" />
                       </Button>
                    </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-background border border-border shadow-2xl z-[1100]" align="end">
+                  <DropdownMenuContent className="w-56 bg-popover text-popover-foreground border border-border shadow-2xl z-[1100]" align="end">
                     <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
@@ -396,7 +396,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                         </Button>
                       </DropdownMenuTrigger>
                    </EnhancedTooltip>
-                    <DropdownMenuContent className="w-48 py-1 bg-background shadow-2xl border border-border z-[1100]" align="end" forceMount>
+                    <DropdownMenuContent className="w-48 py-1 bg-popover text-popover-foreground shadow-2xl border border-border z-[1100]" align="end" forceMount>
                       <div className="flex flex-col space-y-0.5 p-1.5">
                          <p className="text-xs font-medium leading-none truncate">
                            {userProfile?.full_name || user.email}
