@@ -576,59 +576,30 @@ export const useRadioPlayer = () => {
       return;
     }
 
-    const wasPlaying = state.isPlaying;
+    const audio = audioRef.current;
 
-    // Stop current stream
-    audioRef.current.pause();
-    audioRef.current.src = '';
-    audioRef.current.load();
-
-    setState(prev => ({ ...prev, isLoading: true }));
-
-    // Wait a bit for cleanup
-    await new Promise(resolve => setTimeout(resolve, 100));
-
+    // Stop current stream immediately
+    audio.pause();
+    
     // Set new source with cache buster
     const hasQuery = newStreamUrl.includes('?');
     const sep = hasQuery ? '&' : '?';
-    const nextUrl = `${newStreamUrl}${sep}ts=${Date.now()}`;
-    audioRef.current.src = nextUrl;
-    audioRef.current.load();
-
-    const audio = audioRef.current;
+    audio.src = `${newStreamUrl}${sep}ts=${Date.now()}`;
 
     try {
-      // For live MP3 streams, 'canplay' is not always reliable.
-      // If the user was already playing, attempt to resume immediately.
-      if (wasPlaying) {
-        await audio.play();
-        setState(prev => ({ ...prev, isLoading: false }));
-        toast({
-          title: 'Channel Switched',
-          description: 'Now playing new channel',
-        });
-        return;
-      }
-
-      // If not playing yet, just finish the switch; user can hit play.
-      setState(prev => ({ ...prev, isLoading: false }));
+      // Start playing immediately
+      await audio.play();
+      setState(prev => ({ ...prev, isPlaying: true }));
     } catch (error: any) {
       console.error('Failed to switch stream:', error);
-      console.error('Switch stream audio details:', {
-        src: audio?.src,
-        networkState: audio?.networkState,
-        readyState: audio?.readyState,
-        error: audio?.error,
-      });
-
-      setState(prev => ({ ...prev, isLoading: false, isPlaying: false }));
+      setState(prev => ({ ...prev, isPlaying: false }));
       toast({
         title: 'Channel Unavailable',
         description: 'Could not connect to this channel. Try another.',
         variant: 'destructive',
       });
     }
-  }, [state.isPlaying, toast]);
+  }, [toast]);
 
   // Health check watchdog to auto-reconnect if playback stalls
   useEffect(() => {
