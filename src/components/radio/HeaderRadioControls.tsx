@@ -140,11 +140,11 @@ export const HeaderRadioControls = () => {
                   <ChevronUp className="h-4 w-4" />
                 </Button>
 
-                {/* Top Row: Channel Scroller + Volume */}
+                {/* Top Row: Channel Scroller */}
                 <div className="flex items-center gap-3 pr-8">
                   {/* Channel Selector - Scrollable Buttons */}
                   {channels.length > 0 && (
-                    <div className="flex-1 flex items-center overflow-x-auto max-w-[400px] lg:max-w-[600px] xl:max-w-[700px] scrollbar-thin scrollbar-thumb-popover-foreground/20 scrollbar-track-transparent">
+                    <div className="flex-1 flex items-center overflow-x-auto scrollbar-thin scrollbar-thumb-popover-foreground/20 scrollbar-track-transparent">
                       <div className="flex items-center gap-1.5 px-1 py-0.5">
                         {channels.map((channel) => {
                           const isSelected = selectedChannel?.id === channel.id;
@@ -172,37 +172,9 @@ export const HeaderRadioControls = () => {
                       </div>
                     </div>
                   )}
-
-                  {/* Volume Control - on same line as scroller */}
-                  <div className="items-center gap-1.5 flex ml-auto shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setVolume(isMuted ? 0.7 : 0);
-                      }}
-                      type="button"
-                    >
-                      {isMuted ? (
-                        <VolumeX className="h-3 w-3" />
-                      ) : (
-                        <Volume2 className="h-3 w-3" />
-                      )}
-                    </Button>
-                    <Slider
-                      value={[volume]}
-                      onValueChange={([value]) => setVolume(value)}
-                      max={1}
-                      step={0.05}
-                      className="w-16"
-                    />
-                  </div>
                 </div>
 
-                {/* Bottom Row: Logo, Status, Play Button, Listener Count, Now Playing */}
+                {/* Bottom Row: Logo, Status, Play Button, Listener Count, Now Playing, Volume */}
                 <div className="flex items-center gap-3 mt-2 flex-wrap lg:flex-nowrap pr-8">
                   {/* Logo & Status with Play Button */}
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -280,6 +252,34 @@ export const HeaderRadioControls = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Volume Control */}
+                  <div className="items-center gap-1.5 flex ml-auto shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 text-popover-foreground/70 hover:text-popover-foreground hover:bg-white/10"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setVolume(isMuted ? 0.7 : 0);
+                      }}
+                      type="button"
+                    >
+                      {isMuted ? (
+                        <VolumeX className="h-3 w-3" />
+                      ) : (
+                        <Volume2 className="h-3 w-3" />
+                      )}
+                    </Button>
+                    <Slider
+                      value={[volume]}
+                      onValueChange={([value]) => setVolume(value)}
+                      max={1}
+                      step={0.05}
+                      className="w-16"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
