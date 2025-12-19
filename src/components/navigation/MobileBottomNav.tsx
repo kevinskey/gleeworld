@@ -47,7 +47,7 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
         )}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <div className="flex items-center justify-center gap-8 h-16 px-8 bg-background">
+        <div className="flex items-center justify-evenly w-full h-16 px-4 bg-background">
           {/* Musical Toolkit */}
           <div className="flex items-center justify-center w-12 h-12">
             <MusicalToolkit className="!p-0" />
