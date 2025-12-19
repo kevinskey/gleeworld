@@ -170,46 +170,73 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, [exec]);
 
   const insertVideo = useCallback(() => {
-    if (videoUrl) {
-      let videoId = '';
-      let platform = '';
-      let thumbnailUrl = '';
-      
-      const youtubeMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
-      const vimeoMatch = videoUrl.match(/vimeo\.com\/(\d+)/);
-      
-      if (youtubeMatch) {
-        videoId = youtubeMatch[1];
-        platform = 'YouTube';
-        thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
-      } else if (vimeoMatch) {
-        videoId = vimeoMatch[1];
-        platform = 'Vimeo';
-        thumbnailUrl = ''; // Vimeo requires API for thumbnails
-      }
-
-      // Insert a visual placeholder that will be converted to iframe on send
-      const embedUrl = platform === 'YouTube' 
-        ? `https://www.youtube.com/embed/${videoId}`
-        : `https://player.vimeo.com/video/${videoId}`;
-      
-      exec('insertHTML', `
-        <div class="video-embed" data-embed-url="${embedUrl}" style="position: relative; max-width: 560px; margin: 16px 0; border-radius: 8px; overflow: hidden; background: #000;">
-          ${thumbnailUrl ? `<img src="${thumbnailUrl}" alt="${platform} video" style="width: 100%; display: block;" />` : `<div style="padding: 56.25% 0 0 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>`}
-          <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3);">
-            <div style="width: 68px; height: 48px; background: #ff0000; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-              <div style="width: 0; height: 0; border-left: 20px solid white; border-top: 12px solid transparent; border-bottom: 12px solid transparent; margin-left: 4px;"></div>
-            </div>
-          </div>
-          <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,0,0,0.7); color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
-            ${platform} Video
-          </div>
-        </div>
-      `);
-      setVideoUrl('');
-      setShowVideoPopover(false);
+    if (!videoUrl) {
+      console.log('No video URL provided');
+      return;
     }
-  }, [videoUrl, exec]);
+    
+    console.log('Attempting to insert video:', videoUrl);
+    
+    let videoId = '';
+    let platform = '';
+    let thumbnailUrl = '';
+    
+    const youtubeMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s?]+)/);
+    const vimeoMatch = videoUrl.match(/vimeo\.com\/(\d+)/);
+    
+    if (youtubeMatch) {
+      videoId = youtubeMatch[1];
+      platform = 'YouTube';
+      thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+      console.log('YouTube video detected:', videoId);
+    } else if (vimeoMatch) {
+      videoId = vimeoMatch[1];
+      platform = 'Vimeo';
+      console.log('Vimeo video detected:', videoId);
+    } else {
+      console.log('Unknown video format, using generic embed');
+      platform = 'Video';
+    }
+
+    const embedUrl = platform === 'YouTube' 
+      ? `https://www.youtube.com/embed/${videoId}`
+      : platform === 'Vimeo'
+      ? `https://player.vimeo.com/video/${videoId}`
+      : videoUrl;
+    
+    const htmlToInsert = `<div contenteditable="false" style="position: relative; max-width: 560px; margin: 16px 0; border-radius: 8px; overflow: hidden; background: #1a1a1a; border: 2px solid #333;">
+      ${thumbnailUrl 
+        ? `<img src="${thumbnailUrl}" alt="${platform} video" style="width: 100%; display: block; aspect-ratio: 16/9; object-fit: cover;" onerror="this.style.display='none'" />` 
+        : ''
+      }
+      <div style="aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3a5f 0%, #0056a6 100%); ${thumbnailUrl ? 'position: absolute; inset: 0;' : ''}">
+        <div style="width: 80px; height: 56px; background: rgba(255,0,0,0.9); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+          <div style="width: 0; height: 0; border-left: 24px solid white; border-top: 14px solid transparent; border-bottom: 14px solid transparent; margin-left: 6px;"></div>
+        </div>
+      </div>
+      <div style="position: absolute; bottom: 12px; left: 12px; background: rgba(0,0,0,0.8); color: white; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500;">
+        ▶ ${platform} Video
+      </div>
+    </div>&nbsp;`;
+    
+    console.log('Inserting HTML');
+    
+    // Focus the editor first
+    editorRef.current?.focus();
+    
+    // Use insertHTML command
+    const success = document.execCommand('insertHTML', false, htmlToInsert);
+    console.log('insertHTML success:', success);
+    
+    // Manually trigger input handler
+    if (editorRef.current) {
+      isInternalChange.current = true;
+      onChange(editorRef.current.innerHTML);
+    }
+    
+    setVideoUrl('');
+    setShowVideoPopover(false);
+  }, [videoUrl, onChange]);
 
   const insertLink = useCallback(() => {
     if (linkUrl) {
