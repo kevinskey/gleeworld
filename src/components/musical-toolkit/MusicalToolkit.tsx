@@ -68,7 +68,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
         <DropdownMenuContent 
           align={isMobile ? "center" : "end"} 
           className="w-52 bg-popover text-popover-foreground border border-border shadow-2xl z-[9999]" 
-          sideOffset={isMobile ? 16 : 8}
+          sideOffset={20}
         >
           <DropdownMenuLabel className="flex items-center gap-2"><Music2 className="h-4 w-4" /> Musical Toolkit</DropdownMenuLabel>
           <DropdownMenuSeparator />

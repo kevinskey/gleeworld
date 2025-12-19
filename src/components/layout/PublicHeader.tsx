@@ -80,7 +80,7 @@ export const PublicHeader = () => {
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" side="bottom" sideOffset={8} avoidCollisions collisionPadding={8} className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto">
+              <DropdownMenuContent align="end" side="bottom" sideOffset={20} avoidCollisions collisionPadding={8} className="w-[92vw] sm:w-80 max-w-sm p-3 bg-background border border-border rounded-lg shadow-xl z-[9999] max-h-[80vh] overflow-y-auto">
                 <div className="flex items-center justify-center gap-2 pb-2 border-b border-border">
                   <Music className="h-4 w-4 text-primary" />
                   <span className="font-semibold text-sm text-foreground">Menu</span>
