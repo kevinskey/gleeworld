@@ -58,6 +58,13 @@ export const UnifiedDashboard = () => {
     setActiveModuleId(moduleId ? moduleId : null);
   }, [location.search]);
 
+  // Listen for toggle-messages event from UniversalHeader
+  useEffect(() => {
+    const handleToggleMessages = () => setShowMessages(prev => !prev);
+    window.addEventListener('toggle-messages', handleToggleMessages);
+    return () => window.removeEventListener('toggle-messages', handleToggleMessages);
+  }, []);
+
   // Determine view mode based on current route - memoized to prevent infinite renders
   const viewMode = useMemo(() => {
     if (location.pathname === '/dashboard/member') return 'member';
