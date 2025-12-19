@@ -10,6 +10,7 @@ import { Upload, Save, Trash2, Eye, EyeOff, ExternalLink, Edit } from "lucide-re
 import { Slider } from "@/components/ui/slider";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AdvertisingHeroManager } from "./AdvertisingHeroManager";
 
 interface HeroSlide {
   id: string;
@@ -456,6 +457,9 @@ export const HeroManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Advertising Hero Manager - Top Priority */}
+      <AdvertisingHeroManager />
+
       {/* Scroll Settings Card */}
       <Card className="border-2 border-accent/20">
         <CardHeader className="bg-gradient-to-r from-accent/5 to-accent/10">
