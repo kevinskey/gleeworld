@@ -55,12 +55,12 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             aria-label="Musical Toolkit"
             onClick={handleDropdownClick}
             onTouchStart={handleDropdownClick}
-            className="inline-flex items-center justify-center h-7 w-7 sm:h-8 sm:w-8 md:h-9 md:w-9 transition-colors hover:bg-white/10"
+            className="inline-flex items-center justify-center h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 transition-colors hover:bg-white/10 rounded-full"
             style={{ 
               color: isHbcuTheme ? hbcuGold : isSpelmanBlue ? spelmanWhite : '#1e293b'
             }}
           >
-            <TuningForkIcon className="h-5 w-5 sm:h-5 sm:w-5 md:h-6 md:w-6" />
+            <TuningForkIcon className="h-5 w-5 md:h-6 md:w-6" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52 bg-popover text-popover-foreground border border-border shadow-2xl z-[9999]" sideOffset={8}>
