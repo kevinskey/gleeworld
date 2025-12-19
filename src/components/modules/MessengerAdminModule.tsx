@@ -38,8 +38,9 @@ import {
   X,
   Loader2,
   Mail,
-  Smartphone
+  Smartphone,
 } from 'lucide-react';
+import { SignatureSettings } from '@/components/messenger/SignatureSettings';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -526,6 +527,8 @@ export const MessengerAdminModule: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          <SignatureSettings />
         </TabsContent>
       </Tabs>
 
