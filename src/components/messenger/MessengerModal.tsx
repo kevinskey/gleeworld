@@ -64,7 +64,7 @@ export const MessengerModal: React.FC = () => {
 
   // SMS specific state
   const [smsContent, setSmsContent] = useState('');
-  const [sendToAll, setSendToAll] = useState(true);
+  const [sendToAll, setSendToAll] = useState(false);
   const [smsRecipients, setSmsRecipients] = useState<Array<{user_id: string, full_name: string, phone_number: string}>>([]);
 
   // Quick recipient groups
@@ -98,7 +98,7 @@ export const MessengerModal: React.FC = () => {
       setRecipientInput('');
       setSmsContent('');
       setSmsRecipients([]);
-      setSendToAll(true);
+      setSendToAll(false);
       setSearchQuery('');
       setSearchResults([]);
     }
