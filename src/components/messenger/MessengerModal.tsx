@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Mail, Smartphone, X, Send, Users, Search, Loader2, Maximize2, Minimize2 } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface RecipientGroup {
   id: string;
@@ -50,6 +51,7 @@ export const MessengerModal: React.FC = () => {
   const { user } = useAuth();
   const { userProfile } = useUserProfile(user);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Composer state
   const [composerMode, setComposerMode] = useState<'email' | 'sms'>('email');
@@ -348,36 +350,38 @@ export const MessengerModal: React.FC = () => {
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && requestClose()}>
         <DialogContent className={`p-0 gap-0 bg-background transition-all duration-300 ${
-          isFullscreen 
-            ? 'max-w-[100vw] w-[100vw] h-[100vh] max-h-[100vh] rounded-none' 
+          isMobile || isFullscreen 
+            ? 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0 border-0' 
             : 'max-w-4xl max-h-[90vh]'
         }`}>
-          <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-primary/10 via-background to-primary/5">
+          <DialogHeader className={`border-b bg-gradient-to-r from-primary/10 via-background to-primary/5 ${isMobile ? 'px-3 py-3' : 'px-6 py-4'}`}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                  <Mail className="h-5 w-5 text-primary-foreground" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={`rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center ${isMobile ? 'h-8 w-8' : 'h-10 w-10'}`}>
+                  <Mail className={isMobile ? 'h-4 w-4 text-primary-foreground' : 'h-5 w-5 text-primary-foreground'} />
                 </div>
                 <div>
-                  <DialogTitle className="text-xl font-bold">GleeWorld Messenger</DialogTitle>
-                  <p className="text-sm text-muted-foreground">Send branded emails and SMS to members or anyone</p>
+                  <DialogTitle className={isMobile ? 'text-base font-bold' : 'text-xl font-bold'}>GleeWorld Messenger</DialogTitle>
+                  <p className={`text-muted-foreground ${isMobile ? 'text-xs' : 'text-sm'}`}>Send branded emails and SMS to members or anyone</p>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                title={isFullscreen ? "Exit fullscreen" : "Fullscreen mode"}
-                className="mr-8"
-              >
-                {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-              </Button>
+              {!isMobile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  title={isFullscreen ? "Exit fullscreen" : "Fullscreen mode"}
+                  className="mr-8"
+                >
+                  {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+                </Button>
+              )}
             </div>
           </DialogHeader>
 
-          <div className={`relative overflow-hidden ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'max-h-[calc(90vh-100px)]'}`}>
-            {/* Edge-attached Toggle Tab */}
-            {!showGroupsPanel && (
+          <div className={`relative overflow-hidden ${isMobile || isFullscreen ? 'h-[calc(100dvh-70px)]' : 'max-h-[calc(90vh-100px)]'}`}>
+            {/* Edge-attached Toggle Tab - Hidden on mobile */}
+            {!showGroupsPanel && !isMobile && (
               <button
                 onClick={() => setShowGroupsPanel(true)}
                 className="absolute top-1/2 -translate-y-1/2 right-0 z-30 bg-primary text-primary-foreground px-1.5 py-6 rounded-l-lg shadow-lg hover:bg-primary/90 transition-colors flex flex-col items-center gap-1 writing-mode-vertical"
@@ -389,7 +393,7 @@ export const MessengerModal: React.FC = () => {
             )}
 
             {/* Main Composer - Full Width */}
-            <div className={`p-6 pr-10 overflow-y-auto ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'max-h-[calc(90vh-100px)]'}`}>
+            <div className={`overflow-y-auto ${isMobile ? 'p-3 h-[calc(100dvh-70px)]' : `p-6 pr-10 ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'max-h-[calc(90vh-100px)]'}`}`}>
               <Tabs value={composerMode} onValueChange={(v) => setComposerMode(v as 'email' | 'sms')} className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-4">
                   <TabsTrigger value="email" className="gap-2">
@@ -402,9 +406,9 @@ export const MessengerModal: React.FC = () => {
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="email" className="space-y-4 mt-0">
-                  <Card>
-                    <CardContent className="p-4 space-y-4">
+                <TabsContent value="email" className="space-y-3 sm:space-y-4 mt-0">
+                  <Card className="border-0 sm:border shadow-none sm:shadow-sm">
+                    <CardContent className="p-0 sm:p-4 space-y-3 sm:space-y-4">
                       {/* Recipients */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">To:</Label>
@@ -484,17 +488,17 @@ export const MessengerModal: React.FC = () => {
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="sms" className="space-y-4 mt-0">
-                  <Card>
-                    <CardContent className="p-4 space-y-4">
+                <TabsContent value="sms" className="space-y-3 sm:space-y-4 mt-0">
+                  <Card className="border-0 sm:border shadow-none sm:shadow-sm">
+                    <CardContent className="p-0 sm:p-4 space-y-3 sm:space-y-4">
                       {/* Send to All Toggle */}
-                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center justify-between p-2 sm:p-3 bg-muted/50 rounded-lg">
                         <div className="flex items-center gap-2">
                           <Switch checked={sendToAll} onCheckedChange={setSendToAll} />
-                          <Label className="font-medium">Send to All Members</Label>
+                          <Label className="font-medium text-sm sm:text-base">Send to All Members</Label>
                         </div>
                         {sendToAll && (
-                          <Badge variant="secondary">Broadcasts to all members with phone numbers</Badge>
+                          <Badge variant="secondary" className="hidden sm:inline-flex">Broadcasts to all</Badge>
                         )}
                       </div>
 
