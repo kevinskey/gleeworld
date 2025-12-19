@@ -124,14 +124,22 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   // Ensure the header stays fixed across all scroll containers by using a fixed header
   // and pushing page content down by the measured header height.
   const headerRef = useRef<HTMLElement | null>(null);
+  const lastHeaderHeightRef = useRef<number>(0);
+
   useEffect(() => {
     const update = () => {
       const el = headerRef.current;
       if (!el) return;
-      const height = el.getBoundingClientRect().height;
+
+      // Avoid sub-pixel jitter causing layout "bump" when interacting with header controls.
+      const height = Math.round(el.getBoundingClientRect().height);
+      if (Math.abs(height - lastHeaderHeightRef.current) < 1) return;
+
+      lastHeaderHeightRef.current = height;
       document.documentElement.style.setProperty('--gw-header-height', `${height}px`);
     };
 
+    // Initialize once; subsequent updates only happen when height meaningfully changes.
     update();
     const ro = new ResizeObserver(update);
     if (headerRef.current) ro.observe(headerRef.current);
@@ -140,7 +148,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
     return () => {
       window.removeEventListener('resize', update);
       ro.disconnect();
-      document.documentElement.style.setProperty('--gw-header-height', '0px');
     };
   }, []);
 
