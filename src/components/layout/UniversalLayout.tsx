@@ -38,7 +38,7 @@ export const UniversalLayout = ({
       )}
       <main className={`w-full ${className}`}>
         {containerized ? (
-          <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-[5px]">
+          <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-0">
             {children}
           </ResponsiveContainer>
         ) : children}
