@@ -177,12 +177,12 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
         <div className="text-center mb-4 md:mb-6">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
             <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-red-500" />
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-dancing font-bold text-foreground">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-dancing font-bold text-primary">
               All Videos
             </h2>
             <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-red-500" />
           </div>
-          <p className="text-foreground/70 text-xs sm:text-sm md:text-base font-medium">
+          <p className="text-primary/80 text-xs sm:text-sm md:text-base font-medium">
             {totalCount > 0 ? `${totalCount} videos from our channel` : 'Browse our complete video collection'}
           </p>
         </div>
@@ -192,18 +192,18 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
       <div className="flex justify-end mb-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="secondary" size="sm" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+            <Button size="sm" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md">
               <ArrowUpDown className="h-4 w-4" />
               <span className="hidden sm:inline">{currentSortLabel}</span>
               <span className="sm:hidden">Sort</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-popover border border-border shadow-lg z-50">
+          <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-popover border border-border shadow-xl z-50">
             {sortOptions.map((option) => (
               <DropdownMenuItem
                 key={option.value}
                 onClick={() => handleSortChange(option.value)}
-                className={sortBy === option.value ? 'bg-accent text-accent-foreground' : ''}
+                className={`cursor-pointer ${sortBy === option.value ? 'bg-primary/10 text-primary font-medium' : 'text-foreground'}`}
               >
                 <span className="flex items-center gap-2">
                   {option.icon}
@@ -226,7 +226,7 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
           {videos.map((video) => (
             <Card 
               key={video.id}
-              className="group cursor-pointer overflow-hidden bg-card/20 backdrop-blur-md border border-border/30 hover:border-primary/50 transition-all duration-300 hover:shadow-xl"
+              className="group cursor-pointer overflow-hidden bg-white dark:bg-card border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl shadow-md"
               onClick={() => setSelectedVideo(video)}
             >
               <div className="relative aspect-video overflow-hidden">
@@ -255,11 +255,11 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
                 )}
               </div>
               
-              <CardContent className="p-3">
-                <h3 className="font-semibold text-foreground line-clamp-2 text-sm mb-1">
+              <CardContent className="p-3 bg-white dark:bg-card">
+                <h3 className="font-semibold text-gray-900 dark:text-foreground line-clamp-2 text-sm mb-1">
                   {video.title}
                 </h3>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-muted-foreground">
                   {video.view_count > 0 && (
                     <>
                       <span>{formatViewCount(video.view_count)} views</span>
@@ -276,10 +276,10 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
         {/* Loading indicator */}
         <div ref={loadMoreRef} className="flex justify-center py-6">
           {loadingMore && (
-            <Loader2 className="h-6 w-6 animate-spin text-destructive" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           )}
           {!hasMore && videos.length > 0 && (
-            <p className="text-sm text-muted-foreground">All videos loaded</p>
+            <p className="text-sm text-primary/70 font-medium">All videos loaded</p>
           )}
         </div>
       </div>
