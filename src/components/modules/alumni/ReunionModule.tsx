@@ -50,41 +50,43 @@ export function ReunionModule({ user, isFullPage }: ModuleProps) {
         </TabsList>
 
         <TabsContent value="upcoming" className="space-y-6 mt-6">
-          <Card className="bg-gradient-to-br from-violet-500/20 via-purple-500/10 to-background border-violet-500/30">
+          <Card className="group bg-gradient-to-br from-violet-500/20 via-purple-500/10 to-background border-border/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
             <CardHeader>
-              <Badge className="w-fit mb-2 bg-violet-500">Coming Soon</Badge>
-              <CardTitle className="text-2xl">{upcomingReunion.theme}</CardTitle>
+              <Badge className="w-fit mb-2 bg-primary/10 text-primary">Coming Soon</Badge>
+              <CardTitle className="text-2xl font-semibold group-hover:text-primary transition-colors">{upcomingReunion.theme}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-wrap gap-4">
-                <Badge variant="outline" className="gap-2 py-2 px-4">
-                  <Calendar className="h-4 w-4" />
+                <Badge variant="outline" className="gap-2 py-2 px-4 bg-primary/10">
+                  <Calendar className="h-4 w-4 text-primary" />
                   {upcomingReunion.dates}
                 </Badge>
-                <Badge variant="outline" className="gap-2 py-2 px-4">
-                  <MapPin className="h-4 w-4" />
+                <Badge variant="outline" className="gap-2 py-2 px-4 bg-primary/10">
+                  <MapPin className="h-4 w-4 text-primary" />
                   {upcomingReunion.location}
                 </Badge>
-                <Badge variant="outline" className="gap-2 py-2 px-4">
-                  <Users className="h-4 w-4" />
+                <Badge variant="outline" className="gap-2 py-2 px-4 bg-primary/10">
+                  <Users className="h-4 w-4 text-primary" />
                   {upcomingReunion.registered} registered
                 </Badge>
               </div>
 
               <div className="mt-6">
-                <h4 className="font-semibold mb-3">Planned Activities</h4>
+                <h4 className="font-medium text-sm text-foreground mb-3">Planned Activities</h4>
                 <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   {upcomingReunion.activities.map((activity, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <Heart className="h-4 w-4 text-violet-500" />
-                      {activity}
+                    <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="p-1 rounded bg-primary/10">
+                        <Heart className="h-3 w-3 text-primary" />
+                      </div>
+                      <span className="leading-relaxed">{activity}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
               {upcomingReunion.registrationOpen && (
-                <Button onClick={handleRegister} size="lg" className="w-full mt-4">
+                <Button onClick={handleRegister} size="lg" className="w-full mt-4 group-hover:bg-primary/90 transition-colors">
                   Register for Reunion {upcomingReunion.year}
                 </Button>
               )}
@@ -95,22 +97,22 @@ export function ReunionModule({ user, isFullPage }: ModuleProps) {
         <TabsContent value="past" className="space-y-4 mt-6">
           <div className="grid gap-4">
             {reunionYears.map((reunion) => (
-              <Card key={reunion.year}>
+              <Card key={reunion.year} className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.02]">
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Reunion {reunion.year}</CardTitle>
-                    <Badge variant="secondary">{reunion.theme}</Badge>
+                    <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">Reunion {reunion.year}</CardTitle>
+                    <Badge variant="secondary" className="bg-primary/10 text-primary">{reunion.theme}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-6 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <Users className="h-4 w-4" />
+                      <Users className="h-4 w-4 text-primary" />
                       {reunion.attendees} attendees
                     </span>
                     <span>📸 {reunion.photos} photos</span>
                   </div>
-                  <Button variant="outline" size="sm" className="mt-4">
+                  <Button variant="outline" size="sm" className="mt-4 hover:bg-primary/10 transition-colors">
                     View Gallery
                   </Button>
                 </CardContent>

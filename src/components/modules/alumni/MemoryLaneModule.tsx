@@ -134,18 +134,18 @@ export function MemoryLaneModule({ user, isFullPage }: ModuleProps) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {memories.map((memory) => (
-          <Card key={memory.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+          <Card key={memory.id} className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.02]">
             {memory.image_url && (
               <div className="aspect-video bg-muted">
                 <img
                   src={memory.image_url}
                   alt={memory.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
             )}
             <CardContent className="p-4">
-              <h3 className="font-semibold text-lg">{memory.title}</h3>
+              <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">{memory.title}</h3>
               <p className="text-sm text-muted-foreground mt-2 line-clamp-3">
                 {memory.content}
               </p>

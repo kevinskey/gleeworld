@@ -68,10 +68,10 @@ export function AlumniTimelineModule({ user, isFullPage }: ModuleProps) {
               <button
                 key={cy.year}
                 onClick={() => setSelectedYear(selectedYear === cy.year ? null : cy.year)}
-                className={`flex flex-col items-center p-3 rounded-lg border transition-all ${
+                className={`flex flex-col items-center p-3 rounded-lg border transition-all duration-300 hover:scale-[1.02] ${
                   selectedYear === cy.year
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-card hover:bg-accent border-border'
+                    : 'bg-card/50 backdrop-blur-sm hover:bg-accent border-border/50 hover:shadow-lg'
                 }`}
               >
                 <span className="text-lg font-bold">{cy.year}</span>
@@ -90,9 +90,9 @@ export function AlumniTimelineModule({ user, isFullPage }: ModuleProps) {
               .reduce((sum, cy) => sum + cy.count, 0);
             
             return (
-              <Card key={decade} className="text-center">
+              <Card key={decade} className="group text-center hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.02]">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-xl">{decade}s</CardTitle>
+                  <CardTitle className="text-xl group-hover:text-primary transition-colors">{decade}s</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold text-primary">{decadeAlumni}</p>
@@ -104,12 +104,12 @@ export function AlumniTimelineModule({ user, isFullPage }: ModuleProps) {
         </div>
 
         {selectedYear && (
-          <Card>
+          <Card className="hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle>Class of {selectedYear}</CardTitle>
+              <CardTitle className="text-lg font-semibold">Class of {selectedYear}</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground leading-relaxed">
                 {classYears.find(cy => cy.year === selectedYear)?.count || 0} alumni from this class
               </p>
             </CardContent>
