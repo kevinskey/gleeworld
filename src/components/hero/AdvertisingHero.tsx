@@ -84,7 +84,7 @@ export const AdvertisingHero: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[3/1] bg-muted animate-pulse rounded-xl" />
+      <div className="w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[2.5/1] bg-muted animate-pulse rounded-xl" />
     );
   }
 
@@ -97,7 +97,7 @@ export const AdvertisingHero: React.FC = () => {
 
   const content = (
     <div 
-      className="relative w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[3/1] rounded-xl overflow-hidden group shadow-lg"
+      className="relative w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[2.5/1] rounded-xl overflow-hidden group shadow-lg"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
