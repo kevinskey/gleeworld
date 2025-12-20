@@ -16,8 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Vote, Clock, X, MessageCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-const POPUP_DISMISSED_KEY = 'poll_reminder_dismissed';
-const DISMISS_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const SESSION_SHOWN_KEY = 'poll_reminder_shown_this_session';
 
 export const PollReminderPopup = () => {
   const { user } = useAuth();
@@ -29,18 +28,16 @@ export const PollReminderPopup = () => {
   useEffect(() => {
     if (loading || !user || !hasUnvotedPolls) return;
 
-    // Check if popup was recently dismissed
-    const dismissedAt = localStorage.getItem(POPUP_DISMISSED_KEY);
-    if (dismissedAt) {
-      const dismissedTime = parseInt(dismissedAt, 10);
-      if (Date.now() - dismissedTime < DISMISS_DURATION) {
-        return; // Still within dismiss period
-      }
+    // Check if popup was already shown this session (after login)
+    const alreadyShown = sessionStorage.getItem(SESSION_SHOWN_KEY);
+    if (alreadyShown) {
+      return; // Already shown once this session
     }
 
     // Show popup after a short delay
     const timer = setTimeout(() => {
       setIsOpen(true);
+      sessionStorage.setItem(SESSION_SHOWN_KEY, 'true');
       // Play poll notification sound when popup opens
       playSound('poll');
     }, 1500);
@@ -49,7 +46,6 @@ export const PollReminderPopup = () => {
   }, [loading, user, hasUnvotedPolls, playSound]);
 
   const handleDismiss = () => {
-    localStorage.setItem(POPUP_DISMISSED_KEY, Date.now().toString());
     setIsOpen(false);
   };
 
