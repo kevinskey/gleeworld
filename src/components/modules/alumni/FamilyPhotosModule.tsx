@@ -82,56 +82,56 @@ export function FamilyPhotosModule({ user, isFullPage }: ModuleProps) {
     <ModuleWrapper
       title="Family & Kids"
       icon={Users}
-      headerActions={
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Share Photo
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Share a Family Photo</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={newPhoto.title}
-                  onChange={(e) => setNewPhoto({ ...newPhoto, title: e.target.value })}
-                  placeholder="My little singer..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="image">Image URL</Label>
-                <Input
-                  id="image"
-                  value={newPhoto.image_url}
-                  onChange={(e) => setNewPhoto({ ...newPhoto, image_url: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="description">Caption (optional)</Label>
-                <Textarea
-                  id="description"
-                  value={newPhoto.description}
-                  onChange={(e) => setNewPhoto({ ...newPhoto, description: e.target.value })}
-                  placeholder="Tell us about this moment..."
-                  rows={3}
-                />
-              </div>
-              <Button onClick={handleSubmitPhoto} className="w-full">
-                Share Photo
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      }
     >
       <div className="space-y-6">
+        <div className="flex justify-end">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Share Photo
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Share a Family Photo</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={newPhoto.title}
+                    onChange={(e) => setNewPhoto({ ...newPhoto, title: e.target.value })}
+                    placeholder="My little singer..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image">Image URL</Label>
+                  <Input
+                    id="image"
+                    value={newPhoto.image_url}
+                    onChange={(e) => setNewPhoto({ ...newPhoto, image_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description">Caption (optional)</Label>
+                  <Textarea
+                    id="description"
+                    value={newPhoto.description}
+                    onChange={(e) => setNewPhoto({ ...newPhoto, description: e.target.value })}
+                    placeholder="Tell us about this moment..."
+                    rows={3}
+                  />
+                </div>
+                <Button onClick={handleSubmitPhoto} className="w-full">
+                  Share Photo
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
         {/* Stats */}
         <div className="flex gap-4 flex-wrap">
           <Badge variant="outline" className="py-2 px-4 gap-2">

@@ -82,56 +82,57 @@ export function MemoryLaneModule({ user, isFullPage }: ModuleProps) {
     <ModuleWrapper
       title="Memory Lane"
       icon={Camera}
-      headerActions={
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-2">
-              <Plus className="h-4 w-4" />
-              Share Memory
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Share a Memory</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  value={newMemory.title}
-                  onChange={(e) => setNewMemory({ ...newMemory, title: e.target.value })}
-                  placeholder="My favorite Glee Club memory..."
-                />
-              </div>
-              <div>
-                <Label htmlFor="content">Your Memory</Label>
-                <Textarea
-                  id="content"
-                  value={newMemory.content}
-                  onChange={(e) => setNewMemory({ ...newMemory, content: e.target.value })}
-                  placeholder="Tell us about this special moment..."
-                  rows={5}
-                />
-              </div>
-              <div>
-                <Label htmlFor="image">Image URL (optional)</Label>
-                <Input
-                  id="image"
-                  value={newMemory.image_url}
-                  onChange={(e) => setNewMemory({ ...newMemory, image_url: e.target.value })}
-                  placeholder="https://..."
-                />
-              </div>
-              <Button onClick={handleSubmitMemory} className="w-full">
-                Submit Memory
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-      }
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Share Memory
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Share a Memory</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={newMemory.title}
+                    onChange={(e) => setNewMemory({ ...newMemory, title: e.target.value })}
+                    placeholder="My favorite Glee Club memory..."
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="content">Your Memory</Label>
+                  <Textarea
+                    id="content"
+                    value={newMemory.content}
+                    onChange={(e) => setNewMemory({ ...newMemory, content: e.target.value })}
+                    placeholder="Tell us about this special moment..."
+                    rows={5}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="image">Image URL (optional)</Label>
+                  <Input
+                    id="image"
+                    value={newMemory.image_url}
+                    onChange={(e) => setNewMemory({ ...newMemory, image_url: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+                <Button onClick={handleSubmitMemory} className="w-full">
+                  Submit Memory
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {memories.map((memory) => (
           <Card key={memory.id} className="overflow-hidden hover:shadow-lg transition-shadow">
             {memory.image_url && (
@@ -166,6 +167,7 @@ export function MemoryLaneModule({ user, isFullPage }: ModuleProps) {
             <p>No memories shared yet. Be the first to share!</p>
           </div>
         )}
+        </div>
       </div>
     </ModuleWrapper>
   );
