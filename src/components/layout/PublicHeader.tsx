@@ -38,7 +38,7 @@ export const PublicHeader = () => {
       <style dangerouslySetInnerHTML={{
       __html: overlayStyle
     }} />
-      <header className={`bg-transparent border-b border-white/20 sticky top-0 z-50 backdrop-blur-sm ${hideForAnnotation ? 'hidden' : ''}`}>
+      <header className={`bg-primary/95 border-b border-primary-foreground/20 sticky top-0 z-50 backdrop-blur-md shadow-lg ${hideForAnnotation ? 'hidden' : ''}`}>
         <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20 min-w-0">
             {/* Logo */}
