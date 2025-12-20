@@ -353,9 +353,11 @@ export const MessengerModal: React.FC = () => {
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && requestClose()}>
         <DialogContent className={`p-0 gap-0 bg-background transition-all duration-300 ${
-          isMobile || isFullscreen 
-            ? 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0 border-0 !top-0 !left-0 !translate-x-0 !translate-y-0' 
-            : 'max-w-4xl max-h-[90vh] rounded-lg'
+          isMobile 
+            ? 'max-w-[100vw] w-[100vw] h-[calc(100dvh-56px)] max-h-[calc(100dvh-56px)] rounded-none m-0 border-0 !top-14 !left-0 !translate-x-0 !translate-y-0' 
+            : isFullscreen
+              ? 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0 border-0 !top-0 !left-0 !translate-x-0 !translate-y-0'
+              : 'max-w-4xl max-h-[90vh] rounded-lg'
         }`}>
           <DialogHeader className={`border-b bg-gradient-to-r from-primary/10 via-background to-primary/5 ${isMobile ? 'px-3 py-3' : 'px-6 py-4'}`}>
             <div className="flex items-center justify-between">
@@ -382,7 +384,7 @@ export const MessengerModal: React.FC = () => {
             </div>
           </DialogHeader>
 
-          <div className={`relative overflow-hidden ${isMobile || isFullscreen ? 'h-[calc(100dvh-70px)]' : 'max-h-[calc(90vh-100px)]'}`}>
+          <div className={`relative overflow-hidden ${isMobile ? 'h-[calc(100dvh-126px)]' : isFullscreen ? 'h-[calc(100dvh-70px)]' : 'max-h-[calc(90vh-100px)]'}`}>
             {/* Edge-attached Toggle Tab - Hidden on mobile */}
             {!showGroupsPanel && !isMobile && (
               <button
@@ -396,7 +398,7 @@ export const MessengerModal: React.FC = () => {
             )}
 
             {/* Main Composer - Full Width */}
-            <div className={`overflow-y-auto ${isMobile ? 'p-3 h-[calc(100dvh-70px)]' : `p-6 pr-10 ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'max-h-[calc(90vh-100px)]'}`}`}>
+            <div className={`overflow-y-auto ${isMobile ? 'p-3 h-[calc(100dvh-126px)]' : `p-6 pr-10 ${isFullscreen ? 'h-[calc(100vh-80px)]' : 'max-h-[calc(90vh-100px)]'}`}`}>
               <Tabs value={composerMode} onValueChange={(v) => setComposerMode(v as 'email' | 'sms' | 'community')} className="w-full">
                 <TabsList className="grid w-full grid-cols-3 mb-4">
                   <TabsTrigger value="email" className="gap-2">
