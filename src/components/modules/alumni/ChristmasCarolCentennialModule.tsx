@@ -48,35 +48,35 @@ export function ChristmasCarolCentennialModule({ user, isFullPage }: ModuleProps
     >
       <div className="space-y-6">
         {/* Hero Card */}
-        <Card className="bg-gradient-to-br from-amber-500/20 via-red-500/10 to-green-500/10 border-amber-500/30 overflow-hidden relative">
+        <Card className="group bg-gradient-to-br from-amber-500/20 via-red-500/10 to-green-500/10 border-border/50 backdrop-blur-sm overflow-hidden relative hover:shadow-lg transition-all duration-300">
           <div className="absolute top-4 right-4">
-            <Badge className="bg-gradient-to-r from-amber-500 to-yellow-400 text-black">
+            <Badge className="bg-primary/10 text-primary">
               <Star className="h-3 w-3 mr-1" />
               100th Anniversary
             </Badge>
           </div>
           <CardHeader className="pb-2">
-            <CardTitle className="text-2xl">{eventDetails.theme}</CardTitle>
-            <CardDescription>December 2026 • Sisters Chapel</CardDescription>
+            <CardTitle className="text-2xl font-semibold group-hover:text-primary transition-colors">{eventDetails.theme}</CardTitle>
+            <CardDescription className="leading-relaxed">December 2026 • Sisters Chapel</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex flex-wrap gap-3">
-              <Badge variant="outline" className="gap-2 py-2 px-4">
-                <Calendar className="h-4 w-4" />
+              <Badge variant="outline" className="gap-2 py-2 px-4 bg-primary/10">
+                <Calendar className="h-4 w-4 text-primary" />
                 {eventDetails.mainEvent.date}
               </Badge>
-              <Badge variant="outline" className="gap-2 py-2 px-4">
-                <Music className="h-4 w-4" />
+              <Badge variant="outline" className="gap-2 py-2 px-4 bg-primary/10">
+                <Music className="h-4 w-4 text-primary" />
                 {eventDetails.mainEvent.time}
               </Badge>
             </div>
             <div className="flex gap-3">
-              <Button onClick={handleRSVP} className="gap-2">
+              <Button onClick={handleRSVP} className="gap-2 group-hover:bg-primary/90 transition-colors">
                 <Star className="h-4 w-4" />
                 RSVP Now
               </Button>
-              <Button onClick={handleDonate} variant="outline" className="gap-2">
-                <Gift className="h-4 w-4" />
+              <Button onClick={handleDonate} variant="outline" className="gap-2 hover:bg-primary/10 transition-colors">
+                <Gift className="h-4 w-4 text-primary" />
                 Support the Centennial
               </Button>
             </div>
@@ -84,10 +84,10 @@ export function ChristmasCarolCentennialModule({ user, isFullPage }: ModuleProps
         </Card>
 
         {/* Fundraising Progress */}
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Centennial Fund</CardTitle>
-            <CardDescription>Help us reach our goal for the 100th celebration</CardDescription>
+            <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">Centennial Fund</CardTitle>
+            <CardDescription className="leading-relaxed">Help us reach our goal for the 100th celebration</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -97,16 +97,16 @@ export function ChristmasCarolCentennialModule({ user, isFullPage }: ModuleProps
               </div>
               <Progress value={progress} className="h-3" />
             </div>
-            <Button onClick={handleDonate} className="w-full">
+            <Button onClick={handleDonate} className="w-full group-hover:bg-primary/90 transition-colors">
               Contribute to the Centennial Fund
             </Button>
           </CardContent>
         </Card>
 
         {/* Timeline */}
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-lg">100 Years of Tradition</CardTitle>
+            <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">100 Years of Tradition</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="relative border-l-2 border-primary/30 pl-6 space-y-6">
@@ -115,7 +115,7 @@ export function ChristmasCarolCentennialModule({ user, isFullPage }: ModuleProps
                   <div className="absolute -left-8 w-4 h-4 rounded-full bg-primary border-4 border-background" />
                   <div className="flex items-baseline gap-3">
                     <span className="font-bold text-lg text-primary">{milestone.year}</span>
-                    <span className="text-muted-foreground">{milestone.description}</span>
+                    <span className="text-muted-foreground leading-relaxed">{milestone.description}</span>
                   </div>
                 </div>
               ))}

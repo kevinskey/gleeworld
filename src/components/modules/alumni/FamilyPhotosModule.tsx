@@ -147,7 +147,7 @@ export function FamilyPhotosModule({ user, isFullPage }: ModuleProps) {
         {/* Photo Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {photos.map((photo) => (
-            <Card key={photo.id} className="overflow-hidden group">
+            <Card key={photo.id} className="group overflow-hidden hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.02]">
               <div className="aspect-square relative bg-muted">
                 <img
                   src={photo.image_url}
@@ -162,7 +162,7 @@ export function FamilyPhotosModule({ user, isFullPage }: ModuleProps) {
                     <AvatarFallback>{photo.author_name.slice(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm truncate">{photo.title}</h3>
+                    <h3 className="font-semibold text-sm truncate group-hover:text-primary transition-colors">{photo.title}</h3>
                     <p className="text-xs text-muted-foreground">{photo.author_name}</p>
                   </div>
                 </div>

@@ -44,22 +44,22 @@ export function AfricaTripModule({ user, isFullPage }: ModuleProps) {
     >
       <div className="space-y-6">
         {/* Trip Overview */}
-        <Card className="bg-gradient-to-br from-emerald-500/20 via-yellow-500/10 to-red-500/10 border-emerald-500/30">
+        <Card className="group bg-gradient-to-br from-emerald-500/20 via-yellow-500/10 to-red-500/10 border-border/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
           <CardHeader>
             <div className="flex items-center gap-2 mb-2">
-              <Badge className="bg-emerald-500">{tripInfo.year} Journey</Badge>
+              <Badge className="bg-primary/10 text-primary">{tripInfo.year} Journey</Badge>
               {tripInfo.destinations.map((dest) => (
-                <Badge key={dest} variant="outline">{dest}</Badge>
+                <Badge key={dest} variant="outline" className="bg-primary/5">{dest}</Badge>
               ))}
             </div>
-            <CardTitle className="text-2xl">{tripInfo.theme}</CardTitle>
-            <CardDescription className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
+            <CardTitle className="text-2xl font-semibold group-hover:text-primary transition-colors">{tripInfo.theme}</CardTitle>
+            <CardDescription className="flex items-center gap-2 leading-relaxed">
+              <Calendar className="h-4 w-4 text-primary" />
               {tripInfo.dates}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={handleInterest} size="lg" className="w-full sm:w-auto">
+            <Button onClick={handleInterest} size="lg" className="w-full sm:w-auto group-hover:bg-primary/90 transition-colors">
               <Plane className="h-4 w-4 mr-2" />
               Register Interest
             </Button>
@@ -68,10 +68,12 @@ export function AfricaTripModule({ user, isFullPage }: ModuleProps) {
 
         {/* Trip Details */}
         <div className="grid md:grid-cols-2 gap-4">
-          <Card>
+          <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.01]">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Users className="h-5 w-5 text-emerald-500" />
+              <CardTitle className="text-lg font-semibold flex items-center gap-2 group-hover:text-primary transition-colors">
+                <div className="p-1.5 rounded-lg bg-primary/10">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
                 Trip Availability
               </CardTitle>
             </CardHeader>
@@ -99,10 +101,12 @@ export function AfricaTripModule({ user, isFullPage }: ModuleProps) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.01]">
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Info className="h-5 w-5 text-emerald-500" />
+              <CardTitle className="text-lg font-semibold flex items-center gap-2 group-hover:text-primary transition-colors">
+                <div className="p-1.5 rounded-lg bg-primary/10">
+                  <Info className="h-5 w-5 text-primary" />
+                </div>
                 Trip Highlights
               </CardTitle>
             </CardHeader>
@@ -110,8 +114,10 @@ export function AfricaTripModule({ user, isFullPage }: ModuleProps) {
               <ul className="space-y-2">
                 {tripInfo.highlights.map((highlight, index) => (
                   <li key={index} className="flex items-start gap-2 text-sm">
-                    <MapPin className="h-4 w-4 mt-0.5 text-emerald-500 shrink-0" />
-                    {highlight}
+                    <div className="p-1 rounded bg-primary/10 mt-0.5">
+                      <MapPin className="h-3 w-3 text-primary" />
+                    </div>
+                    <span className="leading-relaxed">{highlight}</span>
                   </li>
                 ))}
               </ul>

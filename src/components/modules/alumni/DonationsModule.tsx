@@ -60,13 +60,15 @@ export function DonationsModule({ user, isFullPage }: ModuleProps) {
     >
       <div className="space-y-6">
         {/* Quick Donate */}
-        <Card className="bg-gradient-to-r from-rose-500/20 via-pink-500/10 to-background border-rose-500/30">
+        <Card className="group bg-gradient-to-r from-rose-500/20 via-pink-500/10 to-background border-border/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Gift className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Gift className="h-5 w-5 text-primary" />
+              </div>
               Make a Gift
             </CardTitle>
-            <CardDescription>Your donation supports current members and preserves our legacy</CardDescription>
+            <CardDescription className="leading-relaxed">Your donation supports current members and preserves our legacy</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <RadioGroup value={selectedAmount} onValueChange={setSelectedAmount} className="grid grid-cols-4 gap-2">
@@ -118,14 +120,14 @@ export function DonationsModule({ user, isFullPage }: ModuleProps) {
           <h3 className="text-lg font-semibold">Active Campaigns</h3>
           <div className="grid gap-4">
             {campaigns.map((campaign) => (
-              <Card key={campaign.id}>
+              <Card key={campaign.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.01]">
                 <CardContent className="pt-4 space-y-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="font-semibold">{campaign.name}</h4>
-                      <p className="text-sm text-muted-foreground">{campaign.description}</p>
+                      <h4 className="font-semibold group-hover:text-primary transition-colors">{campaign.name}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{campaign.description}</p>
                     </div>
-                    <Badge variant="secondary">
+                    <Badge variant="secondary" className="bg-primary/10 text-primary">
                       {Math.round((campaign.raised / campaign.goal) * 100)}%
                     </Badge>
                   </div>
@@ -143,17 +145,19 @@ export function DonationsModule({ user, isFullPage }: ModuleProps) {
         </div>
 
         {/* Donor Recognition Levels */}
-        <Card>
+        <Card className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-amber-500" />
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold group-hover:text-primary transition-colors">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Trophy className="h-5 w-5 text-primary" />
+              </div>
               Donor Recognition Levels
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {donorLevels.map((level) => (
-                <div key={level.name} className="text-center p-3 rounded-lg border bg-card">
+                <div key={level.name} className="text-center p-3 rounded-lg border bg-card/50 hover:bg-primary/5 transition-colors">
                   <span className="text-2xl">{level.icon}</span>
                   <p className="font-semibold text-sm mt-1">{level.name}</p>
                   <p className="text-xs text-muted-foreground">

@@ -69,19 +69,19 @@ export function HomecomingModule({ user, isFullPage }: ModuleProps) {
     >
       <div className="space-y-6">
         {/* Hero banner */}
-        <Card className="bg-gradient-to-r from-primary/20 via-primary/10 to-background border-primary/20">
+        <Card className="bg-gradient-to-r from-primary/20 via-primary/10 to-background border-border/50 backdrop-blur-sm hover:shadow-lg transition-all duration-300">
           <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-2">Spelman Homecoming 2025</h2>
-            <p className="text-muted-foreground mb-4">
+            <h2 className="text-2xl font-bold mb-2 group-hover:text-primary transition-colors">Spelman Homecoming 2025</h2>
+            <p className="text-muted-foreground mb-4 leading-relaxed">
               Welcome back, Glee Club sisters! Join us for a weekend of music, memories, and sisterhood.
             </p>
             <div className="flex gap-4 flex-wrap">
-              <Badge variant="outline" className="gap-2 py-2 px-4">
-                <Calendar className="h-4 w-4" />
+              <Badge variant="outline" className="gap-2 py-2 px-4 bg-primary/10">
+                <Calendar className="h-4 w-4 text-primary" />
                 October 17-20, 2025
               </Badge>
-              <Badge variant="outline" className="gap-2 py-2 px-4">
-                <MapPin className="h-4 w-4" />
+              <Badge variant="outline" className="gap-2 py-2 px-4 bg-primary/10">
+                <MapPin className="h-4 w-4 text-primary" />
                 Spelman College Campus
               </Badge>
             </div>
@@ -93,12 +93,12 @@ export function HomecomingModule({ user, isFullPage }: ModuleProps) {
           <h3 className="text-lg font-semibold">Upcoming Events</h3>
           <div className="grid gap-4">
             {events.map((event) => (
-              <Card key={event.id}>
+              <Card key={event.id} className="group hover:shadow-lg transition-all duration-300 border-border/50 bg-card/50 backdrop-blur-sm hover:scale-[1.01]">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle>{event.title}</CardTitle>
-                      <CardDescription className="mt-1">{event.description}</CardDescription>
+                      <CardTitle className="text-lg font-semibold group-hover:text-primary transition-colors">{event.title}</CardTitle>
+                      <CardDescription className="mt-1 leading-relaxed">{event.description}</CardDescription>
                     </div>
                     <Button onClick={() => handleRSVP(event.id)}>
                       <Ticket className="h-4 w-4 mr-2" />
