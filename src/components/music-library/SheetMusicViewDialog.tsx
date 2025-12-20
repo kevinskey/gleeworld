@@ -76,7 +76,7 @@ export const SheetMusicViewDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed inset-0 left-0 top-0 translate-x-0 translate-y-0 p-0 w-screen h-screen max-w-none max-h-none overflow-hidden rounded-none border-0">
+      <DialogContent className="!fixed !inset-0 !left-0 !top-0 !translate-x-0 !translate-y-0 !p-0 !w-screen !h-screen !max-w-none !max-h-none overflow-hidden !rounded-none !border-0">
         <DialogHeader className="hidden" />
         <Button
           variant="secondary"
