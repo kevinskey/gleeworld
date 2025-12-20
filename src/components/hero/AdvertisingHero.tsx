@@ -14,7 +14,7 @@ interface AdvertisingHeroData {
   link_target: string | null;
 }
 
-const ROTATION_INTERVAL = 8000; // 8 seconds
+const ROTATION_INTERVAL = 11000; // 11 seconds
 
 export const AdvertisingHero: React.FC = () => {
   const [heroes, setHeroes] = useState<AdvertisingHeroData[]>([]);
