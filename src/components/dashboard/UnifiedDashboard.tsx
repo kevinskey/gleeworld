@@ -18,6 +18,7 @@ import { ConcertTicketBanner } from '@/components/shared/ConcertTicketBanner';
 import { PollReminderPopup } from '@/components/polls/PollReminderPopup';
 import { MyModules } from './MyModules';
 import { supabase } from '@/integrations/supabase/client';
+import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
 
 // Lazy load heavy components
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({
@@ -353,6 +354,11 @@ export const UnifiedDashboard = () => {
   return (
     <div className="min-h-screen">
       <ConcertTicketBanner />
+      
+      {/* Advertising Hero - TOP OF DASHBOARD */}
+      <div className="max-w-7xl mx-auto px-4 pt-4">
+        <AdvertisingHero />
+      </div>
       
       <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
         {/* Section 1: Role-Based Module */}
