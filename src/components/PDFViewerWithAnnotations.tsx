@@ -1108,17 +1108,25 @@ const [engine, setEngine] = useState<'google' | 'react'>('google');
           {/* React PDF Viewer - Show when not in annotation mode */}
           {signedUrl && !annotationMode && (
             <div 
-              className="w-full" 
+              className="w-full overflow-auto flex justify-center" 
               ref={containerRef}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
               onClick={handleMouseClick}
+              style={{ 
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-x pan-y'
+              } as React.CSSProperties}
             >
               <canvas
                 ref={canvasRef}
-                className="w-full max-w-full block bg-white transition-opacity duration-300"
-                style={{ height: 'auto', minHeight: '100%', width: '100%', maxWidth: '100%', opacity: isLoading ? 0.6 : 1 }}
+                className="block bg-white transition-opacity duration-300"
+                style={{ 
+                  height: 'auto', 
+                  opacity: isLoading ? 0.6 : 1,
+                  maxWidth: scale <= 1.2 ? '100%' : 'none'
+                }}
               />
             </div>
           )}
