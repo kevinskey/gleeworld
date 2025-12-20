@@ -138,12 +138,12 @@ export const FeaturedVideoCarousel: React.FC<FeaturedVideoCarouselProps> = ({
         <div className="text-center mb-4 md:mb-6">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
             <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-red-500" />
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-dancing font-bold text-primary">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-dancing font-bold text-primary-foreground">
               Featured Videos
             </h2>
             <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-red-500" />
           </div>
-          <p className="text-primary/80 text-xs sm:text-sm md:text-base font-medium">
+          <p className="text-primary-foreground/70 text-xs sm:text-sm md:text-base font-medium">
             Watch our latest performances and highlights
           </p>
         </div>
@@ -184,7 +184,7 @@ export const FeaturedVideoCarousel: React.FC<FeaturedVideoCarouselProps> = ({
               className="pl-2 md:pl-4 basis-full sm:basis-1/2 lg:basis-1/3"
             >
               <Card 
-                className="group cursor-pointer overflow-hidden bg-white dark:bg-card border border-border/50 hover:border-primary/50 transition-all duration-300 hover:shadow-xl shadow-md"
+                className="group cursor-pointer overflow-hidden bg-primary/80 border border-primary-foreground/30 hover:bg-primary/70 transition-all duration-300 hover:shadow-xl"
                 onClick={() => setActiveVideo(video.video_id)}
               >
                 <div className="relative aspect-video overflow-hidden">
@@ -206,12 +206,12 @@ export const FeaturedVideoCarousel: React.FC<FeaturedVideoCarouselProps> = ({
                   </div>
                 </div>
                 
-                <CardContent className="p-3 md:p-4 bg-white dark:bg-card">
-                  <h3 className="font-semibold text-gray-900 dark:text-foreground line-clamp-2 text-sm md:text-base mb-1">
+                <CardContent className="p-3 md:p-4">
+                  <h3 className="font-semibold text-primary-foreground line-clamp-2 text-sm md:text-base mb-1">
                     {video.title_override || video.title}
                   </h3>
                   {(video.description_override || video.description) && (
-                    <p className="text-gray-600 dark:text-muted-foreground text-xs md:text-sm line-clamp-2">
+                    <p className="text-primary-foreground/70 text-xs md:text-sm line-clamp-2">
                       {video.description_override || video.description}
                     </p>
                   )}
@@ -220,8 +220,8 @@ export const FeaturedVideoCarousel: React.FC<FeaturedVideoCarouselProps> = ({
             </CarouselItem>
           ))}
         </CarouselContent>
-        <CarouselPrevious className="hidden md:flex -left-4 bg-white dark:bg-background shadow-md border-border" />
-        <CarouselNext className="hidden md:flex -right-4 bg-white dark:bg-background shadow-md border-border" />
+        <CarouselPrevious className="hidden md:flex -left-4 bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/30" />
+        <CarouselNext className="hidden md:flex -right-4 bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/30" />
       </Carousel>
     </div>
   );
