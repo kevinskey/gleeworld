@@ -26,6 +26,7 @@ import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMe
 import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { SmartCoverImage } from "@/components/ui/SmartCoverImage";
 import { FeaturedVideoCarousel } from "@/components/public/FeaturedVideoCarousel";
+import { AllVideosGrid } from "@/components/youtube/AllVideosGrid";
 
 import { PollReminderPopup } from "@/components/polls/PollReminderPopup";
 interface Event {
@@ -493,6 +494,15 @@ export const GleeWorldLanding = () => {
         <div className="w-full max-w-screen-2xl mx-auto">
           <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
             <FeaturedVideoCarousel maxVideos={6} showTitle={true} />
+          </Card>
+        </div>
+      </section>
+
+      {/* All Videos Section with Infinite Scroll */}
+      <section className="relative z-30 py-4 sm:py-8 md:py-12 lg:py-16 px-2 sm:px-4 md:px-6 lg:px-8 w-full">
+        <div className="w-full max-w-screen-2xl mx-auto">
+          <Card className="p-3 sm:p-5 md:p-6 lg:p-8 bg-card/60 backdrop-blur-sm border-2 border-border shadow-xl">
+            <AllVideosGrid maxHeight="700px" showTitle={true} />
           </Card>
         </div>
       </section>
