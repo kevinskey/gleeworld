@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createHmac } from "https://deno.land/std@0.168.0/crypto/mod.ts";
+import { crypto } from "https://deno.land/std@0.168.0/crypto/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +8,6 @@ const corsHeaders = {
 
 // Extract ASIN from Amazon URL
 function extractAsin(url: string): string | null {
-  // Match patterns like /dp/B0XXXXX, /gp/product/B0XXXXX, /product/B0XXXXX
   const patterns = [
     /\/dp\/([A-Z0-9]{10})/i,
     /\/gp\/product\/([A-Z0-9]{10})/i,
@@ -24,24 +23,52 @@ function extractAsin(url: string): string | null {
   return null;
 }
 
-// Get marketplace host from URL
-function getMarketplace(url: string): string {
-  if (url.includes('amazon.co.uk')) return 'www.amazon.co.uk';
-  if (url.includes('amazon.ca')) return 'www.amazon.ca';
-  if (url.includes('amazon.de')) return 'www.amazon.de';
-  if (url.includes('amazon.fr')) return 'www.amazon.fr';
-  if (url.includes('amazon.es')) return 'www.amazon.es';
-  if (url.includes('amazon.it')) return 'www.amazon.it';
-  if (url.includes('amazon.in')) return 'www.amazon.in';
-  if (url.includes('amazon.co.jp')) return 'www.amazon.co.jp';
-  if (url.includes('amazon.com.au')) return 'www.amazon.com.au';
-  if (url.includes('amazon.com.br')) return 'www.amazon.com.br';
-  if (url.includes('amazon.com.mx')) return 'www.amazon.com.mx';
-  return 'www.amazon.com';
+// Get marketplace info
+function getMarketplaceInfo(url: string): { host: string; region: string; marketplace: string } {
+  if (url.includes('amazon.co.uk')) return { host: 'webservices.amazon.co.uk', region: 'eu-west-1', marketplace: 'www.amazon.co.uk' };
+  if (url.includes('amazon.de')) return { host: 'webservices.amazon.de', region: 'eu-west-1', marketplace: 'www.amazon.de' };
+  if (url.includes('amazon.fr')) return { host: 'webservices.amazon.fr', region: 'eu-west-1', marketplace: 'www.amazon.fr' };
+  if (url.includes('amazon.es')) return { host: 'webservices.amazon.es', region: 'eu-west-1', marketplace: 'www.amazon.es' };
+  if (url.includes('amazon.it')) return { host: 'webservices.amazon.it', region: 'eu-west-1', marketplace: 'www.amazon.it' };
+  if (url.includes('amazon.ca')) return { host: 'webservices.amazon.ca', region: 'us-east-1', marketplace: 'www.amazon.ca' };
+  if (url.includes('amazon.com.mx')) return { host: 'webservices.amazon.com.mx', region: 'us-east-1', marketplace: 'www.amazon.com.mx' };
+  if (url.includes('amazon.com.br')) return { host: 'webservices.amazon.com.br', region: 'us-east-1', marketplace: 'www.amazon.com.br' };
+  if (url.includes('amazon.co.jp')) return { host: 'webservices.amazon.co.jp', region: 'us-west-2', marketplace: 'www.amazon.co.jp' };
+  if (url.includes('amazon.com.au')) return { host: 'webservices.amazon.com.au', region: 'us-west-2', marketplace: 'www.amazon.com.au' };
+  if (url.includes('amazon.in')) return { host: 'webservices.amazon.in', region: 'eu-west-1', marketplace: 'www.amazon.in' };
+  return { host: 'webservices.amazon.com', region: 'us-east-1', marketplace: 'www.amazon.com' };
+}
+
+// Convert ArrayBuffer to hex string
+function toHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// SHA-256 hash
+async function sha256(message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return toHex(hashBuffer);
+}
+
+// HMAC-SHA256
+async function hmacSha256(key: ArrayBuffer | Uint8Array, message: string): Promise<ArrayBuffer> {
+  const encoder = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    key,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  return await crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(message));
 }
 
 // Create AWS Signature v4
-function createAwsSignature(
+async function createSignedHeaders(
   method: string,
   host: string,
   path: string,
@@ -49,96 +76,59 @@ function createAwsSignature(
   accessKey: string,
   secretKey: string,
   region: string
-): { headers: Record<string, string>; signedPayload: string } {
+): Promise<Record<string, string>> {
+  const encoder = new TextEncoder();
   const now = new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
   const dateStamp = amzDate.substring(0, 8);
   const service = 'ProductAdvertisingAPI';
+  const target = 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.GetItems';
 
-  const encoder = new TextEncoder();
+  // Hash the payload
+  const payloadHash = await sha256(payload);
 
   // Create canonical request
-  const canonicalUri = path;
-  const canonicalQueryString = '';
-  const payloadHash = createHash(payload);
-  
   const canonicalHeaders = 
     `content-encoding:amz-1.0\n` +
     `content-type:application/json; charset=utf-8\n` +
     `host:${host}\n` +
     `x-amz-date:${amzDate}\n` +
-    `x-amz-target:com.amazon.paapi5.v1.ProductAdvertisingAPIv1.GetItems\n`;
+    `x-amz-target:${target}\n`;
   
   const signedHeaders = 'content-encoding;content-type;host;x-amz-date;x-amz-target';
   
-  const canonicalRequest = 
-    `${method}\n${canonicalUri}\n${canonicalQueryString}\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
+  const canonicalRequest = `${method}\n${path}\n\n${canonicalHeaders}\n${signedHeaders}\n${payloadHash}`;
 
   // Create string to sign
   const algorithm = 'AWS4-HMAC-SHA256';
   const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
-  const stringToSign = 
-    `${algorithm}\n${amzDate}\n${credentialScope}\n${createHash(canonicalRequest)}`;
+  const canonicalRequestHash = await sha256(canonicalRequest);
+  const stringToSign = `${algorithm}\n${amzDate}\n${credentialScope}\n${canonicalRequestHash}`;
 
   // Create signing key
-  const kDate = hmacSha256(encoder.encode(`AWS4${secretKey}`), dateStamp);
-  const kRegion = hmacSha256(kDate, region);
-  const kService = hmacSha256(kRegion, service);
-  const kSigning = hmacSha256(kService, 'aws4_request');
+  const kDate = await hmacSha256(encoder.encode(`AWS4${secretKey}`), dateStamp);
+  const kRegion = await hmacSha256(kDate, region);
+  const kService = await hmacSha256(kRegion, service);
+  const kSigning = await hmacSha256(kService, 'aws4_request');
   
   // Create signature
-  const signature = hmacSha256Hex(kSigning, stringToSign);
+  const signatureBuffer = await hmacSha256(kSigning, stringToSign);
+  const signature = toHex(signatureBuffer);
 
   const authorizationHeader = 
     `${algorithm} Credential=${accessKey}/${credentialScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
 
   return {
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Content-Encoding': 'amz-1.0',
-      'Host': host,
-      'X-Amz-Date': amzDate,
-      'X-Amz-Target': 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.GetItems',
-      'Authorization': authorizationHeader,
-    },
-    signedPayload: payload
+    'Content-Type': 'application/json; charset=utf-8',
+    'Content-Encoding': 'amz-1.0',
+    'Host': host,
+    'X-Amz-Date': amzDate,
+    'X-Amz-Target': target,
+    'Authorization': authorizationHeader,
   };
 }
 
-function createHash(message: string): string {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hashBuffer = new Uint8Array(32);
-  
-  // Simple SHA-256 implementation for Deno
-  const crypto = globalThis.crypto;
-  // For now, use a simpler approach
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    hash = ((hash << 5) - hash) + data[i];
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16).padStart(64, '0');
-}
-
-function hmacSha256(key: Uint8Array, message: string): Uint8Array {
-  // Simplified HMAC-SHA256 - in production use proper crypto
-  const encoder = new TextEncoder();
-  const msgBytes = encoder.encode(message);
-  const result = new Uint8Array(32);
-  for (let i = 0; i < 32; i++) {
-    result[i] = (key[i % key.length] ^ msgBytes[i % msgBytes.length]) & 0xff;
-  }
-  return result;
-}
-
-function hmacSha256Hex(key: Uint8Array, message: string): string {
-  const result = hmacSha256(key, message);
-  return Array.from(result).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -158,7 +148,7 @@ serve(async (req) => {
     const asin = extractAsin(amazonUrl);
     if (!asin) {
       return new Response(
-        JSON.stringify({ error: 'Could not extract ASIN from URL. Please provide a valid Amazon product URL.' }),
+        JSON.stringify({ error: 'Could not extract ASIN from URL' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -177,15 +167,8 @@ serve(async (req) => {
       );
     }
 
-    const marketplace = getMarketplace(amazonUrl);
-    const host = `webservices.${marketplace.replace('www.', '')}`;
-    const region = marketplace.includes('amazon.com') && !marketplace.includes('.co') ? 'us-east-1' : 
-                   marketplace.includes('.co.uk') ? 'eu-west-1' :
-                   marketplace.includes('.de') || marketplace.includes('.fr') || 
-                   marketplace.includes('.es') || marketplace.includes('.it') ? 'eu-west-1' :
-                   marketplace.includes('.co.jp') ? 'us-west-2' :
-                   marketplace.includes('.in') ? 'eu-west-1' :
-                   'us-east-1';
+    const { host, region, marketplace } = getMarketplaceInfo(amazonUrl);
+    const path = '/paapi5/getitems';
 
     const payload = JSON.stringify({
       ItemIds: [asin],
@@ -200,27 +183,34 @@ serve(async (req) => {
       ]
     });
 
-    // Call Amazon PA-API
-    const paApiUrl = `https://${host}/paapi5/getitems`;
-    
+    console.log('Creating signed request for PA-API');
+
+    const signedHeaders = await createSignedHeaders(
+      'POST',
+      host,
+      path,
+      payload,
+      accessKey,
+      secretKey,
+      region
+    );
+
+    const paApiUrl = `https://${host}${path}`;
     console.log('Calling PA-API at:', paApiUrl);
 
     const response = await fetch(paApiUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Content-Encoding': 'amz-1.0',
-        'Host': host,
-        'X-Amz-Target': 'com.amazon.paapi5.v1.ProductAdvertisingAPIv1.GetItems',
-      },
+      headers: signedHeaders,
       body: payload
     });
 
-    // If PA-API fails, try scraping basic info (fallback)
+    console.log('PA-API response status:', response.status);
+
     if (!response.ok) {
-      console.log('PA-API failed, using fallback method');
+      const errorText = await response.text();
+      console.error('PA-API error:', response.status, errorText);
       
-      // Return basic info with the ASIN and affiliate link
+      // Return fallback with affiliate link
       const affiliateUrl = `https://${marketplace}/dp/${asin}?tag=${partnerTag}`;
       
       return new Response(
@@ -228,11 +218,12 @@ serve(async (req) => {
           success: true,
           product: {
             asin,
-            title: `Amazon Product (${asin})`,
-            description: 'Product details could not be fetched. Please enter manually.',
+            title: '',
+            description: '',
             imageUrl: null,
             affiliateUrl,
-            requiresManualEntry: true
+            requiresManualEntry: true,
+            error: `PA-API returned ${response.status}`
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -240,7 +231,7 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('PA-API response:', JSON.stringify(data, null, 2));
+    console.log('PA-API response received');
 
     const item = data?.ItemsResult?.Items?.[0];
     
@@ -250,8 +241,8 @@ serve(async (req) => {
           success: true,
           product: {
             asin,
-            title: `Amazon Product (${asin})`,
-            description: 'Product not found in API.',
+            title: '',
+            description: '',
             imageUrl: null,
             affiliateUrl: `https://${marketplace}/dp/${asin}?tag=${partnerTag}`,
             requiresManualEntry: true
@@ -263,15 +254,15 @@ serve(async (req) => {
 
     const product = {
       asin,
-      title: item.ItemInfo?.Title?.DisplayValue || `Amazon Product (${asin})`,
-      description: item.ItemInfo?.Features?.DisplayValues?.join(' ') || '',
+      title: item.ItemInfo?.Title?.DisplayValue || '',
+      description: item.ItemInfo?.Features?.DisplayValues?.slice(0, 3).join(' ') || '',
       imageUrl: item.Images?.Primary?.Large?.URL || item.Images?.Primary?.Medium?.URL || null,
       affiliateUrl: item.DetailPageURL || `https://${marketplace}/dp/${asin}?tag=${partnerTag}`,
       price: item.Offers?.Listings?.[0]?.Price?.DisplayAmount || null,
       requiresManualEntry: false
     };
 
-    console.log('Returning product:', product);
+    console.log('Product fetched successfully:', product.title);
 
     return new Response(
       JSON.stringify({ success: true, product }),
