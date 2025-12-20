@@ -117,6 +117,32 @@ import { SectionAssignmentModule } from '@/components/admin/SectionAssignmentMod
 import { YouTubeManagement } from '@/components/admin/YouTubeManagement';
 import { MessengerAdminModule } from '@/components/modules/MessengerAdminModule';
 
+// Import alumni-specific modules
+import {
+  AlumniTimelineModule,
+  MemoryLaneModule,
+  HomecomingModule,
+  ReunionModule,
+  ChristmasCarolCentennialModule,
+  SpringTourModule,
+  AfricaTripModule,
+  DonationsModule,
+  GraduatesConnectionModule,
+  FamilyPhotosModule,
+  NetworkingMarketplaceModule,
+  AlumnaCalendarModule
+} from '@/components/modules/alumni';
+
+// Additional icons for alumni modules
+import { 
+  Home, 
+  PartyPopper, 
+  Sparkles, 
+  Plane, 
+  Globe, 
+  Briefcase 
+} from 'lucide-react';
+
 // Comprehensive modules list for super admin access
 export const UNIFIED_MODULES: UnifiedModule[] = [
   // Core Member modules
@@ -1152,6 +1178,165 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     component: TheLabModule,
     dbFunctionName: "the-lab",
     requiredRoles: ["admin", "super-admin"]
+  },
+
+  // ==================== ALUMNI MODULES ====================
+  {
+    id: "alumni-timeline",
+    name: "alumni-timeline",
+    title: "Alumni Timeline",
+    description: "Track alumni by graduation year",
+    icon: Clock,
+    iconColor: "amber",
+    category: "alumnae",
+    isActive: true,
+    component: AlumniTimelineModule,
+    dbFunctionName: "alumni-timeline",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "memory-lane",
+    name: "memory-lane",
+    title: "Memory Lane",
+    description: "Share and explore cherished memories",
+    icon: Camera,
+    iconColor: "pink",
+    category: "alumnae",
+    isActive: true,
+    component: MemoryLaneModule,
+    dbFunctionName: "memory-lane",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "homecoming",
+    name: "homecoming",
+    title: "Homecoming",
+    description: "Annual homecoming events and celebrations",
+    icon: Home,
+    iconColor: "orange",
+    category: "alumnae",
+    isActive: true,
+    component: HomecomingModule,
+    dbFunctionName: "homecoming",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "reunion",
+    name: "reunion",
+    title: "Reunion",
+    description: "Every-four-years gatherings and celebrations",
+    icon: PartyPopper,
+    iconColor: "violet",
+    category: "alumnae",
+    isActive: true,
+    component: ReunionModule,
+    dbFunctionName: "reunion",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "christmas-carol-centennial",
+    name: "christmas-carol-centennial",
+    title: "Christmas Carol Centennial",
+    description: "Celebrating 100 years of the Christmas Carol Concert (2026)",
+    icon: Sparkles,
+    iconColor: "gold",
+    category: "alumnae",
+    isActive: true,
+    isNew: true,
+    component: ChristmasCarolCentennialModule,
+    dbFunctionName: "christmas-carol-centennial",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "spring-tour",
+    name: "spring-tour",
+    title: "Spring Tour",
+    description: "March tour events and alumni participation",
+    icon: Plane,
+    iconColor: "cyan",
+    category: "alumnae",
+    isActive: true,
+    component: SpringTourModule,
+    dbFunctionName: "spring-tour",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "africa-trip",
+    name: "africa-trip",
+    title: "Africa Trip",
+    description: "Post-Christmas Carol tour to Africa",
+    icon: Globe,
+    iconColor: "emerald",
+    category: "alumnae",
+    isActive: true,
+    component: AfricaTripModule,
+    dbFunctionName: "africa-trip",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "donations",
+    name: "donations",
+    title: "Give Back",
+    description: "Support the Glee Club with your contribution",
+    icon: Heart,
+    iconColor: "rose",
+    category: "alumnae",
+    isActive: true,
+    component: DonationsModule,
+    dbFunctionName: "donations",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "graduates-connection",
+    name: "graduates-connection",
+    title: "Connect with Graduates",
+    description: "Mentor and support current seniors",
+    icon: GraduationCap,
+    iconColor: "indigo",
+    category: "alumnae",
+    isActive: true,
+    component: GraduatesConnectionModule,
+    dbFunctionName: "graduates-connection",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "family-photos",
+    name: "family-photos",
+    title: "Family & Kids",
+    description: "Share photos of your Glee Club families",
+    icon: Users,
+    iconColor: "pink",
+    category: "alumnae",
+    isActive: true,
+    component: FamilyPhotosModule,
+    dbFunctionName: "family-photos",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "networking-marketplace",
+    name: "networking-marketplace",
+    title: "Networking Marketplace",
+    description: "Job postings and professional connections",
+    icon: Briefcase,
+    iconColor: "blue",
+    category: "alumnae",
+    isActive: true,
+    component: NetworkingMarketplaceModule,
+    dbFunctionName: "networking-marketplace",
+    requiredRoles: ["alumna", "admin", "super-admin"]
+  },
+  {
+    id: "alumna-calendar",
+    name: "alumna-calendar",
+    title: "Alumni Calendar",
+    description: "Upcoming events and important dates for alumni",
+    icon: Calendar,
+    iconColor: "blue",
+    category: "alumnae",
+    isActive: true,
+    component: AlumnaCalendarModule,
+    dbFunctionName: "alumna-calendar",
+    requiredRoles: ["alumna", "admin", "super-admin"]
   }
 ];
 
@@ -1204,6 +1389,14 @@ export const UNIFIED_MODULE_CATEGORIES: UnifiedModuleCategory[] = [
     icon: GraduationCap,
     color: "indigo",
     modules: UNIFIED_MODULES.filter(m => m.category === "education")
+  },
+  {
+    id: "alumnae",
+    title: "Alumnae Connection",
+    description: "Alumni-specific features, events, networking, and community",
+    icon: Heart,
+    color: "rose",
+    modules: UNIFIED_MODULES.filter(m => m.category === "alumnae")
   }
 ];
 
