@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Play, Youtube, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Play, Youtube, Loader2, ArrowUpDown, Calendar, Eye, SortAsc, SortDesc } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { YouTubeVideoModal } from '@/components/youtube/YouTubeVideoModal';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface YouTubeVideo {
   id: string;
@@ -17,7 +23,18 @@ interface YouTubeVideo {
   duration: string | null;
 }
 
+type SortOption = 'date_desc' | 'date_asc' | 'views_desc' | 'views_asc' | 'title_asc' | 'title_desc';
+
 const VIDEOS_PER_PAGE = 12;
+
+const sortOptions: { value: SortOption; label: string; icon: React.ReactNode }[] = [
+  { value: 'date_desc', label: 'Newest First', icon: <Calendar className="h-4 w-4" /> },
+  { value: 'date_asc', label: 'Oldest First', icon: <Calendar className="h-4 w-4" /> },
+  { value: 'views_desc', label: 'Most Views', icon: <Eye className="h-4 w-4" /> },
+  { value: 'views_asc', label: 'Least Views', icon: <Eye className="h-4 w-4" /> },
+  { value: 'title_asc', label: 'Title (A-Z)', icon: <SortAsc className="h-4 w-4" /> },
+  { value: 'title_desc', label: 'Title (Z-A)', icon: <SortDesc className="h-4 w-4" /> },
+];
 
 const formatViewCount = (count: number): string => {
   if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
@@ -42,10 +59,30 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [sortBy, setSortBy] = useState<SortOption>('date_desc');
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const fetchVideos = useCallback(async (offset: number = 0, append: boolean = false) => {
+  const getSortConfig = (sort: SortOption) => {
+    switch (sort) {
+      case 'date_desc':
+        return { column: 'published_at', ascending: false };
+      case 'date_asc':
+        return { column: 'published_at', ascending: true };
+      case 'views_desc':
+        return { column: 'view_count', ascending: false };
+      case 'views_asc':
+        return { column: 'view_count', ascending: true };
+      case 'title_asc':
+        return { column: 'title', ascending: true };
+      case 'title_desc':
+        return { column: 'title', ascending: false };
+      default:
+        return { column: 'published_at', ascending: false };
+    }
+  };
+
+  const fetchVideos = useCallback(async (offset: number = 0, append: boolean = false, sort: SortOption = sortBy) => {
     try {
       if (append) {
         setLoadingMore(true);
@@ -61,10 +98,12 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
         setTotalCount(count || 0);
       }
 
+      const { column, ascending } = getSortConfig(sort);
+
       const { data, error } = await supabase
         .from('youtube_videos')
         .select('id, video_id, title, description, thumbnail_url, published_at, view_count, duration')
-        .order('published_at', { ascending: false })
+        .order(column, { ascending })
         .range(offset, offset + VIDEOS_PER_PAGE - 1);
 
       if (!error && data) {
@@ -81,11 +120,22 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
       setLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [sortBy]);
 
   useEffect(() => {
-    fetchVideos(0, false);
-  }, [fetchVideos]);
+    fetchVideos(0, false, sortBy);
+  }, [sortBy]);
+
+  const handleSortChange = (newSort: SortOption) => {
+    if (newSort !== sortBy) {
+      setSortBy(newSort);
+      setVideos([]);
+      setHasMore(true);
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
+      }
+    }
+  };
 
   // Infinite scroll handler
   const handleScroll = useCallback(() => {
@@ -93,14 +143,16 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
     
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
     if (scrollHeight - scrollTop - clientHeight < 200) {
-      fetchVideos(videos.length, true);
+      fetchVideos(videos.length, true, sortBy);
     }
-  }, [loadingMore, hasMore, videos.length, fetchVideos]);
+  }, [loadingMore, hasMore, videos.length, fetchVideos, sortBy]);
 
   const getVideoThumbnail = (video: YouTubeVideo) => {
     if (video.thumbnail_url) return video.thumbnail_url;
     return `https://img.youtube.com/vi/${video.video_id}/hqdefault.jpg`;
   };
+
+  const currentSortLabel = sortOptions.find(opt => opt.value === sortBy)?.label || 'Sort';
 
   if (loading) {
     return (
@@ -115,7 +167,7 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
     );
   }
 
-  if (videos.length === 0) {
+  if (videos.length === 0 && !loading) {
     return null;
   }
 
@@ -135,6 +187,33 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
           </p>
         </div>
       )}
+
+      {/* Sort Controls */}
+      <div className="flex justify-end mb-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="gap-2">
+              <ArrowUpDown className="h-4 w-4" />
+              <span className="hidden sm:inline">{currentSortLabel}</span>
+              <span className="sm:hidden">Sort</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            {sortOptions.map((option) => (
+              <DropdownMenuItem
+                key={option.value}
+                onClick={() => handleSortChange(option.value)}
+                className={sortBy === option.value ? 'bg-accent' : ''}
+              >
+                <span className="flex items-center gap-2">
+                  {option.icon}
+                  {option.label}
+                </span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
 
       {/* Scrollable Video Grid */}
       <div 
