@@ -52,6 +52,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (initializedRef.current) return;
     initializedRef.current = true;
 
+    // Safety timeout to prevent infinite loading state
+    const safetyTimeout = setTimeout(() => {
+      if (mountedRef.current && loading) {
+        console.warn('AuthContext: Safety timeout triggered - forcing loading to complete');
+        setLoading(false);
+      }
+    }, 5000);
+
     const initializeAuth = async () => {
       try {
         const { data, error } = await supabase.auth.getSession();
@@ -76,6 +84,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
+          clearTimeout(safetyTimeout);
         }
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -103,6 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error('AuthContext init error:', error);
         if (mountedRef.current) {
           setLoading(false);
+          clearTimeout(safetyTimeout);
         }
       }
     };
