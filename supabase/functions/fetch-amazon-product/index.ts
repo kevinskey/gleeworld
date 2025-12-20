@@ -184,6 +184,8 @@ serve(async (req) => {
     });
 
     console.log('Creating signed request for PA-API');
+    console.log('Using host:', host, 'region:', region, 'marketplace:', marketplace);
+    console.log('Partner Tag:', partnerTag);
 
     const signedHeaders = await createSignedHeaders(
       'POST',
@@ -197,18 +199,49 @@ serve(async (req) => {
 
     const paApiUrl = `https://${host}${path}`;
     console.log('Calling PA-API at:', paApiUrl);
+    console.log('Request payload:', payload);
 
-    const response = await fetch(paApiUrl, {
-      method: 'POST',
-      headers: signedHeaders,
-      body: payload
-    });
+    let response;
+    try {
+      response = await fetch(paApiUrl, {
+        method: 'POST',
+        headers: signedHeaders,
+        body: payload
+      });
+    } catch (fetchError) {
+      console.error('Fetch error calling PA-API:', fetchError.message);
+      throw fetchError;
+    }
 
     console.log('PA-API response status:', response.status);
+    console.log('PA-API response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('PA-API error:', response.status, errorText);
+      console.error('PA-API error response body:', errorText);
+      
+      // Try to parse the error for more details
+      try {
+        const errorJson = JSON.parse(errorText);
+        console.error('PA-API error parsed:', JSON.stringify(errorJson, null, 2));
+        
+        // Common error codes:
+        // - InvalidSignature: signature calculation is wrong
+        // - UnrecognizedClient: access key is invalid
+        // - TooManyRequests: rate limited
+        // - ItemsNotFound: ASIN doesn't exist
+        if (errorJson.__type) {
+          console.error('PA-API error type:', errorJson.__type);
+        }
+        if (errorJson.message) {
+          console.error('PA-API error message:', errorJson.message);
+        }
+        if (errorJson.Errors) {
+          console.error('PA-API Errors array:', JSON.stringify(errorJson.Errors));
+        }
+      } catch (parseError) {
+        console.error('Could not parse error as JSON:', parseError.message);
+      }
       
       // Return fallback with affiliate link
       const affiliateUrl = `https://${marketplace}/dp/${asin}?tag=${partnerTag}`;
@@ -223,7 +256,8 @@ serve(async (req) => {
             imageUrl: null,
             affiliateUrl,
             requiresManualEntry: true,
-            error: `PA-API returned ${response.status}`
+            error: `PA-API returned ${response.status}`,
+            errorDetails: errorText.substring(0, 500) // Include first 500 chars of error
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
