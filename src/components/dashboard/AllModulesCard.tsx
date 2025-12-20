@@ -32,25 +32,25 @@ export const AllModulesCard = ({
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="overflow-hidden bg-background/95 backdrop-blur-sm border-2">
+      <Card className="overflow-hidden bg-primary border border-primary-foreground/20">
         <CollapsibleTrigger className="w-full">
-          <CardHeader className="py-3 px-3 sm:px-4 hover:bg-muted/50 transition-colors cursor-pointer">
+          <CardHeader className="py-3 px-3 sm:px-4 hover:bg-primary-foreground/10 transition-colors cursor-pointer">
             <div className="flex items-center justify-between min-h-[48px] pl-[20px] px-[10px]">
               <div className="gap-3 flex items-start justify-start">
-                <Grid3x3 className="text-primary flex-shrink-0 w-5 h-5 mt-0.5" />
+                <Grid3x3 className="text-primary-foreground flex-shrink-0 w-5 h-5 mt-0.5" />
                 <div className="text-left">
-                  <CardTitle className="text-lg leading-tight">My Modules</CardTitle>
-                  <CardDescription className="leading-tight">All modules assigned to you</CardDescription>
+                  <CardTitle className="text-lg leading-tight text-primary-foreground">My Modules</CardTitle>
+                  <CardDescription className="leading-tight text-primary-foreground/70">All modules assigned to you</CardDescription>
                 </div>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0">
-                <Badge variant="secondary" className="text-sm">
+                <Badge variant="secondary" className="text-sm bg-primary-foreground/20 text-primary-foreground">
                   {modules.length}
                 </Badge>
                 {isOpen ? (
-                  <ChevronUp className="h-5 w-5 text-muted-foreground" />
+                  <ChevronUp className="h-5 w-5 text-primary-foreground/70" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                  <ChevronDown className="h-5 w-5 text-primary-foreground/70" />
                 )}
               </div>
             </div>
@@ -60,17 +60,17 @@ export const AllModulesCard = ({
         <CollapsibleContent>
           <CardContent className="pt-0 px-3 sm:px-4 space-y-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-primary-foreground/60" />
               <Input 
                 placeholder="Search modules..." 
                 value={searchQuery} 
                 onChange={e => setSearchQuery(e.target.value)} 
-                className="pl-10" 
+                className="pl-10 bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/50" 
               />
             </div>
 
             {filteredModules.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-8 text-primary-foreground/70">
                 <p>No modules found</p>
               </div>
             ) : (
@@ -81,7 +81,7 @@ export const AllModulesCard = ({
                   return (
                     <Card 
                       key={module.id} 
-                      className="cursor-pointer hover:shadow-md transition-all duration-200 bg-background/95 backdrop-blur-sm border-2 relative" 
+                      className="cursor-pointer hover:shadow-lg transition-all duration-300 bg-primary/80 border border-primary-foreground/30 relative group hover:bg-primary/70" 
                       onClick={() => {
                         if (module.id === 'librarian') {
                           navigate('/librarian-dashboard');
@@ -93,12 +93,12 @@ export const AllModulesCard = ({
                       <CardHeader className="pb-3 pt-4">
                         <div className="flex flex-col items-center text-center gap-2">
                           {IconComponent && (
-                            <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
-                              <IconComponent className={`h-5 w-5 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
+                            <div className="p-2 rounded-lg bg-primary-foreground/10">
+                              <IconComponent className="h-5 w-5 text-primary-foreground" />
                             </div>
                           )}
                           <div className="min-w-0 w-full">
-                            <CardTitle className="text-sm font-medium leading-tight line-clamp-2">
+                            <CardTitle className="text-sm font-medium leading-tight line-clamp-2 text-primary-foreground">
                               {module.title}
                             </CardTitle>
                           </div>
@@ -109,7 +109,7 @@ export const AllModulesCard = ({
                               e.stopPropagation();
                               onToggleFavorite(module.id);
                             }} 
-                            className={`p-1 h-auto absolute top-2 right-2 ${isFav ? "text-red-500" : "text-muted-foreground"} hover:text-red-500 transition-colors`}
+                            className={`p-1 h-auto absolute top-2 right-2 ${isFav ? "text-red-400" : "text-primary-foreground/60"} hover:text-red-400 transition-colors`}
                           >
                             <Heart className={`h-4 w-4 ${isFav ? "fill-current" : ""}`} />
                           </Button>
