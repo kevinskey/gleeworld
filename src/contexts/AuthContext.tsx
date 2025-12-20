@@ -33,6 +33,8 @@ const cleanupAuthState = () => {
         sessionStorage.removeItem(key);
       }
     });
+    // Clear poll reminder so it shows again on next login
+    sessionStorage.removeItem('poll_reminder_shown_this_session');
   } catch (error) {
     // Silent cleanup failure
   }
