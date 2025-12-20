@@ -182,7 +182,7 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
             </h2>
             <Youtube className="h-5 w-5 sm:h-6 sm:w-6 md:h-8 md:w-8 text-red-500" />
           </div>
-          <p className="text-muted-foreground text-xs sm:text-sm md:text-base">
+          <p className="text-foreground/70 text-xs sm:text-sm md:text-base font-medium">
             {totalCount > 0 ? `${totalCount} videos from our channel` : 'Browse our complete video collection'}
           </p>
         </div>
@@ -192,18 +192,18 @@ export const AllVideosGrid: React.FC<AllVideosGridProps> = ({
       <div className="flex justify-end mb-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="secondary" size="sm" className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
               <ArrowUpDown className="h-4 w-4" />
               <span className="hidden sm:inline">{currentSortLabel}</span>
               <span className="sm:hidden">Sort</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-48 bg-popover border border-border shadow-lg z-50">
             {sortOptions.map((option) => (
               <DropdownMenuItem
                 key={option.value}
                 onClick={() => handleSortChange(option.value)}
-                className={sortBy === option.value ? 'bg-accent' : ''}
+                className={sortBy === option.value ? 'bg-accent text-accent-foreground' : ''}
               >
                 <span className="flex items-center gap-2">
                   {option.icon}
