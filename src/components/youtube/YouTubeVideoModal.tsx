@@ -14,7 +14,7 @@ export const YouTubeVideoModal = ({ isOpen, onClose, videoId, title }: YouTubeVi
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl w-[95vw] p-0 bg-black border-none">
+      <DialogContent className="max-w-6xl w-[95vw] p-0 bg-black border-none shadow-2xl">
         <div className="relative">
           <Button
             variant="ghost"
