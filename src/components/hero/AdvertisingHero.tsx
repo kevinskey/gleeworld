@@ -155,12 +155,12 @@ export const AdvertisingHero: React.FC = () => {
       {(hero.title || hero.description) && (
         <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-white z-30 pointer-events-none">
           {hero.title && (
-            <h2 className="text-base sm:text-2xl md:text-4xl font-bold mb-1 sm:mb-2 drop-shadow-lg">
+            <h2 className="text-sm sm:text-lg md:text-2xl font-bold mb-1 sm:mb-2 drop-shadow-lg">
               {hero.title}
             </h2>
           )}
           {hero.description && (
-            <p className="text-xs sm:text-base md:text-lg text-white/90 max-w-2xl drop-shadow line-clamp-2">
+            <p className="text-xs sm:text-sm md:text-base text-white/90 max-w-2xl drop-shadow line-clamp-2">
               {hero.description}
             </p>
           )}
