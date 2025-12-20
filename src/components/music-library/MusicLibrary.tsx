@@ -217,20 +217,32 @@ export const MusicLibrary = () => {
     route: '/activity-logs'
   }];
 
-  // Mobile layout - simple fullscreen
+  // Mobile layout - true fullscreen for PDF viewer
   if (isMobile) {
-    return <div className="bg-background w-full overflow-hidden">{/* Removed max-w-full as it's redundant */}
-        {/* Simple Header with Back Button */}
-        
-
+    return (
+      <div className={`bg-background w-full ${mobileView === 'viewer' ? 'fixed inset-0 z-50' : 'h-full'} flex flex-col overflow-hidden`}>
         {/* Content */}
-        <div className="flex-1">
-          {mobileView === 'library' ? <MobileMusicLibrary onPdfSelect={handlePdfSelect} onOpenSetlistPlayer={handleOpenSetlistPlayer} selectedPdf={selectedPdf} scrollContainerRef={scrollRef} /> : <MobilePDFViewer selectedPdf={selectedPdf} onBack={() => setMobileView('library')} onStudyMode={openStudyMode} />}
+        <div className="flex-1 min-h-0 overflow-hidden">
+          {mobileView === 'library' ? (
+            <MobileMusicLibrary 
+              onPdfSelect={handlePdfSelect} 
+              onOpenSetlistPlayer={handleOpenSetlistPlayer} 
+              selectedPdf={selectedPdf} 
+              scrollContainerRef={scrollRef} 
+            />
+          ) : (
+            <MobilePDFViewer 
+              selectedPdf={selectedPdf} 
+              onBack={() => setMobileView('library')} 
+              onStudyMode={openStudyMode} 
+            />
+          )}
         </div>
 
         {/* Study Mode Dialog */}
         <SheetMusicViewDialog open={studyDialogOpen} onOpenChange={setStudyDialogOpen} item={studyItem} />
-      </div>;
+      </div>
+    );
   }
 
   // Desktop layout with resizable panels
