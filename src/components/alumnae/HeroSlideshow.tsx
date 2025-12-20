@@ -146,26 +146,35 @@ export const HeroSlideshow = () => {
 
       {/* Content Overlay */}
       {(slide.title || slide.description) && (
-        <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
+        <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-white text-center">
           {slide.title && (
             <h2
-              className="mb-2 text-white"
+              className="mb-4 text-white font-bold drop-shadow-lg"
               style={titleFormatting ? {
                 fontSize: `${titleFormatting.fontSize}px`,
-                fontWeight: titleFormatting.fontWeight,
-                textAlign: titleFormatting.textAlign as any,
+                fontWeight: titleFormatting.fontWeight || '700',
+                textAlign: titleFormatting.textAlign as any || 'center',
                 color: '#ffffff',
                 marginBottom: `${titleFormatting.marginBottom}px`,
                 textTransform: titleFormatting.textTransform as any,
                 letterSpacing: `${titleFormatting.letterSpacing}px`,
                 fontFamily: titleFormatting.fontFamily || 'inherit',
-              } : undefined}
+                textShadow: '2px 2px 8px rgba(0,0,0,0.7)',
+              } : {
+                fontSize: 'clamp(2rem, 5vw, 4rem)',
+                fontWeight: '700',
+                textAlign: 'center',
+                color: '#ffffff',
+                textShadow: '2px 2px 8px rgba(0,0,0,0.7)',
+              }}
             >
               {slide.title}
             </h2>
           )}
           {slide.description && (
-            <p className="text-lg opacity-90">{slide.description}</p>
+            <p className="text-xl md:text-2xl opacity-95 font-medium drop-shadow-md" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.6)' }}>
+              {slide.description}
+            </p>
           )}
         </div>
       )}
