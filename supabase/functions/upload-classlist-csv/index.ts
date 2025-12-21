@@ -173,7 +173,7 @@ serve(async (req) => {
 
     const enrollmentResults = {
       enrolled: 0,
-      updated: 0,
+      skipped: 0,
       profilesCreated: 0,
       errors: [] as string[]
     };
@@ -254,23 +254,9 @@ serve(async (req) => {
           .single();
 
         if (existingEnrollment) {
-          // Update existing enrollment
-          const { error: updateError } = await supabaseClient
-            .from('gw_course_enrollments')
-            .update({
-              registration_status: student.registrationStatus,
-              academic_level: student.level,
-              credit_hours: student.creditHours,
-              enrollment_status: 'enrolled',
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingEnrollment.id);
-
-          if (updateError) {
-            errors.push({ row: students.indexOf(student) + 1, error: updateError.message });
-          } else {
-            enrollmentResults.updated++;
-          }
+          // Skip duplicate - student already enrolled
+          enrollmentResults.skipped++;
+          continue;
         } else {
           // Create new enrollment
           const { error: insertError } = await supabaseClient
@@ -302,7 +288,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Processed ${students.length} students: ${enrollmentResults.enrolled} enrolled, ${enrollmentResults.updated} updated, ${enrollmentResults.profilesCreated} profiles created`,
+        message: `Processed ${students.length} students: ${enrollmentResults.enrolled} enrolled, ${enrollmentResults.skipped} skipped (already enrolled), ${enrollmentResults.profilesCreated} profiles created`,
         results: enrollmentResults,
         errors: errors.length > 0 ? errors : undefined
       }),
