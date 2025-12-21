@@ -644,6 +644,5 @@ export const GleeWorldLanding = () => {
       </section>
       </PublicLayout>
       <PWAInstallPrompt />
-      <PollReminderPopup />
     </div>;
 };
