@@ -18392,6 +18392,7 @@ export type Database = {
           prompt: string
           resources: string[] | null
           rubric: Json | null
+          semester: string | null
           title: string
           updated_at: string
         }
@@ -18409,6 +18410,7 @@ export type Database = {
           prompt: string
           resources?: string[] | null
           rubric?: Json | null
+          semester?: string | null
           title: string
           updated_at?: string
         }
@@ -18426,6 +18428,7 @@ export type Database = {
           prompt?: string
           resources?: string[] | null
           rubric?: Json | null
+          semester?: string | null
           title?: string
           updated_at?: string
         }
@@ -18910,6 +18913,7 @@ export type Database = {
           original_submission_id: string | null
           published_at: string | null
           resubmission_count: number | null
+          semester: string | null
           student_id: string
           submitted_at: string | null
           updated_at: string
@@ -18930,6 +18934,7 @@ export type Database = {
           original_submission_id?: string | null
           published_at?: string | null
           resubmission_count?: number | null
+          semester?: string | null
           student_id: string
           submitted_at?: string | null
           updated_at?: string
@@ -18950,6 +18955,7 @@ export type Database = {
           original_submission_id?: string | null
           published_at?: string | null
           resubmission_count?: number | null
+          semester?: string | null
           student_id?: string
           submitted_at?: string | null
           updated_at?: string
@@ -18994,6 +19000,7 @@ export type Database = {
           letter_grade: string | null
           overall_score: number
           rubric: Json
+          semester: string | null
           student_id: string
           updated_at: string | null
         }
@@ -19018,6 +19025,7 @@ export type Database = {
           letter_grade?: string | null
           overall_score: number
           rubric?: Json
+          semester?: string | null
           student_id: string
           updated_at?: string | null
         }
@@ -19042,6 +19050,7 @@ export type Database = {
           letter_grade?: string | null
           overall_score?: number
           rubric?: Json
+          semester?: string | null
           student_id?: string
           updated_at?: string | null
         }
@@ -19142,6 +19151,7 @@ export type Database = {
           ring_shout_answer: string | null
           selected_essay_question: number | null
           selected_terms: string[]
+          semester: string | null
           submitted_at: string | null
           swing_answer: string | null
           time_started: string
@@ -19176,6 +19186,7 @@ export type Database = {
           ring_shout_answer?: string | null
           selected_essay_question?: number | null
           selected_terms?: string[]
+          semester?: string | null
           submitted_at?: string | null
           swing_answer?: string | null
           time_started?: string
@@ -19210,6 +19221,7 @@ export type Database = {
           ring_shout_answer?: string | null
           selected_essay_question?: number | null
           selected_terms?: string[]
+          semester?: string | null
           submitted_at?: string | null
           swing_answer?: string | null
           time_started?: string
@@ -19262,6 +19274,7 @@ export type Database = {
           id: string
           journal_id: string
           reviewer_id: string
+          semester: string | null
           updated_at: string
         }
         Insert: {
@@ -19270,6 +19283,7 @@ export type Database = {
           id?: string
           journal_id: string
           reviewer_id: string
+          semester?: string | null
           updated_at?: string
         }
         Update: {
@@ -19278,6 +19292,7 @@ export type Database = {
           id?: string
           journal_id?: string
           reviewer_id?: string
+          semester?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -19338,6 +19353,7 @@ export type Database = {
           question_index: number
           response_time: string
           selected_option: number
+          semester: string | null
           student_id: string
           updated_at: string | null
         }
@@ -19347,6 +19363,7 @@ export type Database = {
           question_index: number
           response_time?: string
           selected_option: number
+          semester?: string | null
           student_id: string
           updated_at?: string | null
         }
@@ -19356,6 +19373,7 @@ export type Database = {
           question_index?: number
           response_time?: string
           selected_option?: number
+          semester?: string | null
           student_id?: string
           updated_at?: string | null
         }
@@ -19380,6 +19398,7 @@ export type Database = {
           is_active: boolean
           is_live_session: boolean | null
           questions: Json
+          semester: string | null
           show_results: boolean | null
           title: string
           updated_at: string
@@ -19394,6 +19413,7 @@ export type Database = {
           is_active?: boolean
           is_live_session?: boolean | null
           questions?: Json
+          semester?: string | null
           show_results?: boolean | null
           title: string
           updated_at?: string
@@ -19408,6 +19428,7 @@ export type Database = {
           is_active?: boolean
           is_live_session?: boolean | null
           questions?: Json
+          semester?: string | null
           show_results?: boolean | null
           title?: string
           updated_at?: string
@@ -19751,6 +19772,7 @@ export type Database = {
           question_id: string
           question_type: string
           rubric_breakdown: Json | null
+          semester: string | null
           student_answer: string | null
           submission_id: string
           updated_at: string
@@ -19769,6 +19791,7 @@ export type Database = {
           question_id: string
           question_type: string
           rubric_breakdown?: Json | null
+          semester?: string | null
           student_answer?: string | null
           submission_id: string
           updated_at?: string
@@ -19787,6 +19810,7 @@ export type Database = {
           question_id?: string
           question_type?: string
           rubric_breakdown?: Json | null
+          semester?: string | null
           student_answer?: string | null
           submission_id?: string
           updated_at?: string

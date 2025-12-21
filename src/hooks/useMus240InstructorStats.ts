@@ -34,11 +34,12 @@ export const useMus240InstructorStats = (semesterOverride?: string) => {
       setLoading(true);
       setError(null);
 
-      // Get active assignments
+      // Get active assignments for this semester
       const { data: assignments, error: assignmentsError } = await supabase
         .from('mus240_assignments')
         .select('id')
-        .eq('is_active', true);
+        .eq('is_active', true)
+        .eq('semester', semester);
 
       if (assignmentsError) throw assignmentsError;
 
@@ -51,18 +52,20 @@ export const useMus240InstructorStats = (semesterOverride?: string) => {
 
       if (enrollmentsError) throw enrollmentsError;
 
-      // Get total published journals
+      // Get total published journals for this semester
       const { data: journals, error: journalsError } = await supabase
         .from('mus240_journal_entries')
         .select('id, student_id')
-        .eq('is_published', true);
+        .eq('is_published', true)
+        .eq('semester', semester);
 
       if (journalsError) throw journalsError;
 
-      // Get journal grades to calculate pending
+      // Get journal grades for this semester
       const { data: grades, error: gradesError } = await supabase
         .from('mus240_journal_grades')
-        .select('journal_id, overall_score');
+        .select('journal_id, overall_score, semester')
+        .eq('semester', semester);
 
       if (gradesError) throw gradesError;
 
