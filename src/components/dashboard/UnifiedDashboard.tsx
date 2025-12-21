@@ -377,8 +377,6 @@ export const UnifiedDashboard = () => {
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
-      
-      <PollReminderPopup />
     </div>
   );
 };
