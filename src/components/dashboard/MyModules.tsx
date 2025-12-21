@@ -74,7 +74,7 @@ export const MyModules = ({
       <Card className="border border-border bg-card">
         <CollapsibleTrigger asChild>
           <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
-            <div className="flex items-center justify-between pr-0 pl-[20px]">
+            <div className="flex items-center justify-between pr-0 pl-[20px] py-[20px]">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="text-primary pl-[2px] bg-secondary-foreground pr-0 h-[20px] w-[20px]" />
                 <CardTitle className="text-lg font-semibold tracking-wide">MY MODULES</CardTitle>
@@ -95,23 +95,16 @@ export const MyModules = ({
           <CardContent className="px-4 pb-4 py-[15px]">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {modulesWithDetails.map(module => {
-                const IconComponent = getIconComponent(module.icon);
-                return (
-                  <Button 
-                    key={module.id} 
-                    variant="outline" 
-                    onClick={() => navigate(module.route)} 
-                    className="h-[90px] py-3 px-2 flex flex-col items-center justify-start gap-2 hover:bg-primary/10 hover:border-primary/30"
-                  >
+              const IconComponent = getIconComponent(module.icon);
+              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-[90px] py-3 px-2 flex flex-col items-center justify-start gap-2 hover:bg-primary/10 hover:border-primary/30">
                     <div className="flex-shrink-0 mt-2">
                       <IconComponent className="h-6 w-6 text-primary" />
                     </div>
                     <span className="text-[11px] text-center leading-tight line-clamp-2 text-foreground font-medium px-1">
                       {module.title}
                     </span>
-                  </Button>
-                );
-              })}
+                  </Button>;
+            })}
               {showAdminSettings && <Button variant="outline" className="h-auto py-4 px-2 flex flex-col items-center justify-center gap-2 hover:bg-primary/10 hover:border-primary/30 min-h-[80px]" onClick={() => navigate('/dashboard?module=admin-settings')}>
                   <Settings className="h-5 w-5 text-primary" />
                   <span className="text-xs text-center leading-tight">Admin Settings</span>

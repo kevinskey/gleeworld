@@ -9,33 +9,38 @@ import { useCourseEnrollment } from '@/hooks/useCourseEnrollment';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 export const GleeAcademyDashboardCard = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { selectedCourseId, selectCourse, clearCourseSelection, isDefaultCourse } = useCourseContext();
+  const {
+    user
+  } = useAuth();
+  const {
+    selectedCourseId,
+    selectCourse,
+    clearCourseSelection,
+    isDefaultCourse
+  } = useCourseContext();
   const activeCourses = ACADEMY_COURSES.filter(course => course.isActive);
   const [isOpen, setIsOpen] = useState(true);
-  
   const [notEnrolledDialog, setNotEnrolledDialog] = React.useState<{
     open: boolean;
     courseCode: string;
     courseName: string;
     courseId: string;
-  }>({ open: false, courseCode: '', courseName: '', courseId: '' });
-
+  }>({
+    open: false,
+    courseCode: '',
+    courseName: '',
+    courseId: ''
+  });
   const [courseDialog, setCourseDialog] = React.useState<{
     open: boolean;
     course: typeof ACADEMY_COURSES[0] | null;
-  }>({ open: false, course: null });
-
+  }>({
+    open: false,
+    course: null
+  });
   const handleCourseClick = async (course: typeof ACADEMY_COURSES[0]) => {
     if (!user) {
       toast.error('Please log in to access courses');
@@ -43,14 +48,15 @@ export const GleeAcademyDashboardCard = () => {
     }
 
     // Open the course dialog
-    setCourseDialog({ open: true, course });
+    setCourseDialog({
+      open: true,
+      course
+    });
   };
-
   const handleEnterCourse = () => {
     if (!courseDialog.course) return;
-    
     const course = courseDialog.course;
-    
+
     // MUS 070 (Glee Club) - always accessible to members, just clear selection
     if (course.id === 'a0000000-0000-0000-0000-000000000070') {
       clearCourseSelection();
@@ -59,29 +65,35 @@ export const GleeAcademyDashboardCard = () => {
       selectCourse(course.id);
       toast.success(`Switched to ${course.courseCode}`);
     }
-    
-    setCourseDialog({ open: false, course: null });
+    setCourseDialog({
+      open: false,
+      course: null
+    });
   };
-
   const handleViewCoursePage = () => {
     if (!courseDialog.course) return;
     navigate(courseDialog.course.route);
-    setCourseDialog({ open: false, course: null });
+    setCourseDialog({
+      open: false,
+      course: null
+    });
   };
-
   const handleRequestAccess = () => {
     // Navigate to the course page where they can request enrollment
     navigate(`/academy/${notEnrolledDialog.courseCode.toLowerCase().replace(' ', '-')}`);
-    setNotEnrolledDialog({ open: false, courseCode: '', courseName: '', courseId: '' });
+    setNotEnrolledDialog({
+      open: false,
+      courseCode: '',
+      courseName: '',
+      courseId: ''
+    });
   };
-
-  return (
-    <div className="w-full">
+  return <div className="w-full">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
           <CollapsibleTrigger asChild>
             <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer hover:bg-muted/30 transition-colors">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-[20px]">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-primary/10">
                     <GraduationCap className="h-6 w-6 text-primary" />
@@ -92,21 +104,17 @@ export const GleeAcademyDashboardCard = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  {!isDefaultCourse && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => { e.stopPropagation(); clearCourseSelection(); }}
-                      className="text-xs text-muted-foreground hover:text-foreground"
-                    >
+                  {!isDefaultCourse && <Button variant="ghost" size="sm" onClick={e => {
+                  e.stopPropagation();
+                  clearCourseSelection();
+                }} className="text-xs text-muted-foreground hover:text-foreground">
                       <X className="h-3 w-3 mr-1" />
                       Exit Course View
-                    </Button>
-                  )}
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); navigate('/glee-academy'); }}
-                    className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
-                  >
+                    </Button>}
+                  <button onClick={e => {
+                  e.stopPropagation();
+                  navigate('/glee-academy');
+                }} className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
                     View All <ArrowRight className="h-4 w-4" />
                   </button>
                   <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
@@ -117,24 +125,11 @@ export const GleeAcademyDashboardCard = () => {
           <CollapsibleContent>
             <CardContent className="px-3 sm:px-6">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
-                {activeCourses.map((course) => {
-                  const IconComponent = course.icon;
-                  const isSelected = selectedCourseId === course.id || 
-                    (isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070');
-                  
-                  return (
-                    <button
-                      key={course.id}
-                      onClick={() => handleCourseClick(course)}
-                      className={`group flex flex-col items-center p-3 rounded-lg border transition-all duration-200 ${
-                        isSelected 
-                          ? 'bg-primary/20 border-primary ring-2 ring-primary/30' 
-                          : 'bg-card hover:bg-primary/10 border-border hover:border-primary/30'
-                      }`}
-                    >
-                      <div className={`p-2 rounded-full mb-2 transition-colors ${
-                        isSelected ? 'bg-primary/30' : 'bg-primary/10 group-hover:bg-primary/20'
-                      }`}>
+                {activeCourses.map(course => {
+                const IconComponent = course.icon;
+                const isSelected = selectedCourseId === course.id || isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070';
+                return <button key={course.id} onClick={() => handleCourseClick(course)} className={`group flex flex-col items-center p-3 rounded-lg border transition-all duration-200 ${isSelected ? 'bg-primary/20 border-primary ring-2 ring-primary/30' : 'bg-card hover:bg-primary/10 border-border hover:border-primary/30'}`}>
+                      <div className={`p-2 rounded-full mb-2 transition-colors ${isSelected ? 'bg-primary/30' : 'bg-primary/10 group-hover:bg-primary/20'}`}>
                         <IconComponent className="h-5 w-5 text-primary" />
                       </div>
                       <span className="text-xs font-semibold text-center text-foreground">
@@ -143,12 +138,9 @@ export const GleeAcademyDashboardCard = () => {
                       <span className="text-[10px] text-muted-foreground text-center line-clamp-1 mt-0.5">
                         {course.title}
                       </span>
-                      {isSelected && (
-                        <span className="text-[8px] text-primary font-medium mt-1">ACTIVE</span>
-                      )}
-                    </button>
-                  );
-                })}
+                      {isSelected && <span className="text-[8px] text-primary font-medium mt-1">ACTIVE</span>}
+                    </button>;
+              })}
               </div>
             </CardContent>
           </CollapsibleContent>
@@ -156,7 +148,10 @@ export const GleeAcademyDashboardCard = () => {
       </Collapsible>
 
       {/* Not Enrolled Dialog */}
-      <Dialog open={notEnrolledDialog.open} onOpenChange={(open) => setNotEnrolledDialog(prev => ({ ...prev, open }))}>
+      <Dialog open={notEnrolledDialog.open} onOpenChange={open => setNotEnrolledDialog(prev => ({
+      ...prev,
+      open
+    }))}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -172,7 +167,10 @@ export const GleeAcademyDashboardCard = () => {
               Would you like to view the course details and request enrollment?
             </p>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" onClick={() => setNotEnrolledDialog(prev => ({ ...prev, open: false }))}>
+              <Button variant="outline" onClick={() => setNotEnrolledDialog(prev => ({
+              ...prev,
+              open: false
+            }))}>
                 Cancel
               </Button>
               <Button onClick={handleRequestAccess}>
@@ -184,14 +182,18 @@ export const GleeAcademyDashboardCard = () => {
       </Dialog>
 
       {/* Course Details Dialog */}
-      <Dialog open={courseDialog.open} onOpenChange={(open) => setCourseDialog(prev => ({ ...prev, open }))}>
+      <Dialog open={courseDialog.open} onOpenChange={open => setCourseDialog(prev => ({
+      ...prev,
+      open
+    }))}>
         <DialogContent className="sm:max-w-md">
-          {courseDialog.course && (
-            <>
+          {courseDialog.course && <>
               <DialogHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-lg bg-primary/10">
-                    {React.createElement(courseDialog.course.icon, { className: "h-6 w-6 text-primary" })}
+                    {React.createElement(courseDialog.course.icon, {
+                  className: "h-6 w-6 text-primary"
+                })}
                   </div>
                   <div>
                     <DialogTitle className="text-lg">{courseDialog.course.courseCode}</DialogTitle>
@@ -217,11 +219,9 @@ export const GleeAcademyDashboardCard = () => {
                 </div>
                 
                 <div className="flex flex-wrap gap-1">
-                  {courseDialog.course.highlights.map((highlight) => (
-                    <span key={highlight} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                  {courseDialog.course.highlights.map(highlight => <span key={highlight} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
                       {highlight}
-                    </span>
-                  ))}
+                    </span>)}
                 </div>
                 
                 <div className="flex gap-2 pt-2">
@@ -235,10 +235,8 @@ export const GleeAcademyDashboardCard = () => {
                   </Button>
                 </div>
               </div>
-            </>
-          )}
+            </>}
         </DialogContent>
       </Dialog>
-    </div>
-  );
+    </div>;
 };
