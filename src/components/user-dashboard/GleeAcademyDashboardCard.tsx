@@ -98,7 +98,7 @@ export const GleeAcademyDashboardCard = () => {
                   
                   <div>
                     <CardTitle className="text-xl font-bold tracking-wide pl-[5px]">GLEE ACADEMY</CardTitle>
-                    <p className="text-xs text-muted-foreground pl-[5px]">Spring 2026 Courses ({activeCourses.length})</p>
+                    <p className="text-xs text-muted-foreground pl-[5px] pt-[7px]">Spring 2026 Courses ({activeCourses.length})</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
