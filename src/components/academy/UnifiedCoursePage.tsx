@@ -475,7 +475,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
             {/* Instructor Control Center Button */}
             {isAdmin && (
-              <div className="fixed bottom-6 right-6">
+              <div className="fixed bottom-6 right-6 z-50">
                 <Button 
                   onClick={() => navigate('/mus-240/instructor/console')} 
                   variant="default" 
