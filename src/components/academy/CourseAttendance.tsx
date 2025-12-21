@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 interface CourseAttendanceProps {
   courseId: string;
   isEnrolled: boolean;
+  isAdmin?: boolean;
 }
 
 interface AttendanceRecord {
@@ -18,7 +19,7 @@ interface AttendanceRecord {
   notes: string | null;
 }
 
-export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, isEnrolled }) => {
+export const CourseAttendance: React.FC<CourseAttendanceProps> = ({ courseId, isEnrolled, isAdmin = false }) => {
   const { user } = useAuth();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
