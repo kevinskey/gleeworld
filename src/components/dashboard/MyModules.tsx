@@ -74,9 +74,9 @@ export const MyModules = ({
       <Card className="border border-border bg-card">
         <CollapsibleTrigger asChild>
           <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pr-0 pl-[20px]">
               <div className="flex items-center gap-2">
-                <LayoutGrid className="h-5 w-5 text-primary" />
+                <LayoutGrid className="text-primary pl-[2px] bg-secondary-foreground pr-0 h-[20px] w-[20px]" />
                 <CardTitle className="text-lg font-semibold tracking-wide">MY MODULES</CardTitle>
                 <span className="text-xs text-muted-foreground">
                   ({modulesWithDetails.length + (showAdminSettings ? 1 : 0)})
@@ -98,7 +98,7 @@ export const MyModules = ({
               const IconComponent = getIconComponent(module.icon);
               return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-auto py-4 px-2 flex flex-col items-center justify-center gap-2 hover:bg-primary/10 hover:border-primary/30 min-h-[80px]">
                     <IconComponent className="h-5 w-5 text-primary" />
-                    <span className="text-xs text-center leading-tight line-clamp-2">{module.title}</span>
+                    <span className="text-xs text-center leading-tight line-clamp-2 py-[15px] text-primary-foreground">{module.title}</span>
                   </Button>;
             })}
               {showAdminSettings && <Button variant="outline" className="h-auto py-4 px-2 flex flex-col items-center justify-center gap-2 hover:bg-primary/10 hover:border-primary/30 min-h-[80px]" onClick={() => navigate('/dashboard?module=admin-settings')}>
