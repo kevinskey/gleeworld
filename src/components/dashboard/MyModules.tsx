@@ -108,11 +108,11 @@ export const MyModules = ({ userProfile }: MyModulesProps) => {
                   <Button
                     key={module.id}
                     variant="outline"
-                    className="h-auto py-3 flex flex-col items-center gap-2 hover:bg-primary/10 hover:border-primary/30"
+                    className="h-auto py-2 px-1.5 flex flex-col items-center gap-1.5 hover:bg-primary/10 hover:border-primary/30"
                     onClick={() => navigate(module.route)}
                   >
-                    <IconComponent className="h-5 w-5 text-primary" />
-                    <span className="text-xs text-center leading-tight">{module.title}</span>
+                    <IconComponent className="h-4 w-4 text-primary-foreground" />
+                    <span className="text-[10px] text-center leading-tight text-primary-foreground line-clamp-2">{module.title}</span>
                   </Button>
                 );
               })}
