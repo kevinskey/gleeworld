@@ -7208,43 +7208,52 @@ export type Database = {
       }
       gw_course_enrollments: {
         Row: {
+          academic_level: string | null
           completed_at: string | null
           course_id: string | null
           created_at: string | null
+          credit_hours: number | null
           enrolled_at: string | null
           enrollment_status: string | null
           final_percentage: number | null
           grade: string | null
           id: string
           payment_id: string | null
+          registration_status: string | null
           role: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          academic_level?: string | null
           completed_at?: string | null
           course_id?: string | null
           created_at?: string | null
+          credit_hours?: number | null
           enrolled_at?: string | null
           enrollment_status?: string | null
           final_percentage?: number | null
           grade?: string | null
           id?: string
           payment_id?: string | null
+          registration_status?: string | null
           role?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          academic_level?: string | null
           completed_at?: string | null
           course_id?: string | null
           created_at?: string | null
+          credit_hours?: number | null
           enrolled_at?: string | null
           enrollment_status?: string | null
           final_percentage?: number | null
           grade?: string | null
           id?: string
           payment_id?: string | null
+          registration_status?: string | null
           role?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -7660,7 +7669,9 @@ export type Database = {
           course_code: string | null
           created_at: string | null
           created_by: string | null
+          crn: string | null
           description: string | null
+          end_date: string | null
           id: string
           instructor_email: string | null
           instructor_hours: string | null
@@ -7672,6 +7683,7 @@ export type Database = {
           max_enrollment: number | null
           price_cents: number | null
           semester: string | null
+          start_date: string | null
           syllabus_url: string | null
           term: string | null
           title: string
@@ -7682,7 +7694,9 @@ export type Database = {
           course_code?: string | null
           created_at?: string | null
           created_by?: string | null
+          crn?: string | null
           description?: string | null
+          end_date?: string | null
           id?: string
           instructor_email?: string | null
           instructor_hours?: string | null
@@ -7694,6 +7708,7 @@ export type Database = {
           max_enrollment?: number | null
           price_cents?: number | null
           semester?: string | null
+          start_date?: string | null
           syllabus_url?: string | null
           term?: string | null
           title: string
@@ -7704,7 +7719,9 @@ export type Database = {
           course_code?: string | null
           created_at?: string | null
           created_by?: string | null
+          crn?: string | null
           description?: string | null
+          end_date?: string | null
           id?: string
           instructor_email?: string | null
           instructor_hours?: string | null
@@ -7716,6 +7733,7 @@ export type Database = {
           max_enrollment?: number | null
           price_cents?: number | null
           semester?: string | null
+          start_date?: string | null
           syllabus_url?: string | null
           term?: string | null
           title?: string
