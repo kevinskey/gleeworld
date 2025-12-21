@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit } from 'lucide-react';
+import { Brain, Users, BookOpen, BarChart3, Plus, Eye, Settings, GraduationCap, ClipboardCheck, UserPlus, FileText, Trophy, BarChart, Menu, Home, ListChecks, Edit, Calendar, Video, Headphones, FolderOpen, Mail, MessageSquare } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCourseTA } from '@/hooks/useCourseTA';
@@ -36,6 +36,7 @@ import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { UniversalLayout } from '@/components/layout/UniversalLayout';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 export const InstructorConsole = () => {
   const {
     isAdmin,
@@ -125,69 +126,91 @@ export const InstructorConsole = () => {
   }
 
   console.log('InstructorConsole: Rendering main content');
-  const navItems = [{
-    value: 'assignments',
-    label: 'Assignments',
-    icon: BookOpen
-  }, {
-    value: 'tests',
-    label: 'Tests',
-    icon: ClipboardCheck
-  }, {
-    value: 'polls',
-    label: 'Polls',
-    icon: BarChart3
-  }, {
-    value: 'ai-groups',
-    label: 'AI Group Project',
-    icon: Brain
-  }, {
-    value: 'grades',
-    label: 'Grades',
-    icon: Trophy
-  }, {
-    value: 'rubrics',
-    label: 'Rubrics',
-    icon: ListChecks
-  }, {
-    value: 'communications',
-    label: 'Communications',
-    icon: Users
-  }, {
-    value: 'students',
-    label: 'Students',
-    icon: UserPlus
-  }, {
-    value: 'analytics',
-    label: 'Analytics',
-    icon: BarChart
-  }, {
-    value: 'resources',
-    label: 'Resources',
-    icon: BookOpen
-  }, {
-    value: 'ai-assistant',
-    label: 'AI Assistant',
-    icon: Brain
-  }, {
-    value: 'settings',
-    label: 'Settings',
-    icon: Settings
-  }];
+  // Navigation items organized by category
+  const navCategories = [
+    {
+      label: 'Content',
+      items: [
+        { value: 'syllabus', label: 'Syllabus', icon: FileText },
+        { value: 'modules', label: 'Modules', icon: FolderOpen },
+        { value: 'class-notes', label: 'Class Notes', icon: BookOpen },
+        { value: 'calendar', label: 'Calendar', icon: Calendar },
+      ]
+    },
+    {
+      label: 'Assessment',
+      items: [
+        { value: 'assignments', label: 'Assignments', icon: BookOpen },
+        { value: 'tests', label: 'Tests', icon: ClipboardCheck },
+        { value: 'polls', label: 'Polls', icon: BarChart3 },
+        { value: 'rubrics', label: 'Rubrics', icon: ListChecks },
+        { value: 'grades', label: 'Grades', icon: Trophy },
+      ]
+    },
+    {
+      label: 'Students',
+      items: [
+        { value: 'students', label: 'Enrollment', icon: UserPlus },
+        { value: 'analytics', label: 'Analytics', icon: BarChart },
+        { value: 'communications', label: 'Communications', icon: Mail },
+      ]
+    },
+    {
+      label: 'Resources',
+      items: [
+        { value: 'resources', label: 'Course Materials', icon: BookOpen },
+        { value: 'videos', label: 'Video Library', icon: Video },
+        { value: 'audio', label: 'Audio Examples', icon: Headphones },
+      ]
+    },
+    {
+      label: 'Tools',
+      items: [
+        { value: 'ai-groups', label: 'AI Group Project', icon: Brain },
+        { value: 'ai-assistant', label: 'AI Assistant', icon: Brain },
+        { value: 'settings', label: 'Settings', icon: Settings },
+      ]
+    }
+  ];
+
+  // Flatten for easy lookup
+  const navItems = navCategories.flatMap(cat => cat.items);
   const SidebarNav = ({
     isMobile = false
-  }) => <nav className="space-y-1">
-      {navItems.map(item => {
-      const Icon = item.icon;
-      return <button key={item.value} onClick={() => {
-        setActiveTab(item.value);
-        if (isMobile) setSidebarOpen(false);
-      }} className={cn("w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors", activeTab === item.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground")}>
-            <Icon className="h-4 w-4 flex-shrink-0" />
-            <span>{item.label}</span>
-          </button>;
-    })}
-    </nav>;
+  }) => (
+    <nav className="space-y-4">
+      {navCategories.map(category => (
+        <div key={category.label}>
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-3">
+            {category.label}
+          </h3>
+          <div className="space-y-0.5">
+            {category.items.map(item => {
+              const Icon = item.icon;
+              return (
+                <button 
+                  key={item.value} 
+                  onClick={() => {
+                    setActiveTab(item.value);
+                    if (isMobile) setSidebarOpen(false);
+                  }} 
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+                    activeTab === item.value 
+                      ? "bg-primary text-primary-foreground" 
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </nav>
+  );
   return <UniversalLayout containerized={false}>
       <div className="min-h-screen bg-background">
         {/* Compact Stats Bar */}
@@ -232,9 +255,9 @@ export const InstructorConsole = () => {
                   <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   <span>Student View</span>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240/admin')} className="hidden sm:flex items-center gap-1 sm:gap-2 whitespace-nowrap h-7 sm:h-8 text-xs sm:text-sm">
+                <Button variant="outline" size="sm" onClick={() => navigate('/classes/mus240')} className="hidden sm:flex items-center gap-1 sm:gap-2 whitespace-nowrap h-7 sm:h-8 text-xs sm:text-sm">
                   <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                  <span>Home</span>
+                  <span>Course Page</span>
                 </Button>
               </div>
             </div>
@@ -471,6 +494,120 @@ export const InstructorConsole = () => {
                 </CardHeader>
                 <CardContent className="p-2 sm:p-4 md:p-6">
                   <ResourcesAdmin />
+                </CardContent>
+              </Card>}
+
+            {activeTab === 'syllabus' && <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Syllabus
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Create and edit course syllabus</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <div className="text-center py-8">
+                    <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground mb-4">Syllabus editor coming soon</p>
+                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=syllabus')}>
+                      View Current Syllabus
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>}
+
+            {activeTab === 'modules' && <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <FolderOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Course Modules
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Organize course content into modules</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <div className="text-center py-8">
+                    <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground mb-4">Module editor coming soon</p>
+                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=modules')}>
+                      View Current Modules
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>}
+
+            {activeTab === 'class-notes' && <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Class Notes
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Upload and manage lecture notes</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <div className="text-center py-8">
+                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground mb-4">Class notes manager coming soon</p>
+                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=class-notes')}>
+                      View Current Notes
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>}
+
+            {activeTab === 'calendar' && <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Course Calendar
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Schedule course events and deadlines</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground mb-4">Calendar manager coming soon</p>
+                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=calendar')}>
+                      View Course Calendar
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>}
+
+            {activeTab === 'videos' && <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Video className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Video Library
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Upload and manage video resources</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <div className="text-center py-8">
+                    <Video className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground mb-4">Video library manager coming soon</p>
+                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=videos')}>
+                      View Video Library
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>}
+
+            {activeTab === 'audio' && <Card>
+                <CardHeader className="border-b p-3 sm:p-4 md:p-6">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg md:text-xl">
+                    <Headphones className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Audio Examples
+                  </CardTitle>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">Upload and manage audio files</p>
+                </CardHeader>
+                <CardContent className="p-2 sm:p-4 md:p-6">
+                  <div className="text-center py-8">
+                    <Headphones className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+                    <p className="text-muted-foreground mb-4">Audio examples manager coming soon</p>
+                    <Button variant="outline" onClick={() => navigate('/classes/mus240?section=audio')}>
+                      View Audio Library
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>}
 

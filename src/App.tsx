@@ -33,7 +33,7 @@ import GleeClubCoursePage from "./pages/GleeClubCoursePage";
 import NotationBasics from "./pages/music-theory/NotationBasics";
 import GleeAcademy from "./pages/GleeAcademy";
 import GleeCamGallery from "./pages/GleeCamGallery";
-import InstructorAdmin from "./pages/InstructorAdmin";
+
 
 // Unified Course Pages
 import Mus070Page from "./pages/courses/Mus070Page";
@@ -225,7 +225,7 @@ import Groups from "./pages/mus240/Groups";
 import GroupDetail from "./pages/mus240/GroupDetail";
 import GroupUpdateForm from "./pages/mus240/GroupUpdateForm";
 import ResourcesAdmin from "./pages/mus240/admin/ResourcesAdmin";
-import { Mus240AdminPage } from "./pages/mus240/admin/Mus240AdminPage";
+
 import { InstructorConsole } from "./pages/mus240/InstructorConsole";
 import { StudentMidtermGrading } from "./pages/mus240/StudentMidtermGrading";
 import { StudentWorkOverview } from "./pages/mus240/StudentWorkOverview";
@@ -2259,12 +2259,12 @@ const App = () => {
                                       } 
                                     />
                                     
-                                      {/* Grading System Routes */}
+                                      {/* Grading System Routes - Redirect to course-specific admin */}
                                       <Route 
                                         path="/instructor/admin/:courseId" 
                                         element={
                                           <ProtectedRoute>
-                                            <InstructorAdmin />
+                                            <Navigate to="/mus-240/instructor/console" replace />
                                           </ProtectedRoute>
                                         } 
                                       />
@@ -2272,7 +2272,7 @@ const App = () => {
                                         path="/instructor/admin" 
                                         element={
                                           <ProtectedRoute>
-                                            <InstructorAdmin />
+                                            <Navigate to="/mus-240/instructor/console" replace />
                                           </ProtectedRoute>
                                         } 
                                       />
