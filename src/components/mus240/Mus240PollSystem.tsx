@@ -16,6 +16,7 @@ import { LiveQuestionController } from './LiveQuestionController';
 import { LiveStudentInterface } from './LiveStudentInterface';
 import { TextPollCreator } from './TextPollCreator';
 import { PollEditor } from './PollEditor';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface Poll {
   id: string;
@@ -30,6 +31,7 @@ interface Poll {
 export const Mus240PollSystem = () => {
   const { isAdmin, isSuperAdmin, loading: roleLoading } = useUserRole();
   const { isTA, loading: taLoading } = useCourseTA('MUS240');
+  const { currentSemester } = useMus240SemesterSafe();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(false);
   const [newPollTitle, setNewPollTitle] = useState('');
@@ -47,7 +49,7 @@ export const Mus240PollSystem = () => {
     if (!roleLoading && !taLoading) {
       fetchPolls();
     }
-  }, [roleLoading, taLoading]);
+  }, [roleLoading, taLoading, currentSemester]);
 
   const fetchPolls = async () => {
     setLoading(true);
@@ -55,6 +57,7 @@ export const Mus240PollSystem = () => {
       const { data, error } = await supabase
         .from('mus240_polls')
         .select('*')
+        .eq('semester', currentSemester)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -193,7 +196,8 @@ export const Mus240PollSystem = () => {
           title: title.trim(),
           description: description.trim(),
           questions: questions,
-          is_active: false
+          is_active: false,
+          semester: currentSemester
         })
         .select()
         .single();
