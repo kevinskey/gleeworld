@@ -74,7 +74,7 @@ export const MyModules = ({
       <Card className="border border-border bg-card">
         <CollapsibleTrigger asChild>
           <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
-            <div className="flex items-center justify-between pr-0 pl-[20px] py-[20px]">
+            <div className="flex items-center justify-between pr-0 pl-[20px] py-[20px] bg-accent-foreground">
               <div className="flex items-center gap-2">
                 <LayoutGrid className="text-primary pl-[2px] bg-secondary-foreground pr-0 h-[20px] w-[20px]" />
                 <CardTitle className="text-lg font-semibold tracking-wide">MY MODULES</CardTitle>
