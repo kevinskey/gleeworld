@@ -20,7 +20,6 @@ import {
   QrCode
 } from 'lucide-react';
 import { TakeAttendance } from './TakeAttendance';
-import { MyAttendance } from './MyAttendance';
 import { AttendanceReports } from './AttendanceReports';
 import { QRAttendanceGenerator } from './QRAttendanceGenerator';
 import { ExcuseGenerator } from './ExcuseGenerator';
@@ -214,50 +213,47 @@ export const AttendanceDashboard = () => {
 
   return (
     <div className="space-y-4 px-2 sm:px-4 lg:px-6">
-      {/* User Sections with Admin Collapse Toggle */}
-      <div className="bg-background/50 backdrop-blur-sm rounded-xl border">
-        {/* Collapsible Header - Only for Admins */}
-        {isAdmin && (
-          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border/50">
-            <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2">
-              <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="truncate">Personal Attendance</span>
+      {/* Attendance management tools (Secretary/Admin) */}
+      {canTakeAttendance && (
+        <div className="space-y-4">
+          {/* QR Code Generator */}
+          <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 rounded-xl p-4 sm:p-6 border shadow-lg">
+            <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2 text-primary-foreground">
+              <QrCode className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="truncate">QR Attendance Generator</span>
+              <Badge variant="secondary" className="ml-2 bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30">
+                {isAdmin ? 'Admin' : 'Secretary'}
+              </Badge>
             </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setUserSectionCollapsed(!userSectionCollapsed)}
-              className="flex items-center gap-1"
-            >
-              {userSectionCollapsed ? (
-                <>
-                  <span className="text-sm">Show</span>
-                  <ChevronDown className="h-4 w-4" />
-                </>
-              ) : (
-                <>
-                  <span className="text-sm">Hide</span>
-                  <ChevronUp className="h-4 w-4" />
-                </>
-              )}
-            </Button>
+            <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
+              <QRAttendanceGenerator />
+            </div>
           </div>
-        )}
 
-        {/* Content */}
-        <div className="p-3 sm:p-6 space-y-4">
-          {/* My Attendance Section */}
-          <div>
-            {!isAdmin && (
-              <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
-                <UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="truncate">My Attendance</span>
+          {/* Manual Attendance */}
+          <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 rounded-xl p-4 sm:p-6 border shadow-lg">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h2 className="text-lg sm:text-xl font-semibold flex items-center gap-2 text-primary-foreground">
+                <ClipboardCheck className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="truncate">Manual Attendance</span>
+                <Badge variant="secondary" className="ml-2 bg-primary-foreground/20 text-primary-foreground border-primary-foreground/30">
+                  {isAdmin ? 'Admin' : 'Secretary'}
+                </Badge>
               </h2>
-            )}
-            <MyAttendance />
+              <CSVUploadDialog
+                events={upcomingEvents}
+                onUploadComplete={() => {
+                  loadDashboardStats();
+                  loadUpcomingEvents();
+                }}
+              />
+            </div>
+            <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg p-3 sm:p-4">
+              <TakeAttendance />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Class Schedule Manager - Separate Collapsible Section */}
       <div className="bg-background/50 backdrop-blur-sm rounded-xl border">
