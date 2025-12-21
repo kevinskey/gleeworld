@@ -148,14 +148,13 @@ export const FreshAdminDashboard = () => {
                   }`}
                   onClick={() => module.route ? navigate(module.route) : setSelectedModule(module.id)}
                 >
-                  <CardContent className="p-3 sm:p-4 text-center h-full flex flex-col items-center justify-center min-h-[120px] sm:min-h-[140px] gap-2">
-                    <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <module.icon className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+                  <CardContent className="py-3 px-2 text-center h-full flex flex-col items-center justify-start min-h-[100px] gap-2">
+                    <div className="flex-shrink-0 mt-2">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <module.icon className="h-7 w-7 text-primary" />
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center gap-0.5 w-full">
-                      <h3 className="text-xs sm:text-sm font-semibold text-foreground leading-tight text-center break-words w-full">{module.name}</h3>
-                      <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-2 leading-tight">{module.description}</p>
-                    </div>
+                    <span className="text-[10px] sm:text-sm font-medium text-foreground leading-tight text-center break-words w-full px-0.5 line-clamp-2">{module.name}</span>
                   </CardContent>
                 </Card>
               ))}
