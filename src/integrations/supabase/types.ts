@@ -4998,6 +4998,98 @@ export type Database = {
           },
         ]
       }
+      gw_academy_poll_responses: {
+        Row: {
+          id: string
+          poll_id: string
+          question_index: number
+          response_time: string
+          selected_option: number
+          semester: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          poll_id: string
+          question_index: number
+          response_time?: string
+          selected_option: number
+          semester?: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          poll_id?: string
+          question_index?: number
+          response_time?: string
+          selected_option?: number
+          semester?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_academy_poll_responses_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "gw_academy_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_academy_polls: {
+        Row: {
+          course_id: string
+          created_at: string
+          created_by: string | null
+          current_question_index: number | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          is_live_session: boolean | null
+          questions: Json
+          semester: string
+          show_results: boolean | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          created_by?: string | null
+          current_question_index?: number | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          is_live_session?: boolean | null
+          questions?: Json
+          semester?: string
+          show_results?: boolean | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          created_by?: string | null
+          current_question_index?: number | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          is_live_session?: boolean | null
+          questions?: Json
+          semester?: string
+          show_results?: boolean | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_agendas: {
         Row: {
           agenda_items: Json
