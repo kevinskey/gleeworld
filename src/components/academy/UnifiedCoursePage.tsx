@@ -25,6 +25,7 @@ import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseTestsSection } from './CourseTestsSection';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { CourseMessagingInterface } from './CourseMessagingInterface';
+import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 
 // Lazy loaded components for performance
 const Mus240PollSystem = React.lazy(() => import('@/components/mus240/Mus240PollSystem').then(m => ({ default: m.Mus240PollSystem })));
@@ -168,7 +169,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
         {/* Left Sidebar - Navigation */}
         <div className="w-[15%] min-w-[180px] bg-card border-r border-border flex-shrink-0 hidden lg:block">
           <div className="p-4 border-b border-border">
-            <div className="text-xs font-bold text-muted-foreground mb-1">{currentSemester.toUpperCase()}</div>
+            <Mus240SemesterSelector showLabel={false} className="mb-2" />
             <div className="text-lg font-bold text-foreground">{course.courseCode}</div>
             <div className="text-sm text-muted-foreground">{course.title}</div>
           </div>
