@@ -86,7 +86,7 @@ export const MyModules = ({
                 {userProfile.exec_board_role && <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-1 rounded">
                     {userProfile.exec_board_role}
                   </span>}
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 mr-5 ${isOpen ? 'rotate-180' : ''}`} />
               </div>
             </div>
           </CardHeader>
