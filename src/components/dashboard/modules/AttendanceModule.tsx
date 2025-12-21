@@ -63,34 +63,47 @@ export const AttendanceModule = () => {
     setLoading(true);
     
     const loadData = async () => {
-      const { data: enrollments } = await supabase.from('gw_course_enrollments')
-        .select('user_id').eq('course_id', selectedCourseId).eq('status', 'enrolled');
+      // Fetch enrollments for course using match to avoid type instantiation issues
+      const enrollmentResult = await supabase
+        .from('gw_course_enrollments')
+        .select('user_id')
+        .match({ course_id: selectedCourseId, status: 'enrolled' });
       
-      const userIds = (enrollments || []).map((e: any) => e.user_id);
+      const enrollments = enrollmentResult.data as { user_id: string }[] | null;
+      const userIds = (enrollments || []).map(e => e.user_id);
       if (!userIds.length) { setStudents([]); setAttendance({}); setLoading(false); return; }
 
-      const { data: profiles } = await supabase.from('gw_profiles')
-        .select('user_id, full_name, voice_part, avatar_url').in('user_id', userIds).order('full_name');
+      // Fetch profiles for enrolled users
+      const profileResult = await supabase
+        .from('gw_profiles')
+        .select('user_id, full_name, voice_part, avatar_url')
+        .in('user_id', userIds as string[])
+        .order('full_name');
+      
+      const profiles = profileResult.data as any[] | null;
       
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      const { data: attData } = await supabase.from('gw_course_attendance')
-        .select('student_id, status, notes').eq('course_id', selectedCourseId).eq('attendance_date', dateStr);
+      const attResult = await supabase.from('gw_course_attendance')
+        .select('student_id, status, notes')
+        .match({ course_id: selectedCourseId, attendance_date: dateStr });
+      const attData = attResult.data as any[] | null;
       
-      const attMap = new Map((attData || []).map((a: any) => [a.student_id, { status: a.status, notes: a.notes || '' }]));
+      const attMap = new Map((attData || []).map(a => [a.student_id, { status: a.status, notes: a.notes || '' }]));
       
       setStudents(profiles || []);
       const init: Record<string, { status: string; notes: string }> = {};
-      (profiles || []).forEach((p: any) => {
+      (profiles || []).forEach(p => {
         init[p.user_id] = attMap.get(p.user_id) || { status: 'present', notes: '' };
       });
       setAttendance(init);
 
       // Load stats
-      const { data: allRecords } = await supabase.from('gw_course_attendance')
+      const statsResult = await supabase.from('gw_course_attendance')
         .select('student_id, status').eq('course_id', selectedCourseId);
+      const allRecords = statsResult.data as any[] | null;
       
       const statsMap = new Map<string, any>();
-      (allRecords || []).forEach((r: any) => {
+      (allRecords || []).forEach(r => {
         const s = statsMap.get(r.student_id) || { present: 0, absent: 0, late: 0, excused: 0 };
         if (r.status === 'present') s.present++;
         else if (r.status === 'absent') s.absent++;
@@ -99,7 +112,7 @@ export const AttendanceModule = () => {
         statsMap.set(r.student_id, s);
       });
 
-      const stats = (profiles || []).map((p: any) => {
+      const stats = (profiles || []).map(p => {
         const s = statsMap.get(p.user_id) || { present: 0, absent: 0, late: 0, excused: 0 };
         const total = s.present + s.absent + s.late + s.excused;
         const attended = s.present + s.late + s.excused;
