@@ -96,11 +96,11 @@ export const MyModules = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
-              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-[100px] py-4 px-3 flex flex-col items-center justify-start gap-3 hover:bg-primary/10 hover:border-primary/30">
+              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-[100px] py-3 px-2 flex flex-col items-center justify-start gap-2 bg-card border-border hover:bg-muted/50 hover:border-primary/30">
                     <div className="flex-shrink-0 mt-2">
-                      <IconComponent className="h-8 w-8 text-primary" />
+                      <IconComponent className="h-7 w-7 text-primary" />
                     </div>
-                    <span className="text-center leading-tight line-clamp-2 text-foreground px-1 font-normal font-sans text-xs">
+                    <span className="text-[10px] sm:text-xs text-center leading-tight line-clamp-2 text-foreground px-0.5 font-medium break-words w-full">
                       {module.title}
                     </span>
                   </Button>;
