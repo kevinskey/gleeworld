@@ -22,13 +22,15 @@ import {
   PieChart as PieChartIcon,
   Activity
 } from 'lucide-react';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 export const StudentAnalyticsDashboard: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const { currentSemester } = useMus240SemesterSafe();
 
   // Fetch enrolled students with their analytics if available
   const { data: sessionAnalytics, isLoading: loadingSession } = useQuery({
-    queryKey: ['session-analytics'],
+    queryKey: ['session-analytics', currentSemester],
     queryFn: async () => {
       // Get all enrolled students
       const { data: enrollments, error: enrollError } = await supabase
@@ -37,7 +39,7 @@ export const StudentAnalyticsDashboard: React.FC = () => {
           student_id,
           gw_profiles(full_name, email)
         `)
-        .eq('semester', 'Fall 2025')
+        .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');
 
       if (enrollError) throw enrollError;

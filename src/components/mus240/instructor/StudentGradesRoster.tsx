@@ -8,6 +8,7 @@ import { Search, Download, TrendingUp, TrendingDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface StudentGrade {
   student_id: string;
@@ -26,10 +27,11 @@ export const StudentGradesRoster: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+  const { currentSemester } = useMus240SemesterSafe();
 
   useEffect(() => {
     fetchStudentGrades();
-  }, []);
+  }, [currentSemester]);
 
   const fetchStudentGrades = async () => {
     try {
@@ -39,6 +41,7 @@ export const StudentGradesRoster: React.FC = () => {
       const result = await supabase
         .from('mus240_enrollments' as any)
         .select('student_id, gw_profiles(user_id, full_name, email)')
+        .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');
       
       const enrollments: any[] = result.data || [];

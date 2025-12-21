@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/shared/LoadingSpinner';
 import { Progress } from '@/components/ui/progress';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 interface RoleSubmission {
   id: string;
@@ -38,7 +39,8 @@ interface RoleSubmission {
 
 export const AIGroupProjectManager = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const { groups, loading: groupsLoading } = useMus240Groups('Fall 2025');
+  const { currentSemester } = useMus240SemesterSafe();
+  const { groups, loading: groupsLoading } = useMus240Groups(currentSemester);
 
   // Fetch the AI Group Role assignment
   const { data: assignment } = useQuery({
@@ -57,12 +59,12 @@ export const AIGroupProjectManager = () => {
 
   // Fetch ALL enrolled students to calculate accurate counts
   const { data: enrolledStudents } = useQuery({
-    queryKey: ['enrolled-students-mus240'],
+    queryKey: ['enrolled-students-mus240', currentSemester],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('mus240_enrollments')
         .select('student_id')
-        .eq('semester', 'Fall 2025')
+        .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');
 
       if (error) throw error;
