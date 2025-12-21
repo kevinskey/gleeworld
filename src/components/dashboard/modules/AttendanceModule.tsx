@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
@@ -14,12 +12,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   UserCheck, CheckCircle, XCircle, Clock, AlertTriangle,
-  CalendarIcon, Save, RefreshCw, Users, TrendingDown, BookOpen, CheckCheck
+  CalendarIcon, Save, BookOpen, CheckCheck, Users
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-
-const ATTENDANCE_THRESHOLD = 80;
 
 export const AttendanceModule = () => {
   const { user } = useAuth();
@@ -30,10 +26,8 @@ export const AttendanceModule = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<Record<string, { status: string; notes: string }>>({});
-  const [studentStats, setStudentStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'take' | 'stats'>('take');
 
   // Check permissions
   useEffect(() => {
@@ -63,7 +57,6 @@ export const AttendanceModule = () => {
     setLoading(true);
     
     const loadData = async () => {
-      // Fetch enrollments for course using match to avoid type instantiation issues
       const enrollmentResult = await supabase
         .from('gw_course_enrollments')
         .select('user_id')
@@ -73,7 +66,6 @@ export const AttendanceModule = () => {
       const userIds = (enrollments || []).map(e => e.user_id);
       if (!userIds.length) { setStudents([]); setAttendance({}); setLoading(false); return; }
 
-      // Fetch profiles for enrolled users
       const profileResult = await supabase
         .from('gw_profiles')
         .select('user_id, full_name, voice_part, avatar_url')
@@ -96,37 +88,13 @@ export const AttendanceModule = () => {
         init[p.user_id] = attMap.get(p.user_id) || { status: 'present', notes: '' };
       });
       setAttendance(init);
-
-      // Load stats
-      const statsResult = await supabase.from('gw_course_attendance')
-        .select('student_id, status').eq('course_id', selectedCourseId);
-      const allRecords = statsResult.data as any[] | null;
-      
-      const statsMap = new Map<string, any>();
-      (allRecords || []).forEach(r => {
-        const s = statsMap.get(r.student_id) || { present: 0, absent: 0, late: 0, excused: 0 };
-        if (r.status === 'present') s.present++;
-        else if (r.status === 'absent') s.absent++;
-        else if (r.status === 'late') s.late++;
-        else if (r.status === 'excused') s.excused++;
-        statsMap.set(r.student_id, s);
-      });
-
-      const stats = (profiles || []).map(p => {
-        const s = statsMap.get(p.user_id) || { present: 0, absent: 0, late: 0, excused: 0 };
-        const total = s.present + s.absent + s.late + s.excused;
-        const attended = s.present + s.late + s.excused;
-        return { userId: p.user_id, fullName: p.full_name, totalClasses: total, ...s, 
-          attendanceRate: total > 0 ? Math.round((attended / total) * 100) : 100 };
-      });
-      setStudentStats(stats);
       setLoading(false);
     };
     loadData();
   }, [selectedCourseId, selectedDate, hasPermission]);
 
-  const updateAtt = (userId: string, field: 'status' | 'notes', value: string) => {
-    setAttendance(prev => ({ ...prev, [userId]: { ...prev[userId], [field]: value } }));
+  const updateStatus = (userId: string, status: string) => {
+    setAttendance(prev => ({ ...prev, [userId]: { ...prev[userId], status } }));
   };
 
   const handleSave = async () => {
@@ -139,73 +107,201 @@ export const AttendanceModule = () => {
     }));
     const { error } = await supabase.from('gw_course_attendance').upsert(records, { onConflict: 'course_id,student_id,attendance_date' });
     setSaving(false);
-    toast({ title: error ? "Error" : "Saved", description: error ? "Failed to save" : `Saved for ${records.length} students`, variant: error ? "destructive" : undefined });
+    toast({ title: error ? "Error" : "Attendance Saved", description: error ? "Failed to save attendance" : `Saved for ${records.length} students`, variant: error ? "destructive" : undefined });
   };
 
-  const markAllAs = (status: string) => setAttendance(prev => {
-    const upd = { ...prev }; Object.keys(upd).forEach(u => upd[u] = { ...upd[u], status }); return upd;
-  });
+  const markAllAs = (status: string) => {
+    setAttendance(prev => {
+      const upd = { ...prev };
+      Object.keys(upd).forEach(u => upd[u] = { ...upd[u], status });
+      return upd;
+    });
+  };
 
-  const stats = { total: Object.keys(attendance).length, present: Object.values(attendance).filter(a => a.status === 'present').length,
-    absent: Object.values(attendance).filter(a => a.status === 'absent').length, late: Object.values(attendance).filter(a => a.status === 'late').length };
-  const lowStudents = studentStats.filter(s => s.totalClasses > 0 && s.attendanceRate < ATTENDANCE_THRESHOLD);
+  const counts = {
+    total: Object.keys(attendance).length,
+    present: Object.values(attendance).filter(a => a.status === 'present').length,
+    absent: Object.values(attendance).filter(a => a.status === 'absent').length,
+    late: Object.values(attendance).filter(a => a.status === 'late').length,
+    excused: Object.values(attendance).filter(a => a.status === 'excused').length
+  };
 
-  if (hasPermission === null || loading) return <div className="h-full flex items-center justify-center"><UserCheck className="w-12 h-12 animate-pulse text-muted-foreground" /></div>;
-  if (!hasPermission) return <div className="h-full flex items-center justify-center text-center"><XCircle className="w-12 h-12 text-destructive mx-auto mb-2" /><p className="text-sm">Only Secretary/Admin can manage attendance</p></div>;
-  if (!courses.length) return <div className="h-full flex items-center justify-center text-center"><BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-2" /><p className="text-sm">No active courses</p></div>;
+  if (hasPermission === null || (loading && !courses.length)) {
+    return <div className="h-full flex items-center justify-center"><UserCheck className="w-10 h-10 animate-pulse text-muted-foreground" /></div>;
+  }
+  
+  if (!hasPermission) {
+    return (
+      <div className="h-full flex items-center justify-center text-center p-4">
+        <div>
+          <XCircle className="w-10 h-10 text-destructive mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">Secretary or Admin access required</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!courses.length) {
+    return (
+      <div className="h-full flex items-center justify-center text-center p-4">
+        <div>
+          <BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No active courses found</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="h-full flex flex-col gap-3 p-1">
-      {lowStudents.length > 0 && <Card className="border-destructive/50 bg-destructive/5"><CardContent className="p-3 flex gap-2"><TrendingDown className="h-5 w-5 text-destructive" /><div><p className="text-sm font-medium text-destructive">Low Attendance Alert</p><p className="text-xs text-muted-foreground">{lowStudents.length} student(s) below {ATTENDANCE_THRESHOLD}%</p></div></CardContent></Card>}
-      
-      <div className="flex flex-col sm:flex-row gap-2">
-        <Select value={selectedCourseId} onValueChange={setSelectedCourseId}><SelectTrigger className="flex-1"><SelectValue /></SelectTrigger><SelectContent>{courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title} {c.course_code && <Badge variant="outline" className="ml-2 text-xs">{c.course_code}</Badge>}</SelectItem>)}</SelectContent></Select>
-        <Popover><PopoverTrigger asChild><Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4" />{format(selectedDate, 'MMM d, yyyy')}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={selectedDate} onSelect={d => d && setSelectedDate(d)} /></PopoverContent></Popover>
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="p-3 border-b bg-card/50">
+        <div className="flex items-center gap-2 mb-3">
+          <UserCheck className="h-5 w-5 text-primary" />
+          <h2 className="font-semibold">Take Attendance</h2>
+        </div>
+        
+        {/* Course & Date Selection */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+            <SelectTrigger className="flex-1 bg-background">
+              <SelectValue placeholder="Select course" />
+            </SelectTrigger>
+            <SelectContent>
+              {courses.map(c => (
+                <SelectItem key={c.id} value={c.id}>
+                  <span className="flex items-center gap-2">
+                    {c.title}
+                    {c.course_code && <Badge variant="secondary" className="text-[10px]">{c.course_code}</Badge>}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="bg-background">
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {format(selectedDate, 'MMM d, yyyy')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar mode="single" selected={selectedDate} onSelect={d => d && setSelectedDate(d)} />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as any)} className="flex-1 flex flex-col min-h-0">
-        <TabsList className="w-full grid grid-cols-2"><TabsTrigger value="take"><UserCheck className="h-4 w-4 mr-1" />Take</TabsTrigger><TabsTrigger value="stats"><Users className="h-4 w-4 mr-1" />Stats</TabsTrigger></TabsList>
-        
-        <TabsContent value="take" className="flex-1 flex flex-col gap-2 mt-2 min-h-0">
-          {!students.length ? <div className="text-center py-8 text-muted-foreground text-sm">No students enrolled</div> : <>
-            <div className="grid grid-cols-4 gap-2 text-center text-xs">
-              <div className="bg-muted/30 rounded p-2"><Users className="h-3.5 w-3.5 mx-auto" /><span className="font-bold">{stats.total}</span></div>
-              <div className="bg-muted/30 rounded p-2 text-green-600"><CheckCircle className="h-3.5 w-3.5 mx-auto" /><span className="font-bold">{stats.present}</span></div>
-              <div className="bg-muted/30 rounded p-2 text-red-600"><XCircle className="h-3.5 w-3.5 mx-auto" /><span className="font-bold">{stats.absent}</span></div>
-              <div className="bg-muted/30 rounded p-2 text-yellow-600"><Clock className="h-3.5 w-3.5 mx-auto" /><span className="font-bold">{stats.late}</span></div>
-            </div>
-            <div className="flex justify-between"><Button size="sm" variant="outline" onClick={() => markAllAs('present')} className="text-xs h-7"><CheckCheck className="h-3 w-3 mr-1" />All Present</Button><Button size="sm" onClick={handleSave} disabled={saving} className="h-7"><Save className="h-3.5 w-3.5 mr-1" />{saving ? '...' : 'Save'}</Button></div>
-            <ScrollArea className="flex-1"><div className="space-y-2 pr-2">{students.map((s: any) => <StudentRow key={s.user_id} student={s} status={attendance[s.user_id]?.status || 'present'} onStatusChange={st => updateAtt(s.user_id, 'status', st)} />)}</div></ScrollArea>
-          </>}
-        </TabsContent>
-        
-        <TabsContent value="stats" className="flex-1 mt-2 min-h-0"><ScrollArea className="h-full"><div className="space-y-2 pr-2">{studentStats.sort((a,b) => a.attendanceRate - b.attendanceRate).map(s => <StatsRow key={s.userId} student={s} />)}</div></ScrollArea></TabsContent>
-      </Tabs>
+      {/* Quick Stats Bar */}
+      {students.length > 0 && (
+        <div className="px-3 py-2 border-b bg-muted/30 flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="font-medium">{counts.total}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-green-600">
+            <CheckCircle className="h-3.5 w-3.5" />
+            <span className="font-medium">{counts.present}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-red-600">
+            <XCircle className="h-3.5 w-3.5" />
+            <span className="font-medium">{counts.absent}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-yellow-600">
+            <Clock className="h-3.5 w-3.5" />
+            <span className="font-medium">{counts.late}</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-blue-600">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            <span className="font-medium">{counts.excused}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Student List */}
+      <ScrollArea className="flex-1">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <UserCheck className="w-8 h-8 animate-pulse text-muted-foreground" />
+          </div>
+        ) : !students.length ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Users className="w-10 h-10 text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">No enrolled students</p>
+          </div>
+        ) : (
+          <div className="p-3 space-y-2">
+            {students.map((s: any) => (
+              <AttendanceRow
+                key={s.user_id}
+                student={s}
+                status={attendance[s.user_id]?.status || 'present'}
+                onStatusChange={status => updateStatus(s.user_id, status)}
+              />
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+
+      {/* Footer Actions */}
+      {students.length > 0 && (
+        <div className="p-3 border-t bg-card/50 flex justify-between gap-2">
+          <Button variant="outline" size="sm" onClick={() => markAllAs('present')}>
+            <CheckCheck className="h-4 w-4 mr-1.5" />
+            All Present
+          </Button>
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            <Save className="h-4 w-4 mr-1.5" />
+            {saving ? 'Saving...' : 'Save Attendance'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
 
-const StudentRow = ({ student, status, onStatusChange }: any) => {
-  const opts = [{ v: 'present', c: 'bg-green-100 text-green-700', i: <CheckCircle className="h-4 w-4" /> },
-    { v: 'absent', c: 'bg-red-100 text-red-700', i: <XCircle className="h-4 w-4" /> },
-    { v: 'late', c: 'bg-yellow-100 text-yellow-700', i: <Clock className="h-4 w-4" /> },
-    { v: 'excused', c: 'bg-blue-100 text-blue-700', i: <AlertTriangle className="h-4 w-4" /> }];
-  return (
-    <div className="bg-muted/30 rounded-lg p-2.5 flex items-center gap-2">
-      <Avatar className="h-8 w-8"><AvatarImage src={student.avatar_url} /><AvatarFallback>{student.full_name?.charAt(0)}</AvatarFallback></Avatar>
-      <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{student.full_name}</p>{student.voice_part && <p className="text-[10px] text-muted-foreground">{student.voice_part}</p>}</div>
-      <div className="flex gap-1">{opts.map(o => <button key={o.v} onClick={() => onStatusChange(o.v)} className={cn("p-1.5 rounded-md", status === o.v ? o.c : "bg-muted/50 text-muted-foreground")}>{o.i}</button>)}</div>
-    </div>
-  );
-};
+const AttendanceRow = ({ student, status, onStatusChange }: { student: any; status: string; onStatusChange: (s: string) => void }) => {
+  const statusOptions = [
+    { value: 'present', icon: CheckCircle, activeClass: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' },
+    { value: 'absent', icon: XCircle, activeClass: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' },
+    { value: 'late', icon: Clock, activeClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400' },
+    { value: 'excused', icon: AlertTriangle, activeClass: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' }
+  ];
 
-const StatsRow = ({ student }: any) => {
-  const isLow = student.attendanceRate < ATTENDANCE_THRESHOLD;
   return (
-    <div className={cn("bg-muted/30 rounded-lg p-3", isLow && "border border-destructive/30 bg-destructive/5")}>
-      <div className="flex justify-between mb-1"><span className="text-sm font-medium">{student.fullName}{isLow && <Badge variant="destructive" className="ml-2 text-[10px] h-4">Low</Badge>}</span><span className={cn("text-lg font-bold", isLow ? "text-destructive" : "text-green-600")}>{student.attendanceRate}%</span></div>
-      <div className="flex gap-3 text-xs text-muted-foreground"><span><span className="w-2 h-2 rounded-full bg-green-500 inline-block mr-1" />{student.present}</span><span><span className="w-2 h-2 rounded-full bg-red-500 inline-block mr-1" />{student.absent}</span><span><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block mr-1" />{student.late}</span></div>
-      <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden"><div className={cn("h-full", isLow ? "bg-destructive" : "bg-green-500")} style={{ width: `${student.attendanceRate}%` }} /></div>
+    <div className="flex items-center gap-3 p-2.5 rounded-lg bg-muted/40 hover:bg-muted/60 transition-colors">
+      <Avatar className="h-9 w-9">
+        <AvatarImage src={student.avatar_url} />
+        <AvatarFallback className="text-xs">{student.full_name?.charAt(0) || '?'}</AvatarFallback>
+      </Avatar>
+      
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">{student.full_name || 'Unknown'}</p>
+        {student.voice_part && (
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{student.voice_part}</p>
+        )}
+      </div>
+      
+      <div className="flex gap-1">
+        {statusOptions.map(opt => {
+          const Icon = opt.icon;
+          const isActive = status === opt.value;
+          return (
+            <button
+              key={opt.value}
+              onClick={() => onStatusChange(opt.value)}
+              className={cn(
+                "p-2 rounded-md transition-all",
+                isActive ? opt.activeClass : "bg-muted/50 text-muted-foreground hover:bg-muted"
+              )}
+              title={opt.value.charAt(0).toUpperCase() + opt.value.slice(1)}
+            >
+              <Icon className="h-4 w-4" />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };
