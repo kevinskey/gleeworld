@@ -100,7 +100,7 @@ export const MyModules = ({
                     <div className="flex-shrink-0 mt-2">
                       <IconComponent className="h-7 w-7 text-primary" />
                     </div>
-                    <span className="text-[10px] sm:text-xs text-center leading-tight line-clamp-2 text-foreground px-0.5 font-medium break-words w-full">
+                    <span className="text-[10px] text-center leading-tight line-clamp-2 text-foreground px-0.5 font-medium break-words w-full sm:text-sm">
                       {module.title}
                     </span>
                   </Button>;
