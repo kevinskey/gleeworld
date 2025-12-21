@@ -29,6 +29,7 @@ import { getInitials } from '@/utils/avatarUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { convertToSecureUrl } from '@/utils/secureFileAccess';
 import { StudentGradeSummary } from '@/components/mus240/instructor/StudentGradeSummary';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 export const StudentWorkOverview = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -39,6 +40,7 @@ export const StudentWorkOverview = () => {
   const [students, setStudents] = useState<Array<{ user_id: string; full_name: string; email: string }>>([]);
   const [studentsLoading, setStudentsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<'midterm' | string | null>(null);
+  const { currentSemester } = useMus240SemesterSafe();
 
   useEffect(() => {
     const fetchEnrolledStudents = async () => {
@@ -49,7 +51,7 @@ export const StudentWorkOverview = () => {
             student_id,
             gw_profiles!inner(user_id, full_name, email)
           `)
-          .eq('semester', 'Fall 2025')
+          .eq('semester', currentSemester)
           .eq('enrollment_status', 'enrolled')
           .order('gw_profiles(full_name)');
 
@@ -70,7 +72,7 @@ export const StudentWorkOverview = () => {
     };
 
     fetchEnrolledStudents();
-  }, []);
+  }, [currentSemester]);
 
   const isLoading = userLoading || midtermLoading || assignmentsLoading;
 

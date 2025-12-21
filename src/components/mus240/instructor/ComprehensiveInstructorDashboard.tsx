@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useMus240Enrollments } from '@/hooks/useMus240Enrollments';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { StudentRecordView } from './StudentRecordView';
@@ -52,6 +53,7 @@ interface DashboardStats {
 
 export const ComprehensiveInstructorDashboard: React.FC = () => {
   const { isAdmin, loading } = useUserRole();
+  const { currentSemester } = useMus240SemesterSafe();
   const { enrollments, loading: enrollmentsLoading } = useMus240Enrollments();
   const navigate = useNavigate();
   
@@ -69,7 +71,7 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
 
   useEffect(() => {
     loadDashboardStats();
-  }, []);
+  }, [currentSemester]);
 
   const loadDashboardStats = async () => {
     try {
@@ -79,7 +81,7 @@ export const ComprehensiveInstructorDashboard: React.FC = () => {
       const { data: studentsData } = await supabase
         .from('mus240_enrollments')
         .select('student_id')
-        .eq('semester', 'Fall 2025')
+        .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');
 
       // Get pending assignments

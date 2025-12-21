@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Download, Search, RefreshCw, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 
 // Grade weights as percentages of 100%
 const GRADE_WEIGHTS = {
@@ -40,6 +41,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
   const [overrides, setOverrides] = useState<Record<string, Partial<Record<GradeField, number>>>>({});
   const [sortField, setSortField] = useState<SortField>('final_grade');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const { currentSemester } = useMus240SemesterSafe();
 
   const handleOverride = (studentId: string, field: GradeField, value: number) => {
     // Clamp value to max weight for that field
@@ -85,7 +87,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
 
   useEffect(() => {
     fetchGrades();
-  }, []);
+  }, [currentSemester]);
 
   const fetchGrades = async () => {
     try {
@@ -95,6 +97,7 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
       const { data: enrollments, error: enrollError } = await supabase
         .from('mus240_enrollments')
         .select('student_id, gw_profiles(user_id, full_name)')
+        .eq('semester', currentSemester)
         .eq('enrollment_status', 'enrolled');
 
       if (enrollError) throw enrollError;
