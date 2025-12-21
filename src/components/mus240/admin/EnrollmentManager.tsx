@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCourseTA } from '@/hooks/useCourseTA';
 import { useUserRole } from '@/hooks/useUserRole';
+import { ClasslistUploadDialog } from '@/components/academy/ClasslistUploadDialog';
 
 interface Enrollment {
   id: string;
@@ -293,14 +294,20 @@ export const EnrollmentManager = () => {
           <h3 className="text-2xl font-bold">Course Enrollment Management</h3>
           <p className="text-muted-foreground">Manage student enrollments for MUS 240</p>
         </div>
-        
-        <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Student
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <ClasslistUploadDialog 
+            courses={[{ id: 'mus240', title: 'MUS 240', course_code: 'MUS 240' }]}
+            selectedCourseId="mus240"
+            onUploadComplete={loadEnrollments}
+          />
+          
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Student
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Enroll Student in MUS 240</DialogTitle>
@@ -331,6 +338,7 @@ export const EnrollmentManager = () => {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="space-y-4">
