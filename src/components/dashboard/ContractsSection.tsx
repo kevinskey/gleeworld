@@ -99,15 +99,17 @@ export const ContractsSection = ({ onViewContract }: ContractsSectionProps) => {
               <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                 <FileText className="h-5 w-5 text-primary flex-shrink-0 mt-0.5 sm:mt-0" />
                 <div className="min-w-0 flex-1">
-                  <h4 className="font-medium text-foreground truncate text-sm sm:text-base leading-tight">{contract.title}</h4>
-                  <div className="flex flex-col gap-1 mt-1 text-xs text-muted-foreground">
+                  <h4 className="font-medium text-foreground truncate text-xs sm:text-sm leading-tight">
+                    {contract.title.replace(/^Tour Contract\s*-\s*/i, '')}
+                  </h4>
+                  <div className="flex flex-col gap-0.5 mt-0.5 text-[10px] sm:text-xs text-muted-foreground">
                     <div className="flex items-center gap-1.5">
-                      <Calendar className="h-3 w-3 flex-shrink-0" />
+                      <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
                       <span>Created {new Date(contract.created_at).toLocaleDateString()}</span>
                     </div>
                     {contract.creator_name && (
                       <div className="flex items-center gap-1.5">
-                        <User className="h-3 w-3 flex-shrink-0" />
+                        <User className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
                         <span>by {contract.creator_name}</span>
                       </div>
                     )}
