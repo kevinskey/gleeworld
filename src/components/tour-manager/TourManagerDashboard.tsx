@@ -102,27 +102,17 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Mobile Menu Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-      >
-        {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-      </Button>
-
-      {/* Sidebar */}
+    <div className="min-h-screen bg-background flex flex-col lg:flex-row">
+      {/* Sidebar - hidden on mobile, shown on desktop */}
       <aside 
         className={cn(
-          "fixed inset-y-0 left-0 z-40 w-48 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0",
+          "fixed inset-y-0 left-0 z-40 w-56 bg-card border-r border-border transform transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 flex-shrink-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           {/* Sidebar Header */}
-          <div className="px-3 py-3 border-b border-border">
+          <div className="px-3 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="flex gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
@@ -131,6 +121,14 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
               </div>
               <span className="text-sm font-medium text-foreground whitespace-nowrap">Tour Manager</span>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden h-8 w-8"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Navigation */}
@@ -144,13 +142,13 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
                     setSidebarOpen(false);
                   }}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors text-left",
+                    "w-full flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-colors text-left",
                     activeSection === item.value
                       ? "bg-primary text-primary-foreground"
                       : "text-foreground/70 hover:text-foreground hover:bg-muted/50"
                   )}
                 >
-                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
                   <span>{item.label}</span>
                 </button>
               ))}
@@ -170,17 +168,29 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/20 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
         {/* Top Bar */}
         <header className="sticky top-0 z-20 bg-background border-b border-border">
           <div className="flex items-center justify-between px-4 lg:px-6 h-14">
-            <div className="flex items-center gap-4 pl-10 lg:pl-0">
+            <div className="flex items-center gap-3">
+              {/* Mobile Menu Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden h-9 w-9 flex-shrink-0"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              <h1 className="text-base font-semibold text-foreground lg:hidden truncate">
+                {currentContent.title}
+              </h1>
               <div className="relative w-64 hidden sm:block">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -192,7 +202,7 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="gap-2 text-sm"
+              className="gap-2 text-sm flex-shrink-0"
               onClick={() => navigate('/bus-information')}
             >
               <Bus className="h-4 w-4" />
@@ -203,12 +213,13 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6 max-w-5xl">
-            {/* Section Header */}
-            <div className="mb-6">
+          <div className="p-4 lg:p-6 lg:max-w-5xl">
+            {/* Section Header - hidden on mobile (shown in top bar) */}
+            <div className="mb-4 lg:mb-6 hidden lg:block">
               <h2 className="text-xl font-semibold text-foreground">{currentContent.title}</h2>
               <p className="text-sm text-muted-foreground mt-1">{currentContent.description}</p>
             </div>
+            <p className="text-sm text-muted-foreground mb-4 lg:hidden">{currentContent.description}</p>
 
             {/* Content */}
             <div className="space-y-4">
@@ -218,31 +229,26 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-30">
-        <div className="flex items-center justify-around h-16 px-2">
-          {navItems.slice(0, 4).map((item) => (
-            <button
-              key={item.value}
-              onClick={() => setActiveSection(item.value)}
-              className={cn(
-                "flex flex-col items-center gap-1 px-3 py-2 rounded-md transition-colors",
-                activeSection === item.value
-                  ? "text-primary"
-                  : "text-muted-foreground"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{item.label}</span>
-            </button>
-          ))}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="flex flex-col items-center gap-1 px-3 py-2 text-muted-foreground"
-          >
-            <Menu className="h-5 w-5" />
-            <span className="text-xs font-medium">More</span>
-          </button>
+      {/* Mobile Bottom Navigation - Scrollable */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border lg:hidden z-30 safe-area-inset-bottom">
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="flex items-center h-16 px-2 min-w-max">
+            {navItems.map((item) => (
+              <button
+                key={item.value}
+                onClick={() => setActiveSection(item.value)}
+                className={cn(
+                  "flex flex-col items-center gap-1 px-4 py-2 rounded-md transition-colors flex-shrink-0",
+                  activeSection === item.value
+                    ? "text-primary"
+                    : "text-muted-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
     </div>
