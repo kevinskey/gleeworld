@@ -186,13 +186,15 @@ export const TourContracts = () => {
               <CardContent>
                 {tourManagerContracts.slice(0, 5).map(contract => (
                   <div key={contract.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
-                    <div>
-                      <p className="font-medium">{contract.title}</p>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="flex-1 min-w-0 mr-2">
+                      <p className="font-medium text-sm sm:text-base truncate">
+                        {contract.title.replace(/^Tour Contract\s*-\s*/i, '')}
+                      </p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         Created {format(new Date(contract.created_at), 'MMM dd, yyyy')}
                       </p>
                     </div>
-                    <Badge className={getStatusColor(contract.status)}>
+                    <Badge className={`${getStatusColor(contract.status)} text-xs flex-shrink-0`}>
                       {getStatusIcon(contract.status)}
                       <span className="ml-1">{contract.status}</span>
                     </Badge>
@@ -276,17 +278,19 @@ export const TourContracts = () => {
           <div className="space-y-4">
             {filteredContracts.map(contract => (
               <Card key={contract.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-semibold">{contract.title}</h3>
-                        <Badge className={getStatusColor(contract.status)}>
+                <CardContent className="p-3 sm:p-4">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                        <h3 className="font-semibold text-sm sm:text-base truncate">
+                          {contract.title.replace(/^Tour Contract\s*-\s*/i, '')}
+                        </h3>
+                        <Badge className={`${getStatusColor(contract.status)} text-xs flex-shrink-0 w-fit`}>
                           {getStatusIcon(contract.status)}
                           <span className="ml-1">{contract.status}</span>
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-3 sm:gap-4 mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {format(new Date(contract.created_at), 'MMM dd, yyyy')}
