@@ -1,399 +1,198 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
-  UserCheck, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertTriangle,
-  Calendar,
-  TrendingUp,
-  AlertCircle,
-  BookOpen
+  UserCheck, CheckCircle, XCircle, Clock, AlertTriangle,
+  CalendarIcon, Save, RefreshCw, Users, TrendingDown, BookOpen, CheckCheck
 } from 'lucide-react';
-import { useAcademyAttendance } from '@/hooks/useAcademyAttendance';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isToday, parseISO } from 'date-fns';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
+
+const ATTENDANCE_THRESHOLD = 80;
 
 export const AttendanceModule = () => {
-  const {
-    enrolledCourses,
-    courseStats,
-    loading,
-    selectedCourseId,
-    setSelectedCourseId,
-    getOverallStats,
-    getLowAttendanceCourses,
-    getAttendanceByDate,
-    ATTENDANCE_THRESHOLD
-  } = useAcademyAttendance();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [students, setStudents] = useState<any[]>([]);
+  const [attendance, setAttendance] = useState<Record<string, { status: string; notes: string }>>({});
+  const [studentStats, setStudentStats] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'take' | 'stats'>('take');
 
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  // Check permissions
+  useEffect(() => {
+    if (!user) { setHasPermission(false); return; }
+    supabase.from('gw_profiles').select('is_admin, is_super_admin, exec_board_role, special_roles')
+      .eq('user_id', user.id).single().then(({ data }) => {
+        const isAdmin = data?.is_admin || data?.is_super_admin;
+        const isSecretary = data?.exec_board_role?.toLowerCase() === 'secretary';
+        setHasPermission(isAdmin || isSecretary || data?.special_roles?.includes('secretary') || false);
+      });
+  }, [user]);
 
-  if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center text-muted-foreground">
-          <UserCheck className="w-12 h-12 mx-auto mb-3 animate-pulse" />
-          <p>Loading attendance...</p>
-        </div>
-      </div>
-    );
-  }
+  // Load courses
+  useEffect(() => {
+    if (!hasPermission) return;
+    supabase.from('gw_courses').select('id, title, course_code, semester').eq('is_active', true).order('title')
+      .then(({ data }) => {
+        setCourses(data || []);
+        if (data?.length && !selectedCourseId) setSelectedCourseId(data[0].id);
+        setLoading(false);
+      });
+  }, [hasPermission]);
 
-  if (enrolledCourses.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center text-muted-foreground">
-          <BookOpen className="w-12 h-12 mx-auto mb-3" />
-          <h3 className="text-lg font-medium mb-2">No Courses Found</h3>
-          <p className="text-sm">Enroll in Glee Academy courses to track attendance</p>
-        </div>
-      </div>
-    );
-  }
+  // Load students & attendance
+  useEffect(() => {
+    if (!selectedCourseId || !hasPermission) return;
+    setLoading(true);
+    
+    const loadData = async () => {
+      const { data: enrollments } = await supabase.from('gw_course_enrollments')
+        .select('user_id').eq('course_id', selectedCourseId).eq('status', 'enrolled');
+      
+      const userIds = (enrollments || []).map((e: any) => e.user_id);
+      if (!userIds.length) { setStudents([]); setAttendance({}); setLoading(false); return; }
 
-  const overallStats = getOverallStats();
-  const lowAttendanceCourses = getLowAttendanceCourses();
-  const attendanceByDate = getAttendanceByDate();
-  const selectedStats = selectedCourseId ? courseStats.get(selectedCourseId) : null;
+      const { data: profiles } = await supabase.from('gw_profiles')
+        .select('user_id, full_name, voice_part, avatar_url').in('user_id', userIds).order('full_name');
+      
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const { data: attData } = await supabase.from('gw_course_attendance')
+        .select('student_id, status, notes').eq('course_id', selectedCourseId).eq('attendance_date', dateStr);
+      
+      const attMap = new Map((attData || []).map((a: any) => [a.student_id, { status: a.status, notes: a.notes || '' }]));
+      
+      setStudents(profiles || []);
+      const init: Record<string, { status: string; notes: string }> = {};
+      (profiles || []).forEach((p: any) => {
+        init[p.user_id] = attMap.get(p.user_id) || { status: 'present', notes: '' };
+      });
+      setAttendance(init);
+
+      // Load stats
+      const { data: allRecords } = await supabase.from('gw_course_attendance')
+        .select('student_id, status').eq('course_id', selectedCourseId);
+      
+      const statsMap = new Map<string, any>();
+      (allRecords || []).forEach((r: any) => {
+        const s = statsMap.get(r.student_id) || { present: 0, absent: 0, late: 0, excused: 0 };
+        if (r.status === 'present') s.present++;
+        else if (r.status === 'absent') s.absent++;
+        else if (r.status === 'late') s.late++;
+        else if (r.status === 'excused') s.excused++;
+        statsMap.set(r.student_id, s);
+      });
+
+      const stats = (profiles || []).map((p: any) => {
+        const s = statsMap.get(p.user_id) || { present: 0, absent: 0, late: 0, excused: 0 };
+        const total = s.present + s.absent + s.late + s.excused;
+        const attended = s.present + s.late + s.excused;
+        return { userId: p.user_id, fullName: p.full_name, totalClasses: total, ...s, 
+          attendanceRate: total > 0 ? Math.round((attended / total) * 100) : 100 };
+      });
+      setStudentStats(stats);
+      setLoading(false);
+    };
+    loadData();
+  }, [selectedCourseId, selectedDate, hasPermission]);
+
+  const updateAtt = (userId: string, field: 'status' | 'notes', value: string) => {
+    setAttendance(prev => ({ ...prev, [userId]: { ...prev[userId], [field]: value } }));
+  };
+
+  const handleSave = async () => {
+    if (!selectedCourseId || !user) return;
+    setSaving(true);
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    const records = Object.entries(attendance).map(([uid, d]) => ({
+      course_id: selectedCourseId, student_id: uid, attendance_date: dateStr,
+      status: d.status, notes: d.notes || null, recorded_by: user.id
+    }));
+    const { error } = await supabase.from('gw_course_attendance').upsert(records, { onConflict: 'course_id,student_id,attendance_date' });
+    setSaving(false);
+    toast({ title: error ? "Error" : "Saved", description: error ? "Failed to save" : `Saved for ${records.length} students`, variant: error ? "destructive" : undefined });
+  };
+
+  const markAllAs = (status: string) => setAttendance(prev => {
+    const upd = { ...prev }; Object.keys(upd).forEach(u => upd[u] = { ...upd[u], status }); return upd;
+  });
+
+  const stats = { total: Object.keys(attendance).length, present: Object.values(attendance).filter(a => a.status === 'present').length,
+    absent: Object.values(attendance).filter(a => a.status === 'absent').length, late: Object.values(attendance).filter(a => a.status === 'late').length };
+  const lowStudents = studentStats.filter(s => s.totalClasses > 0 && s.attendanceRate < ATTENDANCE_THRESHOLD);
+
+  if (hasPermission === null || loading) return <div className="h-full flex items-center justify-center"><UserCheck className="w-12 h-12 animate-pulse text-muted-foreground" /></div>;
+  if (!hasPermission) return <div className="h-full flex items-center justify-center text-center"><XCircle className="w-12 h-12 text-destructive mx-auto mb-2" /><p className="text-sm">Only Secretary/Admin can manage attendance</p></div>;
+  if (!courses.length) return <div className="h-full flex items-center justify-center text-center"><BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-2" /><p className="text-sm">No active courses</p></div>;
 
   return (
-    <div className="h-full flex flex-col gap-4 p-1">
-      {/* Low Attendance Alert */}
-      {lowAttendanceCourses.length > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="p-3">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-destructive text-sm">Low Attendance Alert</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {lowAttendanceCourses.map(c => `${c.courseCode} (${c.attendanceRate}%)`).join(', ')} 
-                  {' '}below {ATTENDANCE_THRESHOLD}% threshold
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Overall Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <StatCard 
-          label="Overall Rate" 
-          value={`${overallStats.overallRate}%`}
-          icon={<TrendingUp className="h-4 w-4" />}
-          variant={overallStats.overallRate >= ATTENDANCE_THRESHOLD ? 'success' : 'warning'}
-        />
-        <StatCard 
-          label="Present" 
-          value={overallStats.totalPresent}
-          icon={<CheckCircle className="h-4 w-4" />}
-          variant="success"
-        />
-        <StatCard 
-          label="Absent" 
-          value={overallStats.totalAbsent}
-          icon={<XCircle className="h-4 w-4" />}
-          variant="danger"
-        />
-        <StatCard 
-          label="Late/Excused" 
-          value={overallStats.totalLate + overallStats.totalExcused}
-          icon={<Clock className="h-4 w-4" />}
-          variant="neutral"
-        />
+    <div className="h-full flex flex-col gap-3 p-1">
+      {lowStudents.length > 0 && <Card className="border-destructive/50 bg-destructive/5"><CardContent className="p-3 flex gap-2"><TrendingDown className="h-5 w-5 text-destructive" /><div><p className="text-sm font-medium text-destructive">Low Attendance Alert</p><p className="text-xs text-muted-foreground">{lowStudents.length} student(s) below {ATTENDANCE_THRESHOLD}%</p></div></CardContent></Card>}
+      
+      <div className="flex flex-col sm:flex-row gap-2">
+        <Select value={selectedCourseId} onValueChange={setSelectedCourseId}><SelectTrigger className="flex-1"><SelectValue /></SelectTrigger><SelectContent>{courses.map(c => <SelectItem key={c.id} value={c.id}>{c.title} {c.course_code && <Badge variant="outline" className="ml-2 text-xs">{c.course_code}</Badge>}</SelectItem>)}</SelectContent></Select>
+        <Popover><PopoverTrigger asChild><Button variant="outline"><CalendarIcon className="mr-2 h-4 w-4" />{format(selectedDate, 'MMM d, yyyy')}</Button></PopoverTrigger><PopoverContent className="w-auto p-0"><Calendar mode="single" selected={selectedDate} onSelect={d => d && setSelectedDate(d)} /></PopoverContent></Popover>
       </div>
 
-      {/* Course Tabs */}
-      <Tabs 
-        value={selectedCourseId || enrolledCourses[0]?.id} 
-        onValueChange={setSelectedCourseId}
-        className="flex-1 flex flex-col min-h-0"
-      >
-        <TabsList className="w-full justify-start h-auto flex-wrap gap-1 bg-muted/50 p-1">
-          {enrolledCourses.map(course => {
-            const stats = courseStats.get(course.id);
-            const isLow = stats && stats.total > 0 && stats.attendanceRate < ATTENDANCE_THRESHOLD;
-            return (
-              <TabsTrigger 
-                key={course.id} 
-                value={course.id}
-                className="text-xs px-2 py-1.5 data-[state=active]:bg-background"
-              >
-                <span className="flex items-center gap-1.5">
-                  {course.courseCode}
-                  {isLow && <AlertCircle className="h-3 w-3 text-destructive" />}
-                </span>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-
-        {enrolledCourses.map(course => (
-          <TabsContent 
-            key={course.id} 
-            value={course.id}
-            className="flex-1 mt-3 min-h-0"
-          >
-            <CourseAttendanceView 
-              stats={courseStats.get(course.id)} 
-              currentMonth={currentMonth}
-              setCurrentMonth={setCurrentMonth}
-              attendanceByDate={attendanceByDate}
-              courseCode={course.courseCode}
-            />
-          </TabsContent>
-        ))}
+      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as any)} className="flex-1 flex flex-col min-h-0">
+        <TabsList className="w-full grid grid-cols-2"><TabsTrigger value="take"><UserCheck className="h-4 w-4 mr-1" />Take</TabsTrigger><TabsTrigger value="stats"><Users className="h-4 w-4 mr-1" />Stats</TabsTrigger></TabsList>
+        
+        <TabsContent value="take" className="flex-1 flex flex-col gap-2 mt-2 min-h-0">
+          {!students.length ? <div className="text-center py-8 text-muted-foreground text-sm">No students enrolled</div> : <>
+            <div className="grid grid-cols-4 gap-2 text-center text-xs">
+              <div className="bg-muted/30 rounded p-2"><Users className="h-3.5 w-3.5 mx-auto" /><span className="font-bold">{stats.total}</span></div>
+              <div className="bg-muted/30 rounded p-2 text-green-600"><CheckCircle className="h-3.5 w-3.5 mx-auto" /><span className="font-bold">{stats.present}</span></div>
+              <div className="bg-muted/30 rounded p-2 text-red-600"><XCircle className="h-3.5 w-3.5 mx-auto" /><span className="font-bold">{stats.absent}</span></div>
+              <div className="bg-muted/30 rounded p-2 text-yellow-600"><Clock className="h-3.5 w-3.5 mx-auto" /><span className="font-bold">{stats.late}</span></div>
+            </div>
+            <div className="flex justify-between"><Button size="sm" variant="outline" onClick={() => markAllAs('present')} className="text-xs h-7"><CheckCheck className="h-3 w-3 mr-1" />All Present</Button><Button size="sm" onClick={handleSave} disabled={saving} className="h-7"><Save className="h-3.5 w-3.5 mr-1" />{saving ? '...' : 'Save'}</Button></div>
+            <ScrollArea className="flex-1"><div className="space-y-2 pr-2">{students.map((s: any) => <StudentRow key={s.user_id} student={s} status={attendance[s.user_id]?.status || 'present'} onStatusChange={st => updateAtt(s.user_id, 'status', st)} />)}</div></ScrollArea>
+          </>}
+        </TabsContent>
+        
+        <TabsContent value="stats" className="flex-1 mt-2 min-h-0"><ScrollArea className="h-full"><div className="space-y-2 pr-2">{studentStats.sort((a,b) => a.attendanceRate - b.attendanceRate).map(s => <StatsRow key={s.userId} student={s} />)}</div></ScrollArea></TabsContent>
       </Tabs>
     </div>
   );
 };
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  variant: 'success' | 'warning' | 'danger' | 'neutral';
-}
-
-const StatCard: React.FC<StatCardProps> = ({ label, value, icon, variant }) => {
-  const variantStyles = {
-    success: 'text-green-600 dark:text-green-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    danger: 'text-red-600 dark:text-red-400',
-    neutral: 'text-muted-foreground'
-  };
-
+const StudentRow = ({ student, status, onStatusChange }: any) => {
+  const opts = [{ v: 'present', c: 'bg-green-100 text-green-700', i: <CheckCircle className="h-4 w-4" /> },
+    { v: 'absent', c: 'bg-red-100 text-red-700', i: <XCircle className="h-4 w-4" /> },
+    { v: 'late', c: 'bg-yellow-100 text-yellow-700', i: <Clock className="h-4 w-4" /> },
+    { v: 'excused', c: 'bg-blue-100 text-blue-700', i: <AlertTriangle className="h-4 w-4" /> }];
   return (
-    <Card>
-      <CardContent className="p-3 text-center">
-        <div className={`flex items-center justify-center gap-1 ${variantStyles[variant]}`}>
-          {icon}
-          <span className="text-xl font-bold">{value}</span>
-        </div>
-        <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-      </CardContent>
-    </Card>
+    <div className="bg-muted/30 rounded-lg p-2.5 flex items-center gap-2">
+      <Avatar className="h-8 w-8"><AvatarImage src={student.avatar_url} /><AvatarFallback>{student.full_name?.charAt(0)}</AvatarFallback></Avatar>
+      <div className="flex-1 min-w-0"><p className="text-sm font-medium truncate">{student.full_name}</p>{student.voice_part && <p className="text-[10px] text-muted-foreground">{student.voice_part}</p>}</div>
+      <div className="flex gap-1">{opts.map(o => <button key={o.v} onClick={() => onStatusChange(o.v)} className={cn("p-1.5 rounded-md", status === o.v ? o.c : "bg-muted/50 text-muted-foreground")}>{o.i}</button>)}</div>
+    </div>
   );
 };
 
-interface CourseAttendanceViewProps {
-  stats?: {
-    courseCode: string;
-    courseTitle: string;
-    total: number;
-    present: number;
-    absent: number;
-    late: number;
-    excused: number;
-    attendanceRate: number;
-    records: Array<{
-      id: string;
-      attendance_date: string;
-      status: string;
-      notes?: string;
-    }>;
-  };
-  currentMonth: Date;
-  setCurrentMonth: (date: Date) => void;
-  attendanceByDate: Map<string, { status: string; courseCode: string }[]>;
-  courseCode: string;
-}
-
-const CourseAttendanceView: React.FC<CourseAttendanceViewProps> = ({ 
-  stats,
-  currentMonth,
-  setCurrentMonth,
-  attendanceByDate,
-  courseCode
-}) => {
-  const [view, setView] = useState<'history' | 'calendar'>('history');
-
-  if (!stats) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <p>No attendance data available</p>
-      </div>
-    );
-  }
-
-  // Calendar calculations
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
-  const startDay = monthStart.getDay();
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'present': return 'bg-green-500';
-      case 'absent': return 'bg-red-500';
-      case 'late': return 'bg-yellow-500';
-      case 'excused': return 'bg-blue-500';
-      default: return 'bg-muted';
-    }
-  };
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'present': return 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400';
-      case 'absent': return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400';
-      case 'late': return 'bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400';
-      case 'excused': return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400';
-      default: return '';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'present': return <CheckCircle className="h-3.5 w-3.5 text-green-600" />;
-      case 'absent': return <XCircle className="h-3.5 w-3.5 text-red-600" />;
-      case 'late': return <Clock className="h-3.5 w-3.5 text-yellow-600" />;
-      case 'excused': return <AlertTriangle className="h-3.5 w-3.5 text-blue-600" />;
-      default: return null;
-    }
-  };
-
+const StatsRow = ({ student }: any) => {
+  const isLow = student.attendanceRate < ATTENDANCE_THRESHOLD;
   return (
-    <div className="flex flex-col gap-3 h-full">
-      {/* Course Stats Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Badge variant="outline" className="font-mono">{stats.courseCode}</Badge>
-          <span className="text-sm font-medium">{stats.attendanceRate}% attendance</span>
-          <span className="text-xs text-muted-foreground">({stats.total} classes)</span>
-        </div>
-        <div className="flex gap-1">
-          <button
-            onClick={() => setView('history')}
-            className={`p-1.5 rounded transition-colors ${view === 'history' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-          >
-            <UserCheck className="h-4 w-4" />
-          </button>
-          <button
-            onClick={() => setView('calendar')}
-            className={`p-1.5 rounded transition-colors ${view === 'calendar' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-          >
-            <Calendar className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-
-      {view === 'history' ? (
-        <ScrollArea className="flex-1">
-          {stats.records.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <UserCheck className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No attendance records yet</p>
-            </div>
-          ) : (
-            <div className="space-y-2 pr-2">
-              {stats.records.map(record => (
-                <div 
-                  key={record.id}
-                  className="flex items-center justify-between p-2.5 bg-muted/30 rounded-lg"
-                >
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(record.status)}
-                    <span className="text-sm">
-                      {format(parseISO(record.attendance_date), 'EEE, MMM d, yyyy')}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {record.notes && (
-                      <span className="text-xs text-muted-foreground max-w-[120px] truncate">
-                        {record.notes}
-                      </span>
-                    )}
-                    <Badge variant="outline" className={`text-xs ${getStatusBadgeClass(record.status)}`}>
-                      {record.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-      ) : (
-        <div className="flex-1">
-          {/* Calendar Header */}
-          <div className="flex items-center justify-between mb-3">
-            <button 
-              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-              className="p-1 hover:bg-muted rounded"
-            >
-              ←
-            </button>
-            <span className="font-medium text-sm">{format(currentMonth, 'MMMM yyyy')}</span>
-            <button 
-              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-              className="p-1 hover:bg-muted rounded"
-            >
-              →
-            </button>
-          </div>
-
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1 text-center">
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-              <div key={day} className="text-xs text-muted-foreground py-1">{day}</div>
-            ))}
-            
-            {/* Empty cells for start of month */}
-            {Array.from({ length: startDay }).map((_, i) => (
-              <div key={`empty-${i}`} className="aspect-square" />
-            ))}
-            
-            {/* Days */}
-            {days.map(day => {
-              const dateKey = format(day, 'yyyy-MM-dd');
-              const dayRecords = attendanceByDate.get(dateKey)?.filter(r => r.courseCode === courseCode) || [];
-              const hasRecord = dayRecords.length > 0;
-              const status = hasRecord ? dayRecords[0].status : null;
-              
-              return (
-                <div 
-                  key={dateKey}
-                  className={`
-                    aspect-square flex items-center justify-center text-xs rounded
-                    ${!isSameMonth(day, currentMonth) ? 'text-muted-foreground/30' : ''}
-                    ${isToday(day) ? 'ring-1 ring-primary' : ''}
-                    ${hasRecord ? 'relative' : ''}
-                  `}
-                >
-                  <span>{format(day, 'd')}</span>
-                  {hasRecord && (
-                    <span className={`absolute bottom-0.5 w-1.5 h-1.5 rounded-full ${getStatusColor(status!)}`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Legend */}
-          <div className="flex items-center justify-center gap-3 mt-3 text-xs">
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span>Present</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-red-500" />
-              <span>Absent</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-yellow-500" />
-              <span>Late</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-blue-500" />
-              <span>Excused</span>
-            </div>
-          </div>
-        </div>
-      )}
+    <div className={cn("bg-muted/30 rounded-lg p-3", isLow && "border border-destructive/30 bg-destructive/5")}>
+      <div className="flex justify-between mb-1"><span className="text-sm font-medium">{student.fullName}{isLow && <Badge variant="destructive" className="ml-2 text-[10px] h-4">Low</Badge>}</span><span className={cn("text-lg font-bold", isLow ? "text-destructive" : "text-green-600")}>{student.attendanceRate}%</span></div>
+      <div className="flex gap-3 text-xs text-muted-foreground"><span><span className="w-2 h-2 rounded-full bg-green-500 inline-block mr-1" />{student.present}</span><span><span className="w-2 h-2 rounded-full bg-red-500 inline-block mr-1" />{student.absent}</span><span><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block mr-1" />{student.late}</span></div>
+      <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden"><div className={cn("h-full", isLow ? "bg-destructive" : "bg-green-500")} style={{ width: `${student.attendanceRate}%` }} /></div>
     </div>
   );
 };
