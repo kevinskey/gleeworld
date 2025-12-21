@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { mus240Assignments } from '@/data/mus240Assignments';
 import { InlineJournalGrader } from './InlineJournalGrader';
+import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
 interface Assignment {
   id: string;
   title: string;
@@ -41,6 +42,7 @@ interface JournalSubmission {
 }
 export const AssignmentManager = () => {
   const navigate = useNavigate();
+  const { currentSemester } = useMus240SemesterSafe();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Record<string, JournalSubmission[]>>({});
   const [grades, setGrades] = useState<Record<string, any[]>>({});
@@ -68,7 +70,7 @@ export const AssignmentManager = () => {
     fetchAssignments();
     fetchSubmissions();
     fetchGrades();
-  }, []);
+  }, [currentSemester]);
   useEffect(() => {
     if (Object.keys(submissions).length > 0) {
       fetchStudents();
@@ -79,7 +81,7 @@ export const AssignmentManager = () => {
       const {
         data,
         error
-      } = await supabase.from('mus240_assignments').select('*').order('created_at', {
+      } = await supabase.from('mus240_assignments').select('*').eq('semester', currentSemester).order('created_at', {
         ascending: false
       });
       if (error) throw error;
@@ -111,11 +113,11 @@ export const AssignmentManager = () => {
   };
   const fetchSubmissions = async () => {
     try {
-      // Fetch all journal entries
+      // Fetch journal entries for current semester
       const {
         data: journalData,
         error: journalError
-      } = await supabase.from('mus240_journal_entries').select('*').order('submitted_at', {
+      } = await supabase.from('mus240_journal_entries').select('*').eq('semester', currentSemester).order('submitted_at', {
         ascending: false
       });
       if (journalError) throw journalError;
