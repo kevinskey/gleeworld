@@ -8,7 +8,7 @@ import {
   BookOpen, Calendar, Mail, ClipboardList, FileCheck, BarChart, 
   MessageSquare, Video, Headphones, FileText, BookMarked, UserCheck, 
   Ruler, Settings, Music, ArrowLeft, Users, GraduationCap, Home,
-  Bell, Trophy, Clock, PenLine, Brain, Library
+  Bell, Trophy, Clock, PenLine, Brain, Library, MessagesSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,6 +24,7 @@ import { CourseCalendarView } from './CourseCalendarView';
 import { CourseAnnouncements } from './CourseAnnouncements';
 import { CourseTestsSection } from './CourseTestsSection';
 import { useMus240SemesterSafe } from '@/contexts/Mus240SemesterContext';
+import { CourseMessagingInterface } from './CourseMessagingInterface';
 
 // Lazy loaded components for performance
 const Mus240PollSystem = React.lazy(() => import('@/components/mus240/Mus240PollSystem').then(m => ({ default: m.Mus240PollSystem })));
@@ -177,6 +178,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
               { icon: Home, label: 'Home', tab: 'home' },
               { icon: FileText, label: 'Syllabus', tab: 'syllabus' },
               { icon: Bell, label: 'Announcements', tab: 'announcements' },
+              { icon: MessagesSquare, label: 'Messages', tab: 'messages' },
               { icon: ClipboardList, label: 'Assignments', tab: 'assignments' },
               { icon: PenLine, label: 'Journals', tab: 'journals' },
               { icon: FileCheck, label: 'Tests', tab: 'tests' },
@@ -236,6 +238,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="w-full flex-wrap h-auto gap-1">
                   <TabsTrigger value="home">Home</TabsTrigger>
+                  <TabsTrigger value="messages">Messages</TabsTrigger>
                   <TabsTrigger value="assignments">Assignments</TabsTrigger>
                   <TabsTrigger value="tests">Tests</TabsTrigger>
                   <TabsTrigger value="lounge">Lounge</TabsTrigger>
@@ -348,6 +351,14 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
             {activeTab === 'announcements' && (
               <CourseAnnouncements courseId={course.id} />
+            )}
+
+            {activeTab === 'messages' && (
+              <CourseMessagingInterface 
+                courseId={course.id}
+                courseName={course.title}
+                isEnrolled={isEnrolled}
+              />
             )}
 
             {activeTab === 'assignments' && (
