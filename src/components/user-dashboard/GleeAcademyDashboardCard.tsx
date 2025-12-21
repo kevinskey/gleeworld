@@ -95,9 +95,7 @@ export const GleeAcademyDashboardCard = () => {
             <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer hover:bg-muted/30 transition-colors">
               <div className="flex items-center justify-between py-[20px] bg-accent-foreground px-[10px]">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <GraduationCap className="h-6 w-6 text-primary" />
-                  </div>
+                  
                   <div>
                     <CardTitle className="text-xl font-bold tracking-wide">GLEE ACADEMY</CardTitle>
                     <p className="text-xs text-muted-foreground">Spring 2026 Courses ({activeCourses.length})</p>
