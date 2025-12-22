@@ -236,15 +236,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             </div>
 
             {/* Mobile Tab Navigation */}
-            <div className="lg:hidden relative z-10">
+            <div className="lg:hidden relative z-10 -mx-4 px-4">
               <Tabs value={activeTab} onValueChange={(val) => { console.log('Tab changed to:', val); setActiveTab(val); }}>
-                <TabsList className="w-full flex-wrap h-auto gap-1 p-2">
-                  <TabsTrigger value="home" className="flex-1">Home</TabsTrigger>
-                  <TabsTrigger value="messages" className="flex-1">Messages</TabsTrigger>
-                  <TabsTrigger value="assignments" className="flex-1">Assignments</TabsTrigger>
-                  <TabsTrigger value="tests" className="flex-1">Tests</TabsTrigger>
-                  <TabsTrigger value="lounge" className="flex-1">Lounge</TabsTrigger>
-                  <TabsTrigger value="grades" className="flex-1">Grades</TabsTrigger>
+                <TabsList className="w-full grid grid-cols-4 h-auto">
+                  <TabsTrigger value="home" className="text-xs px-2">Home</TabsTrigger>
+                  <TabsTrigger value="messages" className="text-xs px-2">Messages</TabsTrigger>
+                  <TabsTrigger value="assignments" className="text-xs px-2">Assignments</TabsTrigger>
+                  <TabsTrigger value="tests" className="text-xs px-2">Tests</TabsTrigger>
+                </TabsList>
+                <TabsList className="w-full grid grid-cols-4 h-auto mt-1">
+                  <TabsTrigger value="lounge" className="text-xs px-2">Lounge</TabsTrigger>
+                  <TabsTrigger value="grades" className="text-xs px-2">Grades</TabsTrigger>
+                  <TabsTrigger value="syllabus" className="text-xs px-2">Syllabus</TabsTrigger>
+                  <TabsTrigger value="resources" className="text-xs px-2">Resources</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
