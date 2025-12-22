@@ -236,15 +236,15 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             </div>
 
             {/* Mobile Tab Navigation */}
-            <div className="lg:hidden">
-              <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="w-full flex-wrap h-auto gap-1">
-                  <TabsTrigger value="home">Home</TabsTrigger>
-                  <TabsTrigger value="messages">Messages</TabsTrigger>
-                  <TabsTrigger value="assignments">Assignments</TabsTrigger>
-                  <TabsTrigger value="tests">Tests</TabsTrigger>
-                  <TabsTrigger value="lounge">Lounge</TabsTrigger>
-                  <TabsTrigger value="grades">Grades</TabsTrigger>
+            <div className="lg:hidden relative z-10">
+              <Tabs value={activeTab} onValueChange={(val) => { console.log('Tab changed to:', val); setActiveTab(val); }}>
+                <TabsList className="w-full flex-wrap h-auto gap-1 p-2">
+                  <TabsTrigger value="home" className="flex-1">Home</TabsTrigger>
+                  <TabsTrigger value="messages" className="flex-1">Messages</TabsTrigger>
+                  <TabsTrigger value="assignments" className="flex-1">Assignments</TabsTrigger>
+                  <TabsTrigger value="tests" className="flex-1">Tests</TabsTrigger>
+                  <TabsTrigger value="lounge" className="flex-1">Lounge</TabsTrigger>
+                  <TabsTrigger value="grades" className="flex-1">Grades</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
