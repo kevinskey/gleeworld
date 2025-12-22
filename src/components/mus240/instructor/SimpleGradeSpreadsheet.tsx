@@ -397,64 +397,76 @@ export const SimpleGradeSpreadsheet: React.FC = () => {
         {loading ? (
           <div className="text-center py-8 text-muted-foreground">Loading...</div>
         ) : (
-          <div className="overflow-x-auto">
-            <Table>
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <Table className="min-w-[600px]">
               <TableHeader>
                 <TableRow>
                   <TableHead 
-                    className="text-foreground cursor-pointer hover:bg-muted/50"
+                    className="text-foreground cursor-pointer hover:bg-muted/50 min-w-[120px]"
                     onClick={() => handleSort('student_name')}
                   >
                     <div className="flex items-center">
-                      <span>Student Name <span className="text-xs text-muted-foreground">(by last)</span></span> {getSortIcon('student_name')}
+                      <span className="hidden sm:inline">Student Name <span className="text-xs text-muted-foreground">(by last)</span></span>
+                      <span className="sm:hidden">Name</span>
+                      {getSortIcon('student_name')}
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]"
                     onClick={() => handleSort('assignments_pct')}
                   >
-                    <div className="flex items-center justify-center">
-                      Assignments ({GRADE_WEIGHTS.assignments}%) {getSortIcon('assignments_pct')}
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="hidden sm:inline">Assignments</span>
+                      <span className="sm:hidden">Assign</span>
+                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.assignments}%)</span>
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]"
                     onClick={() => handleSort('midterm_pct')}
                   >
-                    <div className="flex items-center justify-center">
-                      Midterm ({GRADE_WEIGHTS.midterm}%) {getSortIcon('midterm_pct')}
+                    <div className="flex flex-col items-center justify-center">
+                      <span>Midterm</span>
+                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.midterm}%)</span>
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]"
                     onClick={() => handleSort('final_exam_pct')}
                   >
-                    <div className="flex items-center justify-center">
-                      Final Exam ({GRADE_WEIGHTS.finalExam}%) {getSortIcon('final_exam_pct')}
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="hidden sm:inline">Final Exam</span>
+                      <span className="sm:hidden">Final</span>
+                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.finalExam}%)</span>
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[80px]"
                     onClick={() => handleSort('ai_project_pct')}
                   >
-                    <div className="flex items-center justify-center">
-                      AI Project ({GRADE_WEIGHTS.aiProject}%) {getSortIcon('ai_project_pct')}
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="hidden sm:inline">AI Project</span>
+                      <span className="sm:hidden">AI</span>
+                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.aiProject}%)</span>
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="text-center text-foreground cursor-pointer hover:bg-muted/50"
+                    className="text-center text-foreground cursor-pointer hover:bg-muted/50 min-w-[60px]"
                     onClick={() => handleSort('polls_pct')}
                   >
-                    <div className="flex items-center justify-center">
-                      Polls ({GRADE_WEIGHTS.polls}%) {getSortIcon('polls_pct')}
+                    <div className="flex flex-col items-center justify-center">
+                      <span>Polls</span>
+                      <span className="text-xs text-muted-foreground">({GRADE_WEIGHTS.polls}%)</span>
                     </div>
                   </TableHead>
                   <TableHead 
-                    className="text-center text-foreground font-bold cursor-pointer hover:bg-muted/50"
+                    className="text-center text-foreground font-bold cursor-pointer hover:bg-muted/50 min-w-[70px]"
                     onClick={() => handleSort('final_grade')}
                   >
-                    <div className="flex items-center justify-center">
-                      Final Grade {getSortIcon('final_grade')}
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="hidden sm:inline">Final Grade</span>
+                      <span className="sm:hidden">Grade</span>
+                      {getSortIcon('final_grade')}
                     </div>
                   </TableHead>
                 </TableRow>
