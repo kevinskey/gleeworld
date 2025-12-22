@@ -212,6 +212,20 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
+          {/* Course Header - Full width on mobile, seamless with header */}
+          <div className="bg-gradient-to-r from-primary to-primary/80 lg:hidden">
+            <div className="p-4 pb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
+                <Badge variant="outline" className="border-white/30 text-white">
+                  {course.level}
+                </Badge>
+              </div>
+              <h1 className="text-2xl font-bold text-white">{course.title}</h1>
+              <p className="text-white/80 mt-2">{course.description}</p>
+            </div>
+          </div>
+
           <div className="p-4 lg:p-6 space-y-4 max-w-5xl mx-auto">
             {/* Back Button - Desktop only */}
             <Button
@@ -223,8 +237,8 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
               Back to Academy
             </Button>
 
-            {/* Course Header - Welcome Card */}
-            <Card className="bg-gradient-to-r from-primary to-primary/80 border-0">
+            {/* Course Header - Card on Desktop */}
+            <Card className="bg-gradient-to-r from-primary to-primary/80 border-0 hidden lg:block">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-3 mb-2">
                   <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
