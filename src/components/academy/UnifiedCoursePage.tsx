@@ -212,12 +212,12 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-4 lg:p-6 space-y-6 max-w-5xl mx-auto">
-            {/* Back Button */}
+          <div className="p-4 lg:p-6 space-y-4 max-w-5xl mx-auto">
+            {/* Back Button - Desktop only */}
             <Button
               variant="ghost"
               onClick={() => navigate('/glee-academy')}
-              className="mb-2"
+              className="hidden lg:flex -mt-2"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Academy
