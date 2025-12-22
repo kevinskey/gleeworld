@@ -28,7 +28,7 @@ import { CourseMessagingInterface } from './CourseMessagingInterface';
 import { Mus240SemesterSelector } from '@/components/mus240/admin/Mus240SemesterSelector';
 
 // Lazy loaded components for performance
-const Mus240PollSystem = React.lazy(() => import('@/components/mus240/Mus240PollSystem').then(m => ({ default: m.Mus240PollSystem })));
+const AcademyPollSystem = React.lazy(() => import('@/components/academy/polls/AcademyPollSystem').then(m => ({ default: m.AcademyPollSystem })));
 const GradesAdmin = React.lazy(() => import('@/components/mus240/instructor/GradesAdmin').then(m => ({ default: m.GradesAdmin })));
 
 interface UnifiedCoursePageProps {
@@ -390,7 +390,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
             {activeTab === 'polls' && (
               <React.Suspense fallback={<Card><CardContent className="py-8 text-center">Loading polls...</CardContent></Card>}>
-                <Mus240PollSystem />
+                <AcademyPollSystem courseId={course.id} />
               </React.Suspense>
             )}
 
