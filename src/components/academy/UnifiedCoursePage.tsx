@@ -279,19 +279,19 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                 )}
 
                 {/* Welcome Card */}
-                <Card>
+                <Card className="bg-primary border-0">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-primary" />
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <BookOpen className="h-5 w-5 text-white" />
                       Welcome to {course.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground mb-4">{course.description}</p>
+                    <p className="text-white/80 mb-4">{course.description}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {course.highlights.map((highlight, i) => (
-                        <div key={i} className="bg-muted/50 rounded-lg p-3 text-center">
-                          <span className="text-sm font-medium">{highlight}</span>
+                        <div key={i} className="bg-white/10 rounded-lg p-3 text-center">
+                          <span className="text-sm font-medium text-white">{highlight}</span>
                         </div>
                       ))}
                     </div>
@@ -299,25 +299,25 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
                 </Card>
 
                 {/* Instructor Card */}
-                <Card>
+                <Card className="bg-primary border-0">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5 text-primary" />
+                    <CardTitle className="flex items-center gap-2 text-white">
+                      <Users className="h-5 w-5 text-white" />
                       Instructor
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <p className="font-semibold text-lg">{course.instructor.name}</p>
-                      <p className="text-muted-foreground">
+                      <p className="font-semibold text-lg text-white">{course.instructor.name}</p>
+                      <p className="text-white/80">
                         <Mail className="h-4 w-4 inline mr-2" />
                         {course.instructor.email}
                       </p>
-                      <p className="text-muted-foreground">
+                      <p className="text-white/80">
                         <BookMarked className="h-4 w-4 inline mr-2" />
                         Office: {course.instructor.office}
                       </p>
-                      <p className="text-muted-foreground">
+                      <p className="text-white/80">
                         <Clock className="h-4 w-4 inline mr-2" />
                         Office Hours: {course.instructor.hours}
                       </p>
