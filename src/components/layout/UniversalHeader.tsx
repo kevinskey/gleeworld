@@ -208,7 +208,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     letterSpacing: isSpelmanBlue ? '-0.01em' : '0.02em'
                   }}
                 >
-                  {isSpelmanBlue ? 'Portal' : 'GleeWorld'}
+                  GleeWorld
                   {!isSpelmanBlue && <span className="text-amber-500 ml-1 text-xs sm:text-sm hidden sm:inline">✨</span>}
                 </span>
               </Link>
