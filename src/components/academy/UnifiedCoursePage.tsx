@@ -223,19 +223,23 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
               Back to Academy
             </Button>
 
-            {/* Course Header */}
-            <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-6 rounded-lg">
-              <div className="flex items-center gap-3 mb-2">
-                <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
-                <Badge variant="outline" className="border-primary-foreground/30 text-primary-foreground">
-                  {course.level}
-                </Badge>
-              </div>
-              <h1 className="text-2xl lg:text-3xl font-bold">{course.title}</h1>
-              <p className="text-primary-foreground/80 mt-2">{course.description}</p>
-            </div>
+            {/* Course Header - Welcome Card */}
+            <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-3 mb-2">
+                  <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
+                  <Badge variant="outline" className="border-primary-foreground/30 text-primary-foreground">
+                    {course.level}
+                  </Badge>
+                </div>
+                <CardTitle className="text-2xl lg:text-3xl font-bold text-primary-foreground">{course.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-primary-foreground/80">{course.description}</p>
+              </CardContent>
+            </Card>
 
-            {/* Mobile Tab Navigation */}
+            {/* Mobile Tab Navigation - Below Welcome Card */}
             <div className="lg:hidden relative z-10 -mx-4 px-4">
               <Tabs value={activeTab} onValueChange={(val) => { console.log('Tab changed to:', val); setActiveTab(val); }}>
                 <TabsList className="w-full grid grid-cols-4 h-auto">
