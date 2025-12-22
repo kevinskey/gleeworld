@@ -35,12 +35,12 @@ export const UniversalLayout = ({
   
   return (
     <div className="min-h-screen w-full relative" style={{
-      background: 'var(--theme-background, hsl(var(--background)))'
+      background: 'linear-gradient(to top, hsl(210, 60%, 95%) 0%, hsl(0, 0%, 100%) 30%)'
     }}>
       {showHeader && (
         shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />
       )}
-      <main className={`w-full pb-20 sm:pb-0 ${className}`} style={{ background: 'linear-gradient(to top, hsl(210, 60%, 95%) 0%, hsl(0, 0%, 100%) 30%)' }}>
+      <main className={`w-full pb-20 sm:pb-0 ${className}`}>
         {containerized ? (
           <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-0">
             {children}
