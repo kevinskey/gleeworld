@@ -151,6 +151,21 @@
   background: var(--theme-background) !important;
 }
 
+/* Use on pages that must stay white even when a theme class is present on <html>. */
+.academy-neutral {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 8%;
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 8%;
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 25%;
+  --border: 0 0% 85%;
+  --input: 0 0% 98%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 8%;
+  --theme-background: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(0 0% 100%) 100%);
+}
+
 /* Musical Notation Styles */
 .musical-staff {
   position: relative;
