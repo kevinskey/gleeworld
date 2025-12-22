@@ -214,7 +214,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
         <div className="flex-1 overflow-y-auto">
           {/* Course Header - Full width on mobile, seamless with header */}
           <div className="bg-gradient-to-r from-primary to-primary/80 lg:hidden">
-            <div className="p-4 pb-6">
+            <div className="px-4 pb-6 pt-4">
               <div className="flex items-center gap-3 mb-2">
                 <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
                 <Badge variant="outline" className="border-white/30 text-white">
@@ -226,7 +226,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             </div>
           </div>
 
-          <div className="p-4 lg:p-6 space-y-4 max-w-5xl mx-auto">
+          <div className="px-4 lg:px-6 space-y-4 max-w-5xl mx-auto">
             {/* Back Button - Desktop only */}
             <Button
               variant="ghost"
