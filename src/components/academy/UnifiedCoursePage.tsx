@@ -165,7 +165,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
 
   return (
     <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
-      <div className="flex min-h-screen bg-muted/20">
+      <div className="flex min-h-screen bg-white dark:bg-background">
         {/* Left Sidebar - Navigation */}
         <div className="w-[15%] min-w-[180px] bg-card border-r border-border flex-shrink-0 hidden lg:block">
           <div className="p-4 border-b border-border">
