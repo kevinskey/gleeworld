@@ -168,7 +168,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
       <UniversalLayout showHeader={true} showFooter={true} containerized={false}>
         <div className="flex min-h-screen bg-background">
         {/* Left Sidebar - Navigation */}
-        <div className="w-[15%] min-w-[180px] bg-accent border-r border-border flex-shrink-0 hidden lg:block">
+        <div className="w-[15%] min-w-[180px] bg-muted border-r border-border flex-shrink-0 hidden lg:block">
           <div className="p-4 border-b border-border">
             <Mus240SemesterSelector showLabel={false} className="mb-2" />
             <div className="text-lg font-bold text-foreground">{course.courseCode}</div>
@@ -493,7 +493,7 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
         </div>
 
         {/* Right Sidebar - Resources */}
-        <div className="w-[20%] min-w-[200px] bg-accent border-l border-border flex-shrink-0 overflow-y-auto hidden xl:block">
+        <div className="w-[20%] min-w-[200px] bg-muted border-l border-border flex-shrink-0 overflow-y-auto hidden xl:block">
           <div className="p-4 space-y-4">
             <h3 className="font-bold text-foreground">Course Resources</h3>
             
