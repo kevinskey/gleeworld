@@ -224,18 +224,18 @@ export const UnifiedCoursePage: React.FC<UnifiedCoursePageProps> = ({ course }) 
             </Button>
 
             {/* Course Header - Welcome Card */}
-            <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
+            <Card className="bg-gradient-to-r from-primary to-primary/80 border-0">
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-3 mb-2">
                   <Badge variant="secondary" className="font-mono">{course.courseCode}</Badge>
-                  <Badge variant="outline" className="border-primary-foreground/30 text-primary-foreground">
+                  <Badge variant="outline" className="border-white/30 text-white">
                     {course.level}
                   </Badge>
                 </div>
-                <CardTitle className="text-2xl lg:text-3xl font-bold text-primary-foreground">{course.title}</CardTitle>
+                <CardTitle className="text-2xl lg:text-3xl font-bold text-white">{course.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-primary-foreground/80">{course.description}</p>
+                <p className="text-white/80">{course.description}</p>
               </CardContent>
             </Card>
 
