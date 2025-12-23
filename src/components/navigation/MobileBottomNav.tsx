@@ -7,6 +7,7 @@ import { CategorizedQuickCapture } from '@/components/quick-capture/CategorizedQ
 import { MusicalToolkit } from '@/components/musical-toolkit/MusicalToolkit';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { useAssistant } from '@/contexts/AssistantContext';
 
 interface MobileBottomNavProps {
   className?: string;
@@ -17,24 +18,42 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const { toast } = useToast();
+  const { isWakeWordActive, setIsWakeWordActive, wakeWordStatus } = useAssistant();
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
-  const [assistantActive, setAssistantActive] = useState(false);
 
   // Only show on mobile
   if (!isMobile) return null;
 
   const isActive = (path: string) => location.pathname === path;
 
-  const toggleAssistant = () => {
-    const newState = !assistantActive;
-    setAssistantActive(newState);
-    toast({
-      title: newState ? "Assistant Active" : "Assistant Off",
-      description: newState ? "Listening for voice commands..." : "Voice assistant disabled",
-      duration: 2000,
-    });
+  const toggleAssistant = async () => {
+    // Request microphone permission first if activating
+    if (!isWakeWordActive) {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        setIsWakeWordActive(true);
+        toast({
+          title: "Hey Glee Enabled",
+          description: "Say \"Hey Glee\" to activate the assistant.",
+          duration: 3000,
+        });
+      } catch (e) {
+        toast({
+          title: "Microphone Required",
+          description: "Please allow microphone access to use voice assistant.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      setIsWakeWordActive(false);
+      toast({
+        title: "Assistant Off",
+        description: "Voice assistant disabled",
+        duration: 2000,
+      });
+    }
   };
 
   return (
@@ -66,16 +85,16 @@ export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
             onClick={toggleAssistant}
             className={cn(
               "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
-              assistantActive 
+              isWakeWordActive 
                 ? "text-white bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg animate-pulse" 
                 : "text-white hover:bg-white/10"
             )}
           >
             <Mic className="h-7 w-7" />
-            {assistantActive && (
+            {isWakeWordActive && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background animate-ping" />
             )}
-            {assistantActive && (
+            {isWakeWordActive && (
               <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-background" />
             )}
           </button>
