@@ -30,9 +30,7 @@ export const UniversalLayout = ({
   // Use PublicHeader for public, fan, and alumnae pages
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
-  return <div className="min-h-screen w-full relative" style={{
-    background: 'linear-gradient(to top, hsl(210, 60%, 95%) 0%, hsl(0, 0%, 100%) 30%)'
-  }}>
+  return <div className="min-h-screen w-full relative bg-background">
       {showHeader && (shouldUsePublicHeader ? <PublicHeader className="bg-secondary" /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
       <main className={`w-full pb-20 sm:pb-0 ${className}`}>
         {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-0">
