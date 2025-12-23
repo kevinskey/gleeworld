@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useAssistant } from '@/contexts/AssistantContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -49,13 +50,20 @@ interface AssistantAction {
 }
 
 export const GleeAssistant = () => {
-  const [isOpen, setIsOpen] = useState(false);
+  // Use shared context for assistant state
+  const { 
+    isWakeWordActive, 
+    isAssistantOpen: isOpen, 
+    wakeWordStatus,
+    setIsWakeWordActive,
+    setIsAssistantOpen: setIsOpen,
+    setWakeWordStatus 
+  } = useAssistant();
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isWakeWordActive, setIsWakeWordActive] = useState(false);
-  const [wakeWordStatus, setWakeWordStatus] = useState<'inactive' | 'listening' | 'activated'>('inactive');
   const scrollRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const wakeWordRecognitionRef = useRef<any>(null);

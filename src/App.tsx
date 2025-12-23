@@ -20,6 +20,7 @@ import { PWAInstallPrompt } from "@/components/pwa/PWAInstallPrompt";
 import { SplashWrapper } from "@/components/splash/SplashWrapper";
 import { LiveInvitePopup } from "@/components/glee-lounge/LiveInvitePopup";
 import { GleeAssistant } from "@/components/assistant/GleeAssistant";
+import { AssistantProvider } from "@/contexts/AssistantContext";
 import { MessengerProvider } from "@/contexts/MessengerContext";
 import { MessengerModal } from "@/components/messenger/MessengerModal";
 
@@ -338,6 +339,7 @@ const App = () => {
                   <Mus240SemesterProvider>
                   <CourseProvider>
                   <MessengerProvider>
+                  <AssistantProvider>
                   <SplashWrapper>
                   <div>
                   <Toaster />
@@ -2364,6 +2366,7 @@ const App = () => {
                     <PWAInstallPrompt />
                    </div>
                    </SplashWrapper>
+                   </AssistantProvider>
                   </MessengerProvider>
                   </CourseProvider>
                   </Mus240SemesterProvider>
