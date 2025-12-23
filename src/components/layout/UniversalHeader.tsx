@@ -160,10 +160,10 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
   return (
     <>
-        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-x-hidden">
+        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-x-hidden px-2 sm:px-4 md:px-6 lg:px-8">
           <header 
             ref={headerRef}
-            className={`w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden rounded-b-lg`}
+            className={`w-full max-w-7xl mx-auto border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden rounded-b-lg`}
             style={{ 
               backgroundColor: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.primary : '#ffffff',
               borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined,
