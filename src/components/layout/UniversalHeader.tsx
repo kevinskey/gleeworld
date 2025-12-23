@@ -164,10 +164,7 @@ export const UniversalHeader = ({
     };
   }, []);
   return <>
-        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-x-hidden" style={{
-      width: '100%',
-      paddingRight: 'calc(100vw - 100%)'
-    }}>
+        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden">
           <div className="max-w-7xl mx-auto px-0">
             <header ref={headerRef} className={`w-full border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden rounded-b-lg`} style={{
           backgroundColor: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.primary : '#ffffff',
