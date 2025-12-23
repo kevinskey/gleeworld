@@ -96,7 +96,7 @@ export const MyModules = ({
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
-              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-[100px] py-3 px-2 flex flex-col items-center justify-center gap-2 !bg-primary border-primary/50 hover:!bg-primary/90 hover:border-primary/30">
+              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-[100px] py-3 px-2 flex flex-col items-center justify-center gap-2 border-primary/50 hover:opacity-90 hover:border-primary/30" style={{ background: 'hsl(208, 100%, 33%)' }}>
                     <div className="flex-shrink-0">
                       <IconComponent className="h-7 w-7 text-white" />
                     </div>
