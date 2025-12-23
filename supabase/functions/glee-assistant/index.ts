@@ -80,19 +80,37 @@ const tools = [
     type: "function",
     function: {
       name: "navigate_to_page",
-      description: "Navigate to a specific page in GleeWorld. Use this when users want to go to a specific feature or section.",
+      description: "Open or navigate to any page in GleeWorld. Use this when users want to go to, open, access, or view a specific feature, section, or page. This handles ALL navigation requests including opening pages.",
       parameters: {
         type: "object",
         properties: {
           page: {
             type: "string",
             enum: [
-              "dashboard", "music-library", "calendar", "glee-academy", 
-              "email-composer", "messages", "glee-lounge", "handbook",
-              "first-year-resources", "exec-board-workshop", "wardrobe",
-              "alumnae", "profile", "admin-dashboard"
+              "dashboard", "home",
+              "music-library", "sheet-music",
+              "calendar", "events", "schedule",
+              "glee-academy", "academy", "courses", "classes",
+              "email-composer", "compose", "email",
+              "messages", "messaging", "chat",
+              "glee-lounge", "lounge", "radio",
+              "handbook", "policies",
+              "first-year-resources", "freshman-resources",
+              "exec-board-workshop", "executive-board",
+              "wardrobe", "costumes", "uniforms",
+              "alumnae", "alumni",
+              "profile", "my-profile", "account", "settings",
+              "admin-dashboard", "admin",
+              "attendance", "check-in",
+              "payments", "dues", "finances",
+              "announcements", "news",
+              "notifications",
+              "shop", "store", "merchandise", "merch",
+              "booking-request", "booking", "book-us",
+              "sight-reading", "sight-reading-studio",
+              "karaoke"
             ],
-            description: "The page to navigate to",
+            description: "The page to navigate to. Accepts various aliases (e.g., 'music-library', 'sheet-music', 'scores' all go to Music Library)",
           },
         },
         required: ["page"],
@@ -102,11 +120,17 @@ const tools = [
   {
     type: "function",
     function: {
-      name: "close_music_library",
-      description: "Close the music library and return to the dashboard. Use this when users want to close, exit, or leave the music library.",
+      name: "close_current_page",
+      description: "Close, exit, or leave the current page and return to the dashboard. Use this when users say things like 'close this', 'go back', 'exit', 'leave this page', 'close the [page name]', 'I'm done here', or want to return to the main dashboard from any page.",
       parameters: {
         type: "object",
-        properties: {},
+        properties: {
+          destination: {
+            type: "string",
+            enum: ["dashboard", "previous", "home"],
+            description: "Where to go after closing. Default is dashboard.",
+          },
+        },
         required: [],
       },
     },
@@ -570,34 +594,130 @@ async function executeTool(toolName: string, args: any, userId: string) {
     }
 
     case "navigate_to_page": {
+      // Comprehensive page route mapping with aliases
       const pageRoutes: Record<string, string> = {
+        // Dashboard/Home
         "dashboard": "/dashboard",
+        "home": "/dashboard",
+        
+        // Music Library
         "music-library": "/music-library",
+        "sheet-music": "/music-library",
+        
+        // Calendar/Events
         "calendar": "/calendar",
+        "events": "/calendar",
+        "schedule": "/calendar",
+        
+        // Academy/Classes
         "glee-academy": "/glee-academy",
+        "academy": "/glee-academy",
+        "courses": "/glee-academy",
+        "classes": "/glee-academy",
+        
+        // Email/Compose
         "email-composer": "/compose",
+        "compose": "/compose",
+        "email": "/compose",
+        
+        // Messages
         "messages": "/messages",
+        "messaging": "/messages",
+        "chat": "/messages",
+        
+        // Glee Lounge/Radio
         "glee-lounge": "/glee-lounge",
+        "lounge": "/glee-lounge",
+        "radio": "/glee-lounge",
+        
+        // Handbook
         "handbook": "/handbook",
+        "policies": "/handbook",
+        
+        // First Year Resources
         "first-year-resources": "/first-year-resources",
+        "freshman-resources": "/first-year-resources",
+        
+        // Exec Board
         "exec-board-workshop": "/exec-board-workshop",
+        "executive-board": "/exec-board-workshop",
+        
+        // Wardrobe
         "wardrobe": "/wardrobe",
+        "costumes": "/wardrobe",
+        "uniforms": "/wardrobe",
+        
+        // Alumnae
         "alumnae": "/alumnae",
+        "alumni": "/alumnae",
+        
+        // Profile/Account
         "profile": "/profile",
+        "my-profile": "/profile",
+        "account": "/profile",
+        "settings": "/profile",
+        
+        // Admin
         "admin-dashboard": "/admin-dashboard",
+        "admin": "/admin-dashboard",
+        
+        // Attendance
+        "attendance": "/attendance",
+        "check-in": "/attendance",
+        
+        // Payments
+        "payments": "/payments",
+        "dues": "/payments",
+        "finances": "/payments",
+        
+        // Announcements
+        "announcements": "/announcements",
+        "news": "/announcements",
+        
+        // Notifications
+        "notifications": "/notifications",
+        
+        // Shop
+        "shop": "/shop",
+        "store": "/shop",
+        "merchandise": "/shop",
+        "merch": "/shop",
+        
+        // Booking
+        "booking-request": "/booking-request",
+        "booking": "/booking-request",
+        "book-us": "/booking-request",
+        
+        // Sight Reading
+        "sight-reading": "/member-sight-reading-studio",
+        "sight-reading-studio": "/member-sight-reading-studio",
+        
+        // Karaoke
+        "karaoke": "/dashboard?module=karaoke",
+      };
+
+      const route = pageRoutes[args.page] || "/dashboard";
+      const pageName = args.page.replace(/-/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase());
+
+      return {
+        action: "navigate",
+        route: route,
+        message: `Opening ${pageName}.`
+      };
+    }
+
+    case "close_current_page": {
+      const destination = args.destination || "dashboard";
+      const routes: Record<string, string> = {
+        "dashboard": "/dashboard",
+        "home": "/dashboard",
+        "previous": "/dashboard", // Default to dashboard since we don't track history
       };
 
       return {
         action: "navigate",
-        route: pageRoutes[args.page] || "/dashboard",
-        message: `Navigating to ${args.page.replace(/-/g, " ")}.`
-      };
-    }
-
-    case "close_music_library": {
-      return {
-        action: "close_music_library",
-        message: "Closing the music library and returning to the dashboard."
+        route: routes[destination] || "/dashboard",
+        message: "Closing this page and returning to the dashboard."
       };
     }
 
