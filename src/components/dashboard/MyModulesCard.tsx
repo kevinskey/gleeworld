@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Grid3x3, Heart, ArrowUpDown, SortAsc, SortDesc, Clock } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Grid3x3, Heart, ArrowUpDown, SortAsc, SortDesc, Clock, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -22,6 +23,7 @@ interface MyModulesCardProps {
 export const MyModulesCard = ({ modules, onModuleClick, onToggleFavorite, isFavorite }: MyModulesCardProps) => {
   const navigate = useNavigate();
   const [sortBy, setSortBy] = useState<SortOption>('name-asc');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const sortModules = (modulesToSort: any[]) => {
     const sorted = [...modulesToSort];
@@ -71,7 +73,10 @@ export const MyModulesCard = ({ modules, onModuleClick, onToggleFavorite, isFavo
     );
   }
 
-  const sortedModules = sortModules(modules);
+  const filteredModules = modules.filter((module) =>
+    module.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const sortedModules = sortModules(filteredModules);
 
   return (
     <Card className="bg-background/95 backdrop-blur-sm">
@@ -112,7 +117,16 @@ export const MyModulesCard = ({ modules, onModuleClick, onToggleFavorite, isFavo
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search modules..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {sortedModules.map((module) => {
             const IconComponent = module.icon;
