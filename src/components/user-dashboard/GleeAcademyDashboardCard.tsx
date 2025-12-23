@@ -92,8 +92,8 @@ export const GleeAcademyDashboardCard = () => {
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
           <CollapsibleTrigger asChild>
-            <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer hover:bg-muted/30 transition-colors">
-              <div className="flex items-center justify-between py-[20px] bg-accent-foreground px-[10px]">
+            <CardHeader className="pb-3 px-3 cursor-pointer hover:bg-muted/30 transition-colors sm:px-[16px] py-[16px]">
+              <div className="flex items-center justify-between py-[20px] px-[10px] bg-brand-600">
                 <div className="flex items-center gap-3">
                   
                   <div>
@@ -121,12 +121,12 @@ export const GleeAcademyDashboardCard = () => {
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <CardContent className="px-3 sm:px-6">
+            <CardContent className="px-3 sm:px-6 bg-brand-600">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                 {activeCourses.map(course => {
                 const IconComponent = course.icon;
                 const isSelected = selectedCourseId === course.id || isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070';
-                return <button key={course.id} onClick={() => handleCourseClick(course)} className={`group flex flex-col items-center p-3 rounded-lg border transition-all duration-200 ${isSelected ? 'bg-primary/20 border-primary ring-2 ring-primary/30' : 'bg-card hover:bg-primary/10 border-border hover:border-primary/30'}`}>
+                return <button key={course.id} onClick={() => handleCourseClick(course)} className="">
                       <div className={`p-2 rounded-full mb-2 transition-colors ${isSelected ? 'bg-primary/30' : 'bg-primary/10 group-hover:bg-primary/20'}`}>
                         <IconComponent className="h-5 w-5 text-primary" />
                       </div>
