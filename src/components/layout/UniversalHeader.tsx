@@ -485,7 +485,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             </div>
             </div>
           </header>
-          </div>
         </div>
 
       {/* Quick Capture Category Selector */}
