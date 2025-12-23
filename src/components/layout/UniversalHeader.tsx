@@ -1,4 +1,3 @@
-
 import { useState, useMemo, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -13,14 +12,12 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
 import { useTheme } from "@/contexts/ThemeContext";
-
 import { DashboardSwitcher } from "@/components/navigation/DashboardSwitcher";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
 import { CountdownText } from "@/components/ui/countdown-text";
-
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
 import { ExecutiveBoardDropdown } from "@/components/navigation/ExecutiveBoardDropdown";
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
@@ -30,27 +27,39 @@ import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
-
-
 interface UniversalHeaderProps {
   viewMode?: 'admin' | 'member';
   onViewModeChange?: (mode: 'admin' | 'member') => void;
 }
-
-export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderProps) => {
-  const { user, signOut } = useAuth();
-  const { toggleMessenger, isOpen: isMessengerOpen } = useMessenger();
+export const UniversalHeader = ({
+  viewMode,
+  onViewModeChange
+}: UniversalHeaderProps) => {
+  const {
+    user,
+    signOut
+  } = useAuth();
+  const {
+    toggleMessenger,
+    isOpen: isMessengerOpen
+  } = useMessenger();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const location = useLocation();
-  const { userProfile } = useUserProfile(user);
-  const { pageName } = usePageTitle();
-  const { themeName } = useTheme();
-  
+  const {
+    userProfile
+  } = useUserProfile(user);
+  const {
+    pageName
+  } = usePageTitle();
+  const {
+    themeName
+  } = useTheme();
+
   // Quick Capture state
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
-  
+
   // Quick Actions state
   const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
   const {
@@ -60,9 +69,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
     addQuickAction,
     removeQuickAction,
     reorderQuickActions,
-    isInQuickActions,
+    isInQuickActions
   } = useMemberQuickActions(user?.id, userProfile?.role || 'member');
-  
+
   // Memoize quickActions prop
   const memoizedQuickActions = useMemo(() => {
     if (!canUseQuickActions) return undefined;
@@ -74,41 +83,43 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
       isInQuickActions
     };
   }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, reorderQuickActions, isInQuickActions]);
-  
+
   // Theme-specific styling
   const isHbcuTheme = themeName === 'hbcu';
   const isSpelmanBlue = themeName === 'spelman-blue';
-  
   const hbcuColors = {
-    gold: '#FFDF00',        // Primary gold - all text and icons
-    red: '#8B0000',         // Dark red accent - borders
-    background: '#000000',  // Pure black background
+    gold: '#FFDF00',
+    // Primary gold - all text and icons
+    red: '#8B0000',
+    // Dark red accent - borders
+    background: '#000000' // Pure black background
   };
-  
+
   // Spelman Blue portal-style colors
   const spelmanBlueColors = {
-    primary: '#0056a6',      // Official Spelman Blue
-    accent: '#55BBEE',       // Bright sky blue  
-    text: '#ffffff',         // White text
-    background: 'linear-gradient(180deg, #0056a6 0%, #003d75 100%)',
+    primary: '#0056a6',
+    // Official Spelman Blue
+    accent: '#55BBEE',
+    // Bright sky blue  
+    text: '#ffffff',
+    // White text
+    background: 'linear-gradient(180deg, #0056a6 0%, #003d75 100%)'
   };
-  
+
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true || userProfile?.is_exec_board === true;
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
   const canAccessPR = isAdmin || isPRCoordinator;
   const isExecBoardMember = userProfile?.exec_board_role && userProfile.exec_board_role.trim() !== '';
   const hasExecBoardPerms = isAdmin || isExecBoardMember;
-  
-  console.log('UniversalHeader: PR Access Debug', { 
-    userProfile: userProfile, 
-    isAdmin: isAdmin, 
-    isPRCoordinator: isPRCoordinator, 
+  console.log('UniversalHeader: PR Access Debug', {
+    userProfile: userProfile,
+    isAdmin: isAdmin,
+    isPRCoordinator: isPRCoordinator,
     canAccessPR: canAccessPR,
     userRole: userProfile?.role,
     execBoardRole: userProfile?.exec_board_role
   });
-
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -116,7 +127,6 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
       console.error('Sign out error:', error);
     }
   };
-
   const getInitials = (email: string) => {
     return email.charAt(0).toUpperCase();
   };
@@ -126,20 +136,17 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   const headerRef = useRef<HTMLElement | null>(null);
   const lastHeaderHeightRef = useRef<number>(0);
   const isInitializedRef = useRef(false);
-
   useEffect(() => {
     const update = (force = false) => {
       const el = headerRef.current;
       if (!el) return;
-
       const height = Math.round(el.getBoundingClientRect().height);
-      
+
       // Only update on initial mount or if height changes significantly (> 2px)
       // This prevents dropdown interactions from causing layout shifts
       if (!force && isInitializedRef.current && Math.abs(height - lastHeaderHeightRef.current) <= 2) {
         return;
       }
-
       lastHeaderHeightRef.current = height;
       document.documentElement.style.setProperty('--gw-header-height', `${height}px`);
       isInitializedRef.current = true;
@@ -147,67 +154,55 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
     // Initialize once on mount
     update(true);
-    
+
     // Only update on window resize, not on internal ResizeObserver changes
     // This prevents dropdowns/popups from triggering layout recalculations
     const handleResize = () => update(true);
     window.addEventListener('resize', handleResize);
-
     return () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  return (
-    <>
-        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-x-hidden" style={{ width: '100%', paddingRight: 'calc(100vw - 100%)' }}>
+  return <>
+        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-x-hidden" style={{
+      width: '100%',
+      paddingRight: 'calc(100vw - 100%)'
+    }}>
           <div className="max-w-7xl mx-auto px-0">
-            <header 
-              ref={headerRef}
-              className={`w-full border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden rounded-b-lg`}
-              style={{ 
-                backgroundColor: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.primary : '#ffffff',
-                borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined,
-                background: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.background : 'linear-gradient(90deg, rgba(220,38,38,0.05) 0%, #ffffff 20%, #ffffff 80%, rgba(22,163,74,0.05) 100%)'
-              }}
-            >
+            <header ref={headerRef} className={`w-full border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden rounded-b-lg`} style={{
+          backgroundColor: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.primary : '#ffffff',
+          borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined,
+          background: isHbcuTheme ? hbcuColors.background : isSpelmanBlue ? spelmanBlueColors.background : 'linear-gradient(90deg, rgba(220,38,38,0.05) 0%, #ffffff 20%, #ffffff 80%, rgba(22,163,74,0.05) 100%)'
+        }}>
               {/* Holiday sparkle accents - hide for HBCU and Spelman Blue themes */}
-              {!isHbcuTheme && !isSpelmanBlue && (
-                <div className="absolute inset-0 pointer-events-none">
+              {!isHbcuTheme && !isSpelmanBlue && <div className="absolute inset-0 pointer-events-none">
                   <Sparkles className="absolute top-1.5 left-[8%] w-3 h-3 text-amber-400/50 animate-pulse" />
-                  <Sparkles className="absolute top-2 left-[25%] w-2 h-2 text-red-500/30 animate-pulse" style={{ animationDelay: '0.3s' }} />
-                  <Sparkles className="absolute bottom-2 right-[15%] w-3 h-3 text-emerald-500/40 animate-pulse" style={{ animationDelay: '0.5s' }} />
-                  <Sparkles className="absolute top-1.5 right-[35%] w-2 h-2 text-amber-400/40 animate-pulse" style={{ animationDelay: '0.7s' }} />
-                </div>
-              )}
+                  <Sparkles className="absolute top-2 left-[25%] w-2 h-2 text-red-500/30 animate-pulse" style={{
+              animationDelay: '0.3s'
+            }} />
+                  <Sparkles className="absolute bottom-2 right-[15%] w-3 h-3 text-emerald-500/40 animate-pulse" style={{
+              animationDelay: '0.5s'
+            }} />
+                  <Sparkles className="absolute top-1.5 right-[35%] w-2 h-2 text-amber-400/40 animate-pulse" style={{
+              animationDelay: '0.7s'
+            }} />
+                </div>}
 
-              <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 lg:py-3 px-2 sm:px-4 md:px-6 lg:px-8">
+              <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-2 sm:px-4 md:px-6 lg:px-8 bg-secondary lg:py-[22px]">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0">
-            <EnhancedTooltip 
-              content="Go to GleeWorld Home" 
-              disabled={isMobile || location.pathname === '/admin'}
-              className="z-10"
-            >
+            <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
               <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0">
                 <div className="relative">
-                  <img 
-                    src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" 
-                    alt="Spelman College Glee Club" 
-                    className="w-8 h-8 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0 drop-shadow-md"
-                    style={(isHbcuTheme || isSpelmanBlue) ? { 
+                  <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-8 h-8 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0 drop-shadow-md" style={isHbcuTheme || isSpelmanBlue ? {
                       filter: 'brightness(0) invert(1)'
-                    } : undefined}
-                  />
+                    } : undefined} />
                 </div>
-                <span 
-                  className="font-bold text-base sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap relative" 
-                  style={{ 
+                <span className="font-bold text-base sm:text-base md:text-lg lg:text-xl xl:text-2xl whitespace-nowrap relative" style={{
                     color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#0f172a',
                     fontFamily: isSpelmanBlue ? "'Inter', system-ui, sans-serif" : "'Cinzel', serif",
                     letterSpacing: isSpelmanBlue ? '-0.01em' : '0.02em'
-                  }}
-                >
+                  }}>
                   GleeWorld
                   {!isSpelmanBlue && <span className="text-amber-500 ml-1 text-xs sm:text-sm hidden sm:inline">✨</span>}
                 </span>
@@ -228,36 +223,21 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
             </div>
             
             {/* Email/SMS Messenger Toggle - Available to all authenticated users */}
-            {user && (
-              <EnhancedTooltip content={isMessengerOpen ? "Close Messenger" : "Send Email/SMS"}>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={toggleMessenger}
-                  className={`h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full ${isMessengerOpen ? 'bg-white/20' : ''}`}
-                  style={{ 
-                    color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
-                  }}
-                  type="button"
-                >
+            {user && <EnhancedTooltip content={isMessengerOpen ? "Close Messenger" : "Send Email/SMS"}>
+                <Button variant="ghost" size="sm" onClick={toggleMessenger} className={`h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full ${isMessengerOpen ? 'bg-white/20' : ''}`} style={{
+                  color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                }} type="button">
                   <Mail className="h-5 w-5 md:h-6 md:w-6" />
                 </Button>
-              </EnhancedTooltip>
-            )}
+              </EnhancedTooltip>}
             
-            {user && (
-              <>
+            {user && <>
                 {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
-                {userProfile?.is_super_admin && (
-                <DropdownMenu>
+                {userProfile?.is_super_admin && <DropdownMenu>
                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full"
-                        style={{ color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b' }}
-                        type="button"
-                      >
+                      <Button variant="ghost" size="sm" className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full" style={{
+                      color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                    }} type="button">
                         <LayoutDashboard className="h-5 w-5 md:h-6 md:w-6" />
                       </Button>
                    </DropdownMenuTrigger>
@@ -266,77 +246,46 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     <DropdownMenuSeparator />
                     
                     {/* Main Dashboard Views */}
-                    {isAdmin && (
-                      <DropdownMenuItem 
-                        onClick={() => navigate('/dashboard')}
-                        className="cursor-pointer"
-                      >
+                    {isAdmin && <DropdownMenuItem onClick={() => navigate('/dashboard')} className="cursor-pointer">
                         <User className="mr-2 h-4 w-4" />
                         My Dashboard
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/dashboard/member')}
-                      className="cursor-pointer"
-                    >
+                      </DropdownMenuItem>}
+                    <DropdownMenuItem onClick={() => navigate('/dashboard/member')} className="cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
                       Member
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/dashboard/student')}
-                      className="cursor-pointer"
-                    >
+                    <DropdownMenuItem onClick={() => navigate('/dashboard/student')} className="cursor-pointer">
                       <GraduationCap className="mr-2 h-4 w-4" />
                       Student
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/dashboard/fan')}
-                      className="cursor-pointer"
-                    >
+                    <DropdownMenuItem onClick={() => navigate('/dashboard/fan')} className="cursor-pointer">
                       <Heart className="mr-2 h-4 w-4" />
                       Fan
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/alumnae')}
-                      className="cursor-pointer"
-                    >
+                    <DropdownMenuItem onClick={() => navigate('/alumnae')} className="cursor-pointer">
                       <GraduationCap className="mr-2 h-4 w-4" />
                       Alumnae
                     </DropdownMenuItem>
-                    {hasExecBoardPerms && (
-                      <DropdownMenuItem 
-                        onClick={() => navigate('/admin')}
-                        className="cursor-pointer"
-                      >
+                    {hasExecBoardPerms && <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
                         <Crown className="mr-2 h-4 w-4" />
                         Admin
-                      </DropdownMenuItem>
-                    )}
+                      </DropdownMenuItem>}
                     
                     <DropdownMenuSeparator />
                     
                     {/* Public Pages */}
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/')}
-                      className="cursor-pointer"
-                    >
+                    <DropdownMenuItem onClick={() => navigate('/')} className="cursor-pointer">
                       <Globe className="mr-2 h-4 w-4" />
                       Landing Page
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        navigate('/glee-academy');
-                        window.scrollTo(0, 0);
-                      }}
-                      className="cursor-pointer"
-                    >
+                    <DropdownMenuItem onClick={() => {
+                      navigate('/glee-academy');
+                      window.scrollTo(0, 0);
+                    }} className="cursor-pointer">
                       <GraduationCap className="mr-2 h-4 w-4" />
                       Glee Academy
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => navigate('/dashboard/public')}
-                      className="cursor-pointer"
-                    >
+                    <DropdownMenuItem onClick={() => navigate('/dashboard/public')} className="cursor-pointer">
                       <Globe className="mr-2 h-4 w-4" />
                       Public View
                     </DropdownMenuItem>
@@ -344,46 +293,29 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                     {/* Executive Board Dropdown */}
                     {hasExecBoardPerms && <ExecutiveBoardDropdown />}
                   </DropdownMenuContent>
-                </DropdownMenu>
-                )}
+                </DropdownMenu>}
 
                 
                 {/* Add Module Quick Action - For members without admin access - Hidden on mobile */}
-                {!hasExecBoardPerms && (
-                  <EnhancedTooltip content="Add Module to Dashboard">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => navigate('/dashboard/member?addModule=true')}
-                      className="hidden sm:flex h-8 w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full"
-                      style={{ 
-                        color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
-                      }}
-                      type="button"
-                    >
+                {!hasExecBoardPerms && <EnhancedTooltip content="Add Module to Dashboard">
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/member?addModule=true')} className="hidden sm:flex h-8 w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full" style={{
+                    color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                  }} type="button">
                       <Plus className="h-4 w-4 md:h-5 md:w-5" />
                     </Button>
-                  </EnhancedTooltip>
-                )}
+                  </EnhancedTooltip>}
 
                 {/* Glee Cam Quick Capture - Hidden on mobile (available in bottom nav) */}
                 <div className="hidden sm:block">
                   <EnhancedTooltip content="Glee Cam - Quick Capture">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('Camera button clicked - showing category selector');
-                        setShowCategorySelector(true);
-                      }}
-                      className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full"
-                      style={{ 
-                        color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
-                      }}
-                      type="button"
-                    >
+                    <Button variant="ghost" size="sm" onClick={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Camera button clicked - showing category selector');
+                      setShowCategorySelector(true);
+                    }} className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full" style={{
+                      color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                    }} type="button">
                       <Camera className="h-5 w-5 md:h-6 md:w-6" />
                     </Button>
                   </EnhancedTooltip>
@@ -391,16 +323,9 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
 
                 {/* Quick Actions Button */}
                 <EnhancedTooltip content="Members Quick Access">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => setIsQuickActionsOpen(prev => !prev)}
-                    className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full"
-                    style={{ 
-                      color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
-                    }}
-                    type="button"
-                  >
+                  <Button variant="ghost" size="sm" onClick={() => setIsQuickActionsOpen(prev => !prev)} className="h-9 w-9 sm:h-8 sm:w-8 md:h-9 md:w-9 p-0 hover:bg-white/10 rounded-full" style={{
+                    color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                  }} type="button">
                     <Key className="h-5 w-5 md:h-6 md:w-6" />
                   </Button>
                 </EnhancedTooltip>
@@ -408,25 +333,20 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className="relative h-8 w-8 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0 hover:bg-white/10" style={{ color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b' }} type="button">
-                           <Avatar className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7 border" style={{ borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined }}>
-                             <AvatarImage
-                               src={userProfile?.avatar_url || undefined} 
-                               alt={userProfile?.full_name || user?.email || "Your Profile"}
-                               className="object-cover"
-                               onError={(e) => {
-                                 console.log('Avatar image failed to load:', userProfile?.avatar_url);
-                                 e.currentTarget.style.display = 'none';
-                               }}
-                               onLoad={() => {
-                                 console.log('Avatar image loaded successfully:', userProfile?.avatar_url);
-                               }}
-                             />
+                         <Button variant="ghost" className="relative h-8 w-8 sm:h-7 sm:w-7 md:h-8 md:w-8 rounded-full p-0 hover:bg-white/10" style={{
+                        color: isHbcuTheme ? hbcuColors.gold : isSpelmanBlue ? spelmanBlueColors.text : '#1e293b'
+                      }} type="button">
+                           <Avatar className="h-7 w-7 sm:h-6 sm:w-6 md:h-7 md:w-7 border" style={{
+                          borderColor: isHbcuTheme ? hbcuColors.red : isSpelmanBlue ? spelmanBlueColors.accent : undefined
+                        }}>
+                             <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.full_name || user?.email || "Your Profile"} className="object-cover" onError={e => {
+                            console.log('Avatar image failed to load:', userProfile?.avatar_url);
+                            e.currentTarget.style.display = 'none';
+                          }} onLoad={() => {
+                            console.log('Avatar image loaded successfully:', userProfile?.avatar_url);
+                          }} />
                              <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-bold relative">
-                               {userProfile?.full_name ? 
-                                 userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() :
-                                 user?.email?.charAt(0).toUpperCase() || 'U'
-                               }
+                               {userProfile?.full_name ? userProfile.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : user?.email?.charAt(0).toUpperCase() || 'U'}
                              </AvatarFallback>
                            </Avatar>
                         </Button>
@@ -443,17 +363,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                       </div>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild className="py-1.5 text-xs">
-                        <Link 
-                          to="/profile" 
-                          className="flex items-center"
-                          onClick={(e) => {
-                            console.log('🔗 Profile link clicked in header');
-                            console.log('🔗 Event details:', e);
-                            console.log('🔗 Current location:', location.pathname);
-                            console.log('🔗 User:', user);
-                            console.log('🔗 UserProfile:', userProfile);
-                          }}
-                        >
+                        <Link to="/profile" className="flex items-center" onClick={e => {
+                        console.log('🔗 Profile link clicked in header');
+                        console.log('🔗 Event details:', e);
+                        console.log('🔗 Current location:', location.pathname);
+                        console.log('🔗 User:', user);
+                        console.log('🔗 UserProfile:', userProfile);
+                      }}>
                           <User className="mr-1.5 h-3 w-3" />
                           Profile
                         </Link>
@@ -471,16 +387,13 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                      </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </>
-            )}
+              </>}
 
-            {!user && (
-              <EnhancedTooltip content="Sign in to access your dashboard">
+            {!user && <EnhancedTooltip content="Sign in to access your dashboard">
                 <Button asChild variant="default" size="sm" className="text-xs sm:text-sm px-3 sm:px-6 min-w-[70px] sm:min-w-[80px] whitespace-nowrap">
                   <Link to="/auth">Sign In</Link>
                 </Button>
-              </EnhancedTooltip>
-            )}
+              </EnhancedTooltip>}
           </div>
             </div>
           </header>
@@ -488,47 +401,28 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
         </div>
 
       {/* Quick Capture Category Selector */}
-      <QuickCaptureCategorySelector
-        open={showCategorySelector}
-        onClose={() => setShowCategorySelector(false)}
-        onSelectCategory={(category) => {
-          setShowCategorySelector(false);
-          setSelectedCategory(category);
-        }}
-      />
+      <QuickCaptureCategorySelector open={showCategorySelector} onClose={() => setShowCategorySelector(false)} onSelectCategory={category => {
+      setShowCategorySelector(false);
+      setSelectedCategory(category);
+    }} />
 
       {/* Categorized Quick Capture */}
-      {selectedCategory && (
-        <CategorizedQuickCapture
-          category={selectedCategory}
-          onClose={() => setSelectedCategory(null)}
-          onBack={() => {
-            setSelectedCategory(null);
-            setShowCategorySelector(true);
-          }}
-        />
-      )}
+      {selectedCategory && <CategorizedQuickCapture category={selectedCategory} onClose={() => setSelectedCategory(null)} onBack={() => {
+      setSelectedCategory(null);
+      setShowCategorySelector(true);
+    }} />}
 
       {/* Quick Actions Panel */}
-      {user && (
-        <QuickActionsPanel
-          user={{
-            id: user.id,
-            email: user.email || '',
-            full_name: userProfile?.full_name || user.email || '',
-            role: userProfile?.role || 'member',
-            exec_board_role: userProfile?.exec_board_role || undefined,
-            is_exec_board: userProfile?.is_exec_board || false,
-          }}
-          onModuleSelect={(moduleId) => {
-            navigate(`/dashboard?module=${moduleId}`);
-            setIsQuickActionsOpen(false);
-          }}
-          isOpen={isQuickActionsOpen}
-          onClose={() => setIsQuickActionsOpen(false)}
-          quickActions={memoizedQuickActions}
-        />
-      )}
-    </>
-  );
+      {user && <QuickActionsPanel user={{
+      id: user.id,
+      email: user.email || '',
+      full_name: userProfile?.full_name || user.email || '',
+      role: userProfile?.role || 'member',
+      exec_board_role: userProfile?.exec_board_role || undefined,
+      is_exec_board: userProfile?.is_exec_board || false
+    }} onModuleSelect={moduleId => {
+      navigate(`/dashboard?module=${moduleId}`);
+      setIsQuickActionsOpen(false);
+    }} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />}
+    </>;
 };

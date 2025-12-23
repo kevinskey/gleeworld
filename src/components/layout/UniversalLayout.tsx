@@ -5,7 +5,6 @@ import { PublicHeader } from "./PublicHeader";
 import { UniversalFooter } from "./UniversalFooter";
 import { ResponsiveContainer } from "@/components/shared/ResponsiveContainer";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
-
 interface UniversalLayoutProps {
   children: ReactNode;
   showHeader?: boolean;
@@ -16,7 +15,6 @@ interface UniversalLayoutProps {
   viewMode?: 'admin' | 'member';
   onViewModeChange?: (mode: 'admin' | 'member') => void;
 }
-
 export const UniversalLayout = ({
   children,
   showHeader = true,
@@ -32,25 +30,18 @@ export const UniversalLayout = ({
   // Use PublicHeader for public, fan, and alumnae pages
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
-  
-  return (
-    <div className="min-h-screen w-full relative" style={{
-      background: 'linear-gradient(to top, hsl(210, 60%, 95%) 0%, hsl(0, 0%, 100%) 30%)'
-    }}>
-      {showHeader && (
-        shouldUsePublicHeader ? <PublicHeader /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />
-      )}
+  return <div className="min-h-screen w-full relative" style={{
+    background: 'linear-gradient(to top, hsl(210, 60%, 95%) 0%, hsl(0, 0%, 100%) 30%)'
+  }}>
+      {showHeader && (shouldUsePublicHeader ? <PublicHeader className="bg-secondary" /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
       <main className={`w-full pb-20 sm:pb-0 ${className}`}>
-        {containerized ? (
-          <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-0">
+        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-px">
             {children}
-          </ResponsiveContainer>
-        ) : children}
+          </ResponsiveContainer> : children}
       </main>
       {showFooter && <UniversalFooter />}
       
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
-    </div>
-  );
+    </div>;
 };
