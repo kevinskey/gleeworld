@@ -2,11 +2,20 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { LayoutGrid, Settings, Loader2, ChevronDown } from 'lucide-react';
+import { LayoutGrid, Settings, Loader2, ChevronDown, Search, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import * as Icons from 'lucide-react';
+
+type SortOption = 'name-asc' | 'name-desc' | 'default';
 interface MyModulesProps {
   userProfile: {
     user_id: string;
@@ -30,6 +39,8 @@ export const MyModules = ({
   userProfile
 }: MyModulesProps) => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('default');
   const [isOpen, setIsOpen] = useState(true);
   const {
     getAccessibleModules,
@@ -38,8 +49,16 @@ export const MyModules = ({
   const accessibleModules = getAccessibleModules();
   const isSuperAdmin = userProfile.is_super_admin || userProfile.is_admin;
 
+  const getSortLabel = () => {
+    switch (sortBy) {
+      case 'name-asc': return 'A-Z';
+      case 'name-desc': return 'Z-A';
+      default: return 'Sort';
+    }
+  };
+
   // For super admins, show all modules; for others, show up to 12
-  const modulesWithDetails = accessibleModules.map(module => {
+  const allModulesWithDetails = accessibleModules.map(module => {
     const unifiedModule = UNIFIED_MODULES.find(u => u.id === module.id);
     return {
       id: module.id,
@@ -48,7 +67,24 @@ export const MyModules = ({
       iconColor: unifiedModule?.iconColor || 'blue',
       route: `/dashboard?module=${module.id}`
     };
-  }).slice(0, isSuperAdmin ? 100 : 12); // Super admins see all, others see max 12
+  }).slice(0, isSuperAdmin ? 100 : 12);
+
+  // Filter by search
+  const filteredModules = allModulesWithDetails.filter(module =>
+    module.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Sort modules
+  const modulesWithDetails = [...filteredModules].sort((a, b) => {
+    switch (sortBy) {
+      case 'name-asc':
+        return a.title.localeCompare(b.title);
+      case 'name-desc':
+        return b.title.localeCompare(a.title);
+      default:
+        return 0;
+    }
+  });
 
   // Admin always gets admin settings
   const showAdminSettings = userProfile.is_admin || userProfile.is_super_admin;
@@ -92,7 +128,41 @@ export const MyModules = ({
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-4 pb-4 py-[15px]" style={{ background: 'hsl(208, 100%, 33%)' }}>
+          <CardContent className="px-4 pb-4 py-[15px] space-y-4" style={{ background: 'hsl(208, 100%, 33%)' }}>
+            {/* Search and Sort Controls */}
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search modules..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 bg-white/90"
+                />
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 bg-white/90 h-10">
+                    <ArrowUpDown className="h-3.5 w-3.5" />
+                    <span className="text-xs">{getSortLabel()}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortBy('name-asc')} className="gap-2">
+                    <SortAsc className="h-4 w-4" />
+                    Name (A-Z)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('name-desc')} className="gap-2">
+                    <SortDesc className="h-4 w-4" />
+                    Name (Z-A)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('default')} className="gap-2">
+                    <LayoutGrid className="h-4 w-4" />
+                    Default Order
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
