@@ -65,7 +65,7 @@ import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
 import { SchedulingModule } from '@/components/modules/SchedulingModule';
 import { CalendarManagementModule } from '@/components/modules/CalendarManagementModule';
 import { TourManagerModule } from '@/components/modules/TourManagerModule';
-import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
+
 import { AlumnaePortalModule } from '@/components/modules/AlumnaePortalModule';
 import { AlumnaeManagementModule } from '@/components/modules/AlumnaeManagementModule';
 import { ContractsModule } from '@/components/modules/ContractsModule';
@@ -492,18 +492,6 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     isActive: true,
     component: TourManagerModule,
     dbFunctionName: "tour-management"
-  },
-  {
-    id: "booking-forms",
-    name: "booking-forms",
-    title: "Booking Forms",
-    description: "Manage performance requests and booking inquiries from external organizations",
-    icon: FileText,
-    iconColor: "cyan",
-    category: "communications",
-    isActive: true,
-    component: BookingFormsModule,
-    dbFunctionName: "booking-forms"
   },
 
   // Musical Leadership modules

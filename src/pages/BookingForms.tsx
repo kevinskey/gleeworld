@@ -1,32 +1,15 @@
 import React, { useEffect } from 'react';
-import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
-import { useAuth } from '@/contexts/AuthContext';
+import { Navigate } from 'react-router-dom';
 
-const BookingForms = () => {
-  const { user } = useAuth();
-
+// Booking Forms is now part of Tour Manager module
+// Redirect to dashboard with tour-management module
+const BookingForms: React.FC = () => {
   useEffect(() => {
     document.title = 'Booking Forms | GleeWorld';
-    const desc = 'Booking Forms — Review, filter, and manage incoming performance booking requests.';
-    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
-    if (!meta) {
-      meta = document.createElement('meta');
-      meta.setAttribute('name', 'description');
-      document.head.appendChild(meta);
-    }
-    if (meta) meta.setAttribute('content', desc);
-
-    const href = `${window.location.origin}/booking-forms`;
-    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (!link) {
-      link = document.createElement('link');
-      link.setAttribute('rel', 'canonical');
-      document.head.appendChild(link);
-    }
-    if (link) link.setAttribute('href', href);
   }, []);
 
-  return <BookingFormsModule user={user ? { id: user.id, email: user.email || '' } : undefined} isFullPage />;
+  // Redirect to Tour Manager (which contains booking requests as its first tab)
+  return <Navigate to="/dashboard?module=tour-management" replace />;
 };
 
 export default BookingForms;
