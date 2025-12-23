@@ -15,7 +15,7 @@ import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { AttendanceModule } from '@/components/modules/AttendanceModule';
 import { SightSingingPreviewModule } from '@/components/modules/SightSingingPreviewModule';
 import { SettingsModule } from '@/components/dashboard/modules/SettingsModule';
-import { BookingFormsModule } from '@/components/modules/BookingFormsModule';
+import { TourManagerModule } from '@/components/modules/TourManagerModule';
 import { BudgetsModule } from '@/components/modules/BudgetsModule';
 import { BucketsOfLoveModule } from '@/components/modules/BucketsOfLoveModule';
 
@@ -49,7 +49,6 @@ import { MediaLibrary as MediaLibraryComponent } from '@/components/radio/MediaL
 import { HeroManagement } from '@/components/admin/HeroManagement';
 import { FirstYearConsole } from '@/components/console/first-year/FirstYearConsole';
 import { LibrarianModule } from '@/components/modules/LibrarianModule';
-import { TourManagerModule } from '@/components/modules/TourManagerModule';
 
 interface MemberModulesProps {
   user: {
@@ -78,7 +77,7 @@ const getModuleComponent = (moduleName: string) => {
     'sight-reading-preview': SightSingingPreviewModule,
     'sight-reading-generator': SightSingingPreviewModule,
     'settings': SettingsModule,
-    'booking-forms': BookingFormsModule,
+    'booking-forms': TourManagerModule, // Booking is now part of Tour Manager
     
     // Extended modules
     'ai-financial': AIFinancialPlanningModule,
