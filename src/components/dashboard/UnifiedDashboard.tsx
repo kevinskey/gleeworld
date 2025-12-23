@@ -352,27 +352,29 @@ export const UnifiedDashboard = () => {
 
   // DEFAULT VIEW: New streamlined structure
   return (
-    <div className="min-h-screen px-2 sm:px-4 md:px-6 lg:px-8">
+    <div className="min-h-screen">
       <ConcertTicketBanner />
-      
-      {/* Advertising Hero - TOP OF DASHBOARD */}
-      <div className="max-w-7xl mx-auto pt-4">
-        <AdvertisingHero />
-      </div>
-      
-      <div className="max-w-7xl mx-auto py-4 space-y-4">
-        {/* Section 1: Role-Based Module */}
-        {renderRoleBasedModule()}
-        
-        {/* Section 2: My Modules (assigned modules based on exec role) */}
-        <MyModules userProfile={{
-          user_id: profile.user_id,
-          role: profile.role,
-          exec_board_role: profile.exec_board_role,
-          is_exec_board: profile.is_exec_board,
-          is_admin: profile.is_admin,
-          is_super_admin: profile.is_super_admin
-        }} />
+
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+        {/* Advertising Hero - TOP OF DASHBOARD */}
+        <div className="pt-4">
+          <AdvertisingHero />
+        </div>
+
+        <div className="py-4 space-y-4">
+          {/* Section 1: Role-Based Module */}
+          {renderRoleBasedModule()}
+
+          {/* Section 2: My Modules (assigned modules based on exec role) */}
+          <MyModules userProfile={{
+            user_id: profile.user_id,
+            role: profile.role,
+            exec_board_role: profile.exec_board_role,
+            is_exec_board: profile.is_exec_board,
+            is_admin: profile.is_admin,
+            is_super_admin: profile.is_super_admin
+          }} />
+        </div>
       </div>
       
       {/* Messages Panel Overlay */}
