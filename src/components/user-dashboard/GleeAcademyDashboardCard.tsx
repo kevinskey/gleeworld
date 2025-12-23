@@ -90,53 +90,53 @@ export const GleeAcademyDashboardCard = () => {
   };
   return <div className="w-full">
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
+        <Card className="border border-border/30 bg-white shadow-sm overflow-hidden">
           <CollapsibleTrigger asChild>
-            <CardHeader className="pb-3 px-3 cursor-pointer hover:bg-muted/30 transition-colors sm:px-[16px] py-[16px]">
-              <div className="flex items-center justify-between py-[20px] px-[10px] bg-brand-600">
+            <CardHeader className="p-0 cursor-pointer transition-colors" style={{ background: 'hsl(208, 100%, 33%)' }}>
+              <div className="flex items-center justify-between py-4 px-6">
                 <div className="flex items-center gap-3">
-                  
                   <div>
-                    <CardTitle className="text-xl font-bold tracking-wide pl-[5px]">GLEE ACADEMY</CardTitle>
-                    <p className="text-xs text-muted-foreground pl-[5px] pt-[7px]">Spring 2026 Courses ({activeCourses.length})</p>
+                    <CardTitle className="text-xl font-bold tracking-wide text-white">GLEE ACADEMY</CardTitle>
+                    <p className="text-xs text-white/70 pt-1">Spring 2026 Courses ({activeCourses.length})</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {!isDefaultCourse && <Button variant="ghost" size="sm" onClick={e => {
                   e.stopPropagation();
                   clearCourseSelection();
-                }} className="text-xs text-muted-foreground hover:text-foreground">
+                }} className="text-xs text-white/80 hover:text-white hover:bg-white/10">
                       <X className="h-3 w-3 mr-1" />
                       Exit Course View
                     </Button>}
                   <button onClick={e => {
                   e.stopPropagation();
                   navigate('/glee-academy');
-                }} className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
+                }} className="text-sm text-white hover:text-white/80 flex items-center gap-1 transition-colors">
                     View All <ArrowRight className="h-4 w-4" />
                   </button>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`h-4 w-4 text-white transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                 </div>
               </div>
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <CardContent className="px-3 sm:px-6 bg-brand-600">
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+            <CardContent className="px-6 py-6 bg-white">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
                 {activeCourses.map(course => {
                 const IconComponent = course.icon;
                 const isSelected = selectedCourseId === course.id || isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070';
-                return <button key={course.id} onClick={() => handleCourseClick(course)} className="">
-                      <div className={`p-2 rounded-full mb-2 transition-colors ${isSelected ? 'bg-primary/30' : 'bg-primary/10 group-hover:bg-primary/20'}`}>
-                        <IconComponent className="h-5 w-5 text-primary" />
+                return <button key={course.id} onClick={() => handleCourseClick(course)} 
+                  className={`flex flex-col items-center p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-[hsl(208,100%,33%)] bg-[hsl(208,100%,33%)]/5' : 'border-[hsl(208,100%,33%)]/30 hover:border-[hsl(208,100%,33%)] hover:bg-[hsl(208,100%,33%)]/5'}`}>
+                      <div className={`p-2 rounded-full mb-2 transition-colors ${isSelected ? 'bg-[hsl(208,100%,33%)]' : 'bg-[hsl(208,100%,33%)]/10'}`}>
+                        <IconComponent className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-[hsl(208,100%,33%)]'}`} />
                       </div>
-                      <span className="text-xs font-semibold text-center text-foreground">
+                      <span className="text-xs font-semibold text-center text-[hsl(208,100%,33%)]">
                         {course.courseCode}
                       </span>
-                      <span className="text-[10px] text-muted-foreground text-center line-clamp-1 mt-0.5">
+                      <span className="text-[10px] text-gray-500 text-center line-clamp-1 mt-0.5">
                         {course.title}
                       </span>
-                      {isSelected && <span className="text-[8px] text-primary font-medium mt-1">ACTIVE</span>}
+                      {isSelected && <span className="text-[8px] text-[hsl(208,100%,33%)] font-medium mt-1">ACTIVE</span>}
                     </button>;
               })}
               </div>
