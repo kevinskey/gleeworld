@@ -352,7 +352,7 @@ export const UnifiedDashboard = () => {
 
   // DEFAULT VIEW: New streamlined structure
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <ConcertTicketBanner />
       
       {/* Advertising Hero - TOP OF DASHBOARD */}
