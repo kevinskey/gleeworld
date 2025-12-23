@@ -7,7 +7,11 @@ import { ResponsiveNavigation } from "@/components/navigation/ResponsiveNavigati
 import { HeaderClock } from "@/components/ui/header-clock";
 import { MusicStaffMenu } from "@/components/ui/music-staff-menu";
 import { useAuth } from "@/contexts/AuthContext";
-export const PublicHeader = () => {
+interface PublicHeaderProps {
+  className?: string;
+}
+
+export const PublicHeader = ({ className }: PublicHeaderProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const {
     user
