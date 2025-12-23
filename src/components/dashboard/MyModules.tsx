@@ -71,7 +71,7 @@ export const MyModules = ({
     return null; // Don't render if no assigned modules
   }
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border border-border bg-card">
+      <Card className="border border-border !bg-white" style={{ background: 'white' }}>
         <CollapsibleTrigger asChild>
           <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
             <div className="flex items-center justify-between pr-0 pl-[20px] py-[20px]">
@@ -92,7 +92,7 @@ export const MyModules = ({
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-4 pb-4 py-[15px] bg-card">
+          <CardContent className="px-4 pb-4 py-[15px] !bg-white" style={{ background: 'white' }}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
