@@ -161,7 +161,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
   return (
     <>
         <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-x-hidden" style={{ width: '100%', paddingRight: 'calc(100vw - 100%)' }}>
-          <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-0">
             <header 
               ref={headerRef}
               className={`w-full border-b shadow-lg ${isHbcuTheme ? 'hbcu-header' : ''} ${isSpelmanBlue ? 'spelman-blue-header' : ''} relative overflow-hidden rounded-b-lg`}
@@ -181,7 +181,7 @@ export const UniversalHeader = ({ viewMode, onViewModeChange }: UniversalHeaderP
                 </div>
               )}
 
-              <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 lg:py-3">
+              <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 lg:py-3 px-2 sm:px-4 md:px-6 lg:px-8">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0">
             <EnhancedTooltip 
