@@ -356,11 +356,11 @@ export const UnifiedDashboard = () => {
       <ConcertTicketBanner />
       
       {/* Advertising Hero - TOP OF DASHBOARD */}
-      <div className="max-w-7xl mx-auto px-4 pt-4">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 pt-4">
         <AdvertisingHero />
       </div>
       
-      <div className="max-w-7xl mx-auto px-4 py-4 space-y-4">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-4 space-y-4">
         {/* Section 1: Role-Based Module */}
         {renderRoleBasedModule()}
         
