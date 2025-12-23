@@ -79,11 +79,7 @@ export const AdvertisingHero: React.FC = () => {
   const content = <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[2/1] rounded-xl overflow-hidden group shadow-lg" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
       {/* Background blur from current image with Spelman blue tint */}
       <div className="absolute inset-0 z-0 bg-[hsl(208_100%_33%)]">
-        <img 
-          src={hero.image_url || fallbackImage} 
-          alt="" 
-          className="w-full h-full object-cover scale-110 blur-xl opacity-40"
-        />
+        <img src={hero.image_url || fallbackImage} alt="" className="w-full h-full object-cover scale-110 blur-xl opacity-40" />
       </div>
 
       {/* Hero Images with fade transition */}
@@ -93,7 +89,7 @@ export const AdvertisingHero: React.FC = () => {
         if (!e.currentTarget.src.includes('unsplash.com')) {
           e.currentTarget.src = fallbackImage;
         }
-      }} className="hidden md:block w-full h-full object-contain" />
+      }} className="hidden md:block w-full h-full object-contain rounded-none" />
           
           {/* iPad/Tablet Image */}
           <img src={h.ipad_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="hidden sm:block md:hidden w-full h-full object-cover" onError={e => {
