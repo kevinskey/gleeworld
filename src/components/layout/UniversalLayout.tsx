@@ -35,7 +35,7 @@ export const UniversalLayout = ({
   }}>
       {showHeader && (shouldUsePublicHeader ? <PublicHeader className="bg-secondary" /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
       <main className={`w-full pb-20 sm:pb-0 ${className}`}>
-        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-px">
+        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-0">
             {children}
           </ResponsiveContainer> : children}
       </main>
