@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Camera, Mic } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsPhone } from '@/hooks/use-mobile';
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from '@/components/quick-capture/QuickCaptureCategorySelector';
 import { CategorizedQuickCapture } from '@/components/quick-capture/CategorizedQuickCapture';
 import { MusicalToolkit } from '@/components/musical-toolkit/MusicalToolkit';
@@ -16,15 +16,15 @@ interface MobileBottomNavProps {
 export const MobileBottomNav = ({ className }: MobileBottomNavProps) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const isMobile = useIsMobile();
+  const isPhone = useIsPhone();
   const { toast } = useToast();
   const { isWakeWordActive, setIsWakeWordActive, wakeWordStatus } = useAssistant();
   
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
 
-  // Only show on mobile
-  if (!isMobile) return null;
+  // Only show on phones (not tablets or desktop)
+  if (!isPhone) return null;
 
   const isActive = (path: string) => location.pathname === path;
 
