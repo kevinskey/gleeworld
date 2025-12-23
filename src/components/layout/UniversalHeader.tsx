@@ -164,7 +164,7 @@ export const UniversalHeader = ({
     };
   }, []);
   return <>
-        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-x-hidden bg-secondary" style={{
+        <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-x-hidden" style={{
       width: '100%',
       paddingRight: 'calc(100vw - 100%)'
     }}>
