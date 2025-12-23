@@ -479,6 +479,13 @@ export const GleeAssistant = () => {
           } else if (action.action === 'get_now_playing') {
             // Client-side fallback - server should have returned this info
             break;
+          } else if (action.action === 'close_music_library') {
+            // Close the music library by navigating to dashboard
+            setTimeout(() => {
+              navigate('/dashboard');
+              setIsOpen(false);
+            }, 500);
+            break;
           }
         }
       }

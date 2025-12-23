@@ -102,6 +102,18 @@ const tools = [
   {
     type: "function",
     function: {
+      name: "close_music_library",
+      description: "Close the music library and return to the dashboard. Use this when users want to close, exit, or leave the music library.",
+      parameters: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "get_class_schedule",
       description: "Get the class/course schedule and important dates like last day of class",
       parameters: {
@@ -579,6 +591,13 @@ async function executeTool(toolName: string, args: any, userId: string) {
         action: "navigate",
         route: pageRoutes[args.page] || "/dashboard",
         message: `Navigating to ${args.page.replace(/-/g, " ")}.`
+      };
+    }
+
+    case "close_music_library": {
+      return {
+        action: "close_music_library",
+        message: "Closing the music library and returning to the dashboard."
       };
     }
 
