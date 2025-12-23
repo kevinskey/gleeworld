@@ -77,14 +77,13 @@ export const AdvertisingHero: React.FC = () => {
   const hero = heroes[currentIndex];
   const fallbackImage = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=2070&q=80';
   const content = <div className="relative w-full aspect-[16/9] sm:aspect-[21/9] md:aspect-[2/1] rounded-xl overflow-hidden group shadow-lg" onMouseEnter={() => setIsPaused(true)} onMouseLeave={() => setIsPaused(false)}>
-      {/* Background blur from current image with blue tint */}
-      <div className="absolute inset-0 z-0">
+      {/* Background blur from current image with Spelman blue tint */}
+      <div className="absolute inset-0 z-0 bg-[hsl(208_100%_33%)]">
         <img 
           src={hero.image_url || fallbackImage} 
           alt="" 
-          className="w-full h-full object-cover scale-110 blur-xl opacity-50"
+          className="w-full h-full object-cover scale-110 blur-xl opacity-40"
         />
-        <div className="absolute inset-0 bg-primary/60" />
       </div>
 
       {/* Hero Images with fade transition */}
