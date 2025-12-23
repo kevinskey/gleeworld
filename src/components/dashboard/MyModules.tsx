@@ -92,7 +92,7 @@ export const MyModules = ({
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-4 pb-4 py-[15px] !bg-white" style={{ background: 'white' }}>
+          <CardContent className="px-4 pb-4 py-[15px]" style={{ background: 'hsl(208, 100%, 33%)' }}>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
