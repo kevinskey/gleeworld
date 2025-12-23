@@ -93,7 +93,7 @@ export const GleeAcademyDashboardCard = () => {
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
           <CollapsibleTrigger asChild>
             <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer hover:bg-muted/30 transition-colors py-[20px]">
-              <div className="flex items-center justify-between py-[20px] bg-accent-foreground px-[10px]">
+              <div className="flex items-center justify-between py-[20px] px-[10px]">
                 <div className="flex items-center gap-3">
                   
                   <div>
