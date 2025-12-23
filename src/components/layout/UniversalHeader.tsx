@@ -188,7 +188,7 @@ export const UniversalHeader = ({
             }} />
                 </div>}
 
-              <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-2 sm:px-4 md:px-6 lg:px-8 bg-secondary lg:py-[22px]">
+              <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-2 sm:px-4 md:px-6 lg:px-8 bg-secondary pb-[22.5px] lg:py-[2px] pt-0">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0">
             <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">

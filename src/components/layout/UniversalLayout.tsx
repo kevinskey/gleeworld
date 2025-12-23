@@ -33,7 +33,7 @@ export const UniversalLayout = ({
   return <div className="min-h-screen w-full relative bg-background">
       {showHeader && (shouldUsePublicHeader ? <PublicHeader className="bg-secondary" /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
       <main className={`w-full pb-20 sm:pb-0 ${className}`}>
-        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="py-0 px-0">
+        {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="px-0 py-[2px] pt-[15px]">
             {children}
           </ResponsiveContainer> : children}
       </main>
