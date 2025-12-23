@@ -35,7 +35,7 @@ export const AuthLayout = ({ children, title, subtitle, theme = 'default' }: Aut
   
   return (
     <div 
-      className="min-h-screen flex items-center justify-center p-4 relative bg-cover bg-no-repeat bg-center md:bg-left-center"
+      className="min-h-screen w-full flex items-center justify-center p-4 relative bg-cover bg-no-repeat bg-center md:bg-left-center"
       style={{
         background: config.background.startsWith('linear-gradient') ? config.background : `url(${config.background})`
       }}
