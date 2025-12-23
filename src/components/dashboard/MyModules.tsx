@@ -128,7 +128,7 @@ export const MyModules = ({
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-4 pb-4 py-[15px] space-y-4" style={{ background: 'hsl(208, 100%, 33%)' }}>
+          <CardContent className="px-4 pb-4 py-[15px] space-y-4 bg-primary">
             {/* Search and Sort Controls */}
             <div className="flex gap-2">
               <div className="relative flex-1">
