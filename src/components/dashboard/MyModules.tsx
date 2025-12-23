@@ -71,49 +71,49 @@ export const MyModules = ({
     return null; // Don't render if no assigned modules
   }
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border border-border !bg-white" style={{
-      background: 'white'
-    }}>
+      <Card className="border-0 bg-white shadow-none">
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-muted/50 transition-colors py-[16px]">
-            <div className="flex items-center justify-between pr-0 pl-[20px] py-[20px] bg-brand-600">
+          <CardHeader className="pb-2 px-4 cursor-pointer transition-colors py-4" style={{ background: 'hsl(208, 100%, 33%)' }}>
+            <div className="flex items-center justify-between px-5 py-4">
               <div className="flex items-center gap-2">
-                
-                <CardTitle className="text-lg font-semibold tracking-wide">MY MODULES</CardTitle>
-                <span className="text-xs text-muted-foreground">
+                <CardTitle className="text-lg font-semibold tracking-wide text-white">MY MODULES</CardTitle>
+                <span className="text-xs text-white/70">
                   ({modulesWithDetails.length + (showAdminSettings ? 1 : 0)})
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {userProfile.exec_board_role && <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-1 rounded">
+                {userProfile.exec_board_role && <span className="text-xs text-white bg-white/20 px-2 py-1 rounded">
                     {userProfile.exec_board_role}
                   </span>}
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 mr-5 ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 text-white transition-transform duration-200 mr-5 ${isOpen ? 'rotate-180' : ''}`} />
               </div>
             </div>
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent style={{
-          background: 'hsl(208, 100%, 33%)'
-        }} className="px-4 pb-4 py-[15px] bg-brand-600">
+          <CardContent style={{ background: 'hsl(208, 100%, 25%)' }} className="px-4 pb-4 py-4">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
               {modulesWithDetails.map(module => {
               const IconComponent = getIconComponent(module.icon);
-              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="module-card-solid h-[100px] py-3 px-2 flex flex-col items-center justify-center gap-2 border-primary/50 hover:opacity-90 hover:border-primary/30 bg-muted">
+              return <Button key={module.id} variant="ghost" onClick={() => navigate(module.route)} 
+                style={{ background: 'hsl(208, 100%, 33%)' }}
+                className="h-[100px] py-3 px-2 flex flex-col items-center justify-center gap-2 border border-white/20 hover:bg-[hsl(208,100%,40%)] hover:border-white/40">
                     <div className="flex-shrink-0">
                       <IconComponent className="h-7 w-7 text-white" />
                     </div>
-                    <span className="text-[10px] text-center leading-tight line-clamp-2 text-white px-0.5 font-medium break-words w-full bg-secondary sm:text-base">
+                    <span className="text-[10px] text-center leading-tight line-clamp-2 text-white px-0.5 font-medium break-words w-full sm:text-xs">
                       {module.title}
                     </span>
                   </Button>;
             })}
-              {showAdminSettings && <Button variant="outline" className="h-[100px] py-4 px-3 flex flex-col items-center justify-start gap-3 hover:bg-primary/10 hover:border-primary/30" onClick={() => navigate('/dashboard?module=admin-settings')}>
+              {showAdminSettings && <Button variant="ghost" 
+                style={{ background: 'hsl(208, 100%, 33%)' }}
+                className="h-[100px] py-4 px-3 flex flex-col items-center justify-start gap-3 border border-white/20 hover:bg-[hsl(208,100%,40%)] hover:border-white/40" 
+                onClick={() => navigate('/dashboard?module=admin-settings')}>
                   <div className="flex-shrink-0 mt-2">
-                    <Settings className="h-8 w-8 text-primary" />
+                    <Settings className="h-8 w-8 text-white" />
                   </div>
-                  <span className="text-sm text-center leading-tight font-medium">Admin Settings</span>
+                  <span className="text-sm text-center leading-tight font-medium text-white">Admin Settings</span>
                 </Button>}
             </div>
           </CardContent>
