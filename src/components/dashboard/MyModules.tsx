@@ -140,7 +140,7 @@ export const MyModules = ({
                   placeholder="Search modules..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-background border-border text-foreground placeholder:text-muted-foreground/80"
+                  className="pl-9 bg-white border-2 border-gray-300 text-gray-900 placeholder:text-gray-500 shadow-sm"
                 />
               </div>
               <DropdownMenu>
