@@ -135,19 +135,19 @@ export const MyModules = ({
             {/* Search and Sort Controls */}
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/70" />
                 <Input
                   placeholder="Search modules..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 bg-background border-border text-foreground placeholder:text-muted-foreground/80"
                 />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5 bg-white/90 h-10">
+                  <Button variant="outline" size="sm" className="gap-1.5 bg-background border-border h-10">
                     <ArrowUpDown className="h-3.5 w-3.5" />
-                    <span className="text-xs">{getSortLabel()}</span>
+                    <span className="text-sm font-medium">{getSortLabel()}</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
