@@ -61,7 +61,7 @@
 
     /* Muted Elements - More visible */
     --muted: 210 15% 92%; /* Slightly blue-tinted gray */
-    --muted-foreground: 220 20% 25%; /* Much darker for readability */
+    --muted-foreground: 220 25% 18%; /* Dark enough for body/UI labels */
 
     /* Accent for Interactive Elements */
     --accent: var(--spelman-blue-light);
