@@ -150,15 +150,26 @@
   border: 1px solid hsla(0, 0%, 100%, 0.25) !important;
 }
 
-/* Module cards should always be solid and readable */
+/* Module cards should always be solid and readable - high specificity to override button variants */
+button.module-card-solid,
 .module-card-solid {
-  background: hsl(var(--primary)) !important;
-  color: hsl(var(--primary-foreground)) !important;
+  background-color: hsl(219 78% 31%) !important;
+  background: hsl(219 78% 31%) !important;
+  color: hsl(0 0% 100%) !important;
   background-image: none !important;
+  border-color: hsl(219 78% 40%) !important;
+}
+
+button.module-card-solid:hover,
+.module-card-solid:hover {
+  background-color: hsl(219 78% 35%) !important;
+  background: hsl(219 78% 35%) !important;
 }
 
 /* Module cards should have solid backgrounds, not glass */
+.spelman-blue-theme button.module-card-solid,
 .spelman-blue-theme .module-card-solid,
+.glass-theme button.module-card-solid,
 .glass-theme .module-card-solid {
   background-color: hsl(208 100% 33%) !important;
   background-image: none !important;
