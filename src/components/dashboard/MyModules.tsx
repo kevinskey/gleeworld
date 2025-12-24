@@ -166,7 +166,7 @@ export const MyModules = ({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-3">
+            <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {modulesWithDetails.map(module => {
                 const IconComponent = getIconComponent(module.icon);
                 return (
@@ -174,12 +174,12 @@ export const MyModules = ({
                     key={module.id}
                     variant="outline"
                     onClick={() => navigate(module.route)}
-                    className="module-card-solid h-[100px] py-3 px-2 flex flex-col items-center justify-center gap-2 border-primary/30 hover:opacity-95 hover:border-primary/40"
+                    className="module-card-solid h-[120px] md:h-[130px] lg:h-[140px] py-4 px-3 flex flex-col items-center justify-center gap-3 border-primary/30 hover:opacity-95 hover:border-primary/40"
                   >
                     <div className="flex-shrink-0">
-                      <IconComponent className="h-7 w-7 text-primary-foreground" />
+                      <IconComponent className="h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 text-primary-foreground" />
                     </div>
-                    <span className="text-[10px] text-center leading-tight line-clamp-2 text-primary-foreground px-0.5 font-medium break-words w-full sm:text-sm">
+                    <span className="text-xs md:text-sm lg:text-base text-center leading-tight line-clamp-2 text-primary-foreground px-1 font-medium break-words w-full">
                       {module.title}
                     </span>
                   </Button>
@@ -188,13 +188,13 @@ export const MyModules = ({
               {showAdminSettings && (
                 <Button
                   variant="outline"
-                  className="h-[100px] py-4 px-3 flex flex-col items-center justify-start gap-3 hover:bg-primary/10 hover:border-primary/30"
+                  className="module-card-solid h-[120px] md:h-[130px] lg:h-[140px] py-4 px-3 flex flex-col items-center justify-center gap-3 border-primary/30 hover:opacity-95 hover:border-primary/40"
                   onClick={() => navigate('/dashboard?module=admin-settings')}
                 >
-                  <div className="flex-shrink-0 mt-2">
-                    <Settings className="h-8 w-8 text-primary" />
+                  <div className="flex-shrink-0">
+                    <Settings className="h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 text-primary-foreground" />
                   </div>
-                  <span className="text-sm text-center leading-tight font-medium">Admin Settings</span>
+                  <span className="text-xs md:text-sm lg:text-base text-center leading-tight font-medium text-primary-foreground">Admin Settings</span>
                 </Button>
               )}
             </div>
