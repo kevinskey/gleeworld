@@ -150,6 +150,13 @@
   border: 1px solid hsla(0, 0%, 100%, 0.25) !important;
 }
 
+/* Module cards should always be solid and readable */
+.module-card-solid {
+  background: hsl(var(--primary)) !important;
+  color: hsl(var(--primary-foreground)) !important;
+  background-image: none !important;
+}
+
 /* Module cards should have solid backgrounds, not glass */
 .spelman-blue-theme .module-card-solid,
 .glass-theme .module-card-solid {
