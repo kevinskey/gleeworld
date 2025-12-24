@@ -48,20 +48,20 @@
     --message-received-fg: 0 0% 20%; /* Dark text on light gray */
     
     /* High-Contrast Backgrounds */
-    --background: 0 0% 98%; /* Very light gray instead of pure white */
-    --foreground: 0 0% 8%; /* Near-black text for readability */
+    --background: 210 20% 96%; /* Light blue-gray for better contrast */
+    --foreground: 220 15% 15%; /* Dark blue-gray text */
 
-    /* Card System - Subtle tint for depth */
-    --card: 210 40% 98%; /* Very subtle blue tint */
-    --card-foreground: 0 0% 8%; /* Dark text on white */
+    /* Card System - Visible cards with shadow-friendly bg */
+    --card: 0 0% 100%; /* Pure white cards stand out on gray bg */
+    --card-foreground: 220 15% 15%; /* Dark text */
 
     /* Popover and Dropdown Elements */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 220 15% 15%;
 
-    /* Muted Elements - Subtle but Readable */
-    --muted: 0 0% 96%; /* Very light gray */
-    --muted-foreground: 0 0% 25%; /* Medium dark gray */
+    /* Muted Elements - More visible */
+    --muted: 210 15% 92%; /* Slightly blue-tinted gray */
+    --muted-foreground: 220 10% 35%; /* Darker for readability */
 
     /* Accent for Interactive Elements */
     --accent: var(--spelman-blue-light);
@@ -71,9 +71,9 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border and Input Styling */
-    --border: 0 0% 85%; /* Visible but subtle borders */
-    --input: 0 0% 98%; /* Very light gray input backgrounds for contrast */
+    /* Border and Input Styling - MORE VISIBLE */
+    --border: 220 15% 75%; /* Darker, visible borders */
+    --input: 0 0% 100%; /* White inputs on gray bg */
     --ring: var(--spelman-blue-light); /* Blue focus rings */
 
     --radius: 0rem;
