@@ -49,7 +49,7 @@
     
     /* High-Contrast Backgrounds */
     --background: 210 20% 96%; /* Light blue-gray for better contrast */
-    --foreground: 220 15% 15%; /* Dark blue-gray text */
+    --foreground: 220 25% 10%; /* Very dark blue-black for maximum readability */
 
     /* Card System - Visible cards with shadow-friendly bg */
     --card: 0 0% 100%; /* Pure white cards stand out on gray bg */
@@ -61,7 +61,7 @@
 
     /* Muted Elements - More visible */
     --muted: 210 15% 92%; /* Slightly blue-tinted gray */
-    --muted-foreground: 220 10% 35%; /* Darker for readability */
+    --muted-foreground: 220 20% 25%; /* Much darker for readability */
 
     /* Accent for Interactive Elements */
     --accent: var(--spelman-blue-light);
