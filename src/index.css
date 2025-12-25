@@ -150,20 +150,23 @@
   border: 1px solid hsla(0, 0%, 100%, 0.25) !important;
 }
 
-/* Module cards should always be solid and readable - high specificity to override button variants */
+/* Module cards - clean white design with subtle accents */
 button.module-card-solid,
 .module-card-solid {
-  background-color: hsl(219 78% 31%) !important;
-  background: hsl(219 78% 31%) !important;
-  color: hsl(0 0% 100%) !important;
+  background-color: hsl(0 0% 100%) !important;
+  background: hsl(0 0% 100%) !important;
+  color: hsl(220 25% 15%) !important;
   background-image: none !important;
-  border-color: hsl(219 78% 40%) !important;
+  border: 2px solid hsl(220 15% 85%) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
 }
 
 button.module-card-solid:hover,
 .module-card-solid:hover {
-  background-color: hsl(219 78% 35%) !important;
-  background: hsl(219 78% 35%) !important;
+  background-color: hsl(219 78% 97%) !important;
+  background: hsl(219 78% 97%) !important;
+  border-color: hsl(219 78% 50%) !important;
+  box-shadow: 0 4px 12px rgba(17, 68, 139, 0.12) !important;
 }
 
 /* Module cards should have solid backgrounds, not glass */
