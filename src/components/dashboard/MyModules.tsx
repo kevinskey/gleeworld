@@ -107,45 +107,45 @@ export const MyModules = ({
     return null; // Don't render if no assigned modules
   }
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border border-border bg-card">
+      <Card className="border border-primary/30 bg-primary">
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-muted/50 transition-colors">
+          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-primary/90 transition-colors">
             <div className="flex items-center justify-between py-5">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-lg font-semibold tracking-wide">MY MODULES</CardTitle>
-                <span className="text-xs text-muted-foreground">
+                <CardTitle className="text-lg font-semibold tracking-wide text-primary-foreground">MY MODULES</CardTitle>
+                <span className="text-xs text-primary-foreground/80">
                   ({modulesWithDetails.length + (showAdminSettings ? 1 : 0)})
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 {userProfile.exec_board_role && (
-                  <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-1 rounded">
+                  <span className="text-xs text-primary-foreground bg-white/20 px-2 py-1 rounded">
                     {userProfile.exec_board_role}
                   </span>
                 )}
                 <ChevronDown
-                  className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+                  className={`h-4 w-4 text-primary-foreground/80 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
                 />
               </div>
             </div>
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-4 pb-4 py-4 space-y-4 bg-card">
+          <CardContent className="px-4 pb-4 py-4 space-y-4 bg-primary">
             {/* Search and Sort Controls */}
             <div className="flex gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/70" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search modules..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-white border-2 border-gray-300 text-gray-900 placeholder:text-gray-500 shadow-sm"
+                  className="pl-9 bg-white border-2 border-white/30 text-foreground placeholder:text-muted-foreground shadow-sm"
                 />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-1.5 bg-background border-border h-10">
+                  <Button variant="outline" size="sm" className="gap-1.5 bg-white border-white/30 h-10 text-foreground">
                     <ArrowUpDown className="h-3.5 w-3.5" />
                     <span className="text-sm font-medium">{getSortLabel()}</span>
                   </Button>
