@@ -32,7 +32,7 @@ export const UniversalLayout = ({
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
   return <div className="min-h-screen w-full relative bg-background">
       {showHeader && (shouldUsePublicHeader ? <PublicHeader className="bg-secondary" /> : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />)}
-      <main className={`w-full pb-20 sm:pb-0 bg-background ${className}`}>
+      <main className={`w-full pb-20 sm:pb-0 bg-white ${className}`}>
         {containerized ? <ResponsiveContainer maxWidth={maxWidth} className="px-0 py-[2px] pt-[15px]">
             {children}
           </ResponsiveContainer> : children}
