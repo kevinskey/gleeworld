@@ -60,7 +60,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
             
             {/* Branding Text */}
             <div className="flex flex-col">
-              <h1 className="text-base md:text-lg font-bold text-primary">GleeWorld</h1>
+              <h1 className="text-base md:text-lg font-bold text-foreground">GleeWorld</h1>
               <p className="text-xs text-muted-foreground hidden sm:block">Spelman College Glee Club</p>
             </div>
           </div>
@@ -69,17 +69,17 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
         {/* Center Section - Clock & Views */}
         <div className="flex items-center gap-2 md:gap-4">
           {/* Live Clock */}
-          <div className="flex items-center gap-1.5 md:gap-2 bg-background/50 px-2 md:px-3 py-1 rounded-lg border">
-            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" />
-            <span className="text-xs md:text-sm font-mono">
+          <div className="flex items-center gap-1.5 md:gap-2 bg-muted px-2 md:px-3 py-1 rounded-lg border">
+            <Clock className="w-3.5 h-3.5 md:w-4 md:h-4 text-foreground" />
+            <span className="text-xs md:text-sm font-mono text-foreground">
               {format(currentTime, 'h:mm:ss a')}
             </span>
           </div>
           
           {/* Views Counter */}
-          <div className="hidden md:flex items-center gap-2 bg-background/50 px-3 py-1 rounded-lg border">
-            <Eye className="w-4 h-4 text-secondary" />
-            <span className="text-sm font-medium">{viewCount.toLocaleString()}</span>
+          <div className="hidden md:flex items-center gap-2 bg-muted px-3 py-1 rounded-lg border">
+            <Eye className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">{viewCount.toLocaleString()}</span>
             <span className="text-xs text-muted-foreground">views</span>
           </div>
         </div>
@@ -117,7 +117,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-left">
-                  <p className="text-sm font-medium">{userProfile?.display_name || userProfile?.first_name || 'User'}</p>
+                  <p className="text-sm font-medium text-foreground">{userProfile?.display_name || userProfile?.first_name || 'User'}</p>
                   <p className="text-xs text-muted-foreground">{userProfile?.role || 'Member'}</p>
                 </div>
                 <ChevronDown className="w-4 h-4" />
