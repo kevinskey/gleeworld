@@ -205,8 +205,8 @@ export const UniversalHeader = ({
             
             {/* Email/SMS Messenger Toggle - Available to all authenticated users */}
             {user && <EnhancedTooltip content={isMessengerOpen ? "Close Messenger" : "Send Email/SMS"}>
-                <Button variant="ghost" size="sm" onClick={toggleMessenger} className={`h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground ${isMessengerOpen ? 'bg-gray-100' : ''}`} type="button">
-                  <Mail className="h-8 w-8 sm:h-8 sm:w-8 md:h-12 md:w-12 lg:h-16 lg:w-16" />
+                <Button variant="ghost" size="sm" onClick={toggleMessenger} className={`h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground [&_svg]:!size-8 md:[&_svg]:!size-12 lg:[&_svg]:!size-16 ${isMessengerOpen ? 'bg-gray-100' : ''}`} type="button">
+                  <Mail className="!h-8 !w-8 md:!h-12 md:!w-12 lg:!h-16 lg:!w-16" />
                 </Button>
               </EnhancedTooltip>}
             
@@ -214,8 +214,8 @@ export const UniversalHeader = ({
                 {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
                 {userProfile?.is_super_admin && <DropdownMenu>
                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground" type="button">
-                        <LayoutDashboard className="h-8 w-8 sm:h-8 sm:w-8 md:h-12 md:w-12 lg:h-16 lg:w-16" />
+                      <Button variant="ghost" size="sm" className="h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground [&_svg]:!size-8 md:[&_svg]:!size-12 lg:[&_svg]:!size-16" type="button">
+                        <LayoutDashboard className="!h-8 !w-8 md:!h-12 md:!w-12 lg:!h-16 lg:!w-16" />
                       </Button>
                    </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-popover text-popover-foreground border border-border shadow-2xl z-[1100]" align={isMobile ? "center" : "end"} sideOffset={20}>
@@ -275,8 +275,8 @@ export const UniversalHeader = ({
                 
                 {/* Add Module Quick Action - For members without admin access - Hidden on mobile */}
                 {!hasExecBoardPerms && <EnhancedTooltip content="Add Module to Dashboard">
-                    <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/member?addModule=true')} className="hidden sm:flex h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground" type="button">
-                      <Plus className="h-8 w-8 sm:h-8 sm:w-8 md:h-12 md:w-12 lg:h-16 lg:w-16" />
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/member?addModule=true')} className="hidden sm:flex h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground [&_svg]:!size-8 md:[&_svg]:!size-12 lg:[&_svg]:!size-16" type="button">
+                      <Plus className="!h-8 !w-8 md:!h-12 md:!w-12 lg:!h-16 lg:!w-16" />
                     </Button>
                   </EnhancedTooltip>}
 
@@ -288,16 +288,16 @@ export const UniversalHeader = ({
                       e.stopPropagation();
                       console.log('Camera button clicked - showing category selector');
                       setShowCategorySelector(true);
-                    }} className="h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground" type="button">
-                      <Camera className="h-8 w-8 sm:h-8 sm:w-8 md:h-12 md:w-12 lg:h-16 lg:w-16" />
+                    }} className="h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground [&_svg]:!size-8 md:[&_svg]:!size-12 lg:[&_svg]:!size-16" type="button">
+                      <Camera className="!h-8 !w-8 md:!h-12 md:!w-12 lg:!h-16 lg:!w-16" />
                     </Button>
                   </EnhancedTooltip>
                 </div>
 
                 {/* Quick Actions Button */}
                 <EnhancedTooltip content="Members Quick Access">
-                  <Button variant="ghost" size="sm" onClick={() => setIsQuickActionsOpen(prev => !prev)} className="h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground" type="button">
-                    <Key className="h-8 w-8 sm:h-8 sm:w-8 md:h-12 md:w-12 lg:h-16 lg:w-16" />
+                  <Button variant="ghost" size="sm" onClick={() => setIsQuickActionsOpen(prev => !prev)} className="h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-gray-100 rounded-full text-foreground [&_svg]:!size-8 md:[&_svg]:!size-12 lg:[&_svg]:!size-16" type="button">
+                    <Key className="!h-8 !w-8 md:!h-12 md:!w-12 lg:!h-16 lg:!w-16" />
                   </Button>
                 </EnhancedTooltip>
                 
