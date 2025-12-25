@@ -165,7 +165,7 @@ export const UniversalHeader = ({
   }, []);
   return <>
         <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden">
-          <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 bg-white">
+          <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 bg-white py-[20px]">
             <header ref={headerRef} className={`w-full border-b shadow-lg relative overflow-hidden rounded-b-lg bg-white`} style={{
           backgroundColor: '#ffffff',
           borderColor: '#e5e7eb'
