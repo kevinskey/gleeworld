@@ -170,8 +170,8 @@ export const UniversalHeader = ({
           backgroundColor: '#ffffff',
           borderColor: '#e5e7eb'
         }}>
-              {/* Holiday sparkle accents - hide for HBCU and Spelman Blue themes */}
-              {!isHbcuTheme && !isSpelmanBlue && <div className="absolute inset-0 pointer-events-none">
+              {/* Holiday sparkle accents - always show on white header */}
+              <div className="absolute inset-0 pointer-events-none">
                   <Sparkles className="absolute top-1.5 left-[8%] w-3 h-3 text-amber-400/50 animate-pulse" />
                   <Sparkles className="absolute top-2 left-[25%] w-2 h-2 text-red-500/30 animate-pulse" style={{
               animationDelay: '0.3s'
@@ -182,7 +182,7 @@ export const UniversalHeader = ({
                   <Sparkles className="absolute top-1.5 right-[35%] w-2 h-2 text-amber-400/40 animate-pulse" style={{
               animationDelay: '0.7s'
             }} />
-                </div>}
+                </div>
 
               <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-2 sm:px-4 md:px-6 lg:px-8 pb-[22.5px] lg:py-[2px] pt-0 bg-white text-foreground">
           {/* Logo and Navigation */}
