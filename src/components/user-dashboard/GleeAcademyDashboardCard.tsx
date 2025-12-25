@@ -92,12 +92,12 @@ export const GleeAcademyDashboardCard = () => {
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
           <CollapsibleTrigger asChild>
-            <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer transition-colors py-[20px] text-gray-50 bg-secondary">
-              <div className="flex items-center justify-between py-[20px] px-[10px]">
+            <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer transition-colors py-[20px] text-gray-50 bg-slate-50">
+              <div className="flex items-center justify-between py-[20px] px-[10px] bg-primary-foreground">
                 <div className="flex items-center gap-3">
                   
                   <div>
-                    <CardTitle className="text-xl font-bold tracking-wide pl-[5px]">GLEE ACADEMY</CardTitle>
+                    <CardTitle className="text-xl font-bold tracking-wide pl-[5px] bg-white text-black">GLEE ACADEMY</CardTitle>
                     <p className="text-xs text-muted-foreground pl-[5px] pt-[7px]">Spring 2026 Courses ({activeCourses.length})</p>
                   </div>
                 </div>
