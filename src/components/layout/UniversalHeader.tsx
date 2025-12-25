@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Sparkles, Plus, Mail, Key } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -170,19 +170,6 @@ export const UniversalHeader = ({
           backgroundColor: '#ffffff',
           borderColor: '#e5e7eb'
         }}>
-              {/* Holiday sparkle accents - always show on white header */}
-              <div className="absolute inset-0 pointer-events-none">
-                  <Sparkles className="absolute top-1.5 left-[8%] w-3 h-3 text-amber-400/50 animate-pulse" />
-                  <Sparkles className="absolute top-2 left-[25%] w-2 h-2 text-red-500/30 animate-pulse" style={{
-              animationDelay: '0.3s'
-            }} />
-                  <Sparkles className="absolute bottom-2 right-[15%] w-3 h-3 text-emerald-500/40 animate-pulse" style={{
-              animationDelay: '0.5s'
-            }} />
-                  <Sparkles className="absolute top-1.5 right-[35%] w-2 h-2 text-amber-400/40 animate-pulse" style={{
-              animationDelay: '0.7s'
-            }} />
-                </div>
 
               <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-2 sm:px-4 lg:px-8 pb-[22.5px] pt-0 text-foreground bg-primary-foreground md:px-0 mx-0 lg:py-[20px]">
           {/* Logo and Navigation */}
