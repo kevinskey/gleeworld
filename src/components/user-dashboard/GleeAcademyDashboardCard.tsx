@@ -92,7 +92,7 @@ export const GleeAcademyDashboardCard = () => {
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
           <CollapsibleTrigger asChild>
-            <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer hover:bg-muted/30 transition-colors py-[20px]">
+            <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer transition-colors py-[20px] text-gray-50 bg-secondary">
               <div className="flex items-center justify-between py-[20px] px-[10px]">
                 <div className="flex items-center gap-3">
                   
@@ -121,7 +121,7 @@ export const GleeAcademyDashboardCard = () => {
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <CardContent className="px-3 sm:px-6">
+            <CardContent className="px-3 sm:px-6 bg-primary-foreground">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
                 {activeCourses.map(course => {
                 const IconComponent = course.icon;
