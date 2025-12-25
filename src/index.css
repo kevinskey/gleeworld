@@ -186,6 +186,34 @@ button.module-card-solid:hover,
   background-image: none !important;
 }
 
+/* Force all headers to white background regardless of theme */
+header,
+.spelman-blue-theme header,
+.glass-theme header,
+.hbcu-theme header,
+[class*="theme"] header {
+  background-color: hsl(0 0% 100%) !important;
+  background: hsl(0 0% 100%) !important;
+  color: hsl(222 47% 11%) !important;
+}
+
+/* Force header text and icons to dark color */
+header *,
+.spelman-blue-theme header *,
+.glass-theme header *,
+.hbcu-theme header * {
+  --tw-text-opacity: 1;
+}
+
+header a,
+header button,
+header svg,
+.spelman-blue-theme header a,
+.spelman-blue-theme header button,
+.spelman-blue-theme header svg {
+  color: hsl(222 47% 11%) !important;
+}
+
 /* Use on pages that must stay white even when a theme class is present on <html>. */
 .academy-neutral {
   --background: 0 0% 100%;
