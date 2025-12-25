@@ -190,7 +190,7 @@ export const UniversalHeader = ({
             <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
               <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-black">
                 <div className="relative">
-                  <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-8 h-8 sm:w-8 sm:h-8 md:w-10 md:h-10 lg:w-12 lg:h-12 object-contain flex-shrink-0 drop-shadow-md" />
+                  <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-11 h-11 sm:w-11 sm:h-11 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain flex-shrink-0 drop-shadow-md" />
                 </div>
                 <span style={{
                     color: '#0f172a',
