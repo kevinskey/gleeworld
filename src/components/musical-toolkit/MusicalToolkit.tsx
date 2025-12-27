@@ -10,6 +10,7 @@ import { Tuner } from '@/components/tuner/Tuner';
 import { useTheme } from '@/contexts/ThemeContext';
 import { forceUnlockAudio, setupMobileAudioUnlock } from '@/utils/mobileAudioUnlock';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { HEADER_ICON_SIZES } from '@/components/layout/headerIconSizes';
 
 // Static chromatic ranges
 const FULL_PIANO_RANGE = [
@@ -57,9 +58,9 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
             aria-label="Musical Toolkit"
             onClick={handleDropdownClick}
             onTouchStart={handleDropdownClick}
-            className="inline-flex items-center justify-center h-8 w-8 sm:h-8 sm:w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 p-0 transition-colors hover:bg-white/10 rounded-full text-white"
+            className={`inline-flex items-center justify-center ${HEADER_ICON_SIZES.button} p-0 transition-colors hover:bg-white/10 rounded-full text-white`}
           >
-            <Piano className="!h-5 !w-5 md:!h-7 md:!w-7 lg:!h-10 lg:!w-10" />
+            <Piano className={HEADER_ICON_SIZES.icon} />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 

@@ -10,6 +10,7 @@ import { EnhancedTooltip } from '@/components/ui/enhanced-tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { HEADER_ICON_SIZES } from '@/components/layout/headerIconSizes';
 
 // CSS class added to body when radio bar is open - used by other components to add padding
 const RADIO_OPEN_CLASS = 'radio-bar-open';
@@ -139,13 +140,13 @@ export const HeaderRadioControls = () => {
             size="sm"
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              "relative h-8 w-8 sm:h-8 sm:w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 p-0 hover:bg-white/10 transition-colors rounded-full",
+              `relative ${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 transition-colors rounded-full`,
               isOpen && "bg-white/20"
             )}
             style={{ color: getTextColor() }}
             type="button"
           >
-            <Radio className="!h-5 !w-5 md:!h-7 md:!w-7 lg:!h-10 lg:!w-10" />
+            <Radio className={HEADER_ICON_SIZES.icon} />
             {isPlaying && (
               <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-green-500 rounded-full animate-pulse" />
             )}
