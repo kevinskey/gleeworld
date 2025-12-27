@@ -53,7 +53,7 @@ export const CountdownText = ({
 
   return (
     <EnhancedTooltip content={`${eventName} - ${formatDate(targetDate)}`}>
-      <div className={`hidden md:flex items-center gap-2 text-sm font-medium text-foreground/90 px-3 py-1.5 rounded-lg ${className}`}>
+      <div className={`hidden md:flex items-center gap-2 text-sm font-medium text-card-foreground px-3 py-1.5 rounded-lg ${className}`}>
         <Calendar className="h-3.5 w-3.5 text-primary" />
         <div className="flex items-center gap-1.5">
           <span className="font-mono text-xs">
