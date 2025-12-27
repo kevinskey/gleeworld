@@ -139,13 +139,13 @@ export const HeaderRadioControls = () => {
             size="sm"
             onClick={() => setIsOpen(!isOpen)}
             className={cn(
-              "relative h-12 w-12 sm:h-12 sm:w-12 md:h-16 md:w-16 lg:h-20 lg:w-20 p-0 hover:bg-white/10 transition-colors rounded-full",
+              "relative h-8 w-8 sm:h-8 sm:w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 p-0 hover:bg-white/10 transition-colors rounded-full",
               isOpen && "bg-white/20"
             )}
             style={{ color: getTextColor() }}
             type="button"
           >
-            <Radio className="!h-8 !w-8 md:!h-12 md:!w-12 lg:!h-16 lg:!w-16" />
+            <Radio className="!h-5 !w-5 md:!h-7 md:!w-7 lg:!h-10 lg:!w-10" />
             {isPlaying && (
               <div className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 bg-green-500 rounded-full animate-pulse" />
             )}
