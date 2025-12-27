@@ -257,9 +257,9 @@ export const HeaderClock = ({
         
         {/* Countdown Text - Visible on desktop */}
         <div className="hidden lg:block">
-          <span className="text-sm font-medium whitespace-nowrap" style={{
+          <span style={{
           color: getColor()
-        }}>
+        }} className="text-sm font-medium whitespace-nowrap text-black">
             🚌 {getCountdownText()}
           </span>
         </div>
