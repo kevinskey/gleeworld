@@ -801,7 +801,7 @@ export const MessengerModal: React.FC = () => {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm"
         onClick={requestClose}
       />
       
@@ -817,7 +817,7 @@ export const MessengerModal: React.FC = () => {
         disableDragging={isFullscreen}
         enableResizing={!isFullscreen}
         dragHandleClassName="messenger-drag-handle"
-        className="fixed z-50"
+        className="fixed z-[70]"
         bounds="window"
       >
         <div className="h-full w-full bg-background rounded-lg border shadow-2xl flex flex-col overflow-hidden">
