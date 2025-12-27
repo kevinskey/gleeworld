@@ -126,17 +126,17 @@ export const GleeAcademyDashboardCard = () => {
                 {activeCourses.map(course => {
                 const IconComponent = course.icon;
                 const isSelected = selectedCourseId === course.id || isDefaultCourse && course.id === 'a0000000-0000-0000-0000-000000000070';
-                return <button key={course.id} onClick={() => handleCourseClick(course)} className={`group flex flex-col items-center p-3 rounded-lg border transition-all duration-200 ${isSelected ? 'bg-primary/20 border-primary ring-2 ring-primary/30' : 'bg-card hover:bg-primary/10 border-border hover:border-primary/30'}`}>
-                      <div className={`p-2 rounded-full mb-2 transition-colors ${isSelected ? 'bg-primary/30' : 'bg-primary/10 group-hover:bg-primary/20'}`}>
-                        <IconComponent className="h-5 w-5 text-primary" />
+                return <button key={course.id} onClick={() => handleCourseClick(course)} className={`group flex flex-col items-center p-3 rounded-lg border transition-all duration-200 ${isSelected ? 'bg-primary border-primary ring-2 ring-primary/30' : 'bg-primary hover:bg-primary/90 border-primary/50 hover:border-primary'}`}>
+                      <div className={`p-2 rounded-full mb-2 transition-colors ${isSelected ? 'bg-primary-foreground/30' : 'bg-primary-foreground/20 group-hover:bg-primary-foreground/30'}`}>
+                        <IconComponent className="h-5 w-5 text-primary-foreground" />
                       </div>
-                      <span className="text-xs font-semibold text-center text-foreground">
+                      <span className="text-xs font-semibold text-center text-primary-foreground">
                         {course.courseCode}
                       </span>
-                      <span className="text-[10px] text-center line-clamp-1 mt-0.5 text-primary-foreground">
+                      <span className="text-[10px] text-center line-clamp-1 mt-0.5 text-primary-foreground/80">
                         {course.title}
                       </span>
-                      {isSelected && <span className="text-[8px] text-primary font-medium mt-1">ACTIVE</span>}
+                      {isSelected && <span className="text-[8px] text-primary-foreground font-medium mt-1">ACTIVE</span>}
                     </button>;
               })}
               </div>
