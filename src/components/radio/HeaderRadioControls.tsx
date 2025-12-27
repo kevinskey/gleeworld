@@ -164,13 +164,14 @@ export const HeaderRadioControls = () => {
             
             {/* Horizontal Radio Bar - Connected directly to header */}
             <div 
-              ref={radioBarRef}
-              className={cn(
-                "fixed left-0 right-0 z-[9999] bg-popover border-b-2 border-primary/40 shadow-lg"
-              )}
+              className="fixed left-0 right-0 z-[9999]"
               style={{ top: `${headerHeight}px` }}
             >
-              <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-1.5 relative">
+              <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8">
+                <div 
+                  ref={radioBarRef}
+                  className="bg-popover border-b-2 border-primary/40 shadow-lg rounded-b-lg px-2 sm:px-4 md:px-6 lg:px-8 py-1.5 relative"
+                >
                 {/* Close Button - Top Right */}
                 <Button
                   variant="ghost"
@@ -320,6 +321,7 @@ export const HeaderRadioControls = () => {
                 </div>
               </div>
             </div>
+          </div>
           </>,
           document.body
         )}
