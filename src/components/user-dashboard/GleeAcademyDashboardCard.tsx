@@ -92,27 +92,27 @@ export const GleeAcademyDashboardCard = () => {
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <Card className="border-2 border-primary/20 bg-gradient-to-br from-background to-primary/5">
           <CollapsibleTrigger asChild>
-            <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer transition-colors py-[20px] text-gray-50 bg-slate-50">
-              <div className="flex items-center justify-between py-[20px] px-[10px] bg-primary-foreground">
+            <CardHeader className="pb-3 px-3 sm:px-6 cursor-pointer transition-colors py-[20px] text-gray-50 bg-secondary">
+              <div className="flex items-center justify-between py-[20px] px-[10px] bg-secondary">
                 <div className="flex items-center gap-3">
                   
                   <div>
                     <CardTitle className="text-xl font-bold tracking-wide pl-[5px] bg-white text-black">GLEE ACADEMY</CardTitle>
-                    <p className="text-xs text-muted-foreground pl-[5px] pt-[7px]">Spring 2026 Courses ({activeCourses.length})</p>
+                    <p className="text-xs pl-[5px] pt-[7px] text-primary-foreground">Spring 2026 Courses ({activeCourses.length})</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {!isDefaultCourse && <Button variant="ghost" size="sm" onClick={e => {
                   e.stopPropagation();
                   clearCourseSelection();
-                }} className="text-xs text-muted-foreground hover:text-foreground">
+                }} className="text-xs text-primary-foreground">
                       <X className="h-3 w-3 mr-1" />
                       Exit Course View
                     </Button>}
                   <button onClick={e => {
                   e.stopPropagation();
                   navigate('/glee-academy');
-                }} className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors">
+                }} className="text-sm flex items-center gap-1 transition-colors text-primary-foreground">
                     View All <ArrowRight className="h-4 w-4" />
                   </button>
                   <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
@@ -133,7 +133,7 @@ export const GleeAcademyDashboardCard = () => {
                       <span className="text-xs font-semibold text-center text-foreground">
                         {course.courseCode}
                       </span>
-                      <span className="text-[10px] text-muted-foreground text-center line-clamp-1 mt-0.5">
+                      <span className="text-[10px] text-center line-clamp-1 mt-0.5 text-primary-foreground">
                         {course.title}
                       </span>
                       {isSelected && <span className="text-[8px] text-primary font-medium mt-1">ACTIVE</span>}
