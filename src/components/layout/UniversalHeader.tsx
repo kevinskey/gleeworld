@@ -167,24 +167,20 @@ export const UniversalHeader = ({
   return <>
     <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none">
           <div className="w-full max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-2 pointer-events-auto">
-            <header ref={headerRef} className={`w-full border-b shadow-lg relative overflow-hidden rounded-b-lg bg-white`} style={{
-          backgroundColor: '#ffffff',
-          borderColor: '#e5e7eb'
-        }}>
+            <header ref={headerRef} className="w-full border-b border-border shadow-lg relative overflow-hidden rounded-b-lg bg-card">
 
-              <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-2 sm:px-4 lg:px-8 pb-[22.5px] pt-0 text-foreground bg-primary-foreground md:px-0 mx-0 lg:py-[20px]">
+              <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-2 sm:px-4 lg:px-8 pb-[22.5px] pt-0 md:px-0 mx-0 lg:py-[20px]">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0">
             <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
-              <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-black">
+              <Link to="/" className="flex items-center gap-1.5 hover:scale-105 transition-transform duration-200 relative flex-shrink-0">
                 <div className="relative">
                   <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-11 h-11 sm:w-11 sm:h-11 md:w-14 md:h-14 lg:w-16 lg:h-16 object-contain flex-shrink-0 drop-shadow-md" />
                 </div>
-                <span style={{
-                    color: '#0f172a',
+                <span className="text-base sm:text-base md:text-lg xl:text-2xl whitespace-nowrap relative font-medium lg:text-3xl text-foreground" style={{
                     fontFamily: "'Cinzel', serif",
                     letterSpacing: '0.02em'
-                  }} className="text-base sm:text-base md:text-lg xl:text-2xl whitespace-nowrap relative text-black font-medium lg:text-3xl">
+                  }}>
                   GleeWorld
                   <span className="text-amber-500 ml-1 text-xs sm:text-sm hidden sm:inline">✨</span>
                 </span>
