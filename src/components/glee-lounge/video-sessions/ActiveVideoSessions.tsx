@@ -133,9 +133,9 @@ export const ActiveVideoSessions = ({
         ) : (
           <div className="space-y-3">
             {sessions.map((session) => (
-              <div
+            <div
                 key={session.id}
-                className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between p-3 rounded-lg border bg-card text-card-foreground hover:bg-muted/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -148,7 +148,7 @@ export const ActiveVideoSessions = ({
                     <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 bg-green-500 rounded-full border-2 border-background" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-sm">{session.title}</h4>
+                    <h4 className="font-medium text-sm text-foreground">{session.title}</h4>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span>Hosted by {session.host?.full_name || 'Unknown'}</span>
                       <span>•</span>
