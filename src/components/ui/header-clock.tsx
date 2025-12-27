@@ -255,22 +255,6 @@ export const HeaderClock = ({
           </svg>
         </div>
         
-        {/* Countdown Text - Visible on desktop */}
-        <div className="hidden lg:block">
-        <span style={{
-          color: getColor()
-        }} className="text-sm font-medium whitespace-nowrap">
-            🚌 {getCountdownText()}
-          </span>
-        </div>
       </div>
-      
-      {/* Hover Tooltip for when countdown text is hidden */}
-      {showCountdown && <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-[120] lg:hidden">
-          <Badge variant="secondary" className="bg-primary text-primary-foreground px-3 py-2 text-sm font-medium shadow-xl animate-fade-in whitespace-nowrap border border-white/20">
-            🚌 {getCountdownText()}
-          </Badge>
-          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-primary rotate-45 border-l border-t border-white/20"></div>
-        </div>}
     </div>;
 };
