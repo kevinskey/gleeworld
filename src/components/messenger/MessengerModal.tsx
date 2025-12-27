@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Rnd } from 'react-rnd';
 import { useMessenger } from '@/contexts/MessengerContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
@@ -78,6 +79,32 @@ export const MessengerModal: React.FC = () => {
   const [addingGroup, setAddingGroup] = useState<string | null>(null);
   const [showGroupsPanel, setShowGroupsPanel] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Resizable window state
+  const [windowSize, setWindowSize] = useState({ width: 900, height: 600 });
+  const [windowPosition, setWindowPosition] = useState({ x: 0, y: 0 });
+  
+  // Initialize window position to center
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !isMobile) {
+      setWindowPosition({
+        x: Math.max(0, (window.innerWidth - windowSize.width) / 2),
+        y: Math.max(0, (window.innerHeight - windowSize.height) / 2)
+      });
+    }
+  }, [isMobile]);
+
+  const handleResize = useCallback((e: any, direction: any, ref: HTMLElement, delta: any, position: { x: number; y: number }) => {
+    setWindowSize({
+      width: ref.offsetWidth,
+      height: ref.offsetHeight
+    });
+    setWindowPosition(position);
+  }, []);
+
+  const handleDragStop = useCallback((e: any, d: { x: number; y: number }) => {
+    setWindowPosition({ x: d.x, y: d.y });
+  }, []);
   
   // Video session state
   const [showCreateSession, setShowCreateSession] = useState(false);
@@ -353,16 +380,35 @@ export const MessengerModal: React.FC = () => {
 </html>`;
   };
 
-  return (
+  // Mobile uses Dialog, Desktop uses Rnd for resizable window
+  if (!isOpen) return (
     <>
-      <Dialog open={isOpen} onOpenChange={(open) => !open && requestClose()}>
-        <DialogContent className={`p-0 gap-0 bg-background transition-all duration-300 ${
-          isMobile 
-            ? 'max-w-[100vw] w-[100vw] h-[calc(100dvh-56px)] max-h-[calc(100dvh-56px)] rounded-none m-0 border-0 !top-14 !left-0 !translate-x-0 !translate-y-0' 
-            : isFullscreen
-              ? 'max-w-[100vw] w-[100vw] h-[100dvh] max-h-[100dvh] rounded-none m-0 border-0 !top-0 !left-0 !translate-x-0 !translate-y-0'
-              : 'max-w-4xl max-h-[90vh] rounded-lg'
-        }`}>
+      {/* Unsaved Changes Warning */}
+      <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved content in the messenger. Are you sure you want to close without sending?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Editing</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClose} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+
+  // Mobile version with Dialog
+  if (isMobile) {
+    return (
+      <>
+        <Dialog open={isOpen} onOpenChange={(open) => !open && requestClose()}>
+          <DialogContent className="p-0 gap-0 bg-background max-w-[100vw] w-[100vw] h-[calc(100dvh-56px)] max-h-[calc(100dvh-56px)] rounded-none m-0 border-0 !top-14 !left-0 !translate-x-0 !translate-y-0">
           <DialogHeader className={`border-b bg-gradient-to-r from-primary/10 via-background to-primary/5 ${isMobile ? 'px-3 py-3' : 'px-6 py-4'}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 sm:gap-3">
@@ -723,6 +769,365 @@ export const MessengerModal: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Unsaved Changes Warning */}
+      <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved content in the messenger. Are you sure you want to close without sending?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Editing</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmClose} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Discard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
+  }
+
+  // Desktop version with Rnd for resizable/draggable window
+  const desktopWidth = isFullscreen ? window.innerWidth : windowSize.width;
+  const desktopHeight = isFullscreen ? window.innerHeight : windowSize.height;
+  const desktopX = isFullscreen ? 0 : windowPosition.x;
+  const desktopY = isFullscreen ? 0 : windowPosition.y;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        onClick={requestClose}
+      />
+      
+      <Rnd
+        size={{ width: desktopWidth, height: desktopHeight }}
+        position={{ x: desktopX, y: desktopY }}
+        onDragStop={handleDragStop}
+        onResizeStop={handleResize}
+        minWidth={500}
+        minHeight={400}
+        maxWidth={isFullscreen ? undefined : window.innerWidth - 40}
+        maxHeight={isFullscreen ? undefined : window.innerHeight - 40}
+        disableDragging={isFullscreen}
+        enableResizing={!isFullscreen}
+        dragHandleClassName="messenger-drag-handle"
+        className="fixed z-50"
+        bounds="window"
+      >
+        <div className="h-full w-full bg-background rounded-lg border shadow-2xl flex flex-col overflow-hidden">
+          {/* Header - Drag Handle */}
+          <div className="messenger-drag-handle border-b bg-gradient-to-r from-primary/10 via-background to-primary/5 px-6 py-4 cursor-move flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                <Mail className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-foreground">GleeWorld Messenger</h2>
+                <p className="text-sm text-muted-foreground">Send branded emails and SMS to members or anyone</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                title={isFullscreen ? "Exit fullscreen" : "Fullscreen mode"}
+              >
+                {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={requestClose}
+                title="Close"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Content area */}
+          <div className="relative flex-1 overflow-hidden">
+            {/* Edge-attached Toggle Tab */}
+            {!showGroupsPanel && (
+              <button
+                onClick={() => setShowGroupsPanel(true)}
+                className="absolute top-1/2 -translate-y-1/2 right-0 z-30 bg-primary text-primary-foreground px-1.5 py-6 rounded-l-lg shadow-lg hover:bg-primary/90 transition-colors flex flex-col items-center gap-1"
+                style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+              >
+                <Users className="h-4 w-4 rotate-90" />
+                <span className="text-xs font-medium tracking-wide">Groups</span>
+              </button>
+            )}
+
+            {/* Main Composer */}
+            <div className="overflow-y-auto p-6 pr-10 h-full">
+              <Tabs value={composerMode} onValueChange={(v) => setComposerMode(v as 'email' | 'sms' | 'video')} className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4">
+                  <TabsTrigger value="email" className="gap-2">
+                    <Mail className="h-4 w-4" />
+                    <span>Email</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="sms" className="gap-2">
+                    <Smartphone className="h-4 w-4" />
+                    <span>SMS</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="video" className="gap-2">
+                    <Video className="h-4 w-4" />
+                    <span>Video</span>
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="email" className="space-y-4 mt-0">
+                  <Card className="border shadow-sm">
+                    <CardContent className="p-4 space-y-4">
+                      {/* Recipients */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">To:</Label>
+                        <div className="flex flex-wrap gap-2 p-2 min-h-[44px] border rounded-lg bg-background">
+                          {recipients.map((r, i) => (
+                            <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                              {r}
+                              <button onClick={() => removeRecipient(r)} className="hover:bg-muted-foreground/20 rounded-full p-0.5">
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          ))}
+                          <div className="relative flex-1 min-w-[200px]">
+                            <Input
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && recipientInput.trim()) {
+                                  addRecipient(recipientInput.trim());
+                                }
+                              }}
+                              placeholder="Search members or enter email..."
+                              className="border-0 shadow-none focus-visible:ring-0 h-8 text-sm"
+                            />
+                            {isSearching && (
+                              <Loader2 className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                        {searchResults.length > 0 && (
+                          <div className="border rounded-lg max-h-32 overflow-y-auto bg-background shadow-lg">
+                            {searchResults.map((user: any) => (
+                              <button
+                                key={user.id}
+                                onClick={() => {
+                                  addRecipient(user.email);
+                                  setSearchQuery('');
+                                  setSearchResults([]);
+                                }}
+                                className="w-full p-2 text-left hover:bg-muted flex items-center gap-2 text-sm"
+                              >
+                                <span className="font-medium">{user.full_name}</span>
+                                <span className="text-muted-foreground">({user.email})</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Subject */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Subject:</Label>
+                        <Input
+                          value={subject}
+                          onChange={(e) => {
+                            setSubject(e.target.value);
+                            setHasUnsavedChanges(true);
+                          }}
+                          placeholder="Enter email subject..."
+                          className="text-sm"
+                        />
+                      </div>
+
+                      {/* Message */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Message:</Label>
+                        <RichTextEditor
+                          value={content}
+                          onChange={(val) => {
+                            setContent(val);
+                            setHasUnsavedChanges(true);
+                          }}
+                          placeholder="Write your message..."
+                          className="min-h-[200px]"
+                        />
+                      </div>
+
+                      {/* Send Button */}
+                      <div className="flex justify-end">
+                        <Button
+                          onClick={handleSendEmail}
+                          disabled={isSending || !recipients.length || !subject.trim() || !content.trim()}
+                          className="gap-2"
+                        >
+                          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          Send Email
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Preview */}
+                  {subject && (
+                    <div className="mt-6">
+                      <h3 className="font-semibold mb-3">Preview</h3>
+                      <div className="bg-gradient-to-br from-primary to-primary/70 rounded-t-lg p-4 text-center">
+                        <h4 className="text-primary-foreground font-bold">✨ GleeWorld</h4>
+                        <p className="text-primary-foreground/80 text-xs">Spelman College Glee Club</p>
+                      </div>
+                      <div className="bg-background border border-t-0 rounded-b-lg p-4">
+                        <h5 className="font-semibold text-sm mb-2">{subject || 'Your Subject'}</h5>
+                        <p className="text-xs text-muted-foreground line-clamp-3">
+                          {content || 'Your message will appear here with beautiful branding...'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="sms" className="space-y-4 mt-0">
+                  <Card className="border shadow-sm">
+                    <CardContent className="p-4 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Send to all members with phone numbers</Label>
+                        <Switch checked={sendToAll} onCheckedChange={setSendToAll} />
+                      </div>
+                      
+                      {!sendToAll && (
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">Recipients:</Label>
+                          <div className="flex flex-wrap gap-2 p-2 min-h-[44px] border rounded-lg bg-background">
+                            {smsRecipients.map((r, i) => (
+                              <Badge key={i} variant="secondary" className="gap-1 pr-1">
+                                {r.full_name}
+                                <button 
+                                  onClick={() => setSmsRecipients(smsRecipients.filter((_, idx) => idx !== i))} 
+                                  className="hover:bg-muted-foreground/20 rounded-full p-0.5"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Message (160 char limit):</Label>
+                        <Textarea
+                          value={smsContent}
+                          onChange={(e) => {
+                            if (e.target.value.length <= 160) {
+                              setSmsContent(e.target.value);
+                              setHasUnsavedChanges(true);
+                            }
+                          }}
+                          placeholder="Enter SMS message..."
+                          className="text-sm resize-none"
+                          rows={3}
+                        />
+                        <p className="text-xs text-muted-foreground text-right">{smsContent.length}/160</p>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          onClick={handleSendSMS}
+                          disabled={isSending || !smsContent.trim() || (!sendToAll && smsRecipients.length === 0)}
+                          className="gap-2"
+                        >
+                          {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                          Send SMS
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                <TabsContent value="video" className="space-y-4 mt-0">
+                  <ActiveVideoSessions
+                    onJoinSession={(sessionId, roomName, isRecording) => setActiveVideoSession({
+                      id: sessionId,
+                      roomName: roomName,
+                      isRecording: isRecording
+                    })}
+                    onCreateSession={() => setShowCreateSession(true)}
+                  />
+                  
+                  <CreateVideoSessionDialog
+                    open={showCreateSession}
+                    onOpenChange={setShowCreateSession}
+                    onSessionCreated={(sessionId, roomName) => {
+                      setActiveVideoSession({
+                        id: sessionId,
+                        roomName: roomName,
+                        isRecording: false
+                      });
+                      setShowCreateSession(false);
+                    }}
+                  />
+                  
+                  {activeVideoSession && (
+                    <VideoSessionViewer
+                      sessionId={activeVideoSession.id}
+                      roomName={activeVideoSession.roomName}
+                      isRecordingEnabled={activeVideoSession.isRecording}
+                      onClose={() => setActiveVideoSession(null)}
+                    />
+                  )}
+                </TabsContent>
+              </Tabs>
+
+              {/* Groups Panel Overlay */}
+              {showGroupsPanel && (
+                <div className="absolute inset-y-0 right-0 w-80 bg-background border-l shadow-xl z-40 flex flex-col">
+                  <div className="flex items-center justify-between p-4 border-b">
+                    <h3 className="font-semibold">Quick Add Groups</h3>
+                    <Button variant="ghost" size="icon" onClick={() => setShowGroupsPanel(false)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <ScrollArea className="flex-1 p-4">
+                    {loadingGroups ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : recipientGroups.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-8">No groups available</p>
+                    ) : (
+                      recipientGroups.map((group) => (
+                        <Button
+                          key={group.id}
+                          variant="outline"
+                          className="w-full justify-between mb-2"
+                          onClick={() => handleAddGroup(group)}
+                          disabled={addingGroup === group.id}
+                        >
+                          <span className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            {group.name}
+                          </span>
+                          <Badge variant="secondary">{group.count}</Badge>
+                        </Button>
+                      ))
+                    )}
+                  </ScrollArea>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </Rnd>
 
       {/* Unsaved Changes Warning */}
       <AlertDialog open={showCloseWarning} onOpenChange={setShowCloseWarning}>
