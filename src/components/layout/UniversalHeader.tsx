@@ -186,9 +186,10 @@ export const UniversalHeader = ({
               </Link>
             </EnhancedTooltip>
             
-            {/* Clock - Hidden on mobile, shown on larger screens */}
-            <div className="hidden sm:flex items-center">
+            {/* Clock + Countdown - Hidden on mobile, shown on larger screens */}
+            <div className="hidden sm:flex items-center gap-2">
               <HeaderClock className="text-xs sm:text-sm" />
+              <CountdownText className="bg-muted/40" />
             </div>
           </div>
 
