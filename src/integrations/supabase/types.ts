@@ -7474,6 +7474,63 @@ export type Database = {
           },
         ]
       }
+      gw_course_outline_items: {
+        Row: {
+          content: string
+          course_id: string
+          created_at: string
+          due_at: string | null
+          id: string
+          is_completed: boolean | null
+          item_type: string
+          link_url: string | null
+          position: number
+          session_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          course_id: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          item_type: string
+          link_url?: string | null
+          position?: number
+          session_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          course_id?: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          item_type?: string
+          link_url?: string | null
+          position?: number
+          session_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_outline_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_course_outline_items_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "gw_course_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_course_playlist_videos: {
         Row: {
           added_at: string | null
@@ -7610,6 +7667,65 @@ export type Database = {
           },
         ]
       }
+      gw_course_sessions: {
+        Row: {
+          calendar_event_id: string | null
+          cancellation_reason: string | null
+          course_id: string
+          created_at: string
+          end_at: string
+          id: string
+          notes: string | null
+          session_date: string
+          session_index: number
+          start_at: string
+          status: string
+          title: string
+          updated_at: string
+          week_index: number
+        }
+        Insert: {
+          calendar_event_id?: string | null
+          cancellation_reason?: string | null
+          course_id: string
+          created_at?: string
+          end_at: string
+          id?: string
+          notes?: string | null
+          session_date: string
+          session_index: number
+          start_at: string
+          status?: string
+          title?: string
+          updated_at?: string
+          week_index?: number
+        }
+        Update: {
+          calendar_event_id?: string | null
+          cancellation_reason?: string | null
+          course_id?: string
+          created_at?: string
+          end_at?: string
+          id?: string
+          notes?: string | null
+          session_date?: string
+          session_index?: number
+          start_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          week_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_sessions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gw_course_submissions: {
         Row: {
           ai_feedback: string | null
@@ -7680,6 +7796,47 @@ export type Database = {
             columns: ["assignment_id"]
             isOneToOne: false
             referencedRelation: "gw_course_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gw_course_templates: {
+        Row: {
+          course_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          template_json: Json
+          updated_at: string
+        }
+        Insert: {
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          template_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          template_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gw_course_templates_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
         ]
@@ -7762,6 +7919,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           crn: string | null
+          default_location: string | null
           description: string | null
           end_date: string | null
           id: string
@@ -7773,11 +7931,13 @@ export type Database = {
           is_active: boolean | null
           is_free: boolean | null
           max_enrollment: number | null
+          meeting_patterns: Json | null
           price_cents: number | null
           semester: string | null
           start_date: string | null
           syllabus_url: string | null
           term: string | null
+          timezone: string | null
           title: string
           updated_at: string | null
         }
@@ -7787,6 +7947,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           crn?: string | null
+          default_location?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -7798,11 +7959,13 @@ export type Database = {
           is_active?: boolean | null
           is_free?: boolean | null
           max_enrollment?: number | null
+          meeting_patterns?: Json | null
           price_cents?: number | null
           semester?: string | null
           start_date?: string | null
           syllabus_url?: string | null
           term?: string | null
+          timezone?: string | null
           title: string
           updated_at?: string | null
         }
@@ -7812,6 +7975,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           crn?: string | null
+          default_location?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -7823,11 +7987,13 @@ export type Database = {
           is_active?: boolean | null
           is_free?: boolean | null
           max_enrollment?: number | null
+          meeting_patterns?: Json | null
           price_cents?: number | null
           semester?: string | null
           start_date?: string | null
           syllabus_url?: string | null
           term?: string | null
+          timezone?: string | null
           title?: string
           updated_at?: string | null
         }
@@ -8361,11 +8527,14 @@ export type Database = {
       gw_events: {
         Row: {
           address: string | null
+          all_day: boolean | null
           attendance_deadline: string | null
           attendance_notes: string | null
           attendance_required: boolean | null
           attendance_type: string | null
           calendar_id: string
+          category: string | null
+          course_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -8399,11 +8568,14 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          all_day?: boolean | null
           attendance_deadline?: string | null
           attendance_notes?: string | null
           attendance_required?: boolean | null
           attendance_type?: string | null
           calendar_id: string
+          category?: string | null
+          course_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -8437,11 +8609,14 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          all_day?: boolean | null
           attendance_deadline?: string | null
           attendance_notes?: string | null
           attendance_required?: boolean | null
           attendance_type?: string | null
           calendar_id?: string
+          category?: string | null
+          course_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -8479,6 +8654,13 @@ export type Database = {
             columns: ["calendar_id"]
             isOneToOne: false
             referencedRelation: "gw_calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gw_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "gw_courses"
             referencedColumns: ["id"]
           },
           {
