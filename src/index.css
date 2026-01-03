@@ -1959,8 +1959,20 @@ label.required::after {
 
 /* Prevent horizontal overflow on all pages */
 :root {
-  --gw-header-height: 0px;
+  /* Layout dimensions - header height is set dynamically by UniversalHeader */
+  --gw-header-h: 4rem; /* Default fallback, updated by JS */
+  --gw-header-height: var(--gw-header-h); /* Alias for backwards compat */
   --gw-radio-bar-height: 0px;
+  
+  /* Semantic surface colors for accessibility */
+  --surface: 0 0% 100%; /* Pure white surface */
+  --surface-elevated: 0 0% 100%; /* Elevated surfaces */
+  --surface-sunken: 210 20% 96%; /* Recessed areas */
+  
+  /* Ensure text contrast */
+  --text-primary: 220 25% 10%; /* Near-black for body text */
+  --text-secondary: 220 15% 35%; /* Muted but readable */
+  --text-tertiary: 220 10% 50%; /* Placeholder/disabled */
 }
 
 html, body {
@@ -2044,7 +2056,69 @@ html, body {
 /* ============================================
    THEME CONTRAST FIXES
    Ensure readability across all themes
+   Eliminate white-on-white and black-on-black
    ============================================ */
+
+/* Force semantic colors on common problem patterns */
+.bg-white, 
+[class*="bg-white"] {
+  background-color: hsl(var(--card)) !important;
+}
+
+.text-white:not(.bg-primary):not(.bg-secondary):not(.bg-destructive):not(.bg-success):not([class*="bg-brand"]) {
+  color: hsl(var(--foreground)) !important;
+}
+
+.text-black,
+[class*="text-black"] {
+  color: hsl(var(--foreground)) !important;
+}
+
+.bg-black:not(.dark) {
+  background-color: hsl(var(--foreground)) !important;
+}
+
+/* Ensure cards are always visible against background */
+.bg-card {
+  background-color: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+}
+
+.bg-background {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* Fix muted text to be readable */
+.text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+}
+
+/* Interactive focus states for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  ring: 2px;
+  ring-color: hsl(var(--ring));
+  ring-offset: 2px;
+  ring-offset-color: hsl(var(--background));
+  box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+}
+
+/* Ensure hover states are visible */
+button:hover:not(:disabled),
+[role="button"]:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+.hover\:bg-accent:hover {
+  background-color: hsl(var(--accent) / 0.1);
+}
 
 /* Dark mode specific contrast improvements */
 .dark .text-muted-foreground {

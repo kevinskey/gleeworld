@@ -3,36 +3,42 @@ import { useLocation } from "react-router-dom";
 import { UniversalHeader } from "./UniversalHeader";
 import { PublicHeader } from "./PublicHeader";
 import { UniversalFooter } from "./UniversalFooter";
-import { PageContainer } from "./PageContainer";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
 
-interface UniversalLayoutProps {
+interface AppShellProps {
   children: ReactNode;
   showHeader?: boolean;
   showFooter?: boolean;
+  showMobileNav?: boolean;
   className?: string;
-  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "7xl" | "full";
-  containerized?: boolean;
   viewMode?: 'admin' | 'member';
   onViewModeChange?: (mode: 'admin' | 'member') => void;
 }
 
-export const UniversalLayout = ({
+/**
+ * AppShell - The unified layout wrapper for all authenticated routes.
+ * 
+ * Features:
+ * - Fixed header with dynamic height stored in --gw-header-h CSS variable
+ * - Main content area with proper top padding to prevent content overlap
+ * - Consistent footer and mobile navigation
+ * - No nested scroll containers - body/main handles scrolling
+ */
+export const AppShell = ({
   children,
   showHeader = true,
   showFooter = true,
+  showMobileNav = true,
   className = "",
-  maxWidth = "7xl",
-  containerized = true,
   viewMode,
   onViewModeChange
-}: UniversalLayoutProps) => {
+}: AppShellProps) => {
   const location = useLocation();
 
   // Use PublicHeader for public, fan, and alumnae pages
-  const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
-  const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
-  
+  const publicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
+  const shouldUsePublicHeader = publicHeaderPaths.includes(location.pathname);
+
   return (
     <div className="min-h-screen w-full bg-background">
       {/* Fixed Header */}
@@ -42,19 +48,27 @@ export const UniversalLayout = ({
           : <UniversalHeader viewMode={viewMode} onViewModeChange={onViewModeChange} />
       )}
       
-      {/* Main Content - padded by header height to prevent overlap */}
-      <main className={`w-full min-h-dvh pt-[var(--gw-header-h,4rem)] pb-20 sm:pb-0 bg-background text-foreground ${className}`}>
-        {containerized ? (
-          <PageContainer maxWidth={maxWidth} padded>
-            {children}
-          </PageContainer>
-        ) : children}
+      {/* Main Content - padded by header height */}
+      <main 
+        className={`
+          w-full 
+          min-h-dvh 
+          pt-[var(--gw-header-h,4rem)]
+          pb-20 sm:pb-0
+          bg-background
+          ${className}
+        `.trim().replace(/\s+/g, ' ')}
+      >
+        {children}
       </main>
-      
+
+      {/* Footer */}
       {showFooter && <UniversalFooter />}
       
       {/* Mobile Bottom Navigation */}
-      <MobileBottomNav />
+      {showMobileNav && <MobileBottomNav />}
     </div>
   );
 };
+
+export default AppShell;

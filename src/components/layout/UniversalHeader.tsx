@@ -149,6 +149,8 @@ export const UniversalHeader = ({
         return;
       }
       lastHeaderHeightRef.current = height;
+      // Set both variables for compatibility
+      document.documentElement.style.setProperty('--gw-header-h', `${height}px`);
       document.documentElement.style.setProperty('--gw-header-height', `${height}px`);
       isInitializedRef.current = true;
     };
