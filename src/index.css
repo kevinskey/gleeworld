@@ -47,21 +47,21 @@
     --message-received: 0 0% 93%; /* Light gray for received messages */
     --message-received-fg: 0 0% 20%; /* Dark text on light gray */
     
-    /* High-Contrast Backgrounds */
-    --background: 210 20% 96%; /* Light blue-gray for better contrast */
-    --foreground: 220 25% 10%; /* Very dark blue-black for maximum readability */
+    /* High-Contrast Backgrounds - LIGHTER, LESS BLUE */
+    --background: 0 0% 98%; /* Near-white, neutral background */
+    --foreground: 220 15% 15%; /* Dark text for readability */
 
-    /* Card System - Visible cards with shadow-friendly bg */
-    --card: 0 0% 100%; /* Pure white cards stand out on gray bg */
-    --card-foreground: 220 15% 15%; /* Dark text */
+    /* Card System - Clean white cards */
+    --card: 0 0% 100%; /* Pure white cards */
+    --card-foreground: 220 15% 20%; /* Dark text */
 
     /* Popover and Dropdown Elements */
     --popover: 0 0% 100%;
     --popover-foreground: 220 15% 15%;
 
-    /* Muted Elements - More visible */
-    --muted: 210 15% 92%; /* Slightly blue-tinted gray */
-    --muted-foreground: 220 25% 18%; /* Dark enough for body/UI labels */
+    /* Muted Elements - Neutral, not blue */
+    --muted: 0 0% 94%; /* Neutral light gray */
+    --muted-foreground: 0 0% 35%; /* Medium gray for labels */
 
     /* Accent for Interactive Elements */
     --accent: var(--spelman-blue-light);
@@ -71,10 +71,10 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border and Input Styling - MORE VISIBLE */
-    --border: 220 15% 75%; /* Darker, visible borders */
-    --input: 0 0% 100%; /* White inputs on gray bg */
-    --ring: var(--spelman-blue-light); /* Blue focus rings */
+    /* Border and Input Styling - Neutral borders */
+    --border: 0 0% 85%; /* Neutral gray borders */
+    --input: 0 0% 100%; /* White inputs */
+    --ring: var(--spelman-blue-dark); /* Blue focus rings */
 
     --radius: 0rem;
 
@@ -139,15 +139,15 @@
   }
 }
 
-/* Glass Theme Styles */
+/* Glass Theme Styles - DISABLED for cleaner look */
 .glass-theme [data-component="card"],
 .glass-theme .bg-card,
 .spelman-blue-theme [data-component="card"],
 .spelman-blue-theme .bg-card {
-  background: hsla(0, 0%, 100%, 0.15) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid hsla(0, 0%, 100%, 0.25) !important;
+  background: hsl(0 0% 100%) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid hsl(0 0% 90%) !important;
 }
 
 /* Module cards - clean white design with subtle accents */
@@ -169,20 +169,24 @@ button.module-card-solid:hover,
   box-shadow: 0 4px 12px rgba(17, 68, 139, 0.12) !important;
 }
 
-/* Module cards should have solid backgrounds, not glass */
+/* Module cards should have solid WHITE backgrounds in blue theme */
 .spelman-blue-theme button.module-card-solid,
 .spelman-blue-theme .module-card-solid,
 .glass-theme button.module-card-solid,
 .glass-theme .module-card-solid {
-  background-color: hsl(208 100% 33%) !important;
+  background-color: hsl(0 0% 100%) !important;
   background-image: none !important;
-  background: hsl(208 100% 33%) !important;
+  background: hsl(0 0% 100%) !important;
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
+  color: hsl(220 25% 15%) !important;
+  border: 2px solid hsl(220 15% 85%) !important;
 }
 
-.spelman-blue-theme .bg-background {
-  background-color: hsl(0 0% 100%) !important;
+/* Force background to white/neutral in blue theme */
+.spelman-blue-theme .bg-background,
+.glass-theme .bg-background {
+  background-color: hsl(0 0% 98%) !important;
   background-image: none !important;
 }
 
@@ -382,32 +386,32 @@ header svg,
    SPELMAN BLUE THEME - Modern & Professional
    ======================================== */
 
-/* Spelman Blue Theme - Bright, clean, modern portal aesthetic */
+/* Spelman Blue Theme - Clean, light, professional aesthetic */
 .spelman-blue-theme,
 html[data-theme="spelman-blue"] {
-  /* Official Spelman Blue palette */
-  --spelman-primary: 208 100% 33%;      /* #0056a6 - Official Spelman Blue */
-  --spelman-accent: 203 85% 63%;        /* #55BBEE - Bright sky blue */
-  --spelman-highlight: 208 100% 43%;    /* #0073c9 - Lighter Spelman Blue */
+  /* Official Spelman Blue palette - used for accents only */
+  --spelman-primary: 219 78% 31%;      /* #11448B - Spelman dark blue */
+  --spelman-accent: 203 85% 63%;        /* #55BBEE - Sky blue accent */
+  --spelman-highlight: 208 100% 43%;    /* #0073c9 - Lighter blue */
   
-  /* Override core colors - MORE BLUE throughout */
-  --primary: 208 100% 33%;
+  /* Keep UI light and neutral - blue only for accents */
+  --primary: 219 78% 31%;
   --primary-foreground: 0 0% 100%;
   --secondary: 203 85% 63%;
   --secondary-foreground: 0 0% 100%;
-  --accent: 208 100% 43%;
+  --accent: 219 78% 31%;
   --accent-foreground: 0 0% 100%;
-  --background: 208 60% 96%;            /* Light blue tint background */
-  --foreground: 208 80% 20%;            /* Dark blue text */
-  --card: 208 50% 98%;                  /* Very light blue cards */
-  --card-foreground: 208 80% 20%;       /* Dark blue text on cards */
-  --muted: 208 40% 92%;                 /* Blue-tinted muted */
-  --muted-foreground: 208 30% 40%;      /* Medium blue muted text */
-  --border: 208 50% 80%;                /* Blue-tinted borders */
-  --ring: 203 85% 63%;
-  --input: 208 40% 98%;                 /* Light blue inputs */
-  --popover: 208 100% 28%;               /* Dark blue popovers */
-  --popover-foreground: 0 0% 100%;        /* White text on dark blue */
+  --background: 0 0% 98%;              /* Near-white neutral background */
+  --foreground: 220 15% 15%;           /* Dark neutral text */
+  --card: 0 0% 100%;                   /* Pure white cards */
+  --card-foreground: 220 15% 20%;      /* Dark text on cards */
+  --muted: 0 0% 94%;                   /* Neutral muted */
+  --muted-foreground: 0 0% 40%;        /* Gray muted text */
+  --border: 0 0% 88%;                  /* Neutral borders */
+  --ring: 219 78% 31%;
+  --input: 0 0% 100%;                  /* White inputs */
+  --popover: 0 0% 100%;                /* White popovers */
+  --popover-foreground: 220 15% 15%;   /* Dark text on popovers */
 }
 
 /* Spelman Blue Theme Typography - Clean sans-serif */
