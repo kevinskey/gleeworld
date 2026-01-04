@@ -7089,6 +7089,39 @@ export type Database = {
         }
         Relationships: []
       }
+      gw_countdowns: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          display_in_header: boolean
+          event_name: string
+          id: string
+          is_active: boolean
+          target_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          display_in_header?: boolean
+          event_name: string
+          id?: string
+          is_active?: boolean
+          target_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          display_in_header?: boolean
+          event_name?: string
+          id?: string
+          is_active?: boolean
+          target_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gw_course_announcements: {
         Row: {
           content: string

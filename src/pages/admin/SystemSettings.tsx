@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Settings, Globe, Lock, Database } from "lucide-react";
+import { CountdownManager } from "@/components/admin/countdown/CountdownManager";
 
 const SystemSettings = () => {
   return (
@@ -16,6 +17,9 @@ const SystemSettings = () => {
           Update Settings
         </Button>
       </div>
+
+      {/* Countdown Manager - Full Width */}
+      <CountdownManager />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
