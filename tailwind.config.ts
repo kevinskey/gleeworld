@@ -88,6 +88,9 @@ export default {
 				'spelman-blue': {
 					dark: 'hsl(var(--spelman-blue-dark))',
 					light: 'hsl(var(--spelman-blue-light))',
+					navy: '#11448B',
+					sky: '#55BBEE',
+					white: '#FFFFFF',
 				},
 				brand: {
 					50: 'hsl(203 85% 97%)',
