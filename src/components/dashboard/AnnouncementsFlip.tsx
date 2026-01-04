@@ -15,43 +15,44 @@ interface AnnouncementsFlipProps {
   direction?: 'left' | 'right' | 'up';
 }
 
-// Theme-specific styling for announcement cards
+// Theme-specific styling using CSS variable references for consistency
+// These use HSL values that match the theme system in themeConfig.ts
 const getThemeStyles = (themeName: ThemeName) => {
   switch (themeName) {
     case 'hbcu':
       return {
-        background: 'linear-gradient(135deg, #8B0000 0%, #a52a2a 100%)',
-        borderColor: '#FFDF00',
-        textColor: '#FFFFFF',
-        badgeBg: '#FFDF00',
-        badgeText: '#000000',
-        badgeBorder: '#8B0000',
+        background: 'linear-gradient(135deg, hsl(0 72% 42%) 0%, hsl(0 60% 45%) 100%)',
+        borderColor: 'hsl(45 65% 55%)',
+        textColor: 'hsl(0 0% 100%)',
+        badgeBg: 'hsl(45 65% 55%)',
+        badgeText: 'hsl(0 0% 0%)',
+        badgeBorder: 'hsl(0 72% 42%)',
       };
     case 'spelman-blue':
       return {
-        background: 'linear-gradient(135deg, hsl(201 52% 50%) 0%, hsl(201 52% 66%) 100%)',
-        borderColor: 'hsl(201 52% 80%)',
-        textColor: '#FFFFFF',
-        badgeBg: 'linear-gradient(to bottom, hsl(201 52% 66%), hsl(201 52% 50%))',
-        badgeText: '#FFFFFF',
-        badgeBorder: 'hsl(201 40% 40%)',
+        background: 'linear-gradient(135deg, hsl(203 85% 50%) 0%, hsl(203 85% 63%) 100%)',
+        borderColor: 'hsl(203 85% 80%)',
+        textColor: 'hsl(0 0% 100%)',
+        badgeBg: 'linear-gradient(to bottom, hsl(203 85% 63%), hsl(203 85% 50%))',
+        badgeText: 'hsl(0 0% 100%)',
+        badgeBorder: 'hsl(219 78% 31%)',
       };
     case 'spelhouse':
       return {
         background: 'linear-gradient(135deg, hsl(210 65% 45%) 0%, hsl(352 65% 35%) 100%)',
         borderColor: 'hsl(210 50% 60%)',
-        textColor: '#FFFFFF',
+        textColor: 'hsl(0 0% 100%)',
         badgeBg: 'linear-gradient(to bottom, hsl(210 65% 55%), hsl(210 65% 45%))',
-        badgeText: '#FFFFFF',
+        badgeText: 'hsl(0 0% 100%)',
         badgeBorder: 'hsl(352 65% 28%)',
       };
     case 'music':
       return {
         background: 'linear-gradient(135deg, hsl(210 100% 35%) 0%, hsl(180 80% 30%) 100%)',
         borderColor: 'hsl(180 100% 50%)',
-        textColor: '#FFFFFF',
+        textColor: 'hsl(0 0% 100%)',
         badgeBg: 'linear-gradient(to bottom, hsl(210 100% 50%), hsl(210 100% 35%))',
-        badgeText: '#FFFFFF',
+        badgeText: 'hsl(0 0% 100%)',
         badgeBorder: 'hsl(180 100% 40%)',
       };
     case 'glee-world':
@@ -59,10 +60,10 @@ const getThemeStyles = (themeName: ThemeName) => {
       return {
         background: 'linear-gradient(135deg, hsl(203 85% 50%) 0%, hsl(219 78% 31%) 100%)',
         borderColor: 'hsl(203 85% 70%)',
-        textColor: '#FFFFFF',
-        badgeBg: 'linear-gradient(to bottom, #94a3b8, #64748b, #475569)',
-        badgeText: '#f1f5f9',
-        badgeBorder: 'rgba(71, 85, 105, 0.5)',
+        textColor: 'hsl(0 0% 100%)',
+        badgeBg: 'linear-gradient(to bottom, hsl(215 16% 62%), hsl(215 16% 47%))',
+        badgeText: 'hsl(210 40% 96%)',
+        badgeBorder: 'hsl(215 20% 35% / 0.5)',
       };
   }
 };

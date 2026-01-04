@@ -23,16 +23,8 @@ export const HeaderRadioControls = () => {
     const { themeName } = useTheme();
     const radioBarRef = useRef<HTMLDivElement>(null);
     
-    // Theme-specific colors
+    // Use theme CSS variables - icons inherit from parent which uses theme tokens
     const isHbcuTheme = themeName === 'hbcu';
-    const isSpelmanBlue = themeName === 'spelman-blue';
-    const hbcuGold = '#FFDF00';
-    const navyBlue = '#11448B'; // Spelman navy blue
-    
-    const getTextColor = () => {
-      if (isHbcuTheme) return hbcuGold;
-      return navyBlue; // Navy blue for all other themes including spelman-blue
-    };
 
     const getChannelIcon = (iconName: string | null) => {
       switch (iconName) {
@@ -142,7 +134,6 @@ export const HeaderRadioControls = () => {
               `relative ${HEADER_ICON_SIZES.button} p-0 hover:bg-white/10 transition-colors rounded-full`,
               isOpen && "bg-white/20"
             )}
-            style={{ color: getTextColor() }}
             type="button"
           >
             <Radio className={HEADER_ICON_SIZES.icon} />

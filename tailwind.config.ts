@@ -84,13 +84,12 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom brand colors
+				// Custom brand colors - All use CSS variables for theme consistency
 				'spelman-blue': {
 					dark: 'hsl(var(--spelman-blue-dark))',
 					light: 'hsl(var(--spelman-blue-light))',
-					navy: '#11448B',
-					sky: '#55BBEE',
-					white: '#FFFFFF',
+					navy: 'hsl(var(--spelman-blue-dark))',
+					sky: 'hsl(var(--spelman-blue-light))',
 				},
 				brand: {
 					50: 'hsl(203 85% 97%)',

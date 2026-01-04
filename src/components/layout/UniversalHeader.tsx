@@ -85,27 +85,9 @@ export const UniversalHeader = ({
     };
   }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, reorderQuickActions, isInQuickActions]);
 
-  // Theme-specific styling
+  // Theme-specific styling - use CSS variables from theme system
   const isHbcuTheme = themeName === 'hbcu';
   const isSpelmanBlue = themeName === 'spelman-blue';
-  const hbcuColors = {
-    gold: '#FFDF00',
-    // Primary gold - all text and icons
-    red: '#8B0000',
-    // Dark red accent - borders
-    background: '#000000' // Pure black background
-  };
-
-  // Spelman Blue portal-style colors
-  const spelmanBlueColors = {
-    primary: '#0056a6',
-    // Official Spelman Blue
-    accent: '#55BBEE',
-    // Bright sky blue  
-    text: '#ffffff',
-    // White text
-    background: 'linear-gradient(180deg, #0056a6 0%, #003d75 100%)'
-  };
 
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true || userProfile?.is_exec_board === true;
@@ -196,7 +178,7 @@ export const UniversalHeader = ({
           </div>
 
           {/* Right side actions - Mobile-optimized icon bar */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-[20px] [&_svg]:text-[#11448B]">
+          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 lg:gap-[20px] text-spelman-blue-dark">
             <HeaderRadioControls />
             <div className="hidden sm:block">
               <MusicalToolkit />
