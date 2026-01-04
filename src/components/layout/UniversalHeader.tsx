@@ -204,7 +204,7 @@ export const UniversalHeader = ({
             
             {/* Email/SMS Messenger Toggle - Available to all authenticated users */}
             {user && <EnhancedTooltip content={isMessengerOpen ? "Close Messenger" : "Send Email/SMS"}>
-                <Button variant="ghost" size="sm" onClick={toggleMessenger} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full text-foreground ${HEADER_ICON_SIZES.svgSelector} ${isMessengerOpen ? 'bg-gray-100' : ''}`} type="button">
+                <Button variant="ghost" size="sm" onClick={toggleMessenger} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector} ${isMessengerOpen ? 'bg-gray-100' : ''}`} type="button">
                   <Mail className={HEADER_ICON_SIZES.icon} />
                 </Button>
               </EnhancedTooltip>}
@@ -213,7 +213,7 @@ export const UniversalHeader = ({
                 {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
                 {userProfile?.is_super_admin && <DropdownMenu>
                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full text-foreground ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                         <LayoutDashboard className={HEADER_ICON_SIZES.icon} />
                       </Button>
                    </DropdownMenuTrigger>
@@ -274,7 +274,7 @@ export const UniversalHeader = ({
                 
                 {/* Add Module Quick Action - For members without admin access - Hidden on mobile */}
                 {!hasExecBoardPerms && <EnhancedTooltip content="Add Module to Dashboard">
-                    <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/member?addModule=true')} className={`hidden sm:flex ${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full text-foreground ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                    <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/member?addModule=true')} className={`hidden sm:flex ${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                       <Plus className={HEADER_ICON_SIZES.icon} />
                     </Button>
                   </EnhancedTooltip>}
@@ -287,7 +287,7 @@ export const UniversalHeader = ({
                       e.stopPropagation();
                       console.log('Camera button clicked - showing category selector');
                       setShowCategorySelector(true);
-                    }} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full text-foreground ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                    }} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                       <Camera className={HEADER_ICON_SIZES.icon} />
                     </Button>
                   </EnhancedTooltip>
@@ -295,7 +295,7 @@ export const UniversalHeader = ({
 
                 {/* Quick Actions Button */}
                 <EnhancedTooltip content="Members Quick Access">
-                  <Button variant="ghost" size="sm" onClick={() => setIsQuickActionsOpen(prev => !prev)} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full text-foreground ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                  <Button variant="ghost" size="sm" onClick={() => setIsQuickActionsOpen(prev => !prev)} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                     <Key className={HEADER_ICON_SIZES.icon} />
                   </Button>
                 </EnhancedTooltip>
@@ -303,7 +303,7 @@ export const UniversalHeader = ({
                <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
                       <DropdownMenuTrigger asChild>
-                         <Button variant="ghost" className={`relative ${HEADER_ICON_SIZES.button} rounded-full p-0 hover:bg-gray-100 text-foreground`} type="button">
+                         <Button variant="ghost" className={`relative ${HEADER_ICON_SIZES.button} rounded-full p-0 hover:bg-gray-100`} type="button">
                            <Avatar className={`${HEADER_ICON_SIZES.avatar} border border-border`}>
                              <AvatarImage src={userProfile?.avatar_url || undefined} alt={userProfile?.full_name || user?.email || "Your Profile"} className="object-cover" onError={e => {
                             console.log('Avatar image failed to load:', userProfile?.avatar_url);
