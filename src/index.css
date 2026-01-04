@@ -2067,31 +2067,12 @@ html, body {
 }
 
 /* ============================================
-   THEME CONTRAST FIXES
-   Ensure readability across all themes
-   Eliminate white-on-white and black-on-black
+   THEME SYSTEM - SEMANTIC COLOR ENFORCEMENT
+   All colors should flow from CSS variables
+   Components should use semantic tokens, not raw colors
    ============================================ */
 
-/* Force semantic colors on common problem patterns */
-.bg-white, 
-[class*="bg-white"] {
-  background-color: hsl(var(--card)) !important;
-}
-
-.text-white:not(.bg-primary):not(.bg-secondary):not(.bg-destructive):not(.bg-success):not([class*="bg-brand"]) {
-  color: hsl(var(--foreground)) !important;
-}
-
-.text-black,
-[class*="text-black"] {
-  color: hsl(var(--foreground)) !important;
-}
-
-.bg-black:not(.dark) {
-  background-color: hsl(var(--foreground)) !important;
-}
-
-/* Ensure cards are always visible against background */
+/* Semantic background tokens */
 .bg-card {
   background-color: hsl(var(--card));
   color: hsl(var(--card-foreground));
@@ -2102,7 +2083,7 @@ html, body {
   color: hsl(var(--foreground));
 }
 
-/* Fix muted text to be readable */
+/* Semantic text tokens */
 .text-muted-foreground {
   color: hsl(var(--muted-foreground));
 }

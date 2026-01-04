@@ -22,20 +22,16 @@ export const ModulePageHeader: React.FC<ModulePageHeaderProps> = ({
   const navigate = useNavigate();
   const { themeName } = useTheme();
 
-  // HBCU theme colors
+  // Use theme system via CSS classes - no hardcoded colors
   const isHbcuTheme = themeName === 'hbcu';
-  const hbcuGold = '#FFDF00';
-  const hbcuRed = '#8B0000';
 
   return (
     <div 
-      className="relative z-10 rounded-lg border-2 shadow-lg py-3 px-4 sm:px-6"
-      style={{
-        background: isHbcuTheme 
-          ? 'linear-gradient(to bottom, #1a1a1a, #0a0a0a)' 
-          : 'linear-gradient(to bottom, #cbd5e1, #94a3b8, #64748b)',
-        borderColor: isHbcuTheme ? hbcuRed : '#64748b'
-      }}
+      className={`relative z-10 rounded-lg border-2 shadow-lg py-3 px-4 sm:px-6 ${
+        isHbcuTheme 
+          ? 'bg-gradient-to-b from-neutral-900 to-black border-secondary' 
+          : 'bg-gradient-to-b from-slate-300 via-slate-400 to-slate-500 border-slate-500'
+      }`}
     >
       <div className="flex items-center justify-between gap-3">
         {/* Back Button */}
@@ -44,11 +40,9 @@ export const ModulePageHeader: React.FC<ModulePageHeaderProps> = ({
             variant="ghost" 
             size="sm" 
             onClick={() => navigate(backPath)} 
-            className="flex items-center gap-1 shrink-0"
-            style={{
-              color: isHbcuTheme ? hbcuGold : '#1e293b',
-              backgroundColor: 'transparent'
-            }}
+            className={`flex items-center gap-1 shrink-0 ${
+              isHbcuTheme ? 'text-primary hover:text-primary/80' : 'text-slate-800 hover:text-slate-900'
+            }`}
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="hidden sm:inline">{backLabel}</span>
@@ -59,13 +53,13 @@ export const ModulePageHeader: React.FC<ModulePageHeaderProps> = ({
         <div className="flex items-center gap-2 flex-1 justify-center">
           {Icon && (
             <Icon 
-              className="h-5 w-5 shrink-0" 
-              style={{ color: isHbcuTheme ? hbcuGold : '#dc2626' }} 
+              className={`h-5 w-5 shrink-0 ${isHbcuTheme ? 'text-primary' : 'text-destructive'}`}
             />
           )}
           <h1 
-            className="text-base sm:text-xl lg:text-2xl font-bold tracking-wide font-mono uppercase"
-            style={{ color: isHbcuTheme ? hbcuGold : '#1e293b' }}
+            className={`text-base sm:text-xl lg:text-2xl font-bold tracking-wide font-mono uppercase ${
+              isHbcuTheme ? 'text-primary' : 'text-slate-800'
+            }`}
           >
             {title}
           </h1>

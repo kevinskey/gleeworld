@@ -15,16 +15,8 @@ export const HeaderClock = ({
     themeName
   } = useTheme();
 
-  // Theme-specific colors
+  // Use currentColor to inherit from parent theme styling
   const isHbcuTheme = themeName === 'hbcu';
-  const isSpelmanBlue = themeName === 'spelman-blue';
-  const hbcuGold = '#FFDF00';
-  const spelmanWhite = '#ffffff';
-  const getColor = () => {
-    if (isHbcuTheme) return hbcuGold;
-    if (isSpelmanBlue) return spelmanWhite;
-    return '#1e293b';
-  };
   useEffect(() => {
     // Initialize with current time
     setCurrentTime(new Date());
@@ -99,10 +91,8 @@ export const HeaderClock = ({
     const hourAngle = hours * 30 + minutes * 0.5 - 90;
     return <div className={`relative ${className}`}>
         <div className="relative cursor-pointer" onMouseEnter={() => setShowCountdown(true)} onMouseLeave={() => setShowCountdown(false)} onClick={() => setShowCountdown(!showCountdown)}>
-          {/* SVG Clock with spinning globe - smaller on mobile */}
-          <svg width="28" height="28" viewBox="0 0 40 40" style={{
-          color: getColor()
-        }}>
+          {/* SVG Clock with spinning globe - uses currentColor to inherit from parent */}
+          <svg width="28" height="28" viewBox="0 0 40 40" className="text-current">
             <defs>
               {/* Gradient for 3D effect */}
               <radialGradient id="headerGlobeGradient" cx="40%" cy="40%">
@@ -187,10 +177,8 @@ export const HeaderClock = ({
   return <div className={`relative ${className}`}>
       <div className="flex items-center gap-2">
         <div className="relative cursor-pointer" onMouseEnter={() => setShowCountdown(true)} onMouseLeave={() => setShowCountdown(false)} onClick={() => setShowCountdown(!showCountdown)}>
-          {/* SVG Clock with spinning globe */}
-          <svg width="36" height="36" viewBox="0 0 40 40" style={{
-          color: getColor()
-        }} className="text-black">
+          {/* SVG Clock with spinning globe - uses currentColor to inherit from parent */}
+          <svg width="36" height="36" viewBox="0 0 40 40" className="text-current">
             <defs>
               {/* Gradient for 3D effect */}
               <radialGradient id="desktopGlobeGradient" cx="40%" cy="40%">
