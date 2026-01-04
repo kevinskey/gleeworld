@@ -17,7 +17,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { EnhancedTooltip } from "@/components/ui/enhanced-tooltip";
 import { HeaderClock } from "@/components/ui/header-clock";
 import { HeaderRadioControls } from "@/components/radio/HeaderRadioControls";
-import { CountdownText } from "@/components/ui/countdown-text";
+import { DynamicCountdownText } from "@/components/ui/DynamicCountdownText";
 import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
 import { ExecutiveBoardDropdown } from "@/components/navigation/ExecutiveBoardDropdown";
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
@@ -191,7 +191,7 @@ export const UniversalHeader = ({
             {/* Clock + Countdown - Hidden on mobile, shown on larger screens */}
             <div className="hidden sm:flex items-center gap-2">
               <HeaderClock className="text-xs sm:text-sm" />
-              <CountdownText className="bg-muted/40" />
+              <DynamicCountdownText className="bg-muted/40" />
             </div>
           </div>
 
