@@ -174,7 +174,7 @@ export const MyModules = ({
                     key={module.id}
                     variant="outline"
                     onClick={() => navigate(module.route)}
-                    className="module-card-solid h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 hover:opacity-95"
+                    className="h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 hover:opacity-95 bg-white border-border text-foreground"
                   >
                     <div className="flex-shrink-0">
                       <IconComponent className="h-9 w-9 md:h-10 md:w-10 lg:h-12 lg:w-12 text-primary" />
@@ -188,7 +188,7 @@ export const MyModules = ({
               {showAdminSettings && (
                 <Button
                   variant="outline"
-                  className="module-card-solid h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 hover:opacity-95"
+                  className="h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 hover:opacity-95 bg-white border-border text-foreground"
                   onClick={() => navigate('/dashboard?module=admin-settings')}
                 >
                   <div className="flex-shrink-0">
