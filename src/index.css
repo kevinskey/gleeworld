@@ -47,45 +47,45 @@
     --message-received: 0 0% 93%; /* Light gray for received messages */
     --message-received-fg: 0 0% 20%; /* Dark text on light gray */
     
-    /* High-Contrast Backgrounds - LIGHTER, LESS BLUE */
-    --background: 0 0% 98%; /* Near-white, neutral background */
-    --foreground: 220 15% 15%; /* Dark text for readability */
+    /* High-Contrast Backgrounds - PURE WHITE, NEUTRAL */
+    --background: 0 0% 100%; /* Pure white background */
+    --foreground: 0 0% 10%; /* Near-black text for readability */
 
     /* Card System - Clean white cards */
     --card: 0 0% 100%; /* Pure white cards */
-    --card-foreground: 220 15% 20%; /* Dark text */
+    --card-foreground: 0 0% 10%; /* Dark text */
 
     /* Popover and Dropdown Elements */
     --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 15%;
+    --popover-foreground: 0 0% 10%;
 
-    /* Muted Elements - Neutral, not blue */
-    --muted: 0 0% 94%; /* Neutral light gray */
-    --muted-foreground: 0 0% 35%; /* Medium gray for labels */
+    /* Muted Elements - Warm neutral, no blue */
+    --muted: 40 10% 96%; /* Warm off-white */
+    --muted-foreground: 0 0% 40%; /* Medium gray for labels */
 
     /* Accent for Interactive Elements */
-    --accent: var(--spelman-blue-light);
-    --accent-foreground: 0 0% 100%; /* White text on blue */
+    --accent: 40 10% 96%; /* Warm neutral accent */
+    --accent-foreground: 0 0% 10%; /* Dark text on accent */
 
     /* System Colors */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border and Input Styling - Neutral borders */
-    --border: 0 0% 85%; /* Neutral gray borders */
+    /* Border and Input Styling - Warm neutral borders */
+    --border: 40 5% 88%; /* Warm gray borders */
     --input: 0 0% 100%; /* White inputs */
-    --ring: var(--spelman-blue-dark); /* Blue focus rings */
+    --ring: 219 78% 31%; /* Blue focus rings */
 
     --radius: 0rem;
 
     /* Enhanced Color Tokens */
-    --text-secondary: 0 0% 30%; /* Readable secondary text */
-    --hover-accent: 212 100% 50%; /* Bright blue for hovers */
+    --text-secondary: 0 0% 35%; /* Readable secondary text */
+    --hover-accent: 219 78% 40%; /* Subtle blue for hovers */
     
-    /* Professional Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--spelman-blue-dark)), hsl(var(--spelman-blue-light)));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 98%));
-    --gradient-accent: linear-gradient(90deg, hsl(var(--spelman-gold)), hsl(45 100% 60%));
+    /* Professional Gradients - minimal, not dark */
+    --gradient-hero: linear-gradient(135deg, hsl(219 78% 31%), hsl(203 85% 50%));
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(0 0% 100%));
+    --gradient-accent: linear-gradient(90deg, hsl(45 100% 55%), hsl(45 100% 65%));
     
     /* Enhanced 3D Shadow System */
     --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -386,7 +386,7 @@ header svg,
    SPELMAN BLUE THEME - Modern & Professional
    ======================================== */
 
-/* Spelman Blue Theme - Clean, light, professional aesthetic */
+/* Spelman Blue Theme - Clean, LIGHT, professional aesthetic */
 .spelman-blue-theme,
 html[data-theme="spelman-blue"] {
   /* Official Spelman Blue palette - used for accents only */
@@ -394,24 +394,24 @@ html[data-theme="spelman-blue"] {
   --spelman-accent: 203 85% 63%;        /* #55BBEE - Sky blue accent */
   --spelman-highlight: 208 100% 43%;    /* #0073c9 - Lighter blue */
   
-  /* Keep UI light and neutral - blue only for accents */
+  /* LIGHT UI - blue only for buttons/links */
   --primary: 219 78% 31%;
   --primary-foreground: 0 0% 100%;
   --secondary: 203 85% 63%;
   --secondary-foreground: 0 0% 100%;
-  --accent: 219 78% 31%;
-  --accent-foreground: 0 0% 100%;
-  --background: 0 0% 98%;              /* Near-white neutral background */
-  --foreground: 220 15% 15%;           /* Dark neutral text */
+  --accent: 40 10% 96%;                /* Warm neutral accent */
+  --accent-foreground: 0 0% 10%;       /* Dark text */
+  --background: 0 0% 100%;             /* PURE WHITE background */
+  --foreground: 0 0% 10%;              /* Near-black text */
   --card: 0 0% 100%;                   /* Pure white cards */
-  --card-foreground: 220 15% 20%;      /* Dark text on cards */
-  --muted: 0 0% 94%;                   /* Neutral muted */
-  --muted-foreground: 0 0% 40%;        /* Gray muted text */
-  --border: 0 0% 88%;                  /* Neutral borders */
+  --card-foreground: 0 0% 10%;         /* Dark text on cards */
+  --muted: 40 10% 97%;                 /* Warm off-white muted */
+  --muted-foreground: 0 0% 45%;        /* Gray muted text */
+  --border: 40 5% 90%;                 /* Warm neutral borders */
   --ring: 219 78% 31%;
   --input: 0 0% 100%;                  /* White inputs */
   --popover: 0 0% 100%;                /* White popovers */
-  --popover-foreground: 220 15% 15%;   /* Dark text on popovers */
+  --popover-foreground: 0 0% 10%;      /* Dark text on popovers */
 }
 
 /* Spelman Blue Theme Typography - Clean sans-serif */
