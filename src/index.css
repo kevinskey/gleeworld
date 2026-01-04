@@ -190,15 +190,24 @@ button.module-card-solid:hover,
   background-image: none !important;
 }
 
-/* Force all headers to white background regardless of theme */
+/* Header styling - liquid glass effect with readable text */
 header,
 .spelman-blue-theme header,
 .glass-theme header,
-.hbcu-theme header,
 [class*="theme"] header {
-  background-color: hsl(0 0% 100%) !important;
-  background: hsl(0 0% 100%) !important;
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
   color: hsl(222 47% 11%) !important;
+}
+
+/* HBCU theme keeps dark header */
+.hbcu-theme header {
+  background-color: rgba(0, 0, 0, 0.85) !important;
+  background: rgba(0, 0, 0, 0.85) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
 }
 
 /* Force header text and icons to dark color */
