@@ -131,9 +131,9 @@ function applyThemeToDocument(themeName: ThemeName, isDarkMode: boolean) {
   const root = document.documentElement;
 
   // Some themes are always dark mode
-  const alwaysDarkThemes = ['music', 'hbcu', 'glee-world', 'spelman-blue'];
+  const alwaysDarkThemes = ['music', 'hbcu', 'glee-world'];
   // Some themes are always light mode (bright themes)
-  const alwaysLightThemes: string[] = [];
+  const alwaysLightThemes: string[] = ['spelman-blue'];
   
   const forceDark = alwaysDarkThemes.includes(themeName);
   const forceLight = alwaysLightThemes.includes(themeName);
