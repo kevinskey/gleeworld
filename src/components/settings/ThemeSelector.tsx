@@ -2,23 +2,21 @@
  * THEME SELECTOR COMPONENT
  * 
  * Allows users to preview and select their preferred dashboard theme.
- * Displays all available themes with previews and applies selection.
+ * Uses themes from Supabase database as the authoritative source.
  */
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useTheme } from '@/contexts/ThemeContext';
-import { getAllThemes, ThemeName } from '@/themes/themeConfig';
+import { useTheme, ThemeName } from '@/contexts/ThemeContext';
 import { Check, Palette, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export function ThemeSelector() {
-  const { currentTheme, themeName, setTheme, loading } = useTheme();
+  const { currentTheme, themeName, themes, setTheme, loading } = useTheme();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
-  const themes = getAllThemes();
 
   const handleThemeSelect = async (newTheme: ThemeName) => {
     setSaving(true);
@@ -76,7 +74,7 @@ export function ThemeSelector() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-muted-foreground">Current Theme</p>
-              <p className="text-lg font-bold">{currentTheme.name}</p>
+              <p className="text-lg font-bold">{currentTheme?.name || 'Default'}</p>
             </div>
             <Badge variant="secondary" className="gap-1">
               <Check className="h-3 w-3" />
@@ -89,7 +87,6 @@ export function ThemeSelector() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
           {themes.map((theme) => {
             const isSelected = theme.id === themeName;
-            const colors = theme.colors;
 
             return (
               <Card
@@ -97,7 +94,7 @@ export function ThemeSelector() {
                 className={`relative cursor-pointer transition-all hover:shadow-lg ${
                   isSelected ? 'ring-2 ring-primary shadow-md' : ''
                 }`}
-                onClick={() => !saving && handleThemeSelect(theme.id)}
+                onClick={() => !saving && handleThemeSelect(theme.id as ThemeName)}
               >
                 {isSelected && (
                   <div className="absolute top-2 right-2 z-10">
@@ -112,29 +109,22 @@ export function ThemeSelector() {
                 <div
                   className="h-32 rounded-t-lg p-4 flex items-end relative overflow-hidden"
                   style={{
-                    background: theme.background.value,
+                    background: theme.background_value,
                   }}
                 >
-                  {theme.background.overlay && (
-                    <div
-                      className="absolute inset-0"
-                      style={{ background: theme.background.overlay }}
-                    />
-                  )}
-                  
                   {/* Color Palette Preview */}
                   <div className="flex gap-2 relative z-10">
                     <div
                       className="w-8 h-8 rounded-full border-2 border-white shadow-md"
-                      style={{ backgroundColor: `hsl(${colors.primary})` }}
+                      style={{ backgroundColor: `hsl(${theme.color_primary})` }}
                     />
                     <div
                       className="w-8 h-8 rounded-full border-2 border-white shadow-md"
-                      style={{ backgroundColor: `hsl(${colors.secondary})` }}
+                      style={{ backgroundColor: `hsl(${theme.color_secondary})` }}
                     />
                     <div
                       className="w-8 h-8 rounded-full border-2 border-white shadow-md"
-                      style={{ backgroundColor: `hsl(${colors.accent})` }}
+                      style={{ backgroundColor: `hsl(${theme.color_accent})` }}
                     />
                   </div>
                 </div>
@@ -144,17 +134,22 @@ export function ThemeSelector() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <h3 className="font-bold text-lg">{theme.name}</h3>
-                      {theme.decorations?.animations && (
+                      {theme.glass_effect && (
                         <Sparkles className="h-4 w-4 text-amber-500" />
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">{theme.description}</p>
                     
-                    {/* Typography Style Badge */}
-                    <div className="pt-2">
+                    {/* Theme Type Badge */}
+                    <div className="pt-2 flex gap-2">
                       <Badge variant="outline" className="text-xs">
-                        {theme.typography.style.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                        {theme.is_dark_theme ? 'Dark' : 'Light'}
                       </Badge>
+                      {theme.glass_effect && (
+                        <Badge variant="outline" className="text-xs">
+                          Glass Effect
+                        </Badge>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -168,7 +163,7 @@ export function ThemeSelector() {
                       disabled={saving}
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleThemeSelect(theme.id);
+                        handleThemeSelect(theme.id as ThemeName);
                       }}
                     >
                       {saving ? 'Applying...' : 'Apply Theme'}

@@ -2,17 +2,22 @@
  * THEME CONTEXT
  * 
  * Provides global theme management for the application.
- * Handles loading user preferences from Supabase and applying themes.
+ * Fetches theme definitions from Supabase (authoritative source)
+ * and applies them as CSS variables to the document root.
  */
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ThemeName, ThemeConfig, getTheme, DEFAULT_THEME } from '@/themes/themeConfig';
+import { useThemeTemplates, ThemeTemplate } from '@/hooks/useThemeTemplates';
+
+// Theme names match database IDs
+export type ThemeName = 'glee-world' | 'spelman-blue' | 'spelhouse' | 'music' | 'hbcu';
 
 interface ThemeContextType {
-  currentTheme: ThemeConfig;
+  currentTheme: ThemeTemplate | null;
   themeName: ThemeName;
+  themes: ThemeTemplate[];
   setTheme: (theme: ThemeName) => Promise<void>;
   loading: boolean;
   isDarkMode: boolean;
@@ -21,15 +26,16 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const DEFAULT_THEME: ThemeName = 'glee-world';
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const { data: themes = [], isLoading: themesLoading } = useThemeTemplates();
   const [themeName, setThemeName] = useState<ThemeName>(DEFAULT_THEME);
-  const [loading, setLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    // Check localStorage for saved preference
     const saved = localStorage.getItem('gw-dark-mode');
     if (saved !== null) return saved === 'true';
-    // Default to system preference
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
@@ -37,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const loadThemePreference = async () => {
       if (!user?.id) {
-        setLoading(false);
+        setUserLoading(false);
         return;
       }
 
@@ -56,7 +62,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Failed to load theme:', error);
       } finally {
-        setLoading(false);
+        setUserLoading(false);
       }
     };
 
@@ -65,10 +71,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Apply theme to document root whenever it changes
   useEffect(() => {
-    applyThemeToDocument(themeName, isDarkMode);
-  }, [themeName, isDarkMode]);
+    const theme = themes.find(t => t.id === themeName);
+    if (theme) {
+      applyThemeToDocument(theme, isDarkMode);
+    }
+  }, [themeName, themes, isDarkMode]);
 
-  // Toggle dark mode
   const toggleDarkMode = () => {
     setIsDarkMode(prev => {
       const newValue = !prev;
@@ -77,7 +85,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  // Save theme preference to Supabase and update state
   const setTheme = async (newTheme: ThemeName) => {
     if (!user?.id) {
       setThemeName(newTheme);
@@ -102,10 +109,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const currentTheme = getTheme(themeName);
+  const currentTheme = themes.find(t => t.id === themeName) || null;
+  const loading = themesLoading || userLoading;
 
   return (
-    <ThemeContext.Provider value={{ currentTheme, themeName, setTheme, loading, isDarkMode, toggleDarkMode }}>
+    <ThemeContext.Provider value={{ currentTheme, themeName, themes, setTheme, loading, isDarkMode, toggleDarkMode }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -123,22 +131,16 @@ export function useTheme() {
 }
 
 /**
- * Apply theme colors to CSS custom properties on document root
- * This allows all components to use the theme colors via CSS variables
+ * Apply theme from database to CSS custom properties on document root
+ * This is the single source of truth for all theme styling
  */
-function applyThemeToDocument(themeName: ThemeName, isDarkMode: boolean) {
-  const theme = getTheme(themeName);
+function applyThemeToDocument(theme: ThemeTemplate, isDarkMode: boolean) {
   const root = document.documentElement;
 
-  // Some themes are always dark mode
-  const alwaysDarkThemes = ['music', 'hbcu', 'glee-world'];
-  // Some themes are always light mode (bright themes)
-  const alwaysLightThemes: string[] = ['spelman-blue'];
-  
-  const forceDark = alwaysDarkThemes.includes(themeName);
-  const forceLight = alwaysLightThemes.includes(themeName);
+  // Determine if dark mode should be applied
+  const forceDark = theme.is_dark_theme;
+  const forceLight = !theme.is_dark_theme && theme.glass_effect; // Glass themes are always light
 
-  // Apply dark/light mode class
   if (forceLight) {
     root.classList.remove('dark');
     root.classList.add('light');
@@ -149,56 +151,43 @@ function applyThemeToDocument(themeName: ThemeName, isDarkMode: boolean) {
     root.classList.remove('dark');
     root.classList.add('light');
   }
+
+  // Apply theme-specific class for CSS targeting
+  root.setAttribute('data-theme', theme.id);
   
-  // Apply Spelman Blue theme class for special styling
-  if (themeName === 'spelman-blue') {
-    root.classList.add('spelman-blue-theme');
-  } else {
-    root.classList.remove('spelman-blue-theme');
-  }
+  // Theme-specific classes
+  root.classList.toggle('spelman-blue-theme', theme.id === 'spelman-blue');
+  root.classList.toggle('hbcu-theme', theme.id === 'hbcu');
+  root.classList.toggle('glass-theme', theme.glass_effect);
 
   // Apply color variables
-  Object.entries(theme.colors).forEach(([key, value]) => {
-    const cssVarName = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-    root.style.setProperty(`--${cssVarName}`, value);
-  });
+  root.style.setProperty('--primary', theme.color_primary);
+  root.style.setProperty('--primary-foreground', theme.color_primary_foreground);
+  root.style.setProperty('--secondary', theme.color_secondary);
+  root.style.setProperty('--secondary-foreground', theme.color_secondary_foreground);
+  root.style.setProperty('--accent', theme.color_accent);
+  root.style.setProperty('--accent-foreground', theme.color_accent_foreground);
+  root.style.setProperty('--background', theme.color_background);
+  root.style.setProperty('--foreground', theme.color_foreground);
+  root.style.setProperty('--card', theme.color_card);
+  root.style.setProperty('--card-foreground', theme.color_card_foreground);
+  root.style.setProperty('--muted', theme.color_muted);
+  root.style.setProperty('--muted-foreground', theme.color_muted_foreground);
+  root.style.setProperty('--border', theme.color_border);
+  root.style.setProperty('--destructive', theme.color_destructive);
+  root.style.setProperty('--destructive-foreground', theme.color_destructive_foreground);
 
   // Apply typography
-  root.style.setProperty('--font-family', theme.typography.fontFamily);
-  if (theme.typography.headingFamily) {
-    root.style.setProperty('--font-heading', theme.typography.headingFamily);
+  root.style.setProperty('--font-family', theme.font_family);
+  if (theme.font_heading) {
+    root.style.setProperty('--font-heading', theme.font_heading);
   }
-
-  // Apply background
-  if (theme.background.type === 'image') {
-    const bgSize = theme.background.size || 'cover';
-    const bgValue = `${theme.background.value} no-repeat ${theme.background.position || 'center center'} / ${bgSize}`;
-    root.style.setProperty('--theme-background', bgValue);
-  } else if (theme.background.type === 'gradient' || theme.background.type === 'solid') {
-    root.style.setProperty('--theme-background', theme.background.value);
-  }
-
-  // Store theme name as data attribute for CSS targeting
-  root.setAttribute('data-theme', themeName);
-  
-  // Apply HBCU theme class for special styling
-  if (themeName === 'hbcu') {
-    root.classList.add('hbcu-theme');
-  } else {
-    root.classList.remove('hbcu-theme');
-  }
-  
-  // Apply heading shadow if defined
-  if (theme.typography.headingShadow) {
-    root.style.setProperty('--heading-shadow', theme.typography.headingShadow);
+  if (theme.heading_shadow) {
+    root.style.setProperty('--heading-shadow', theme.heading_shadow);
   } else {
     root.style.removeProperty('--heading-shadow');
   }
-  
-  // Apply glass effect class
-  if (theme.glassEffect) {
-    root.classList.add('glass-theme');
-  } else {
-    root.classList.remove('glass-theme');
-  }
+
+  // Apply background
+  root.style.setProperty('--theme-background', theme.background_value);
 }

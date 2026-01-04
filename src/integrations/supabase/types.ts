@@ -23057,6 +23057,102 @@ export type Database = {
           },
         ]
       }
+      theme_templates: {
+        Row: {
+          background_type: string
+          background_value: string
+          color_accent: string
+          color_accent_foreground: string
+          color_background: string
+          color_border: string
+          color_card: string
+          color_card_foreground: string
+          color_destructive: string
+          color_destructive_foreground: string
+          color_foreground: string
+          color_muted: string
+          color_muted_foreground: string
+          color_primary: string
+          color_primary_foreground: string
+          color_secondary: string
+          color_secondary_foreground: string
+          created_at: string
+          description: string | null
+          font_family: string
+          font_heading: string | null
+          glass_effect: boolean
+          heading_shadow: string | null
+          id: string
+          is_active: boolean
+          is_dark_theme: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          background_type?: string
+          background_value?: string
+          color_accent?: string
+          color_accent_foreground?: string
+          color_background?: string
+          color_border?: string
+          color_card?: string
+          color_card_foreground?: string
+          color_destructive?: string
+          color_destructive_foreground?: string
+          color_foreground?: string
+          color_muted?: string
+          color_muted_foreground?: string
+          color_primary?: string
+          color_primary_foreground?: string
+          color_secondary?: string
+          color_secondary_foreground?: string
+          created_at?: string
+          description?: string | null
+          font_family?: string
+          font_heading?: string | null
+          glass_effect?: boolean
+          heading_shadow?: string | null
+          id: string
+          is_active?: boolean
+          is_dark_theme?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          background_type?: string
+          background_value?: string
+          color_accent?: string
+          color_accent_foreground?: string
+          color_background?: string
+          color_border?: string
+          color_card?: string
+          color_card_foreground?: string
+          color_destructive?: string
+          color_destructive_foreground?: string
+          color_foreground?: string
+          color_muted?: string
+          color_muted_foreground?: string
+          color_primary?: string
+          color_primary_foreground?: string
+          color_secondary?: string
+          color_secondary_foreground?: string
+          created_at?: string
+          description?: string | null
+          font_family?: string
+          font_heading?: string | null
+          glass_effect?: boolean
+          heading_shadow?: string | null
+          id?: string
+          is_active?: boolean
+          is_dark_theme?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       theory_poll_questions: {
         Row: {
           answer_index: number

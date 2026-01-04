@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeName } from '@/themes/themeConfig';
+import { useTheme, ThemeName } from '@/contexts/ThemeContext';
 
 interface Announcement {
   id: string;

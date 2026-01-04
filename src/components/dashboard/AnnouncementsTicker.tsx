@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useTheme } from '@/contexts/ThemeContext';
-import { ThemeName } from '@/themes/themeConfig';
+import { useTheme, ThemeName } from '@/contexts/ThemeContext';
 
 interface Announcement {
   id: string;
@@ -16,35 +15,35 @@ interface AnnouncementsTickerProps {
   className?: string;
 }
 
-// Theme-specific styling for announcement cards
+// Theme-specific styling using HSL values matching the database theme system
 const getThemeStyles = (themeName: ThemeName) => {
   switch (themeName) {
     case 'hbcu':
       return {
-        background: 'linear-gradient(135deg, #8B0000 0%, #a52a2a 100%)',
-        borderColor: '#FFDF00',
-        textColor: '#FFFFFF',
-        desktopTextColor: '#FFDF00',
+        background: 'linear-gradient(135deg, hsl(0 72% 42%) 0%, hsl(0 60% 45%) 100%)',
+        borderColor: 'hsl(45 65% 55%)',
+        textColor: 'hsl(0 0% 100%)',
+        desktopTextColor: 'hsl(45 65% 55%)',
       };
     case 'spelman-blue':
       return {
-        background: 'linear-gradient(135deg, hsl(201 52% 50%) 0%, hsl(201 52% 66%) 100%)',
-        borderColor: 'hsl(201 52% 80%)',
-        textColor: '#FFFFFF',
-        desktopTextColor: 'hsl(220 50% 20%)',
+        background: 'linear-gradient(135deg, hsl(203 85% 50%) 0%, hsl(203 85% 63%) 100%)',
+        borderColor: 'hsl(203 85% 80%)',
+        textColor: 'hsl(0 0% 100%)',
+        desktopTextColor: 'hsl(219 78% 31%)',
       };
     case 'spelhouse':
       return {
         background: 'linear-gradient(135deg, hsl(210 65% 45%) 0%, hsl(352 65% 35%) 100%)',
         borderColor: 'hsl(210 50% 60%)',
-        textColor: '#FFFFFF',
+        textColor: 'hsl(0 0% 100%)',
         desktopTextColor: 'hsl(352 65% 25%)',
       };
     case 'music':
       return {
         background: 'linear-gradient(135deg, hsl(210 100% 35%) 0%, hsl(180 80% 30%) 100%)',
         borderColor: 'hsl(180 100% 50%)',
-        textColor: '#FFFFFF',
+        textColor: 'hsl(0 0% 100%)',
         desktopTextColor: 'hsl(0 0% 95%)',
       };
     case 'glee-world':
@@ -52,7 +51,7 @@ const getThemeStyles = (themeName: ThemeName) => {
       return {
         background: 'linear-gradient(135deg, hsl(203 85% 50%) 0%, hsl(219 78% 31%) 100%)',
         borderColor: 'hsl(203 85% 70%)',
-        textColor: '#FFFFFF',
+        textColor: 'hsl(0 0% 100%)',
         desktopTextColor: 'hsl(0 0% 100%)',
       };
   }

@@ -3,22 +3,6 @@
  * 
  * Utility hook that provides theme-aware CSS classes and inline styles
  * for components that need dynamic styling based on the current theme.
- * 
- * USAGE EXAMPLE:
- * 
- * import { useThemeStyles } from '@/hooks/useThemeStyles';
- * 
- * function MyComponent() {
- *   const { themeClasses, themeStyles, getCardStyles } = useThemeStyles();
- *   
- *   return (
- *     <div className={themeClasses.background}>
- *       <div className={themeClasses.card} style={getCardStyles()}>
- *         <h1 className={themeClasses.heading}>Hello</h1>
- *       </div>
- *     </div>
- *   );
- * }
  */
 
 import { useMemo } from 'react';
@@ -43,8 +27,8 @@ export function useThemeStyles() {
     buttonAccent: 'bg-accent text-accent-foreground hover:bg-accent/90',
     
     // Text styles
-    heading: currentTheme.typography.headingFamily 
-      ? `font-[${currentTheme.typography.headingFamily}]`
+    heading: currentTheme?.font_heading 
+      ? `font-[${currentTheme.font_heading}]`
       : '',
     textPrimary: 'text-foreground',
     textSecondary: 'text-muted-foreground',
@@ -57,23 +41,19 @@ export function useThemeStyles() {
 
   // Generate inline styles for complex backgrounds
   const themeStyles = useMemo(() => ({
-    backgroundStyle: {
-      background: currentTheme.background.type !== 'image' 
-        ? currentTheme.background.value 
+    backgroundStyle: currentTheme ? {
+      background: currentTheme.background_type !== 'image' 
+        ? currentTheme.background_value 
         : undefined,
-      backgroundImage: currentTheme.background.type === 'image'
-        ? `url(${currentTheme.background.value})`
+      backgroundImage: currentTheme.background_type === 'image'
+        ? `url(${currentTheme.background_value})`
         : undefined,
-      backgroundPosition: currentTheme.background.position || 'center',
+      backgroundPosition: 'center',
       backgroundSize: 'cover',
       backgroundRepeat: 'no-repeat',
-    } as React.CSSProperties,
+    } as React.CSSProperties : {},
     
-    overlayStyle: currentTheme.background.overlay
-      ? {
-          background: currentTheme.background.overlay,
-        } as React.CSSProperties
-      : undefined,
+    overlayStyle: undefined as React.CSSProperties | undefined,
   }), [currentTheme]);
 
   // Helper function to get card styles with theme background
@@ -101,10 +81,10 @@ export function useThemeStyles() {
     };
   };
 
-  // Helper to check if theme has decorations
-  const hasDecorations = currentTheme.decorations !== undefined;
-  const decorationType = currentTheme.decorations?.floatingElements;
-  const hasAnimations = currentTheme.decorations?.animations || false;
+  // Theme features (simplified - no decorations in database model)
+  const hasDecorations = false;
+  const decorationType = undefined;
+  const hasAnimations = false;
 
   return {
     currentTheme,
@@ -118,51 +98,3 @@ export function useThemeStyles() {
     hasAnimations,
   };
 }
-
-/**
- * HOW TO USE THIS HOOK IN YOUR COMPONENTS:
- * 
- * Basic Usage:
- * ```tsx
- * function DashboardCard() {
- *   const { themeClasses, getCardStyles } = useThemeStyles();
- *   
- *   return (
- *     <div className={themeClasses.card} style={getCardStyles(true)}>
- *       <h2 className={themeClasses.heading}>Welcome</h2>
- *       <p className={themeClasses.textSecondary}>Your content here</p>
- *     </div>
- *   );
- * }
- * ```
- * 
- * With Background:
- * ```tsx
- * function PageBackground() {
- *   const { themeStyles } = useThemeStyles();
- *   
- *   return (
- *     <div style={themeStyles.backgroundStyle}>
- *       {themeStyles.overlayStyle && (
- *         <div style={themeStyles.overlayStyle} />
- *       )}
- *       <div>Content</div>
- *     </div>
- *   );
- * }
- * ```
- * 
- * Conditional Rendering Based on Theme:
- * ```tsx
- * function DecoratedCard() {
- *   const { decorationType, hasAnimations } = useThemeStyles();
- *   
- *   return (
- *     <div>
- *       {decorationType === 'music-notes' && <MusicNoteDecoration />}
- *       {hasAnimations && <AnimatedElement />}
- *     </div>
- *   );
- * }
- * ```
- */
