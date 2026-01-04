@@ -330,9 +330,8 @@ export const UnifiedDashboard = () => {
   };
 
   // DEFAULT VIEW: New streamlined structure
-  return <div className="min-h-screen bg-background" style={{
-    paddingTop: 'var(--gw-header-height)'
-  }}>
+  // Note: padding-top is handled by UniversalLayout wrapper, not here
+  return <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-0">
         {/* Advertising Hero - TOP OF DASHBOARD */}
         <AdvertisingHero />
