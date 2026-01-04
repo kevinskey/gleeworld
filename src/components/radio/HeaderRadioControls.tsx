@@ -27,12 +27,11 @@ export const HeaderRadioControls = () => {
     const isHbcuTheme = themeName === 'hbcu';
     const isSpelmanBlue = themeName === 'spelman-blue';
     const hbcuGold = '#FFDF00';
-    const spelmanWhite = '#ffffff';
+    const navyBlue = '#11448B'; // Spelman navy blue
     
     const getTextColor = () => {
       if (isHbcuTheme) return hbcuGold;
-      if (isSpelmanBlue) return spelmanWhite;
-      return '#1e293b';
+      return navyBlue; // Navy blue for all other themes including spelman-blue
     };
 
     const getChannelIcon = (iconName: string | null) => {
