@@ -135,7 +135,7 @@ export const MyModulesCard = ({ modules, onModuleClick, onToggleFavorite, isFavo
               <div key={module.id} className="relative group">
                 <Button
                   variant="outline"
-                  className="h-auto flex-col gap-2 p-4 hover:bg-accent/50 w-full"
+                  className="h-auto flex-col gap-2 p-4 hover:bg-accent/50 w-full bg-card border-border"
                   onClick={() => {
                     if (module.id === 'librarian') {
                       navigate('/librarian-dashboard');
@@ -145,11 +145,11 @@ export const MyModulesCard = ({ modules, onModuleClick, onToggleFavorite, isFavo
                   }}
                 >
                   {IconComponent && (
-                    <div className={`p-2 rounded-lg bg-${module.iconColor}-100 dark:bg-${module.iconColor}-900/20`}>
-                      <IconComponent className={`h-5 w-5 text-${module.iconColor}-600 dark:text-${module.iconColor}-400`} />
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <IconComponent className="h-5 w-5 text-primary" />
                     </div>
                   )}
-                  <span className="text-xs font-medium text-center line-clamp-2">
+                  <span className="text-xs font-medium text-center line-clamp-2 text-foreground">
                     {module.title}
                   </span>
                 </Button>
