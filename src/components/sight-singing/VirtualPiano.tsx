@@ -364,9 +364,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           const whiteKeyMap = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6]; // A=0, A#=0, B=1, C=2, C#=2, D=3...
           const whiteKeysBeforeNote = octaveFromA0 * 7 + whiteKeyMap[noteInOctave];
           
-          // Calculate scroll position to center the note
+          // Calculate scroll position to center the note in the viewport
           const notePosition = whiteKeysBeforeNote * keyWithGap;
-          const scrollPosition = Math.max(0, notePosition - containerWidth / 2 + keyWithGap / 2);
+          const scrollPosition = Math.max(0, notePosition - (containerWidth / 2));
           
           keysContainerRef.current.scrollTo({
             left: scrollPosition,
