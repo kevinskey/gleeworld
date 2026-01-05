@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, CalendarDays } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -22,6 +22,8 @@ import { MusicalToolkit } from "@/components/musical-toolkit/MusicalToolkit";
 import { ExecutiveBoardDropdown } from "@/components/navigation/ExecutiveBoardDropdown";
 import { QuickCaptureCategorySelector, QuickCaptureCategory } from "@/components/quick-capture/QuickCaptureCategorySelector";
 import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQuickCapture";
+import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
+import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 import { HEADER_ICON_SIZES } from "@/components/layout/headerIconSizes";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
@@ -60,6 +62,29 @@ export const UniversalHeader = ({
   const [showCategorySelector, setShowCategorySelector] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<QuickCaptureCategory | null>(null);
 
+  // Quick Actions state
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  const {
+    quickActions: memberQuickActions,
+    loading: quickActionsLoading,
+    canUseQuickActions,
+    addQuickAction,
+    removeQuickAction,
+    reorderQuickActions,
+    isInQuickActions
+  } = useMemberQuickActions(user?.id, userProfile?.role || 'member');
+
+  // Memoize quickActions prop
+  const memoizedQuickActions = useMemo(() => {
+    if (!canUseQuickActions) return undefined;
+    return {
+      quickActions: memberQuickActions,
+      addQuickAction,
+      removeQuickAction,
+      reorderQuickActions,
+      isInQuickActions
+    };
+  }, [canUseQuickActions, memberQuickActions, addQuickAction, removeQuickAction, reorderQuickActions, isInQuickActions]);
 
   // Theme-specific styling - use CSS variables from theme system
   const isHbcuTheme = themeName === 'hbcu';
@@ -296,7 +321,12 @@ export const UniversalHeader = ({
                   </EnhancedTooltip>
                 </div>
 
-
+                {/* Quick Actions Button */}
+                <EnhancedTooltip content="Members Quick Access">
+                  <Button variant="ghost" size="sm" onClick={() => setIsQuickActionsOpen(prev => !prev)} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                    <Key className={HEADER_ICON_SIZES.icon} />
+                  </Button>
+                </EnhancedTooltip>
                 
                <DropdownMenu>
                    <EnhancedTooltip content="Profile menu">
@@ -379,6 +409,18 @@ export const UniversalHeader = ({
       setShowCategorySelector(true);
     }} />}
 
+      {/* Quick Actions Panel */}
+      {user && <QuickActionsPanel user={{
+      id: user.id,
+      email: user.email || '',
+      full_name: userProfile?.full_name || user.email || '',
+      role: userProfile?.role || 'student',
+      exec_board_role: userProfile?.exec_board_role || undefined,
+      is_exec_board: userProfile?.is_exec_board || false
+    }} onModuleSelect={moduleId => {
+      navigate(`/dashboard?module=${moduleId}`);
+      setIsQuickActionsOpen(false);
+    }} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />}
 
       {/* Mobile Bottom Navigation */}
       {user && <MobileBottomNav onCameraClick={() => setShowCategorySelector(true)} />}
