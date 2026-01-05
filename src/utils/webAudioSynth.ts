@@ -433,6 +433,26 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterEnvelope: 1500,
     reverbMix: 0.02,
   },
+  // Drum Kit
+  {
+    id: 22,
+    name: 'Drum Kit',
+    category: 'Percussion',
+    oscillatorType: 'square',
+    harmonics: [0.8, 0.5, 0.3, 0.2],
+    oscillator2Type: 'triangle',
+    oscillator2Detune: -2400,
+    oscillator2Volume: 0.5,
+    attack: 0.001,
+    decay: 0.15,
+    sustain: 0.01,
+    release: 0.15,
+    filterType: 'lowpass',
+    filterFrequency: 2500,
+    filterQ: 4,
+    filterEnvelope: 2000,
+    reverbMix: 0.02,
+  },
 ];
 
 interface ActiveNote {
