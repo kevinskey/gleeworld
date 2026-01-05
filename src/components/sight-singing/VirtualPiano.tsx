@@ -322,6 +322,82 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     };
   }, []); // No dependencies - stable listener
 
+  // MIDI Controller Support
+  useEffect(() => {
+    let midiAccess: MIDIAccess | null = null;
+    
+    // Convert MIDI note number to note name and frequency
+    const midiNoteToName = (midiNote: number): { name: string; frequency: number } => {
+      const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      const octave = Math.floor(midiNote / 12) - 1;
+      const noteIndex = midiNote % 12;
+      const name = `${noteNames[noteIndex]}${octave}`;
+      // A4 (MIDI 69) = 440Hz
+      const frequency = 440 * Math.pow(2, (midiNote - 69) / 12);
+      return { name, frequency };
+    };
+    
+    const handleMIDIMessage = (event: MIDIMessageEvent) => {
+      const [status, note, velocity] = event.data as Uint8Array;
+      const command = status & 0xf0;
+      
+      // Note On (144) or Note Off (128)
+      if (command === 144 && velocity > 0) {
+        // Note On
+        const { name, frequency } = midiNoteToName(note);
+        console.log('🎹 MIDI Note On:', name, 'velocity:', velocity);
+        playNote(name, frequency);
+      } else if (command === 128 || (command === 144 && velocity === 0)) {
+        // Note Off
+        const { name } = midiNoteToName(note);
+        console.log('🎹 MIDI Note Off:', name);
+        stopNote(name);
+      }
+    };
+    
+    const setupMIDI = async () => {
+      try {
+        if (navigator.requestMIDIAccess) {
+          midiAccess = await navigator.requestMIDIAccess();
+          console.log('🎹 MIDI Access granted');
+          
+          // Connect to all available MIDI inputs
+          midiAccess.inputs.forEach((input) => {
+            console.log('🎹 MIDI Input connected:', input.name);
+            input.onmidimessage = handleMIDIMessage;
+          });
+          
+          // Listen for new MIDI devices
+          midiAccess.onstatechange = (event) => {
+            const port = event.port as MIDIInput;
+            if (port.type === 'input') {
+              if (port.state === 'connected') {
+                console.log('🎹 MIDI Device connected:', port.name);
+                port.onmidimessage = handleMIDIMessage;
+              } else {
+                console.log('🎹 MIDI Device disconnected:', port.name);
+              }
+            }
+          };
+        } else {
+          console.log('🎹 Web MIDI API not supported');
+        }
+      } catch (error) {
+        console.error('🎹 MIDI Access denied:', error);
+      }
+    };
+    
+    setupMIDI();
+    
+    return () => {
+      if (midiAccess) {
+        midiAccess.inputs.forEach((input) => {
+          input.onmidimessage = null;
+        });
+      }
+    };
+  }, [playNote, stopNote]);
+
   // Cleanup on unmount - don't close shared audio context
   useEffect(() => {
     return () => {
