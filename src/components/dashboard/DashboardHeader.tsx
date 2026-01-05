@@ -70,52 +70,51 @@ export const DashboardHeader = ({ user, onToggleMessages, showMessages }: Dashbo
       <AnnouncementsDisplay />
 
       {/* Right side - Actions and profile */}
-      <div className="flex items-center gap-4 relative z-10">
+      <div className="flex items-center gap-2 relative z-10">
         <Button
           variant="ghost"
-          size="default"
+          size="icon"
           onClick={onToggleMessages}
-          className={`relative h-9 px-6 ${showMessages ? 'bg-muted' : ''}`}
+          className={`relative h-10 w-10 p-0 ${showMessages ? 'bg-muted' : ''}`}
         >
-          <MessageCircle className="w-7 h-7 mr-2 stroke-[1.5]" />
-          Messages
-          <Badge variant="destructive" className="absolute -top-1 -right-1 w-5 h-5 rounded-full p-0 flex items-center justify-center text-xs">
+          <MessageCircle className="h-5 w-5" />
+          <Badge variant="destructive" className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px]">
             3
           </Badge>
         </Button>
 
-        <Button variant="ghost" size="sm">
-          <Bell className="w-7 h-7 stroke-[1.5]" />
+        <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+          <Bell className="h-5 w-5" />
         </Button>
 
-        <Button variant="ghost" size="sm">
-          <Settings className="w-7 h-7 stroke-[1.5]" />
+        <Button variant="ghost" size="icon" className="h-10 w-10 p-0">
+          <Settings className="h-5 w-5" />
         </Button>
 
-        <div className="flex items-center gap-3 pl-4 border-l border-border">
-          <div className="text-right">
-            <p className="text-sm font-medium text-foreground">
+        <div className="flex items-center gap-2 pl-3 ml-1 border-l border-border">
+          <div className="text-right hidden sm:block">
+            <p className="text-sm font-medium text-foreground leading-tight">
               {user?.user_metadata?.full_name || 'User'}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground leading-tight">
               {user?.email}
             </p>
           </div>
           
-          <Avatar className="w-10 h-10 ring-2 ring-amber-400/30">
+          <Avatar className="h-9 w-9 ring-2 ring-amber-400/30">
             <AvatarImage src={user?.user_metadata?.avatar_url} />
-            <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
+            <AvatarFallback className="bg-primary text-primary-foreground font-semibold text-sm">
               {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
 
           <Button 
             variant="ghost" 
-            size="sm"
+            size="icon"
             onClick={handleSignOut}
-            className="text-muted-foreground hover:text-destructive"
+            className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="h-4 w-4" />
           </Button>
         </div>
       </div>
