@@ -16,11 +16,12 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
   const getInitialDimensions = useCallback(() => {
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 900;
     const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
-    const width = Math.min(900, viewportWidth - 40);
-    const height = Math.min(viewportHeight * 0.8, viewportHeight - 40);
+    // Full width with small margin
+    const width = viewportWidth - 32;
+    const height = viewportHeight - 32;
     return {
-      x: Math.round((viewportWidth - width) / 2),
-      y: Math.round((viewportHeight - height) / 2),
+      x: 16,
+      y: 16,
       width,
       height,
     };
@@ -43,11 +44,12 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
           height: mobileHeight,
         });
       } else {
-        const desktopWidth = Math.min(900, viewportWidth - 40);
-        const desktopHeight = Math.min(viewportHeight * 0.8, viewportHeight - 40);
+        // Full width with small margin
+        const desktopWidth = viewportWidth - 32;
+        const desktopHeight = viewportHeight - 32;
         setDimensions({
-          x: Math.round((viewportWidth - desktopWidth) / 2),
-          y: Math.round((viewportHeight - desktopHeight) / 2),
+          x: 16,
+          y: 16,
           width: desktopWidth,
           height: desktopHeight,
         });
