@@ -92,13 +92,13 @@ export const ProductSlider = () => {
         </div>
         
         {/* Glee Academy Button */}
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4">
           <Button 
             onClick={() => navigate('/glee-academy')}
-            className="gap-2"
+            className="w-full gap-2 h-14 text-lg"
             size="lg"
           >
-            <GraduationCap className="h-5 w-5" />
+            <GraduationCap className="h-6 w-6" />
             Explore Glee Academy
           </Button>
         </div>
