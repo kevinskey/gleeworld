@@ -95,7 +95,7 @@ const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, showMessag
             
             {/* Branding Text */}
             <div className="flex flex-col">
-              <h1 className="text-lg font-bold text-primary">GleeWorld</h1>
+              <h1 className="text-2xl font-bold text-primary">GleeWorld</h1>
               <p className="text-xs text-muted-foreground">Spelman College Glee Club</p>
             </div>
           </div>
@@ -283,7 +283,7 @@ export const Header = ({ activeTab, onTabChange, isRadioPlaying = false, onRadio
         <div className="flex items-center justify-between h-14 sm:h-16 md:h-18">
           {/* Logo */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary truncate">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl font-bold text-primary truncate">
               GleeWorld
             </h1>
           </div>
