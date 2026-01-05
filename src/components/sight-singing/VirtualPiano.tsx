@@ -393,12 +393,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         </div>
       </div>
 
-      {/* Piano Keyboard Area - Scrollable only when not fullscreen with dynamic sizing */}
+      {/* Piano Keyboard Area with 3D frame */}
       <div ref={keysContainerRef} style={{
       scrollbarWidth: 'thin',
-      scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))'
+      scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))',
+      background: 'linear-gradient(to bottom, #1a1a1a 0%, #0d0d0d 100%)',
+      padding: '12px 8px 8px 8px',
+      boxShadow: 'inset 0 5px 15px rgba(0,0,0,0.5)'
     }} className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="relative inline-block min-w-max px-2 mx-0 sm:px-0 py-0">
+        <div className="relative inline-block min-w-max mx-0 py-0">
           {/* White Keys */}
           <div className="relative">
             <div className={isFullScreen ? "flex gap-0.5 h-[240px] sm:h-[384px] md:h-[480px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
@@ -410,11 +413,16 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 width: `${whiteKeyWidth}px`,
                 minWidth: `${whiteKeyWidth}px`,
                 boxShadow: isActive 
-                  ? 'inset 0 4px 8px rgba(0,0,0,0.15), inset 0 1px 3px rgba(0,0,0,0.1)' 
-                  : '0 6px 12px rgba(0,0,0,0.2), inset 0 3px 0 rgba(255,255,255,0.9)',
-                background: '#FFFFFF',
-                transform: isActive ? 'translateY(2px)' : 'translateY(0)',
-              }} className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none border-r border-gray-300/50 last:border-r-0 touch-manipulation !bg-white ${isActive ? '' : 'hover:!bg-gray-50 shadow-lg active:scale-[0.98]'} ${index === 0 ? 'rounded-l-lg sm:rounded-l-xl' : ''} ${index === whiteKeys.length - 1 ? 'rounded-r-lg sm:rounded-r-xl' : ''}`}
+                  ? 'inset 0 -2px 10px rgba(0,0,0,0.2), inset 0 2px 5px rgba(0,0,0,0.1)' 
+                  : '0 8px 15px rgba(0,0,0,0.3), inset -2px 0 3px rgba(0,0,0,0.1), inset 2px 0 3px rgba(255,255,255,0.8)',
+                background: isActive 
+                  ? 'linear-gradient(to bottom, #e8e8e8 0%, #f5f5f5 10%, #ffffff 50%, #f0f0f0 100%)'
+                  : 'linear-gradient(to bottom, #ffffff 0%, #f8f8f8 60%, #e8e8e8 90%, #d8d8d8 100%)',
+                transform: isActive ? 'translateY(3px)' : 'translateY(0)',
+                borderLeft: '1px solid rgba(0,0,0,0.08)',
+                borderRight: '1px solid rgba(0,0,0,0.15)',
+                borderBottom: '4px solid #c0c0c0',
+              }} className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none touch-manipulation ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
               onPointerDown={(e) => {
                 e.preventDefault();
                 playNote(keyName, key.frequency);
@@ -447,13 +455,17 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                   left: `${leftPosition}px`,
                   width: `${blackKeyWidth}px`,
                   minWidth: '36px',
-                  maxWidth: '60px',
-                  borderRadius: '0 0 8px 8px',
+                  maxWidth: '80px',
+                  borderRadius: '0 0 6px 6px',
                   boxShadow: isActive 
-                    ? 'inset 0 3px 6px rgba(0,0,0,0.5)' 
-                    : '0 5px 12px rgba(0,0,0,0.7), inset 0 2px 0 rgba(255,255,255,0.2)',
-                  backgroundColor: '#000000',
-                  opacity: 1,
+                    ? 'inset 0 3px 8px rgba(0,0,0,0.6)' 
+                    : '0 6px 12px rgba(0,0,0,0.5), inset 0 -15px 20px rgba(50,50,50,0.3), inset 0 1px 0 rgba(255,255,255,0.15)',
+                  background: isActive
+                    ? 'linear-gradient(to bottom, #1a1a1a 0%, #2a2a2a 40%, #1f1f1f 100%)'
+                    : 'linear-gradient(to bottom, #2d2d2d 0%, #1a1a1a 30%, #0d0d0d 70%, #1a1a1a 100%)',
+                  borderLeft: '1px solid #3a3a3a',
+                  borderRight: '1px solid #0a0a0a',
+                  borderBottom: '3px solid #0a0a0a',
                   transform: isActive ? 'translateY(2px)' : 'translateY(0)',
                 }}
                 onPointerDown={(e) => {
