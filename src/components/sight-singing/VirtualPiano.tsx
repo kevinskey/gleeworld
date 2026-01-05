@@ -77,6 +77,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   className = '',
   onClose
 }) => {
+  // Full-screen mode when onClose is provided - MUST be defined first
+  const isFullScreen = !!onClose;
+  
   const [activeNotes, setActiveNotes] = useState<Set<string>>(new Set());
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
@@ -347,7 +350,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         const { name, frequency } = midiNoteToName(note);
         console.log('🎹 MIDI Note On:', name, 'velocity:', velocity);
         
-        // Scroll directly to the played note to ensure it's visible
+        // Keep the keyboard stable: only scroll when the played note is outside the visible range
         if (keysContainerRef.current) {
           const container = keysContainerRef.current;
           const gap = 2;
@@ -356,26 +359,34 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : baseWhiteKeyWidth;
           const keyWithGap = whiteKeyWidth + gap;
 
-          // Calculate white key index for this MIDI note
+          // Calculate approximate X position for this MIDI note on our white-key grid
           // MIDI note 21 = A0 (first key)
           const noteInOctave = (note - 21) % 12; // 0=A, 1=A#, 2=B, 3=C...
           const octaveFromA0 = Math.floor((note - 21) / 12);
-
-          // Map chromatic position to white key count (A..G)
           const whiteKeyMap = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
           const whiteKeysBeforeNote = octaveFromA0 * 7 + whiteKeyMap[noteInOctave];
 
-          // Center the note in the viewport (use the key's center point)
           const noteCenterX = whiteKeysBeforeNote * keyWithGap + whiteKeyWidth / 2;
-          const desiredLeft = noteCenterX - container.clientWidth / 2;
 
-          const maxLeft = Math.max(0, container.scrollWidth - container.clientWidth);
-          const clampedLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
+          const visibleLeft = container.scrollLeft;
+          const visibleRight = visibleLeft + container.clientWidth;
 
-          container.scrollTo({
-            left: clampedLeft,
-            behavior: 'smooth',
-          });
+          // "Comfort" margin so we don't scroll for notes that are still comfortably visible
+          const margin = Math.min(container.clientWidth * 0.2, keyWithGap * 2);
+
+          const isComfortablyVisible =
+            noteCenterX >= visibleLeft + margin && noteCenterX <= visibleRight - margin;
+
+          if (!isComfortablyVisible) {
+            const desiredLeft = noteCenterX - container.clientWidth / 2;
+            const maxLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+            const clampedLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
+
+            container.scrollTo({
+              left: clampedLeft,
+              behavior: 'smooth',
+            });
+          }
         }
         
         playNote(name, frequency);
@@ -428,7 +439,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         });
       }
     };
-  }, [playNote, stopNote]);
+  }, [playNote, stopNote, isMobile, isFullScreen, dynamicKeyWidth]);
 
   // Cleanup on unmount - don't close shared audio context
   useEffect(() => {
@@ -442,7 +453,6 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   }, []);
 
   // Full-screen mode when onClose is provided
-  const isFullScreen = !!onClose;
   const pianoContent = <div className={isFullScreen ? "w-full h-full bg-background flex flex-col overflow-hidden" : `w-full flex flex-col ${className}`}>
       {/* Header Bar */}
       <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move gap-2">
