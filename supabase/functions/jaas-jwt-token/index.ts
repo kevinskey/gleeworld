@@ -32,8 +32,10 @@ serve(async (req) => {
     }
 
     // Basic config validation to avoid generating tokens that JaaS will reject
+    console.log('DEBUG: JAAS_APP_ID value:', JSON.stringify(appId), 'JAAS_KEY_ID value:', JSON.stringify(keyId));
+    
     if (!appId.startsWith('vpaas-magic-cookie-') || appId.includes(':') || appId.includes(' ')) {
-      throw new Error('JAAS_APP_ID invalid. Expected like: vpaas-magic-cookie-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+      throw new Error(`JAAS_APP_ID invalid. Got: "${appId}". Expected like: vpaas-magic-cookie-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`);
     }
 
     if (
