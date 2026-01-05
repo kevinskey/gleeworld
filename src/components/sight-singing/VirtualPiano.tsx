@@ -334,7 +334,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             <SelectTrigger className="w-24 sm:w-32 h-8 sm:h-9 text-xs sm:text-sm">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="z-[2147483648] bg-popover">
+            <SelectContent className="z-[100] bg-popover">
               <SelectItem value="0">A0-B1</SelectItem>
               <SelectItem value="1">C1-B2</SelectItem>
               <SelectItem value="2">C2-B3</SelectItem>
@@ -349,7 +349,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             <SelectTrigger className="w-32 sm:w-48 h-8 sm:h-9 text-xs sm:text-sm">
               <SelectValue placeholder="Instrument" />
             </SelectTrigger>
-            <SelectContent className="z-[2147483648] max-h-[300px] bg-popover">
+            <SelectContent className="z-[100] max-h-[300px] bg-popover">
               {SYNTH_INSTRUMENTS.map(instrument => <SelectItem key={instrument.id} value={instrument.id.toString()}>
                   {instrument.name}
                 </SelectItem>)}
@@ -469,7 +469,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     if (isMobile) {
       return (
         <div 
-          className="fixed inset-0 z-[2147483647] bg-black/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4"
           onTouchStart={handleUserInteraction}
           onClick={handleUserInteraction}
         >
@@ -485,7 +485,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     
     // Wrap Rnd in a fixed overlay to ensure proper viewport positioning
     return (
-      <div className="fixed inset-0 z-[2147483646]" onClick={(e) => {
+      <div className="fixed inset-0 z-[60]" onClick={(e) => {
         // Close when clicking overlay background
         if (e.target === e.currentTarget && onClose) {
           onClose();
@@ -510,7 +510,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           maxHeight={900} 
           dragHandleClassName="cursor-move"
           cancel=".no-drag"
-          className="z-[2147483647]" 
+          className="z-[61]" 
           bounds="parent"
         >
           {pianoContent}
