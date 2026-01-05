@@ -211,9 +211,9 @@ export const UniversalHeader = ({
               <MusicalToolkit />
             </div>
             
-            {/* Email/SMS Messenger Toggle - Available to all authenticated users */}
-            {user && <EnhancedTooltip content={isMessengerOpen ? "Close Messenger" : "Send Email/SMS"}>
-                <Button variant="ghost" size="sm" onClick={toggleMessenger} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector} ${isMessengerOpen ? 'bg-gray-100' : ''}`} type="button">
+            {/* Email/SMS Messenger - Available to all authenticated users */}
+            {user && <EnhancedTooltip content="Send Email/SMS">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/messenger')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                   <Mail className={HEADER_ICON_SIZES.icon} />
                 </Button>
               </EnhancedTooltip>}

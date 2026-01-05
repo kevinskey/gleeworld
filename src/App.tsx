@@ -84,6 +84,7 @@ import Payments from "./pages/Payments";
 import Profile from "./pages/Profile";
 import ProfileSetup from "./pages/ProfileSetup";
 import Calendar from "./pages/Calendar";
+import Messenger from "./pages/Messenger";
 import { AppointmentAdminDashboard } from "./components/admin/AppointmentAdminDashboard";
 
 import PublicCalendar from "./pages/PublicCalendar";
@@ -954,6 +955,14 @@ const App = () => {
                   } 
                 />
                 <Route 
+                  path="/messenger" 
+                  element={
+                    <ProtectedRoute>
+                      <Messenger />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route
                   path="/public-calendar" 
                   element={
                     <PublicRoute>
