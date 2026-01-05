@@ -49,9 +49,9 @@ export const UniversalLayout = ({
       {/* Main Content - padded by header height to prevent overlap */}
       <main className={`w-full min-h-dvh pt-[var(--gw-header-h,4rem)] pb-20 sm:pb-0 ${shellBg} text-foreground ${className}`}>
         {containerized ? (
-          <PageContainer maxWidth="full" padded={false}>
-            {children}
-          </PageContainer>
+        <PageContainer maxWidth="full" padded={false} className="!p-0 !m-0">
+          {children}
+        </PageContainer>
         ) : children}
       </main>
       
