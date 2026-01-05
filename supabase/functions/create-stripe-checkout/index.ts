@@ -1,12 +1,31 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://cdn.jsdelivr.net/npm/stripe@14.21.0/+esm";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import Stripe from "https://esm.sh/stripe@18.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+interface ShippingRate {
+  id: string;
+  carrier: string;
+  service: string;
+  rate: number;
+  currency: string;
+  delivery_days: number;
+}
+
+interface ShippingAddress {
+  name: string;
+  street1: string;
+  street2?: string;
+  city: string;
+  state: string;
+  zip: string;
+  country: string;
+  phone?: string;
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -14,24 +33,38 @@ serve(async (req) => {
   }
 
   try {
-    const { cartItems, customerEmail, customerName } = await req.json();
+    const { 
+      cartItems, 
+      customerEmail, 
+      customerName,
+      shippingRate,
+      shippingAddress,
+      shipmentId
+    } = await req.json();
+
+    console.log("[CHECKOUT] Request received", { 
+      itemCount: cartItems?.length, 
+      hasShippingRate: !!shippingRate 
+    });
 
     if (!cartItems || cartItems.length === 0) {
       throw new Error("Cart is empty");
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-      apiVersion: "2023-10-16",
+      apiVersion: "2025-08-27.basil",
     });
 
-    // Calculate totals
+    // Calculate subtotal
     const subtotal = cartItems.reduce((sum: number, item: any) => 
       sum + (item.product.price * item.quantity), 0
     );
     
-    // Free shipping over $150
-    const shippingCost = subtotal >= 150 ? 0 : 10;
+    // Use EasyPost rate if provided, otherwise fallback to flat rate
+    const shippingCost = shippingRate?.rate ?? (subtotal >= 150 ? 0 : 10);
     const total = subtotal + shippingCost;
+
+    console.log("[CHECKOUT] Calculated totals", { subtotal, shippingCost, total });
 
     // Create line items for Stripe
     const lineItems = cartItems.map((item: any) => ({
@@ -39,24 +72,28 @@ serve(async (req) => {
         currency: "usd",
         product_data: {
           name: item.product.title,
-          description: item.product.description,
-          images: item.product.images || [],
+          description: item.product.description || undefined,
+          images: item.product.images?.filter((img: string) => img) || [],
         },
-        unit_amount: Math.round(item.product.price * 100), // Convert to cents
+        unit_amount: Math.round(item.product.price * 100),
       },
       quantity: item.quantity,
     }));
 
-    // Add shipping if applicable
+    // Add shipping as a line item
     if (shippingCost > 0) {
+      const shippingDescription = shippingRate 
+        ? `${shippingRate.carrier} ${shippingRate.service}${shippingRate.delivery_days ? ` (${shippingRate.delivery_days} days)` : ''}`
+        : "Standard shipping";
+        
       lineItems.push({
         price_data: {
           currency: "usd",
           product_data: {
             name: "Shipping",
-            description: "Standard shipping (Free over $150)",
+            description: shippingDescription,
           },
-          unit_amount: shippingCost * 100,
+          unit_amount: Math.round(shippingCost * 100),
         },
         quantity: 1,
       });
@@ -75,24 +112,38 @@ serve(async (req) => {
       }
     }
 
-    // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    // Build session options
+    const sessionOptions: any = {
       customer: customerId,
       customer_email: customerId ? undefined : customerEmail,
       line_items: lineItems,
       mode: "payment",
       success_url: `${req.headers.get("origin")}/shop/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/shop`,
-      shipping_address_collection: {
-        allowed_countries: ["US", "CA"],
-      },
       metadata: {
         customer_name: customerName || "",
         subtotal: subtotal.toString(),
         shipping_cost: shippingCost.toString(),
         total: total.toString(),
+        shipment_id: shipmentId || "",
+        shipping_rate_id: shippingRate?.id || "",
+        shipping_carrier: shippingRate?.carrier || "",
+        shipping_service: shippingRate?.service || "",
       },
-    });
+    };
+
+    // If we already have a shipping address from EasyPost, skip Stripe's collection
+    // Otherwise, collect it via Stripe
+    if (!shippingAddress?.street1) {
+      sessionOptions.shipping_address_collection = {
+        allowed_countries: ["US", "CA"],
+      };
+    }
+
+    // Create checkout session
+    const session = await stripe.checkout.sessions.create(sessionOptions);
+
+    console.log("[CHECKOUT] Session created", { sessionId: session.id });
 
     return new Response(
       JSON.stringify({ url: session.url, sessionId: session.id }),
@@ -102,7 +153,7 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Stripe checkout error:", error);
+    console.error("[CHECKOUT] Error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
