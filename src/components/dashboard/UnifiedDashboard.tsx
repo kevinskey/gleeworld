@@ -341,7 +341,7 @@ export const UnifiedDashboard = () => {
       </div>
 
       {/* Full Screen Empty Div */}
-      <div className="w-full h-[200px]" />
+      <div className="w-full h-[200px] bg-background" />
 
       {/* Horizontal E-commerce Slider */}
       <ProductSlider />
