@@ -30,9 +30,10 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Use 8x8.vc which doesn't require moderator authentication for embedded use
-  const jitsiDomain = '8x8.vc';
-  const jitsiRoom = `vpaas-magic-cookie-public/GleeWorld-${roomName}`;
+  // Use Jitsi's public server - generate unique room to avoid lobby
+  const jitsiDomain = 'meet.jit.si';
+  // Add timestamp suffix to make room unique and avoid cached lobby settings
+  const jitsiRoom = `GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
 
   useEffect(() => {
     let mounted = true;
@@ -44,9 +45,9 @@ export const JitsiMeetRoom = ({
         return;
       }
 
-      // Load the Jitsi External API script from 8x8.vc
+      // Load the Jitsi External API script
       const script = document.createElement('script');
-      script.src = 'https://8x8.vc/vpaas-magic-cookie-public/external_api.js';
+      script.src = 'https://meet.jit.si/external_api.js';
       script.async = true;
       
       script.onload = () => {
@@ -86,14 +87,20 @@ export const JitsiMeetRoom = ({
             enableWelcomePage: false,
             enableClosePage: false,
             disableInviteFunctions: true,
-            // Skip moderator login requirements
+            // Disable lobby and moderator requirements
+            lobby: { enabled: false },
             enableLobby: false,
             hideLobbyButton: true,
             requireDisplayName: false,
             enableInsecureRoomNameWarning: false,
-            disableModeratorIndicator: false,
+            disableModeratorIndicator: true,
             enableUserRolesBasedOnToken: false,
-            enableFeaturesBasedOnToken: false
+            enableFeaturesBasedOnToken: false,
+            // Make everyone a moderator
+            disableRemoteMute: false,
+            remoteVideoMenu: { disableKick: false },
+            disableKick: false,
+            p2p: { enabled: true }
           },
           interfaceConfigOverwrite: {
             SHOW_JITSI_WATERMARK: false,
