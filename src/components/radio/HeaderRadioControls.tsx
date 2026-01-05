@@ -185,7 +185,7 @@ export const HeaderRadioControls = () => {
                           onClick={() => handleChannelChange(channel)}
                           disabled={isLoading}
                           className={cn(
-                            "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap transition-all shrink-0",
+                            "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all shrink-0",
                             isSelected
                               ? "bg-primary text-primary-foreground"
                               : "bg-popover-foreground/10 text-popover-foreground/70 hover:bg-popover-foreground/20 hover:text-popover-foreground",
