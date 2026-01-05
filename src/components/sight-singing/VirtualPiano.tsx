@@ -113,12 +113,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     const calculateKeyWidth = () => {
       if (onClose && !isMobile) {
         // Full piano has 52 white keys, calculate width to fit viewport
-        const availableWidth = window.innerWidth - 48; // padding
+        const availableWidth = window.innerWidth - 16; // minimal padding
         const numWhiteKeys = 52;
         const gap = 2; // gap between keys
         const totalGaps = (numWhiteKeys - 1) * gap;
         const keyWidth = Math.floor((availableWidth - totalGaps) / numWhiteKeys);
-        setDynamicKeyWidth(Math.max(30, Math.min(keyWidth, 80))); // clamp between 30-80px
+        setDynamicKeyWidth(Math.max(20, keyWidth)); // no max cap
       }
     };
     checkMobile();
