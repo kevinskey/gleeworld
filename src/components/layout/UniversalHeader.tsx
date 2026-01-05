@@ -233,7 +233,7 @@ export const UniversalHeader = ({
                         <LayoutDashboard className={HEADER_ICON_SIZES.icon} />
                       </Button>
                    </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56 bg-popover text-popover-foreground border border-border shadow-2xl z-[1100]" align={isMobile ? "center" : "end"} sideOffset={20}>
+                  <DropdownMenuContent className="w-56 bg-popover text-popover-foreground border border-border shadow-2xl z-[1100]" align="center" sideOffset={8}>
                     <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     
@@ -334,7 +334,7 @@ export const UniversalHeader = ({
                         </Button>
                       </DropdownMenuTrigger>
                    </EnhancedTooltip>
-                    <DropdownMenuContent className="w-48 py-1 bg-popover text-popover-foreground shadow-2xl border border-border z-[1100]" align={isMobile ? "center" : "end"} sideOffset={20} forceMount>
+                    <DropdownMenuContent className="w-48 py-1 bg-popover text-popover-foreground shadow-2xl border border-border z-[1100]" align="center" sideOffset={8} forceMount>
                       <div className="flex flex-col space-y-1 p-1.5">
                          <p className="text-xs font-medium leading-none truncate">
                            {userProfile?.full_name || user.email}
