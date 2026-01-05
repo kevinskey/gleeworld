@@ -30,10 +30,9 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Use JaaS (8x8) for reliable embedded video without moderator requirements
-  const jaasAppId = 'vpaas-magic-cookie-30a67bf738354c25b1a3da324d0b99ad';
-  const jitsiDomain = '8x8.vc';
-  const jitsiRoom = `${jaasAppId}/GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
+  // Use free public Jitsi Meet server - no login required
+  const jitsiDomain = 'meet.jit.si';
+  const jitsiRoom = `GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
 
   useEffect(() => {
     let mounted = true;
@@ -45,9 +44,9 @@ export const JitsiMeetRoom = ({
         return;
       }
 
-      // Load the JaaS External API script
+      // Load the Jitsi Meet External API script
       const script = document.createElement('script');
-      script.src = 'https://8x8.vc/external_api.js';
+      script.src = 'https://meet.jit.si/external_api.js';
       script.async = true;
       
       script.onload = () => {
