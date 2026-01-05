@@ -92,7 +92,7 @@ export const UniversalHeader = ({
   // Role-based accent colors for header branding
   const getRoleAccentColor = () => {
     const role = userProfile?.role;
-    if (userProfile?.is_super_admin) return 'border-b-4 border-b-red-500';
+    if (userProfile?.is_super_admin) return 'border-b-4 border-b-spelman-blue';
     if (userProfile?.is_admin || userProfile?.is_exec_board) return 'border-b-4 border-b-purple-500';
     switch (role) {
       case 'student': return 'border-b-4 border-b-emerald-500';
