@@ -57,7 +57,7 @@ export const EmailModule = () => {
         // Add predefined groups
         const groups = [
           { id: 'exec-group', name: 'Executive Board', email: 'exec@gleeworld.org', role: 'Group' },
-          { id: 'all-members', name: 'All Members', email: 'members@gleeworld.org', role: 'Group' },
+          { id: 'all-students', name: 'All Students', email: 'students@gleeworld.org', role: 'Group' },
           { id: 'music-library', name: 'Music Library', email: 'library@gleeworld.org', role: 'Department' }
         ];
 
