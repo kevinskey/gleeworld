@@ -59,21 +59,21 @@ export const MobileBottomNav = ({ onCameraClick }: MobileBottomNavProps) => {
     <>
       {/* Bottom Navigation Bar */}
       <nav 
-        className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-primary text-primary-foreground border-t border-border shadow-lg"
+        className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-slate-900 border-t border-slate-700 shadow-lg"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-center justify-evenly w-full h-16 px-4">
           {/* Musical Toolkit */}
-          <div className="flex items-center justify-center w-12 h-12">
-            <MusicalToolkit className="!p-0 text-primary-foreground [&_svg]:text-primary-foreground" />
+          <div className="flex items-center justify-center w-12 h-12 text-white">
+            <MusicalToolkit className="!p-0 text-white [&_svg]:text-white [&_button]:text-white" />
           </div>
 
           {/* Glee Cam - Highlighted Center */}
           <button
             onClick={handleCameraClick}
-            className="flex items-center justify-center w-16 h-16 -mt-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all border-4 border-primary"
+            className="flex items-center justify-center w-16 h-16 -mt-6 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-xl hover:shadow-2xl hover:scale-105 transition-all border-4 border-slate-900"
           >
-            <Camera className="h-7 w-7" />
+            <Camera className="h-7 w-7 text-white" />
           </button>
 
           {/* Voice Assistant Toggle */}
@@ -83,15 +83,15 @@ export const MobileBottomNav = ({ onCameraClick }: MobileBottomNavProps) => {
               "relative flex items-center justify-center w-12 h-12 rounded-full transition-all",
               isWakeWordActive 
                 ? "text-white bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg animate-pulse" 
-                : "text-primary-foreground hover:bg-primary-foreground/10"
+                : "text-white hover:bg-white/10"
             )}
           >
             <Mic className="h-6 w-6" />
             {isWakeWordActive && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-primary animate-ping" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900 animate-ping" />
             )}
             {isWakeWordActive && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-primary" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-slate-900" />
             )}
           </button>
         </div>
