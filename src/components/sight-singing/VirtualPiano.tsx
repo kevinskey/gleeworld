@@ -349,28 +349,32 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         
         // Scroll directly to the played note to ensure it's visible
         if (keysContainerRef.current) {
-          const whiteKeyWidth = window.innerWidth < 768 ? 50 : 69;
+          const container = keysContainerRef.current;
           const gap = 2;
+
+          const baseWhiteKeyWidth = isMobile ? 50 : 69;
+          const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : baseWhiteKeyWidth;
           const keyWithGap = whiteKeyWidth + gap;
-          const containerWidth = keysContainerRef.current.clientWidth;
-          
+
           // Calculate white key index for this MIDI note
-          // MIDI note 21 = A0 (first key), 23 = B0, 24 = C1, etc.
-          // White keys: A, B, C, D, E, F, G (indices 0,2,3,5,7,8,10 in chromatic scale relative to A)
-          const noteInOctave = (note - 21) % 12; // 0=A, 1=A#, 2=B, 3=C, etc.
+          // MIDI note 21 = A0 (first key)
+          const noteInOctave = (note - 21) % 12; // 0=A, 1=A#, 2=B, 3=C...
           const octaveFromA0 = Math.floor((note - 21) / 12);
-          
-          // Map chromatic position to white key count
-          const whiteKeyMap = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6]; // A=0, A#=0, B=1, C=2, C#=2, D=3...
+
+          // Map chromatic position to white key count (A..G)
+          const whiteKeyMap = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
           const whiteKeysBeforeNote = octaveFromA0 * 7 + whiteKeyMap[noteInOctave];
-          
-          // Calculate scroll position to center the note in the viewport
-          const notePosition = whiteKeysBeforeNote * keyWithGap;
-          const scrollPosition = Math.max(0, notePosition - (containerWidth / 2));
-          
-          keysContainerRef.current.scrollTo({
-            left: scrollPosition,
-            behavior: 'smooth'
+
+          // Center the note in the viewport (use the key's center point)
+          const noteCenterX = whiteKeysBeforeNote * keyWithGap + whiteKeyWidth / 2;
+          const desiredLeft = noteCenterX - container.clientWidth / 2;
+
+          const maxLeft = Math.max(0, container.scrollWidth - container.clientWidth);
+          const clampedLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
+
+          container.scrollTo({
+            left: clampedLeft,
+            behavior: 'smooth',
           });
         }
         
