@@ -103,11 +103,11 @@ export const VideoSessionViewer = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900 flex overflow-hidden">
-      {/* Video area */}
+    <div className="fixed inset-0 z-50 bg-slate-900 flex flex-col md:flex-row overflow-hidden">
+      {/* Video area - full width on mobile when chat is hidden */}
       <div 
-        className="flex-1 h-full transition-all duration-300"
-        style={{ marginRight: showChat ? '320px' : '0' }}
+        className={`flex-1 h-full transition-all duration-300 ${showChat ? 'hidden md:block' : ''}`}
+        style={{ marginRight: showChat && window.innerWidth >= 768 ? '320px' : '0' }}
       >
         <JitsiMeetRoom
           roomName={roomName}
@@ -118,9 +118,9 @@ export const VideoSessionViewer = ({
         />
       </div>
 
-      {/* Chat sidebar */}
+      {/* Chat sidebar - full screen on mobile */}
       {showChat && (
-        <div className="fixed right-0 top-0 bottom-0 w-80 bg-background border-l shadow-xl z-50">
+        <div className="fixed inset-0 md:inset-auto md:right-0 md:top-0 md:bottom-0 md:w-80 bg-background md:border-l shadow-xl z-50 flex flex-col">
           <VideoSessionChat 
             sessionId={sessionId} 
             onClose={() => setShowChat(false)}
@@ -128,11 +128,11 @@ export const VideoSessionViewer = ({
         </div>
       )}
 
-      {/* Toggle chat button when closed */}
+      {/* Toggle chat button when closed - bottom on mobile */}
       {!showChat && (
         <Button
           onClick={() => setShowChat(true)}
-          className="fixed right-4 top-4 z-[60] rounded-full h-10 w-10 p-0 shadow-lg bg-primary hover:bg-primary/90"
+          className="fixed right-4 bottom-4 md:top-4 md:bottom-auto z-[60] rounded-full h-12 w-12 md:h-10 md:w-10 p-0 shadow-lg bg-primary hover:bg-primary/90"
         >
           <MessageSquare className="h-5 w-5" />
         </Button>
