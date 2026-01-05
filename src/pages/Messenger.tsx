@@ -346,8 +346,20 @@ const Messenger = () => {
                   
                   {/* Send Button - Fixed at bottom */}
                   <div className="p-4 bg-primary/80 border-t border-primary-foreground/10">
-                    <Button onClick={handleSendEmail} disabled={isSending || recipients.length === 0 || !subject.trim()} variant="ghost" className="w-full text-primary-foreground hover:bg-primary-foreground/10">
-                      {isSending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</> : <><Send className="h-4 w-4 mr-2" /> Send Email</>}
+                    <Button 
+                      onClick={handleSendEmail} 
+                      disabled={isSending || recipients.length === 0 || !subject.trim()} 
+                      className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSending ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
+                      ) : recipients.length === 0 ? (
+                        <><Send className="h-4 w-4 mr-2" /> Add Recipients to Send</>
+                      ) : !subject.trim() ? (
+                        <><Send className="h-4 w-4 mr-2" /> Add Subject to Send</>
+                      ) : (
+                        <><Send className="h-4 w-4 mr-2" /> Send Email</>
+                      )}
                     </Button>
                   </div>
                 </TabsContent>
