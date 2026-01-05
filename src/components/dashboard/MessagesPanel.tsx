@@ -114,16 +114,12 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
       ) : (
         <Rnd
           ref={rndRef}
-          default={{
-            x: dimensions.x,
-            y: dimensions.y,
-            width: dimensions.width,
-            height: dimensions.height,
-          }}
+          size={{ width: dimensions.width, height: dimensions.height }}
+          position={{ x: dimensions.x, y: dimensions.y }}
           minWidth={400}
           minHeight={300}
           className="z-50"
-          style={{ 
+          style={{
             position: 'fixed',
             willChange: 'transform',
           }}
