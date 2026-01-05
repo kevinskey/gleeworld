@@ -156,39 +156,26 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
 
   // Generate full 88-key piano range (A0-C8)
-  const { whiteKeys: allWhiteKeys, blackKeys: allBlackKeys } = generateFullPianoKeys();
+  const { whiteKeys, blackKeys } = generateFullPianoKeys();
 
-  // Filter keys based on octave view setting
-  const visibleKeys = useMemo(() => {
-    // Calculate the starting white key index based on startOctave
-    // A0=0, B0=1, C1=2, D1=3, E1=4, F1=5, G1=6, A1=7, B1=8, C2=9, ...
-    let startWhiteIndex = 0;
-    if (startOctave === 0) {
-      startWhiteIndex = 0; // A0
-    } else {
-      // C[N] is at index: 2 + (N-1)*7
-      startWhiteIndex = 2 + (startOctave - 1) * 7;
-    }
-
-    // Each octave has 7 white keys
-    const whiteKeysToShow = octaveView * 7;
-    const endWhiteIndex = Math.min(startWhiteIndex + whiteKeysToShow, allWhiteKeys.length);
-
-    const whiteKeys = allWhiteKeys.slice(startWhiteIndex, endWhiteIndex);
-
-    // Filter black keys that fall within the visible white key range
-    const blackKeys = allBlackKeys.filter(bk => {
-      // Black key position is relative to the full piano
-      // We need to check if it falls within our visible range
-      return bk.position > startWhiteIndex && bk.position <= endWhiteIndex;
-    }).map(bk => ({
-      ...bk,
-      // Adjust position to be relative to our visible range
-      position: bk.position - startWhiteIndex,
-    }));
-
-    return { whiteKeys, blackKeys };
-  }, [allWhiteKeys, allBlackKeys, startOctave, octaveView]);
+  // Calculate dynamic key width based on octave view setting
+  // This controls how many octaves fit in the viewport at once
+  const viewportKeyWidth = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    
+    // Get approximate container width (viewport minus some padding)
+    const containerWidth = window.innerWidth - 32;
+    
+    // Each octave has 7 white keys, plus gap
+    const gap = 2;
+    const whiteKeysInView = octaveView * 7;
+    
+    // Calculate key width to fit the desired octaves
+    const calculatedWidth = Math.floor((containerWidth - (whiteKeysInView - 1) * gap) / whiteKeysInView);
+    
+    // Clamp between reasonable min/max values
+    return Math.max(40, Math.min(120, calculatedWidth));
+  }, [octaveView]);
 
   // Initialize audio context with mobile unlock
   const initAudioContext = useCallback(async () => {
@@ -546,10 +533,10 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           {/* White Keys */}
           <div className="relative">
             <div className={isFullScreen ? "flex gap-0.5 h-[240px] sm:h-[384px] md:h-[480px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
-              {visibleKeys.whiteKeys.map((key, index) => {
+              {whiteKeys.map((key, index) => {
               const keyName = `${key.note}${key.octave}`;
               const isActive = activeNotes.has(keyName);
-              const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69);
+              const whiteKeyWidth = viewportKeyWidth || (isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69));
               return <button key={keyName} style={{
                 width: `${whiteKeyWidth}px`,
                 minWidth: `${whiteKeyWidth}px`,
@@ -563,7 +550,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 borderLeft: '1px solid rgba(0,0,0,0.08)',
                 borderRight: '1px solid rgba(0,0,0,0.15)',
                 borderBottom: isActive ? '2px solid #3b82f6' : '4px solid #c0c0c0',
-              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none touch-manipulation ${index === 0 ? 'rounded-bl-lg' : ''} ${index === visibleKeys.whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
+              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none touch-manipulation ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
               onPointerDown={(e) => {
                 e.preventDefault();
                 playNote(keyName, key.frequency);
@@ -584,10 +571,10 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             {/* Black Keys */}
             <div className="pointer-events-none absolute inset-0 top-0 h-[65%]">
               <div className="relative w-full h-full">
-                {visibleKeys.blackKeys.map(key => {
+                {blackKeys.map(key => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
-                const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69);
+                const whiteKeyWidth = viewportKeyWidth || (isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69));
                 const blackKeyWidth = Math.floor(whiteKeyWidth * 0.58); // Standard piano ratio
                 const gap = 2; // gap-0.5 = 0.125rem ≈ 2px
                 // Position accounts for key width + gap between keys
