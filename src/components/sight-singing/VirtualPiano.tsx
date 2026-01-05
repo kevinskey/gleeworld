@@ -350,44 +350,10 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         const { name, frequency } = midiNoteToName(note);
         console.log('🎹 MIDI Note On:', name, 'velocity:', velocity);
         
-        // Keep the keyboard stable: only scroll when the played note is outside the visible range
-        if (keysContainerRef.current) {
-          const container = keysContainerRef.current;
-          const gap = 2;
+        // Keep the keyboard stable: do not auto-scroll on MIDI input.
+        // If a user wants to see other octaves, they can scroll manually or use the octave selector.
+        // (Auto-scrolling here caused the keyboard to “shift every note”.)
 
-          const baseWhiteKeyWidth = isMobile ? 50 : 69;
-          const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : baseWhiteKeyWidth;
-          const keyWithGap = whiteKeyWidth + gap;
-
-          // Calculate approximate X position for this MIDI note on our white-key grid
-          // MIDI note 21 = A0 (first key)
-          const noteInOctave = (note - 21) % 12; // 0=A, 1=A#, 2=B, 3=C...
-          const octaveFromA0 = Math.floor((note - 21) / 12);
-          const whiteKeyMap = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
-          const whiteKeysBeforeNote = octaveFromA0 * 7 + whiteKeyMap[noteInOctave];
-
-          const noteCenterX = whiteKeysBeforeNote * keyWithGap + whiteKeyWidth / 2;
-
-          const visibleLeft = container.scrollLeft;
-          const visibleRight = visibleLeft + container.clientWidth;
-
-          // "Comfort" margin so we don't scroll for notes that are still comfortably visible
-          const margin = Math.min(container.clientWidth * 0.2, keyWithGap * 2);
-
-          const isComfortablyVisible =
-            noteCenterX >= visibleLeft + margin && noteCenterX <= visibleRight - margin;
-
-          if (!isComfortablyVisible) {
-            const desiredLeft = noteCenterX - container.clientWidth / 2;
-            const maxLeft = Math.max(0, container.scrollWidth - container.clientWidth);
-            const clampedLeft = Math.max(0, Math.min(maxLeft, desiredLeft));
-
-            container.scrollTo({
-              left: clampedLeft,
-              behavior: 'smooth',
-            });
-          }
-        }
         
         playNote(name, frequency);
       } else if (command === 128 || (command === 144 && velocity === 0)) {
