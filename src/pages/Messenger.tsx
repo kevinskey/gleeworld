@@ -231,7 +231,7 @@ const Messenger = () => {
     <UniversalLayout showHeader={true} showFooter={false}>
       <div className="flex flex-col h-[calc(100vh-64px)]">
         {/* Header section */}
-        <div className="flex-shrink-0 px-4 sm:px-6 py-3 border-b border-border bg-background">
+        <div className="flex-shrink-0 border-b border-border bg-background">
           <div className="max-w-5xl mx-auto">
             <BackNavigation className="mb-2" />
             
