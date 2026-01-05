@@ -85,21 +85,28 @@ serve(async (req) => {
       room: roomName || "*",
       exp: exp,
       nbf: now,
+      iat: now,
       context: {
         user: {
           id: userId || crypto.randomUUID(),
           name: userName || "Glee Member",
           email: userEmail || "",
-          moderator: isModerator ? "true" : "false",
+          moderator: isModerator, // boolean, not string
           avatar: ""
         },
         features: {
-          livestreaming: "true",
-          recording: "true",
-          transcription: "true",
-          "outbound-call": "true"
+          livestreaming: true,
+          recording: true,
+          transcription: true,
+          "outbound-call": true,
+          "sip-outbound-call": true
+        },
+        room: {
+          regex: false
         }
-      }
+      },
+      // Add moderator claim at top level for lobby bypass
+      moderator: isModerator
     };
 
     // Create JWT with RS256
