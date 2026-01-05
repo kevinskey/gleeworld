@@ -4,7 +4,8 @@ import { Rnd } from 'react-rnd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { Volume2, VolumeX, X } from 'lucide-react';
+import { Volume2, VolumeX, X, Keyboard } from 'lucide-react';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { WebAudioSynth, SYNTH_INSTRUMENTS } from '@/utils/webAudioSynth';
 import { unlockAudioContext, setupMobileAudioUnlock, forceUnlockAudio, getSharedAudioContext } from '@/utils/mobileAudioUnlock';
 interface VirtualPianoProps {
@@ -84,6 +85,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const [volume, setVolume] = useState([0.4]);
   const [isMuted, setIsMuted] = useState(false);
   const [startOctave, setStartOctave] = useState<number>(3); // Default starts at C3-B4 (shows A4)
+  const [octaveView, setOctaveView] = useState<1 | 2 | 3>(2); // How many octaves to show at once
   const [pianoSize, setPianoSize] = useState({
     width: 900,
     height: 600
@@ -154,10 +156,39 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const scale = Math.min(scaleX, scaleY); // Maintain aspect ratio
 
   // Generate full 88-key piano range (A0-C8)
-  const {
-    whiteKeys,
-    blackKeys
-  } = generateFullPianoKeys();
+  const { whiteKeys: allWhiteKeys, blackKeys: allBlackKeys } = generateFullPianoKeys();
+
+  // Filter keys based on octave view setting
+  const visibleKeys = useMemo(() => {
+    // Calculate the starting white key index based on startOctave
+    // A0=0, B0=1, C1=2, D1=3, E1=4, F1=5, G1=6, A1=7, B1=8, C2=9, ...
+    let startWhiteIndex = 0;
+    if (startOctave === 0) {
+      startWhiteIndex = 0; // A0
+    } else {
+      // C[N] is at index: 2 + (N-1)*7
+      startWhiteIndex = 2 + (startOctave - 1) * 7;
+    }
+
+    // Each octave has 7 white keys
+    const whiteKeysToShow = octaveView * 7;
+    const endWhiteIndex = Math.min(startWhiteIndex + whiteKeysToShow, allWhiteKeys.length);
+
+    const whiteKeys = allWhiteKeys.slice(startWhiteIndex, endWhiteIndex);
+
+    // Filter black keys that fall within the visible white key range
+    const blackKeys = allBlackKeys.filter(bk => {
+      // Black key position is relative to the full piano
+      // We need to check if it falls within our visible range
+      return bk.position > startWhiteIndex && bk.position <= endWhiteIndex;
+    }).map(bk => ({
+      ...bk,
+      // Adjust position to be relative to our visible range
+      position: bk.position - startWhiteIndex,
+    }));
+
+    return { whiteKeys, blackKeys };
+  }, [allWhiteKeys, allBlackKeys, startOctave, octaveView]);
 
   // Initialize audio context with mobile unlock
   const initAudioContext = useCallback(async () => {
@@ -456,6 +487,25 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 </SelectItem>)}
             </SelectContent>
           </Select>
+          
+          {/* Octave View Toggle */}
+          <ToggleGroup 
+            type="single" 
+            value={octaveView.toString()} 
+            onValueChange={(val) => val && setOctaveView(parseInt(val, 10) as 1 | 2 | 3)}
+            className="h-8 sm:h-9"
+          >
+            <ToggleGroupItem value="1" aria-label="1 octave" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
+              1 Oct
+            </ToggleGroupItem>
+            <ToggleGroupItem value="2" aria-label="2 octaves" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
+              2 Oct
+            </ToggleGroupItem>
+            <ToggleGroupItem value="3" aria-label="3 octaves" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
+              3 Oct
+            </ToggleGroupItem>
+          </ToggleGroup>
+          
           {synthReady && <span className="text-xs text-green-500 hidden sm:inline">✓ Ready</span>}
         </div>
 
@@ -496,7 +546,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           {/* White Keys */}
           <div className="relative">
             <div className={isFullScreen ? "flex gap-0.5 h-[240px] sm:h-[384px] md:h-[480px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
-              {whiteKeys.map((key, index) => {
+              {visibleKeys.whiteKeys.map((key, index) => {
               const keyName = `${key.note}${key.octave}`;
               const isActive = activeNotes.has(keyName);
               const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69);
@@ -513,7 +563,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 borderLeft: '1px solid rgba(0,0,0,0.08)',
                 borderRight: '1px solid rgba(0,0,0,0.15)',
                 borderBottom: isActive ? '2px solid #3b82f6' : '4px solid #c0c0c0',
-              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none touch-manipulation ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
+              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none touch-manipulation ${index === 0 ? 'rounded-bl-lg' : ''} ${index === visibleKeys.whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
               onPointerDown={(e) => {
                 e.preventDefault();
                 playNote(keyName, key.frequency);
@@ -534,7 +584,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             {/* Black Keys */}
             <div className="pointer-events-none absolute inset-0 top-0 h-[65%]">
               <div className="relative w-full h-full">
-                {blackKeys.map(key => {
+                {visibleKeys.blackKeys.map(key => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
                 const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69);
