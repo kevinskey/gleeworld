@@ -225,34 +225,38 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }
   }, [volume, isMuted]);
 
-  // Scroll to selected octave range when dropdown changes (NOT on mobile/viewport toggles)
+  // Scroll to selected octave range when dropdown changes
+  const scrollToOctave = useCallback((octave: number) => {
+    const container = keysContainerRef.current;
+    if (!container) return;
+
+    const baseWhiteKeyWidth = isMobile ? 50 : 69;
+    const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : baseWhiteKeyWidth;
+    const gap = 2;
+    const keyWithGap = whiteKeyWidth + gap;
+
+    // Piano layout: A0, B0, then C1-B1, C2-B2, ... C7-B7, C8
+    let scrollPosition = 0;
+    if (octave === 0) {
+      scrollPosition = 0;
+    } else {
+      const cIndex = 2 + (octave - 1) * 7;
+      scrollPosition = cIndex * keyWithGap;
+    }
+
+    container.scrollTo({
+      left: scrollPosition,
+      behavior: 'smooth',
+    });
+  }, [isMobile, isFullScreen, dynamicKeyWidth]);
+
+  // Trigger scroll when octave selection changes
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const container = keysContainerRef.current;
-      if (!container) return;
-
-      const baseWhiteKeyWidth = isMobile ? 50 : 69;
-      const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : baseWhiteKeyWidth;
-      const gap = 2; // gap-0.5 ≈ 2px
-      const keyWithGap = whiteKeyWidth + gap;
-
-      // Piano layout: A0, B0, then C1-B1, C2-B2, ... C7-B7, C8
-      let scrollPosition = 0;
-      if (startOctave === 0) {
-        scrollPosition = 0;
-      } else {
-        const cIndex = 2 + (startOctave - 1) * 7;
-        scrollPosition = cIndex * keyWithGap;
-      }
-
-      container.scrollTo({
-        left: scrollPosition,
-        behavior: 'smooth',
-      });
+      scrollToOctave(startOctave);
     }, 100);
-
     return () => window.clearTimeout(timer);
-  }, [startOctave]);
+  }, [startOctave, scrollToOctave]);
 
   const playNote = useCallback((noteName: string, frequency: number) => {
     console.log('🎹 Playing note:', noteName, 'at frequency:', frequency.toFixed(2), 'Hz');
