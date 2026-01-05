@@ -14,7 +14,11 @@ interface AdvertisingHeroData {
 }
 const ROTATION_INTERVAL = 11000; // 11 seconds
 
-export const AdvertisingHero: React.FC = () => {
+interface AdvertisingHeroProps {
+  className?: string;
+}
+
+export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({ className }) => {
   const [heroes, setHeroes] = useState<AdvertisingHeroData[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
