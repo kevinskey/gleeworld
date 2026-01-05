@@ -57,7 +57,7 @@ import { SightSingingModule } from '@/components/modules/SightSingingModule';
 import { NotificationsModule } from '@/components/modules/NotificationsModule';
 import { BudgetsModule } from '@/components/modules/BudgetsModule';
 import { SettingsModule } from '@/components/modules/SettingsModule';
-import { PermissionsModule } from '@/components/modules/PermissionsModule';
+import { LazyPermissionsModule } from '@/components/modules/LazyPermissionsModule';
 import { AuditionsModule } from '@/components/modules/AuditionsModule';
 import { WardrobeModule } from '@/components/modules/WardrobeModule';
 import { EmailManagementModule } from '@/components/modules/EmailManagementModule';
@@ -404,7 +404,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "blue",
     category: "member-management",
     isActive: true,
-    component: PermissionsModule,
+    component: LazyPermissionsModule,
     dbFunctionName: "user-management"
   },
   {
@@ -452,7 +452,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "red",
     category: "member-management",
     isActive: true,
-    component: PermissionsModule,
+    component: LazyPermissionsModule,
     dbFunctionName: "permissions"
   },
   {
@@ -722,7 +722,7 @@ export const UNIFIED_MODULES: UnifiedModule[] = [
     iconColor: "red",
     category: "system",
     isActive: true,
-    component: PermissionsModule, // Admin tools
+    component: LazyPermissionsModule, // Admin tools
     dbFunctionName: "admin-tools"
   },
   {
