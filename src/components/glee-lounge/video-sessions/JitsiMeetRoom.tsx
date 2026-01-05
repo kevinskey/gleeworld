@@ -30,10 +30,10 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Use Jitsi's public server - generate unique room to avoid lobby
-  const jitsiDomain = 'meet.jit.si';
-  // Add timestamp suffix to make room unique and avoid cached lobby settings
-  const jitsiRoom = `GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
+  // Use JaaS (8x8) for reliable embedded video without moderator requirements
+  const jaasAppId = 'vpaas-magic-cookie-30a67bf738354c25b1a3da324d0b99ad';
+  const jitsiDomain = '8x8.vc';
+  const jitsiRoom = `${jaasAppId}/GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
 
   useEffect(() => {
     let mounted = true;
@@ -45,9 +45,9 @@ export const JitsiMeetRoom = ({
         return;
       }
 
-      // Load the Jitsi External API script
+      // Load the JaaS External API script
       const script = document.createElement('script');
-      script.src = 'https://meet.jit.si/external_api.js';
+      script.src = 'https://8x8.vc/external_api.js';
       script.async = true;
       
       script.onload = () => {
