@@ -30,8 +30,8 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Jitsi domain (fallback to public instance if custom domain isn't configured)
-  const jitsiDomain = import.meta.env.VITE_JITSI_DOMAIN || 'meet.jit.si';
+  // Jitsi domain - use self-hosted instance
+  const jitsiDomain = import.meta.env.VITE_JITSI_DOMAIN || 'meet.gleeworld.org';
   const jitsiRoom = `GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
   const jitsiScriptSrc = `https://${jitsiDomain}/external_api.js`;
 
