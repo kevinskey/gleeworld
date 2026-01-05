@@ -18,9 +18,9 @@ serve(async (req) => {
     console.log('Generating JaaS JWT for room:', roomName, 'user:', userName);
 
     const privateKeyPem = Deno.env.get('JAAS_PRIVATE_KEY');
-    // JAAS_APP_ID should be just the vpaas-magic-cookie-* value
+    // JAAS_APP_ID should be the full vpaas app id, typically: "vpaas-magic-cookie-<tenant>"
     const appId = Deno.env.get('JAAS_APP_ID') || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9';
-    // JAAS_KEY_ID should be your tenant/key path like "fcc211/YOUR_API_KEY_ID"
+    // JAAS_KEY_ID should be your key id in JaaS, typically: "<tenant>/<apiKeyId>" (NOT a public key, not a vpaas id)
     const keyId = Deno.env.get('JAAS_KEY_ID');
 
     if (!privateKeyPem) {
@@ -30,7 +30,21 @@ serve(async (req) => {
     if (!keyId) {
       throw new Error('JAAS_KEY_ID not configured');
     }
-    
+
+    // Basic config validation to avoid generating tokens that JaaS will reject
+    if (!appId.startsWith('vpaas-magic-cookie-') || appId.includes(':') || appId.includes(' ')) {
+      throw new Error('JAAS_APP_ID invalid. Expected like: vpaas-magic-cookie-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx');
+    }
+
+    if (
+      keyId.startsWith('vpaas-magic-cookie-') ||
+      keyId.includes('BEGIN PUBLIC KEY') ||
+      keyId.includes('BEGIN PRIVATE KEY') ||
+      !keyId.includes('/')
+    ) {
+      throw new Error('JAAS_KEY_ID invalid. Expected like: <tenant>/<apiKeyId> (from JaaS Console > API Keys)');
+    }
+
     console.log('Using appId:', appId, 'keyId:', keyId);
 
     // Parse PEM private key
