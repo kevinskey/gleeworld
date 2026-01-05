@@ -96,11 +96,12 @@ serve(async (req) => {
     };
 
     // Create JWT with RS256
+    // kid format for JaaS should be just the keyId (which is already tenant/apiKeyId format)
     const jwt = await create(
       { 
         alg: "RS256", 
         typ: "JWT",
-        kid: `${appId}/${keyId}`
+        kid: keyId
       },
       payload,
       privateKey
