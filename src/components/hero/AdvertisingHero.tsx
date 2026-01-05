@@ -17,8 +17,9 @@ const ROTATION_INTERVAL = 11000; // 11 seconds
 interface AdvertisingHeroProps {
   className?: string;
 }
-
-export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({ className }) => {
+export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({
+  className
+}) => {
   const [heroes, setHeroes] = useState<AdvertisingHeroData[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -93,7 +94,7 @@ export const AdvertisingHero: React.FC<AdvertisingHeroProps> = ({ className }) =
         if (!e.currentTarget.src.includes('unsplash.com')) {
           e.currentTarget.src = fallbackImage;
         }
-      }} className="hidden md:block w-full h-full object-contain rounded-none" />
+      }} className="hidden md:block w-full h-full rounded-none object-cover" />
           
           {/* iPad/Tablet Image */}
           <img src={h.ipad_image_url || h.image_url || fallbackImage} alt={h.title || 'Featured promotion'} className="hidden sm:block md:hidden w-full h-full object-cover" onError={e => {
