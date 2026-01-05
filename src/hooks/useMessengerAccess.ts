@@ -34,8 +34,8 @@ export interface UseMessengerAccessReturn {
 
 export const useMessengerAccess = (): UseMessengerAccessReturn => {
   const { user } = useAuth();
-  const { userProfile } = useUserProfile(user);
-  const [isLoading, setIsLoading] = useState(true);
+  const { userProfile, loading: profileLoading } = useUserProfile(user);
+  const [contactsLoading, setContactsLoading] = useState(true);
   const [contacts, setContacts] = useState<MessengerContact[]>([]);
   const [courseGroups, setCourseGroups] = useState<MessengerCourseGroup[]>([]);
 
@@ -80,11 +80,11 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
     if (!user || !hasAccess) {
       setContacts([]);
       setCourseGroups([]);
-      setIsLoading(false);
+      setContactsLoading(false);
       return;
     }
 
-    setIsLoading(true);
+    setContactsLoading(true);
     try {
       const allContacts: MessengerContact[] = [];
       const groups: MessengerCourseGroup[] = [];
@@ -293,13 +293,16 @@ export const useMessengerAccess = (): UseMessengerAccessReturn => {
     } catch (error) {
       console.error('Error loading messenger contacts:', error);
     } finally {
-      setIsLoading(false);
+      setContactsLoading(false);
     }
   };
 
   useEffect(() => {
     loadContacts();
   }, [user, messengerRole, hasAccess]);
+
+  // Include profile loading in overall loading state
+  const isLoading = profileLoading || contactsLoading;
 
   return {
     hasAccess,
