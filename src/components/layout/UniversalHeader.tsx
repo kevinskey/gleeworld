@@ -25,6 +25,7 @@ import { CategorizedQuickCapture } from "@/components/quick-capture/CategorizedQ
 import { QuickActionsPanel } from "@/components/dashboard/QuickActionsPanel";
 import { useMemberQuickActions } from "@/hooks/useMemberQuickActions";
 import { HEADER_ICON_SIZES } from "@/components/layout/headerIconSizes";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 
 // import GlobalCommandPalette from "@/components/navigation/GlobalCommandPalette";
 
@@ -227,12 +228,14 @@ export const UniversalHeader = ({
                 </Button>
               </EnhancedTooltip>}
 
-            {/* Calendar Quick Access */}
-            {user && <EnhancedTooltip content="View Calendar">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                  <CalendarDays className={HEADER_ICON_SIZES.icon} />
-                </Button>
-              </EnhancedTooltip>}
+            {/* Calendar Quick Access - Hidden on mobile (available in bottom nav) */}
+            {user && <div className="hidden sm:block">
+                <EnhancedTooltip content="View Calendar">
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                    <CalendarDays className={HEADER_ICON_SIZES.icon} />
+                  </Button>
+                </EnhancedTooltip>
+              </div>}
             
             {user && <>
                 {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
@@ -418,5 +421,8 @@ export const UniversalHeader = ({
       navigate(`/dashboard?module=${moduleId}`);
       setIsQuickActionsOpen(false);
     }} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />}
+
+      {/* Mobile Bottom Navigation */}
+      {user && <MobileBottomNav onCameraClick={() => setShowCategorySelector(true)} />}
     </>;
 };
