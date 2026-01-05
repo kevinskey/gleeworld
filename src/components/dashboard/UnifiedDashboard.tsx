@@ -16,15 +16,11 @@ import { ModuleDisplay } from './ModuleDisplay';
 import { MetalHeaderDashboard } from '@/components/shared/MetalHeaderDashboard';
 import { ConcertTicketBanner } from '@/components/shared/ConcertTicketBanner';
 import { PollReminderPopup } from '@/components/polls/PollReminderPopup';
+import { MyModules } from './MyModules';
 import { supabase } from '@/integrations/supabase/client';
-
-// Premium components
-import { PremiumHeader } from '@/components/premium/PremiumHeader';
-import { PremiumHero } from '@/components/premium/PremiumHero';
-import { ShopSection } from '@/components/premium/ShopSection';
-import { QuickAccessSection } from '@/components/premium/QuickAccessSection';
-import { PremiumModules } from '@/components/premium/PremiumModules';
-import { PremiumFooter } from '@/components/premium/PremiumFooter';
+import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
+import { FourCardLayout } from './FourCardLayout';
+import { ProductSlider } from './ProductSlider';
 
 // Lazy load heavy components
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({
@@ -335,29 +331,41 @@ export const UnifiedDashboard = () => {
       </Suspense>;
   };
 
-  // DEFAULT VIEW: Premium dark theme dashboard
-  return (
-    <div className="min-h-screen bg-[#0A0A0A]">
-      {/* Premium Header */}
-      <PremiumHeader />
-      
-      {/* Premium Hero Section */}
-      <PremiumHero />
+  // DEFAULT VIEW: New streamlined 4-card layout
+  return <div className="min-h-screen bg-background">
+      {/* Advertising Hero - TOP OF DASHBOARD in its own container */}
+      <div className="w-full bg-primary">
+        <div className="w-full">
+          <AdvertisingHero />
+        </div>
+      </div>
 
-      {/* Shop Section */}
-      <ShopSection />
+      {/* Full Screen Empty Div */}
+      <div className="w-full h-[200px] bg-muted flex items-center justify-center">
+        <h2 className="text-2xl font-bold tracking-wide text-foreground">SHOP GLEEWORLD</h2>
+      </div>
 
-      {/* Quick Access Cards */}
-      <QuickAccessSection />
+      {/* Horizontal E-commerce Slider */}
+      <ProductSlider />
 
-      {/* Premium Modules / Tasks */}
-      <PremiumModules />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-4 space-y-6">
+          {/* 4 Fixed Cards - Role-specific content */}
+          <FourCardLayout role={profile.role} isAdmin={profile.is_admin} isSuperAdmin={profile.is_super_admin} />
 
-      {/* Premium Footer */}
-      <PremiumFooter />
+          {/* My Modules (assigned modules based on exec role) */}
+          <MyModules userProfile={{
+          user_id: profile.user_id,
+          role: profile.role,
+          exec_board_role: profile.exec_board_role,
+          is_exec_board: profile.is_exec_board,
+          is_admin: profile.is_admin,
+          is_super_admin: profile.is_super_admin
+        }} />
+        </div>
+      </div>
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
-    </div>
-  );
+    </div>;
 };
