@@ -302,7 +302,7 @@ const Messenger = () => {
 
                 {/* Email Tab */}
                 <TabsContent value="email" className="flex-1 overflow-auto mt-0 data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="flex-1 bg-primary p-4 sm:p-6 space-y-4">
+                  <div className="flex-1 bg-primary p-4 sm:p-6 space-y-4 px-[10px] py-[10px]">
                     {/* Recipients */}
                     <div className="space-y-1">
                       <Label className="text-sm font-medium text-primary-foreground">To:</Label>
