@@ -315,3 +315,6 @@ verify_jwt = false
 
 [functions.fetch-amazon-product]
 verify_jwt = false
+
+[functions.easypost-rates]
+verify_jwt = false
