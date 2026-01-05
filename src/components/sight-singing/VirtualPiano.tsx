@@ -370,16 +370,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           const visibleLeft = container.scrollLeft;
           const visibleRight = visibleLeft + container.clientWidth;
 
-          // Only scroll if the note is truly off-screen
+          // Only scroll if the note is truly off-screen, then center it
           if (noteRightEdge < visibleLeft || noteLeftEdge > visibleRight) {
-            const buffer = keyWithGap * 2;
-            let targetScroll: number;
-            
-            if (noteRightEdge < visibleLeft) {
-              targetScroll = noteLeftEdge - buffer;
-            } else {
-              targetScroll = noteRightEdge - container.clientWidth + buffer;
-            }
+            // Center the note in the viewport
+            const noteCenterX = noteLeftEdge + whiteKeyWidth / 2;
+            const targetScroll = noteCenterX - container.clientWidth / 2;
             
             const maxScroll = container.scrollWidth - container.clientWidth;
             container.scrollTo({
