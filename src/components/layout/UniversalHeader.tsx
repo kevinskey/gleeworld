@@ -190,7 +190,7 @@ export const UniversalHeader = ({
         <header ref={headerRef} className={`w-full shadow-lg relative rounded-b-lg bg-white/80 backdrop-blur-xl text-foreground ${user ? getRoleAccentColor() : 'border-b border-white/20'}`}>
           <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-4 sm:px-6 lg:px-8 mx-0 lg:py-[10px] pt-[10px] pb-[5px]">
           {/* Logo and Navigation */}
-          <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0 pl-4 sm:pl-8 md:pl-[75px] lg:pl-[100px] xl:pl-[200px] pr-4 sm:pr-8 md:pr-[75px] lg:pr-[100px] xl:pr-[200px]">
+          <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0 pl-4 sm:pl-8 md:pl-[10px] lg:pl-[100px] xl:pl-[200px] pr-4 sm:pr-8 md:pr-[10px] lg:pr-[100px] xl:pr-[200px]">
             <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
               <Link to="/" className="flex items-center gap-2 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-card-foreground p-2 sm:p-3">
                 <div className="relative">
@@ -214,7 +214,7 @@ export const UniversalHeader = ({
           </div>
 
           {/* Right side actions - Mobile-optimized icon bar */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 text-spelman-blue-dark pr-4 sm:pr-8 md:pr-[75px] lg:pr-[100px] xl:pr-[200px] lg:gap-[30px]">
+          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 text-spelman-blue-dark pr-4 sm:pr-8 md:pr-[10px] lg:pr-[100px] xl:pr-[200px] lg:gap-[30px]">
             <HeaderRadioControls />
             <div className="hidden sm:block">
               <MusicalToolkit />
