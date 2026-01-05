@@ -115,6 +115,8 @@ export const VideoSessionViewer = ({
           onLeave={handleLeave}
           onChatToggle={() => setShowChat(!showChat)}
           isRecordingEnabled={isRecordingEnabled}
+          userEmail={user?.email}
+          userId={user?.id}
         />
       </div>
 
