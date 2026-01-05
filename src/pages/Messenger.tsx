@@ -267,7 +267,7 @@ const Messenger = () => {
                 </div>
                 <div>
                   <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">GleeWorld Messenger</h1>
-                  <p className="text-xs text-muted-foreground px-0 py-[20px] pb-[15px]">Send branded emails, SMS, and video calls</p>
+                  <p className="text-xs md:text-sm text-muted-foreground px-0 py-[20px] pb-[15px]">Send branded emails, SMS, and video calls</p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2">
