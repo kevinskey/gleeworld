@@ -506,9 +506,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       );
     }
     
-    // Desktop: Full width piano
-    const fullWidth = window.innerWidth - 32; // 16px padding on each side
-    const fullHeight = Math.min(500, window.innerHeight - 100);
+    // Desktop: Full width piano with proper key proportions
+    const fullWidth = window.innerWidth - 32;
+    const fullHeight = Math.min(700, window.innerHeight - 80); // Taller for proper key length
     
     return createPortal(
       <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4" onClick={(e) => {
