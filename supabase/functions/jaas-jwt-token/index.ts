@@ -45,15 +45,22 @@ serve(async (req) => {
 
     console.log('Using appId:', appId, 'keyId:', keyId);
 
-    // Parse PEM private key
-    const pemHeader = "-----BEGIN PRIVATE KEY-----";
-    const pemFooter = "-----END PRIVATE KEY-----";
-    const pemContents = privateKeyPem
-      .replace(pemHeader, "")
-      .replace(pemFooter, "")
-      .replace(/\s/g, "");
+    // Parse PEM private key - handle various formats and newline issues
+    let pemContents = privateKeyPem
+      .replace(/-----BEGIN (RSA )?PRIVATE KEY-----/g, "")
+      .replace(/-----END (RSA )?PRIVATE KEY-----/g, "")
+      .replace(/\\n/g, "") // Handle escaped newlines from env vars
+      .replace(/\s/g, ""); // Remove all whitespace
     
-    const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+    console.log('PEM content length after cleanup:', pemContents.length);
+    
+    let binaryDer: Uint8Array;
+    try {
+      binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
+    } catch (e) {
+      console.error('Base64 decode failed. First 50 chars:', pemContents.substring(0, 50));
+      throw new Error('Failed to decode base64. Ensure the private key PEM is complete and properly formatted.');
+    }
     
     // Import the private key for RS256
     const privateKey = await crypto.subtle.importKey(
