@@ -299,8 +299,8 @@ export const UnifiedDashboard = () => {
   const renderRoleBasedModule = () => {
     const role = profile?.role;
 
-    // Members get Glee Academy
-    if (role === 'member' || role === 'student') {
+    // Students get Glee Academy
+    if (role === 'student') {
       return <Suspense fallback={<div className="h-32 bg-muted animate-pulse rounded-lg" />}>
           <GleeAcademyDashboardCard />
         </Suspense>;

@@ -82,10 +82,13 @@ export const useUserRole = () => {
     return profile.role === 'alumna';
   };
 
-  const isMember = () => {
+  const isStudent = () => {
     if (!profile) return false;
-    return profile.role === 'member';
+    return profile.role === 'student';
   };
+  
+  // Alias for backwards compatibility
+  const isMember = isStudent;
 
   const isAdmin = () => {
     if (!profile) return false;
@@ -127,7 +130,8 @@ export const useUserRole = () => {
     isFan,
     isAuditioner,
     isAlumna,
-    isMember,
+    isStudent,
+    isMember, // Alias for backwards compatibility
     isCourseTA,
   };
 };
