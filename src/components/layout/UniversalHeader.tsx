@@ -346,7 +346,7 @@ export const UniversalHeader = ({
                         </Button>
                       </DropdownMenuTrigger>
                    </EnhancedTooltip>
-                    <DropdownMenuContent className="w-48 py-1 bg-popover text-popover-foreground shadow-2xl border border-border z-[1100]" align="center" sideOffset={8} forceMount>
+                    <DropdownMenuContent className="w-48 py-1 bg-popover text-popover-foreground shadow-2xl border border-border z-[1100]" align="end" sideOffset={8} forceMount>
                       <div className="flex flex-col space-y-1 p-1.5">
                          <p className="text-xs font-medium leading-none truncate">
                            {userProfile?.full_name || user.email}
