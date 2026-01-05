@@ -485,41 +485,24 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       );
     }
     
-    // Desktop: Use portal to render at body level, centered
-    const centerX = Math.max(0, (window.innerWidth - pianoSize.width) / 2);
-    const centerY = Math.max(0, (window.innerHeight - pianoSize.height) / 2);
+    // Desktop: Full width piano
+    const fullWidth = window.innerWidth - 32; // 16px padding on each side
+    const fullHeight = Math.min(500, window.innerHeight - 100);
     
     return createPortal(
-      <div className="fixed inset-0 z-[9999] bg-black/50" onClick={(e) => {
+      <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4" onClick={(e) => {
         // Close when clicking overlay background
         if (e.target === e.currentTarget && onClose) {
           onClose();
         }
       }}>
-        <Rnd 
-          default={{
-            x: centerX,
-            y: centerY,
-            width: pianoSize.width,
-            height: pianoSize.height
-          }}
-          onResizeStop={(e, direction, ref, delta, position) => {
-            setPianoSize({
-              width: parseInt(ref.style.width),
-              height: parseInt(ref.style.height)
-            });
-          }} 
-          minWidth={600} 
-          minHeight={400} 
-          maxWidth={1400} 
-          maxHeight={900} 
-          dragHandleClassName="cursor-move"
-          cancel=".no-drag"
-          className="z-[10000]" 
-          bounds="window"
+        <div 
+          className="bg-background rounded-lg shadow-2xl overflow-hidden"
+          style={{ width: fullWidth, height: fullHeight }}
+          onClick={(e) => e.stopPropagation()}
         >
           {pianoContent}
-        </Rnd>
+        </div>
       </div>,
       document.body
     );
