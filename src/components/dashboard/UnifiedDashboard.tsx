@@ -19,6 +19,7 @@ import { PollReminderPopup } from '@/components/polls/PollReminderPopup';
 import { MyModules } from './MyModules';
 import { supabase } from '@/integrations/supabase/client';
 import { AdvertisingHero } from '@/components/hero/AdvertisingHero';
+import { FourCardLayout } from './FourCardLayout';
 
 // Lazy load heavy components
 const MemberNavigation = lazy(() => import('@/components/member/MemberNavigation').then(m => ({
@@ -329,30 +330,35 @@ export const UnifiedDashboard = () => {
       </Suspense>;
   };
 
-  // DEFAULT VIEW: New streamlined structure
-  // Note: padding-top is handled by UniversalLayout wrapper, not here
-  return <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-0">
+  // DEFAULT VIEW: New streamlined 4-card layout
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6">
         {/* Advertising Hero - TOP OF DASHBOARD */}
         <AdvertisingHero />
 
-        <div className="py-4 space-y-4">
-          {/* Section 1: Role-Based Module */}
-          {renderRoleBasedModule()}
+        <div className="py-4 space-y-6">
+          {/* 4 Fixed Cards - Role-specific content */}
+          <FourCardLayout 
+            role={profile.role}
+            isAdmin={profile.is_admin}
+            isSuperAdmin={profile.is_super_admin}
+          />
 
-          {/* Section 2: My Modules (assigned modules based on exec role) */}
+          {/* My Modules (assigned modules based on exec role) */}
           <MyModules userProfile={{
-          user_id: profile.user_id,
-          role: profile.role,
-          exec_board_role: profile.exec_board_role,
-          is_exec_board: profile.is_exec_board,
-          is_admin: profile.is_admin,
-          is_super_admin: profile.is_super_admin
-        }} />
+            user_id: profile.user_id,
+            role: profile.role,
+            exec_board_role: profile.exec_board_role,
+            is_exec_board: profile.is_exec_board,
+            is_admin: profile.is_admin,
+            is_super_admin: profile.is_super_admin
+          }} />
         </div>
       </div>
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
-    </div>;
+    </div>
+  );
 };
