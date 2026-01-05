@@ -340,8 +340,11 @@ export const UnifiedDashboard = () => {
         </div>
       </div>
 
+      {/* Full Screen Empty Div */}
+      <div className="w-full h-screen" />
+
       {/* Horizontal E-commerce Slider */}
-      <ProductSlider className="pt-[20px] bg-[spelman-blue-light]" />
+      <ProductSlider />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-4 space-y-6">
