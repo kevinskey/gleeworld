@@ -30,9 +30,10 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Use free public Jitsi Meet server - no login required
-  const jitsiDomain = 'meet.jit.si';
-  const jitsiRoom = `GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
+  // Use JaaS (8x8) - designed for embedding, allows guest access
+  const jitsiDomain = '8x8.vc';
+  const jaasAppId = 'vpaas-magic-cookie-ef5ce88c13234a12b9ddc05a7b79d1c1';
+  const jitsiRoom = `${jaasAppId}/GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
 
   useEffect(() => {
     let mounted = true;
@@ -44,9 +45,9 @@ export const JitsiMeetRoom = ({
         return;
       }
 
-      // Load the Jitsi Meet External API script
+      // Load the JaaS External API script
       const script = document.createElement('script');
-      script.src = 'https://meet.jit.si/external_api.js';
+      script.src = 'https://8x8.vc/external_api.js';
       script.async = true;
       
       script.onload = () => {
