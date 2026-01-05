@@ -276,8 +276,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     return () => window.clearTimeout(timer);
   }, [startOctave, scrollToOctave]);
 
-  const playNote = useCallback((noteName: string, frequency: number) => {
-    console.log('🎹 Playing note:', noteName, 'at frequency:', frequency.toFixed(2), 'Hz');
+  const playNote = useCallback((noteName: string, frequency: number, velocity: number = 100) => {
+    console.log('🎹 Playing note:', noteName, 'at frequency:', frequency.toFixed(2), 'Hz', 'velocity:', velocity);
     
     // CRITICAL: All audio operations must be synchronous within user gesture for iOS
     // Force unlock first - this plays a silent buffer synchronously
@@ -300,9 +300,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       setSynthReady(true);
     }
     
-    // Play the note immediately (synchronous)
+    // Play the note immediately with velocity (synchronous)
     try {
-      synthRef.current.playNote(noteName, frequency);
+      synthRef.current.playNote(noteName, frequency, velocity);
       setActiveNotes(prev => new Set(prev).add(noteName));
       if (!audioUnlocked) setAudioUnlocked(true);
     } catch (error) {
@@ -380,7 +380,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         
         // Auto-scroll removed - keyboard stays in place, user scrolls manually or uses octave selector
         
-        playNote(name, frequency);
+        playNote(name, frequency, velocity);
       } else if (command === 128 || (command === 144 && velocity === 0)) {
         // Note Off
         const { name } = midiNoteToName(note);

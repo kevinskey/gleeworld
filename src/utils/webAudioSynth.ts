@@ -460,8 +460,11 @@ export class WebAudioSynth {
     this.masterVolume = Math.max(0, Math.min(1, volume));
   }
 
-  playNote(noteName: string, frequency: number): void {
+  playNote(noteName: string, frequency: number, velocity: number = 100): void {
     if (this.activeNotes.has(noteName)) return;
+    
+    // Normalize velocity (0-127) to a volume multiplier (0-1)
+    const velocityMultiplier = Math.max(0.1, Math.min(1, velocity / 127));
 
     // Resume synchronously if needed - fire and forget, no await
     if (this.audioContext.state === 'suspended') {
@@ -611,8 +614,8 @@ export class WebAudioSynth {
     // Apply ADSR envelope with smooth curves
     const attackTime = instrument.attack;
     const decayTime = instrument.decay;
-    const sustainLevel = instrument.sustain * this.masterVolume;
-    const peakLevel = this.masterVolume * 1.1; // Slight overshoot for punch
+    const sustainLevel = instrument.sustain * this.masterVolume * velocityMultiplier;
+    const peakLevel = this.masterVolume * velocityMultiplier * 1.1; // Slight overshoot for punch
 
     gainNode.gain.setValueAtTime(0, now);
     gainNode.gain.linearRampToValueAtTime(peakLevel, now + attackTime);
