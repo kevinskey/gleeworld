@@ -18,10 +18,9 @@ serve(async (req) => {
     console.log('Generating JaaS JWT for room:', roomName, 'user:', userName);
 
     const privateKeyPem = Deno.env.get('JAAS_PRIVATE_KEY');
-    const appIdRaw = Deno.env.get('JAAS_APP_ID') || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9';
-    // Some setups accidentally store "{appId}/{keyId}" in JAAS_APP_ID.
-    // JaaS expects appId to be ONLY the vpaas-magic-cookie-* value.
-    const appId = appIdRaw.split('/')[0].trim();
+    // JAAS_APP_ID should be just the vpaas-magic-cookie-* value
+    const appId = Deno.env.get('JAAS_APP_ID') || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9';
+    // JAAS_KEY_ID should be your tenant/key path like "fcc211/YOUR_API_KEY_ID"
     const keyId = Deno.env.get('JAAS_KEY_ID');
 
     if (!privateKeyPem) {
@@ -31,6 +30,8 @@ serve(async (req) => {
     if (!keyId) {
       throw new Error('JAAS_KEY_ID not configured');
     }
+    
+    console.log('Using appId:', appId, 'keyId:', keyId);
 
     // Parse PEM private key
     const pemHeader = "-----BEGIN PRIVATE KEY-----";
