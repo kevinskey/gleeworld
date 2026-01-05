@@ -356,57 +356,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         const { name, frequency } = midiNoteToName(note);
         console.log('🎹 MIDI Note On:', name, 'velocity:', velocity);
         
-        // Smart scroll: only scroll if the played note is completely off-screen
-        if (keysContainerRef.current) {
-          const container = keysContainerRef.current;
-          const gap = 2;
-          const baseWhiteKeyWidth = isMobile ? 50 : 69;
-          const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : baseWhiteKeyWidth;
-          const keyWithGap = whiteKeyWidth + gap;
-
-          // Calculate position for this MIDI note (A0 = MIDI 21)
-          const noteInOctave = (note - 21) % 12;
-          const octaveFromA0 = Math.floor((note - 21) / 12);
-          const whiteKeyMap = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6];
-          const whiteKeysBeforeNote = octaveFromA0 * 7 + whiteKeyMap[noteInOctave];
-
-          const noteLeftEdge = whiteKeysBeforeNote * keyWithGap;
-          const noteRightEdge = noteLeftEdge + whiteKeyWidth;
-
-          const visibleLeft = container.scrollLeft;
-          const visibleRight = visibleLeft + container.clientWidth;
-
-          // Only scroll if the note is truly off-screen, then center it.
-          // Guard against repeated notes during smooth scrolling.
-          const isOffscreen = noteRightEdge < visibleLeft || noteLeftEdge > visibleRight;
-          if (isOffscreen) {
-            const state = autoScrollStateRef.current;
-
-            // If we're already auto-scrolling to this same note, don't retrigger.
-            if (state.isAutoScrolling && state.lastNote === name) {
-              // no-op
-            } else {
-              // Center the note in the viewport
-              const noteCenterX = noteLeftEdge + whiteKeyWidth / 2;
-              const targetScroll = noteCenterX - container.clientWidth / 2;
-
-              const maxScroll = container.scrollWidth - container.clientWidth;
-              container.scrollTo({
-                left: Math.max(0, Math.min(maxScroll, targetScroll)),
-                behavior: 'smooth',
-              });
-
-              // Lock scrolling briefly so repeated hits don't cause the keyboard to "hunt"
-              if (state.unlockTimer) window.clearTimeout(state.unlockTimer);
-              state.isAutoScrolling = true;
-              state.lastNote = name;
-              state.unlockTimer = window.setTimeout(() => {
-                autoScrollStateRef.current.isAutoScrolling = false;
-                autoScrollStateRef.current.unlockTimer = null;
-              }, 350);
-            }
-          }
-        }
+        // Auto-scroll removed - keyboard stays in place, user scrolls manually or uses octave selector
         
         playNote(name, frequency);
       } else if (command === 128 || (command === 144 && velocity === 0)) {
