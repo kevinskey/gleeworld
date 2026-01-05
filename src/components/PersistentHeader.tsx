@@ -60,7 +60,7 @@ export const PersistentHeader = ({ activeTab, onTabChange, onToggleMessages, sho
             
             {/* Branding Text */}
             <div className="flex flex-col">
-              <h1 className="text-base md:text-lg font-bold text-foreground">GleeWorld</h1>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground">GleeWorld</h1>
               <p className="text-xs text-muted-foreground hidden sm:block">Spelman College Glee Club</p>
             </div>
           </div>
