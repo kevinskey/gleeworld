@@ -189,11 +189,11 @@ export const UniversalHeader = ({
     <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none">
       <div className="w-full max-w-7xl lg:max-w-full mx-auto pointer-events-auto py-0 bg-primary-foreground">
         <header ref={headerRef} className={`w-full shadow-lg relative rounded-b-lg bg-white/80 backdrop-blur-xl text-foreground ${user ? getRoleAccentColor() : 'border-b border-white/20'}`}>
-          <div className="flex items-center justify-between w-full min-h-12 sm:min-h-14 md:min-h-16 py-2 px-2 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between w-full min-h-10 sm:min-h-11 md:min-h-12 py-1 px-2 sm:px-4 md:px-6 lg:px-8">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0">
             <EnhancedTooltip content="Go to GleeWorld Home" disabled={isMobile || location.pathname === '/admin'} className="z-10">
-              <Link to="/" className="flex items-center gap-2 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-card-foreground p-2 sm:p-3">
+              <Link to="/" className="flex items-center gap-2 hover:scale-105 transition-transform duration-200 relative flex-shrink-0 text-card-foreground p-1 sm:p-1.5">
                 <div className="relative">
                   <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-14 h-14 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain flex-shrink-0 drop-shadow-md" />
                 </div>
