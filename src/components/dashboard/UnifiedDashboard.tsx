@@ -332,12 +332,14 @@ export const UnifiedDashboard = () => {
 
   // DEFAULT VIEW: New streamlined 4-card layout
   return <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-0">
-        {/* Advertising Hero - TOP OF DASHBOARD */}
-        <div className="bg-primary rounded-xl">
+      {/* Advertising Hero - TOP OF DASHBOARD in its own container */}
+      <div className="w-full bg-primary">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <AdvertisingHero />
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-4 space-y-6">
           {/* 4 Fixed Cards - Role-specific content */}
           <FourCardLayout role={profile.role} isAdmin={profile.is_admin} isSuperAdmin={profile.is_super_admin} />
