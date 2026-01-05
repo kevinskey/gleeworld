@@ -30,8 +30,9 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Use meet.jit.si which is allowed by CSP
-  const jitsiRoom = `GleeWorld-${roomName}`;
+  // Use 8x8.vc which doesn't require moderator authentication for embedded use
+  const jitsiDomain = '8x8.vc';
+  const jitsiRoom = `vpaas-magic-cookie-public/GleeWorld-${roomName}`;
 
   useEffect(() => {
     let mounted = true;
@@ -43,9 +44,9 @@ export const JitsiMeetRoom = ({
         return;
       }
 
-      // Load the Jitsi External API script from meet.jit.si
+      // Load the Jitsi External API script from 8x8.vc
       const script = document.createElement('script');
-      script.src = 'https://meet.jit.si/external_api.js';
+      script.src = 'https://8x8.vc/vpaas-magic-cookie-public/external_api.js';
       script.async = true;
       
       script.onload = () => {
@@ -71,7 +72,7 @@ export const JitsiMeetRoom = ({
       if (!containerRef.current || !mounted) return;
 
       try {
-        apiRef.current = new window.JitsiMeetExternalAPI('meet.jit.si', {
+        apiRef.current = new window.JitsiMeetExternalAPI(jitsiDomain, {
           roomName: jitsiRoom,
           parentNode: containerRef.current,
           userInfo: {
