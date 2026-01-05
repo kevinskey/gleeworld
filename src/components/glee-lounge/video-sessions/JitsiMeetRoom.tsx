@@ -84,7 +84,15 @@ export const JitsiMeetRoom = ({
             disableDeepLinking: true,
             enableWelcomePage: false,
             enableClosePage: false,
-            disableInviteFunctions: true
+            disableInviteFunctions: true,
+            // Skip moderator login requirements
+            enableLobby: false,
+            hideLobbyButton: true,
+            requireDisplayName: false,
+            enableInsecureRoomNameWarning: false,
+            disableModeratorIndicator: false,
+            enableUserRolesBasedOnToken: false,
+            enableFeaturesBasedOnToken: false
           },
           interfaceConfigOverwrite: {
             SHOW_JITSI_WATERMARK: false,
