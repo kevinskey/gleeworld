@@ -45,20 +45,30 @@ serve(async (req) => {
 
     console.log('Using appId:', appId, 'keyId:', keyId);
 
-    // Parse PEM private key - handle various formats and newline issues
-    let pemContents = privateKeyPem
-      .replace(/-----BEGIN (RSA )?PRIVATE KEY-----/g, "")
-      .replace(/-----END (RSA )?PRIVATE KEY-----/g, "")
-      .replace(/\\n/g, "") // Handle escaped newlines from env vars
-      .replace(/\s/g, ""); // Remove all whitespace
-    
-    console.log('PEM content length after cleanup:', pemContents.length);
-    
+    // Parse PEM private key - be tolerant of common env var formatting issues
+    // (wrapped quotes, escaped newlines, extra whitespace, etc.)
+    const pemRaw = (privateKeyPem || "").trim().replace(/^['"]|['"]$/g, "");
+
+    // Extract the base64 body from a PEM block if headers are present
+    const pemMatch = pemRaw.match(
+      /-----BEGIN (?:RSA )?PRIVATE KEY-----([\s\S]*?)-----END (?:RSA )?PRIVATE KEY-----/,
+    );
+
+    // Normalize escaped newlines ("\\n") to real newlines before stripping
+    const maybeBody = (pemMatch ? pemMatch[1] : pemRaw)
+      .replace(/\\r/g, "\r")
+      .replace(/\\n/g, "\n");
+
+    // Keep only valid base64 characters
+    const base64Body = maybeBody.replace(/[^A-Za-z0-9+/=]/g, "");
+
+    console.log('PEM base64 length after cleanup:', base64Body.length);
+
     let binaryDer: Uint8Array;
     try {
-      binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0));
-    } catch (e) {
-      console.error('Base64 decode failed. First 50 chars:', pemContents.substring(0, 50));
+      binaryDer = Uint8Array.from(atob(base64Body), c => c.charCodeAt(0));
+    } catch (_e) {
+      // Don't log the key; just surface a helpful error.
       throw new Error('Failed to decode base64. Ensure the private key PEM is complete and properly formatted.');
     }
     
