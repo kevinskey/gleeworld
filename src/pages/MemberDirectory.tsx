@@ -32,7 +32,7 @@ const MemberDirectory = () => {
         return 'bg-red-100 text-red-800';
       case 'executive':
         return 'bg-purple-100 text-purple-800';
-      case 'member':
+      case 'student':
         return 'bg-blue-100 text-blue-800';
       case 'alumna':
         return 'bg-green-100 text-green-800';
@@ -98,7 +98,7 @@ const MemberDirectory = () => {
                 className="px-3 py-2 border rounded-md"
               >
                 <option value="all">All Roles</option>
-                <option value="member">Members</option>
+                <option value="student">Students</option>
                 <option value="alumna">Alumnae</option>
                 <option value="executive">Executive Board</option>
                 <option value="admin">Administrators</option>

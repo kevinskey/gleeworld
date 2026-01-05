@@ -185,9 +185,9 @@ export const useSimplifiedModuleAccess = (userId?: string) => {
             };
           }
 
-          // Standard members get essential member modules (hardcoded access)
+          // Students get essential student modules (hardcoded access)
           const essentialModules = ['community-hub', 'music-library', 'calendar', 'attendance', 'member-sight-reading-studio'];
-          if (profile?.role === 'member' && essentialModules.includes(module.id)) {
+          if (profile?.role === 'student' && essentialModules.includes(module.id)) {
             return {
               moduleId: module.id,
               hasAccess: true,

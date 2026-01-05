@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
               user_id: userId,
               email: assignment.email,
               full_name: assignment.full_name,
-              role: 'member',
+              role: 'student',
               exec_board_role: assignment.role,
               is_exec_board: true,
               is_admin: assignment.role === 'president',

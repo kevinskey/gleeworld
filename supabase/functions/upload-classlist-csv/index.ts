@@ -198,7 +198,7 @@ serve(async (req) => {
               student_id: student.studentId,
               full_name: student.name,
               academic_year: student.classYear,
-              role: 'member',
+              role: 'student',
               status: 'active'
             })
             .select('user_id')

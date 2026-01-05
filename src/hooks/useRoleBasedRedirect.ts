@@ -185,9 +185,9 @@ export const useRoleBasedRedirect = () => {
         return;
       }
       
-      // PRIORITY 6: Regular Members -> simplified Member Dashboard
-      if (userProfile.role === 'member') {
-        console.log('👤 useRoleBasedRedirect: Member redirect to unified dashboard');
+      // PRIORITY 6: Students -> simplified Student Dashboard
+      if (userProfile.role === 'student') {
+        console.log('👤 useRoleBasedRedirect: Student redirect to unified dashboard');
         navigate('/dashboard', { replace: true });
         return;
       }

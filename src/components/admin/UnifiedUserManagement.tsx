@@ -265,7 +265,7 @@ export const UnifiedUserManagement = () => {
       case 'super-admin': return 'bg-red-500/20 text-red-600';
       case 'admin': return 'bg-purple-500/20 text-purple-600';
       case 'executive': return 'bg-blue-500/20 text-blue-600';
-      case 'member': return 'bg-green-500/20 text-green-600';
+      case 'student': return 'bg-green-500/20 text-green-600';
       case 'alumna': return 'bg-gold-500/20 text-gold-600';
       case 'fan': return 'bg-gray-500/20 text-gray-600';
       case 'student': return 'bg-blue-500/20 text-blue-600';
@@ -279,7 +279,7 @@ export const UnifiedUserManagement = () => {
       case 'super-admin': return <Crown className="h-4 w-4" />;
       case 'admin': return <Shield className="h-4 w-4" />;
       case 'executive': return <UserCog className="h-4 w-4" />;
-      case 'member': return <User className="h-4 w-4" />;
+      case 'student': return <User className="h-4 w-4" />;
       case 'alumna': return <UserCheck className="h-4 w-4" />;
       case 'fan': return <UserX className="h-4 w-4" />;
       case 'student': return <User className="h-4 w-4" />;
@@ -369,7 +369,7 @@ export const UnifiedUserManagement = () => {
   const userStats = {
     total: users.length,
     admins: users.filter(u => u.role === 'admin' || u.role === 'super-admin').length,
-    members: users.filter(u => u.role === 'member').length,
+    students: users.filter(u => u.role === 'student').length,
     executives: users.filter(u => u.role === 'executive' || u.is_exec_board).length,
     vips: users.filter(u => u.role === 'vip').length,
     alumnae: users.filter(u => u.role === 'alumna').length,
@@ -426,11 +426,11 @@ export const UnifiedUserManagement = () => {
             
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2">
-                <CardTitle className="text-xs sm:text-sm font-medium">Members</CardTitle>
+                <CardTitle className="text-xs sm:text-sm font-medium">Students</CardTitle>
                 <User className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent className="pt-0">
-                <div className="text-lg sm:text-2xl font-bold">{userStats.members}</div>
+                <div className="text-lg sm:text-2xl font-bold">{userStats.students}</div>
               </CardContent>
             </Card>
             
