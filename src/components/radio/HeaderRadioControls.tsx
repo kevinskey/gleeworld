@@ -160,7 +160,7 @@ export const HeaderRadioControls = () => {
               <div className="max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8">
                 <div
                   ref={radioBarRef}
-                  className="bg-popover border-b-2 border-primary/40 shadow-lg rounded-b-lg px-2 sm:px-4 md:px-6 lg:px-8 py-1.5 relative"
+                  className="bg-popover border-b-2 border-primary/40 shadow-lg rounded-b-lg px-2 sm:px-4 md:px-6 lg:px-8 pt-1.5 pb-4 relative"
                 >
                 {/* Close Button - Top Right */}
                 <Button
