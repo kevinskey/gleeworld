@@ -334,7 +334,7 @@ export const UnifiedDashboard = () => {
   return <div className="min-h-screen bg-background">
       {/* Advertising Hero - TOP OF DASHBOARD in its own container */}
       <div className="w-full bg-primary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full">
           <AdvertisingHero />
         </div>
       </div>
