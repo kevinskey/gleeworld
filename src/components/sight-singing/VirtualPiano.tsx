@@ -102,17 +102,36 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [synthReady, setSynthReady] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [dynamicKeyWidth, setDynamicKeyWidth] = useState<number | null>(null);
   const keysContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const synthRef = useRef<WebAudioSynth | null>(null);
 
-  // Detect mobile on mount and resize
+  // Detect mobile on mount and resize, calculate dynamic key width for fullscreen
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const calculateKeyWidth = () => {
+      if (onClose && !isMobile) {
+        // Full piano has 52 white keys, calculate width to fit viewport
+        const availableWidth = window.innerWidth - 48; // padding
+        const numWhiteKeys = 52;
+        const gap = 2; // gap between keys
+        const totalGaps = (numWhiteKeys - 1) * gap;
+        const keyWidth = Math.floor((availableWidth - totalGaps) / numWhiteKeys);
+        setDynamicKeyWidth(Math.max(30, Math.min(keyWidth, 80))); // clamp between 30-80px
+      }
+    };
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+    calculateKeyWidth();
+    window.addEventListener('resize', () => {
+      checkMobile();
+      calculateKeyWidth();
+    });
+    return () => window.removeEventListener('resize', () => {
+      checkMobile();
+      calculateKeyWidth();
+    });
+  }, [onClose, isMobile]);
 
   // Setup mobile audio unlock on mount
   useEffect(() => {
@@ -384,19 +403,19 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         </div>
       </div>
 
-      {/* Piano Keyboard Area - Scrollable */}
+      {/* Piano Keyboard Area - Scrollable only when not fullscreen with dynamic sizing */}
       <div ref={keysContainerRef} style={{
       scrollbarWidth: 'thin',
       scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))'
-    }} className="flex-1 overflow-x-auto overflow-y-hidden">
-        <div className="relative inline-block px-2 min-w-max mx-0 sm:px-0 py-0">
+    }} className={`flex-1 ${isFullScreen && dynamicKeyWidth ? 'overflow-hidden' : 'overflow-x-auto'} overflow-y-hidden`}>
+        <div className={`relative ${isFullScreen && dynamicKeyWidth ? 'w-full flex justify-center' : 'inline-block min-w-max'} px-2 mx-0 sm:px-0 py-0`}>
           {/* White Keys */}
           <div className="relative">
             <div className={isFullScreen ? "flex gap-0.5 h-[200px] sm:h-[320px] md:h-[400px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
               {whiteKeys.map((key, index) => {
               const keyName = `${key.note}${key.octave}`;
               const isActive = activeNotes.has(keyName);
-              const whiteKeyWidth = isMobile ? 50 : 69;
+              const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69);
               return <button key={keyName} style={{
                 width: `${whiteKeyWidth}px`,
                 minWidth: `${whiteKeyWidth}px`,
@@ -429,8 +448,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 {blackKeys.map(key => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
-                const whiteKeyWidth = isMobile ? 50 : 69;
-                const blackKeyWidth = isMobile ? 34 : 46;
+                const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69);
+                const blackKeyWidth = Math.floor(whiteKeyWidth * 0.65);
                 const gap = 2; // gap-0.5 = 0.125rem ≈ 2px
                 // Position accounts for key width + gap between keys
                 const leftPosition = key.position * (whiteKeyWidth + gap) - blackKeyWidth / 2;
