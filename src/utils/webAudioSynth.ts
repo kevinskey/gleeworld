@@ -53,7 +53,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterFrequency: 6000,
     filterQ: 0.7,
     filterEnvelope: 3000,
-    reverbMix: 0.02,
+    reverbMix: 0.01,
   },
   {
     id: 1,
@@ -72,7 +72,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterFrequency: 8000,
     filterQ: 0.5,
     filterEnvelope: 2000,
-    reverbMix: 0.05,
+    reverbMix: 0.02,
   },
   {
     id: 2,
@@ -88,7 +88,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     sustain: 0.15,
     release: 0.5,
     tremoloRate: 4.5,
-    reverbMix: 0.1,
+    reverbMix: 0.04,
   },
   {
     id: 3,
@@ -103,7 +103,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     decay: 0.2,
     sustain: 0.25,
     release: 0.3,
-    reverbMix: 0.05,
+    reverbMix: 0.02,
     chorusDepth: 8,
   },
   // Organ sounds
@@ -121,7 +121,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     sustain: 0.9,
     release: 0.05,
     tremoloRate: 6.5,
-    reverbMix: 0.1,
+    reverbMix: 0.04,
     chorusDepth: 3,
   },
   {
@@ -137,7 +137,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     decay: 0.1,
     sustain: 0.85,
     release: 0.15,
-    reverbMix: 0.15,
+    reverbMix: 0.06,
   },
   // Strings
   {
@@ -159,7 +159,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterEnvelope: 1500,
     vibratoRate: 5.5,
     vibratoDepth: 6,
-    reverbMix: 0.12,
+    reverbMix: 0.05,
     chorusDepth: 6,
   },
   {
@@ -177,7 +177,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterQ: 1.5,
     vibratoRate: 6,
     vibratoDepth: 10,
-    reverbMix: 0.08,
+    reverbMix: 0.03,
   },
   // Brass
   {
@@ -197,7 +197,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterFrequency: 1500,
     filterQ: 2.5,
     filterEnvelope: 3000,
-    reverbMix: 0.08,
+    reverbMix: 0.03,
   },
   {
     id: 9,
@@ -215,7 +215,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterEnvelope: 4000,
     vibratoRate: 5,
     vibratoDepth: 5,
-    reverbMix: 0.06,
+    reverbMix: 0.02,
   },
   // Woodwinds
   {
@@ -233,7 +233,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     release: 0.1,
     vibratoRate: 5,
     vibratoDepth: 8,
-    reverbMix: 0.1,
+    reverbMix: 0.04,
   },
   {
     id: 11,
@@ -250,7 +250,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterQ: 1.2,
     vibratoRate: 4.5,
     vibratoDepth: 4,
-    reverbMix: 0.08,
+    reverbMix: 0.03,
   },
   // Synth leads
   {
@@ -270,7 +270,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterFrequency: 3000,
     filterQ: 4,
     filterEnvelope: 4000,
-    reverbMix: 0.06,
+    reverbMix: 0.02,
     chorusDepth: 5,
   },
   {
@@ -286,7 +286,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterType: 'lowpass',
     filterFrequency: 4000,
     filterQ: 2,
-    reverbMix: 0.05,
+    reverbMix: 0.02,
   },
   // Pads - slightly longer but not excessive
   {
@@ -307,7 +307,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterQ: 0.5,
     filterEnvelope: 1000,
     tremoloRate: 2.5,
-    reverbMix: 0.15,
+    reverbMix: 0.06,
     chorusDepth: 8,
   },
   {
@@ -326,7 +326,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterType: 'lowpass',
     filterFrequency: 1800,
     filterQ: 0.8,
-    reverbMix: 0.15,
+    reverbMix: 0.06,
     chorusDepth: 10,
   },
   // Bells/Mallet
@@ -343,7 +343,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     decay: 0.5,
     sustain: 0.05,
     release: 0.8,
-    reverbMix: 0.12,
+    reverbMix: 0.05,
   },
   {
     id: 17,
@@ -356,7 +356,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     sustain: 0.1,
     release: 0.5,
     tremoloRate: 5.5,
-    reverbMix: 0.1,
+    reverbMix: 0.04,
   },
   // Bass
   {
@@ -376,7 +376,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterFrequency: 800,
     filterQ: 5,
     filterEnvelope: 2500,
-    reverbMix: 0.03,
+    reverbMix: 0.01,
   },
   {
     id: 19,
@@ -391,7 +391,7 @@ export const SYNTH_INSTRUMENTS: InstrumentConfig[] = [
     filterType: 'lowpass',
     filterFrequency: 1500,
     filterQ: 2,
-    reverbMix: 0.03,
+    reverbMix: 0.01,
   },
 ];
 
