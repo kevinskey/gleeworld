@@ -17,6 +17,8 @@ serve(async (req) => {
     
     console.log('Generating JaaS JWT for room:', roomName, 'user:', userName);
 
+    const privateKeyPem = Deno.env.get('JAAS_PRIVATE_KEY');
+
     // JAAS_APP_ID should be the full vpaas app id, typically: "vpaas-magic-cookie-<tenant>"
     const appId = (Deno.env.get('JAAS_APP_ID') || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9')
       .trim()
