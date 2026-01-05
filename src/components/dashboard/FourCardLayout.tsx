@@ -19,7 +19,6 @@ export const FourCardLayout = ({ role, isAdmin, isSuperAdmin }: FourCardLayoutPr
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {showAdminCard && <AdminToolsCard />}
       {showStudentCard && <StudentCoursesCard />}
       {showAlumniCard && <AlumniMemoriesCard />}
       {showFanCard && <FanFeaturesCard />}
