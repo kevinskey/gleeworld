@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessenger } from "@/contexts/MessengerContext";
+
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import { AppNavigation } from "@/components/navigation/AppNavigation";
@@ -40,10 +40,6 @@ export const UniversalHeader = ({
     user,
     signOut
   } = useAuth();
-  const {
-    toggleMessenger,
-    isOpen: isMessengerOpen
-  } = useMessenger();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const location = useLocation();
@@ -211,9 +207,9 @@ export const UniversalHeader = ({
               <MusicalToolkit />
             </div>
             
-            {/* Email/SMS Messenger Toggle - Available to all authenticated users */}
-            {user && <EnhancedTooltip content={isMessengerOpen ? "Close Messenger" : "Send Email/SMS"}>
-                <Button variant="ghost" size="sm" onClick={toggleMessenger} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector} ${isMessengerOpen ? 'bg-gray-100' : ''}`} type="button">
+            {/* Email/SMS Messenger - Navigate to full page */}
+            {user && <EnhancedTooltip content="Send Email/SMS">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/messenger')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
                   <Mail className={HEADER_ICON_SIZES.icon} />
                 </Button>
               </EnhancedTooltip>}
