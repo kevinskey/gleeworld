@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { PhoneOff, MessageSquare, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface JitsiMeetRoomProps {
   roomName: string;
@@ -9,6 +10,8 @@ interface JitsiMeetRoomProps {
   onLeave: () => void;
   onChatToggle?: () => void;
   isRecordingEnabled?: boolean;
+  userEmail?: string;
+  userId?: string;
 }
 
 declare global {
@@ -22,7 +25,9 @@ export const JitsiMeetRoom = ({
   displayName,
   onLeave,
   onChatToggle,
-  isRecordingEnabled = false
+  isRecordingEnabled = false,
+  userEmail,
+  userId
 }: JitsiMeetRoomProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,53 +35,84 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Jitsi domain (fallback to public instance if custom domain isn't configured)
-  const jitsiDomain = import.meta.env.VITE_JITSI_DOMAIN || 'meet.jit.si';
+  // Use 8x8 JaaS domain
+  const jitsiDomain = '8x8.vc';
   const jitsiRoom = `GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
   const jitsiScriptSrc = `https://${jitsiDomain}/external_api.js`;
 
   useEffect(() => {
     let mounted = true;
 
-    const loadJitsiAPI = async () => {
-      // Check if already loaded
-      if (window.JitsiMeetExternalAPI) {
-        initializeJitsi();
-        return;
-      }
+    const fetchJwtAndInitialize = async () => {
+      try {
+        // First, get JWT token from edge function
+        console.log('Fetching JaaS JWT token...');
+        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('jaas-jwt-token', {
+          body: {
+            roomName: jitsiRoom,
+            userName: displayName,
+            userEmail: userEmail,
+            userId: userId,
+            isModerator: true
+          }
+        });
 
-      // Load the Jitsi External API script
-      const script = document.createElement('script');
-      script.src = jitsiScriptSrc;
-      script.async = true;
-      
-      script.onload = () => {
-        if (mounted && window.JitsiMeetExternalAPI) {
-          initializeJitsi();
-        } else if (mounted) {
-          setError('Failed to initialize video API');
-          setIsLoading(false);
+        if (tokenError) {
+          console.error('Error fetching JWT:', tokenError);
+          // Continue without JWT - will use public mode
         }
-      };
-      
-      script.onerror = () => {
+
+        const jwt = tokenData?.token;
+        const appId = tokenData?.appId || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9';
+        
+        console.log('JWT fetched:', jwt ? 'success' : 'failed, using public mode');
+
+        // Load Jitsi API script
+        if (!window.JitsiMeetExternalAPI) {
+          await loadJitsiScript();
+        }
+
+        if (!mounted) return;
+        
+        initializeJitsi(jwt, appId);
+      } catch (err) {
+        console.error('Error in fetchJwtAndInitialize:', err);
         if (mounted) {
-          setError('Failed to load video conferencing');
+          setError('Failed to initialize video session');
           setIsLoading(false);
         }
-      };
-
-      document.head.appendChild(script);
+      }
     };
 
-    const initializeJitsi = () => {
+    const loadJitsiScript = (): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = jitsiScriptSrc;
+        script.async = true;
+        
+        script.onload = () => {
+          if (window.JitsiMeetExternalAPI) {
+            resolve();
+          } else {
+            reject(new Error('JitsiMeetExternalAPI not available'));
+          }
+        };
+        
+        script.onerror = () => reject(new Error('Failed to load Jitsi script'));
+        document.head.appendChild(script);
+      });
+    };
+
+    const initializeJitsi = (jwt: string | null, appId: string) => {
       if (!containerRef.current || !mounted) return;
 
       try {
-        console.log('Initializing Jitsi with room:', jitsiRoom);
+        // For JaaS, room name format is: [appId]/[roomName]
+        const fullRoomName = jwt ? `${appId}/${jitsiRoom}` : jitsiRoom;
+        console.log('Initializing Jitsi with room:', fullRoomName, 'JWT:', jwt ? 'present' : 'none');
         
-        apiRef.current = new window.JitsiMeetExternalAPI(jitsiDomain, {
-          roomName: jitsiRoom,
+        const options: any = {
+          roomName: fullRoomName,
           parentNode: containerRef.current,
           width: '100%',
           height: '100%',
@@ -95,16 +131,13 @@ export const JitsiMeetRoom = ({
             hideLobbyButton: true,
             requireDisplayName: false,
             enableInsecureRoomNameWarning: false,
-            // Disable lobby/waiting room so members can join directly
             lobby: { enabled: false },
             disableLobby: true,
             membersOnly: false,
             p2p: { enabled: true },
             testing: { p2pTestMode: false },
-            // Allow anyone to start the meeting without waiting for moderator
             startAudioOnly: false,
             enableNoisyMicDetection: false,
-            // These settings help bypass the "waiting for moderator" issue on public Jitsi
             openBridgeChannel: 'websocket',
             channelLastN: -1
           },
@@ -116,7 +149,14 @@ export const JitsiMeetRoom = ({
             TOOLBAR_ALWAYS_VISIBLE: true,
             DISABLE_JOIN_LEAVE_NOTIFICATIONS: true
           }
-        });
+        };
+
+        // Add JWT if available
+        if (jwt) {
+          options.jwt = jwt;
+        }
+        
+        apiRef.current = new window.JitsiMeetExternalAPI(jitsiDomain, options);
         
         console.log('Jitsi API created successfully');
 
@@ -125,7 +165,7 @@ export const JitsiMeetRoom = ({
             setIsLoading(false);
             toast({
               title: "Connected",
-              description: "You've joined the video session"
+              description: "You've joined the video session as moderator"
             });
           }
         });
@@ -143,7 +183,7 @@ export const JitsiMeetRoom = ({
           if (mounted && isLoading) {
             setIsLoading(false);
           }
-        }, 5000);
+        }, 8000);
 
       } catch (err) {
         if (mounted) {
@@ -154,7 +194,7 @@ export const JitsiMeetRoom = ({
       }
     };
 
-    loadJitsiAPI();
+    fetchJwtAndInitialize();
 
     return () => {
       mounted = false;
@@ -163,7 +203,7 @@ export const JitsiMeetRoom = ({
         apiRef.current = null;
       }
     };
-  }, [jitsiRoom, displayName, onLeave, toast]);
+  }, [jitsiRoom, displayName, onLeave, toast, userEmail, userId]);
 
   const hangUp = () => {
     if (apiRef.current) {

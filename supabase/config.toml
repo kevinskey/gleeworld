@@ -318,3 +318,6 @@ verify_jwt = false
 
 [functions.easypost-rates]
 verify_jwt = false
+
+[functions.jaas-jwt-token]
+verify_jwt = true
