@@ -200,9 +200,9 @@ export const UniversalHeader = ({
                 <span style={{
                     fontFamily: "'Cinzel', serif",
                     letterSpacing: '0.02em'
-                  }} className="sm:text-xl md:text-2xl xl:text-3xl whitespace-nowrap relative font-medium lg:text-4xl text-card-foreground drop-shadow-sm text-sm">
+                  }} className="sm:text-xl md:text-2xl xl:text-3xl whitespace-nowrap relative font-medium text-card-foreground drop-shadow-sm text-sm lg:text-9xl">
                   GleeWorld
-                  <span className="text-amber-500 ml-1 text-sm sm:text-base hidden sm:inline">✨</span>
+                  
                 </span>
               </Link>
             </EnhancedTooltip>
