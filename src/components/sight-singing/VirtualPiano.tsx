@@ -517,16 +517,16 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 width: `${whiteKeyWidth}px`,
                 minWidth: `${whiteKeyWidth}px`,
                 boxShadow: isActive 
-                  ? 'inset 0 -2px 10px rgba(0,0,0,0.2), inset 0 2px 5px rgba(0,0,0,0.1)' 
+                  ? 'inset 0 -2px 10px rgba(0,0,0,0.2), inset 0 2px 5px rgba(0,0,0,0.1), 0 0 20px 5px rgba(59, 130, 246, 0.6)' 
                   : '0 8px 15px rgba(0,0,0,0.3), inset -2px 0 3px rgba(0,0,0,0.1), inset 2px 0 3px rgba(255,255,255,0.8)',
                 background: isActive 
-                  ? 'linear-gradient(to bottom, #e8e8e8 0%, #f5f5f5 10%, #ffffff 50%, #f0f0f0 100%)'
+                  ? 'linear-gradient(to bottom, #bfdbfe 0%, #dbeafe 10%, #eff6ff 50%, #dbeafe 100%)'
                   : 'linear-gradient(to bottom, #ffffff 0%, #f8f8f8 60%, #e8e8e8 90%, #d8d8d8 100%)',
-                transform: isActive ? 'translateY(3px)' : 'translateY(0)',
+                transform: isActive ? 'translateY(3px) scale(1.02)' : 'translateY(0) scale(1)',
                 borderLeft: '1px solid rgba(0,0,0,0.08)',
                 borderRight: '1px solid rgba(0,0,0,0.15)',
-                borderBottom: '4px solid #c0c0c0',
-              }} className={`cursor-pointer transition-all duration-75 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none touch-manipulation ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
+                borderBottom: isActive ? '2px solid #3b82f6' : '4px solid #c0c0c0',
+              }} className={`cursor-pointer transition-all duration-150 flex flex-col items-center justify-end pb-2 sm:pb-4 text-[10px] sm:text-sm font-semibold select-none touch-manipulation ${index === 0 ? 'rounded-bl-lg' : ''} ${index === whiteKeys.length - 1 ? 'rounded-br-lg' : ''}`}
               onPointerDown={(e) => {
                 e.preventDefault();
                 playNote(keyName, key.frequency);
@@ -555,22 +555,22 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
                 const gap = 2; // gap-0.5 = 0.125rem ≈ 2px
                 // Position accounts for key width + gap between keys
                 const leftPosition = key.position * (whiteKeyWidth + gap) - blackKeyWidth / 2;
-                return <button key={keyName} className="absolute h-full cursor-pointer transition-all duration-75 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation" style={{
+                return <button key={keyName} className="absolute h-full cursor-pointer transition-all duration-150 flex items-end justify-center pb-2 sm:pb-3 text-[0.65rem] sm:text-xs font-bold pointer-events-auto select-none touch-manipulation" style={{
                   left: `${leftPosition}px`,
                   width: `${blackKeyWidth}px`,
                   minWidth: '36px',
                   maxWidth: '80px',
                   borderRadius: '0 0 6px 6px',
                   boxShadow: isActive 
-                    ? 'inset 0 3px 8px rgba(0,0,0,0.6)' 
+                    ? 'inset 0 3px 8px rgba(0,0,0,0.6), 0 0 15px 3px rgba(59, 130, 246, 0.7)' 
                     : '0 6px 12px rgba(0,0,0,0.5), inset 0 -15px 20px rgba(50,50,50,0.3), inset 0 1px 0 rgba(255,255,255,0.15)',
                   background: isActive
-                    ? 'linear-gradient(to bottom, #1a1a1a 0%, #2a2a2a 40%, #1f1f1f 100%)'
+                    ? 'linear-gradient(to bottom, #1e40af 0%, #2563eb 40%, #1d4ed8 100%)'
                     : 'linear-gradient(to bottom, #2d2d2d 0%, #1a1a1a 30%, #0d0d0d 70%, #1a1a1a 100%)',
                   borderLeft: '1px solid #3a3a3a',
                   borderRight: '1px solid #0a0a0a',
-                  borderBottom: '3px solid #0a0a0a',
-                  transform: isActive ? 'translateY(2px)' : 'translateY(0)',
+                  borderBottom: isActive ? '2px solid #60a5fa' : '3px solid #0a0a0a',
+                  transform: isActive ? 'translateY(2px) scale(1.05)' : 'translateY(0) scale(1)',
                 }}
                 onPointerDown={(e) => {
                   e.preventDefault();
