@@ -227,11 +227,15 @@ const Messenger = () => {
     }
     setIsSending(true);
     try {
+      // Prepend sender name to message
+      const senderName = userProfile?.full_name || user?.email?.split('@')[0] || 'GleeWorld';
+      const messageWithSender = `[From: ${senderName}]\n\n${smsContent}`;
+      
       const {
         error
       } = await supabase.functions.invoke('send-sms', {
         body: {
-          message: smsContent,
+          message: messageWithSender,
           sendToAll,
           recipients: sendToAll ? [] : smsRecipients.map(r => r.phone_number)
         }
