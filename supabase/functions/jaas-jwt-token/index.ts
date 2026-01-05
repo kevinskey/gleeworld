@@ -17,33 +17,40 @@ serve(async (req) => {
     
     console.log('Generating JaaS JWT for room:', roomName, 'user:', userName);
 
-    const privateKeyPem = Deno.env.get('JAAS_PRIVATE_KEY');
     // JAAS_APP_ID should be the full vpaas app id, typically: "vpaas-magic-cookie-<tenant>"
-    const appId = Deno.env.get('JAAS_APP_ID') || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9';
-    // JAAS_KEY_ID should be your key id in JaaS, typically: "<tenant>/<apiKeyId>" (NOT a public key, not a vpaas id)
-    const keyId = Deno.env.get('JAAS_KEY_ID');
+    const appId = (Deno.env.get('JAAS_APP_ID') || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9')
+      .trim()
+      .replace(/^['"]|['"]$/g, "");
+
+    // JAAS_KEY_ID should be your key id in JaaS, typically: "<tenant>/<apiKeyId>"
+    // Some people mistakenly paste it as: "vpaas-magic-cookie-<tenant>/<apiKeyId>".
+    // Normalize to the correct format.
+    const keyIdRaw = (Deno.env.get('JAAS_KEY_ID') || '').trim().replace(/^['"]|['"]$/g, "");
 
     if (!privateKeyPem) {
       throw new Error('JAAS_PRIVATE_KEY not configured');
     }
 
-    if (!keyId) {
+    if (!keyIdRaw) {
       throw new Error('JAAS_KEY_ID not configured');
     }
 
+    const keyId = keyIdRaw.startsWith('vpaas-magic-cookie-')
+      ? keyIdRaw.replace(/^vpaas-magic-cookie-/, '')
+      : keyIdRaw;
+
     // Basic config validation to avoid generating tokens that JaaS will reject
-    console.log('DEBUG: JAAS_APP_ID value:', JSON.stringify(appId), 'JAAS_KEY_ID value:', JSON.stringify(keyId));
-    
+    console.log('DEBUG: JAAS_APP_ID value:', JSON.stringify(appId), 'JAAS_KEY_ID value:', JSON.stringify(keyIdRaw), 'normalized kid:', JSON.stringify(keyId));
+
     if (!appId.startsWith('vpaas-magic-cookie-') || appId.includes(':') || appId.includes(' ')) {
       throw new Error(`JAAS_APP_ID invalid. Got: "${appId}". Expected like: vpaas-magic-cookie-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`);
     }
 
-    // Relaxed validation - just check it has a slash (tenant/keyId format)
     if (!keyId.includes('/') || keyId.includes('BEGIN')) {
       throw new Error('JAAS_KEY_ID invalid. Expected like: <tenant>/<apiKeyId> (from JaaS Console > API Keys)');
     }
 
-    console.log('Using appId:', appId, 'keyId:', keyId);
+    console.log('Using appId:', appId, 'kid:', keyId);
 
     // Parse PEM private key - be tolerant of common env var formatting issues
     // (wrapped quotes, escaped newlines, extra whitespace, etc.)
