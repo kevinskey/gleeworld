@@ -30,9 +30,10 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Use self-hosted Jitsi server
-  const jitsiDomain = 'meet.gleeworld.org';
+  // Jitsi domain (fallback to public instance if custom domain isn't configured)
+  const jitsiDomain = import.meta.env.VITE_JITSI_DOMAIN || 'meet.jit.si';
   const jitsiRoom = `GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
+  const jitsiScriptSrc = `https://${jitsiDomain}/external_api.js`;
 
   useEffect(() => {
     let mounted = true;
@@ -44,9 +45,9 @@ export const JitsiMeetRoom = ({
         return;
       }
 
-      // Load the Jitsi External API script from self-hosted server
+      // Load the Jitsi External API script
       const script = document.createElement('script');
-      script.src = 'https://meet.gleeworld.org/external_api.js';
+      script.src = jitsiScriptSrc;
       script.async = true;
       
       script.onload = () => {
