@@ -38,12 +38,8 @@ serve(async (req) => {
       throw new Error(`JAAS_APP_ID invalid. Got: "${appId}". Expected like: vpaas-magic-cookie-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`);
     }
 
-    if (
-      keyId.startsWith('vpaas-magic-cookie-') ||
-      keyId.includes('BEGIN PUBLIC KEY') ||
-      keyId.includes('BEGIN PRIVATE KEY') ||
-      !keyId.includes('/')
-    ) {
+    // Relaxed validation - just check it has a slash (tenant/keyId format)
+    if (!keyId.includes('/') || keyId.includes('BEGIN')) {
       throw new Error('JAAS_KEY_ID invalid. Expected like: <tenant>/<apiKeyId> (from JaaS Console > API Keys)');
     }
 
