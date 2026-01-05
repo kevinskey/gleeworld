@@ -110,6 +110,17 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const audioContextRef = useRef<AudioContext | null>(null);
   const synthRef = useRef<WebAudioSynth | null>(null);
 
+  // Auto-scroll guard: prevents repeated MIDI hits (e.g., repeated C4) from re-triggering scroll
+  const autoScrollStateRef = useRef<{
+    isAutoScrolling: boolean;
+    lastNote: string | null;
+    unlockTimer: number | null;
+  }>({
+    isAutoScrolling: false,
+    lastNote: null,
+    unlockTimer: null,
+  });
+
   // Detect mobile on mount and resize, calculate dynamic key width for fullscreen
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -370,17 +381,35 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           const visibleLeft = container.scrollLeft;
           const visibleRight = visibleLeft + container.clientWidth;
 
-          // Only scroll if the note is truly off-screen, then center it
-          if (noteRightEdge < visibleLeft || noteLeftEdge > visibleRight) {
-            // Center the note in the viewport
-            const noteCenterX = noteLeftEdge + whiteKeyWidth / 2;
-            const targetScroll = noteCenterX - container.clientWidth / 2;
-            
-            const maxScroll = container.scrollWidth - container.clientWidth;
-            container.scrollTo({
-              left: Math.max(0, Math.min(maxScroll, targetScroll)),
-              behavior: 'smooth',
-            });
+          // Only scroll if the note is truly off-screen, then center it.
+          // Guard against repeated notes during smooth scrolling.
+          const isOffscreen = noteRightEdge < visibleLeft || noteLeftEdge > visibleRight;
+          if (isOffscreen) {
+            const state = autoScrollStateRef.current;
+
+            // If we're already auto-scrolling to this same note, don't retrigger.
+            if (state.isAutoScrolling && state.lastNote === name) {
+              // no-op
+            } else {
+              // Center the note in the viewport
+              const noteCenterX = noteLeftEdge + whiteKeyWidth / 2;
+              const targetScroll = noteCenterX - container.clientWidth / 2;
+
+              const maxScroll = container.scrollWidth - container.clientWidth;
+              container.scrollTo({
+                left: Math.max(0, Math.min(maxScroll, targetScroll)),
+                behavior: 'smooth',
+              });
+
+              // Lock scrolling briefly so repeated hits don't cause the keyboard to "hunt"
+              if (state.unlockTimer) window.clearTimeout(state.unlockTimer);
+              state.isAutoScrolling = true;
+              state.lastNote = name;
+              state.unlockTimer = window.setTimeout(() => {
+                autoScrollStateRef.current.isAutoScrolling = false;
+                autoScrollStateRef.current.unlockTimer = null;
+              }, 350);
+            }
           }
         }
         
