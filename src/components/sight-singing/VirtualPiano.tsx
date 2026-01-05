@@ -347,11 +347,32 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         const { name, frequency } = midiNoteToName(note);
         console.log('🎹 MIDI Note On:', name, 'velocity:', velocity);
         
-        // Auto-scroll to the octave of the played note
-        const octave = Math.floor(note / 12) - 1;
-        // Clamp octave to valid range (0-7) and set it
-        const clampedOctave = Math.max(0, Math.min(7, octave));
-        setStartOctave(clampedOctave);
+        // Scroll directly to the played note to ensure it's visible
+        if (keysContainerRef.current) {
+          const whiteKeyWidth = window.innerWidth < 768 ? 50 : 69;
+          const gap = 2;
+          const keyWithGap = whiteKeyWidth + gap;
+          const containerWidth = keysContainerRef.current.clientWidth;
+          
+          // Calculate white key index for this MIDI note
+          // MIDI note 21 = A0 (first key), 23 = B0, 24 = C1, etc.
+          // White keys: A, B, C, D, E, F, G (indices 0,2,3,5,7,8,10 in chromatic scale relative to A)
+          const noteInOctave = (note - 21) % 12; // 0=A, 1=A#, 2=B, 3=C, etc.
+          const octaveFromA0 = Math.floor((note - 21) / 12);
+          
+          // Map chromatic position to white key count
+          const whiteKeyMap = [0, 0, 1, 2, 2, 3, 3, 4, 5, 5, 6, 6]; // A=0, A#=0, B=1, C=2, C#=2, D=3...
+          const whiteKeysBeforeNote = octaveFromA0 * 7 + whiteKeyMap[noteInOctave];
+          
+          // Calculate scroll position to center the note
+          const notePosition = whiteKeysBeforeNote * keyWithGap;
+          const scrollPosition = Math.max(0, notePosition - containerWidth / 2 + keyWithGap / 2);
+          
+          keysContainerRef.current.scrollTo({
+            left: scrollPosition,
+            behavior: 'smooth'
+          });
+        }
         
         playNote(name, frequency);
       } else if (command === 128 || (command === 144 && velocity === 0)) {
