@@ -215,7 +215,7 @@ export const UniversalHeader = ({
           </div>
 
           {/* Right side actions - Mobile-optimized icon bar */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 text-spelman-blue-dark pr-4 sm:pr-8 md:pr-[10px] lg:pr-[100px] xl:pr-[200px] lg:gap-[35px]">
+          <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 lg:gap-3 xl:gap-4 text-spelman-blue-dark pr-2 sm:pr-4 md:pr-6 lg:pr-8 xl:pr-12">
             <HeaderRadioControls />
             <div className="hidden sm:block">
               <MusicalToolkit />
