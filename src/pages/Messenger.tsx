@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap, ShieldAlert, AlertCircle } from "lucide-react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useMessengerAccess } from '@/hooks/useMessengerAccess';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { ActiveVideoSessions } from '@/components/glee-lounge/video-sessions/Act
 import { CreateVideoSessionDialog } from '@/components/glee-lounge/video-sessions/CreateVideoSessionDialog';
 import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/VideoSessionViewer';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface RecipientGroup {
   id: string;
@@ -26,16 +28,21 @@ interface RecipientGroup {
   count: number;
   type: 'manual' | 'course';
 }
+
 const Messenger = () => {
-  const {
-    user
-  } = useAuth();
-  const {
-    userProfile
-  } = useUserProfile(user);
-  const {
-    toast
-  } = useToast();
+  const { user } = useAuth();
+  const { userProfile } = useUserProfile(user);
+  const { 
+    hasAccess, 
+    messengerRole, 
+    isLoading: accessLoading, 
+    contacts, 
+    courseGroups,
+    canMessageAnyone,
+    canSendSMS,
+    noAccessReason 
+  } = useMessengerAccess();
+  const { toast } = useToast();
 
   // Composer state
   const [composerMode, setComposerMode] = useState<'email' | 'sms' | 'video'>('email');
@@ -44,7 +51,7 @@ const Messenger = () => {
   const [recipients, setRecipients] = useState<string[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<typeof contacts>([]);
 
   // SMS specific state
   const [smsContent, setSmsContent] = useState('');
@@ -68,104 +75,36 @@ const Messenger = () => {
     isRecording: boolean;
   } | null>(null);
 
-  // Search for members
+  // Filter contacts based on search query
   useEffect(() => {
-    const searchMembers = async () => {
-      if (!searchQuery.trim()) {
-        setSearchResults([]);
-        return;
-      }
-      const {
-        data,
-        error
-      } = await supabase.from('gw_profiles').select('user_id, full_name, email, phone_number').ilike('full_name', `%${searchQuery}%`).limit(5);
-      if (!error && data) {
-        setSearchResults(data);
-      }
-    };
-    const timer = setTimeout(searchMembers, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+    if (!searchQuery.trim()) {
+      setFilteredContacts([]);
+      return;
+    }
+    
+    const filtered = contacts.filter(c => 
+      c.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.email?.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 8);
+    
+    setFilteredContacts(filtered);
+  }, [searchQuery, contacts]);
 
-  // Load groups including course enrollments
+  // Build groups from course groups
   useEffect(() => {
-    const loadGroups = async () => {
-      if (!user) return;
-      setLoadingGroups(true);
-      try {
-        const allGroups: RecipientGroup[] = [];
-        
-        // Load manual messenger groups
-        const { data: manualGroups, error: groupsError } = await supabase
-          .from('messenger_groups')
-          .select('id, name')
-          .eq('is_active', true)
-          .order('name');
-        
-        if (!groupsError && manualGroups) {
-          manualGroups.forEach(group => {
-            allGroups.push({
-              id: group.id,
-              name: group.name,
-              count: 0,
-              type: 'manual'
-            });
-          });
-        }
-        
-        // Load courses where user is instructor (or admin/super-admin)
-        const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin;
-        
-        let coursesQuery = supabase
-          .from('gw_courses')
-          .select(`
-            id,
-            title,
-            gw_course_enrollments!inner(user_id, role, enrollment_status)
-          `)
-          .eq('is_active', true);
-        
-        if (!isAdmin) {
-          // For non-admins, only show courses they're instructing
-          coursesQuery = coursesQuery.eq('gw_course_enrollments.user_id', user.id)
-            .eq('gw_course_enrollments.role', 'instructor');
-        }
-        
-        const { data: courses, error: coursesError } = await coursesQuery;
-        
-        if (!coursesError && courses) {
-          // For each course, get the student count
-          for (const course of courses) {
-            const { count } = await supabase
-              .from('gw_course_enrollments')
-              .select('*', { count: 'exact', head: true })
-              .eq('course_id', course.id)
-              .eq('role', 'student')
-              .eq('enrollment_status', 'enrolled');
-            
-            allGroups.push({
-              id: `course:${course.id}`,
-              name: `📚 ${course.title}`,
-              count: count || 0,
-              type: 'course'
-            });
-          }
-        }
-        
-        setRecipientGroups(allGroups);
-      } catch (err) {
-        console.error('Failed to load groups:', err);
-      }
-      setLoadingGroups(false);
-    };
-    loadGroups();
-  }, [user, userProfile]);
+    const groups: RecipientGroup[] = courseGroups.map(cg => ({
+      id: `course:${cg.id}`,
+      name: `📚 ${cg.title}`,
+      count: cg.studentCount,
+      type: 'course' as const
+    }));
+    setRecipientGroups(groups);
+  }, [courseGroups]);
 
   const addRecipient = (email: string) => {
     if (email && !recipients.includes(email)) {
       setRecipients([...recipients, email]);
       setSearchQuery('');
-      setSearchResults([]);
     }
   };
 
@@ -181,7 +120,6 @@ const Messenger = () => {
     if (!smsRecipients.find(r => r.user_id === recipient.user_id)) {
       setSmsRecipients([...smsRecipients, recipient]);
       setSearchQuery('');
-      setSearchResults([]);
     }
   };
 
@@ -354,6 +292,37 @@ const Messenger = () => {
       setIsSending(false);
     }
   };
+  // Show loading state
+  if (accessLoading) {
+    return (
+      <UniversalLayout showHeader={true} showFooter={false}>
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </UniversalLayout>
+    );
+  }
+
+  // Show no-access message for fans
+  if (!hasAccess) {
+    return (
+      <UniversalLayout showHeader={true} showFooter={false}>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-64px)] p-6">
+          <div className="max-w-md text-center space-y-4">
+            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+              <ShieldAlert className="h-8 w-8 text-destructive" />
+            </div>
+            <h1 className="text-2xl font-bold">Messenger Access Restricted</h1>
+            <p className="text-muted-foreground">{noAccessReason}</p>
+            <Button asChild className="mt-4">
+              <a href="mailto:admin@gleeworld.org">Contact Admin</a>
+            </Button>
+          </div>
+        </div>
+      </UniversalLayout>
+    );
+  }
+
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
       <div className="flex flex-col h-[calc(100vh-64px)]">
@@ -368,13 +337,23 @@ const Messenger = () => {
                   <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">GleeWorld Messenger</h1>
-                  <p className="text-xs md:text-sm text-muted-foreground px-0 py-[20px] pb-[15px]">Send branded emails, SMS, and video calls</p>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">GleeWorld Messenger</h1>
+                    <Badge variant="outline" className="text-xs capitalize">{messengerRole}</Badge>
+                  </div>
+                  <p className="text-xs md:text-sm text-muted-foreground">
+                    {canMessageAnyone 
+                      ? 'Full access - message anyone' 
+                      : messengerRole === 'alumna' 
+                        ? 'Message alumnae and mentees'
+                        : `Message your ${courseGroups.length} course${courseGroups.length !== 1 ? 's' : ''}`
+                    }
+                  </p>
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => setShowGroupsPanel(!showGroupsPanel)} className="gap-2">
                 <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Groups</span>
+                <span className="hidden sm:inline">Groups ({recipientGroups.length})</span>
               </Button>
             </div>
           </div>
@@ -387,15 +366,17 @@ const Messenger = () => {
             <div className={`flex-1 flex flex-col overflow-hidden ${showGroupsPanel ? 'hidden sm:flex' : ''}`}>
               {/* Tabs */}
               <Tabs value={composerMode} onValueChange={v => setComposerMode(v as 'email' | 'sms' | 'video')} className="flex flex-col flex-1 overflow-hidden">
-                <TabsList className="grid w-full grid-cols-3 rounded-none bg-muted/50 h-11 p-0 gap-0">
+                <TabsList className={`grid w-full ${canSendSMS ? 'grid-cols-3' : 'grid-cols-2'} rounded-none bg-muted/50 h-11 p-0 gap-0`}>
                   <TabsTrigger value="email" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-foreground">
                     <Mail className="h-4 w-4" />
                     <span>Email</span>
                   </TabsTrigger>
-                  <TabsTrigger value="sms" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-foreground">
-                    <Smartphone className="h-4 w-4" />
-                    <span>SMS</span>
-                  </TabsTrigger>
+                  {canSendSMS && (
+                    <TabsTrigger value="sms" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-foreground">
+                      <Smartphone className="h-4 w-4" />
+                      <span>SMS</span>
+                    </TabsTrigger>
+                  )}
                   <TabsTrigger value="video" className="gap-2 rounded-none h-full border-0 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=inactive]:bg-transparent data-[state=inactive]:text-foreground">
                     <Video className="h-4 w-4" />
                     <span>Video</span>
@@ -421,8 +402,8 @@ const Messenger = () => {
                             addRecipient(searchQuery);
                           }
                         }} placeholder="Search or type email..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent" />
-                          {searchResults.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                              {searchResults.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-2">
+                          {filteredContacts.length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                              {filteredContacts.map(result => <button key={result.user_id} onClick={() => addRecipient(result.email)} className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-2">
                                   <span className="font-medium">{result.full_name}</span>
                                   <span className="text-sm text-muted-foreground">{result.email}</span>
                                 </button>)}
@@ -490,11 +471,11 @@ const Messenger = () => {
                             </Badge>)}
                           <div className="relative flex-1 min-w-[200px]">
                             <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search members..." className="border-0 h-8 p-0 focus-visible:ring-0 bg-transparent" />
-                            {searchResults.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                                {searchResults.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => addSmsRecipient({
+                            {filteredContacts.filter(r => r.phone_number).length > 0 && <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-background border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                {filteredContacts.filter(r => r.phone_number).map(result => <button key={result.user_id} onClick={() => addSmsRecipient({
                             user_id: result.user_id,
                             full_name: result.full_name,
-                            phone_number: result.phone_number
+                            phone_number: result.phone_number || ''
                           })} className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-2">
                                     <span className="font-medium">{result.full_name}</span>
                                     <span className="text-sm text-muted-foreground">{result.phone_number}</span>
