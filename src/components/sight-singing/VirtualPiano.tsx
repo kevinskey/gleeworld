@@ -340,12 +340,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
   // Full-screen mode when onClose is provided
   const isFullScreen = !!onClose;
-  const pianoContent = <div className={isFullScreen ? "w-full h-full bg-background flex flex-col rounded-none md:rounded-lg overflow-hidden shadow-2xl" : `w-full flex flex-col ${className}`} style={isFullScreen && !isMobile ? {
-    transform: `scale(${scale})`,
-    transformOrigin: 'top left',
-    width: `${baseWidth}px`,
-    height: `${baseHeight}px`
-  } : undefined}>
+  const pianoContent = <div className={isFullScreen ? "w-full h-full bg-background flex flex-col overflow-hidden" : `w-full flex flex-col ${className}`}>
       {/* Header Bar */}
       <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move gap-2">
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
