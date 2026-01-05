@@ -100,7 +100,13 @@ export const JitsiMeetRoom = ({
             disableLobby: true,
             membersOnly: false,
             p2p: { enabled: true },
-            testing: { p2pTestMode: false }
+            testing: { p2pTestMode: false },
+            // Allow anyone to start the meeting without waiting for moderator
+            startAudioOnly: false,
+            enableNoisyMicDetection: false,
+            // These settings help bypass the "waiting for moderator" issue on public Jitsi
+            openBridgeChannel: 'websocket',
+            channelLastN: -1
           },
           interfaceConfigOverwrite: {
             SHOW_JITSI_WATERMARK: false,
