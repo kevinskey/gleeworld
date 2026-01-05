@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -89,6 +89,33 @@ export const UniversalHeader = ({
   const isHbcuTheme = themeName === 'hbcu';
   const isSpelmanBlue = themeName === 'spelman-blue';
 
+  // Role-based accent colors for header branding
+  const getRoleAccentColor = () => {
+    const role = userProfile?.role;
+    if (userProfile?.is_super_admin) return 'border-b-4 border-b-red-500';
+    if (userProfile?.is_admin || userProfile?.is_exec_board) return 'border-b-4 border-b-purple-500';
+    switch (role) {
+      case 'student': return 'border-b-4 border-b-emerald-500';
+      case 'alumna': return 'border-b-4 border-b-amber-500';
+      case 'fan': return 'border-b-4 border-b-sky-500';
+      case 'auditioner': return 'border-b-4 border-b-yellow-500';
+      default: return 'border-b border-white/20';
+    }
+  };
+
+  const getRoleBadgeLabel = () => {
+    if (userProfile?.is_super_admin) return 'Super Admin';
+    if (userProfile?.is_admin) return 'Admin';
+    if (userProfile?.is_exec_board) return userProfile?.exec_board_role?.replace(/_/g, ' ') || 'Executive';
+    switch (userProfile?.role) {
+      case 'student': return 'Student';
+      case 'alumna': return 'Alumna';
+      case 'fan': return 'Fan';
+      case 'auditioner': return 'Auditioner';
+      default: return null;
+    }
+  };
+
   // Check if user has PR access (PR coordinator or admin)
   const isAdmin = userProfile?.is_admin === true || userProfile?.is_super_admin === true || userProfile?.is_exec_board === true;
   const isPRCoordinator = userProfile?.exec_board_role === 'pr_coordinator';
@@ -151,7 +178,7 @@ export const UniversalHeader = ({
   return <>
     <div className="w-full m-0 p-0 fixed top-0 left-0 right-0 z-50 overflow-hidden pointer-events-none">
       <div className="w-full max-w-7xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-2 pointer-events-auto">
-        <header ref={headerRef} className="w-full border-b border-white/20 shadow-lg relative rounded-b-lg bg-white/80 backdrop-blur-xl text-foreground">
+        <header ref={headerRef} className={`w-full shadow-lg relative rounded-b-lg bg-white/80 backdrop-blur-xl text-foreground ${user ? getRoleAccentColor() : 'border-b border-white/20'}`}>
           <div className="flex items-center justify-between w-full min-h-12 sm:min-h-12 md:min-h-14 lg:min-h-16 py-2 sm:py-2 md:py-2.5 px-2 sm:px-4 lg:px-8 pb-[22.5px] pt-0 md:px-0 mx-0 lg:py-[20px]">
           {/* Logo and Navigation */}
           <div className="flex items-center gap-1 md:gap-3 lg:gap-5 min-w-0">
@@ -188,6 +215,13 @@ export const UniversalHeader = ({
             {user && <EnhancedTooltip content={isMessengerOpen ? "Close Messenger" : "Send Email/SMS"}>
                 <Button variant="ghost" size="sm" onClick={toggleMessenger} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector} ${isMessengerOpen ? 'bg-gray-100' : ''}`} type="button">
                   <Mail className={HEADER_ICON_SIZES.icon} />
+                </Button>
+              </EnhancedTooltip>}
+
+            {/* Calendar Quick Access */}
+            {user && <EnhancedTooltip content="View Calendar">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/calendar')} className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
+                  <CalendarDays className={HEADER_ICON_SIZES.icon} />
                 </Button>
               </EnhancedTooltip>}
             
@@ -301,13 +335,26 @@ export const UniversalHeader = ({
                       </DropdownMenuTrigger>
                    </EnhancedTooltip>
                     <DropdownMenuContent className="w-48 py-1 bg-popover text-popover-foreground shadow-2xl border border-border z-[1100]" align={isMobile ? "center" : "end"} sideOffset={20} forceMount>
-                      <div className="flex flex-col space-y-0.5 p-1.5">
+                      <div className="flex flex-col space-y-1 p-1.5">
                          <p className="text-xs font-medium leading-none truncate">
                            {userProfile?.full_name || user.email}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
+                        {getRoleBadgeLabel() && (
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium w-fit mt-1 ${
+                            userProfile?.is_super_admin ? 'bg-red-100 text-red-700' :
+                            userProfile?.is_admin ? 'bg-purple-100 text-purple-700' :
+                            userProfile?.is_exec_board ? 'bg-blue-100 text-blue-700' :
+                            userProfile?.role === 'student' ? 'bg-emerald-100 text-emerald-700' :
+                            userProfile?.role === 'alumna' ? 'bg-amber-100 text-amber-700' :
+                            userProfile?.role === 'fan' ? 'bg-sky-100 text-sky-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {getRoleBadgeLabel()}
+                          </span>
+                        )}
                       </div>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem asChild className="py-1.5 text-xs">
@@ -365,7 +412,7 @@ export const UniversalHeader = ({
       id: user.id,
       email: user.email || '',
       full_name: userProfile?.full_name || user.email || '',
-      role: userProfile?.role || 'member',
+      role: userProfile?.role || 'student',
       exec_board_role: userProfile?.exec_board_role || undefined,
       is_exec_board: userProfile?.is_exec_board || false
     }} onModuleSelect={moduleId => {
