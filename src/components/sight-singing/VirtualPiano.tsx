@@ -123,24 +123,22 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
   // Detect mobile on mount and resize, calculate dynamic key width for fullscreen
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    const calculateKeyWidth = () => {
-      if (onClose && !isMobile) {
+    const updateLayout = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+
+      if (onClose && !mobile) {
         // Double-sized keys for easier touchscreen play (will require scrolling)
-        setDynamicKeyWidth(100); // Large fixed width for touch-friendly keys
+        setDynamicKeyWidth(100);
+      } else {
+        setDynamicKeyWidth(null);
       }
     };
-    checkMobile();
-    calculateKeyWidth();
-    window.addEventListener('resize', () => {
-      checkMobile();
-      calculateKeyWidth();
-    });
-    return () => window.removeEventListener('resize', () => {
-      checkMobile();
-      calculateKeyWidth();
-    });
-  }, [onClose, isMobile]);
+
+    updateLayout();
+    window.addEventListener('resize', updateLayout);
+    return () => window.removeEventListener('resize', updateLayout);
+  }, [onClose]);
 
   // Setup mobile audio unlock on mount
   useEffect(() => {
@@ -227,37 +225,34 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     }
   }, [volume, isMuted]);
 
-  // Scroll to selected octave range when dropdown changes or on mount
+  // Scroll to selected octave range when dropdown changes (NOT on mobile/viewport toggles)
   useEffect(() => {
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      if (keysContainerRef.current) {
-        const whiteKeyWidth = isMobile ? 50 : 69;
-        const gap = 2; // 0.5 gap in Tailwind = ~2px
-        const keyWithGap = whiteKeyWidth + gap;
-        
-        // Calculate scroll position based on startOctave
-        // Piano layout: A0, B0, then C1-B1, C2-B2, ... C7-B7, C8
-        // Index 0 = A0, Index 1 = B0, Index 2 = C1, etc.
-        let scrollPosition = 0;
-        if (startOctave === 0) {
-          // A0-B1: start at beginning
-          scrollPosition = 0;
-        } else {
-          // For octave N, C[N] is at index: 2 + (N-1)*7
-          // e.g., C1 at index 2, C2 at index 9, C3 at index 16, C4 at index 23
-          const cIndex = 2 + (startOctave - 1) * 7;
-          scrollPosition = cIndex * keyWithGap;
-        }
-        
-        keysContainerRef.current.scrollTo({
-          left: scrollPosition,
-          behavior: 'smooth'
-        });
+    const timer = window.setTimeout(() => {
+      const container = keysContainerRef.current;
+      if (!container) return;
+
+      const baseWhiteKeyWidth = isMobile ? 50 : 69;
+      const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : baseWhiteKeyWidth;
+      const gap = 2; // gap-0.5 ≈ 2px
+      const keyWithGap = whiteKeyWidth + gap;
+
+      // Piano layout: A0, B0, then C1-B1, C2-B2, ... C7-B7, C8
+      let scrollPosition = 0;
+      if (startOctave === 0) {
+        scrollPosition = 0;
+      } else {
+        const cIndex = 2 + (startOctave - 1) * 7;
+        scrollPosition = cIndex * keyWithGap;
       }
+
+      container.scrollTo({
+        left: scrollPosition,
+        behavior: 'smooth',
+      });
     }, 100);
-    return () => clearTimeout(timer);
-  }, [startOctave, isMobile]);
+
+    return () => window.clearTimeout(timer);
+  }, [startOctave]);
 
   const playNote = useCallback((noteName: string, frequency: number) => {
     console.log('🎹 Playing note:', noteName, 'at frequency:', frequency.toFixed(2), 'Hz');
