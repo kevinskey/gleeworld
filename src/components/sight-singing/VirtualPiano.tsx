@@ -346,6 +346,13 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         // Note On
         const { name, frequency } = midiNoteToName(note);
         console.log('🎹 MIDI Note On:', name, 'velocity:', velocity);
+        
+        // Auto-scroll to the octave of the played note
+        const octave = Math.floor(note / 12) - 1;
+        // Clamp octave to valid range (0-7) and set it
+        const clampedOctave = Math.max(0, Math.min(7, octave));
+        setStartOctave(clampedOctave);
+        
         playNote(name, frequency);
       } else if (command === 128 || (command === 144 && velocity === 0)) {
         // Note Off
