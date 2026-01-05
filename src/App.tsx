@@ -90,6 +90,7 @@ import PublicCalendar from "./pages/PublicCalendar";
 import PressKit from "./pages/PressKit";
 import Notifications from "./pages/Notifications";
 import Messages from "./pages/Messages";
+import MessengerPage from "./pages/MessengerPage";
 import EmailComposerPage from "./pages/EmailComposerPage";
 import OnboardingInfo from "./pages/OnboardingInfo";
 import MemberRegistration from "./pages/MemberRegistration";
@@ -818,10 +819,18 @@ const App = () => {
                   } 
                   />
                  <Route
+                   path="/messenger" 
+                   element={
+                     <ProtectedRoute>
+                       <MessengerPage />
+                     </ProtectedRoute>
+                   } 
+                   />
+                 <Route
                    path="/messages" 
                    element={
                      <ProtectedRoute>
-                       <Messages />
+                       <Navigate to="/messenger" replace />
                      </ProtectedRoute>
                    } 
                    />
@@ -839,21 +848,13 @@ const App = () => {
                      <ProtectedRoute>
                        <Announcements />
                      </ProtectedRoute>
-                   } 
+                   }
                  />
-                 <Route
-                   path="/messages" 
-                   element={
-                     <ProtectedRoute>
-                       <Navigate to="/community?tab=messages" replace />
-                     </ProtectedRoute>
-                   } 
-                  />
                  <Route
                    path="/direct-messages" 
                    element={
                      <ProtectedRoute>
-                       <Navigate to="/community?tab=messages" replace />
+                       <Navigate to="/messenger" replace />
                      </ProtectedRoute>
                    } 
                   />
