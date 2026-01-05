@@ -441,13 +441,13 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             </div>
 
             {/* Black Keys */}
-            <div className="pointer-events-none absolute inset-0 top-0 h-[60%]">
+            <div className="pointer-events-none absolute inset-0 top-0 h-[65%]">
               <div className="relative w-full h-full">
                 {blackKeys.map(key => {
                 const keyName = `${key.note}${key.octave}`;
                 const isActive = activeNotes.has(keyName);
                 const whiteKeyWidth = isFullScreen && dynamicKeyWidth ? dynamicKeyWidth : (isMobile ? 50 : 69);
-                const blackKeyWidth = Math.floor(whiteKeyWidth * 0.65);
+                const blackKeyWidth = Math.floor(whiteKeyWidth * 0.58); // Standard piano ratio
                 const gap = 2; // gap-0.5 = 0.125rem ≈ 2px
                 // Position accounts for key width + gap between keys
                 const leftPosition = key.position * (whiteKeyWidth + gap) - blackKeyWidth / 2;
