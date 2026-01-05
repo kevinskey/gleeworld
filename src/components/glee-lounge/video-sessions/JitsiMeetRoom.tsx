@@ -30,8 +30,8 @@ export const JitsiMeetRoom = ({
   const apiRef = useRef<any>(null);
   const { toast } = useToast();
 
-  // Jitsi domain - use self-hosted instance
-  const jitsiDomain = import.meta.env.VITE_JITSI_DOMAIN || 'meet.gleeworld.org';
+  // Jitsi domain (fallback to public instance if custom domain isn't configured)
+  const jitsiDomain = import.meta.env.VITE_JITSI_DOMAIN || 'meet.jit.si';
   const jitsiRoom = `GleeWorld${roomName.replace(/[^a-zA-Z0-9]/g, '')}`;
   const jitsiScriptSrc = `https://${jitsiDomain}/external_api.js`;
 
@@ -95,6 +95,10 @@ export const JitsiMeetRoom = ({
             hideLobbyButton: true,
             requireDisplayName: false,
             enableInsecureRoomNameWarning: false,
+            // Disable lobby/waiting room so members can join directly
+            lobby: { enabled: false },
+            disableLobby: true,
+            membersOnly: false,
             p2p: { enabled: true },
             testing: { p2pTestMode: false }
           },
