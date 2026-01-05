@@ -44,7 +44,7 @@ export const ProductSlider = () => {
   return <div className="w-full py-4 bg-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold py-[10px] text-5xl">SHOP GLEEWORLD</h2>
+          
           <button onClick={() => navigate('/shop')} className="text-sm text-primary hover:underline">
             View All →
           </button>
