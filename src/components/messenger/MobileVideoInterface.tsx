@@ -15,7 +15,8 @@ import {
   VideoOff,
   Mic,
   MicOff,
-  PhoneCall
+  PhoneCall,
+  Trash2
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -168,6 +169,31 @@ export const MobileVideoInterface = ({ onJoinSession }: MobileVideoInterfaceProp
     }
   };
 
+  const handleDeleteSession = async (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation();
+    
+    if (!confirm('Delete this session permanently?')) return;
+
+    const { error } = await supabase
+      .from('gw_video_sessions')
+      .delete()
+      .eq('id', sessionId);
+
+    if (error) {
+      toast({
+        title: "Failed to delete",
+        description: error.message,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Session deleted",
+        description: "The video session has been removed"
+      });
+      fetchSessions();
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -304,10 +330,22 @@ export const MobileVideoInterface = ({ onJoinSession }: MobileVideoInterfaceProp
                       <h4 className="font-semibold text-foreground truncate">
                         {session.title}
                       </h4>
-                      <Badge variant="secondary" className="shrink-0 gap-1 text-xs">
-                        <Users className="h-3 w-3" />
-                        {session.participant_count}
-                      </Badge>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Badge variant="secondary" className="gap-1 text-xs">
+                          <Users className="h-3 w-3" />
+                          {session.participant_count}
+                        </Badge>
+                        {user && session.host_user_id === user.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 rounded-full text-destructive hover:bg-destructive/10"
+                            onClick={(e) => handleDeleteSession(e, session.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">
                       {session.host?.full_name || 'Unknown Host'}
