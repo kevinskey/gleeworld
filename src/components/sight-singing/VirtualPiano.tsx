@@ -401,7 +401,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         <div className="relative inline-block min-w-max px-2 mx-0 sm:px-0 py-0">
           {/* White Keys */}
           <div className="relative">
-            <div className={isFullScreen ? "flex gap-0.5 h-[200px] sm:h-[320px] md:h-[400px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
+            <div className={isFullScreen ? "flex gap-0.5 h-[240px] sm:h-[384px] md:h-[480px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
               {whiteKeys.map((key, index) => {
               const keyName = `${key.note}${key.octave}`;
               const isActive = activeNotes.has(keyName);
