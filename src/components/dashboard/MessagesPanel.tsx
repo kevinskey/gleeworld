@@ -1,83 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GroupMessageInterface } from '@/components/notifications/GroupMessageInterface';
-import { Rnd } from 'react-rnd';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MessagesPanelProps {
   onClose: () => void;
 }
 
 export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
-  const isMobile = useIsMobile();
-  const rndRef = useRef<Rnd>(null);
-  
-  const getInitialDimensions = useCallback(() => {
-    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 900;
-    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 600;
-    // 95% viewport width and height
-    const width = Math.floor(viewportWidth * 0.95);
-    const height = Math.floor(viewportHeight * 0.95);
-    return {
-      x: Math.floor((viewportWidth - width) / 2),
-      y: Math.floor((viewportHeight - height) / 2),
-      width,
-      height,
-    };
-  }, []);
-
-  const [dimensions, setDimensions] = useState(getInitialDimensions);
-
-  useEffect(() => {
-    const updateDimensions = () => {
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
-      
-      if (isMobile) {
-        const mobileWidth = Math.min(viewportWidth * 0.9, 400);
-        const mobileHeight = viewportHeight * 0.45;
-        setDimensions({
-          x: Math.round((viewportWidth - mobileWidth) / 2),
-          y: Math.round((viewportHeight - mobileHeight) / 2),
-          width: mobileWidth,
-          height: mobileHeight,
-        });
-      } else {
-        // 95% viewport width and height
-        const desktopWidth = Math.floor(viewportWidth * 0.95);
-        const desktopHeight = Math.floor(viewportHeight * 0.95);
-        setDimensions({
-          x: Math.floor((viewportWidth - desktopWidth) / 2),
-          y: Math.floor((viewportHeight - desktopHeight) / 2),
-          width: desktopWidth,
-          height: desktopHeight,
-        });
-      }
-    };
-
-    updateDimensions();
-    window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
-  }, [isMobile]);
-
-  const handleDragStop = useCallback((_e: any, data: { x: number; y: number }) => {
-    setDimensions(prev => ({
-      ...prev,
-      x: data.x,
-      y: data.y,
-    }));
-  }, []);
-
-  const handleResizeStop = useCallback((_e: any, _direction: any, ref: HTMLElement, _delta: any, position: { x: number; y: number }) => {
-    setDimensions({
-      x: position.x,
-      y: position.y,
-      width: ref.offsetWidth,
-      height: ref.offsetHeight,
-    });
-  }, []);
-
   const handleClose = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -85,94 +15,36 @@ export const MessagesPanel = ({ onClose }: MessagesPanelProps) => {
   }, [onClose]);
 
   return (
-    <>
-      {isMobile ? (
-        <div 
-          className="fixed inset-0 z-50 bg-background flex flex-col"
-          style={{ height: '100dvh' }}
-        >
-          {/* Mobile header with close button */}
-          <div className="flex-shrink-0 bg-[hsl(var(--message-header))] text-white px-3 py-3 flex items-center justify-between safe-top">
-            <div className="flex items-center gap-2">
-              <span className="text-base font-semibold">Messages</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClose}
-              className="h-10 w-10 rounded-full text-white hover:bg-white/20 active:bg-white/30 touch-manipulation"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+    <div className="fixed inset-0 z-50 flex flex-col">
+      {/* Blurred backdrop */}
+      <div 
+        className="absolute inset-0 bg-background/80 backdrop-blur-md"
+        onClick={handleClose}
+      />
+      
+      {/* Full-page content */}
+      <div className="relative z-10 flex flex-col h-full">
+        {/* Header */}
+        <div className="flex-shrink-0 bg-[hsl(var(--message-header))] text-white px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-lg font-semibold">GleeWorld Messenger</span>
+            <span className="text-sm text-white/70">Send branded emails and SMS to members</span>
           </div>
-
-          {/* Content area - takes remaining space */}
-          <div className="flex-1 min-h-0 overflow-hidden">
-            <GroupMessageInterface />
-          </div>
-        </div>
-      ) : (
-        <Rnd
-          ref={rndRef}
-          size={{ width: dimensions.width, height: dimensions.height }}
-          position={{ x: dimensions.x, y: dimensions.y }}
-          minWidth={400}
-          minHeight={300}
-          className="z-50"
-          style={{
-            position: 'fixed',
-            willChange: 'transform',
-          }}
-          enableResizing={{
-            top: true,
-            right: true,
-            bottom: true,
-            left: true,
-            topRight: true,
-            bottomRight: true,
-            bottomLeft: true,
-            topLeft: true,
-          }}
-          disableDragging={false}
-          dragHandleClassName="drag-handle"
-          enableUserSelectHack={false}
-          cancel=".no-drag"
-          onDragStop={handleDragStop}
-          onResizeStop={handleResizeStop}
-        >
-          <div 
-            className="h-full bg-background shadow-2xl rounded-xl flex flex-col border border-border overflow-hidden"
-            style={{ willChange: 'auto' }}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleClose}
+            className="h-10 w-10 rounded-full text-white hover:bg-white/20"
           >
-            <div className="drag-handle cursor-move bg-[hsl(var(--message-header))] text-white px-3 py-2 flex items-center justify-between select-none">
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <div 
-                    className="no-drag w-3 h-3 rounded-full bg-white/30 hover:bg-red-500 transition-colors cursor-pointer" 
-                    onClick={handleClose} 
-                  />
-                  <div className="w-3 h-3 rounded-full bg-white/30" />
-                  <div className="w-3 h-3 rounded-full bg-white/30" />
-                </div>
-                <span className="text-sm font-medium ml-2">Messages</span>
-              </div>
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClose}
-                className="no-drag h-8 w-8 rounded-full text-white hover:bg-white/20"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <GroupMessageInterface />
-            </div>
-          </div>
-        </Rnd>
-      )}
-    </>
+        {/* Content area */}
+        <div className="flex-1 min-h-0 overflow-hidden bg-background">
+          <GroupMessageInterface />
+        </div>
+      </div>
+    </div>
   );
 };
