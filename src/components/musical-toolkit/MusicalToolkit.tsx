@@ -115,7 +115,7 @@ export const MusicalToolkit: React.FC<{ className?: string }> = ({ className = '
 
       {/* Small Piano */}
       <Dialog open={open.pianoSmall} onOpenChange={(v) => setOpen((o) => ({ ...o, pianoSmall: v }))}>
-        <DialogContent className="sm:max-w-[720px] bg-background border border-border top-[15%] translate-y-0 sm:top-[20%]">
+        <DialogContent className="sm:max-w-[720px] bg-background border border-border top-[calc(15%+76px)] translate-y-0 sm:top-[calc(20%+76px)]">
           <DialogHeader>
             <DialogTitle className="text-base">Small Piano</DialogTitle>
           </DialogHeader>
