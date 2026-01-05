@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2 } from "lucide-react";
+import { Mail, Smartphone, Video, X, Send, Users, Search, Loader2, GraduationCap } from "lucide-react";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
 import { BackNavigation } from "@/components/shared/BackNavigation";
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,10 +18,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { ActiveVideoSessions } from '@/components/glee-lounge/video-sessions/ActiveVideoSessions';
 import { CreateVideoSessionDialog } from '@/components/glee-lounge/video-sessions/CreateVideoSessionDialog';
 import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/VideoSessionViewer';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
 interface RecipientGroup {
   id: string;
   name: string;
   count: number;
+  type: 'manual' | 'course';
 }
 const Messenger = () => {
   const {
@@ -84,30 +87,80 @@ const Messenger = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Load groups
+  // Load groups including course enrollments
   useEffect(() => {
     const loadGroups = async () => {
+      if (!user) return;
       setLoadingGroups(true);
       try {
-        const {
-          data,
-          error
-        } = await supabase.from('messenger_groups').select('id, name').eq('is_active', true).order('name');
-        if (!error && data) {
-          // For now, just set a placeholder count since we don't have member counts readily available
-          const groupsWithCounts = data.map(group => ({
-            ...group,
-            count: 0 // Placeholder - actual count would require more complex queries
-          }));
-          setRecipientGroups(groupsWithCounts);
+        const allGroups: RecipientGroup[] = [];
+        
+        // Load manual messenger groups
+        const { data: manualGroups, error: groupsError } = await supabase
+          .from('messenger_groups')
+          .select('id, name')
+          .eq('is_active', true)
+          .order('name');
+        
+        if (!groupsError && manualGroups) {
+          manualGroups.forEach(group => {
+            allGroups.push({
+              id: group.id,
+              name: group.name,
+              count: 0,
+              type: 'manual'
+            });
+          });
         }
+        
+        // Load courses where user is instructor (or admin/super-admin)
+        const isAdmin = userProfile?.is_admin || userProfile?.is_super_admin;
+        
+        let coursesQuery = supabase
+          .from('gw_courses')
+          .select(`
+            id,
+            title,
+            gw_course_enrollments!inner(user_id, role, enrollment_status)
+          `)
+          .eq('is_active', true);
+        
+        if (!isAdmin) {
+          // For non-admins, only show courses they're instructing
+          coursesQuery = coursesQuery.eq('gw_course_enrollments.user_id', user.id)
+            .eq('gw_course_enrollments.role', 'instructor');
+        }
+        
+        const { data: courses, error: coursesError } = await coursesQuery;
+        
+        if (!coursesError && courses) {
+          // For each course, get the student count
+          for (const course of courses) {
+            const { count } = await supabase
+              .from('gw_course_enrollments')
+              .select('*', { count: 'exact', head: true })
+              .eq('course_id', course.id)
+              .eq('role', 'student')
+              .eq('enrollment_status', 'enrolled');
+            
+            allGroups.push({
+              id: `course:${course.id}`,
+              name: `📚 ${course.title}`,
+              count: count || 0,
+              type: 'course'
+            });
+          }
+        }
+        
+        setRecipientGroups(allGroups);
       } catch (err) {
         console.error('Failed to load groups:', err);
       }
       setLoadingGroups(false);
     };
     loadGroups();
-  }, []);
+  }, [user, userProfile]);
+
   const addRecipient = (email: string) => {
     if (email && !recipients.includes(email)) {
       setRecipients([...recipients, email]);
@@ -115,9 +168,11 @@ const Messenger = () => {
       setSearchResults([]);
     }
   };
+
   const removeRecipient = (email: string) => {
     setRecipients(recipients.filter(r => r !== email));
   };
+
   const addSmsRecipient = (recipient: {
     user_id: string;
     full_name: string;
@@ -129,16 +184,58 @@ const Messenger = () => {
       setSearchResults([]);
     }
   };
+
   const removeSmsRecipient = (userId: string) => {
     setSmsRecipients(smsRecipients.filter(r => r.user_id !== userId));
   };
+
   const handleAddGroup = async (group: RecipientGroup) => {
-    // For email groups, we need to fetch emails based on group type
-    // This is a simplified version - the full implementation would query based on group criteria
-    toast({
-      title: `Group: ${group.name}`,
-      description: "Group recipient fetching will be implemented based on group type"
-    });
+    try {
+      if (group.type === 'course') {
+        // Extract course ID from group id (format: "course:uuid")
+        const courseId = group.id.replace('course:', '');
+        
+        // Fetch all enrolled students' emails
+        const { data: enrollments, error } = await supabase
+          .from('gw_course_enrollments')
+          .select('user_id, gw_profiles!inner(email)')
+          .eq('course_id', courseId)
+          .eq('role', 'student')
+          .eq('enrollment_status', 'enrolled');
+        
+        if (error) throw error;
+        
+        if (enrollments && enrollments.length > 0) {
+          const emails = enrollments
+            .map((e: any) => e.gw_profiles?.email)
+            .filter((email: string | null) => email && !recipients.includes(email));
+          
+          setRecipients([...recipients, ...emails]);
+          toast({
+            title: `Added ${emails.length} students`,
+            description: `From ${group.name.replace('📚 ', '')}`
+          });
+        } else {
+          toast({
+            title: "No students found",
+            description: "This course has no enrolled students",
+            variant: "destructive"
+          });
+        }
+      } else {
+        // Handle manual groups (existing logic placeholder)
+        toast({
+          title: `Group: ${group.name}`,
+          description: "Manual group recipient fetching coming soon"
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Failed to add group",
+        description: err.message,
+        variant: "destructive"
+      });
+    }
   };
   const handleSendEmail = async () => {
     if (recipients.length === 0 || !subject.trim()) return;
@@ -257,7 +354,8 @@ const Messenger = () => {
       setIsSending(false);
     }
   };
-  return <UniversalLayout showHeader={true} showFooter={false}>
+  return (
+    <UniversalLayout showHeader={true} showFooter={false}>
       <div className="flex flex-col h-[calc(100vh-64px)]">
         {/* Header section */}
         <div className="flex-shrink-0 border-b border-border bg-background">
@@ -460,19 +558,72 @@ const Messenger = () => {
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-                <div className="space-y-2">
-                  {loadingGroups ? <div className="flex items-center justify-center py-4">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    </div> : recipientGroups.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
-                      No groups available
-                    </p> : recipientGroups.map(group => <Button key={group.id} variant="outline" size="sm" className="w-full justify-start text-left" onClick={() => handleAddGroup(group)}>
-                        <span className="flex-1 truncate">{group.name}</span>
-                        <Badge variant="secondary" className="ml-2">{group.count}</Badge>
-                      </Button>)}
-                </div>
+                
+                {loadingGroups ? (
+                  <div className="flex items-center justify-center py-4">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <ScrollArea className="h-[300px]">
+                    {/* Course Groups */}
+                    {recipientGroups.filter(g => g.type === 'course').length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                          <GraduationCap className="h-3 w-3" />
+                          My Courses
+                        </h4>
+                        <div className="space-y-1">
+                          {recipientGroups.filter(g => g.type === 'course').map(group => (
+                            <Button 
+                              key={group.id} 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full justify-start text-left h-auto py-2" 
+                              onClick={() => handleAddGroup(group)}
+                            >
+                              <span className="flex-1 truncate text-xs">{group.name}</span>
+                              <Badge variant="secondary" className="ml-2 text-xs">{group.count}</Badge>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Manual Groups */}
+                    {recipientGroups.filter(g => g.type === 'manual').length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          Saved Groups
+                        </h4>
+                        <div className="space-y-1">
+                          {recipientGroups.filter(g => g.type === 'manual').map(group => (
+                            <Button 
+                              key={group.id} 
+                              variant="outline" 
+                              size="sm" 
+                              className="w-full justify-start text-left h-auto py-2" 
+                              onClick={() => handleAddGroup(group)}
+                            >
+                              <span className="flex-1 truncate text-xs">{group.name}</span>
+                              <Badge variant="secondary" className="ml-2 text-xs">{group.count}</Badge>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {recipientGroups.length === 0 && (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No groups available
+                      </p>
+                    )}
+                  </ScrollArea>
+                )}
 
                 {/* Email Preview */}
-                {composerMode === 'email' && subject && <div className="mt-6">
+                {composerMode === 'email' && subject && (
+                  <div className="mt-6">
                     <h3 className="font-semibold mb-3 text-sm">Preview</h3>
                     <div className="bg-gradient-to-br from-primary to-primary/70 rounded-t-lg p-3 text-center">
                       <h4 className="text-primary-foreground font-bold text-sm">✨ GleeWorld</h4>
@@ -484,11 +635,13 @@ const Messenger = () => {
                         {content || 'Your message will appear here...'}
                       </p>
                     </div>
-                  </div>}
+                  </div>
+                )}
               </div>}
           </div>
         </div>
       </div>
-    </UniversalLayout>;
+    </UniversalLayout>
+  );
 };
 export default Messenger;
