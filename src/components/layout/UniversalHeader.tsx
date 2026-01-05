@@ -197,10 +197,10 @@ export const UniversalHeader = ({
                 <div className="relative">
                   <img src="/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png" alt="Spelman College Glee Club" className="w-14 h-14 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 object-contain flex-shrink-0 drop-shadow-md" />
                 </div>
-                <span className="text-lg sm:text-xl md:text-2xl xl:text-3xl whitespace-nowrap relative font-medium lg:text-4xl text-card-foreground drop-shadow-sm" style={{
+                <span style={{
                     fontFamily: "'Cinzel', serif",
                     letterSpacing: '0.02em'
-                  }}>
+                  }} className="sm:text-xl md:text-2xl xl:text-3xl whitespace-nowrap relative font-medium lg:text-4xl text-card-foreground drop-shadow-sm text-sm">
                   GleeWorld
                   <span className="text-amber-500 ml-1 text-sm sm:text-base hidden sm:inline">✨</span>
                 </span>
