@@ -187,7 +187,7 @@ const Messenger = () => {
           to: recipients,
           subject,
           html: htmlContent,
-          from_name: userProfile?.full_name
+          senderName: userProfile?.full_name
         }
       });
       if (error) throw error;
