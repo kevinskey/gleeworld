@@ -72,9 +72,13 @@ export const JitsiMeetRoom = ({
       if (!containerRef.current || !mounted) return;
 
       try {
+        console.log('Initializing Jitsi with room:', jitsiRoom);
+        
         apiRef.current = new window.JitsiMeetExternalAPI(jitsiDomain, {
           roomName: jitsiRoom,
           parentNode: containerRef.current,
+          width: '100%',
+          height: '100%',
           userInfo: {
             displayName: displayName
           },
@@ -86,29 +90,24 @@ export const JitsiMeetRoom = ({
             enableWelcomePage: false,
             enableClosePage: false,
             disableInviteFunctions: true,
-            // Disable lobby and moderator requirements
-            lobby: { enabled: false },
-            enableLobby: false,
+            enableLobbyChat: false,
             hideLobbyButton: true,
             requireDisplayName: false,
             enableInsecureRoomNameWarning: false,
-            disableModeratorIndicator: true,
-            enableUserRolesBasedOnToken: false,
-            enableFeaturesBasedOnToken: false,
-            // Make everyone a moderator
-            disableRemoteMute: false,
-            remoteVideoMenu: { disableKick: false },
-            disableKick: false,
-            p2p: { enabled: true }
+            p2p: { enabled: true },
+            testing: { p2pTestMode: false }
           },
           interfaceConfigOverwrite: {
             SHOW_JITSI_WATERMARK: false,
             SHOW_WATERMARK_FOR_GUESTS: false,
             MOBILE_APP_PROMO: false,
             HIDE_INVITE_MORE_HEADER: true,
-            TOOLBAR_ALWAYS_VISIBLE: true
+            TOOLBAR_ALWAYS_VISIBLE: true,
+            DISABLE_JOIN_LEAVE_NOTIFICATIONS: true
           }
         });
+        
+        console.log('Jitsi API created successfully');
 
         apiRef.current.addListener('videoConferenceJoined', () => {
           if (mounted) {
