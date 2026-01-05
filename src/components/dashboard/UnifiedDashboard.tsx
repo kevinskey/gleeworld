@@ -341,7 +341,9 @@ export const UnifiedDashboard = () => {
       </div>
 
       {/* Full Screen Empty Div */}
-      <div className="w-full h-[200px] bg-secondary" />
+      <div className="w-full h-[200px] bg-secondary">
+        <h2 className="font-semibold py-[10px] text-5xl">SHOP GLEEWORLD</h2>
+      </div>
 
       {/* Horizontal E-commerce Slider */}
       <ProductSlider />
