@@ -16,9 +16,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { ActiveVideoSessions } from '@/components/glee-lounge/video-sessions/ActiveVideoSessions';
-import { CreateVideoSessionDialog } from '@/components/glee-lounge/video-sessions/CreateVideoSessionDialog';
 import { VideoSessionViewer } from '@/components/glee-lounge/video-sessions/VideoSessionViewer';
+import { MobileVideoInterface } from '@/components/messenger/MobileVideoInterface';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -68,7 +67,6 @@ const Messenger = () => {
   const [showGroupsPanel, setShowGroupsPanel] = useState(false);
 
   // Video state
-  const [showCreateSession, setShowCreateSession] = useState(false);
   const [activeVideoSession, setActiveVideoSession] = useState<{
     id: string;
     roomName: string;
@@ -505,25 +503,23 @@ const Messenger = () => {
                 </TabsContent>
 
                 {/* Video Tab */}
-                <TabsContent value="video" className="flex-1 overflow-auto mt-0 p-4 sm:p-6 bg-primary data-[state=active]:flex data-[state=active]:flex-col">
-                  <div className="bg-background rounded-lg p-4 flex-1">
-                    <ActiveVideoSessions onJoinSession={(sessionId, roomName, isRecording) => setActiveVideoSession({
-                    id: sessionId,
-                    roomName: roomName,
-                    isRecording: isRecording
-                  })} onCreateSession={() => setShowCreateSession(true)} />
-                  </div>
+                <TabsContent value="video" className="flex-1 overflow-hidden mt-0 bg-background data-[state=active]:flex data-[state=active]:flex-col">
+                  <MobileVideoInterface 
+                    onJoinSession={(sessionId, roomName, isRecording) => setActiveVideoSession({
+                      id: sessionId,
+                      roomName: roomName,
+                      isRecording: isRecording
+                    })} 
+                  />
                   
-                  <CreateVideoSessionDialog open={showCreateSession} onOpenChange={setShowCreateSession} onSessionCreated={(sessionId, roomName) => {
-                  setActiveVideoSession({
-                    id: sessionId,
-                    roomName: roomName,
-                    isRecording: false
-                  });
-                  setShowCreateSession(false);
-                }} />
-                  
-                  {activeVideoSession && <VideoSessionViewer sessionId={activeVideoSession.id} roomName={activeVideoSession.roomName} isRecordingEnabled={activeVideoSession.isRecording} onClose={() => setActiveVideoSession(null)} />}
+                  {activeVideoSession && (
+                    <VideoSessionViewer 
+                      sessionId={activeVideoSession.id} 
+                      roomName={activeVideoSession.roomName} 
+                      isRecordingEnabled={activeVideoSession.isRecording} 
+                      onClose={() => setActiveVideoSession(null)} 
+                    />
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
