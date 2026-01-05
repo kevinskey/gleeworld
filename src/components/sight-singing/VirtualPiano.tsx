@@ -485,7 +485,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     
     // Wrap Rnd in a fixed overlay to ensure proper viewport positioning
     return (
-      <div className="fixed inset-0 z-[60]" onClick={(e) => {
+      <div className="fixed inset-0 z-[60] bg-black/50" onClick={(e) => {
         // Close when clicking overlay background
         if (e.target === e.currentTarget && onClose) {
           onClose();
