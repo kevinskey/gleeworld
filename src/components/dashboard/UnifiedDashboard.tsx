@@ -339,6 +339,24 @@ export const UnifiedDashboard = () => {
         </div>
       </div>
 
+      {/* Horizontal E-commerce Slider */}
+      <div className="w-full py-6 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-xl font-semibold mb-4">Shop Glee Merch</h2>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {/* Placeholder product cards - will be populated with real products */}
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div 
+                key={i} 
+                className="flex-shrink-0 w-48 h-64 bg-card rounded-lg border shadow-sm flex items-center justify-center text-muted-foreground"
+              >
+                Product {i}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-4 space-y-6">
           {/* 4 Fixed Cards - Role-specific content */}
