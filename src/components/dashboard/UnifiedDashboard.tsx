@@ -330,25 +330,34 @@ export const UnifiedDashboard = () => {
       </Suspense>;
   };
 
-  // DEFAULT VIEW: New streamlined 4-card layout
-  return <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-0">
-        {/* Advertising Hero - TOP OF DASHBOARD */}
-        <AdvertisingHero />
+  // DEFAULT VIEW: New streamlined 4-card layout with full-bleed sections
+  return <div className="min-h-screen">
+      {/* Advertising Hero - Full bleed background */}
+      <div className="full-bleed bg-muted">
+        <div className="full-bleed-content py-4">
+          <AdvertisingHero />
+        </div>
+      </div>
 
-        <div className="py-4 space-y-6">
+      {/* Cards section - Full bleed background */}
+      <div className="full-bleed bg-primary">
+        <div className="full-bleed-content py-6 space-y-6">
           {/* 4 Fixed Cards - Role-specific content */}
           <FourCardLayout role={profile.role} isAdmin={profile.is_admin} isSuperAdmin={profile.is_super_admin} />
+        </div>
+      </div>
 
-          {/* My Modules (assigned modules based on exec role) */}
+      {/* My Modules section */}
+      <div className="full-bleed bg-background">
+        <div className="full-bleed-content py-6">
           <MyModules userProfile={{
-          user_id: profile.user_id,
-          role: profile.role,
-          exec_board_role: profile.exec_board_role,
-          is_exec_board: profile.is_exec_board,
-          is_admin: profile.is_admin,
-          is_super_admin: profile.is_super_admin
-        }} />
+            user_id: profile.user_id,
+            role: profile.role,
+            exec_board_role: profile.exec_board_role,
+            is_exec_board: profile.is_exec_board,
+            is_admin: profile.is_admin,
+            is_super_admin: profile.is_super_admin
+          }} />
         </div>
       </div>
       
