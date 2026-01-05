@@ -32,9 +32,13 @@ export const UniversalLayout = ({
   // Use PublicHeader for public, fan, and alumnae pages
   const usePublicHeaderPaths = ['/dashboard/public', '/dashboard/fan', '/alumnae'];
   const shouldUsePublicHeader = usePublicHeaderPaths.includes(location.pathname);
+
+  // Full-bleed shell background for wide screens on dashboards
+  const isDashboardShell = location.pathname.startsWith('/dashboard');
+  const shellBg = isDashboardShell ? 'bg-muted' : 'bg-background';
   
   return (
-    <div className="min-h-screen w-full bg-background">
+    <div className={`min-h-screen w-full ${shellBg}`}>
       {/* Fixed Header */}
       {showHeader && (
         shouldUsePublicHeader 
@@ -43,7 +47,7 @@ export const UniversalLayout = ({
       )}
       
       {/* Main Content - padded by header height to prevent overlap */}
-      <main className={`w-full min-h-dvh pt-[var(--gw-header-h,4rem)] pb-20 sm:pb-0 bg-background text-foreground ${className}`}>
+      <main className={`w-full min-h-dvh pt-[var(--gw-header-h,4rem)] pb-20 sm:pb-0 ${shellBg} text-foreground ${className}`}>
         {containerized ? (
           <PageContainer maxWidth={maxWidth} padded>
             {children}
