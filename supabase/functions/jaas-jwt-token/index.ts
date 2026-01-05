@@ -19,9 +19,14 @@ serve(async (req) => {
 
     const privateKeyPem = Deno.env.get('JAAS_PRIVATE_KEY');
     const appId = Deno.env.get('JAAS_APP_ID') || 'vpaas-magic-cookie-f5bedadd63834d7887fe0bfe495bd2f9';
+    const keyId = Deno.env.get('JAAS_KEY_ID');
     
     if (!privateKeyPem) {
       throw new Error('JAAS_PRIVATE_KEY not configured');
+    }
+    
+    if (!keyId) {
+      throw new Error('JAAS_KEY_ID not configured');
     }
 
     // Parse PEM private key
@@ -79,7 +84,7 @@ serve(async (req) => {
       { 
         alg: "RS256", 
         typ: "JWT",
-        kid: `${appId}/YOUR_KEY_ID` // You may need to update this with your actual key ID from JaaS console
+        kid: `${appId}/${keyId}`
       },
       payload,
       privateKey
