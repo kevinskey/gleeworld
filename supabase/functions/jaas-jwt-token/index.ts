@@ -60,13 +60,26 @@ serve(async (req) => {
       .replace(/\\n/g, "\n");
 
     // Keep only valid base64 characters
-    const base64Body = maybeBody.replace(/[^A-Za-z0-9+/=]/g, "");
+    let base64Body = maybeBody.replace(/[^A-Za-z0-9+/=]/g, "");
 
-    console.log('PEM base64 length after cleanup:', base64Body.length);
+    console.log('PEM base64 length after cleanup:', base64Body.length, 'mod4:', base64Body.length % 4);
+
+    if (!base64Body || base64Body.length < 256) {
+      throw new Error(
+        'JAAS_PRIVATE_KEY appears incomplete. Paste the full PEM including BEGIN/END lines.',
+      );
+    }
+
+    // Some secret managers strip padding; add it back if needed
+    const pad = base64Body.length % 4;
+    if (pad !== 0) {
+      base64Body = base64Body + "=".repeat(4 - pad);
+      console.log('Added base64 padding. New length:', base64Body.length);
+    }
 
     let binaryDer: Uint8Array;
     try {
-      binaryDer = Uint8Array.from(atob(base64Body), c => c.charCodeAt(0));
+      binaryDer = Uint8Array.from(atob(base64Body), (c) => c.charCodeAt(0));
     } catch (_e) {
       // Don't log the key; just surface a helpful error.
       throw new Error('Failed to decode base64. Ensure the private key PEM is complete and properly formatted.');
