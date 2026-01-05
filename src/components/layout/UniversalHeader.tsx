@@ -5,7 +5,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { LogOut, User, Settings, Menu, Home, LayoutDashboard, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays } from "lucide-react";
+import { LogOut, User, Settings, Menu, Home, Camera, Shield, Crown, Globe, Heart, GraduationCap, Music, Search, Plus, Mail, Key, CalendarDays } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMessenger } from "@/contexts/MessengerContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -215,7 +215,7 @@ export const UniversalHeader = ({
           </div>
 
           {/* Right side actions - Mobile-optimized icon bar */}
-          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 text-spelman-blue-dark pr-4 sm:pr-8 md:pr-[10px] lg:pr-[100px] xl:pr-[200px] lg:gap-[30px]">
+          <div className="flex items-center gap-0.5 sm:gap-1 md:gap-1.5 text-spelman-blue-dark pr-4 sm:pr-8 md:pr-[10px] lg:pr-[100px] xl:pr-[200px] lg:gap-[35px]">
             <HeaderRadioControls />
             <div className="hidden sm:block">
               <MusicalToolkit />
@@ -241,9 +241,7 @@ export const UniversalHeader = ({
                 {/* Keep dashboard switcher as secondary navigation - Super Admin only */}
                 {userProfile?.is_super_admin && <DropdownMenu>
                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className={`${HEADER_ICON_SIZES.button} p-0 hover:bg-gray-100 rounded-full ${HEADER_ICON_SIZES.svgSelector}`} type="button">
-                        <LayoutDashboard className={HEADER_ICON_SIZES.icon} />
-                      </Button>
+                      
                    </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56 bg-popover text-popover-foreground border border-border shadow-2xl z-[1100]" align="center" sideOffset={8}>
                     <DropdownMenuLabel>Quick Access</DropdownMenuLabel>
