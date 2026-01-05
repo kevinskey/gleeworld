@@ -95,10 +95,6 @@ export const JitsiMeetRoom = ({
             hideLobbyButton: true,
             requireDisplayName: false,
             enableInsecureRoomNameWarning: false,
-            // Disable lobby/waiting room so members can join directly
-            lobby: { enabled: false },
-            disableLobby: true,
-            membersOnly: false,
             p2p: { enabled: true },
             testing: { p2pTestMode: false }
           },
