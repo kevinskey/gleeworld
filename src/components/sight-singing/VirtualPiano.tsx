@@ -112,13 +112,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     const calculateKeyWidth = () => {
       if (onClose && !isMobile) {
-        // Full piano has 52 white keys, calculate width to fit viewport
-        const availableWidth = window.innerWidth - 16; // minimal padding
-        const numWhiteKeys = 52;
-        const gap = 2; // gap between keys
-        const totalGaps = (numWhiteKeys - 1) * gap;
-        const keyWidth = Math.floor((availableWidth - totalGaps) / numWhiteKeys);
-        setDynamicKeyWidth(Math.max(20, keyWidth)); // no max cap
+        // Double-sized keys for easier touchscreen play (will require scrolling)
+        setDynamicKeyWidth(100); // Large fixed width for touch-friendly keys
       }
     };
     checkMobile();
@@ -402,8 +397,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       <div ref={keysContainerRef} style={{
       scrollbarWidth: 'thin',
       scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))'
-    }} className={`flex-1 ${isFullScreen && dynamicKeyWidth ? 'overflow-hidden' : 'overflow-x-auto'} overflow-y-hidden`}>
-        <div className={`relative ${isFullScreen && dynamicKeyWidth ? 'w-full flex justify-center' : 'inline-block min-w-max'} px-2 mx-0 sm:px-0 py-0`}>
+    }} className="flex-1 overflow-x-auto overflow-y-hidden">
+        <div className="relative inline-block min-w-max px-2 mx-0 sm:px-0 py-0">
           {/* White Keys */}
           <div className="relative">
             <div className={isFullScreen ? "flex gap-0.5 h-[200px] sm:h-[320px] md:h-[400px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
