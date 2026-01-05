@@ -421,6 +421,6 @@ export const UniversalHeader = ({
     }} isOpen={isQuickActionsOpen} onClose={() => setIsQuickActionsOpen(false)} quickActions={memoizedQuickActions} />}
 
       {/* Mobile Bottom Navigation */}
-      {user && <MobileBottomNav onCameraClick={() => setShowCategorySelector(true)} />}
+      {user && <MobileBottomNav />}
     </>;
 };
