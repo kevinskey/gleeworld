@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, GraduationCap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Product {
   id: string;
@@ -88,6 +89,18 @@ export const ProductSlider = () => {
               </div>
             </div>
           ))}
+        </div>
+        
+        {/* Glee Academy Button */}
+        <div className="mt-4 flex justify-center">
+          <Button 
+            onClick={() => navigate('/glee-academy')}
+            className="gap-2"
+            size="lg"
+          >
+            <GraduationCap className="h-5 w-5" />
+            Explore Glee Academy
+          </Button>
         </div>
       </div>
     </div>
