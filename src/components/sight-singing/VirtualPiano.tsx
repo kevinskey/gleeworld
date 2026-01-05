@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { Rnd } from 'react-rnd';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
@@ -467,9 +468,9 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   if (isFullScreen) {
     // On mobile, use a compact modal instead of full screen
     if (isMobile) {
-      return (
+      return createPortal(
         <div 
-          className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4"
           onTouchStart={handleUserInteraction}
           onClick={handleUserInteraction}
         >
@@ -479,13 +480,17 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           >
             {pianoContent}
           </div>
-        </div>
+        </div>,
+        document.body
       );
     }
     
-    // Wrap Rnd in a fixed overlay to ensure proper viewport positioning
-    return (
-      <div className="fixed inset-0 z-[60] bg-black/50" onClick={(e) => {
+    // Desktop: Use portal to render at body level, centered
+    const centerX = Math.max(0, (window.innerWidth - pianoSize.width) / 2);
+    const centerY = Math.max(0, (window.innerHeight - pianoSize.height) / 2);
+    
+    return createPortal(
+      <div className="fixed inset-0 z-[9999] bg-black/50" onClick={(e) => {
         // Close when clicking overlay background
         if (e.target === e.currentTarget && onClose) {
           onClose();
@@ -493,8 +498,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       }}>
         <Rnd 
           default={{
-            x: pianoPosition.x,
-            y: pianoPosition.y,
+            x: centerX,
+            y: centerY,
             width: pianoSize.width,
             height: pianoSize.height
           }}
@@ -510,12 +515,13 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
           maxHeight={900} 
           dragHandleClassName="cursor-move"
           cancel=".no-drag"
-          className="z-[61]" 
-          bounds="parent"
+          className="z-[10000]" 
+          bounds="window"
         >
           {pianoContent}
         </Rnd>
-      </div>
+      </div>,
+      document.body
     );
   }
   return pianoContent;
