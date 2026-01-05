@@ -324,7 +324,7 @@ export const GroupMessageInterface: React.FC = () => {
   }
 
   return (
-    <div className="h-full flex flex-col bg-muted/30 overflow-hidden max-w-5xl mx-auto safe-area-inset">
+    <div className="h-full flex flex-col bg-muted/30 overflow-hidden max-w-5xl mx-auto safe-area-inset px-6">
       {/* Mobile: Single column with groups at top */}
       {isMobile ? (
         <>
