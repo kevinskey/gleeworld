@@ -331,34 +331,28 @@ export const UnifiedDashboard = () => {
   };
 
   // DEFAULT VIEW: New streamlined 4-card layout
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6">
+  return <div className="min-h-screen bg-background">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-0">
         {/* Advertising Hero - TOP OF DASHBOARD */}
         <AdvertisingHero />
 
         <div className="py-4 space-y-6">
           {/* 4 Fixed Cards - Role-specific content */}
-          <FourCardLayout 
-            role={profile.role}
-            isAdmin={profile.is_admin}
-            isSuperAdmin={profile.is_super_admin}
-          />
+          <FourCardLayout role={profile.role} isAdmin={profile.is_admin} isSuperAdmin={profile.is_super_admin} />
 
           {/* My Modules (assigned modules based on exec role) */}
           <MyModules userProfile={{
-            user_id: profile.user_id,
-            role: profile.role,
-            exec_board_role: profile.exec_board_role,
-            is_exec_board: profile.is_exec_board,
-            is_admin: profile.is_admin,
-            is_super_admin: profile.is_super_admin
-          }} />
+          user_id: profile.user_id,
+          role: profile.role,
+          exec_board_role: profile.exec_board_role,
+          is_exec_board: profile.is_exec_board,
+          is_admin: profile.is_admin,
+          is_super_admin: profile.is_super_admin
+        }} />
         </div>
       </div>
       
       {/* Messages Panel Overlay */}
       {showMessages && <MessagesPanel onClose={() => setShowMessages(false)} />}
-    </div>
-  );
+    </div>;
 };
