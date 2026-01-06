@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { 
   Mail, FileText, MapPin, Calendar, Users, Building2, Bed, Bus, Package, 
-  ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home
+  ClipboardList, Shirt, DollarSign, UserCheck, Search, Menu, X, Home, Clock
 } from 'lucide-react';
 import { BookingRequestManager } from './BookingRequestManager';
 import { ContractManager } from './ContractManager';
@@ -23,6 +23,7 @@ import { TourDocumentsSection } from '@/components/tour/TourDocumentsSection';
 import { LivePerformancesSection } from '@/components/tour/LivePerformancesSection';
 import { TourRosterSection } from '@/components/tour/TourRosterSection';
 import { TourManagerLanding } from './TourManagerLanding';
+import { TourLogisticsSection } from './TourLogisticsSection';
 import { supabase } from '@/integrations/supabase/client';
 
 interface TourManagerDashboardProps {
@@ -39,6 +40,7 @@ interface TourManagerDashboardProps {
 
 const navItems = [
   { value: 'overview', label: 'Overview', icon: Home },
+  { value: 'logistics', label: 'Logistics', icon: Clock },
   { value: 'booking-requests', label: 'Requests', icon: Mail },
   { value: 'contracts', label: 'Contracts', icon: FileText },
   { value: 'hosts', label: 'Contacts', icon: Building2 },
@@ -53,6 +55,7 @@ const navItems = [
 
 const contentConfig: Record<string, { title: string; description: string }> = {
   'overview': { title: 'Tour Management', description: 'Overview of all tour operations' },
+  'logistics': { title: 'Logistics', description: 'Call times, crew duties, and merchandise coordination' },
   'booking-requests': { title: 'Requests', description: 'Manage incoming performance requests and inquiries' },
   'contracts': { title: 'Contracts', description: 'Create, manage, and track contract signatures' },
   'hosts': { title: 'Contacts', description: 'Manage venue contacts and host relationships' },
@@ -132,6 +135,8 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
     switch (activeSection) {
       case 'overview':
         return <TourManagerLanding onNavigate={setActiveSection} stats={stats} />;
+      case 'logistics':
+        return <TourLogisticsSection />;
       case 'booking-requests':
         return <BookingRequestManager user={user} />;
       case 'contracts':
