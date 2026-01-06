@@ -24,6 +24,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { DocumentUpload } from '@/components/DocumentUpload';
 import { ContractTemplates } from '@/components/ContractTemplates';
 import { format } from 'date-fns';
+import { formatContractDisplayName } from '@/lib/contract-utils';
 
 export const TourContracts = () => {
   const { user } = useAuth();
@@ -188,7 +189,7 @@ export const TourContracts = () => {
                   <div key={contract.id} className="flex items-center justify-between py-2 border-b last:border-b-0">
                     <div className="flex-1 min-w-0 mr-2">
                       <p className="font-medium text-sm sm:text-base truncate">
-                        {contract.title.replace(/^(Tour Contract|TC)\s*-\s*/i, '')}
+                        {formatContractDisplayName(contract.title)}
                       </p>
                       <p className="text-xs sm:text-sm text-muted-foreground">
                         Created {format(new Date(contract.created_at), 'MMM dd, yyyy')}
@@ -283,7 +284,7 @@ export const TourContracts = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                         <h3 className="font-semibold text-sm sm:text-base truncate">
-                          {contract.title.replace(/^(Tour Contract|TC)\s*-\s*/i, '')}
+                          {formatContractDisplayName(contract.title)}
                         </h3>
                         <Badge className={`${getStatusColor(contract.status)} text-xs flex-shrink-0 w-fit`}>
                           {getStatusIcon(contract.status)}
