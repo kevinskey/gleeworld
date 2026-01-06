@@ -238,7 +238,7 @@ export const TourMilestones = () => {
                   ) : (
                     <>
                       <span className={cn(
-                        "flex-1 text-xs",
+                        "flex-1 text-xs text-foreground",
                         milestone.completed && "line-through text-muted-foreground"
                       )}>
                         {milestone.title}
