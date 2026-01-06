@@ -241,47 +241,38 @@ export const TourManagerDashboard = ({ user }: TourManagerDashboardProps) => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
-        {/* Top Bar */}
+        {/* Top Bar - Compact */}
         <header className="sticky top-0 z-20 bg-background border-b border-border">
-          <div className="flex items-center justify-between px-4 lg:px-6 h-14">
-            <div className="flex items-center gap-3">
-              {/* Mobile Menu Button */}
+          <div className="flex items-center justify-between px-3 lg:px-4 h-10">
+            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="icon"
-                className="lg:hidden h-9 w-9 flex-shrink-0"
+                className="lg:hidden h-8 w-8 flex-shrink-0"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
               >
-                <Menu className="h-5 w-5" />
+                <Menu className="h-4 w-4" />
               </Button>
-              <h1 className="text-base font-semibold text-foreground lg:hidden truncate">
+              <h1 className="text-sm font-medium text-foreground truncate">
                 {currentContent.title}
               </h1>
-              <div className="relative w-64 hidden sm:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search" 
-                  className="pl-9 h-9 bg-background border focus-visible:ring-1"
-                />
-              </div>
+              <span className="text-xs text-muted-foreground hidden sm:inline">—</span>
+              <span className="text-xs text-muted-foreground hidden sm:inline truncate">{currentContent.description}</span>
+            </div>
+            <div className="relative w-48 hidden md:block">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input 
+                placeholder="Search" 
+                className="pl-8 h-8 text-sm bg-background border focus-visible:ring-1"
+              />
             </div>
           </div>
         </header>
 
         {/* Content Area */}
         <div className="flex-1 overflow-auto">
-          <div className="p-4 lg:p-6 lg:max-w-5xl">
-            {/* Section Header - hidden on mobile (shown in top bar) */}
-            <div className="mb-4 lg:mb-6 hidden lg:block">
-              <h2 className="text-xl font-semibold text-foreground">{currentContent.title}</h2>
-              <p className="text-sm text-muted-foreground mt-1">{currentContent.description}</p>
-            </div>
-            <p className="text-sm text-muted-foreground mb-4 lg:hidden">{currentContent.description}</p>
-
-            {/* Content */}
-            <div className="space-y-4">
-              {renderContent()}
-            </div>
+          <div className="p-3 lg:p-4 lg:max-w-5xl">
+            {renderContent()}
           </div>
         </div>
       </main>
