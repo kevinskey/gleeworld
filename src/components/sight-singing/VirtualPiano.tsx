@@ -126,6 +126,8 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
   // Detect mobile and orientation on mount and resize
   useEffect(() => {
+    let resizeTimeout: NodeJS.Timeout;
+    
     const updateLayout = () => {
       const mobile = window.innerWidth < 768;
       const landscape = window.innerWidth > window.innerHeight;
@@ -143,12 +145,19 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       }
     };
 
+    // Debounced handler to prevent closing on orientation change
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateLayout, 100);
+    };
+
     updateLayout();
-    window.addEventListener('resize', updateLayout);
-    window.addEventListener('orientationchange', updateLayout);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
     return () => {
-      window.removeEventListener('resize', updateLayout);
-      window.removeEventListener('orientationchange', updateLayout);
+      clearTimeout(resizeTimeout);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
     };
   }, [onClose]);
 
@@ -455,12 +464,12 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
   // Full-screen mode when onClose is provided
   const pianoContent = <div className={isFullScreen ? "w-full h-full bg-background flex flex-col overflow-hidden" : `w-full flex flex-col ${className}`}>
-      {/* Header Bar */}
-      <div className="relative z-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-2 sm:px-4 py-2 sm:py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move gap-2">
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-          <h2 className="text-sm sm:text-lg font-semibold hidden sm:block">Piano</h2>
+      {/* Header Bar - Compact on mobile */}
+      <div className="relative z-10 flex items-center justify-between px-2 sm:px-4 py-1.5 sm:py-3 border-b border-border bg-card backdrop-blur-sm shrink-0 cursor-move gap-1 sm:gap-2 min-w-0">
+        <div className="flex items-center gap-1 sm:gap-3 min-w-0 flex-1 overflow-x-auto">
+          <h2 className="text-sm sm:text-lg font-semibold hidden sm:block flex-shrink-0">Piano</h2>
           <Select value={startOctave.toString()} onValueChange={value => setStartOctave(parseInt(value, 10))}>
-            <SelectTrigger className="w-24 sm:w-32 h-8 sm:h-9 text-xs sm:text-sm">
+            <SelectTrigger className="w-16 sm:w-32 h-7 sm:h-9 text-xs sm:text-sm flex-shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="z-[100] bg-popover">
@@ -475,7 +484,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             </SelectContent>
           </Select>
           <Select value={selectedInstrument.toString()} onValueChange={value => setSelectedInstrument(parseInt(value, 10))}>
-            <SelectTrigger className="w-32 sm:w-48 h-8 sm:h-9 text-xs sm:text-sm">
+            <SelectTrigger className="w-20 sm:w-48 h-7 sm:h-9 text-xs sm:text-sm flex-shrink-0">
               <SelectValue placeholder="Instrument" />
             </SelectTrigger>
             <SelectContent className="z-[100] max-h-[300px] bg-popover">
@@ -485,32 +494,32 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             </SelectContent>
           </Select>
           
-          {/* Octave View Toggle */}
+          {/* Octave View Toggle - Hidden on small mobile */}
           <ToggleGroup 
             type="single" 
             value={octaveView.toString()} 
             onValueChange={(val) => val && setOctaveView(parseInt(val, 10) as 1 | 2 | 3)}
-            className="h-8 sm:h-9"
+            className="h-7 sm:h-9 hidden xs:flex"
           >
-            <ToggleGroupItem value="1" aria-label="1 octave" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
-              1 Oct
+            <ToggleGroupItem value="1" aria-label="1 octave" className="h-7 sm:h-9 px-1.5 sm:px-3 text-xs sm:text-sm">
+              1
             </ToggleGroupItem>
-            <ToggleGroupItem value="2" aria-label="2 octaves" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
-              2 Oct
+            <ToggleGroupItem value="2" aria-label="2 octaves" className="h-7 sm:h-9 px-1.5 sm:px-3 text-xs sm:text-sm">
+              2
             </ToggleGroupItem>
-            <ToggleGroupItem value="3" aria-label="3 octaves" className="h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm">
-              3 Oct
+            <ToggleGroupItem value="3" aria-label="3 octaves" className="h-7 sm:h-9 px-1.5 sm:px-3 text-xs sm:text-sm">
+              3
             </ToggleGroupItem>
           </ToggleGroup>
           
-          {synthReady && <span className="text-xs text-green-500 hidden sm:inline">✓ Ready</span>}
+          {synthReady && <span className="text-xs text-green-500 hidden sm:inline flex-shrink-0">✓</span>}
         </div>
 
-        <div className="flex items-center gap-1 sm:gap-2 justify-end">
-          <Button variant="ghost" size="sm" onClick={toggleMute} className="h-7 w-7 sm:h-9 sm:w-9 p-0">
-            {isMuted ? <VolumeX className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <Volume2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+        <div className="flex items-center gap-1 sm:gap-2 justify-end flex-shrink-0">
+          <Button variant="ghost" size="sm" onClick={toggleMute} className="h-6 w-6 sm:h-9 sm:w-9 p-0">
+            {isMuted ? <VolumeX className="h-3 w-3 sm:h-4 sm:w-4" /> : <Volume2 className="h-3 w-3 sm:h-4 sm:w-4" />}
           </Button>
-          <div className="w-14 sm:w-24">
+          <div className="w-10 sm:w-24 hidden xs:block">
             <Slider value={volume} onValueChange={setVolume} max={1} min={0} step={0.1} className="w-full" />
           </div>
           {onClose && <Button 
@@ -523,10 +532,10 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
             }} 
             onPointerDown={(e) => e.stopPropagation()}
             onMouseDown={(e) => e.stopPropagation()}
-            className="h-7 w-7 sm:h-9 sm:w-9 p-0 ml-1 no-drag" 
+            className="h-6 w-6 sm:h-9 sm:w-9 p-0 ml-0.5 no-drag" 
             aria-label="Close piano"
           >
-              <X className="h-4 w-4 sm:h-5 sm:w-5" />
+              <X className="h-3.5 w-3.5 sm:h-5 sm:w-5" />
             </Button>}
         </div>
       </div>
