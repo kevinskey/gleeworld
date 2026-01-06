@@ -48,21 +48,8 @@ export const DashboardStoreSection = () => {
   }
   return <div className="w-full bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 pl-[30px] pt-[20px]">
-        {/* Bold Header */}
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black tracking-tight text-foreground leading-none lg:text-lg">COLLECTIONS
-24-25<br />
-              COLLECTIONS<br />
-              <span className="text-primary text-4xl">24-25</span>
-            </h1>
-          </div>
-          
-          {/* Filters & Sorts - Right Side */}
-          
-        </div>
-
-        {/* Category Tabs */}
+        {/* Section Header */}
+        <h2 className="text-2xl font-bold text-foreground mb-6">Shop</h2>
         
 
         {/* Product Horizontal Scroll */}
