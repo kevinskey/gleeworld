@@ -572,586 +572,263 @@ export const CreateEventDialog = ({
       <DialogTrigger asChild>
         
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg sm:text-xl">Create New Event</DialogTitle>
-          <DialogDescription>
-            Add a new event to the Glee World calendar.
+      <DialogContent className="max-w-[95vw] sm:max-w-3xl lg:max-w-4xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-2 flex-shrink-0">
+          <DialogTitle className="text-lg">Create New Event</DialogTitle>
+          <DialogDescription className="text-sm">
+            Add a new event to the calendar
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            {/* Calendar Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="calendar">Calendar *</Label>
-              <Select value={selectedCalendarId} onValueChange={setSelectedCalendarId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a calendar..." />
-                </SelectTrigger>
-                <SelectContent className="max-h-40 overflow-y-auto z-50 bg-background border shadow-lg">
-                  {calendars.map(calendar => <SelectItem key={calendar.id} value={calendar.id}>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{
-                      backgroundColor: calendar.color
-                    }} />
-                        <span>{calendar.name}</span>
-                      </div>
-                    </SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="title">Event Title *</Label>
-              <Input id="title" value={formData.title} onChange={e => setFormData(prev => ({
-              ...prev,
-              title: e.target.value
-            }))} placeholder="e.g., Fall Concert" required />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="description">Description</Label>
-                <Button type="button" variant="outline" size="sm" onClick={generateDescription} disabled={generatingDescription || !formData.title} className="h-8">
-                  <Sparkles className="h-3 w-3 mr-1" />
-                  {generatingDescription ? "Generating..." : "AI Generate"}
-                </Button>
-              </div>
-              <Textarea id="description" value={formData.description} onChange={e => setFormData(prev => ({
-              ...prev,
-              description: e.target.value
-            }))} placeholder="Event description... (or use AI Generate)" rows={3} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="event_type">Event Type</Label>
-                <Select value={formData.event_type} onValueChange={value => setFormData(prev => ({
-                ...prev,
-                event_type: value
-              }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {eventTypes.map(type => <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="max_attendees">Max Attendees</Label>
-                <Input id="max_attendees" type="number" value={formData.max_attendees} onChange={e => setFormData(prev => ({
-                ...prev,
-                max_attendees: e.target.value
-              }))} placeholder="Optional" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="start_date">Start Date & Time *</Label>
-                <Input id="start_date" type="datetime-local" value={formData.start_date} onChange={e => {
-                const newStartDate = e.target.value;
-                setFormData(prev => ({
-                  ...prev,
-                  start_date: newStartDate,
-                  attendance_deadline: prev.attendance_required && newStartDate ? calculateAttendanceDeadline(newStartDate) : prev.attendance_deadline
-                }));
-              }} required />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="end_date">End Date & Time</Label>
-                <Input id="end_date" type="datetime-local" value={formData.end_date} onChange={e => setFormData(prev => ({
-                ...prev,
-                end_date: e.target.value
-              }))} />
-              </div>
-            </div>
-
-            {/* Attendance Tracking Section - Moved up for visibility */}
-            <div className="space-y-4 border-t pt-4 border-primary/20 bg-muted/20 p-4 rounded-lg">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-base font-semibold">
-                  <UserCheck className="h-5 w-5" />
-                  Attendance Tracking
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Configure attendance requirements for this event
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Attendance Required</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Should members be required to mark attendance?
-                  </p>
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto pr-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Left Column - Basic Info */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Calendar *</Label>
+                  <Select value={selectedCalendarId} onValueChange={setSelectedCalendarId}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue placeholder="Select..." />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-background border shadow-lg">
+                      {calendars.map(calendar => (
+                        <SelectItem key={calendar.id} value={calendar.id}>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: calendar.color }} />
+                            <span className="text-sm">{calendar.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Switch checked={formData.attendance_required} onCheckedChange={checked => {
-                setFormData(prev => ({
-                  ...prev,
-                  attendance_required: checked,
-                  attendance_deadline: checked && prev.start_date ? calculateAttendanceDeadline(prev.start_date) : prev.attendance_deadline
-                }));
-              }} />
+                <div className="space-y-1">
+                  <Label className="text-xs">Type</Label>
+                  <Select value={formData.event_type} onValueChange={value => setFormData(prev => ({ ...prev, event_type: value }))}>
+                    <SelectTrigger className="h-8 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {eventTypes.map(type => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              {formData.attendance_required && <div className="space-y-4 p-4 border rounded-lg bg-background">
-                  <div className="space-y-2">
-                    <Label htmlFor="attendance_deadline">
-                      Attendance Deadline
-                      <span className="text-xs text-muted-foreground ml-2">(Automatically set to 30 minutes after start)</span>
-                    </Label>
-                    <Input id="attendance_deadline" type="datetime-local" value={formData.attendance_deadline} onChange={e => setFormData(prev => ({
-                  ...prev,
-                  attendance_deadline: e.target.value
-                }))} placeholder="When must attendance be marked?" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Members must mark their attendance before this time
-                  </p>
+              <div className="space-y-1">
+                <Label className="text-xs">Title *</Label>
+                <Input value={formData.title} onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))} placeholder="Event name" required className="h-8" />
+              </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Allow Late Arrivals</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Can members mark attendance after the start time?
-                      </p>
-                    </div>
-                    <Switch checked={formData.late_arrival_allowed} onCheckedChange={checked => setFormData(prev => ({
-                  ...prev,
-                  late_arrival_allowed: checked
-                }))} />
-                  </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Description</Label>
+                  <Button type="button" variant="ghost" size="sm" onClick={generateDescription} disabled={generatingDescription || !formData.title} className="h-5 text-xs px-1">
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    AI
+                  </Button>
+                </div>
+                <Textarea value={formData.description} onChange={e => setFormData(prev => ({ ...prev, description: e.target.value }))} placeholder="Description..." rows={2} className="text-sm resize-none" />
+              </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>Excuse Required for Absence</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Must members provide an excuse if they can't attend?
-                      </p>
-                    </div>
-                    <Switch checked={formData.excuse_required} onCheckedChange={checked => setFormData(prev => ({
-                  ...prev,
-                  excuse_required: checked
-                }))} />
-                  </div>
-                </div>}
-            </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Venue</Label>
+                  <Input value={formData.venue_name} onChange={e => setFormData(prev => ({ ...prev, venue_name: e.target.value }))} placeholder="Location" className="h-8" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Max Attendees</Label>
+                  <Input type="number" value={formData.max_attendees} onChange={e => setFormData(prev => ({ ...prev, max_attendees: e.target.value }))} placeholder="Optional" className="h-8" />
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="venue_name">Venue Name</Label>
-              <Input id="venue_name" value={formData.venue_name} onChange={e => setFormData(prev => ({
-              ...prev,
-              venue_name: e.target.value
-            }))} placeholder="e.g., Memorial Auditorium" />
-            </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Address</Label>
+                <AddressInput value={formData.address} onChange={value => setFormData(prev => ({ ...prev, address: value }))} placeholder="Full address" onPlaceSelect={place => {
+                  if (place.formatted_address) setFormData(prev => ({ ...prev, address: place.formatted_address || '' }));
+                }} />
+              </div>
 
-            <AddressInput id="address" label="Full Address" value={formData.address} onChange={value => setFormData(prev => ({
-            ...prev,
-            address: value
-          }))} placeholder="Complete street address" onPlaceSelect={place => {
-            if (place.formatted_address) {
-              setFormData(prev => ({
-                ...prev,
-                address: place.formatted_address || ''
-              }));
-            }
-          }} />
-
-            <div className="space-y-2">
-              <Label htmlFor="event_image">Event Image</Label>
-              <div className="space-y-2">
-                {imagePreview ? <div className="relative">
-                    <img src={imagePreview} alt="Event preview" className="w-full h-32 object-cover rounded-md border" />
-                    <Button type="button" variant="outline" size="sm" onClick={removeImage} className="absolute top-2 right-2">
-                      <X className="h-4 w-4" />
+              {/* Image - Compact */}
+              <div className="flex items-center gap-2">
+                <Label className="text-xs">Image:</Label>
+                {imagePreview ? (
+                  <div className="flex items-center gap-2">
+                    <img src={imagePreview} alt="Preview" className="w-10 h-10 object-cover rounded border" />
+                    <Button type="button" variant="ghost" size="sm" onClick={removeImage} className="h-6 w-6 p-0">
+                      <X className="h-3 w-3" />
                     </Button>
-                  </div> : <div className="border-2 border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <Upload className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Upload an event image to display on the landing page
-                    </p>
-                    <Input id="event_image" type="file" accept="image/*,.heic,.heif" onChange={handleImageUpload} className="hidden" />
-                    <Button type="button" variant="outline" onClick={() => document.getElementById('event_image')?.click()}>
-                      Choose Image
+                  </div>
+                ) : (
+                  <>
+                    <Input id="event_image" type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                    <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('event_image')?.click()} className="h-6 text-xs">
+                      <Upload className="h-3 w-3 mr-1" /> Upload
                     </Button>
-                  </div>}
-                <p className="text-xs text-muted-foreground">
-                  Maximum file size: 5MB. Supported formats: JPG, PNG, WebP
-                </p>
+                  </>
+                )}
               </div>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Registration Required</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Do attendees need to register for this event?
-                  </p>
-                </div>
-                <Switch checked={formData.registration_required} onCheckedChange={checked => setFormData(prev => ({
-                ...prev,
-                registration_required: checked
-              }))} />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Public Event</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Should this event be visible to the public?
-                  </p>
-                </div>
-                <Switch checked={formData.is_public} onCheckedChange={checked => setFormData(prev => ({
-                ...prev,
-                is_public: checked
-              }))} />
-              </div>
-            </div>
-
-            {/* Recurring Event Section */}
-            <div className="space-y-4 border-t pt-4 border-primary/20 bg-muted/20 p-4 rounded-lg">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2 text-base font-semibold">
-                  <CalendarDays className="h-5 w-5" />
-                  Recurring Event
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Set this event to repeat on a schedule
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Make this event recurring</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Automatically create future instances of this event
-                  </p>
-                </div>
-                <Switch checked={formData.is_recurring} onCheckedChange={checked => setFormData(prev => ({
-                ...prev,
-                is_recurring: checked
-              }))} />
-              </div>
-
-              {formData.is_recurring && <div className="space-y-4 p-4 border rounded-lg bg-background">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Recurrence Pattern</Label>
-                      <Select value={formData.recurrence_type} onValueChange={value => setFormData(prev => ({
-                    ...prev,
-                    recurrence_type: value
-                  }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Repeat Every</Label>
-                      <div className="flex items-center gap-2">
-                        <Input type="number" min="1" max="12" value={formData.recurrence_interval} onChange={e => setFormData(prev => ({
+            {/* Right Column - Date/Time & Options */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs">Start *</Label>
+                  <Input type="datetime-local" value={formData.start_date} onChange={e => {
+                    const newStartDate = e.target.value;
+                    setFormData(prev => ({
                       ...prev,
-                      recurrence_interval: parseInt(e.target.value) || 1
-                    }))} className="w-20" />
-                        <span className="text-sm text-muted-foreground">
-                          {formData.recurrence_type === 'daily' ? 'days' : formData.recurrence_type === 'weekly' ? 'weeks' : 'months'}
-                        </span>
-                      </div>
+                      start_date: newStartDate,
+                      attendance_deadline: prev.attendance_required && newStartDate ? calculateAttendanceDeadline(newStartDate) : prev.attendance_deadline
+                    }));
+                  }} required className="h-8 text-sm" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">End</Label>
+                  <Input type="datetime-local" value={formData.end_date} onChange={e => setFormData(prev => ({ ...prev, end_date: e.target.value }))} className="h-8 text-sm" />
+                </div>
+              </div>
+
+              {/* Quick Options */}
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 p-2 bg-muted/30 rounded-lg text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Public</span>
+                  <Switch checked={formData.is_public} onCheckedChange={checked => setFormData(prev => ({ ...prev, is_public: checked }))} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Registration</span>
+                  <Switch checked={formData.registration_required} onCheckedChange={checked => setFormData(prev => ({ ...prev, registration_required: checked }))} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Attendance</span>
+                  <Switch checked={formData.attendance_required} onCheckedChange={checked => {
+                    setFormData(prev => ({
+                      ...prev,
+                      attendance_required: checked,
+                      attendance_deadline: checked && prev.start_date ? calculateAttendanceDeadline(prev.start_date) : prev.attendance_deadline
+                    }));
+                  }} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Recurring</span>
+                  <Switch checked={formData.is_recurring} onCheckedChange={checked => setFormData(prev => ({ ...prev, is_recurring: checked }))} />
+                </div>
+              </div>
+
+              {/* Attendance Settings */}
+              {formData.attendance_required && (
+                <div className="p-2 border rounded-lg space-y-2 bg-background">
+                  <div className="flex items-center gap-1 text-xs font-medium">
+                    <UserCheck className="h-3 w-3" /> Attendance
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="datetime-local" value={formData.attendance_deadline} onChange={e => setFormData(prev => ({ ...prev, attendance_deadline: e.target.value }))} className="h-7 text-xs" placeholder="Deadline" />
+                    <div className="flex items-center justify-around">
+                      <label className="flex items-center gap-1 text-xs">
+                        <Switch checked={formData.late_arrival_allowed} onCheckedChange={checked => setFormData(prev => ({ ...prev, late_arrival_allowed: checked }))} /> Late OK
+                      </label>
                     </div>
                   </div>
+                </div>
+              )}
 
-                  {/* Day of Week Selector - Only shown for weekly recurrence */}
+              {/* Recurring Settings */}
+              {formData.is_recurring && (
+                <div className="p-2 border rounded-lg space-y-2 bg-background">
+                  <div className="flex items-center gap-1 text-xs font-medium">
+                    <CalendarDays className="h-3 w-3" /> Recurrence
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Select value={formData.recurrence_type} onValueChange={value => setFormData(prev => ({ ...prev, recurrence_type: value }))}>
+                      <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <div className="flex items-center gap-1">
+                      <Input type="number" min="1" max="12" value={formData.recurrence_interval} onChange={e => setFormData(prev => ({ ...prev, recurrence_interval: parseInt(e.target.value) || 1 }))} className="h-7 w-12 text-xs" />
+                      <span className="text-xs">{formData.recurrence_type === 'daily' ? 'd' : formData.recurrence_type === 'weekly' ? 'wk' : 'mo'}</span>
+                    </div>
+                    <Input 
+                      type="number" 
+                      min="1"
+                      value={formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0 
+                        ? Math.ceil(formData.max_occurrences / Math.max(formData.recurrence_days_of_week.length, 1))
+                        : formData.max_occurrences
+                      } 
+                      onChange={e => {
+                        const val = parseInt(e.target.value) || 1;
+                        if (formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0) {
+                          setFormData(prev => ({ ...prev, max_occurrences: val * prev.recurrence_days_of_week.length }));
+                        } else {
+                          setFormData(prev => ({ ...prev, max_occurrences: val }));
+                        }
+                      }} 
+                      className="h-7 text-xs"
+                      placeholder={formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0 ? "wks" : "times"}
+                    />
+                  </div>
                   {formData.recurrence_type === 'weekly' && (
-                    <div className="space-y-2">
-                      <Label>Repeat on Days</Label>
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Select specific days of the week (e.g., MWF for classes)
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          { value: 0, label: 'Sun' },
-                          { value: 1, label: 'Mon' },
-                          { value: 2, label: 'Tue' },
-                          { value: 3, label: 'Wed' },
-                          { value: 4, label: 'Thu' },
-                          { value: 5, label: 'Fri' },
-                          { value: 6, label: 'Sat' },
-                        ].map((day) => (
-                          <Button
-                            key={day.value}
-                            type="button"
-                            variant={formData.recurrence_days_of_week.includes(day.value) ? "default" : "outline"}
-                            size="sm"
-                            className="w-12"
-                            onClick={() => {
-                              setFormData(prev => ({
-                                ...prev,
-                                recurrence_days_of_week: prev.recurrence_days_of_week.includes(day.value)
-                                  ? prev.recurrence_days_of_week.filter(d => d !== day.value)
-                                  : [...prev.recurrence_days_of_week, day.value].sort((a, b) => a - b)
-                              }));
-                            }}
-                          >
-                            {day.label}
-                          </Button>
-                        ))}
-                      </div>
-                      {formData.recurrence_days_of_week.length > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          Selected: {formData.recurrence_days_of_week.map(d => 
-                            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d]
-                          ).join(', ')}
-                        </p>
-                      )}
+                    <div className="flex gap-1">
+                      {['S','M','T','W','T','F','S'].map((d, i) => (
+                        <Button key={i} type="button" variant={formData.recurrence_days_of_week.includes(i) ? "default" : "outline"} size="sm" className="w-7 h-7 p-0 text-xs"
+                          onClick={() => setFormData(prev => ({
+                            ...prev,
+                            recurrence_days_of_week: prev.recurrence_days_of_week.includes(i)
+                              ? prev.recurrence_days_of_week.filter(x => x !== i)
+                              : [...prev.recurrence_days_of_week, i].sort((a, b) => a - b)
+                          }))}>
+                          {d}
+                        </Button>
+                      ))}
                     </div>
                   )}
+                  <Input type="date" value={formData.recurrence_end_date} onChange={e => setFormData(prev => ({ ...prev, recurrence_end_date: e.target.value }))} className="h-7 text-xs" placeholder="End date (optional)" />
+                </div>
+              )}
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>End Date (Optional)</Label>
-                      <Input type="date" value={formData.recurrence_end_date} onChange={e => setFormData(prev => ({
-                    ...prev,
-                    recurrence_end_date: e.target.value
-                  }))} />
+              {/* Team & Notifications - Collapsible */}
+              <details className="border rounded-lg">
+                <summary className="p-2 cursor-pointer text-xs font-medium hover:bg-muted/50 flex items-center gap-1">
+                  <Users className="h-3 w-3" /> Team & Notifications
+                  {teamMembers.length > 0 && <span className="ml-auto bg-primary text-primary-foreground px-1.5 py-0.5 rounded text-xs">{teamMembers.length}</span>}
+                </summary>
+                <div className="p-2 pt-0 space-y-2">
+                  <Select onValueChange={addTeamMember}>
+                    <SelectTrigger className="h-7 text-xs"><SelectValue placeholder="Add member..." /></SelectTrigger>
+                    <SelectContent className="z-50 bg-background border shadow-lg">
+                      {usersLoading ? <SelectItem value="loading" disabled>Loading...</SelectItem> : users.filter(u => !teamMembers.find(tm => tm.userId === u.id)).map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.full_name || u.email}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {teamMembers.map(m => (
+                    <div key={m.userId} className="flex items-center gap-1 p-1 border rounded text-xs">
+                      <span className="truncate flex-1">{m.name}</span>
+                      <Input placeholder="Role" value={m.responsibility} onChange={e => updateTeamMemberResponsibility(m.userId, e.target.value)} className="h-6 w-24 text-xs" />
+                      <Button type="button" variant="ghost" size="sm" onClick={() => removeTeamMember(m.userId)} className="h-5 w-5 p-0 text-destructive"><Trash2 className="h-3 w-3" /></Button>
                     </div>
-
-                    <div className="space-y-2">
-                      {formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0 ? (
-                        <>
-                          <Label>Number of Weeks</Label>
-                          <Input 
-                            type="number" 
-                            min="1" 
-                            max="52" 
-                            value={Math.ceil(formData.max_occurrences / Math.max(formData.recurrence_days_of_week.length, 1))} 
-                            onChange={e => {
-                              const weeks = parseInt(e.target.value) || 1;
-                              setFormData(prev => ({
-                                ...prev,
-                                max_occurrences: weeks * prev.recurrence_days_of_week.length
-                              }));
-                            }} 
-                            placeholder="16" 
-                          />
-                          <p className="text-xs text-muted-foreground">
-                            {formData.recurrence_days_of_week.length} days/week × {Math.ceil(formData.max_occurrences / Math.max(formData.recurrence_days_of_week.length, 1))} weeks = {formData.max_occurrences} events
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <Label>Max Occurrences</Label>
-                          <Input type="number" min="1" max="365" value={formData.max_occurrences} onChange={e => setFormData(prev => ({
-                            ...prev,
-                            max_occurrences: parseInt(e.target.value) || 10
-                          }))} placeholder="10" />
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground">
-                    Recurring events will be created automatically when you save this event.
-                    {formData.recurrence_end_date 
-                      ? ` Events will repeat until ${new Date(formData.recurrence_end_date).toLocaleDateString()}.` 
-                      : formData.recurrence_type === 'weekly' && formData.recurrence_days_of_week.length > 0
-                        ? ` ${formData.max_occurrences} events will be created over ${Math.ceil(formData.max_occurrences / formData.recurrence_days_of_week.length)} weeks.`
-                        : ` Up to ${formData.max_occurrences} future events will be created.`
-                    }
-                  </p>
-                </div>}
-            </div>
-
-            {/* Team Member Management Section */}
-            <div className="space-y-4 border-t pt-4">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Event Team Members
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Assign team members responsible for this event
-                </p>
-                
-                {/* User Selection Dropdown */}
-                <Select onValueChange={addTeamMember}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a team member to add..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-40 overflow-y-auto z-50 bg-background border shadow-lg">
-                    {usersLoading ? <SelectItem value="loading" disabled>Loading users...</SelectItem> : users.filter(user => !teamMembers.find(tm => tm.userId === user.id)).map(user => <SelectItem key={user.id} value={user.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">
-                                {user.full_name || user.email}
-                              </span>
-                              {user.full_name && user.email && <span className="text-sm text-muted-foreground">
-                                  {user.email}
-                                </span>}
-                            </div>
-                          </SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Team Members List */}
-              {teamMembers.length > 0 && <div className="space-y-3">
-                  <Label>Team Members & Responsibilities</Label>
-                  {teamMembers.map(member => <div key={member.userId} className="p-3 border rounded-lg space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{member.name}</p>
-                          <p className="text-sm text-muted-foreground">{member.email}</p>
-                        </div>
-                        <Button type="button" variant="ghost" size="sm" onClick={() => removeTeamMember(member.userId)} className="text-destructive hover:text-destructive">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Input placeholder="Enter their responsibility/role..." value={member.responsibility} onChange={e => updateTeamMemberResponsibility(member.userId, e.target.value)} />
-                    </div>)}
-                </div>}
-
-              {/* Notification Preferences */}
-              {teamMembers.length > 0 && <div className="space-y-3">
-                  <Label>Notification Method</Label>
-                  <RadioGroup value={notificationMethod} onValueChange={(value: 'email' | 'sms') => setNotificationMethod(value)} className="flex space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="email" id="email" />
-                      <Label htmlFor="email">Email</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="sms" id="sms" />
-                      <Label htmlFor="sms">SMS/Text</Label>
-                    </div>
-                  </RadioGroup>
-                </div>}
-
-              {/* Custom Message */}
-              {teamMembers.length > 0 && <div className="space-y-2">
-                  <Label htmlFor="notificationMessage">Custom Message (Optional)</Label>
-                  <Textarea id="notificationMessage" value={notificationMessage} onChange={e => setNotificationMessage(e.target.value)} placeholder="Add a personal message to the notification..." rows={3} />
-                </div>}
-            </div>
-
-            {/* Appointment Scheduling Section */}
-            {teamMembers.length > 0 && <div className="space-y-4 border-t pt-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label className="flex items-center gap-2">
-                        <CalendarDays className="h-4 w-4" />
-                        Schedule Appointments with Team
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        Schedule individual planning meetings with team members
-                      </p>
-                    </div>
-                    <Switch checked={requiresAppointments} onCheckedChange={setRequiresAppointments} />
+                  ))}
+                  <div className="pt-1 border-t">
+                    <Label className="text-xs text-muted-foreground">Additional notifications</Label>
+                    <UserPicker selectedUserIds={selectedUserIds} onSelectionChange={setSelectedUserIds} />
                   </div>
                 </div>
-
-                {requiresAppointments && <div className="space-y-4 p-4 border rounded-lg bg-muted/20">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Appointment Date */}
-                      <div className="space-y-2">
-                        <Label>Appointment Date</Label>
-                        <Calendar mode="single" selected={appointmentDate} onSelect={setAppointmentDate} className="rounded-md border w-full" disabled={date => date < new Date()} />
-                      </div>
-
-                      {/* Appointment Details */}
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <Label htmlFor="appointmentTime">Time</Label>
-                          <Input id="appointmentTime" type="time" value={appointmentTime} onChange={e => setAppointmentTime(e.target.value)} placeholder="Select time" />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="appointmentDuration">Duration (minutes)</Label>
-                          <Select value={appointmentDuration.toString()} onValueChange={value => setAppointmentDuration(parseInt(value))}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="15">15 minutes</SelectItem>
-                              <SelectItem value="30">30 minutes</SelectItem>
-                              <SelectItem value="45">45 minutes</SelectItem>
-                              <SelectItem value="60">1 hour</SelectItem>
-                              <SelectItem value="90">1.5 hours</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="appointmentType">Appointment Type</Label>
-                          <Select value={appointmentType} onValueChange={setAppointmentType}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="planning">Event Planning</SelectItem>
-                              <SelectItem value="coordination">Coordination Meeting</SelectItem>
-                              <SelectItem value="briefing">Role Briefing</SelectItem>
-                              <SelectItem value="preparation">Event Preparation</SelectItem>
-                              <SelectItem value="general">General Discussion</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="appointmentDescription">Meeting Description</Label>
-                          <Textarea id="appointmentDescription" value={appointmentDescription} onChange={e => setAppointmentDescription(e.target.value)} placeholder="Describe the purpose of these appointments..." rows={3} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {appointmentDate && appointmentTime && <div className="p-3 bg-primary/10 rounded-lg">
-                        <p className="text-sm font-medium flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          Appointments will be scheduled for:
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {appointmentDate.toLocaleDateString()} at {appointmentTime} ({appointmentDuration} min each) with {teamMembers.length} team member{teamMembers.length > 1 ? 's' : ''}
-                        </p>
-                      </div>}
-                  </div>}
-              </div>}
-
-            {/* General User Notifications Section */}
-            <div className="space-y-4 border-t pt-4">
-              <div className="space-y-2">
-                <Label className="flex items-center gap-2">
-                  <Send className="h-4 w-4" />
-                  Additional User Notifications
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Select additional users to notify about this event (not team members)
-                </p>
-                <UserPicker selectedUserIds={selectedUserIds} onSelectionChange={setSelectedUserIds} />
-              </div>
+              </details>
             </div>
           </div>
-
-          <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-              {loading ? "Creating..." : "Create Event"}
-            </Button>
-          </div>
         </form>
+
+        <div className="flex justify-end gap-2 pt-3 border-t flex-shrink-0">
+          <Button type="button" variant="outline" onClick={() => setOpen(false)} size="sm">Cancel</Button>
+          <Button type="submit" disabled={loading} size="sm" onClick={handleSubmit}>
+            {loading ? "Creating..." : "Create Event"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>;
 };
