@@ -159,7 +159,7 @@ export const CalendarManager = () => {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={openCreateDialog}>
+            <Button onClick={openCreateDialog} className="pr-[10px] mx-[20px]">
               <Plus className="h-4 w-4 mr-2" />
               Create Calendar
             </Button>
