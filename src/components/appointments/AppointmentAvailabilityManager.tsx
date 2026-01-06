@@ -236,12 +236,12 @@ export const AppointmentAvailabilityManager = () => {
           {/* Existing Slots */}
           <div className="space-y-2">
             {availabilitySlots.map((slot) => (
-              <div key={slot.id} className="flex items-center justify-between p-3 border rounded-lg">
+              <div key={slot.id} className="flex items-center justify-between p-3 border rounded-lg bg-card">
                 <div className="flex items-center gap-4">
-                  <Badge variant="outline">
+                  <Badge variant="outline" className="bg-background text-foreground">
                     {daysOfWeek[slot.day_of_week]}
                   </Badge>
-                  <span className="text-sm">
+                  <span className="text-sm text-foreground">
                     {slot.start_time && slot.end_time ? 
                       `${formatTo12Hour(slot.start_time)} - ${formatTo12Hour(slot.end_time)}` : 
                       `${slot.start_time} - ${slot.end_time}`
@@ -257,7 +257,7 @@ export const AppointmentAvailabilityManager = () => {
                   size="sm"
                   onClick={() => removeAvailabilitySlot(slot.id)}
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-4 w-4 text-muted-foreground" />
                 </Button>
               </div>
             ))}
