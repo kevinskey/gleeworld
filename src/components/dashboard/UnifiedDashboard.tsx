@@ -344,7 +344,7 @@ export const UnifiedDashboard = () => {
       <DashboardStoreSection />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="py-4 space-y-6">
+        <div className="py-4 space-y-6 pb-0 pt-0">
           {/* 4 Fixed Cards - Role-specific content */}
           <FourCardLayout role={profile.role} isAdmin={profile.is_admin} isSuperAdmin={profile.is_super_admin} />
 

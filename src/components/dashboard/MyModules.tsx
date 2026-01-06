@@ -7,14 +7,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { LayoutGrid, Settings, Loader2, ChevronDown, Search, ArrowUpDown, SortAsc, SortDesc } from 'lucide-react';
 import { useSimplifiedModuleAccess } from '@/hooks/useSimplifiedModuleAccess';
 import { UNIFIED_MODULES } from '@/config/unified-modules';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import * as Icons from 'lucide-react';
-
 type SortOption = 'name-asc' | 'name-desc' | 'default';
 interface MyModulesProps {
   userProfile: {
@@ -48,12 +42,14 @@ export const MyModules = ({
   } = useSimplifiedModuleAccess(userProfile.user_id);
   const accessibleModules = getAccessibleModules();
   const isSuperAdmin = userProfile.is_super_admin || userProfile.is_admin;
-
   const getSortLabel = () => {
     switch (sortBy) {
-      case 'name-asc': return 'A-Z';
-      case 'name-desc': return 'Z-A';
-      default: return 'Sort';
+      case 'name-asc':
+        return 'A-Z';
+      case 'name-desc':
+        return 'Z-A';
+      default:
+        return 'Sort';
     }
   };
 
@@ -70,9 +66,7 @@ export const MyModules = ({
   }).slice(0, isSuperAdmin ? 100 : 12);
 
   // Filter by search
-  const filteredModules = allModulesWithDetails.filter(module =>
-    module.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredModules = allModulesWithDetails.filter(module => module.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   // Sort modules
   const modulesWithDetails = [...filteredModules].sort((a, b) => {
@@ -107,41 +101,17 @@ export const MyModules = ({
     return null; // Don't render if no assigned modules
   }
   return <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <Card className="border border-primary/30 bg-white shadow-sm">
+      <Card className="border border-primary/30 bg-white shadow-sm py-0">
         <CollapsibleTrigger asChild>
-          <CardHeader className="pb-2 px-4 cursor-pointer hover:bg-primary/5 transition-colors bg-primary rounded-t-lg">
-            <div className="flex items-center justify-between py-5">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg font-semibold tracking-wide text-primary-foreground">MY MODULES</CardTitle>
-                <span className="text-xs text-primary-foreground/80">
-                  ({modulesWithDetails.length + (showAdminSettings ? 1 : 0)})
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                {userProfile.exec_board_role && (
-                  <span className="text-xs text-primary-foreground bg-white/20 px-2 py-1 rounded">
-                    {userProfile.exec_board_role}
-                  </span>
-                )}
-                <ChevronDown
-                  className={`h-4 w-4 text-primary-foreground/80 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                />
-              </div>
-            </div>
-          </CardHeader>
+          
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <CardContent className="px-4 pb-4 py-4 space-y-4 bg-white">
+          <CardContent className="px-4 pb-4 py-4 space-y-4 bg-white pt-0">
             {/* Search and Sort Controls */}
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search modules..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 bg-white border border-border text-foreground placeholder:text-muted-foreground shadow-sm"
-                />
+                <Input placeholder="Search modules..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 bg-white border border-border text-foreground placeholder:text-muted-foreground shadow-sm" />
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -168,35 +138,22 @@ export const MyModules = ({
             </div>
             <div className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {modulesWithDetails.map(module => {
-                const IconComponent = getIconComponent(module.icon);
-                return (
-                  <Button
-                    key={module.id}
-                    variant="outline"
-                    onClick={() => navigate(module.route)}
-                    className="h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/40 transition-all"
-                  >
+              const IconComponent = getIconComponent(module.icon);
+              return <Button key={module.id} variant="outline" onClick={() => navigate(module.route)} className="h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/40 transition-all">
                     <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
                       <IconComponent className="h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 text-primary" />
                     </div>
                     <span className="text-sm md:text-base text-center leading-tight line-clamp-2 text-foreground px-1 font-medium break-words w-full">
                       {module.title}
                     </span>
-                  </Button>
-                );
-              })}
-              {showAdminSettings && (
-                <Button
-                  variant="outline"
-                  className="h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/40 transition-all"
-                  onClick={() => navigate('/dashboard?module=admin-settings')}
-                >
+                  </Button>;
+            })}
+              {showAdminSettings && <Button variant="outline" className="h-[130px] md:h-[150px] lg:h-[160px] py-4 px-3 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 border-primary/20 hover:border-primary/40 transition-all" onClick={() => navigate('/dashboard?module=admin-settings')}>
                   <div className="flex-shrink-0 p-2 rounded-lg bg-primary/10">
                     <Settings className="h-8 w-8 md:h-9 md:w-9 lg:h-10 lg:w-10 text-primary" />
                   </div>
                   <span className="text-sm md:text-base text-center leading-tight font-medium text-foreground">Admin Settings</span>
-                </Button>
-              )}
+                </Button>}
             </div>
           </CardContent>
         </CollapsibleContent>
