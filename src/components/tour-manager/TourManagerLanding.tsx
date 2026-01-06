@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Calendar, MapPin, Users, FileText, ClipboardList, ChevronRight, MapPinned, UserCheck, Phone, Music, BookOpen, DollarSign, Mic2, UsersRound, CalendarDays, ExternalLink } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { TourMilestones } from './TourMilestones';
+
 interface TourManagerLandingProps {
   onNavigate: (section: string) => void;
   stats?: {
@@ -123,6 +126,9 @@ export const TourManagerLanding = ({
         </Button>
       </div>
 
+      {/* Tour Milestones */}
+      <TourMilestones />
+
       {/* Compact Stats Row */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
         {sections.map(section => <button key={section.id} onClick={() => onNavigate(section.id)} className="text-center p-2 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
@@ -237,7 +243,17 @@ export const TourManagerLanding = ({
 
       {/* Section Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {sections.map(section => {})}
+        {sections.map(section => (
+          <button
+            key={section.id}
+            onClick={() => onNavigate(section.id)}
+            className="p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left"
+          >
+            <section.icon className={cn("h-5 w-5 mb-2", section.color.replace('bg-', 'text-'))} />
+            <div className="text-sm font-medium">{section.title}</div>
+            <div className="text-xs text-muted-foreground">{section.stat} {section.statLabel}</div>
+          </button>
+        ))}
       </div>
     </div>;
 };
