@@ -32,7 +32,7 @@ const GleeAcademy = () => {
         </div>
 
         {/* Courses Section */}
-        <div className="py-12 sm:py-16 lg:py-20 bg-background pt-[40px]">
+        <div className="py-12 sm:py-16 lg:py-20 bg-background pt-[20px]">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h1 className="text-3xl font-bold text-foreground mb-2 -mt-4 sm:text-lg">
