@@ -19,7 +19,7 @@ export const RecentContractsTemplatesCollapsible = ({
   onNewTemplate,
   onViewContract 
 }: RecentContractsTemplatesCollapsibleProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const { contracts, loading: contractsLoading } = useContracts();
   const { templates, loading: templatesLoading } = useContractTemplates();
 
