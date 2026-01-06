@@ -1,40 +1,23 @@
 import { CalendarViews } from "@/components/calendar/CalendarViews";
 import { UniversalLayout } from "@/components/layout/UniversalLayout";
-import { Calendar as CalendarIcon, Settings } from "lucide-react";
 import { BackNavigation } from "@/components/shared/BackNavigation";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
 const Calendar = () => {
-  const navigate = useNavigate();
-  
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
       <div className="min-h-screen w-full">
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-7xl">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-7xl">
           {/* Back Navigation */}
-          <BackNavigation className="mb-4" />
+          <BackNavigation className="mb-6" />
           
-          {/* Header */}
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl p-2.5 sm:p-3 bg-primary/10">
-                <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">Calendar</h1>
-                <p className="text-xs sm:text-sm text-muted-foreground">View and manage events</p>
-              </div>
-            </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => navigate('/calendar/settings')}
-              className="gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              <span className="hidden sm:inline">Settings</span>
-            </Button>
+          {/* Header - Clean Figma Style */}
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
+              My Calendar
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Manage your schedule and appointments
+            </p>
           </div>
           
           {/* Main Content */}
