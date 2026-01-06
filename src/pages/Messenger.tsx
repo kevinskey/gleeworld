@@ -323,7 +323,7 @@ const Messenger = () => {
 
   return (
     <UniversalLayout showHeader={true} showFooter={false}>
-      <div className="flex flex-col h-[calc(100vh-64px)]">
+      <div className="flex flex-col h-[calc(100dvh-var(--gw-header-h,4rem))]">
         {/* Header section */}
         <div className="flex-shrink-0 border-b border-border bg-background">
           <div className="max-w-5xl mx-auto">
