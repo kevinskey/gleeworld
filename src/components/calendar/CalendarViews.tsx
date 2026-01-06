@@ -95,6 +95,28 @@ export const CalendarViews = () => {
                 </div>
               </div>
 
+              {/* Calendar Filters - inline on mobile */}
+              <div className="flex items-center gap-1 mb-2 flex-shrink-0">
+                <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
+                {isAdmin && (
+                  <>
+                    <Button variant="ghost" size="icon" onClick={() => navigate('/calendar/settings')} className="h-6 w-6 flex-shrink-0">
+                      <Settings className="h-3.5 w-3.5" />
+                    </Button>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+                          <Plus className="h-3.5 w-3.5" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[90vh] overflow-y-auto">
+                        <CalendarManager />
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                )}
+              </div>
+
               {/* Calendar Grid */}
               <div className="flex-1 min-h-0">
                 <MonthlyCalendar events={filteredEvents} onEventUpdated={fetchEvents} currentDate={currentDate} selectedDate={selectedDate} onDateSelect={setSelectedDate} onMonthChange={setCurrentDate} />
@@ -109,32 +131,6 @@ export const CalendarViews = () => {
           console.log('Event clicked:', event);
         }} />
         </div>
-      </div>
-
-      {/* Combined Footer: Filters + Admin Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mt-1 sm:mt-2 flex-shrink-0">
-        <div className="flex-1 min-w-0">
-          <CalendarFilterStrip onCalendarsChange={setVisibleCalendarIds} />
-        </div>
-        {isAdmin && (
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <Button variant="outline" size="sm" onClick={() => navigate('/calendar/settings')} className="gap-1 h-6 text-[10px] sm:text-xs px-1.5 sm:px-2">
-              <Settings className="h-3 w-3" />
-              <span className="hidden sm:inline">Settings</span>
-            </Button>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="h-6 text-[10px] sm:text-xs px-1.5 sm:px-2">
-                  <Plus className="h-3 w-3 sm:mr-1" />
-                  <span className="hidden md:inline">Manage</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-[95vw] sm:max-w-6xl max-h-[90vh] overflow-y-auto">
-                <CalendarManager />
-              </DialogContent>
-            </Dialog>
-          </div>
-        )}
       </div>
 
       {/* Create Event Dialog - controlled by state */}
