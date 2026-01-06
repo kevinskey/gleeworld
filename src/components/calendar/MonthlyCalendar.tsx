@@ -196,7 +196,7 @@ export const MonthlyCalendar = ({
 
               {/* Event Lines - Minimalist indicator */}
               {hasEvents && (
-                <div className="flex flex-col items-center gap-0.5 mt-0.5">
+                <div className="flex flex-col items-center gap-0.5 mt-0.5 w-full">
                   {dayEvents.slice(0, 3).map((event) => {
                     const lineClass = (() => {
                       switch (event.event_type) {
@@ -233,7 +233,7 @@ export const MonthlyCalendar = ({
                         <div
                           onClick={(e) => handleEventClick(event, e)}
                           className={cn(
-                            'h-1 sm:h-1.5 w-4/5 rounded-full cursor-pointer hover:opacity-80 transition-opacity',
+                            'h-1 sm:h-1.5 w-full rounded-full cursor-pointer hover:opacity-80 transition-opacity',
                             lineClass
                           )}
                           title={event.title}
