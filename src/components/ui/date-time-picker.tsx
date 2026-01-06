@@ -70,6 +70,7 @@ export function DateTimePicker({
           selected={value}
           onSelect={handleDateSelect}
           initialFocus
+          className="pointer-events-auto"
         />
       </PopoverContent>
     </Popover>
