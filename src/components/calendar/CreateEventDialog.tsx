@@ -19,12 +19,24 @@ import { UserPicker } from "./UserPicker";
 interface CreateEventDialogProps {
   onEventCreated: () => void;
   initialDate?: Date;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export const CreateEventDialog = ({ onEventCreated, initialDate }: CreateEventDialogProps) => {
+export const CreateEventDialog = ({ onEventCreated, initialDate, open: externalOpen, onOpenChange }: CreateEventDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  
+  // Use external control if provided, otherwise use internal state
+  const open = externalOpen !== undefined ? externalOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(value);
+    } else {
+      setInternalOpen(value);
+    }
+  };
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
