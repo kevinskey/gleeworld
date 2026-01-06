@@ -18,19 +18,16 @@ const getCourseHighlights = (title: string): string[] => {
   }
   return ['Course Materials', 'Assignments', 'Discussions', 'Resources'];
 };
-
 const getCourseIcon = (title: string) => {
   if (title.toLowerCase().includes('glee')) return Users;
   if (title.toLowerCase().includes('conducting')) return Music;
   return Monitor;
 };
-
 const getCourseLevel = (title: string): string => {
   if (title.toLowerCase().includes('glee')) return 'Audition Required';
   if (title.toLowerCase().includes('conducting')) return 'Intermediate';
   return 'All Levels';
 };
-
 interface Course {
   id: string;
   title: string;
@@ -55,29 +52,26 @@ export const DashboardStoreSection = () => {
   useEffect(() => {
     const fetchData = async () => {
       // Fetch products
-      const { data: productsData, error: productsError } = await supabase
-        .from('gw_products')
-        .select('id, title, price, images')
-        .eq('is_active', true)
-        .limit(9)
-        .order('created_at', { ascending: false });
-      
+      const {
+        data: productsData,
+        error: productsError
+      } = await supabase.from('gw_products').select('id, title, price, images').eq('is_active', true).limit(9).order('created_at', {
+        ascending: false
+      });
       if (!productsError && productsData) {
         setProducts(productsData);
       }
 
       // Fetch courses from gw_courses
-      const { data: coursesData, error: coursesError } = await supabase
-        .from('gw_courses')
-        .select('id, title, description, course_code, instructor_name')
-        .eq('is_active', true)
-        .limit(10)
-        .order('created_at', { ascending: false });
-      
+      const {
+        data: coursesData,
+        error: coursesError
+      } = await supabase.from('gw_courses').select('id, title, description, course_code, instructor_name').eq('is_active', true).limit(10).order('created_at', {
+        ascending: false
+      });
       if (!coursesError && coursesData) {
         setCourses(coursesData);
       }
-
       setLoading(false);
     };
     fetchData();
@@ -159,36 +153,25 @@ export const DashboardStoreSection = () => {
 
             {/* Courses Horizontal Scroll */}
             <div className="mt-6">
-              <div 
-                className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" 
-                style={{
-                  scrollbarWidth: 'none',
-                  msOverflowStyle: 'none',
-                  WebkitOverflowScrolling: 'touch'
-                }}
-              >
-                {courses.length > 0 ? (
-                  courses.map(course => {
-                    const CourseIcon = getCourseIcon(course.title);
-                    const highlights = getCourseHighlights(course.title);
-                    const level = getCourseLevel(course.title);
-                    
-                    return (
-                      <div 
-                        key={course.id} 
-                        className="flex-shrink-0 w-80 snap-start rounded-lg overflow-hidden shadow-lg"
-                      >
+              <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-smooth flex-nowrap" style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}>
+                {courses.length > 0 ? courses.map(course => {
+              const CourseIcon = getCourseIcon(course.title);
+              const highlights = getCourseHighlights(course.title);
+              const level = getCourseLevel(course.title);
+              return <div key={course.id} className="flex-shrink-0 w-80 snap-start rounded-lg overflow-hidden shadow-lg">
                         {/* Blue Header Section */}
-                        <div className="bg-[#0066CC] p-4">
+                        <div className="p-4 bg-[#53baee]">
                           {/* Top row with icon, code, and level */}
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-2">
                               <CourseIcon className="h-5 w-5 text-white/80" />
-                              {course.course_code && (
-                                <span className="px-3 py-1 bg-[#003366] text-white text-sm font-medium rounded">
+                              {course.course_code && <span className="px-3 py-1 bg-[#003366] text-white text-sm font-medium rounded">
                                   {course.course_code}
-                                </span>
-                              )}
+                                </span>}
                             </div>
                             <span className="text-white text-sm font-medium">{level}</span>
                           </div>
@@ -202,42 +185,31 @@ export const DashboardStoreSection = () => {
                         
                         {/* White Content Section */}
                         <div className="bg-white p-4 flex flex-col min-h-[200px]">
-                          {course.description && (
-                            <p className="text-gray-700 text-sm leading-relaxed mb-4">
+                          {course.description && <p className="text-gray-700 text-sm leading-relaxed mb-4">
                               {course.description}
-                            </p>
-                          )}
+                            </p>}
                           
                           {/* Course Highlights */}
                           <div className="mb-4 flex-1">
                             <h5 className="font-semibold text-gray-900 mb-2">Course Highlights:</h5>
                             <ul className="space-y-1">
-                              {highlights.map((highlight, idx) => (
-                                <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
+                              {highlights.map((highlight, idx) => <li key={idx} className="flex items-center gap-2 text-sm text-gray-700">
                                   <ChevronRight className="h-3 w-3 text-gray-400" />
                                   {highlight}
-                                </li>
-                              ))}
+                                </li>)}
                             </ul>
                           </div>
                           
                           {/* Enter Button */}
-                          <button 
-                            onClick={() => navigate(`/glee-academy/course/${course.id}`)}
-                            className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors"
-                          >
+                          <button onClick={() => navigate(`/glee-academy/course/${course.id}`)} className="w-full bg-[#003366] hover:bg-[#002244] text-white py-3 px-4 flex items-center justify-center gap-2 transition-colors">
                             <span className="font-medium">Enter {course.course_code || course.title}</span>
                             <ChevronRight className="h-4 w-4" />
                           </button>
                         </div>
-                      </div>
-                    );
-                  })
-                ) : (
-                  <div className="flex-shrink-0 w-80 snap-start bg-muted/30 border border-dashed border-border rounded-lg p-4 flex items-center justify-center min-h-[300px]">
+                      </div>;
+            }) : <div className="flex-shrink-0 w-80 snap-start bg-muted/30 border border-dashed border-border rounded-lg p-4 flex items-center justify-center min-h-[300px]">
                     <p className="text-sm text-muted-foreground">No courses available yet</p>
-                  </div>
-                )}
+                  </div>}
               </div>
             </div>
           </> : <div className="text-center py-16">
