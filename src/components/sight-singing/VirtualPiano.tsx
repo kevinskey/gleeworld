@@ -107,6 +107,7 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
   const [isMobile, setIsMobile] = useState(false);
   const [synthReady, setSynthReady] = useState(false);
   const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   const [dynamicKeyWidth, setDynamicKeyWidth] = useState<number | null>(null);
   const keysContainerRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -123,15 +124,20 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
     unlockTimer: null,
   });
 
-  // Detect mobile on mount and resize, calculate dynamic key width for fullscreen
+  // Detect mobile and orientation on mount and resize
   useEffect(() => {
     const updateLayout = () => {
       const mobile = window.innerWidth < 768;
+      const landscape = window.innerWidth > window.innerHeight;
       setIsMobile(mobile);
+      setIsLandscape(landscape);
 
       if (onClose && !mobile) {
         // Double-sized keys for easier touchscreen play (will require scrolling)
         setDynamicKeyWidth(100);
+      } else if (mobile && landscape) {
+        // Landscape mobile: fit more keys
+        setDynamicKeyWidth(Math.max(40, Math.floor((window.innerWidth - 20) / 14))); // ~2 octaves visible
       } else {
         setDynamicKeyWidth(null);
       }
@@ -139,7 +145,11 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
 
     updateLayout();
     window.addEventListener('resize', updateLayout);
-    return () => window.removeEventListener('resize', updateLayout);
+    window.addEventListener('orientationchange', updateLayout);
+    return () => {
+      window.removeEventListener('resize', updateLayout);
+      window.removeEventListener('orientationchange', updateLayout);
+    };
   }, [onClose]);
 
   // Setup mobile audio unlock on mount
@@ -532,7 +542,15 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
         <div className="relative inline-block min-w-max mx-0 py-0">
           {/* White Keys */}
           <div className="relative">
-            <div className={isFullScreen ? "flex gap-0.5 h-[240px] sm:h-[384px] md:h-[480px]" : "flex gap-0.5 h-[180px] sm:h-[240px]"}>
+            <div className={`flex gap-0.5 ${
+              isFullScreen 
+                ? isMobile && isLandscape 
+                  ? "h-[calc(100vh-120px)]" // Landscape mobile: use most of screen height
+                  : isMobile 
+                    ? "h-[50vh]" // Portrait mobile: half screen
+                    : "h-[384px] md:h-[480px]" // Desktop
+                : "h-[180px] sm:h-[240px]"
+            }`}>
               {whiteKeys.map((key, index) => {
               const keyName = `${key.note}${key.octave}`;
               const isActive = activeNotes.has(keyName);
@@ -615,16 +633,20 @@ export const VirtualPiano: React.FC<VirtualPianoProps> = ({
       </div>
     </div>;
   if (isFullScreen) {
-    // On mobile, use a compact modal instead of full screen
+    // On mobile, responsive modal that adapts to orientation
     if (isMobile) {
       return createPortal(
         <div 
-          className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[9999] bg-black/80 flex items-end sm:items-center justify-center"
           onTouchStart={handleUserInteraction}
           onClick={handleUserInteraction}
         >
           <div 
-            className="bg-background rounded-xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-2xl"
+            className={`bg-background overflow-hidden shadow-2xl ${
+              isLandscape 
+                ? 'w-full h-full' 
+                : 'w-full rounded-t-xl max-h-[85vh]'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             {pianoContent}
