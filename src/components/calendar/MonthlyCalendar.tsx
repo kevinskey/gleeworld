@@ -217,7 +217,7 @@ export const MonthlyCalendar = ({
                         key={event.id}
                         onClick={(e) => handleEventClick(event, e)}
                         className={cn(
-                          'h-1 sm:h-1.5 w-full rounded-sm cursor-pointer hover:opacity-80 transition-opacity truncate',
+                          'h-1 sm:h-1.5 w-4/5 rounded-full cursor-pointer hover:opacity-80 transition-opacity',
                           lineClass
                         )}
                         title={event.title}
