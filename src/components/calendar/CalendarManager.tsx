@@ -154,7 +154,7 @@ export const CalendarManager = () => {
   return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Calendar Management</h2>
+          <h2 className="font-bold text-lg">Calendar Management</h2>
           
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
