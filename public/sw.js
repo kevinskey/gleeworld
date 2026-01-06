@@ -1,21 +1,21 @@
 // Service Worker for GleeWorld PWA
-// Version: 4.0 - December 2024
-const CACHE_NAME = 'gleeworld-v4';
-const STATIC_CACHE = 'gleeworld-static-v4';
-const DYNAMIC_CACHE = 'gleeworld-dynamic-v4';
+// Version: 5.0 - January 2026
+const CACHE_VERSION = 'v5';
+const CACHE_NAME = `gleeworld-${CACHE_VERSION}`;
+const STATIC_CACHE = `gleeworld-static-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `gleeworld-dynamic-${CACHE_VERSION}`;
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/logo-192.png',
-  '/logo-512.png',
-  '/favicon.ico'
+  '/favicon.ico',
+  '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png'
 ];
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker v4...');
+  console.log('[SW] Installing service worker v5...');
   event.waitUntil(
     caches.open(STATIC_CACHE)
       .then((cache) => {
@@ -32,16 +32,15 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker v4...');
+  console.log('[SW] Activating service worker v5...');
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
         return Promise.all(
           cacheNames
             .filter((name) => {
-              return name !== STATIC_CACHE && 
-                     name !== DYNAMIC_CACHE && 
-                     name !== CACHE_NAME;
+              // Delete any cache that doesn't match current version
+              return !name.includes(CACHE_VERSION);
             })
             .map((name) => {
               console.log('[SW] Deleting old cache:', name);
@@ -64,8 +63,10 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip cross-origin requests except for fonts
-  if (url.origin !== self.location.origin && !url.href.includes('fonts.googleapis.com')) {
+  // Skip cross-origin requests except for fonts and CDNs
+  if (url.origin !== self.location.origin && 
+      !url.href.includes('fonts.googleapis.com') &&
+      !url.href.includes('fonts.gstatic.com')) {
     return;
   }
 
@@ -100,7 +101,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // For static assets - cache first, network fallback
-  if (request.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/)) {
+  if (request.url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|otf|ttf|webp)$/)) {
     event.respondWith(
       caches.match(request)
         .then((cached) => {
@@ -129,8 +130,8 @@ self.addEventListener('push', (event) => {
   let notificationData = {
     title: 'GleeWorld',
     body: 'You have a new notification',
-    icon: '/logo-192.png',
-    badge: '/logo-192.png',
+    icon: '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png',
+    badge: '/lovable-uploads/80d39e41-12f3-4266-8d7a-b1d3621bbf58.png',
     tag: 'gleeworld-notification',
     data: { url: '/dashboard' }
   };
@@ -217,5 +218,9 @@ self.addEventListener('message', (event) => {
     caches.keys().then((names) => {
       names.forEach((name) => caches.delete(name));
     });
+  }
+  
+  if (event.data?.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: CACHE_VERSION });
   }
 });
