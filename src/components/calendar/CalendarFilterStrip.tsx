@@ -1,10 +1,23 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Settings, Palette } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 interface Calendar {
   id: string;
   name: string;
@@ -24,12 +37,20 @@ export const CalendarFilterStrip = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [calendarControlsEnabled, setCalendarControlsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [colorPickerCalendar, setColorPickerCalendar] = useState<Calendar | null>(null);
+  const [newColor, setNewColor] = useState('');
   const {
     user
   } = useAuth();
   const {
     toast
   } = useToast();
+
+  const presetColors = [
+    '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e',
+    '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
+    '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#6b7280'
+  ];
   useEffect(() => {
     loadCalendars();
     if (user) {
@@ -160,6 +181,37 @@ export const CalendarFilterStrip = ({
     setSelectedCalendarIds(newSelectedIds);
     await saveSelectedCalendars(newSelectedIds);
   };
+
+  const updateCalendarColor = async (calendarId: string, color: string) => {
+    try {
+      const { error } = await supabase
+        .from('gw_calendars')
+        .update({ color })
+        .eq('id', calendarId);
+
+      if (error) throw error;
+
+      // Update local state
+      setCalendars(prev => prev.map(cal => 
+        cal.id === calendarId ? { ...cal, color } : cal
+      ));
+
+      setColorPickerCalendar(null);
+      setNewColor('');
+
+      toast({
+        title: "Success",
+        description: "Calendar color updated",
+      });
+    } catch (error) {
+      console.error('Error updating calendar color:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update calendar color",
+        variant: "destructive",
+      });
+    }
+  };
   if (loading) {
     return <Card className="border border-border/50 bg-muted/30">
         <CardContent className="p-3">
@@ -192,27 +244,93 @@ export const CalendarFilterStrip = ({
             {calendars.map(calendar => {
               const isSelected = selectedCalendarIds.includes(calendar.id);
               return (
-                <button 
+                <Popover 
                   key={calendar.id} 
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleCalendar(calendar.id);
-                  }} 
-                  className={`flex items-center gap-1 px-1.5 py-1 rounded text-[9px] sm:text-[10px] transition-all border cursor-pointer ${
-                    isSelected 
-                      ? 'bg-background border-border opacity-100 text-foreground' 
-                      : 'bg-muted/30 border-transparent opacity-70 hover:opacity-100 text-white'
-                  }`}
-                  title={`${calendar.name} - Click to ${isSelected ? 'hide' : 'show'}`}
+                  open={colorPickerCalendar?.id === calendar.id} 
+                  onOpenChange={(open) => {
+                    if (open) {
+                      setColorPickerCalendar(calendar);
+                      setNewColor(calendar.color);
+                    } else {
+                      setColorPickerCalendar(null);
+                      setNewColor('');
+                    }
+                  }}
                 >
-                  <div 
-                    className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 transition-transform ${isSelected ? 'scale-100' : 'scale-75'}`} 
-                    style={{ backgroundColor: calendar.color }}
-                  />
-                  <span className="truncate max-w-[45px] sm:max-w-[55px]">{calendar.name}</span>
-                </button>
+                  <ContextMenu>
+                    <ContextMenuTrigger asChild>
+                      <button 
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          toggleCalendar(calendar.id);
+                        }} 
+                        className={`flex items-center gap-1 px-1.5 py-1 rounded text-[9px] sm:text-[10px] transition-all border cursor-pointer ${
+                          isSelected 
+                            ? 'bg-background border-border opacity-100 text-foreground' 
+                            : 'bg-muted/30 border-transparent opacity-70 hover:opacity-100 text-white'
+                        }`}
+                        title={`${calendar.name} - Click to toggle, right-click to change color`}
+                      >
+                        <div 
+                          className={`w-2.5 h-2.5 rounded-sm flex-shrink-0 transition-transform ${isSelected ? 'scale-100' : 'scale-75'}`} 
+                          style={{ backgroundColor: calendar.color }}
+                        />
+                        <span className="truncate max-w-[45px] sm:max-w-[55px]">{calendar.name}</span>
+                      </button>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="bg-popover z-50">
+                      <PopoverTrigger asChild>
+                        <ContextMenuItem className="gap-2 cursor-pointer">
+                          <Palette className="h-4 w-4" />
+                          Change Color
+                        </ContextMenuItem>
+                      </PopoverTrigger>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                  <PopoverContent className="w-auto p-3 bg-popover z-50" align="start">
+                    <div className="space-y-3">
+                      <Label className="text-sm font-medium">Choose color for {calendar.name}</Label>
+                      <div className="grid grid-cols-6 gap-1.5">
+                        {presetColors.map(color => (
+                          <button
+                            key={color}
+                            type="button"
+                            onClick={() => updateCalendarColor(calendar.id, color)}
+                            className={`w-6 h-6 rounded-md border-2 transition-all hover:scale-110 ${
+                              calendar.color === color ? 'border-primary ring-2 ring-primary/30' : 'border-transparent'
+                            }`}
+                            style={{ backgroundColor: color }}
+                            title={color}
+                          />
+                        ))}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="color"
+                          value={newColor || calendar.color}
+                          onChange={(e) => setNewColor(e.target.value)}
+                          className="w-10 h-8 p-0 border-0 cursor-pointer"
+                        />
+                        <Input
+                          type="text"
+                          value={newColor || calendar.color}
+                          onChange={(e) => setNewColor(e.target.value)}
+                          placeholder="#000000"
+                          className="flex-1 h-8 text-xs"
+                        />
+                        <Button
+                          size="sm"
+                          onClick={() => updateCalendarColor(calendar.id, newColor || calendar.color)}
+                          className="h-8 text-xs"
+                        >
+                          Apply
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               );
             })}
           </div>
